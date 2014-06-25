@@ -3,6 +3,25 @@ extern crate semver;
 use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
 
+pub enum Scheme {
+    Http,
+    Https
+}
+
+pub enum Host<'a> {
+    HostName(&'a str),
+    HostIp(IpAddr)
+}
+
+pub enum Method<'a> {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Other(&'a str)
+}
+
 pub trait Request {
     /// The version of HTTP being used
     fn http_version(&self) -> semver::Version;
@@ -11,13 +30,13 @@ pub trait Request {
     fn conduit_version(&self) -> semver::Version;
 
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
-    fn method<'a>(&'a self) -> &'a str;
+    fn method<'a>(&'a self) -> Method<'a>;
 
     /// The scheme part of the request URL
-    fn scheme<'a>(&'a self) -> &'a str;
+    fn scheme(&self) -> Scheme;
 
     /// The host part of the requested URL
-    fn host<'a>(&'a self) -> &'a str;
+    fn host<'a>(&'a self) -> Host<'a>;
 
     /// The initial part of the request URL's path that corresponds
     /// to a virtual root. This allows an application to have a
@@ -34,8 +53,11 @@ pub trait Request {
     /// sent the request.
     fn remote_ip(&self) -> IpAddr;
 
+    /// The byte-size of the body, if any
+    fn content_length(&self) -> Option<uint>;
+
     /// A Reader for the body of the request
-    fn body<'a>(&mut self) -> Box<Reader + Send>;
+    fn body(&mut self) -> Box<Reader + Send>;
 }
 
 pub struct Response {
