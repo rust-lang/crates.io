@@ -100,6 +100,8 @@ pub struct Response {
     pub body: Box<Reader + Send>
 }
 
+/// A Handler takes a request and returns a response or an error.
+/// By default, a bare function implements `Handler`.
 pub trait Handler<E> {
     fn call(&self, request: &mut Request) -> Result<Response, E>;
 }
