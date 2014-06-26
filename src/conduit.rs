@@ -20,8 +20,17 @@ pub enum Method<'a> {
     Get,
     Post,
     Put,
-    Patch,
     Delete,
+    Head,
+    Connect,
+    Options,
+    Trace,
+
+    // RFC-5789
+    Patch,
+    Purge,
+
+    // WebDAV, Subversion, UPNP
     Other(&'a str)
 }
 
