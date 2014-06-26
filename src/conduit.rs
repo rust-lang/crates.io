@@ -91,4 +91,4 @@ pub struct Response {
     pub body: Box<Reader + Send>
 }
 
-pub type Handler = fn(&mut Request) -> Response;
+pub type Handler<E> = fn(&mut Request) -> Result<Response, E>;
