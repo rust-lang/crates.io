@@ -71,10 +71,10 @@ pub type HeaderEntries<'a> = &'a Iterator<(&'a str, &'a [&'a str])>;
 pub trait Headers {
     /// Find the value of a given header. Multi-line headers are represented
     /// as an array.
-    fn find<'a>(&'a str) -> Option<Vec<&'a str>>;
+    fn find<'a>(&'a self, key: &str) -> Option<Vec<&'a str>>;
 
     /// Returns true if a particular header exists
-    fn has(&str) -> bool;
+    fn has(&self, key: &str) -> bool;
 
     /// Iterate over all of the available headers.
     fn iter<'a>(&'a self) -> HeaderEntries<'a>;
