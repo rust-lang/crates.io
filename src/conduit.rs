@@ -59,7 +59,8 @@ pub trait Request {
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<uint>;
 
-    fn headers<'a>(&'a self) -> &'a mut Headers;
+    /// The request's headers, as conduit::Headers.
+    fn headers<'a>(&'a self) -> &'a Headers;
 
     /// A Reader for the body of the request
     fn body<'a>(&'a mut self) -> &'a mut Reader;
@@ -70,7 +71,7 @@ pub type HeaderEntries<'a> = &'a Iterator<(&'a str, &'a [&'a str])>;
 pub trait Headers {
     /// Find the value of a given header. Multi-line headers are represented
     /// as an array.
-    fn find<'a>(&'a str) -> Option<&'a [&'a str]>;
+    fn find<'a>(&'a str) -> Option<Vec<&'a str>>;
 
     /// Returns true if a particular header exists
     fn has(&str) -> bool;
