@@ -91,7 +91,7 @@ pub struct Response {
     pub body: Box<Reader + Send>
 }
 
-trait Handler<E> {
+pub trait Handler<E> {
     fn call(&self, request: &mut Request) -> Result<Response, E>;
 }
 
