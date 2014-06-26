@@ -91,4 +91,12 @@ pub struct Response {
     pub body: Box<Reader + Send>
 }
 
-pub type Handler<E> = fn(&mut Request) -> Result<Response, E>;
+trait Handler<E> {
+    fn call(&self, request: &mut Request) -> Result<Response, E>;
+}
+
+impl<E> Handler<E> for fn(&mut Request) -> Result<Response, E> {
+    fn call(&self, request: &mut Request) -> Result<Response, E> {
+        (*self)(request)
+    }
+}
