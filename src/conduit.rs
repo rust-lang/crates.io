@@ -66,7 +66,7 @@ pub trait Request {
     fn body<'a>(&'a mut self) -> &'a mut Reader;
 }
 
-pub type HeaderEntries<'a> = &'a Iterator<(&'a str, &'a [&'a str])>;
+pub type HeaderEntries<'a> = &'a Iterator<(&'a str, Vec<&'a str>)>;
 
 pub trait Headers {
     /// Find the value of a given header. Multi-line headers are represented
