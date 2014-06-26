@@ -3,16 +3,19 @@ extern crate semver;
 use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
 
+#[deriving(PartialEq, Show, Clone)]
 pub enum Scheme {
     Http,
     Https
 }
 
+#[deriving(PartialEq, Show, Clone)]
 pub enum Host<'a> {
     HostName(&'a str),
     HostIp(IpAddr)
 }
 
+#[deriving(PartialEq, Show, Clone)]
 pub enum Method<'a> {
     Get,
     Post,
