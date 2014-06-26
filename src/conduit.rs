@@ -85,7 +85,7 @@ pub struct Response {
     pub status: (uint, &'static str),
 
     /// A Map of the headers
-    pub headers: HashMap<String, String>,
+    pub headers: HashMap<String, Vec<String>>,
 
     /// A Writer for body of the response
     pub body: Box<Reader + Send>
