@@ -57,7 +57,7 @@ pub trait Request {
     fn content_length(&self) -> Option<uint>;
 
     /// A Reader for the body of the request
-    fn body(&mut self) -> Box<Reader + Send>;
+    fn body<'a>(&'a mut self) -> &'a mut Reader + Send;
 }
 
 pub struct Response {
