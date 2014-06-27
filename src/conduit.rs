@@ -17,7 +17,7 @@ pub enum Host<'a> {
     HostIp(IpAddr)
 }
 
-#[deriving(PartialEq, Hash, Show, Clone)]
+#[deriving(PartialEq, Hash, Eq, Show, Clone)]
 pub enum Method<'a> {
     Get,
     Post,
