@@ -18,7 +18,7 @@ pub enum Host<'a> {
 }
 
 #[deriving(PartialEq, Hash, Eq, Show, Clone)]
-pub enum Method<'a> {
+pub enum Method {
     Get,
     Post,
     Put,
@@ -33,7 +33,7 @@ pub enum Method<'a> {
     Purge,
 
     // WebDAV, Subversion, UPNP
-    Other(&'a str)
+    Other(&'static str)
 }
 
 /// A Dictionary for extensions provided by the server or middleware
@@ -47,7 +47,7 @@ pub trait Request {
     fn conduit_version(&self) -> semver::Version;
 
     /// The request method, such as GET, POST, PUT, DELETE or PATCH
-    fn method<'a>(&'a self) -> Method<'a>;
+    fn method(&self) -> Method;
 
     /// The scheme part of the request URL
     fn scheme(&self) -> Scheme;
