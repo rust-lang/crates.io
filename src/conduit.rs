@@ -2,6 +2,7 @@ extern crate semver;
 
 use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
+use std::hash::Hash;
 use std::any::Any;
 
 #[deriving(PartialEq, Show, Clone)]
@@ -16,7 +17,7 @@ pub enum Host<'a> {
     HostIp(IpAddr)
 }
 
-#[deriving(PartialEq, Show, Clone)]
+#[deriving(PartialEq, Hash, Show, Clone)]
 pub enum Method<'a> {
     Get,
     Post,
