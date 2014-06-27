@@ -2,6 +2,7 @@ extern crate semver;
 
 use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
+use std::any::Any;
 
 #[deriving(PartialEq, Show, Clone)]
 pub enum Scheme {
@@ -33,6 +34,9 @@ pub enum Method<'a> {
     // WebDAV, Subversion, UPNP
     Other(&'a str)
 }
+
+/// A Dictionary for extensions provided by the server or middleware
+pub type Extensions = HashMap<&'static str, Box<Any>>;
 
 pub trait Request {
     /// The version of HTTP being used
@@ -73,6 +77,12 @@ pub trait Request {
 
     /// A Reader for the body of the request
     fn body<'a>(&'a mut self) -> &'a mut Reader;
+
+    /// A readable map of extensions
+    fn extensions<'a>(&'a self) -> &'a Extensions;
+
+    /// A mutable map of extensions
+    fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions;
 }
 
 pub type HeaderEntries<'a> = Box<Iterator<(&'a str, Vec<&'a str>)>>;
