@@ -5,7 +5,7 @@ extern crate router = "route_recognizer";
 extern crate conduit;
 
 use std::collections::HashMap;
-use std::any::Any;
+use std::any::{Any, AnyRefExt};
 
 use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
@@ -96,23 +96,39 @@ impl<E> conduit::Handler<E> for RouteBuilder<E> {
     }
 }
 
+pub trait RequestParams<'a> {
+    fn params(self) -> &'a router::Params;
+}
+
+pub fn params<'a>(req: &'a mut Request) -> &'a router::Params {
+    req.extensions().find(&"router.params")
+        .and_then(|a| a.as_ref::<router::Params>())
+        .expect("Missing params")
+}
+
+impl<'a> RequestParams<'a> for &'a mut Request {
+    fn params(self) -> &'a router::Params {
+        params(self)
+    }
+}
+
+//impl<T: Request> RequestParams for T {}
+
 #[cfg(test)]
 mod tests {
     extern crate semver;
     use std::io::net::ip::IpAddr;
     use std::collections::HashMap;
     use std::io::MemReader;
-    use std::any::{Any, AnyRefExt};
     use super::*;
 
-    use router::Params;
     use conduit;
     use conduit::{Handler, Method, Scheme, Host, Headers, Extensions};
 
     struct RequestSentinel {
         method: Method,
         path: String,
-        extensions: HashMap<&'static str, Box<Any>>
+        extensions: conduit::Extensions
     }
 
     impl RequestSentinel {
@@ -168,11 +184,8 @@ mod tests {
     }
 
     fn handler1(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
-        let params = req.extensions().find(&"router.params")
-            .and_then(|a| a.as_ref::<Params>()).expect("Missing params");
-
         let mut res = vec!();
-        res.push(params["id"]);
+        res.push(req.params()["id"]);
         res.push(format!("{}", req.method()));
 
         Ok(conduit::Response {
