@@ -8,9 +8,13 @@ use conduit::{Request, Response, Handler};
 
 pub trait Middleware {
     #[allow(unused_variable)]
-    fn before(&self, req: &mut Request) {}
+    fn before<'a>(&self, req: &'a mut Request) -> &'a mut Request {
+        req
+    }
     #[allow(unused_variable)]
-    fn after(&self, req: &mut Request, &mut Response) {}
+    fn after<'a>(&self, req: &mut Request, res: &'a mut Response) -> &'a mut Response {
+        res
+    }
 }
 
 pub trait AroundMiddleware : Handler {
@@ -118,8 +122,9 @@ mod tests {
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before(&self, req: &mut Request) {
+        fn before<'a>(&self, req: &'a mut Request) -> &'a mut Request {
             req.mut_extensions().insert("test.middleware", box "hello".to_str() as Box<Any>);
+            req
         }
     }
 
