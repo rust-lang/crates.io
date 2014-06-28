@@ -4,14 +4,14 @@ name = "conduit-router"
 version = "0.5.0"
 authors = ["wycats@gmail.com"]
 
-[dependencies.conduit]
-
-git = "https://github.com/wycats/conduit.git"
-
-[dependencies.route-recognizer]
-
-git = "https://github.com/wycats/route-recognizer.rs.git"
-
 [[lib]]
 
 name = "conduit-router"
+
+[dependencies.conduit]
+
+git = "https://github.com/conduit-rust/conduit.git"
+
+[dependencies.route-recognizer]
+
+git = "https://github.com/conduit-rust/route-recognizer.rs.git"
