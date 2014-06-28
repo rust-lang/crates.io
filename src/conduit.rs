@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
 use std::hash::Hash;
 use std::any::Any;
+use std::fmt::Show;
 
 #[deriving(PartialEq, Show, Clone)]
 pub enum Scheme {
@@ -113,12 +114,12 @@ pub struct Response {
 
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
-pub trait Handler<E> {
-    fn call(&self, request: &mut Request) -> Result<Response, E>;
+pub trait Handler {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>>;
 }
 
-impl<E> Handler<E> for fn(&mut Request) -> Result<Response, E> {
-    fn call(&self, request: &mut Request) -> Result<Response, E> {
-        (*self)(request)
+impl<T: 'static + Show> Handler for fn(&mut Request) -> Result<Response, T> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
+        { (*self)(request) }.map_err(|e| box e as Box<Show>)
     }
 }
