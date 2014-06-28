@@ -118,8 +118,8 @@ pub trait Handler {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Show>>;
 }
 
-impl Handler for fn(&mut Request) -> Result<Response, Box<Show>> {
+impl<T: 'static + Show> Handler for fn(&mut Request) -> Result<Response, T> {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
-        { (*self)(request) }
+        { (*self)(request) }.map_err(|e| box e as Box<Show>)
     }
 }
