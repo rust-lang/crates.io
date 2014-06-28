@@ -6,80 +6,81 @@ extern crate conduit;
 
 use std::collections::HashMap;
 use std::any::{Any, AnyRefExt};
+use std::fmt::Show;
 
 use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
 
-pub struct RouteBuilder<E> {
-    routers: HashMap<Method, Router<Box<Handler<E>>>>
+pub struct RouteBuilder {
+    routers: HashMap<Method, Router<Box<Handler>>>
 }
 
 macro_rules! method_map(
     ($method:ident => $variant:ty) => (
-        pub fn $method<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                                -> &'a mut RouteBuilder<E>
+        pub fn $method<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                                -> &'a mut RouteBuilder
         {
             self.map(conduit::$variant, pattern, handler)
         }
     )
 )
 
-impl<E> RouteBuilder<E> {
-    pub fn new() -> RouteBuilder<E> {
+impl RouteBuilder {
+    pub fn new() -> RouteBuilder {
         RouteBuilder { routers: HashMap::new() }
     }
 
-    pub fn recognize<'a>(&'a self, method: &Method, path: &str) -> Result<Match<&'a Box<Handler<E>>>, String> {
+    pub fn recognize<'a>(&'a self, method: &Method, path: &str) -> Result<Match<&'a Box<Handler>>, String> {
         match self.routers.find(method) {
             None => Err(format!("No router found for {}", method)),
             Some(router) => router.recognize(path)
         }
     }
 
-    pub fn map<'a, H: 'static + Handler<E>>(&'a mut self,
+    pub fn map<'a, H: 'static + Handler>(&'a mut self,
                                         method: Method, pattern: &str, handler: H)
-                                        -> &'a mut RouteBuilder<E>
+                                        -> &'a mut RouteBuilder
     {
         {
             let router = self.routers.find_or_insert_with(method, |_| Router::new());
-            router.add(pattern, box handler as Box<Handler<E>>);
+            router.add(pattern, box handler as Box<Handler>);
         }
         self
     }
 
-    pub fn get<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                            -> &'a mut RouteBuilder<E>
+    pub fn get<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                            -> &'a mut RouteBuilder
     {
         self.map(conduit::Get, pattern, handler)
     }
 
-    pub fn post<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                            -> &'a mut RouteBuilder<E>
+    pub fn post<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                            -> &'a mut RouteBuilder
     {
         self.map(conduit::Post, pattern, handler)
     }
 
-    pub fn put<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                            -> &'a mut RouteBuilder<E>
+    pub fn put<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                            -> &'a mut RouteBuilder
     {
         self.map(conduit::Put, pattern, handler)
     }
 
-    pub fn delete<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                            -> &'a mut RouteBuilder<E>
+    pub fn delete<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                            -> &'a mut RouteBuilder
     {
         self.map(conduit::Delete, pattern, handler)
     }
 
-    pub fn head<'a, H: 'static + Handler<E>>(&'a mut self, pattern: &str, handler: H)
-                                            -> &'a mut RouteBuilder<E>
+    pub fn head<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+                                            -> &'a mut RouteBuilder
     {
         self.map(conduit::Head, pattern, handler)
     }
 }
 
-impl<E> conduit::Handler<E> for RouteBuilder<E> {
-    fn call(&self, request: &mut Request) -> Result<Response, E> {
+impl conduit::Handler for RouteBuilder {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
         let m = {
             let method = request.method();
             let path = request.path();
@@ -171,13 +172,13 @@ mod tests {
         router.get("/posts/:id", handler1);
 
         let mut req = RequestSentinel::new(conduit::Get, "/posts/1");
-        let mut res = router.call(&mut req).unwrap();
+        let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
         assert_eq!(res.body.read_to_str().unwrap(), "1, Get".to_str());
 
         let mut req = RequestSentinel::new(conduit::Post, "/posts/10");
-        let mut res = router.call(&mut req).unwrap();
+        let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
         assert_eq!(res.body.read_to_str().unwrap(), "10, Post".to_str());
