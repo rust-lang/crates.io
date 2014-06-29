@@ -8,12 +8,12 @@ use conduit::{Request, Response, Handler};
 
 pub trait Middleware {
     #[allow(unused_variable)]
-    fn before<'a>(&self, req: &'a mut Request) -> &'a mut Request {
-        req
+    fn before<'a>(&self, req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
+        Ok(req)
     }
     #[allow(unused_variable)]
-    fn after<'a>(&self, req: &mut Request, res: &'a mut Response) -> &'a mut Response {
-        res
+    fn after<'a>(&self, req: &mut Request, res: &'a mut Response) -> Result<&'a mut Response, Box<Show>> {
+        Ok(res)
     }
 }
 
@@ -48,14 +48,14 @@ impl MiddlewareBuilder {
 impl Handler for MiddlewareBuilder {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
         for middleware in self.middlewares.iter() {
-            middleware.before(req);
+            try!(middleware.before(req));
         }
 
         match (self.handler.get_ref()).call(req) {
             Err(err) => return Err(err),
             Ok(mut res) => {
                 for middleware in self.middlewares.iter() {
-                   middleware.after(req, &mut res);
+                   try!(middleware.after(req, &mut res));
                 }
 
                 Ok(res)
@@ -122,9 +122,9 @@ mod tests {
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before<'a>(&self, req: &'a mut Request) -> &'a mut Request {
+        fn before<'a>(&self, req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
             req.mut_extensions().insert("test.middleware", box "hello".to_str() as Box<Any>);
-            req
+            Ok(req)
         }
     }
 
