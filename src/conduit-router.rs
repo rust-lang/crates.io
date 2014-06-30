@@ -12,7 +12,7 @@ use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
 
 pub struct RouteBuilder {
-    routers: HashMap<Method, Router<Box<Handler>>>
+    routers: HashMap<Method, Router<Box<Handler + 'static>>>
 }
 
 macro_rules! method_map(
@@ -30,7 +30,8 @@ impl RouteBuilder {
         RouteBuilder { routers: HashMap::new() }
     }
 
-    pub fn recognize<'a>(&'a self, method: &Method, path: &str) -> Result<Match<&'a Box<Handler>>, String> {
+    pub fn recognize<'a>(&'a self, method: &Method,
+                         path: &str) -> Result<Match<&'a Box<Handler + 'static>>, String> {
         match self.routers.find(method) {
             None => Err(format!("No router found for {}", method)),
             Some(router) => router.recognize(path)
@@ -43,7 +44,7 @@ impl RouteBuilder {
     {
         {
             let router = self.routers.find_or_insert_with(method, |_| Router::new());
-            router.add(pattern, box handler as Box<Handler>);
+            router.add(pattern, box handler as Box<Handler + 'static>);
         }
         self
     }
