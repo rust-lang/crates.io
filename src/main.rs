@@ -8,6 +8,7 @@ extern crate pg = "postgres";
 
 extern crate conduit_router = "conduit-router";
 extern crate conduit;
+extern crate conduit_cookie = "conduit-cookie";
 extern crate conduit_middleware = "conduit-middleware";
 
 use std::io::{IoResult, MemReader, MemWriter};
@@ -23,6 +24,7 @@ use app::App;
 mod app;
 mod db;
 mod packages;
+mod user;
 
 fn main() {
     let mut router = RouteBuilder::new();
@@ -32,6 +34,7 @@ fn main() {
     router.get("/packages/:id", packages::get);
 
     let mut m = MiddlewareBuilder::new(router);
+    m.add(conduit_cookie::Middleware);
     m.add(app::AppMiddleware::new(App::new()));
 
     let port = 8888;

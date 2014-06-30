@@ -20,6 +20,10 @@ git = "https://github.com/conduit-rust/conduit-router"
 
 git = "https://github.com/conduit-rust/conduit-middleware"
 
+[dependencies.conduit-cookie]
+
+git = "https://github.com/conduit-rust/conduit-cookie"
+
 [dependencies.rust-postgres]
 
 git = "https://github.com/sfackler/rust-postgres"
