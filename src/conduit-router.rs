@@ -94,7 +94,10 @@ impl conduit::Handler for RouteBuilder {
             let method = request.method();
             let path = request.path();
 
-            self.recognize(&method, path).unwrap()
+            match self.recognize(&method, path) {
+                Ok(m) => m,
+                Err(e) => return Err(box e as Box<Show>)
+            }
         };
 
         {
@@ -191,6 +194,9 @@ mod tests {
 
         assert_eq!(res.status, (200, "OK"));
         assert_eq!(res.body.read_to_str().unwrap(), "10, Post".to_str());
+
+        let mut req = RequestSentinel::new(conduit::Post, "/nonexistent");
+        router.call(&mut req).err().expect("No response");
     }
 
     fn handler1(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
