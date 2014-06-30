@@ -1,0 +1,10 @@
+[package]
+
+name = "html"
+version = "0.0.1"
+authors = []
+
+[[lib]]
+
+name = "html"
+path = "lib.rs"

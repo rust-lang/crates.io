@@ -10,18 +10,20 @@ name = "main"
 
 [dependencies.civet]
 
-git = "git://github.com/wycats/rust-civet"
+git = "https://github.com/wycats/rust-civet"
 
-[dependencies.route-recognizer]
+[dependencies.conduit-router]
 
-git = "git://github.com/wycats/route-recognizer.rs"
+git = "https://github.com/conduit-rust/conduit-router"
 
-[dependencies.postgres]
+[dependencies.conduit-middleware]
 
-git = "git://github.com/alexcrichton/rust-postgres"
-branch = "cargo"
+git = "https://github.com/conduit-rust/conduit-middleware"
 
-[dependencies.phf]
+[dependencies.rust-postgres]
 
-git = "git://github.com/alexcrichton/rust-phf"
-branch = "cargo"
+git = "https://github.com/sfackler/rust-postgres"
+
+[dependencies.html]
+
+path = "src/html"
