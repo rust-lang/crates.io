@@ -8,40 +8,43 @@ use conduit::{Request, Response, Handler};
 
 pub trait Middleware {
     #[allow(unused_variable)]
-    fn before<'a>(&self, req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
+    fn before<'a>(&self,
+                  req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
         Ok(req)
     }
     #[allow(unused_variable)]
-    fn after<'a>(&self, req: &mut Request, res: &'a mut Response) -> Result<&'a mut Response, Box<Show>> {
+    fn after<'a>(&self, req: &mut Request,
+                 res: &'a mut Response) -> Result<&'a mut Response, Box<Show>> {
         Ok(res)
     }
 }
 
 pub trait AroundMiddleware : Handler {
-    fn with_handler(&mut self, handler: Box<Handler + 'static>);
+    fn with_handler(&mut self, handler: Box<Handler + 'static + Share>);
 }
 
 pub struct MiddlewareBuilder {
-    middlewares: Vec<Box<Middleware>>,
-    handler: Option<Box<Handler + 'static>>
+    middlewares: Vec<Box<Middleware + 'static + Share>>,
+    handler: Option<Box<Handler + 'static + Share>>
 }
 
 impl MiddlewareBuilder {
-    pub fn new(handler: Box<Handler + 'static>) -> MiddlewareBuilder {
+    pub fn new<H: Handler + 'static + Share>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
             middlewares: vec!(),
-            handler: Some(handler)
+            handler: Some(box handler as Box<Handler + 'static + Share>)
         }
     }
 
-    pub fn add<M: Middleware + 'static>(&mut self, middleware: M) {
-        self.middlewares.push(box middleware as Box<Middleware>);
+    pub fn add<M: Middleware + 'static + Share>(&mut self, middleware: M) {
+        self.middlewares.push(box middleware as Box<Middleware + 'static + Share>);
     }
 
-    pub fn around<M: AroundMiddleware + 'static>(&mut self, mut middleware: M) {
+    pub fn around<M: AroundMiddleware + 'static + Share>(&mut self,
+                                                         mut middleware: M) {
         let handler = self.handler.take_unwrap();
         middleware.with_handler(handler);
-        self.handler = Some(box middleware as Box<Handler + 'static>);
+        self.handler = Some(box middleware as Box<Handler + 'static + Share>);
     }
 }
 
@@ -129,7 +132,7 @@ mod tests {
     }
 
     struct MyAroundMiddleware {
-        handler: Option<Box<Handler + 'static>>
+        handler: Option<Box<Handler + 'static + Share>>
     }
 
     impl MyAroundMiddleware {
@@ -141,7 +144,7 @@ mod tests {
     impl Middleware for MyAroundMiddleware {}
 
     impl AroundMiddleware for MyAroundMiddleware {
-        fn with_handler(&mut self, handler: Box<Handler + 'static>) {
+        fn with_handler(&mut self, handler: Box<Handler + 'static + Share>) {
             self.handler = Some(handler)
         }
     }
@@ -181,7 +184,7 @@ mod tests {
     #[test]
     fn test_simple_middleware() {
 
-        let mut builder = MiddlewareBuilder::new(box handler);
+        let mut builder = MiddlewareBuilder::new(handler);
         builder.add(MyMiddleware);
 
         let mut req = RequestSentinel::new(conduit::Get, "/");
@@ -192,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_around_middleware() {
-        let mut builder = MiddlewareBuilder::new(box middle_handler);
+        let mut builder = MiddlewareBuilder::new(middle_handler);
         builder.add(MyMiddleware);
         builder.around(MyAroundMiddleware::new());
 
