@@ -35,10 +35,9 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before<'a>(&self,
-                  req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Show>> {
         req.mut_extensions().insert("crates.io.app", box self.app.clone());
-        Ok(req)
+        Ok(())
     }
 }
 
