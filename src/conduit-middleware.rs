@@ -7,15 +7,14 @@ use std::fmt::Show;
 use conduit::{Request, Response, Handler};
 
 pub trait Middleware {
-    #[allow(unused_variable)]
-    fn before<'a>(&self,
-                  req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
-        Ok(req)
+    fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
+        Ok(())
     }
-    #[allow(unused_variable)]
-    fn after<'a>(&self, req: &mut Request,
-                 res: &'a mut Response) -> Result<&'a mut Response, Box<Show>> {
-        Ok(res)
+
+    fn after(&self, _: &mut Request, res: Result<Response, Box<Show>>)
+             -> Result<Response, Box<Show>>
+    {
+        res
     }
 }
 
@@ -50,21 +49,39 @@ impl MiddlewareBuilder {
 
 impl Handler for MiddlewareBuilder {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
-        for middleware in self.middlewares.iter() {
-            try!(middleware.before(req));
+        let mut error = None;
+
+        for (i, middleware) in self.middlewares.iter().enumerate() {
+            match middleware.before(req) {
+                Ok(_) => (),
+                Err(err) => {
+                    error = Some((err, i));
+                    break;
+                }
+            }
         }
 
-        match (self.handler.get_ref()).call(req) {
-            Err(err) => return Err(err),
-            Ok(mut res) => {
-                for middleware in self.middlewares.iter() {
-                   try!(middleware.after(req, &mut res));
-                }
+        match error {
+            Some((err, i)) => {
+                let middlewares = self.middlewares.slice_to(i);
+                run_afters(middlewares, req, Err(err))
+            },
+            None => {
+                let res = { self.handler.get_ref().call(req) };
+                let middlewares = self.middlewares.as_slice();
 
-                Ok(res)
+                run_afters(middlewares, req, res)
             }
         }
     }
+}
+
+fn run_afters(middleware: &[Box<Middleware>],
+                  req: &mut Request,
+                  res: Result<Response, Box<Show>>)
+                  -> Result<Response, Box<Show>>
+{
+    middleware.iter().rev().fold(res, |res, m| m.after(req, res))
 }
 
 #[cfg(test)]
@@ -76,7 +93,8 @@ mod tests {
     use std::any::{Any, AnyRefExt};
     use std::io::net::ip::IpAddr;
     use std::io::MemReader;
-    use std::fmt::Show;
+    use std::fmt;
+    use std::fmt::{Show, Formatter};
     use std::collections::HashMap;
 
     use conduit;
@@ -121,13 +139,50 @@ mod tests {
         }
     }
 
-
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before<'a>(&self, req: &'a mut Request) -> Result<&'a mut Request, Box<Show>> {
+        fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Show>> {
             req.mut_extensions().insert("test.middleware", box "hello".to_str() as Box<Any>);
-            Ok(req)
+            Ok(())
+        }
+    }
+
+    struct ErrorRecovery;
+
+    impl Middleware for ErrorRecovery {
+        fn after(&self, _: &mut Request, res: Result<Response, Box<Show>>)
+                     -> Result<Response, Box<Show>>
+        {
+            res.or_else(|e| {
+                Ok(Response {
+                    status: (500, "Internal Server Error"),
+                    headers: HashMap::new(),
+                    body: box MemReader::new(show(e).to_str().into_bytes())
+                })
+            })
+        }
+    }
+
+    struct ProducesError;
+
+    impl Middleware for ProducesError {
+        fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
+            Err(box "Nope".to_str() as Box<Show>)
+        }
+    }
+
+    struct NotReached;
+
+    impl Middleware for NotReached {
+        fn after(&self, _: &mut Request, _: Result<Response, Box<Show>>)
+                     -> Result<Response, Box<Show>>
+        {
+            Ok(Response {
+                status: (200, "OK"),
+                headers: HashMap::new(),
+                body: box MemReader::new(vec!())
+            })
         }
     }
 
@@ -156,6 +211,20 @@ mod tests {
         }
     }
 
+    struct Shower<'a> {
+        inner: &'a Show
+    }
+
+    impl<'a> Show for Shower<'a> {
+        fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+            self.inner.fmt(f)
+        }
+    }
+
+    fn show<'a>(s: &'a Show) -> Shower<'a> {
+        Shower { inner: s }
+    }
+
     fn get_extension<'a, T: 'static>(req: &'a Request, key: &'static str) -> &'a T {
         req.extensions().find(&key).and_then(|s| s.as_ref::<T>())
             .expect(format!("No {} key found in extensions", key).as_slice())
@@ -174,6 +243,10 @@ mod tests {
         Ok(response(hello.clone()))
     }
 
+    fn error_handler(_: &mut Request) -> Result<Response, String> {
+        Err("Error in handler".to_str())
+    }
+
     fn middle_handler(req: &mut Request) -> Result<Response, ()> {
         let hello = get_extension::<String>(req, "test.middleware");
         let middle = get_extension::<String>(req, "test.round-and-round");
@@ -183,14 +256,39 @@ mod tests {
 
     #[test]
     fn test_simple_middleware() {
-
-        let mut builder = MiddlewareBuilder::new(handler);
+        let mut builder = MiddlewareBuilder::new(box handler);
         builder.add(MyMiddleware);
 
         let mut req = RequestSentinel::new(conduit::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.body.read_to_str().ok().expect("No body"), "hello".to_str());
+    }
+
+    #[test]
+    fn test_error_recovery() {
+        let mut builder = MiddlewareBuilder::new(box handler);
+        builder.add(ErrorRecovery);
+        builder.add(ProducesError);
+        // the error bubbles up from ProducesError and shouldn't reach here
+        builder.add(NotReached);
+
+        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let res = builder.call(&mut req).ok().expect("Error not handled");
+
+        assert_eq!(res.status, (500, "Internal Server Error"));
+    }
+
+    #[test]
+    fn test_error_recovery_in_handlers() {
+        let mut builder = MiddlewareBuilder::new(box error_handler);
+        builder.add(ErrorRecovery);
+
+        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let mut res = builder.call(&mut req).ok().expect("Error not handled");
+
+        assert_eq!(res.status, (500, "Internal Server Error"));
+        assert_eq!(res.body.read_to_str().ok().expect("No body"), "Error in handler".to_str());
     }
 
     #[test]
