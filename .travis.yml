@@ -1,0 +1,8 @@
+install:
+  - curl http://www.rust-lang.org/rustup.sh | sudo sh -
+  - yes | sudo add-apt-repository ppa:cmrx64/cargo
+  - sudo apt-get update
+  - sudo apt-get install cargo
+script:
+  - cargo build --verbose
+  - cargo test --verbose
