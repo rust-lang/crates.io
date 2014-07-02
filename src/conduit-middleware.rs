@@ -6,7 +6,7 @@ use std::fmt::Show;
 
 use conduit::{Request, Response, Handler};
 
-pub trait Middleware {
+pub trait Middleware: Send + Share {
     fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
         Ok(())
     }
@@ -18,7 +18,7 @@ pub trait Middleware {
     }
 }
 
-pub trait AroundMiddleware : Handler {
+pub trait AroundMiddleware: Handler {
     fn with_handler(&mut self, handler: Box<Handler + Send + Share>);
 }
 
@@ -28,19 +28,18 @@ pub struct MiddlewareBuilder {
 }
 
 impl MiddlewareBuilder {
-    pub fn new<H: Handler + Send + Share>(handler: H) -> MiddlewareBuilder {
+    pub fn new<H: Handler>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
             middlewares: vec!(),
             handler: Some(box handler as Box<Handler + Send + Share>)
         }
     }
 
-    pub fn add<M: Middleware + Send + Share>(&mut self, middleware: M) {
+    pub fn add<M: Middleware>(&mut self, middleware: M) {
         self.middlewares.push(box middleware as Box<Middleware + Send + Share>);
     }
 
-    pub fn around<M: AroundMiddleware + Send + Share>(&mut self,
-                                                         mut middleware: M) {
+    pub fn around<M: AroundMiddleware>(&mut self, mut middleware: M) {
         let handler = self.handler.take_unwrap();
         middleware.with_handler(handler);
         self.handler = Some(box middleware as Box<Handler + Send + Share>);
