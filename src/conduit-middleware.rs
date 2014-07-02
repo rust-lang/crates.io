@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_simple_middleware() {
-        let mut builder = MiddlewareBuilder::new(box handler);
+        let mut builder = MiddlewareBuilder::new(handler);
         builder.add(MyMiddleware);
 
         let mut req = RequestSentinel::new(conduit::Get, "/");
@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn test_error_recovery() {
-        let mut builder = MiddlewareBuilder::new(box handler);
+        let mut builder = MiddlewareBuilder::new(handler);
         builder.add(ErrorRecovery);
         builder.add(ProducesError);
         // the error bubbles up from ProducesError and shouldn't reach here
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_error_recovery_in_handlers() {
-        let mut builder = MiddlewareBuilder::new(box error_handler);
+        let mut builder = MiddlewareBuilder::new(error_handler);
         builder.add(ErrorRecovery);
 
         let mut req = RequestSentinel::new(conduit::Get, "/");
