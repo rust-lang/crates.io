@@ -19,31 +19,31 @@ pub trait Middleware {
 }
 
 pub trait AroundMiddleware : Handler {
-    fn with_handler(&mut self, handler: Box<Handler + 'static + Share>);
+    fn with_handler(&mut self, handler: Box<Handler + Send + Share>);
 }
 
 pub struct MiddlewareBuilder {
-    middlewares: Vec<Box<Middleware + 'static + Share>>,
-    handler: Option<Box<Handler + 'static + Share>>
+    middlewares: Vec<Box<Middleware + Send + Share>>,
+    handler: Option<Box<Handler + Send + Share>>
 }
 
 impl MiddlewareBuilder {
-    pub fn new<H: Handler + 'static + Share>(handler: H) -> MiddlewareBuilder {
+    pub fn new<H: Handler + Send + Share>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
             middlewares: vec!(),
-            handler: Some(box handler as Box<Handler + 'static + Share>)
+            handler: Some(box handler as Box<Handler + Send + Share>)
         }
     }
 
-    pub fn add<M: Middleware + 'static + Share>(&mut self, middleware: M) {
-        self.middlewares.push(box middleware as Box<Middleware + 'static + Share>);
+    pub fn add<M: Middleware + Send + Share>(&mut self, middleware: M) {
+        self.middlewares.push(box middleware as Box<Middleware + Send + Share>);
     }
 
-    pub fn around<M: AroundMiddleware + 'static + Share>(&mut self,
+    pub fn around<M: AroundMiddleware + Send + Share>(&mut self,
                                                          mut middleware: M) {
         let handler = self.handler.take_unwrap();
         middleware.with_handler(handler);
-        self.handler = Some(box middleware as Box<Handler + 'static + Share>);
+        self.handler = Some(box middleware as Box<Handler + Send + Share>);
     }
 }
 
@@ -187,7 +187,7 @@ mod tests {
     }
 
     struct MyAroundMiddleware {
-        handler: Option<Box<Handler + 'static + Share>>
+        handler: Option<Box<Handler + Send + Share>>
     }
 
     impl MyAroundMiddleware {
@@ -199,7 +199,7 @@ mod tests {
     impl Middleware for MyAroundMiddleware {}
 
     impl AroundMiddleware for MyAroundMiddleware {
-        fn with_handler(&mut self, handler: Box<Handler + 'static + Share>) {
+        fn with_handler(&mut self, handler: Box<Handler + Send + Share>) {
             self.handler = Some(handler)
         }
     }
