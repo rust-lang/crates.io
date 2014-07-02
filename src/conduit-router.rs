@@ -12,12 +12,12 @@ use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
 
 pub struct RouteBuilder {
-    routers: HashMap<Method, Router<Box<Handler + 'static + Share>>>
+    routers: HashMap<Method, Router<Box<Handler + Send + Share>>>
 }
 
 macro_rules! method_map(
     ($method:ident => $variant:ty) => (
-        pub fn $method<'a, H: 'static + Handler>(&'a mut self, pattern: &str, handler: H)
+        pub fn $method<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                                 -> &'a mut RouteBuilder
         {
             self.map(conduit::$variant, pattern, handler)
@@ -31,7 +31,7 @@ impl RouteBuilder {
     }
 
     pub fn recognize<'a>(&'a self, method: &Method, path: &str)
-                         -> Result<Match<&'a Box<Handler + 'static + Share>>, String>
+                         -> Result<Match<&'a Box<Handler + Send + Share>>, String>
     {
         match self.routers.find(method) {
             None => Err(format!("No router found for {}", method)),
@@ -39,50 +39,40 @@ impl RouteBuilder {
         }
     }
 
-    pub fn map<'a, H: 'static + Handler + Share>(&'a mut self,
-                                                 method: Method,
-                                                 pattern: &str,
-                                                 handler: H)
-                                                 -> &'a mut RouteBuilder
-    {
+    pub fn map<'a, H: Handler>(&'a mut self, method: Method, pattern: &str,
+                               handler: H) -> &'a mut RouteBuilder {
         {
             let router = self.routers.find_or_insert_with(method, |_| Router::new());
-            router.add(pattern, box handler as Box<Handler + 'static + Share>);
+            router.add(pattern, box handler as Box<Handler + Send + Share>);
         }
         self
     }
 
-    pub fn get<'a, H: 'static + Handler + Share>(&'a mut self, pattern: &str,
-                                                 handler: H)
-                                                 -> &'a mut RouteBuilder
-    {
+    pub fn get<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
+                               -> &'a mut RouteBuilder {
         self.map(conduit::Get, pattern, handler)
     }
 
-    pub fn post<'a, H: 'static + Handler + Share>(&'a mut self, pattern: &str,
-                                                  handler: H)
-                                                  -> &'a mut RouteBuilder
+    pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
+                                -> &'a mut RouteBuilder
     {
         self.map(conduit::Post, pattern, handler)
     }
 
-    pub fn put<'a, H: 'static + Handler + Share>(&'a mut self, pattern: &str,
-                                                 handler: H)
-                                                 -> &'a mut RouteBuilder
+    pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
+                               -> &'a mut RouteBuilder
     {
         self.map(conduit::Put, pattern, handler)
     }
 
-    pub fn delete<'a, H: 'static + Handler + Share>(&'a mut self, pattern: &str,
-                                                    handler: H)
-                                                    -> &'a mut RouteBuilder
+    pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
+                                  -> &'a mut RouteBuilder
     {
         self.map(conduit::Delete, pattern, handler)
     }
 
-    pub fn head<'a, H: 'static + Handler + Share>(&'a mut self, pattern: &str,
-                                                  handler: H)
-                                                  -> &'a mut RouteBuilder
+    pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
+                                -> &'a mut RouteBuilder
     {
         self.map(conduit::Head, pattern, handler)
     }
