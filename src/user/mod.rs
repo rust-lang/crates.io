@@ -7,7 +7,7 @@ use serialize::json;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
-use curl;
+use curl::http;
 use oauth2::Authorization;
 use pg::PostgresConnection;
 use pg::error::PgDbError;
@@ -90,7 +90,7 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     let token = req.app().github.exchange(code.clone()).unwrap();
 
     // TODO: none of this should be fallible
-    let resp = curl::handle().get("https://api.github.com/user")
+    let resp = http::handle().get("https://api.github.com/user")
                     .header("Accept", "application/vnd.github.v3+json")
                     .header("User-Agent", "hello!")
                     .auth_with(&token)

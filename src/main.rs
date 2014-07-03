@@ -42,10 +42,10 @@ fn main() {
     router.get("/users/auth/github", user::github_access_token);
 
     let mut m = MiddlewareBuilder::new(router);
-    m.add(conduit_cookie::Middleware::new());
+    m.add(conduit_cookie::Middleware::new(b"application-key"));
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
-    m.add(user::Middleware);
     m.add(app::AppMiddleware::new(App::new()));
+    m.add(user::Middleware);
 
     let port = 8888;
     let _a = Server::start(Config { port: port, threads: 8 }, m);
