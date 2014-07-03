@@ -11,6 +11,7 @@ use std::io::{IoResult, MemReader};
 use std::io;
 
 use app::RequestApp;
+use user::RequestUser;
 
 pub fn setup(conn: &PostgresConnection) {
     conn.execute("DROP TABLE IF EXISTS packages", []).unwrap();
@@ -50,6 +51,14 @@ pub fn index(req: &mut Request) -> IoResult<Response> {
             </table>
             <a href="/packages/new">[new package]</a>
         "#));
+
+        match req.user() {
+            Some(user) => try!(write!(dst, "hello! {}",
+                                      Escape(user.email.as_slice()))),
+            None => try!(write!(dst, "<br/>\
+                <a href=\"/users/auth/github/authorize\">please log in</a>")),
+        }
+
         Ok(())
     })
 }

@@ -1,9 +1,13 @@
 #![feature(macro_rules)]
 
-extern crate civet;
 extern crate green;
-extern crate html;
 extern crate rustuv;
+extern crate serialize;
+
+extern crate civet;
+extern crate curl;
+extern crate html;
+extern crate oauth2;
 extern crate pg = "postgres";
 
 extern crate conduit_router = "conduit-router";
@@ -25,6 +29,7 @@ mod app;
 mod db;
 mod packages;
 mod user;
+mod util;
 
 fn main() {
     let mut router = RouteBuilder::new();
@@ -33,8 +38,13 @@ fn main() {
     router.post("/packages/new", packages::create);
     router.get("/packages/:id", packages::get);
 
+    router.get("/users/auth/github/authorize", user::github_authorize);
+    router.get("/users/auth/github", user::github_access_token);
+
     let mut m = MiddlewareBuilder::new(router);
-    m.add(conduit_cookie::Middleware);
+    m.add(conduit_cookie::Middleware::new());
+    m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
+    m.add(user::Middleware);
     m.add(app::AppMiddleware::new(App::new()));
 
     let port = 8888;
