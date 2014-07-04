@@ -1,0 +1,26 @@
+[package]
+
+name = "conduit-static"
+version = "0.5.0"
+authors = ["wycats@gmail.com"]
+
+[[lib]]
+
+name = "conduit-static"
+
+[[bin]]
+
+name = "simple-file-server"
+path = "examples/simple-file-server.rs"
+
+[dependencies.civet]
+
+git = "https://github.com/wycats/rust-civet.git"
+
+[dependencies.conduit]
+
+git = "https://github.com/conduit-rust/conduit.git"
+
+[dependencies.conduit-test]
+
+git = "https://github.com/conduit-rust/conduit-test.git"
