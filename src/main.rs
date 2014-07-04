@@ -14,6 +14,8 @@ extern crate conduit_router = "conduit-router";
 extern crate conduit;
 extern crate conduit_cookie = "conduit-cookie";
 extern crate conduit_middleware = "conduit-middleware";
+extern crate conduit_conditional_get = "conduit-conditional-get";
+extern crate conduit_log_requests = "conduit-log-requests";
 
 use std::io::{IoResult, MemReader, MemWriter};
 use std::collections::HashMap;
@@ -42,6 +44,8 @@ fn main() {
     router.get("/users/auth/github", user::github_access_token);
 
     let mut m = MiddlewareBuilder::new(router);
+    m.add(conduit_log_requests::LogRequests(0));
+    m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(b"application-key"));
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
     m.add(app::AppMiddleware::new(App::new()));
