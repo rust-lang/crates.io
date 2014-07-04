@@ -15,16 +15,6 @@ pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<Handler + Send + Share>>>
 }
 
-macro_rules! method_map(
-    ($method:ident => $variant:ty) => (
-        pub fn $method<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                                -> &'a mut RouteBuilder
-        {
-            self.map(conduit::$variant, pattern, handler)
-        }
-    )
-)
-
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
         RouteBuilder { routers: HashMap::new() }
@@ -114,8 +104,6 @@ impl<'a> RequestParams<'a> for &'a mut Request {
         params(self)
     }
 }
-
-//impl<T: Request> RequestParams for T {}
 
 #[cfg(test)]
 mod tests {
