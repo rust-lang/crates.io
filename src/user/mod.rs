@@ -11,7 +11,6 @@ use curl::http;
 use oauth2::Authorization;
 use pg::PostgresConnection;
 use pg::error::PgDbError;
-use pg::types::ToSql;
 
 use app::{App, RequestApp};
 use util::RequestRedirect;
@@ -31,7 +30,7 @@ impl User {
         let conn = app.db();
         let stmt = conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1")
                        .unwrap();
-        stmt.query([&id as &ToSql]).unwrap().next().map(|row| {
+        stmt.query([&id]).unwrap().next().map(|row| {
             User {
                 id: row["id"],
                 email: row["email"],
@@ -109,8 +108,8 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     let conn = req.app().db();
     let resp = conn.execute("INSERT INTO users (email, gh_access_token) \
                              VALUES ($1, $2)",
-                            [&ghuser.email.as_slice() as &ToSql,
-                             &token.access_token.as_slice() as &ToSql]);
+                            [&ghuser.email.as_slice(),
+                             &token.access_token.as_slice()]);
     match resp {
         Ok(..) => {}
         Err(PgDbError(ref e))
@@ -122,7 +121,7 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     // Who did we just insert?
     let stmt = conn.prepare("SELECT id FROM users WHERE email = $1 LIMIT 1")
                    .unwrap();
-    let row = stmt.query([&ghuser.email.as_slice() as &ToSql]).unwrap()
+    let row = stmt.query([&ghuser.email.as_slice()]).unwrap()
                   .next().unwrap();
     let id: i32 = row["id"];
     req.session().insert("user_id".to_string(), id.to_str());

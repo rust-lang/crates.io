@@ -5,7 +5,6 @@ use html::Escape;
 use html::form;
 use pg::PostgresConnection;
 use pg::error::PgDbError;
-use pg::types::ToSql;
 use std::collections::HashMap;
 use std::io::{IoResult, MemReader};
 use std::io;
@@ -98,9 +97,9 @@ pub fn create(req: &mut Request) -> IoResult<Response> {
     let conn = req.app().db();
     let err = conn.execute("INSERT INTO packages (name, slug, manifest) \
                             VALUES ($1, $2, $3)",
-                           [&name.as_slice() as &ToSql,
-                            &slug.as_slice() as &ToSql,
-                            &manifest.as_slice() as &ToSql]);
+                           [&name.as_slice(),
+                            &slug.as_slice(),
+                            &manifest.as_slice()]);
     match err {
         Ok(..) => {}
         Err(PgDbError(ref e))
@@ -124,7 +123,7 @@ pub fn get(req: &mut Request) -> IoResult<Response> {
     let stmt = conn.prepare("SELECT * FROM packages WHERE slug = $1 LIMIT 1")
                    .unwrap();
 
-    let row = stmt.query([&params["id"].as_slice() as &ToSql]).unwrap()
+    let row = stmt.query([&params["id"].as_slice()]).unwrap()
                   .next().unwrap();
     super::layout(|dst| {
         let name: String = row["name"];
