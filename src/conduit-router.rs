@@ -15,16 +15,6 @@ pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<Handler + Send + Share>>>
 }
 
-macro_rules! method_map(
-    ($method:ident => $variant:ty) => (
-        pub fn $method<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                                -> &'a mut RouteBuilder
-        {
-            self.map(conduit::$variant, pattern, handler)
-        }
-    )
-)
-
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
         RouteBuilder { routers: HashMap::new() }
@@ -54,26 +44,22 @@ impl RouteBuilder {
     }
 
     pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder
-    {
+                                -> &'a mut RouteBuilder {
         self.map(conduit::Post, pattern, handler)
     }
 
     pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                               -> &'a mut RouteBuilder
-    {
+                               -> &'a mut RouteBuilder {
         self.map(conduit::Put, pattern, handler)
     }
 
     pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                  -> &'a mut RouteBuilder
-    {
+                                  -> &'a mut RouteBuilder {
         self.map(conduit::Delete, pattern, handler)
     }
 
     pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder
-    {
+                                -> &'a mut RouteBuilder {
         self.map(conduit::Head, pattern, handler)
     }
 }
@@ -114,8 +100,6 @@ impl<'a> RequestParams<'a> for &'a mut Request {
         params(self)
     }
 }
-
-//impl<T: Request> RequestParams for T {}
 
 #[cfg(test)]
 mod tests {
@@ -168,28 +152,40 @@ mod tests {
     }
 
     #[test]
-    fn as_conduit_handler() {
-        let mut router = RouteBuilder::new();
-        router.post("/posts/:id", handler1);
-        router.get("/posts/:id", handler1);
-
+    fn basic_get() {
+        let router = test_router();
         let mut req = RequestSentinel::new(conduit::Get, "/posts/1");
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
         assert_eq!(res.body.read_to_str().unwrap(), "1, Get".to_str());
+    }
 
+    #[test]
+    fn basic_post() {
+        let router = test_router();
         let mut req = RequestSentinel::new(conduit::Post, "/posts/10");
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
         assert_eq!(res.body.read_to_str().unwrap(), "10, Post".to_str());
+    }
 
+    #[test]
+    fn nonexistent_route() {
+        let router = test_router();
         let mut req = RequestSentinel::new(conduit::Post, "/nonexistent");
         router.call(&mut req).err().expect("No response");
     }
 
-    fn handler1(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
+    fn test_router() -> RouteBuilder {
+        let mut router = RouteBuilder::new();
+        router.post("/posts/:id", test_handler);
+        router.get("/posts/:id", test_handler);
+        router
+    }
+
+    fn test_handler(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
         let mut res = vec!();
         res.push(req.params()["id"]);
         res.push(format!("{}", req.method()));
