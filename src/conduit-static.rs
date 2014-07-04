@@ -1,3 +1,4 @@
+extern crate mime = "mime-types";
 extern crate conduit;
 
 use std::fmt::Show;
@@ -7,12 +8,17 @@ use std::io::util::NullReader;
 use conduit::{Request, Response, Handler};
 
 pub struct Static {
-    path: Path
+    path: Path,
+    types: mime::Types
 }
 
 impl Static {
     pub fn new(path: Path) -> Static {
-        Static { path: path }
+        Static {
+            path: path,
+            types: mime::Types::new()
+                .ok().expect("Couldn't load mime-types")
+        }
     }
 }
 
@@ -29,11 +35,15 @@ impl Handler for Static {
             })
         }
 
+        let mime = self.types.mime_for_path(&path);
         let file = try!(File::open(&path).map_err(|e| box e as Box<Show>));
+
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_str(), vec!(mime.to_str()));
 
         Ok(Response {
             status: (200, "OK"),
-            headers: HashMap::new(),
+            headers: headers,
             body: box file as Box<Reader + Send>
         })
     }
@@ -54,5 +64,15 @@ mod tests {
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_str().ok().expect("No body");
         assert!(body.as_slice().contains("[package]"), "The Cargo.toml was provided");
+        assert_eq!(res.headers.find_equiv(&"Content-Type").expect("No content-type"), &vec!("text/plain".to_str()));
+    }
+
+    #[test]
+    fn test_mime_types() {
+        let root = Path::new(file!()).dir_path().dir_path();
+        let handler = Static::new(root);
+        let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
+        let res = handler.call(&mut req).ok().expect("No response");
+        assert_eq!(res.headers.find_equiv(&"Content-Type").expect("No content-type"), &vec!("text/css".to_str()));
     }
 }
