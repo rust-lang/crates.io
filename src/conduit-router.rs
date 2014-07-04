@@ -44,26 +44,22 @@ impl RouteBuilder {
     }
 
     pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder
-    {
+                                -> &'a mut RouteBuilder {
         self.map(conduit::Post, pattern, handler)
     }
 
     pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                               -> &'a mut RouteBuilder
-    {
+                               -> &'a mut RouteBuilder {
         self.map(conduit::Put, pattern, handler)
     }
 
     pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                  -> &'a mut RouteBuilder
-    {
+                                  -> &'a mut RouteBuilder {
         self.map(conduit::Delete, pattern, handler)
     }
 
     pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
-                                -> &'a mut RouteBuilder
-    {
+                                -> &'a mut RouteBuilder {
         self.map(conduit::Head, pattern, handler)
     }
 }
