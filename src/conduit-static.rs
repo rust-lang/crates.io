@@ -36,10 +36,21 @@ impl Handler for Static {
         }
 
         let mime = self.types.mime_for_path(&path);
-        let file = try!(File::open(&path).map_err(|e| box e as Box<Show>));
+        let mut file = match File::open(&path) {
+            Ok(f) => f,
+            Err(..) => {
+                return Ok(Response {
+                    status: (404, "Not Found"),
+                    headers: HashMap::new(),
+                    body: box NullReader,
+                })
+            }
+        };
+        let stat = try!(file.stat().map_err(|e| box e as Box<Show>));
 
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_str(), vec!(mime.to_str()));
+        headers.insert("Content-Type".to_str(), vec![mime.to_str()]);
+        headers.insert("Content-Length".to_str(), vec![stat.size.to_str()]);
 
         Ok(Response {
             status: (200, "OK"),
@@ -69,9 +80,10 @@ mod tests {
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_str().ok().expect("No body");
         assert_eq!(body.as_slice(), "[package]");
-        assert_eq!(res.headers.find_equiv(&"Content-Type")
-                      .expect("No content-type"),
-                   &vec!("text/plain".to_str()));
+        assert_eq!(res.headers.find_equiv(&"Content-Type"),
+                   Some(&vec!("text/plain".to_str())));
+        assert_eq!(res.headers.find_equiv(&"Content-Length"),
+                   Some(&vec!["9".to_str()]));
     }
 
     #[test]
@@ -84,8 +96,20 @@ mod tests {
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.headers.find_equiv(&"Content-Type")
-                      .expect("No content-type"),
-                   &vec!("text/css".to_str()));
+        assert_eq!(res.headers.find_equiv(&"Content-Type"),
+                   Some(&vec!("text/css".to_str())));
+        assert_eq!(res.headers.find_equiv(&"Content-Length"),
+                   Some(&vec!["0".to_str()]));
+    }
+
+    #[test]
+    fn test_missing() {
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+
+        let handler = Static::new(root.clone());
+        let mut req = test::MockRequest::new(conduit::Get, "/nope");
+        let res = handler.call(&mut req).ok().expect("No response");
+        assert_eq!(res.status.val0(), 404);
     }
 }
