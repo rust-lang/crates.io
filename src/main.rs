@@ -16,12 +16,13 @@ extern crate conduit_cookie = "conduit-cookie";
 extern crate conduit_middleware = "conduit-middleware";
 extern crate conduit_conditional_get = "conduit-conditional-get";
 extern crate conduit_log_requests = "conduit-log-requests";
+extern crate conduit_static = "conduit-static";
 
-use std::io::{IoResult, MemReader, MemWriter};
+use std::io::{IoResult, MemReader, MemWriter, File};
 use std::collections::HashMap;
 
 use civet::{Config, Server, response};
-use conduit::Response;
+use conduit::{Response, Request};
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
@@ -35,10 +36,12 @@ mod util;
 
 fn main() {
     let mut router = RouteBuilder::new();
-    router.get("/", packages::index);
-    router.get("/packages/new", packages::new);
-    router.post("/packages/new", packages::create);
-    router.get("/packages/:id", packages::get);
+    router.get("/", lets_do_this);
+    router.get("/*path", conduit_static::Static::new(Path::new("dist")));
+    // router.get("/", packages::index);
+    // router.get("/packages/new", packages::new);
+    // router.post("/packages/new", packages::create);
+    // router.get("/packages/:id", packages::get);
 
     router.get("/users/auth/github/authorize", user::github_authorize);
     router.get("/users/auth/github", user::github_access_token);
@@ -57,19 +60,27 @@ fn main() {
     wait_for_sigint();
 }
 
-fn layout(f: |&mut Writer| -> IoResult<()>) -> IoResult<Response> {
-    let mut dst = MemWriter::new();
-    try!(write!(&mut dst, r"
-        <html>
-            <head>
-            </head>
-            <body>"));
-    try!(f(&mut dst));
-    try!(write!(&mut dst, r"
-            </body>
-        </html>"));
-    Ok(response(200i, HashMap::new(), MemReader::new(dst.unwrap())))
+fn lets_do_this(_req: &mut Request) -> IoResult<Response> {
+    Ok(Response {
+        status: (200, "Found"),
+        headers: HashMap::new(),
+        body: box try!(File::open(&Path::new("dist/index.html"))),
+    })
 }
+
+// fn layout(f: |&mut Writer| -> IoResult<()>) -> IoResult<Response> {
+//     let mut dst = MemWriter::new();
+//     try!(write!(&mut dst, r"
+//         <html>
+//             <head>
+//             </head>
+//             <body>"));
+//     try!(f(&mut dst));
+//     try!(write!(&mut dst, r"
+//             </body>
+//         </html>"));
+//     Ok(response(200i, HashMap::new(), MemReader::new(dst.unwrap())))
+// }
 
 // libnative doesn't have signal handling yet
 fn wait_for_sigint() {

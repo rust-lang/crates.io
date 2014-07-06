@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Cargo</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {{BASE_TAG}}
+
+    <link rel="stylesheet" href="assets/vendor.css">
+    <link rel="stylesheet" href="assets/cargo.css">
+  </head>
+  <body>
+    <script>
+      window.CargoENV = {{ENV}};
+      window.EmberENV = window.CargoENV.EmberENV;
+    </script>
+    <script src="assets/vendor.js"></script>
+    <script src="assets/cargo.js"></script>
+    <script>
+      window.Cargo = require('cargo/app')['default'].create(CargoENV.APP);
+    </script>
+  </body>
+</html>
