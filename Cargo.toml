@@ -13,7 +13,7 @@ name = "conduit-static"
 name = "simple-file-server"
 path = "examples/simple-file-server.rs"
 
-[dependencies.civet]
+[dev-dependencies.civet]
 
 git = "https://github.com/wycats/rust-civet.git"
 
