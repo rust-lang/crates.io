@@ -52,27 +52,40 @@ impl Handler for Static {
 #[cfg(test)]
 mod tests {
     extern crate test = "conduit-test";
+
+    use std::io::{fs, File, TempDir, UserRWX};
+
     use conduit;
     use conduit::Handler;
     use Static;
 
     #[test]
     fn test_static() {
-        let root = Path::new(file!()).dir_path().dir_path();
-        let handler = Static::new(root);
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+        let handler = Static::new(root.clone());
+        File::create(&root.join("Cargo.toml")).write(b"[package]").unwrap();
         let mut req = test::MockRequest::new(conduit::Get, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_str().ok().expect("No body");
-        assert!(body.as_slice().contains("[package]"), "The Cargo.toml was provided");
-        assert_eq!(res.headers.find_equiv(&"Content-Type").expect("No content-type"), &vec!("text/plain".to_str()));
+        assert_eq!(body.as_slice(), "[package]");
+        assert_eq!(res.headers.find_equiv(&"Content-Type")
+                      .expect("No content-type"),
+                   &vec!("text/plain".to_str()));
     }
 
     #[test]
     fn test_mime_types() {
-        let root = Path::new(file!()).dir_path().dir_path();
-        let handler = Static::new(root);
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+        fs::mkdir(&root.join("src"), UserRWX).unwrap();
+        File::create(&root.join("src/fixture.css")).unwrap();
+
+        let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.headers.find_equiv(&"Content-Type").expect("No content-type"), &vec!("text/css".to_str()));
+        assert_eq!(res.headers.find_equiv(&"Content-Type")
+                      .expect("No content-type"),
+                   &vec!("text/css".to_str()));
     }
 }
