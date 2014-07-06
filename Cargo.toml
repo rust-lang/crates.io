@@ -10,23 +10,23 @@ name = "main"
 
 [dependencies.civet]
 
-git = "https://github.com/wycats/rust-civet.git"
+git = "https://github.com/wycats/rust-civet"
 
 [dependencies.conduit-router]
 
-git = "https://github.com/conduit-rust/conduit-router.git"
+git = "https://github.com/conduit-rust/conduit-router"
 
 [dependencies.conduit-middleware]
 
-git = "https://github.com/conduit-rust/conduit-middleware.git"
+git = "https://github.com/conduit-rust/conduit-middleware"
 
 [dependencies.conduit-cookie]
 
-git = "https://github.com/conduit-rust/conduit-cookie.git"
+git = "https://github.com/conduit-rust/conduit-cookie"
 
 [dependencies.rust-postgres]
 
-git = "https://github.com/sfackler/rust-postgres.git"
+git = "https://github.com/sfackler/rust-postgres"
 
 [dependencies.html]
 
@@ -34,16 +34,20 @@ path = "src/html"
 
 [dependencies.oauth2]
 
-git = "https://github.com/alexcrichton/oauth2-rs.git"
+git = "https://github.com/alexcrichton/oauth2-rs"
 
 [dependencies.curl]
 
-git = "https://github.com/carllerche/curl-rust.git"
+git = "https://github.com/carllerche/curl-rust"
 
 [dependencies.conduit-log-requests]
 
-git = "https://github.com/conduit-rust/conduit-log-requests.git"
+git = "https://github.com/conduit-rust/conduit-log-requests"
 
 [dependencies.conduit-conditional-get]
 
-git = "https://github.com/conduit-rust/conduit-conditional-get.git"
+git = "https://github.com/conduit-rust/conduit-conditional-get"
+
+[dependencies.conduit-static]
+
+git = "https://github.com/conduit-rust/conduit-static"
