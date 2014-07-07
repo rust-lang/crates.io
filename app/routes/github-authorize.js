@@ -3,7 +3,6 @@ import Ember from 'ember';
 export default Ember.Route.extend({
   beforeModel: function(transition) {
     var self = this;
-    transition.queryParams.code += 'wut';
     return Ember.$.getJSON('/authorize', transition.queryParams, function(d) {
       if (!d.ok) {
         self.controllerFor('application').setFlashError(d.error);
