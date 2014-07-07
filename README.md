@@ -10,7 +10,9 @@ This README outlines the details of collaborating on this Ember application.
 
 ## Running
 
-* `ember server`
+* `cargo build`
+* `./target/main`
+* `ember server --proxy http://localhost:8888`
 * Visit your app at http://localhost:4200.
 
 ## Running Tests
@@ -20,6 +22,7 @@ This README outlines the details of collaborating on this Ember application.
 
 ## Building
 
+* `cargo build`
 * `ember build`
 
 For more information on using ember-cli, visit [http://iamstef.net/ember-cli/](http://iamstef.net/ember-cli/).
