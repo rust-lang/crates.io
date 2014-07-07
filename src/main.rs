@@ -36,15 +36,19 @@ mod util;
 
 fn main() {
     let mut router = RouteBuilder::new();
-    router.get("/", lets_do_this);
-    router.get("/*path", conduit_static::Static::new(Path::new("dist")));
+    // router.get("/", lets_do_this);
+    // router.get("/*path", conduit_static::Static::new(Path::new("dist")));
     // router.get("/", packages::index);
     // router.get("/packages/new", packages::new);
     // router.post("/packages/new", packages::create);
     // router.get("/packages/:id", packages::get);
 
-    router.get("/users/auth/github/authorize", user::github_authorize);
-    router.get("/users/auth/github", user::github_access_token);
+    // router.get("/users/auth/github/authorize", user::github_authorize);
+    // router.get("/users/auth/github", user::github_access_token);
+
+    router.get("/authorize_url", user::github_authorize);
+    router.get("/authorize", user::github_access_token);
+    router.get("/logout", user::logout);
 
     let mut m = MiddlewareBuilder::new(router);
     m.add(conduit_log_requests::LogRequests(0));

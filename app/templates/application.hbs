@@ -3,9 +3,9 @@
 {{outlet}}
 
 <footer>
-  {{#if user}}
-    logged in
+  {{#if isLoggedIn}}
+    {{#link-to "logout"}}Log out{{/link-to}}
   {{else}}
-    not logged in
+    {{#link-to "login"}}Log in{{/link-to}}
   {{/if}}
 </footer>

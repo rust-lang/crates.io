@@ -5,7 +5,9 @@ var Router = Ember.Router.extend({
 });
 
 Router.map(function() {
-  this.route('login');
+  this.resource('login');
+  this.resource('logout');
+  this.resource('github_authorize', { path: '/authorize/github' });
 });
 
 export default Router;

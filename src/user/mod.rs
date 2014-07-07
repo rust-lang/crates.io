@@ -13,7 +13,7 @@ use pg::PostgresConnection;
 use pg::error::PgDbError;
 
 use app::{App, RequestApp};
-use util::RequestRedirect;
+use util::{RequestRedirect, RequestJson};
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -56,7 +56,7 @@ pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
     let url = req.app().github.authorize_url(state);
-    Ok(req.redirect(url.to_str()))
+    Ok(req.json(&url.to_str()))
 }
 
 pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
@@ -126,5 +126,10 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     let id: i32 = row["id"];
     req.session().insert("user_id".to_string(), id.to_str());
 
-    Ok(req.redirect("/".to_string()))
+    Ok(req.json(&true))
+}
+
+pub fn logout(req: &mut Request) -> IoResult<Response> {
+    req.session().remove(&"user_id".to_string());
+    Ok(req.json(&true))
 }

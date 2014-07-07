@@ -1,4 +1,5 @@
-#![crate_id = "html"]
+#![crate_name = "html"]
+#![feature(macro_rules)]
 
 extern crate url;
 
