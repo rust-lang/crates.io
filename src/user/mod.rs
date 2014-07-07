@@ -1,5 +1,4 @@
 use std::any::AnyRefExt;
-use std::collections::HashMap;
 use std::io::IoResult;
 use std::rand::{task_rng, Rng};
 use std::str;
@@ -13,7 +12,7 @@ use pg::PostgresConnection;
 use pg::error::PgDbError;
 
 use app::{App, RequestApp};
-use util::{RequestRedirect, RequestJson};
+use util::{RequestJson, RequestQuery};
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -60,18 +59,13 @@ pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
 }
 
 pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
-    // Parse the url query
-    // TODO: this should be a helper
-    let query: HashMap<String, String> = {
-        req.query_string().unwrap_or("").split('&').map(|s| {
-            let mut parts = s.split('=');
-            (parts.next().unwrap_or(s), parts.next().unwrap_or(""))
-        }).map(|(a, b)| (a.to_string(), b.to_string())).collect()
-    };
+    #[deriving(Encodable)]
+    struct R { ok: bool, error: Option<String> }
 
-    // TODO: don't unwrap these
-    let code = query.find_equiv(&"code").unwrap();
-    let state = query.find_equiv(&"state").unwrap();
+    // Parse the url query
+    let mut query = req.query();
+    let code = query.pop_equiv(&"code").unwrap_or(String::new());
+    let state = query.pop_equiv(&"state").unwrap_or(String::new());
 
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
@@ -79,14 +73,18 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
         let session_state = req.session().pop(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| a.as_slice());
         if Some(state.as_slice()) != session_state {
-            // TODO: don't fail here
-            fail!("bad state {} {}", state, session_state);
+            return Ok(req.json(&R {
+                ok: false,
+                error: Some(format!("invalid state parameter"))
+            }))
         }
     }
 
     // Fetch the access token from github using the code we just got
-    // TODO: don't unwrap
-    let token = req.app().github.exchange(code.clone()).unwrap();
+    let token = match req.app().github.exchange(code.clone()) {
+        Ok(token) => token,
+        Err(s) => return Ok(req.json(&R { ok: false, error: Some(s) }))
+    };
 
     // TODO: none of this should be fallible
     let resp = http::handle().get("https://api.github.com/user")
@@ -98,10 +96,8 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
 
     // TODO: more fallibility
     #[deriving(Decodable)]
-    struct GithubUser {
-        email: String,
-    }
-    let json = str::from_utf8(resp.get_body()).unwrap();
+    struct GithubUser { email: String }
+    let json = str::from_utf8(resp.get_body()).expect("non-utf8 body");
     let ghuser: GithubUser = json::decode(json).unwrap();
 
     // Into the database!
@@ -122,11 +118,11 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     let stmt = conn.prepare("SELECT id FROM users WHERE email = $1 LIMIT 1")
                    .unwrap();
     let row = stmt.query([&ghuser.email.as_slice()]).unwrap()
-                  .next().unwrap();
+                  .next().expect("no user with email we just found");
     let id: i32 = row["id"];
     req.session().insert("user_id".to_string(), id.to_str());
 
-    Ok(req.json(&true))
+    Ok(req.json(&R { ok: true, error: None }))
 }
 
 pub fn logout(req: &mut Request) -> IoResult<Response> {

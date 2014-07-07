@@ -1,6 +1,7 @@
 use std::io::{MemReader, IoError};
 use std::collections::HashMap;
 use serialize::{json, Encodable};
+use url;
 
 use conduit::{Request, Response};
 
@@ -10,6 +11,10 @@ pub trait RequestRedirect {
 
 pub trait RequestJson {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response;
+}
+
+pub trait RequestQuery {
+    fn query(self) -> HashMap<String, String>;
 }
 
 impl<'a> RequestRedirect for &'a mut Request {
@@ -35,5 +40,18 @@ impl<'a> RequestJson for &'a mut Request {
             headers: headers,
             body: box MemReader::new(s.into_bytes()),
         }
+    }
+}
+
+impl<'a> RequestQuery for &'a mut Request {
+    fn query(self) -> HashMap<String, String> {
+        self.query_string().unwrap_or("").split('&').filter_map(|s| {
+            let mut parts = s.split('=');
+            let k = parts.next().unwrap_or(s);
+            let v = parts.next().unwrap_or("");
+            let k = try_option!(url::decode_component(k).ok());
+            let v = try_option!(url::decode_component(v).ok());
+            Some((k, v))
+        }).collect()
     }
 }

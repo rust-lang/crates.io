@@ -1,6 +1,12 @@
 <h2 id='title'>Welcome to Ember.js</h2>
 
+{{#if flashError}}
+  <p>{{flashError}}</p>
+{{/if}}
+
 {{outlet}}
+
+{{#link-to 'lol'}}lol{{/link-to}}
 
 <footer>
   {{#if isLoggedIn}}

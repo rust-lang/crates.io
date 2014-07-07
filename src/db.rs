@@ -2,7 +2,6 @@ use pg;
 use pg::PostgresConnection;
 use pg::pool::PostgresConnectionPool;
 
-use packages;
 use user;
 
 fn location() -> String {
@@ -14,6 +13,5 @@ pub fn pool() -> PostgresConnectionPool {
 }
 
 pub fn setup(conn: &PostgresConnection) {
-    packages::setup(conn);
     user::setup(conn);
 }
