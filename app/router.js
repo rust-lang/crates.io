@@ -8,8 +8,6 @@ Router.map(function() {
   this.resource('login');
   this.resource('logout');
   this.resource('github_authorize', { path: '/authorize/github' });
-  this.route('application');
-  this.route('lol');
 });
 
 export default Router;
