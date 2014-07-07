@@ -6,8 +6,6 @@ export default Ember.Route.extend({
     Ember.$.getJSON('/logout', function() {
       self.controllerFor('application').logoutUser();
       self.transitionTo('index');
-    }).fail(function() {
-      console.log('bad');
     });
   }
 });
