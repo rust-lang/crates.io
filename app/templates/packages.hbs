@@ -1,0 +1,12 @@
+<table>
+  <tr>
+    <th>Name</th>
+    <th>&nbsp;</th>
+  </tr>
+  {{#each}}
+    <tr>
+      <td>{{ name }}</td>
+      <td>{{#link-to "package.edit" this}}edit{{/link-to}}</td>
+    </tr>
+  {{/each}}
+</table>

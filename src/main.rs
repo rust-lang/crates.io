@@ -31,6 +31,7 @@ macro_rules! try_option( ($e:expr) => (
 
 mod app;
 mod db;
+mod package;
 mod user;
 mod util;
 
@@ -40,6 +41,8 @@ fn main() {
     router.get("/authorize_url", user::github_authorize);
     router.get("/authorize", user::github_access_token);
     router.get("/logout", user::logout);
+    router.get("/packages", package::index);
+    router.get("/packages/:package_id", package::show);
 
     let mut m = MiddlewareBuilder::new(router);
     m.add(conduit_log_requests::LogRequests(0));

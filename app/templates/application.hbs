@@ -6,10 +6,15 @@
 
 {{outlet}}
 
+
 <footer>
   {{#if isLoggedIn}}
     {{#link-to "logout"}}Log out{{/link-to}}
   {{else}}
     {{#link-to "login"}}Log in{{/link-to}}
   {{/if}}
+  &middot;
+  {{#link-to "packages"}}packages{{/link-to}}
+  &middot;
+  {{#link-to "index"}}index{{/link-to}}
 </footer>

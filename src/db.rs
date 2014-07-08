@@ -3,6 +3,7 @@ use pg::PostgresConnection;
 use pg::pool::PostgresConnectionPool;
 
 use user;
+use package;
 
 fn location() -> String {
     "postgres://postgres:@localhost/cargo.io".to_string()
@@ -14,4 +15,5 @@ pub fn pool() -> PostgresConnectionPool {
 
 pub fn setup(conn: &PostgresConnection) {
     user::setup(conn);
+    package::setup(conn);
 }
