@@ -6,9 +6,8 @@
 
 {{outlet}}
 
-
 <footer>
-  {{#if isLoggedIn}}
+  {{#if session.isLoggedIn}}
     {{#link-to "logout"}}Log out{{/link-to}}
   {{else}}
     {{#link-to "login"}}Log in{{/link-to}}

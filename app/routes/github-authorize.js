@@ -10,9 +10,8 @@ export default Ember.Route.extend({
         return;
       }
 
-      var applicationController = self.controllerFor('application');
-      var transition = applicationController.get('savedTransition');
-      applicationController.loginUser();
+      var transition = self.session.get('savedTransition');
+      self.session.loginUser();
       if (transition) {
         transition.retry();
       } else {

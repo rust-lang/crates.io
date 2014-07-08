@@ -6,7 +6,12 @@
   {{#each}}
     <tr>
       <td>{{ name }}</td>
-      <td>{{#link-to "package.edit" this}}edit{{/link-to}}</td>
+      <td>
+        {{#link-to "package" this}}[show]{{/link-to}}
+        {{#if controller.session.isLoggedIn}}
+          &middot; {{#link-to "package.edit" this}}[edit]{{/link-to}}
+        {{/if}}
+      </td>
     </tr>
   {{/each}}
 </table>

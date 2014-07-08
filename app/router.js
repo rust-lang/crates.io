@@ -9,7 +9,7 @@ Router.map(function() {
   this.resource('logout');
   this.resource('github_authorize', { path: '/authorize/github' });
   this.resource('packages');
-  this.resource('package', { path: '/package/:package_id' }, function() {
+  this.resource('package', { path: '/packages/:package_id' }, function() {
     this.route('edit');
   });
 });

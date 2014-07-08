@@ -1,0 +1,10 @@
+<dl>
+  <dt>Name</dt>
+  <dd>{{name}}</dd>
+  <dt>Slug</dt>
+  <dd>{{id}}</dd>
+</dl>
+
+{{#if session.isLoggedIn}}
+  {{#link-to "package.edit" this}}[edit]{{/link-to}}
+{{/if}}
