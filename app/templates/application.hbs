@@ -1,19 +1,29 @@
-<h2 id='title'>Welcome to Ember.js</h2>
+<div id="header">
+  <div class='inner-content'>
+    {{#link-to "index"}}
+      <img src="assets/Cargo-Logo-Small.png" id="logo"/>
+    {{/link-to}}
 
-{{#if flashError}}
-  <p>{{flashError}}</p>
-{{/if}}
+    <div class='nav'>
+      {{#if session.isLoggedIn}}
+        {{#link-to "me"}}Account{{/link-to}}
+        &middot;
+        {{#link-to "logout"}}Log out{{/link-to}}
+      {{else}}
+        {{#link-to "login"}}Log in{{/link-to}}
+      {{/if}}
+    </div>
 
-{{outlet}}
+    <div class='links'>
+      {{#link-to "packages"}}packages{{/link-to}}
+    </div>
+  </div>
+</div>
 
-<footer>
-  {{#if session.isLoggedIn}}
-    {{#link-to "logout"}}Log out{{/link-to}}
-  {{else}}
-    {{#link-to "login"}}Log in{{/link-to}}
+<div id="main" class='inner-content'>
+  {{#if flashError}}
+    <p>{{flashError}}</p>
   {{/if}}
-  &middot;
-  {{#link-to "packages"}}packages{{/link-to}}
-  &middot;
-  {{#link-to "index"}}index{{/link-to}}
-</footer>
+
+  {{outlet}}
+</div>

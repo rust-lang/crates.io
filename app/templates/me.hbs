@@ -1,0 +1,14 @@
+<dl>
+  <dt>Email</dt>
+  <dd>{{ email }}</dd>
+  <dt>Cargo API Token</dt>
+  <dd>
+    {{ api_token }}
+    <button {{action "resetToken"}}>Reset Token</button>
+  </dd>
+</dl>
+
+<p>Log in via the command line:
+<pre>
+cargo login {{ api_token }}
+</pre>

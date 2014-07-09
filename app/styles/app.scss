@@ -1,0 +1,26 @@
+html, body { margin: 0; }
+
+#header {
+  background: #c6c6c6;
+  padding: 10px;
+
+  #logo { height: 50px; }
+
+  .nav { float: right; }
+
+  .links {
+    position: absolute;
+    bottom: 0;
+    left: 200px;
+  }
+}
+
+.inner-content {
+  width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+
+#main {
+  margin-top: 10px;
+}

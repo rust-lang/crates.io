@@ -12,6 +12,7 @@ Router.map(function() {
   this.resource('package', { path: '/packages/:package_id' }, function() {
     this.route('edit');
   });
+  this.route('me');
 });
 
 export default Router;

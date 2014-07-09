@@ -22,6 +22,14 @@ pub struct User {
     pub id: i32,
     pub email: String,
     pub gh_access_token: String,
+    pub api_token: String,
+}
+
+#[deriving(Encodable)]
+pub struct EncodableUser {
+    pub id: i32,
+    pub email: String,
+    pub api_token: String,
 }
 
 impl User {
@@ -33,9 +41,19 @@ impl User {
             User {
                 id: row["id"],
                 email: row["email"],
-                gh_access_token: row["gh_access_token"]
+                gh_access_token: row["gh_access_token"],
+                api_token: row["api_token"],
             }
         })
+    }
+
+    pub fn new_api_token() -> String {
+        task_rng().gen_ascii_chars().take(16).collect()
+    }
+
+    pub fn encodable(self) -> EncodableUser {
+        let User { id, email, api_token, .. } = self;
+        EncodableUser { id: id, email: email, api_token: api_token }
     }
 }
 
@@ -44,12 +62,14 @@ pub fn setup(conn: &PostgresConnection) {
     conn.execute("CREATE TABLE users (
                     id              SERIAL PRIMARY KEY,
                     email           VARCHAR NOT NULL,
-                    gh_access_token VARCHAR NOT NULL
+                    gh_access_token VARCHAR NOT NULL,
+                    api_token       VARCHAR NOT NULL
                   )", []).unwrap();
     conn.execute("ALTER TABLE users ADD CONSTRAINT \
                   unique_email UNIQUE (email)", []).unwrap();
-    conn.execute("INSERT INTO users (email, gh_access_token) VALUES ($1, $2)",
-                 [&"foo@bar.com", &"wut"]).unwrap();
+    conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
+                  VALUES ($1, $2, $3)",
+                 [&"foo@bar.com", &"wut", &User::new_api_token()]).unwrap();
 }
 
 pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
@@ -62,7 +82,7 @@ pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
 
 pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     #[deriving(Encodable)]
-    struct R { ok: bool, error: Option<String> }
+    struct R { ok: bool, error: Option<String>, user: Option<EncodableUser> }
 
     // Parse the url query
     let mut query = req.query();
@@ -77,7 +97,8 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
         if Some(state.as_slice()) != session_state {
             return Ok(req.json(&R {
                 ok: false,
-                error: Some(format!("invalid state parameter"))
+                error: Some(format!("invalid state parameter")),
+                user: None,
             }))
         }
     }
@@ -85,7 +106,7 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     // Fetch the access token from github using the code we just got
     let token = match req.app().github.exchange(code.clone()) {
         Ok(token) => token,
-        Err(s) => return Ok(req.json(&R { ok: false, error: Some(s) }))
+        Err(s) => return Ok(req.json(&R { ok: false, error: Some(s), user: None }))
     };
 
     // TODO: none of this should be fallible
@@ -104,10 +125,11 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
 
     // Into the database!
     let conn = req.app().db();
-    let resp = conn.execute("INSERT INTO users (email, gh_access_token) \
-                             VALUES ($1, $2)",
+    let resp = conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
+                             VALUES ($1, $2, $3)",
                             [&ghuser.email.as_slice(),
-                             &token.access_token.as_slice()]);
+                             &token.access_token.as_slice(),
+                             &User::new_api_token()]);
     match resp {
         Ok(..) => {}
         Err(PgDbError(ref e))
@@ -117,17 +139,39 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     }
 
     // Who did we just insert?
-    let stmt = conn.prepare("SELECT id FROM users WHERE email = $1 LIMIT 1")
+    let stmt = conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1")
                    .unwrap();
     let row = stmt.query([&ghuser.email.as_slice()]).unwrap()
                   .next().expect("no user with email we just found");
-    let id: i32 = row["id"];
-    req.session().insert("user_id".to_string(), id.to_str());
 
-    Ok(req.json(&R { ok: true, error: None }))
+    let user = User {
+        api_token: row["api_token"],
+        gh_access_token: row["gh_access_token"],
+        id: row["id"],
+        email: row["email"],
+    };
+    req.session().insert("user_id".to_string(), user.id.to_str());
+
+    Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))
 }
 
 pub fn logout(req: &mut Request) -> IoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
+}
+
+pub fn reset_token(req: &mut Request) -> IoResult<Response> {
+    #[deriving(Encodable)]
+    struct R { ok: bool, api_token: String }
+
+    if req.user().is_none() {
+        return Ok(req.unauthorized())
+    }
+    let user_id = req.user().unwrap().id;
+    let token = User::new_api_token();
+    let conn = req.app().db();
+    conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
+                 [&token, &user_id])
+        .unwrap();
+    Ok(req.json(&R { ok: true, api_token: token }))
 }

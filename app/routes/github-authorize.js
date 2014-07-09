@@ -11,7 +11,7 @@ export default Ember.Route.extend({
       }
 
       var transition = self.session.get('savedTransition');
-      self.session.loginUser();
+      self.session.loginUser(d.user);
       if (transition) {
         transition.retry();
       } else {
