@@ -24,3 +24,18 @@ html, body { margin: 0; }
 #main {
   margin-top: 10px;
 }
+
+button.loading {
+  display: none;
+}
+
+.loading-gif {
+  display: none;
+
+  &.visible {
+    background: url(/assets/ajax-loader.gif) no-repeat 50% 50%;
+    height: 18px;
+    width: 40px;
+    display: inline-block;
+  }
+}

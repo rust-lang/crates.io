@@ -1,16 +1,20 @@
 import Ember from 'ember';
+import ajax from 'ic-ajax';
 
 export default Ember.ObjectController.extend({
+  isResetting: false,
+
   actions: {
     resetToken: function() {
+      this.set('isResetting', true);
       var self = this;
-      Ember.$.ajax({
+      ajax({
         dataType: "json",
         url: '/me/reset_token',
         method: 'put',
       }).then(function(d) {
         self.set('api_token', d.api_token);
-      }).fail(function(reason) {
+      }).catch(function(reason) {
         var msg;
         if (reason.status === 403) {
           msg = "A login is required to perform this action";
@@ -19,6 +23,8 @@ export default Ember.ObjectController.extend({
         }
         self.controllerFor('application').setFlashError(msg);
         self.transitionToRoute('index');
+      }).finally(function() {
+        self.set('isResetting', false);
       });
     }
   }

@@ -4,7 +4,11 @@
   <dt>Cargo API Token</dt>
   <dd>
     {{ api_token }}
-    <button {{action "resetToken"}}>Reset Token</button>
+    <button id='user-reset-token'
+            {{bind-attr class="isResetting:loading"}}
+            {{action "resetToken"}}>Reset Token</button>
+    <span class='loading-gif'
+          {{bind-attr class="isResetting:visible"}}></span>
   </dd>
 </dl>
 

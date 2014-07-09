@@ -26,6 +26,7 @@
     "glob": "^3.2.9",
     "ember-cli-ember-data": "0.1.0",
     "broccoli-asset-rev": "0.0.11",
-    "broccoli-sass": "~0.2.1"
+    "broccoli-sass": "~0.2.1",
+    "ember-cli-ic-ajax": "~0.1.1"
   }
 }
