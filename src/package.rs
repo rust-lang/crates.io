@@ -1,20 +1,13 @@
-use std::any::AnyRefExt;
-use std::io::{IoResult, MemReader};
-use std::rand::{task_rng, Rng};
-use std::str;
-use std::collections::HashMap;
-use serialize::json;
+use std::io::IoResult;
 
 use conduit::{Request, Response};
-use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
-use curl::http;
-use oauth2::Authorization;
+use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
-use pg::error::PgDbError;
 
 use app::{App, RequestApp};
-use util::{RequestJson, RequestQuery};
+use user::RequestUser;
+use util::RequestUtils;
 
 #[deriving(Encodable)]
 pub struct Package {
@@ -28,6 +21,18 @@ impl Package {
             id: row["slug"],
             name: row["name"],
         }
+    }
+
+    pub fn find(app: &App, slug: &str) -> Option<Package> {
+        let conn = app.db();
+        let stmt = conn.prepare("SELECT * FROM packages WHERE slug = $1 LIMIT 1")
+                       .unwrap();
+        stmt.query([&slug]).unwrap().next().map(|row| {
+            Package {
+                id: row["slug"],
+                name: row["name"],
+            }
+        })
     }
 }
 
@@ -81,16 +86,43 @@ pub fn show(req: &mut Request) -> IoResult<Response> {
                    .unwrap();
     let row = match stmt.query([&slug.as_slice()]).unwrap().next() {
         Some(row) => row,
-        None => return Ok(Response {
-            status: (404, "Not Found"),
-            headers: HashMap::new(),
-            body: box MemReader::new(Vec::new()),
-        }),
+        None => return Ok(req.not_found()),
     };
 
     #[deriving(Encodable)]
     struct R { package: Package }
 
     let pkg = Package::from_row(&row);
+    Ok(req.json(&R { package: pkg }))
+}
+
+#[deriving(Decodable)]
+pub struct UpdateRequest { package: UpdatePackage }
+
+#[deriving(Decodable)]
+pub struct UpdatePackage {
+    name: String,
+}
+
+pub fn update(req: &mut Request) -> IoResult<Response> {
+    if req.user().is_none() {
+        return Ok(req.unauthorized())
+    }
+    let slug = req.params()["package_id"];
+    let mut pkg = match Package::find(req.app(), slug.as_slice()) {
+        Some(pkg) => pkg,
+        None => return Ok(req.not_found()),
+    };
+    {
+        let conn = req.app().db();
+        let update = conduit_json_parser::json_params::<UpdateRequest>(req);
+        pkg.name = update.unwrap().package.name.clone();
+        conn.execute("UPDATE packages SET name = $1 WHERE slug = $2",
+                     [&pkg.name.as_slice(), &slug.as_slice()])
+            .unwrap();
+    }
+
+    #[deriving(Encodable)]
+    struct R { package: Package }
     Ok(req.json(&R { package: pkg }))
 }

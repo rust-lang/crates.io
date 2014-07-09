@@ -12,7 +12,7 @@ use pg::PostgresConnection;
 use pg::error::PgDbError;
 
 use app::{App, RequestApp};
-use util::{RequestJson, RequestQuery};
+use util::RequestUtils;
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -48,6 +48,8 @@ pub fn setup(conn: &PostgresConnection) {
                   )", []).unwrap();
     conn.execute("ALTER TABLE users ADD CONSTRAINT \
                   unique_email UNIQUE (email)", []).unwrap();
+    conn.execute("INSERT INTO users (email, gh_access_token) VALUES ($1, $2)",
+                 [&"foo@bar.com", &"wut"]).unwrap();
 }
 
 pub fn github_authorize(req: &mut Request) -> IoResult<Response> {

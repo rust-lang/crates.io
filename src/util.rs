@@ -5,31 +5,16 @@ use url;
 
 use conduit::{Request, Response};
 
-pub trait RequestRedirect {
+pub trait RequestUtils {
+    fn not_found(self) -> Response;
+    fn unauthorized(self) -> Response;
     fn redirect(self, url: String) -> Response;
-}
 
-pub trait RequestJson {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response;
-}
-
-pub trait RequestQuery {
     fn query(self) -> HashMap<String, String>;
 }
 
-impl<'a> RequestRedirect for &'a mut Request {
-    fn redirect(self, url: String) -> Response {
-        let mut headers = HashMap::new();
-        headers.insert("Location".to_string(), vec![url.to_str()]);
-        Response {
-            status: (302, "Found"),
-            headers: headers,
-            body: box MemReader::new(Vec::new()),
-        }
-    }
-}
-
-impl<'a> RequestJson for &'a mut Request {
+impl<'a> RequestUtils for &'a mut Request {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
         let s = json::encode(t);
         let mut headers = HashMap::new();
@@ -41,9 +26,7 @@ impl<'a> RequestJson for &'a mut Request {
             body: box MemReader::new(s.into_bytes()),
         }
     }
-}
 
-impl<'a> RequestQuery for &'a mut Request {
     fn query(self) -> HashMap<String, String> {
         self.query_string().unwrap_or("").split('&').filter_map(|s| {
             let mut parts = s.split('=');
@@ -53,5 +36,31 @@ impl<'a> RequestQuery for &'a mut Request {
             let v = try_option!(url::decode_component(v).ok());
             Some((k, v))
         }).collect()
+    }
+
+    fn redirect(self, url: String) -> Response {
+        let mut headers = HashMap::new();
+        headers.insert("Location".to_string(), vec![url.to_str()]);
+        Response {
+            status: (302, "Found"),
+            headers: headers,
+            body: box MemReader::new(Vec::new()),
+        }
+    }
+
+    fn not_found(self) -> Response {
+        Response {
+            status: (404, "Not Found"),
+            headers: HashMap::new(),
+            body: box MemReader::new(Vec::new()),
+        }
+    }
+
+    fn unauthorized(self) -> Response {
+        Response {
+            status: (403, "Forbidden"),
+            headers: HashMap::new(),
+            body: box MemReader::new(Vec::new()),
+        }
     }
 }

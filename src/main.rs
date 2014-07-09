@@ -18,6 +18,7 @@ extern crate conduit_middleware = "conduit-middleware";
 extern crate conduit_conditional_get = "conduit-conditional-get";
 extern crate conduit_log_requests = "conduit-log-requests";
 extern crate conduit_static = "conduit-static";
+extern crate conduit_json_parser = "conduit-json-parser";
 
 use civet::{Config, Server};
 use conduit_router::RouteBuilder;
@@ -43,6 +44,10 @@ fn main() {
     router.get("/logout", user::logout);
     router.get("/packages", package::index);
     router.get("/packages/:package_id", package::show);
+
+    let mut m = MiddlewareBuilder::new(package::update);
+    m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
+    router.put("/packages/:package_id", m);
 
     let mut m = MiddlewareBuilder::new(router);
     m.add(conduit_log_requests::LogRequests(0));

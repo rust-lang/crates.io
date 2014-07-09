@@ -51,3 +51,7 @@ git = "https://github.com/conduit-rust/conduit-conditional-get"
 [dependencies.conduit-static]
 
 git = "https://github.com/conduit-rust/conduit-static"
+
+[dependencies.conduit-json-parser]
+
+git = "https://github.com/conduit-rust/conduit-json-parser"
