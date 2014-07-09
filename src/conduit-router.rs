@@ -1,7 +1,7 @@
 #![feature(macro_rules)]
 #![feature(globs)]
 
-extern crate router = "route_recognizer";
+extern crate router = "route-recognizer";
 extern crate conduit;
 
 use std::collections::HashMap;
