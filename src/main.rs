@@ -42,7 +42,8 @@ fn main() {
     router.get("/authorize_url", user::github_authorize);
     router.get("/authorize", user::github_access_token);
     router.get("/logout", user::logout);
-    router.put("/reset_token", user::reset_token);
+    router.get("/me", user::me);
+    router.put("/me/reset_token", user::reset_token);
     router.get("/packages", package::index);
     router.get("/packages/:package_id", package::show);
 

@@ -18,6 +18,7 @@ pub use self::middleware::{Middleware, RequestUser};
 
 mod middleware;
 
+#[deriving(Clone, Show)]
 pub struct User {
     pub id: i32,
     pub email: String,
@@ -174,4 +175,15 @@ pub fn reset_token(req: &mut Request) -> IoResult<Response> {
                  [&token, &user_id])
         .unwrap();
     Ok(req.json(&R { ok: true, api_token: token }))
+}
+
+pub fn me(req: &mut Request) -> IoResult<Response> {
+    #[deriving(Encodable)]
+    struct R { ok: bool, user: EncodableUser }
+
+    if req.user().is_none() {
+        return Ok(req.unauthorized())
+    }
+    let user = req.user().unwrap().clone().encodable();
+    Ok(req.json(&R{ ok: true, user: user }))
 }

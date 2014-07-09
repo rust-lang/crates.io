@@ -6,10 +6,10 @@ export default Ember.ObjectController.extend({
       var self = this;
       Ember.$.ajax({
         dataType: "json",
-        url: '/reset_token',
+        url: '/me/reset_token',
         method: 'put',
       }).then(function(d) {
-        self.get('model').set('api_token', d.api_token);
+        self.set('api_token', d.api_token);
       }).fail(function(reason) {
         var msg;
         if (reason.status === 403) {
