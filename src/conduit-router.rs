@@ -121,7 +121,7 @@ mod tests {
     impl RequestSentinel {
         fn new(method: Method, path: &'static str) -> RequestSentinel {
             RequestSentinel {
-                path: path.to_str(),
+                path: path.to_string(),
                 extensions: HashMap::new(),
                 method: method
             }
@@ -158,7 +158,7 @@ mod tests {
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
-        assert_eq!(res.body.read_to_str().unwrap(), "1, Get".to_str());
+        assert_eq!(res.body.read_to_string().unwrap(), "1, Get".to_string());
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod tests {
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
-        assert_eq!(res.body.read_to_str().unwrap(), "10, Post".to_str());
+        assert_eq!(res.body.read_to_string().unwrap(), "10, Post".to_string());
     }
 
     #[test]
