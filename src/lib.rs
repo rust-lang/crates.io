@@ -27,7 +27,7 @@ impl MockRequest {
         let headers = HashMap::new();
 
         MockRequest {
-            path: path.to_str(),
+            path: path.to_string(),
             extensions: HashMap::new(),
             query_string: None,
             string_body: None,
@@ -39,17 +39,17 @@ impl MockRequest {
     }
 
     pub fn with_query<'a, S: Show>(&'a mut self, string: S) -> &'a mut MockRequest {
-        self.query_string = Some(string.to_str());
+        self.query_string = Some(string.to_string());
         self
     }
 
     pub fn with_body<'a, S: Show>(&'a mut self, string: S) -> &'a mut MockRequest {
-        self.string_body = Some(string.to_str());
+        self.string_body = Some(string.to_string());
         self
     }
 
     pub fn header<'a, S1: Show, S2: Show>(&'a mut self, name: S1, value: S2) -> &'a mut MockRequest {
-        self.build_headers.insert(name.to_str(), value.to_str());
+        self.build_headers.insert(name.to_string(), value.to_string());
         let headers = MockHeaders { headers: self.build_headers.clone() };
         self.headers = headers;
 
@@ -110,7 +110,7 @@ impl<'a> conduit::Request for MockRequest {
     }
 
     fn body<'a>(&'a mut self) -> &'a mut Reader {
-        let body = self.string_body.clone().unwrap_or("".to_str());
+        let body = self.string_body.clone().unwrap_or("".to_string());
         self.reader = Some(MemReader::new(Vec::from_slice(body.as_bytes())));
 
         self.reader.get_mut_ref() as &mut Reader
@@ -149,7 +149,8 @@ mod tests {
         assert_eq!(req.remote_ip(), Ipv4Addr(127, 0, 0, 1));
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().iter().count(), 0);
-        assert_eq!(req.body().read_to_str().ok().expect("No body"), "".to_str());
+        assert_eq!(req.body().read_to_string().ok().expect("No body"),
+                   "".to_string());
     }
 
     #[test]
@@ -159,7 +160,8 @@ mod tests {
 
         assert_eq!(req.method(), conduit::Post);
         assert_eq!(req.path(), "/articles");
-        assert_eq!(req.body().read_to_str().ok().expect("No body"), "Hello world".to_str());
+        assert_eq!(req.body().read_to_string().ok().expect("No body"),
+                   "Hello world".to_string());
         assert_eq!(req.content_length(), Some(11));
     }
 
