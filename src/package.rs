@@ -18,8 +18,8 @@ pub struct Package {
 impl Package {
     fn from_row(row: &PostgresRow) -> Package {
         Package {
-            id: row["slug"],
-            name: row["name"],
+            id: row.get("slug"),
+            name: row.get("name"),
         }
     }
 
@@ -29,8 +29,8 @@ impl Package {
                        .unwrap();
         stmt.query([&slug]).unwrap().next().map(|row| {
             Package {
-                id: row["slug"],
-                name: row["name"],
+                id: row.get("slug"),
+                name: row.get("name"),
             }
         })
     }
@@ -66,7 +66,7 @@ pub fn index(req: &mut Request) -> IoResult<Response> {
 
     let stmt = conn.prepare("SELECT COUNT(*) FROM packages").unwrap();
     let row = stmt.query([]).unwrap().next().unwrap();
-    let total = row[0u];
+    let total = row.get(0u);
 
     #[deriving(Encodable)]
     struct R { packages: Vec<Package>, meta: Meta }

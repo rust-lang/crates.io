@@ -40,7 +40,7 @@ impl<'a> RequestUtils for &'a mut Request {
 
     fn redirect(self, url: String) -> Response {
         let mut headers = HashMap::new();
-        headers.insert("Location".to_string(), vec![url.to_str()]);
+        headers.insert("Location".to_string(), vec![url.to_string()]);
         Response {
             status: (302, "Found"),
             headers: headers,

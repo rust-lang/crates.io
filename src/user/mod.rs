@@ -40,10 +40,10 @@ impl User {
                        .unwrap();
         stmt.query([&id]).unwrap().next().map(|row| {
             User {
-                id: row["id"],
-                email: row["email"],
-                gh_access_token: row["gh_access_token"],
-                api_token: row["api_token"],
+                id: row.get("id"),
+                email: row.get("email"),
+                gh_access_token: row.get("gh_access_token"),
+                api_token: row.get("api_token"),
             }
         })
     }
@@ -78,7 +78,7 @@ pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
     let url = req.app().github.authorize_url(state);
-    Ok(req.json(&url.to_str()))
+    Ok(req.json(&url.to_string()))
 }
 
 pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
@@ -146,12 +146,12 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
                   .next().expect("no user with email we just found");
 
     let user = User {
-        api_token: row["api_token"],
-        gh_access_token: row["gh_access_token"],
-        id: row["id"],
-        email: row["email"],
+        api_token: row.get("api_token"),
+        gh_access_token: row.get("gh_access_token"),
+        id: row.get("id"),
+        email: row.get("email"),
     };
-    req.session().insert("user_id".to_string(), user.id.to_str());
+    req.session().insert("user_id".to_string(), user.id.to_string());
 
     Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))
 }
