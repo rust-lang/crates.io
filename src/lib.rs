@@ -55,9 +55,9 @@ impl Handler for Static {
         let tm = time::at(ts).to_utc();
 
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_str(), vec![mime.to_str()]);
-        headers.insert("Content-Length".to_str(), vec![stat.size.to_str()]);
-        headers.insert("Last-Modified".to_str(),
+        headers.insert("Content-Type".to_string(), vec![mime.to_string()]);
+        headers.insert("Content-Length".to_string(), vec![stat.size.to_string()]);
+        headers.insert("Last-Modified".to_string(),
                        vec![tm.strftime("%a, %d %b %Y %T GMT")]);
 
         Ok(Response {
@@ -86,12 +86,12 @@ mod tests {
         File::create(&root.join("Cargo.toml")).write(b"[package]").unwrap();
         let mut req = test::MockRequest::new(conduit::Get, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
-        let body = res.body.read_to_str().ok().expect("No body");
+        let body = res.body.read_to_string().ok().expect("No body");
         assert_eq!(body.as_slice(), "[package]");
         assert_eq!(res.headers.find_equiv(&"Content-Type"),
-                   Some(&vec!("text/plain".to_str())));
+                   Some(&vec!("text/plain".to_string())));
         assert_eq!(res.headers.find_equiv(&"Content-Length"),
-                   Some(&vec!["9".to_str()]));
+                   Some(&vec!["9".to_string()]));
     }
 
     #[test]
@@ -105,9 +105,9 @@ mod tests {
         let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.headers.find_equiv(&"Content-Type"),
-                   Some(&vec!("text/css".to_str())));
+                   Some(&vec!("text/css".to_string())));
         assert_eq!(res.headers.find_equiv(&"Content-Length"),
-                   Some(&vec!["0".to_str()]));
+                   Some(&vec!["0".to_string()]));
     }
 
     #[test]
