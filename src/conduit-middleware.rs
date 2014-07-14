@@ -108,7 +108,7 @@ mod tests {
     impl RequestSentinel {
         fn new(method: Method, path: &'static str) -> RequestSentinel {
             RequestSentinel {
-                path: path.to_str(),
+                path: path.to_string(),
                 extensions: HashMap::new(),
                 method: method
             }
@@ -142,7 +142,7 @@ mod tests {
 
     impl Middleware for MyMiddleware {
         fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Show>> {
-            req.mut_extensions().insert("test.middleware", box "hello".to_str() as Box<Any>);
+            req.mut_extensions().insert("test.middleware", box "hello".to_string() as Box<Any>);
             Ok(())
         }
     }
@@ -157,7 +157,7 @@ mod tests {
                 Ok(Response {
                     status: (500, "Internal Server Error"),
                     headers: HashMap::new(),
-                    body: box MemReader::new(show(e).to_str().into_bytes())
+                    body: box MemReader::new(show(e).to_string().into_bytes())
                 })
             })
         }
@@ -167,7 +167,7 @@ mod tests {
 
     impl Middleware for ProducesError {
         fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
-            Err(box "Nope".to_str() as Box<Show>)
+            Err(box "Nope".to_string() as Box<Show>)
         }
     }
 
@@ -205,7 +205,7 @@ mod tests {
 
     impl Handler for MyAroundMiddleware {
         fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
-            req.mut_extensions().insert("test.round-and-round", box "hello".to_str() as Box<Any>);
+            req.mut_extensions().insert("test.round-and-round", box "hello".to_string() as Box<Any>);
             self.handler.get_ref().call(req)
         }
     }
@@ -243,7 +243,7 @@ mod tests {
     }
 
     fn error_handler(_: &mut Request) -> Result<Response, String> {
-        Err("Error in handler".to_str())
+        Err("Error in handler".to_string())
     }
 
     fn middle_handler(req: &mut Request) -> Result<Response, ()> {
@@ -261,7 +261,7 @@ mod tests {
         let mut req = RequestSentinel::new(conduit::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
-        assert_eq!(res.body.read_to_str().ok().expect("No body"), "hello".to_str());
+        assert_eq!(res.body.read_to_string().ok().expect("No body"), "hello".to_string());
     }
 
     #[test]
@@ -287,7 +287,7 @@ mod tests {
         let mut res = builder.call(&mut req).ok().expect("Error not handled");
 
         assert_eq!(res.status, (500, "Internal Server Error"));
-        assert_eq!(res.body.read_to_str().ok().expect("No body"), "Error in handler".to_str());
+        assert_eq!(res.body.read_to_string().ok().expect("No body"), "Error in handler".to_string());
     }
 
     #[test]
@@ -299,6 +299,6 @@ mod tests {
         let mut req = RequestSentinel::new(conduit::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
-        assert_eq!(res.body.read_to_str().ok().expect("No body"), "hello hello".to_str());
+        assert_eq!(res.body.read_to_string().ok().expect("No body"), "hello hello".to_string());
     }
 }
