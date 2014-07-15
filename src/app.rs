@@ -16,6 +16,7 @@ pub struct App {
     db: PostgresConnectionPool,
     pub github: oauth2::Config,
     pub bucket: s3::Bucket,
+    pub session_key: String,
 }
 
 pub struct AppMiddleware {
@@ -39,6 +40,7 @@ impl App {
             bucket: s3::Bucket::new(env("S3_BUCKET"),
                                     env("S3_ACCESS_KEY"),
                                     env("S3_SECRET_KEY")),
+            session_key: env("SESSION_KEY"),
         };
 
         fn env(s: &str) -> String {

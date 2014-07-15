@@ -52,12 +52,14 @@ fn main() {
     m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
     router.put("/packages/:package_id", m);
 
+    let app = App::new();
+
     let mut m = MiddlewareBuilder::new(router);
     m.add(conduit_log_requests::LogRequests(0));
     m.add(conduit_conditional_get::ConditionalGet);
-    m.add(conduit_cookie::Middleware::new(b"application-key"));
+    m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
-    m.add(app::AppMiddleware::new(App::new()));
+    m.add(app::AppMiddleware::new(app));
     m.add(user::Middleware);
 
     let port = 8888;
