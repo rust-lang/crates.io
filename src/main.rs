@@ -47,10 +47,11 @@ fn main() {
     router.put("/me/reset_token", user::reset_token);
     router.get("/packages", package::index);
     router.get("/packages/:package_id", package::show);
-
-    let mut m = MiddlewareBuilder::new(package::update);
-    m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
-    router.put("/packages/:package_id", m);
+    router.put("/packages/:package_id", {
+        let mut m = MiddlewareBuilder::new(package::update);
+        m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
+        m
+    });
 
     let app = App::new();
 
