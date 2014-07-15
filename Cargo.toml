@@ -32,6 +32,10 @@ git = "https://github.com/sfackler/rust-postgres"
 
 path = "src/html"
 
+[dependencies.s3]
+
+path = "src/s3"
+
 [dependencies.oauth2]
 
 git = "https://github.com/alexcrichton/oauth2-rs"

@@ -49,7 +49,7 @@ impl User {
     }
 
     pub fn new_api_token() -> String {
-        task_rng().gen_ascii_chars().take(16).collect()
+        task_rng().gen_ascii_chars().take(32).collect()
     }
 
     pub fn encodable(self) -> EncodableUser {

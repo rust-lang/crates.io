@@ -1,0 +1,18 @@
+[package]
+
+name = "s3"
+version = "0.0.1"
+authors = []
+
+[[lib]]
+
+name = "s3"
+path = "lib.rs"
+
+[dependencies.curl]
+
+git = "https://github.com/carllerche/curl-rust"
+
+[dependencies.openssl]
+
+git = "https://github.com/sfackler/rust-openssl"

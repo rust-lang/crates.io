@@ -1,9 +1,12 @@
-use oauth2;
-use conduit::Request;
-use conduit_middleware::Middleware;
-use pg::pool::{PostgresConnectionPool, PooledPostgresConnection};
 use std::any::AnyRefExt;
 use std::fmt::Show;
+use std::os;
+
+use conduit::Request;
+use conduit_middleware::Middleware;
+use oauth2;
+use pg::pool::{PostgresConnectionPool, PooledPostgresConnection};
+use s3;
 
 use db;
 
@@ -12,6 +15,7 @@ use std::sync::Arc;
 pub struct App {
     db: PostgresConnectionPool,
     pub github: oauth2::Config,
+    pub bucket: s3::Bucket,
 }
 
 pub struct AppMiddleware {
@@ -23,15 +27,25 @@ impl App {
         let pool = db::pool();
         db::setup(&*pool.get_connection());
         let github = oauth2::Config::new(
-            "89b6afdeaa6c6c7506ec",
-            "7a4908a38c75dd12bce36931ad2dbdd951ce228b",
+            env("GH_CLIENT_ID").as_slice(),
+            env("GH_CLIENT_SECRET").as_slice(),
             "https://github.com/login/oauth/authorize",
             "https://github.com/login/oauth/access_token",
         );
 
-        App {
+        return App {
             db: db::pool(),
             github: github,
+            bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                    env("S3_ACCESS_KEY"),
+                                    env("S3_SECRET_KEY")),
+        };
+
+        fn env(s: &str) -> String {
+            match os::getenv(s) {
+                Some(s) => s,
+                None => fail!("must have `{}` defined", s),
+            }
         }
     }
 
