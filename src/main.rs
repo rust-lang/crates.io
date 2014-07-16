@@ -26,10 +26,9 @@ use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
 use app::App;
+use util::C;
 
-macro_rules! try_option( ($e:expr) => (
-    match $e { Some(k) => k, None => return None }
-) )
+mod macros;
 
 mod app;
 mod db;
@@ -40,16 +39,21 @@ mod util;
 fn main() {
     let mut router = RouteBuilder::new();
 
-    router.get("/authorize_url", user::github_authorize);
-    router.get("/authorize", user::github_access_token);
-    router.get("/logout", user::logout);
-    router.get("/me", user::me);
-    router.put("/me/reset_token", user::reset_token);
-    router.get("/packages", package::index);
-    router.get("/packages/:package_id", package::show);
+    router.get("/authorize_url", C(user::github_authorize));
+    router.get("/authorize", C(user::github_access_token));
+    router.get("/logout", C(user::logout));
+    router.get("/me", C(user::me));
+    router.put("/me/reset_token", C(user::reset_token));
+    router.get("/packages", C(package::index));
+    router.get("/packages/:package_id", C(package::show));
     router.put("/packages/:package_id", {
-        let mut m = MiddlewareBuilder::new(package::update);
+        let mut m = MiddlewareBuilder::new(C(package::update));
         m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
+        m
+    });
+    router.post("/packages/new", {
+        let mut m = MiddlewareBuilder::new(C(package::new));
+        m.add(conduit_json_parser::BodyReader::<package::NewRequest>);
         m
     });
 
@@ -68,7 +72,6 @@ fn main() {
     println!("listening on port {}", port);
     wait_for_sigint();
 }
-
 
 // libnative doesn't have signal handling yet
 fn wait_for_sigint() {

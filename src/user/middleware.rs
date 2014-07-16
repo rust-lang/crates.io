@@ -7,6 +7,7 @@ use conduit_cookie::RequestSession;
 
 use app::RequestApp;
 use super::User;
+use util::errors::{CargoResult, Unauthorized, CargoError};
 
 pub struct Middleware;
 
@@ -18,8 +19,8 @@ impl conduit_middleware::Middleware for Middleware {
             None => return Ok(()),
         };
         let user = match User::find(req.app(), id) {
-            Some(user) => user,
-            None => return Ok(()),
+            Ok(user) => user,
+            Err(..) => return Ok(()),
         };
 
         req.mut_extensions().insert("crates.io.user", box user);
@@ -28,13 +29,16 @@ impl conduit_middleware::Middleware for Middleware {
 }
 
 pub trait RequestUser<'a> {
-    fn user(self) -> Option<&'a User>;
+    fn user(self) -> CargoResult<&'a User>;
 }
 
 impl<'a> RequestUser<'a> for &'a Request {
-    fn user(self) -> Option<&'a User> {
-        self.extensions().find_equiv(&"crates.io.user").and_then(|r| {
+    fn user(self) -> CargoResult<&'a User> {
+        match self.extensions().find_equiv(&"crates.io.user").and_then(|r| {
             r.as_ref::<User>()
-        })
+        }) {
+            Some(user) => Ok(user),
+            None => Err(Unauthorized.box_error()),
+        }
     }
 }

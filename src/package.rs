@@ -1,13 +1,12 @@
-use std::io::IoResult;
-
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
 
 use app::{App, RequestApp};
-use user::RequestUser;
-use util::RequestUtils;
+use user::{RequestUser, User};
+use util::{RequestUtils, CargoResult, Require, internal};
+use util::errors::{NotFound, CargoError};
 
 #[deriving(Encodable)]
 pub struct Package {
@@ -23,16 +22,27 @@ impl Package {
         }
     }
 
-    pub fn find(app: &App, slug: &str) -> Option<Package> {
+    pub fn find(app: &App, slug: &str) -> CargoResult<Package> {
         let conn = app.db();
-        let stmt = conn.prepare("SELECT * FROM packages WHERE slug = $1 LIMIT 1")
-                       .unwrap();
-        stmt.query([&slug]).unwrap().next().map(|row| {
-            Package {
-                id: row.get("slug"),
-                name: row.get("name"),
+        let stmt = try!(conn.prepare("SELECT * FROM packages \
+                                      WHERE slug = $1 LIMIT 1"));
+        match try!(stmt.query([&slug])).next() {
+            Some(row) => Ok(Package::from_row(&row)),
+            None => Err(NotFound.box_error()),
+        }
+    }
+
+    fn name_to_slug(name: &str) -> String {
+        name.chars().filter_map(|c| {
+            match c {
+                'A' .. 'Z' |
+                'a' .. 'z' |
+                '0' .. '9' |
+                '-' | '_' => Some(c.to_lowercase()),
+                _ => None
+
             }
-        })
+        }).collect()
     }
 }
 
@@ -52,20 +62,19 @@ pub fn setup(conn: &PostgresConnection) {
                  [&"Test2", &"test2"]).unwrap();
 }
 
-pub fn index(req: &mut Request) -> IoResult<Response> {
+pub fn index(req: &mut Request) -> CargoResult<Response> {
     let limit = 10i64;
     let offset = 0i64;
     let conn = req.app().db();
-    let stmt = conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2")
-                   .unwrap();
+    let stmt = try!(conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2"));
 
     let mut pkgs = Vec::new();
-    for row in stmt.query([&limit, &offset]).unwrap() {
+    for row in try!(stmt.query([&limit, &offset])) {
         pkgs.push(Package::from_row(&row));
     }
 
-    let stmt = conn.prepare("SELECT COUNT(*) FROM packages").unwrap();
-    let row = stmt.query([]).unwrap().next().unwrap();
+    let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
+    let row = try!(stmt.query([])).next().unwrap();
     let total = row.get(0u);
 
     #[deriving(Encodable)]
@@ -79,20 +88,12 @@ pub fn index(req: &mut Request) -> IoResult<Response> {
     }))
 }
 
-pub fn show(req: &mut Request) -> IoResult<Response> {
+pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = req.params()["package_id"];
-    let conn = req.app().db();
-    let stmt = conn.prepare("SELECT * FROM packages WHERE slug = $1 LIMIT 1")
-                   .unwrap();
-    let row = match stmt.query([&slug.as_slice()]).unwrap().next() {
-        Some(row) => row,
-        None => return Ok(req.not_found()),
-    };
+    let pkg = try!(Package::find(req.app(), slug.as_slice()));
 
     #[deriving(Encodable)]
     struct R { package: Package }
-
-    let pkg = Package::from_row(&row);
     Ok(req.json(&R { package: pkg }))
 }
 
@@ -104,25 +105,49 @@ pub struct UpdatePackage {
     name: String,
 }
 
-pub fn update(req: &mut Request) -> IoResult<Response> {
-    if req.user().is_none() {
-        return Ok(req.unauthorized())
-    }
+pub fn update(req: &mut Request) -> CargoResult<Response> {
+    try!(req.user());
     let slug = req.params()["package_id"];
-    let mut pkg = match Package::find(req.app(), slug.as_slice()) {
-        Some(pkg) => pkg,
-        None => return Ok(req.not_found()),
-    };
-    {
-        let conn = req.app().db();
-        let update = conduit_json_parser::json_params::<UpdateRequest>(req);
-        pkg.name = update.unwrap().package.name.clone();
-        conn.execute("UPDATE packages SET name = $1 WHERE slug = $2",
-                     [&pkg.name.as_slice(), &slug.as_slice()])
-            .unwrap();
-    }
+    let mut pkg = try!(Package::find(req.app(), slug.as_slice()));
+
+    let conn = req.app().db();
+    let update = conduit_json_parser::json_params::<UpdateRequest>(req);
+    pkg.name = update.unwrap().package.name.clone();
+    try!(conn.execute("UPDATE packages SET name = $1 WHERE slug = $2",
+                      [&pkg.name.as_slice(), &slug.as_slice()]));
 
     #[deriving(Encodable)]
     struct R { package: Package }
+    Ok(req.json(&R { package: pkg }))
+}
+
+#[deriving(Decodable)]
+pub struct NewRequest { package: NewPackage }
+
+#[deriving(Decodable)]
+pub struct NewPackage {
+    name: String,
+}
+
+pub fn new(req: &mut Request) -> CargoResult<Response> {
+    let app = req.app();
+    let db = app.db();
+    let tx = try!(db.transaction());
+    let _user = {
+        let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
+            internal("missing X-Cargo-Auth header")
+        }));
+        try!(User::find_by_api_token(app, header.get(0).as_slice()))
+    };
+
+    let update = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
+    let name = update.package.name.as_slice();
+    let slug = Package::name_to_slug(name);
+    try!(tx.execute("INSERT INTO packages (name, slug) VALUES ($1, $2)",
+                    [&name, &slug]));
+
+    #[deriving(Encodable)]
+    struct R { package: Package }
+    let pkg = try!(Package::find(app, slug.as_slice()));
     Ok(req.json(&R { package: pkg }))
 }

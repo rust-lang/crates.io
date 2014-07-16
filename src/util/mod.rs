@@ -1,20 +1,27 @@
 use std::io::{MemReader, IoError};
 use std::collections::HashMap;
+use std::fmt::Show;
+
 use serialize::{json, Encodable};
 use url;
 
-use conduit::{Request, Response};
+use conduit::{Request, Response, Handler};
+
+pub use self::errors::{CargoError, CargoResult, internal, internal_error};
+pub use self::errors::{ChainError, BoxError};
+pub use self::result::{Require, Wrap};
+
+pub mod errors;
+pub mod result;
 
 pub trait RequestUtils {
-    fn not_found(self) -> Response;
-    fn unauthorized(self) -> Response;
     fn redirect(self, url: String) -> Response;
 
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response;
     fn query(self) -> HashMap<String, String>;
 }
 
-impl<'a> RequestUtils for &'a mut Request {
+impl<'a> RequestUtils for &'a Request {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
         let s = json::encode(t);
         let mut headers = HashMap::new();
@@ -47,20 +54,19 @@ impl<'a> RequestUtils for &'a mut Request {
             body: box MemReader::new(Vec::new()),
         }
     }
+}
 
-    fn not_found(self) -> Response {
-        Response {
-            status: (404, "Not Found"),
-            headers: HashMap::new(),
-            body: box MemReader::new(Vec::new()),
-        }
-    }
+pub struct C(pub fn(&mut Request) -> CargoResult<Response>);
 
-    fn unauthorized(self) -> Response {
-        Response {
-            status: (403, "Forbidden"),
-            headers: HashMap::new(),
-            body: box MemReader::new(Vec::new()),
+impl Handler for C {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
+        let C(f) = *self;
+        match f(req) {
+            Ok(req) => Ok(req),
+            Err(e) => match e.response() {
+                Some(response) => Ok(response),
+                None => Err(box e as Box<Show>),
+            }
         }
     }
 }

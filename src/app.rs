@@ -73,7 +73,7 @@ pub trait RequestApp<'a> {
     fn app(self) -> &'a App;
 }
 
-impl<'a> RequestApp<'a> for &'a mut Request {
+impl<'a> RequestApp<'a> for &'a Request {
     fn app(self) -> &'a App {
         &**self.extensions().find(&"crates.io.app")
                .and_then(|a| a.as_ref::<Arc<App>>())

@@ -1,5 +1,4 @@
 use std::any::AnyRefExt;
-use std::io::IoResult;
 use std::rand::{task_rng, Rng};
 use std::str;
 use serialize::json;
@@ -8,11 +7,12 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg::PostgresConnection;
+use pg::{PostgresConnection, PostgresRow};
 use pg::error::PgDbError;
 
 use app::{App, RequestApp};
-use util::RequestUtils;
+use util::{RequestUtils, CargoResult, internal, Require, ChainError};
+use util::errors::NotFound;
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -34,18 +34,30 @@ pub struct EncodableUser {
 }
 
 impl User {
-    pub fn find(app: &App, id: i32) -> Option<User> {
+    pub fn find(app: &App, id: i32) -> CargoResult<User> {
         let conn = app.db();
-        let stmt = conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1")
-                       .unwrap();
-        stmt.query([&id]).unwrap().next().map(|row| {
-            User {
-                id: row.get("id"),
-                email: row.get("email"),
-                gh_access_token: row.get("gh_access_token"),
-                api_token: row.get("api_token"),
-            }
+        let stmt = try!(conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1"));
+        return try!(stmt.query([&id])).next().map(User::from_row).require(|| {
+            NotFound
         })
+    }
+
+    pub fn find_by_api_token(app: &App, token: &str) -> CargoResult<User> {
+        let conn = app.db();
+        let stmt = try!(conn.prepare("SELECT * FROM users \
+                                      WHERE api_token = $1 LIMIT 1"));
+        return try!(stmt.query([&token])).next().map(User::from_row).require(|| {
+            NotFound
+        })
+    }
+
+    fn from_row(row: PostgresRow) -> User {
+        User {
+            id: row.get("id"),
+            email: row.get("email"),
+            gh_access_token: row.get("gh_access_token"),
+            api_token: row.get("api_token"),
+        }
     }
 
     pub fn new_api_token() -> String {
@@ -70,10 +82,10 @@ pub fn setup(conn: &PostgresConnection) {
                   unique_email UNIQUE (email)", []).unwrap();
     conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
                   VALUES ($1, $2, $3)",
-                 [&"foo@bar.com", &"wut", &User::new_api_token()]).unwrap();
+                 [&"foo@bar.com", &"wut", &"api-token"]).unwrap();
 }
 
-pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
+pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     let state: String = task_rng().gen_ascii_chars().take(16).collect();
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
@@ -81,7 +93,7 @@ pub fn github_authorize(req: &mut Request) -> IoResult<Response> {
     Ok(req.json(&url.to_string()))
 }
 
-pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
+pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { ok: bool, error: Option<String>, user: Option<EncodableUser> }
 
@@ -110,19 +122,24 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
         Err(s) => return Ok(req.json(&R { ok: false, error: Some(s), user: None }))
     };
 
-    // TODO: none of this should be fallible
-    let resp = http::handle().get("https://api.github.com/user")
-                    .header("Accept", "application/vnd.github.v3+json")
-                    .header("User-Agent", "hello!")
-                    .auth_with(&token)
-                    .exec().unwrap();
-    assert_eq!(resp.get_code(), 200);
+    let resp = try!(http::handle().get("https://api.github.com/user")
+                         .header("Accept", "application/vnd.github.v3+json")
+                         .header("User-Agent", "hello!")
+                         .auth_with(&token)
+                         .exec());
+    if resp.get_code() != 200 {
+        return Err(internal(format!("didn't get a 200 result from github: {}",
+                                    resp)))
+    }
 
-    // TODO: more fallibility
     #[deriving(Decodable)]
     struct GithubUser { email: String }
-    let json = str::from_utf8(resp.get_body()).expect("non-utf8 body");
-    let ghuser: GithubUser = json::decode(json).unwrap();
+    let json = try!(str::from_utf8(resp.get_body()).require(||{
+        internal("github didn't send a utf8-response")
+    }));
+    let ghuser: GithubUser = try!(json::decode(json).chain_error(|| {
+        internal("github didn't send a valid json response")
+    }));
 
     // Into the database!
     let conn = req.app().db();
@@ -140,10 +157,11 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     }
 
     // Who did we just insert?
-    let stmt = conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1")
-                   .unwrap();
-    let row = stmt.query([&ghuser.email.as_slice()]).unwrap()
-                  .next().expect("no user with email we just found");
+    let stmt = try!(conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1"));
+    let mut rows = try!(stmt.query([&ghuser.email.as_slice()]));
+    let row = try!(rows.next().require(|| {
+        internal("no user with email we just found")
+    }));
 
     let user = User {
         api_token: row.get("api_token"),
@@ -156,34 +174,28 @@ pub fn github_access_token(req: &mut Request) -> IoResult<Response> {
     Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))
 }
 
-pub fn logout(req: &mut Request) -> IoResult<Response> {
+pub fn logout(req: &mut Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
 
-pub fn reset_token(req: &mut Request) -> IoResult<Response> {
-    #[deriving(Encodable)]
-    struct R { ok: bool, api_token: String }
+pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
+    let user = try!(req.user());
 
-    if req.user().is_none() {
-        return Ok(req.unauthorized())
-    }
-    let user_id = req.user().unwrap().id;
     let token = User::new_api_token();
     let conn = req.app().db();
-    conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
-                 [&token, &user_id])
-        .unwrap();
+    try!(conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
+                      [&token, &user.id]));
+
+    #[deriving(Encodable)]
+    struct R { ok: bool, api_token: String }
     Ok(req.json(&R { ok: true, api_token: token }))
 }
 
-pub fn me(req: &mut Request) -> IoResult<Response> {
+pub fn me(req: &mut Request) -> CargoResult<Response> {
+    let user = try!(req.user());
+
     #[deriving(Encodable)]
     struct R { ok: bool, user: EncodableUser }
-
-    if req.user().is_none() {
-        return Ok(req.unauthorized())
-    }
-    let user = req.user().unwrap().clone().encodable();
-    Ok(req.json(&R{ ok: true, user: user }))
+    Ok(req.json(&R{ ok: true, user: user.clone().encodable() }))
 }
