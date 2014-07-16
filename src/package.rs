@@ -3,7 +3,8 @@ use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
 
-use app::{App, RequestApp};
+use app::RequestApp;
+use db::Connection;
 use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal};
 use util::errors::{NotFound, CargoError};
@@ -22,8 +23,7 @@ impl Package {
         }
     }
 
-    pub fn find(app: &App, slug: &str) -> CargoResult<Package> {
-        let conn = app.db();
+    pub fn find(conn: &Connection, slug: &str) -> CargoResult<Package> {
         let stmt = try!(conn.prepare("SELECT * FROM packages \
                                       WHERE slug = $1 LIMIT 1"));
         match try!(stmt.query([&slug])).next() {
@@ -90,7 +90,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = req.params()["package_id"];
-    let pkg = try!(Package::find(req.app(), slug.as_slice()));
+    let pkg = try!(Package::find(&req.app().db(), slug.as_slice()));
 
     #[deriving(Encodable)]
     struct R { package: Package }
@@ -107,10 +107,10 @@ pub struct UpdatePackage {
 
 pub fn update(req: &mut Request) -> CargoResult<Response> {
     try!(req.user());
-    let slug = req.params()["package_id"];
-    let mut pkg = try!(Package::find(req.app(), slug.as_slice()));
-
     let conn = req.app().db();
+    let slug = req.params()["package_id"];
+    let mut pkg = try!(Package::find(&conn, slug.as_slice()));
+
     let update = conduit_json_parser::json_params::<UpdateRequest>(req);
     pkg.name = update.unwrap().package.name.clone();
     try!(conn.execute("UPDATE packages SET name = $1 WHERE slug = $2",
@@ -137,7 +137,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
             internal("missing X-Cargo-Auth header")
         }));
-        try!(User::find_by_api_token(app, header.get(0).as_slice()))
+        try!(User::find_by_api_token(&tx, header.get(0).as_slice()))
     };
 
     let update = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
@@ -148,6 +148,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { package: Package }
-    let pkg = try!(Package::find(app, slug.as_slice()));
+    let pkg = try!(Package::find(&tx, slug.as_slice()));
     Ok(req.json(&R { package: pkg }))
 }

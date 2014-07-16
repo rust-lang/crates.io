@@ -10,7 +10,8 @@ use oauth2::Authorization;
 use pg::{PostgresConnection, PostgresRow};
 use pg::error::PgDbError;
 
-use app::{App, RequestApp};
+use app::RequestApp;
+use db::Connection;
 use util::{RequestUtils, CargoResult, internal, Require, ChainError};
 use util::errors::NotFound;
 
@@ -34,16 +35,14 @@ pub struct EncodableUser {
 }
 
 impl User {
-    pub fn find(app: &App, id: i32) -> CargoResult<User> {
-        let conn = app.db();
+    pub fn find(conn: &Connection, id: i32) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1"));
         return try!(stmt.query([&id])).next().map(User::from_row).require(|| {
             NotFound
         })
     }
 
-    pub fn find_by_api_token(app: &App, token: &str) -> CargoResult<User> {
-        let conn = app.db();
+    pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
         return try!(stmt.query([&token])).next().map(User::from_row).require(|| {

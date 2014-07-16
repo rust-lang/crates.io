@@ -18,7 +18,7 @@ impl conduit_middleware::Middleware for Middleware {
             Some(id) => id,
             None => return Ok(()),
         };
-        let user = match User::find(req.app(), id) {
+        let user = match User::find(&req.app().db(), id) {
             Ok(user) => user,
             Err(..) => return Ok(()),
         };
