@@ -59,8 +59,8 @@ fn main() {
         m.add(conduit_json_parser::BodyReader::<package::NewRequest>);
         m
     });
-    router.get("/git/index/*path", git::serve_index);
-    router.post("/git/index/*path", git::serve_index);
+    router.get("/git/index/*path", C(git::serve_index));
+    router.post("/git/index/*path", C(git::serve_index));
 
     let app = App::new();
 

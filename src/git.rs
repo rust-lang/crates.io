@@ -3,12 +3,13 @@ use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
 use std::ascii::StrAsciiExt;
 use std::collections::HashMap;
 use std::io::util;
+use serialize::json;
 
 use conduit::{Request, Response};
 
 use app::{App, RequestApp};
 use util::{CargoResult, exec};
-use package::Package;
+use package::NewPackage;
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     let mut cmd = Command::new("git");
@@ -86,7 +87,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
-pub fn add_package(app: &App, package: &Package) -> CargoResult<()> {
+pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
     let path = app.git_repo_checkout.lock();
     let path = &*path;
     let name = package.name.as_slice();
@@ -100,14 +101,22 @@ pub fn add_package(app: &App, package: &Package) -> CargoResult<()> {
 
     let dst = path.join(c1).join(c2).join(name);
     try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
-    try!(File::create(&dst).write(package.name.as_bytes()));
+    let prev = if dst.exists() {
+        try!(File::open(&dst).read_to_string())
+    } else {
+        String::new()
+    };
+    let s = json::encode(package);
+    let new = if prev.len() == 0 {s} else {prev + "\n" + s};
+    try!(File::create(&dst).write(new.as_bytes()));
 
     macro_rules! git( ($($e:expr),*) => ({
         try!(exec(Command::new("git").cwd(path)$(.arg($e))*))
     }))
 
     git!("add", dst);
-    git!("commit", "-m", format!("Adding package `{}`", package.name));
+    git!("commit", "-m", format!("Updating package `{}#{}`", package.name,
+                                 package.version));
     git!("push");
 
     Ok(())

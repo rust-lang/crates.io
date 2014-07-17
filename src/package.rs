@@ -2,6 +2,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
+use pg::error::PgDbError;
 
 use app::RequestApp;
 use db::Connection;
@@ -122,18 +123,21 @@ pub fn update(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { package: pkg.encodable() }))
 }
 
-#[deriving(Decodable)]
+#[deriving(Decodable, Clone)]
 pub struct NewRequest { package: NewPackage }
 
-#[deriving(Decodable)]
+#[deriving(Decodable, Encodable, Clone)]
 pub struct NewPackage {
-    name: String,
+    pub name: String,
+    pub version: String,
+    pub other: String,
+    pub dependencies: Vec<String>,
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app();
     let db = app.db();
-    let tx = try!(db.transaction());
+    let mut tx = try!(db.transaction());
     tx.set_rollback();
     let _user = {
         let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
@@ -142,16 +146,28 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         try!(User::find_by_api_token(&tx, header.get(0).as_slice()))
     };
 
-    let update = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
-    let name: String = update.package.name.as_slice().chars()
-                             .map(|c| c.to_lowercase()).collect();
+    let new = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
+    let mut new = new.clone();
+    new.package.name = new.package.name.as_slice().chars()
+                          .map(|c| c.to_lowercase()).collect();
+    let name = new.package.name.as_slice();
     if !Package::valid_name(name.as_slice()) {
         return Err(internal(format!("invalid crate name: `{}`", name)))
     }
-    try!(tx.execute("INSERT INTO packages (name) VALUES ($1)", [&name]));
+    match tx.execute("INSERT INTO packages (name) VALUES ($1)", [&name]) {
+        Ok(..) => {}
+        Err(PgDbError(ref e))
+            if e.constraint.as_ref().map(|a| a.as_slice())
+                == Some("unique_name") => {
+                tx.set_rollback();
+                try!(tx.finish());
+                tx = try!(db.transaction());
+            }
+        Err(e) => return Err(e.box_error()),
+    }
 
     let pkg = try!(Package::find_by_name(&tx, name.as_slice()));
-    try!(git::add_package(app, &pkg).chain_error(|| {
+    try!(git::add_package(app, &new.package).chain_error(|| {
         internal(format!("could not add package `{}` to the git repo", pkg.name))
     }));
     tx.set_commit();
