@@ -10,8 +10,13 @@ use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
 use util::errors::{NotFound, CargoError};
 
-#[deriving(Encodable)]
 pub struct Package {
+    pub id: i32,
+    pub name: String,
+}
+
+#[deriving(Encodable)]
+pub struct EncodablePackage {
     pub id: String,
     pub name: String,
 }
@@ -19,31 +24,28 @@ pub struct Package {
 impl Package {
     fn from_row(row: &PostgresRow) -> Package {
         Package {
-            id: row.get("slug"),
+            id: row.get("id"),
             name: row.get("name"),
         }
     }
 
-    pub fn find(conn: &Connection, slug: &str) -> CargoResult<Package> {
+    pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Package> {
         let stmt = try!(conn.prepare("SELECT * FROM packages \
-                                      WHERE slug = $1 LIMIT 1"));
-        match try!(stmt.query([&slug])).next() {
+                                      WHERE name = $1 LIMIT 1"));
+        match try!(stmt.query([&name])).next() {
             Some(row) => Ok(Package::from_row(&row)),
             None => Err(NotFound.box_error()),
         }
     }
 
-    fn name_to_slug(name: &str) -> String {
-        name.chars().filter_map(|c| {
-            match c {
-                'A' .. 'Z' |
-                'a' .. 'z' |
-                '0' .. '9' |
-                '-' | '_' => Some(c.to_lowercase()),
-                _ => None
+    pub fn valid_name(name: &str) -> bool {
+        if name.len() == 0 { return false }
+        name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+    }
 
-            }
-        }).collect()
+    fn encodable(self) -> EncodablePackage {
+        let Package { name, .. } = self;
+        EncodablePackage { id: name.clone(), name: name }
     }
 }
 
@@ -51,16 +53,15 @@ pub fn setup(conn: &PostgresConnection) {
     conn.execute("DROP TABLE IF EXISTS packages", []).unwrap();
     conn.execute("CREATE TABLE packages (
                     id              SERIAL PRIMARY KEY,
-                    name            VARCHAR NOT NULL,
-                    slug            VARCHAR NOT NULL
+                    name            VARCHAR NOT NULL
                   )", []).unwrap();
 
     conn.execute("ALTER TABLE packages ADD CONSTRAINT \
-                  unique_slug UNIQUE (slug)", []).unwrap();
-    conn.execute("INSERT INTO packages (name, slug) VALUES ($1, $2)",
-                 [&"Test", &"test"]).unwrap();
-    conn.execute("INSERT INTO packages (name, slug) VALUES ($1, $2)",
-                 [&"Test2", &"test2"]).unwrap();
+                  unique_name UNIQUE (name)", []).unwrap();
+    conn.execute("INSERT INTO packages (name) VALUES ($1)",
+                 [&"Test"]).unwrap();
+    conn.execute("INSERT INTO packages (name) VALUES ($1)",
+                 [&"Test2"]).unwrap();
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
@@ -71,7 +72,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     let mut pkgs = Vec::new();
     for row in try!(stmt.query([&limit, &offset])) {
-        pkgs.push(Package::from_row(&row));
+        pkgs.push(Package::from_row(&row).encodable());
     }
 
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
@@ -79,7 +80,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let total = row.get(0u);
 
     #[deriving(Encodable)]
-    struct R { packages: Vec<Package>, meta: Meta }
+    struct R { packages: Vec<EncodablePackage>, meta: Meta }
     #[deriving(Encodable)]
     struct Meta { total: i64, page: i64 }
 
@@ -90,12 +91,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let slug = req.params()["package_id"];
-    let pkg = try!(Package::find(&req.app().db(), slug.as_slice()));
+    let name = req.params()["package_id"];
+    let pkg = try!(Package::find_by_name(&req.app().db(), name.as_slice()));
 
     #[deriving(Encodable)]
-    struct R { package: Package }
-    Ok(req.json(&R { package: pkg }))
+    struct R { package: EncodablePackage }
+    Ok(req.json(&R { package: pkg.encodable() }))
 }
 
 #[deriving(Decodable)]
@@ -109,17 +110,16 @@ pub struct UpdatePackage {
 pub fn update(req: &mut Request) -> CargoResult<Response> {
     try!(req.user());
     let conn = req.app().db();
-    let slug = req.params()["package_id"];
-    let mut pkg = try!(Package::find(&conn, slug.as_slice()));
+    let name = req.params()["package_id"];
+    let pkg = try!(Package::find_by_name(&conn, name.as_slice()));
 
-    let update = conduit_json_parser::json_params::<UpdateRequest>(req);
-    pkg.name = update.unwrap().package.name.clone();
-    try!(conn.execute("UPDATE packages SET name = $1 WHERE slug = $2",
-                      [&pkg.name.as_slice(), &slug.as_slice()]));
+    let update = conduit_json_parser::json_params::<UpdateRequest>(req).unwrap();
+    // TODO: this should do something
+    println!("new name: {}", update.package.name);
 
     #[deriving(Encodable)]
-    struct R { package: Package }
-    Ok(req.json(&R { package: pkg }))
+    struct R { package: EncodablePackage }
+    Ok(req.json(&R { package: pkg.encodable() }))
 }
 
 #[deriving(Decodable)]
@@ -144,16 +144,18 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     let update = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
     let name = update.package.name.as_slice();
-    let slug = Package::name_to_slug(name);
-    try!(tx.execute("INSERT INTO packages (name, slug) VALUES ($1, $2)",
-                    [&name, &slug]));
+    if !Package::valid_name(name) {
+        return Err(internal(format!("invalid crate name: `{}`", name)))
+    }
+    try!(tx.execute("INSERT INTO packages (name) VALUES ($1)", [&name]));
 
-    #[deriving(Encodable)]
-    struct R { package: Package }
-    let pkg = try!(Package::find(&tx, slug.as_slice()));
+    let pkg = try!(Package::find_by_name(&tx, name.as_slice()));
     try!(git::add_package(app, &pkg).chain_error(|| {
         internal(format!("could not add package `{}` to the git repo", pkg.name))
     }));
     tx.set_commit();
-    Ok(req.json(&R { package: pkg }))
+
+    #[deriving(Encodable)]
+    struct R { package: EncodablePackage }
+    Ok(req.json(&R { package: pkg.encodable() }))
 }

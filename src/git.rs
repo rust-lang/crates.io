@@ -89,16 +89,16 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 pub fn add_package(app: &App, package: &Package) -> CargoResult<()> {
     let path = app.git_repo_checkout.lock();
     let path = &*path;
-    let slug = package.id.as_slice();
-    let (c1, c2) = match slug.len() {
+    let name = package.name.as_slice();
+    let (c1, c2) = match name.len() {
         0 => unreachable!(),
-        1 => (format!("{}X", slug.slice_to(1)), format!("XX")),
-        2 => (format!("{}", slug.slice_to(2)), format!("XX")),
-        3 => (format!("{}", slug.slice_to(2)), format!("{}X", slug.char_at(2))),
-        _ => (slug.slice_to(2).to_string(), slug.slice(2, 4).to_string()),
+        1 => (format!("{}X", name.slice_to(1)), format!("XX")),
+        2 => (format!("{}", name.slice_to(2)), format!("XX")),
+        3 => (format!("{}", name.slice_to(2)), format!("{}X", name.char_at(2))),
+        _ => (name.slice_to(2).to_string(), name.slice(2, 4).to_string()),
     };
 
-    let dst = path.join(c1).join(c2).join(slug);
+    let dst = path.join(c1).join(c2).join(name);
     try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
     try!(File::create(&dst).write(package.name.as_bytes()));
 
