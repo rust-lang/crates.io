@@ -4,6 +4,7 @@ extern crate green;
 extern crate rustuv;
 extern crate serialize;
 extern crate url;
+extern crate semver;
 
 extern crate civet;
 extern crate curl;
@@ -32,6 +33,7 @@ mod macros;
 
 mod app;
 mod db;
+mod dist;
 mod git;
 mod package;
 mod user;
@@ -69,6 +71,7 @@ fn main() {
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
     m.add(app::AppMiddleware::new(app));
     m.add(user::Middleware);
+    m.around(dist::Middleware::new());
 
     let port = 8888;
     let _a = Server::start(Config { port: port, threads: 8 }, m);
