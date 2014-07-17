@@ -4,6 +4,7 @@ use std::ascii::StrAsciiExt;
 use std::collections::HashMap;
 use std::io::util;
 use serialize::json;
+use flate2::GzDecoder;
 
 use conduit::{Request, Response};
 
@@ -33,10 +34,8 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     // requests. I'm not totally sure that this sequential copy is the best
     // thing to do or actually correct...
     if header(req, "Content-Encoding") == "gzip" {
-        let mut gunzip = try!(Command::new("gunzip").arg("-c").spawn());
-        try!(util::copy(&mut req.body(), &mut gunzip.stdin.take().unwrap()));
-        try!(util::copy(&mut gunzip.stdout.take().unwrap(),
-                        &mut p.stdin.take().unwrap()));
+        let mut body = GzDecoder::new(req.body());
+        try!(util::copy(&mut body, &mut p.stdin.take().unwrap()));
     } else {
         try!(util::copy(&mut req.body(), &mut p.stdin.take().unwrap()));
     }

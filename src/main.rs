@@ -11,6 +11,7 @@ extern crate curl;
 extern crate html;
 extern crate oauth2;
 extern crate pg = "postgres";
+extern crate flate2;
 extern crate s3;
 
 extern crate conduit_router = "conduit-router";
