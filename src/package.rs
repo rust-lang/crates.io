@@ -143,8 +143,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     };
 
     let update = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
-    let name = update.package.name.as_slice();
-    if !Package::valid_name(name) {
+    let name: String = update.package.name.as_slice().chars()
+                             .map(|c| c.to_lowercase()).collect();
+    if !Package::valid_name(name.as_slice()) {
         return Err(internal(format!("invalid crate name: `{}`", name)))
     }
     try!(tx.execute("INSERT INTO packages (name) VALUES ($1)", [&name]));
