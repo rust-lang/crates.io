@@ -5,8 +5,9 @@ use pg::{PostgresConnection, PostgresRow};
 
 use app::RequestApp;
 use db::Connection;
+use git;
 use user::{RequestUser, User};
-use util::{RequestUtils, CargoResult, Require, internal};
+use util::{RequestUtils, CargoResult, Require, internal, ChainError};
 use util::errors::{NotFound, CargoError};
 
 #[deriving(Encodable)]
@@ -133,6 +134,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app();
     let db = app.db();
     let tx = try!(db.transaction());
+    tx.set_rollback();
     let _user = {
         let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
             internal("missing X-Cargo-Auth header")
@@ -149,5 +151,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { package: Package }
     let pkg = try!(Package::find(&tx, slug.as_slice()));
+    try!(git::add_package(app, &pkg).chain_error(|| {
+        internal(format!("could not add package `{}` to the git repo", pkg.name))
+    }));
+    tx.set_commit();
     Ok(req.json(&R { package: pkg }))
 }

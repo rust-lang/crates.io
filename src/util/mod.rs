@@ -1,6 +1,8 @@
 use std::io::{MemReader, IoError};
+use std::io::process::{ProcessOutput, Command};
 use std::collections::HashMap;
 use std::fmt::Show;
+use std::str;
 
 use serialize::{json, Encodable};
 use url;
@@ -68,5 +70,25 @@ impl Handler for C {
                 None => Err(box e as Box<Show>),
             }
         }
+    }
+}
+
+pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
+    let output = try!(cmd.output().chain_error(|| {
+        internal(format!("failed to run command `{}`", cmd))
+    }));
+    if !output.status.success() {
+        let mut desc = String::new();
+        if output.output.len() != 0 {
+            desc.push_str("--- stdout\n");
+            desc.push_str(str::from_utf8(output.output.as_slice()).unwrap());
+        }
+        if output.error.len() != 0 {
+            desc.push_str("--- stderr\n");
+            desc.push_str(str::from_utf8(output.error.as_slice()).unwrap());
+        }
+        Err(internal_error(format!("failed to run command `{}`", cmd), desc))
+    } else {
+        Ok(output)
     }
 }

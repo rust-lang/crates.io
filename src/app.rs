@@ -1,6 +1,7 @@
 use std::any::AnyRefExt;
 use std::fmt::Show;
 use std::os;
+use std::sync::Mutex;
 
 use conduit::Request;
 use conduit_middleware::Middleware;
@@ -17,6 +18,8 @@ pub struct App {
     pub github: oauth2::Config,
     pub bucket: s3::Bucket,
     pub session_key: String,
+    pub git_repo_bare: Path,
+    pub git_repo_checkout: Mutex<Path>,
 }
 
 pub struct AppMiddleware {
@@ -41,6 +44,8 @@ impl App {
                                     env("S3_ACCESS_KEY"),
                                     env("S3_SECRET_KEY")),
             session_key: env("SESSION_KEY"),
+            git_repo_bare: Path::new(env("GIT_REPO_BARE")),
+            git_repo_checkout: Mutex::new(Path::new(env("GIT_REPO_CHECKOUT"))),
         };
 
         fn env(s: &str) -> String {

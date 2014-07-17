@@ -32,6 +32,7 @@ mod macros;
 
 mod app;
 mod db;
+mod git;
 mod package;
 mod user;
 mod util;
@@ -56,6 +57,8 @@ fn main() {
         m.add(conduit_json_parser::BodyReader::<package::NewRequest>);
         m
     });
+    router.get("/git/index/*path", git::serve_index);
+    router.post("/git/index/*path", git::serve_index);
 
     let app = App::new();
 

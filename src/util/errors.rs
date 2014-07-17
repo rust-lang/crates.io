@@ -58,9 +58,28 @@ macro_rules! from_error (
     }
 )
 
+impl<'a> Show for &'a CargoError + Send {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        try!(write!(f, "{}", self.description()));
+
+        match self.detail() {
+            Some(s) => try!(write!(f, "\n  {}", s)),
+            None => {}
+        }
+
+        match self.cause() {
+            Some(cause) => try!(write!(f, "\nCaused by: {}", cause)),
+            None => {}
+        }
+
+        Ok(())
+    }
+}
+
 impl Show for Box<CargoError + Send> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}", self.description())
+        let me: &CargoError + Send = *self;
+        me.fmt(f)
     }
 }
 
@@ -206,7 +225,6 @@ impl CargoError for Unauthorized {
 
 from_error!(Unauthorized)
 
-#[allow(dead_code)]
 pub fn internal_error<S1: Str, S2: Str>(error: S1,
                                         detail: S2) -> Box<CargoError + Send> {
     box ConcreteCargoError {
