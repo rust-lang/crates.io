@@ -4,6 +4,7 @@ extern crate time;
 
 use std::fmt::Show;
 use std::collections::HashMap;
+use std::io;
 use std::io::fs::File;
 use std::io::util::NullReader;
 use conduit::{Request, Response, Handler};
@@ -29,25 +30,19 @@ impl Handler for Static {
         let path = self.path.join(request_path);
 
         if !self.path.is_ancestor_of(&path) {
-            return Ok(Response {
-                status: (404, "Not Found"),
-                headers: HashMap::new(),
-                body: box NullReader
-            })
+            return Ok(not_found())
         }
 
         let mime = self.types.mime_for_path(&path);
         let mut file = match File::open(&path) {
             Ok(f) => f,
-            Err(..) => {
-                return Ok(Response {
-                    status: (404, "Not Found"),
-                    headers: HashMap::new(),
-                    body: box NullReader,
-                })
-            }
+            Err(..) => return Ok(not_found()),
         };
         let stat = try!(file.stat().map_err(|e| box e as Box<Show>));
+        match stat.kind {
+            io::TypeDirectory => return Ok(not_found()),
+            _ => {}
+        }
         let ts = time::Timespec {
             sec: (stat.modified as i64) / 1000,
             nsec: ((stat.modified as i32) % 1000) * 1000
@@ -65,6 +60,14 @@ impl Handler for Static {
             headers: headers,
             body: box file as Box<Reader + Send>
         })
+    }
+}
+
+fn not_found() -> Response {
+    Response {
+        status: (404, "Not Found"),
+        headers: HashMap::new(),
+        body: box NullReader,
     }
 }
 
@@ -117,6 +120,19 @@ mod tests {
 
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(conduit::Get, "/nope");
+        let res = handler.call(&mut req).ok().expect("No response");
+        assert_eq!(res.status.val0(), 404);
+    }
+
+    #[test]
+    fn test_dir() {
+        let td = TempDir::new("conduit-static").unwrap();
+        let root = td.path();
+
+        fs::mkdir(&root.join("foo"), UserRWX).unwrap();
+
+        let handler = Static::new(root.clone());
+        let mut req = test::MockRequest::new(conduit::Get, "/foo");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.status.val0(), 404);
     }

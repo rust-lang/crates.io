@@ -8,6 +8,7 @@ authors = ["wycats@gmail.com"]
 
 name = "simple-file-server"
 path = "examples/simple-file-server.rs"
+test = false
 
 [dev-dependencies.civet]
 
