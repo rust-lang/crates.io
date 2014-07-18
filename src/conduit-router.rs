@@ -187,7 +187,7 @@ mod tests {
 
     fn test_handler(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
         let mut res = vec!();
-        res.push(req.params()["id"]);
+        res.push(req.params()["id"].clone());
         res.push(format!("{}", req.method()));
 
         Ok(conduit::Response {
