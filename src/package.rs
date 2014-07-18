@@ -92,7 +92,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let name = req.params()["package_id"];
+    let name = &req.params()["package_id"];
     let pkg = try!(Package::find_by_name(&req.app().db(), name.as_slice()));
 
     #[deriving(Encodable)]
@@ -111,7 +111,7 @@ pub struct UpdatePackage {
 pub fn update(req: &mut Request) -> CargoResult<Response> {
     try!(req.user());
     let conn = req.app().db();
-    let name = req.params()["package_id"];
+    let name = &req.params()["package_id"];
     let pkg = try!(Package::find_by_name(&conn, name.as_slice()));
 
     let update = conduit_json_parser::json_params::<UpdateRequest>(req).unwrap();
@@ -143,7 +143,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
             internal("missing X-Cargo-Auth header")
         }));
-        try!(User::find_by_api_token(&tx, header.get(0).as_slice()))
+        try!(User::find_by_api_token(&tx, header[0].as_slice()))
     };
 
     let new = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
