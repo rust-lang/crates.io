@@ -75,13 +75,13 @@ impl Middleware for AppMiddleware {
 }
 
 pub trait RequestApp<'a> {
-    fn app(self) -> &'a App;
+    fn app(self) -> &'a Arc<App>;
 }
 
 impl<'a> RequestApp<'a> for &'a Request {
-    fn app(self) -> &'a App {
-        &**self.extensions().find(&"crates.io.app")
-               .and_then(|a| a.as_ref::<Arc<App>>())
-               .expect("Missing app")
+    fn app(self) -> &'a Arc<App> {
+        self.extensions().find(&"crates.io.app")
+            .and_then(|a| a.as_ref::<Arc<App>>())
+            .expect("Missing app")
     }
 }

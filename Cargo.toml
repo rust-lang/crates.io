@@ -1,12 +1,8 @@
 [project]
 
-name = "crates.io"
+name = "cargo-website"
 authors = ["alex@alexcrichton.com"]
 version = "0.1.0"
-
-[[bin]]
-
-name = "main"
 
 [dependencies.civet]
 

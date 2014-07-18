@@ -25,24 +25,25 @@ impl Bucket {
         }
     }
 
-    pub fn put<'a, T: ToBody<'a>>(&mut self, path: &str, content: T)
-                                  -> Result<http::Response, curl::ErrCode> {
-        let mut handle = http::handle();
+    pub fn put<'a, 'b, T: ToBody<'b>>(&self, handle: &'a mut http::Handle,
+                                      path: &str, content: T,
+                                      content_type: &str)
+                                      -> http::Request<'a, 'b> {
+        let path = if path.starts_with("/") {path.slice_from(1)} else {path};
         let host = self.host();
         let date = time::now().rfc822z();
-        let auth = self.auth("PUT", date.as_slice(), path, "",
-                             "application/octet-stream");
+        let auth = self.auth("PUT", date.as_slice(), path, "", content_type);
         let url = format!("https://{}/{}", host, path);
         handle.put(url.as_slice(), content)
               .header("Host", host.as_slice())
               .header("Date", date.as_slice())
               .header("Authorization", auth.as_slice())
-              .exec()
+              .content_type(content_type)
     }
 
-    pub fn delete(&mut self, path: &str)
-                  -> Result<http::Response, curl::ErrCode> {
-        let mut handle = http::handle();
+    pub fn delete<'a, 'b>(&self, handle: &'a mut http::Handle, path: &str)
+                          -> http::Request<'a, 'b> {
+        let path = if path.starts_with("/") {path.slice_from(1)} else {path};
         let host = self.host();
         let date = time::now().rfc822z();
         let auth = self.auth("DELETE", date.as_slice(), path, "", "");
@@ -51,7 +52,6 @@ impl Bucket {
               .header("Host", host.as_slice())
               .header("Date", date.as_slice())
               .header("Authorization", auth.as_slice())
-              .exec()
     }
 
     fn host(&self) -> String {

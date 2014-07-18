@@ -1,10 +1,13 @@
+use std::sync::Arc;
+
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
 use pg::error::PgDbError;
+use curl::http;
 
-use app::RequestApp;
+use app::{App, RequestApp};
 use db::Connection;
 use git;
 use user::{RequestUser, User};
@@ -123,38 +126,64 @@ pub fn update(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { package: pkg.encodable() }))
 }
 
-#[deriving(Decodable, Clone)]
-pub struct NewRequest { package: NewPackage }
-
-#[deriving(Decodable, Encodable, Clone)]
+#[deriving(Encodable)]
 pub struct NewPackage {
     pub name: String,
-    pub version: String,
-    pub other: String,
-    pub dependencies: Vec<String>,
+    pub vers: String,
+    pub deps: Vec<String>,
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
-    let app = req.app();
+    let app = req.app().clone();
     let db = app.db();
     let mut tx = try!(db.transaction());
     tx.set_rollback();
-    let _user = {
-        let header = try!(req.headers().find("X-Cargo-Auth").require(|| {
-            internal("missing X-Cargo-Auth header")
-        }));
-        try!(User::find_by_api_token(&tx, header[0].as_slice()))
-    };
 
-    let new = conduit_json_parser::json_params::<NewRequest>(req).unwrap();
-    let mut new = new.clone();
-    new.package.name = new.package.name.as_slice().chars()
-                          .map(|c| c.to_lowercase()).collect();
-    let name = new.package.name.as_slice();
-    if !Package::valid_name(name.as_slice()) {
-        return Err(internal(format!("invalid crate name: `{}`", name)))
+    // Peel out all input parameters
+    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
+        req.headers().find(hdr).require(|| {
+            internal(format!("missing {} header", hdr))
+        })
     }
-    match tx.execute("INSERT INTO packages (name) VALUES ($1)", [&name]) {
+    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
+    let name = try!(header(req, "X-Cargo-Pkg-Name"))[0].to_string();
+    let vers = try!(header(req, "X-Cargo-Pkg-Version"))[0].to_string();
+    let deps = req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
+                  .move_iter().map(|s| s.to_string()).collect();
+
+    // Make sure the tarball being uploaded looks sane
+    let length = try!(req.content_length().require(|| {
+        internal("missing Content-Length header")
+    }));
+    {
+        let ty = try!(header(req, "Content-Type"))[0];
+        if ty != "application/x-tar" {
+            return Err(internal(format!("expected `application/x-tar`, \
+                                         found `{}`", ty)))
+        }
+        let enc = try!(header(req, "Content-Encoding"))[0];
+        if enc != "gzip" && enc != "x-gzip" {
+            return Err(internal(format!("expected `gzip`, found `{}`", enc)))
+        }
+    }
+
+    // Make sure the api token is a valid api token
+    let _user = try!(User::find_by_api_token(&tx, auth.as_slice()));
+
+    // Validate the name parameter and such
+    let name: String = name.as_slice().chars()
+                           .map(|c| c.to_lowercase()).collect();
+    let new_pkg = NewPackage {
+        name: name,
+        vers: vers,
+        deps: deps,
+    };
+    if !Package::valid_name(new_pkg.name.as_slice()) {
+        return Err(internal(format!("invalid crate name: `{}`", new_pkg.name)))
+    }
+
+    // Persist the new package, if it doesn't already exist
+    match tx.execute("INSERT INTO packages (name) VALUES ($1)", [&new_pkg.name]) {
         Ok(..) => {}
         Err(PgDbError(ref e))
             if e.constraint.as_ref().map(|a| a.as_slice())
@@ -166,11 +195,50 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         Err(e) => return Err(e.box_error()),
     }
 
-    let pkg = try!(Package::find_by_name(&tx, name.as_slice()));
-    try!(git::add_package(app, &new.package).chain_error(|| {
+    // Upload the package to S3
+    let mut handle = http::handle();
+    let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
+                       new_pkg.name, new_pkg.vers);
+    let resp = {
+        let s3req = app.bucket.put(&mut handle, path.as_slice(), req.body(),
+                                   "application/x-tar")
+                              .content_length(length)
+                              .header("Content-Encoding", "gzip");
+        try!(s3req.exec().chain_error(|| {
+            internal(format!("failed to upload to S3: `{}`", path))
+        }))
+    };
+    if resp.get_code() != 200 {
+        return Err(internal(format!("failed to get a 200 response from S3: {}",
+                                    resp)))
+    }
+
+    // If the git commands fail below, we shouldn't keep the package on the
+    // server.
+    struct Bomb { app: Arc<App>, path: Option<String>, handle: http::Handle }
+    impl Drop for Bomb {
+        fn drop(&mut self) {
+            match self.path {
+                Some(ref path) => {
+                    let _ = self.app.bucket.delete(&mut self.handle,
+                                                   path.as_slice())
+                                .exec();
+                }
+                None => {}
+            }
+        }
+    }
+    let mut bomb = Bomb { app: app, path: Some(path), handle: handle };
+
+    // Register this package in our local git repo.
+    let pkg = try!(Package::find_by_name(&tx, new_pkg.name.as_slice()));
+    try!(git::add_package(&**req.app(), &new_pkg).chain_error(|| {
         internal(format!("could not add package `{}` to the git repo", pkg.name))
     }));
+
+    // Now that we've come this far, we're committed!
     tx.set_commit();
+    bomb.path = None;
 
     #[deriving(Encodable)]
     struct R { package: EncodablePackage }

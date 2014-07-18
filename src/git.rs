@@ -115,7 +115,7 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
 
     git!("add", dst);
     git!("commit", "-m", format!("Updating package `{}#{}`", package.name,
-                                 package.version));
+                                 package.vers));
     git!("push");
 
     Ok(())

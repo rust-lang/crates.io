@@ -55,11 +55,7 @@ fn main() {
         m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
         m
     });
-    router.post("/packages/new", {
-        let mut m = MiddlewareBuilder::new(C(package::new));
-        m.add(conduit_json_parser::BodyReader::<package::NewRequest>);
-        m
-    });
+    router.post("/packages/new", C(package::new));
     router.get("/git/index/*path", C(git::serve_index));
     router.post("/git/index/*path", C(git::serve_index));
 
