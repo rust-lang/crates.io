@@ -88,8 +88,11 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     let state: String = task_rng().gen_ascii_chars().take(16).collect();
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
-    let url = req.app().github.authorize_url(state);
-    Ok(req.json(&url.to_string()))
+    let url = req.app().github.authorize_url(state.clone());
+
+    #[deriving(Encodable)]
+    struct R { url: String, state: String }
+    Ok(req.json(&R { url: url.to_string(), state: state }))
 }
 
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {

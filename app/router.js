@@ -5,8 +5,9 @@ var Router = Ember.Router.extend({
 });
 
 Router.map(function() {
-  this.resource('login');
   this.resource('logout');
+  this.resource('login');
+  this.resource('github_login');
   this.resource('github_authorize', { path: '/authorize/github' });
   this.resource('packages');
   this.resource('package', { path: '/packages/:package_id' }, function() {

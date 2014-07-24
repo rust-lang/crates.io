@@ -15,7 +15,7 @@ export default Ember.ObjectController.extend({
         } else {
           msg = "An unknown error occurred";
         }
-        self.controllerFor('application').setFlashError(msg);
+        self.controllerFor('application').set('nextFlashError', msg);
         self.transitionToRoute('index');
       });
     }

@@ -8,9 +8,5 @@ export default Ember.Controller.extend({
     this.set('flashError', this.get('nextFlashError'));
     this.set('nextFlashError', null);
   },
-
-  setFlashError: function(s) {
-    this.set('nextFlashError', s);
-  },
 });
 

@@ -1,22 +1,14 @@
 import Ember from 'ember';
+import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
   beforeModel: function(transition) {
-    var self = this;
-    return Ember.$.getJSON('/authorize', transition.queryParams, function(d) {
-      if (!d.ok) {
-        self.controllerFor('application').setFlashError(d.error);
-        self.transitionTo('index');
-        return;
-      }
-
-      var transition = self.session.get('savedTransition');
-      self.session.loginUser(d.user);
-      if (transition) {
-        transition.retry();
-      } else {
-        self.transitionTo('index');
-      }
+    return ajax('/authorize', {data: transition.queryParams}).then(function(d) {
+      localStorage.github_response = JSON.stringify({ ok: true, data: d });
+    }).catch(function(d) {
+      localStorage.github_response = JSON.stringify({ ok: false, data: d });
+    }).finally(function() {
+      window.close();
     });
   },
 });

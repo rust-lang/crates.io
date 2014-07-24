@@ -4,7 +4,7 @@ use std::ascii::StrAsciiExt;
 use std::collections::HashMap;
 use std::io::util;
 use serialize::json;
-use flate2::GzDecoder;
+use flate2::reader::GzDecoder;
 
 use conduit::{Request, Response};
 
