@@ -1,3 +1,5 @@
+use std::os;
+
 use pg;
 use pg::{PostgresConnection, PostgresStatement, PostgresResult};
 use pg::pool::PostgresConnectionPool;
@@ -7,7 +9,7 @@ use user;
 use package;
 
 fn location() -> String {
-    "postgres://postgres:@localhost/cargo.io".to_string()
+    os::getenv("DATABASE_URL").unwrap()
 }
 
 pub fn pool() -> PostgresConnectionPool {
