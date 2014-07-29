@@ -35,7 +35,7 @@ pub trait RequestUser<'a> {
 impl<'a> RequestUser<'a> for &'a Request {
     fn user(self) -> CargoResult<&'a User> {
         match self.extensions().find_equiv(&"crates.io.user").and_then(|r| {
-            r.as_ref::<User>()
+            r.downcast_ref::<User>()
         }) {
             Some(user) => Ok(user),
             None => Err(Unauthorized.box_error()),

@@ -81,7 +81,7 @@ pub trait RequestApp<'a> {
 impl<'a> RequestApp<'a> for &'a Request {
     fn app(self) -> &'a Arc<App> {
         self.extensions().find(&"crates.io.app")
-            .and_then(|a| a.as_ref::<Arc<App>>())
+            .and_then(|a| a.downcast_ref::<Arc<App>>())
             .expect("Missing app")
     }
 }
