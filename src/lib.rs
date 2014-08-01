@@ -45,7 +45,7 @@ impl Handler for Static {
         }
         let ts = time::Timespec {
             sec: (stat.modified as i64) / 1000,
-            nsec: ((stat.modified as i32) % 1000) * 1000
+            nsec: (((stat.modified as u32) % 1000) as i32) * 1000000
         };
         let tm = time::at(ts).to_utc();
 
