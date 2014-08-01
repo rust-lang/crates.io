@@ -1,0 +1,11 @@
+
+[[package]]
+dependencies = []
+name = "conduit"
+source = "git+https://github.com/conduit-rust/conduit.git#e3878bb57fd8096f4349e1a2bd38d0ded9237a8d"
+version = "0.5.0"
+
+[root]
+dependencies = ["conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#e3878bb57fd8096f4349e1a2bd38d0ded9237a8d)"]
+name = "conduit-middleware"
+version = "0.5.0"

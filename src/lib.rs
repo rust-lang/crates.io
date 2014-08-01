@@ -225,7 +225,7 @@ mod tests {
     }
 
     fn get_extension<'a, T: 'static>(req: &'a Request, key: &'static str) -> &'a T {
-        req.extensions().find(&key).and_then(|s| s.as_ref::<T>())
+        req.extensions().find(&key).and_then(|s| s.downcast_ref::<T>())
             .expect(format!("No {} key found in extensions", key).as_slice())
     }
 
