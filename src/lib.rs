@@ -91,7 +91,7 @@ pub trait RequestParams<'a> {
 
 pub fn params<'a>(req: &'a Request) -> &'a router::Params {
     req.extensions().find(&"router.params")
-        .and_then(|a| a.as_ref::<router::Params>())
+        .and_then(|a| a.downcast_ref::<router::Params>())
         .expect("Missing params")
 }
 
