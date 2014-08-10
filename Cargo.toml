@@ -3,3 +3,6 @@
 name = "conduit"
 version = "0.5.0"
 authors = ["wycats@gmail.com"]
+
+[dependencies.semver]
+git = "https://github.com/rust-lang/semver"
