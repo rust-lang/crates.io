@@ -6,7 +6,7 @@ use std::fmt::Show;
 
 use conduit::{Request, Response, Handler};
 
-pub trait Middleware: Send + Share {
+pub trait Middleware: Send + Sync {
     fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
         Ok(())
     }
@@ -19,30 +19,30 @@ pub trait Middleware: Send + Share {
 }
 
 pub trait AroundMiddleware: Handler {
-    fn with_handler(&mut self, handler: Box<Handler + Send + Share>);
+    fn with_handler(&mut self, handler: Box<Handler + Send + Sync>);
 }
 
 pub struct MiddlewareBuilder {
-    middlewares: Vec<Box<Middleware + Send + Share>>,
-    handler: Option<Box<Handler + Send + Share>>
+    middlewares: Vec<Box<Middleware + Send + Sync>>,
+    handler: Option<Box<Handler + Send + Sync>>
 }
 
 impl MiddlewareBuilder {
     pub fn new<H: Handler>(handler: H) -> MiddlewareBuilder {
         MiddlewareBuilder {
             middlewares: vec!(),
-            handler: Some(box handler as Box<Handler + Send + Share>)
+            handler: Some(box handler as Box<Handler + Send + Sync>)
         }
     }
 
     pub fn add<M: Middleware>(&mut self, middleware: M) {
-        self.middlewares.push(box middleware as Box<Middleware + Send + Share>);
+        self.middlewares.push(box middleware as Box<Middleware + Send + Sync>);
     }
 
     pub fn around<M: AroundMiddleware>(&mut self, mut middleware: M) {
         let handler = self.handler.take_unwrap();
         middleware.with_handler(handler);
-        self.handler = Some(box middleware as Box<Handler + Send + Share>);
+        self.handler = Some(box middleware as Box<Handler + Send + Sync>);
     }
 }
 
@@ -186,7 +186,7 @@ mod tests {
     }
 
     struct MyAroundMiddleware {
-        handler: Option<Box<Handler + Send + Share>>
+        handler: Option<Box<Handler + Send + Sync>>
     }
 
     impl MyAroundMiddleware {
@@ -198,7 +198,7 @@ mod tests {
     impl Middleware for MyAroundMiddleware {}
 
     impl AroundMiddleware for MyAroundMiddleware {
-        fn with_handler(&mut self, handler: Box<Handler + Send + Share>) {
+        fn with_handler(&mut self, handler: Box<Handler + Send + Sync>) {
             self.handler = Some(handler)
         }
     }
