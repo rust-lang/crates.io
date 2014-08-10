@@ -1,7 +1,13 @@
 install:
-  - curl http://www.rust-lang.org/rustup.sh | sudo sh -
+- curl http://www.rust-lang.org/rustup.sh | sudo sh -
 script:
-  - cargo build --verbose
-  - cargo test --verbose
+- cargo build --verbose
+- cargo test --verbose
+- cargo doc
+after_success: ! '[ $TRAVIS_BRANCH = master ] && [ $TRAVIS_PULL_REQUEST = false ]
+  && echo ''<meta http-equiv=refresh content=0;url=conduit-router/index.html>'' >
+  target/doc/index.html && sudo pip install ghp-import && ghp-import -n target/doc
+  && git push -fq https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages '
 env:
-  - LD_LIBRARY_PATH=/usr/local/lib
+  global:
+    secure: PKIdUeYojs1Ebxi4CsRUIg4jDCat14Zp2ed/EHNgGP4sJB+1YlMarKfGTGFmHTyHL717+qF0I3LxyWOHheTNkcDcQhrvgh4giF+ktDVyAMgKcP3Rcoz7ceVO3x6Hw8yiAMkCut3cIRq+GKq+2FcsDXszR4EVZ8aePOBTvcN+hPA=
