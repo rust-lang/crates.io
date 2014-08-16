@@ -3,8 +3,10 @@ extern crate semver;
 use std::collections::HashMap;
 use std::io::net::ip::IpAddr;
 use std::hash::Hash;
-use std::any::Any;
 use std::fmt::Show;
+
+pub use self::typemap::TypeMap;
+mod typemap;
 
 #[deriving(PartialEq, Show, Clone)]
 pub enum Scheme {
@@ -38,7 +40,7 @@ pub enum Method {
 }
 
 /// A Dictionary for extensions provided by the server or middleware
-pub type Extensions = HashMap<&'static str, Box<Any>>;
+pub type Extensions = TypeMap;
 
 pub trait Request {
     /// The version of HTTP being used
