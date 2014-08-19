@@ -107,7 +107,8 @@ mod tests {
     use std::io::net::ip::IpAddr;
     use std::collections::HashMap;
     use std::io::MemReader;
-    use super::*;
+
+    use {RouteBuilder, RequestParams};
 
     use conduit;
     use conduit::{Handler, Method, Scheme, Host, Headers, Extensions};
