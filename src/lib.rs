@@ -87,7 +87,7 @@ fn run_afters(middleware: &[Box<Middleware>],
 mod tests {
     extern crate semver;
 
-    use super::*;
+    use {MiddlewareBuilder, Middleware, AroundMiddleware};
 
     use std::any::{Any, AnyRefExt};
     use std::io::net::ip::IpAddr;

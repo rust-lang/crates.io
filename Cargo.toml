@@ -4,10 +4,6 @@ name = "conduit-middleware"
 version = "0.5.0"
 authors = ["wycats@gmail.com"]
 
-[[lib]]
-
-name = "conduit-middleware"
-
 [dependencies.conduit]
 
 git = "https://github.com/conduit-rust/conduit.git"
