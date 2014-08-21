@@ -7,6 +7,10 @@ pub struct TypeMap {
 }
 
 impl TypeMap {
+    pub fn new() -> TypeMap {
+        TypeMap { data: HashMap::new() }
+    }
+
     pub fn find<T: 'static>(&self) -> Option<&T> {
         self.data.find(&TypeId::of::<T>()).and_then(|a| a.downcast_ref())
     }
