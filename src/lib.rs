@@ -89,7 +89,6 @@ mod tests {
 
     use {MiddlewareBuilder, Middleware, AroundMiddleware};
 
-    use std::any::{Any, AnyRefExt};
     use std::io::net::ip::IpAddr;
     use std::io::MemReader;
     use std::fmt;
@@ -97,11 +96,12 @@ mod tests {
     use std::collections::HashMap;
 
     use conduit;
-    use conduit::{Request, Response, Host, Headers, Method, Scheme, Extensions, Handler};
+    use conduit::{Request, Response, Host, Headers, Method, Scheme, Extensions};
+    use conduit::{Handler, TypeMap};
 
     struct RequestSentinel {
         path: String,
-        extensions: HashMap<&'static str, Box<Any>>,
+        extensions: TypeMap,
         method: Method
     }
 
@@ -109,7 +109,7 @@ mod tests {
         fn new(method: Method, path: &'static str) -> RequestSentinel {
             RequestSentinel {
                 path: path.to_string(),
-                extensions: HashMap::new(),
+                extensions: TypeMap::new(),
                 method: method
             }
         }
@@ -142,7 +142,7 @@ mod tests {
 
     impl Middleware for MyMiddleware {
         fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Show>> {
-            req.mut_extensions().insert("test.middleware", box "hello".to_string() as Box<Any>);
+            req.mut_extensions().insert("hello".to_string());
             Ok(())
         }
     }
@@ -205,7 +205,7 @@ mod tests {
 
     impl Handler for MyAroundMiddleware {
         fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
-            req.mut_extensions().insert("test.round-and-round", box "hello".to_string() as Box<Any>);
+            req.mut_extensions().insert("hello".to_string());
             self.handler.get_ref().call(req)
         }
     }
@@ -224,9 +224,8 @@ mod tests {
         Shower { inner: s }
     }
 
-    fn get_extension<'a, T: 'static>(req: &'a Request, key: &'static str) -> &'a T {
-        req.extensions().find(&key).and_then(|s| s.downcast_ref::<T>())
-            .expect(format!("No {} key found in extensions", key).as_slice())
+    fn get_extension<'a, T: 'static>(req: &'a Request) -> &'a T {
+        req.extensions().find::<T>().unwrap()
     }
 
     fn response(string: String) -> Response {
@@ -238,7 +237,7 @@ mod tests {
     }
 
     fn handler(req: &mut Request) -> Result<Response, ()> {
-        let hello = get_extension::<String>(req, "test.middleware");
+        let hello = get_extension::<String>(req);
         Ok(response(hello.clone()))
     }
 
@@ -247,8 +246,8 @@ mod tests {
     }
 
     fn middle_handler(req: &mut Request) -> Result<Response, ()> {
-        let hello = get_extension::<String>(req, "test.middleware");
-        let middle = get_extension::<String>(req, "test.round-and-round");
+        let hello = get_extension::<String>(req);
+        let middle = get_extension::<String>(req);
 
         Ok(response(format!("{} {}", hello, middle)))
     }
