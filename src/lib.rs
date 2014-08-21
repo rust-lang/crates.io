@@ -5,11 +5,10 @@ extern crate conduit;
 
 use std::io::net::ip::{IpAddr, Ipv4Addr};
 use std::io::MemReader;
-use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Show;
 
-use conduit::{Method, Scheme, Host, Extensions, Headers};
+use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
 
 pub struct MockRequest {
     path: String,
@@ -18,7 +17,7 @@ pub struct MockRequest {
     string_body: Option<String>,
     build_headers: HashMap<String, String>,
     headers: MockHeaders,
-    extensions: HashMap<&'static str, Box<Any>>,
+    extensions: TypeMap,
     reader: Option<MemReader>
 }
 
@@ -28,7 +27,7 @@ impl MockRequest {
 
         MockRequest {
             path: path.to_string(),
-            extensions: HashMap::new(),
+            extensions: TypeMap::new(),
             query_string: None,
             string_body: None,
             build_headers: headers,
@@ -126,7 +125,7 @@ impl<'a> conduit::Request for MockRequest {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::MockRequest;
     use conduit;
     use semver;
 
