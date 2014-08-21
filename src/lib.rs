@@ -5,7 +5,6 @@ extern crate router = "route-recognizer";
 extern crate conduit;
 
 use std::collections::HashMap;
-use std::any::{Any, AnyRefExt};
 use std::fmt::Show;
 
 use router::{Router, Match};
@@ -78,7 +77,7 @@ impl conduit::Handler for RouteBuilder {
 
         {
             let extensions = request.mut_extensions();
-            extensions.insert("router.params", box m.params.clone() as Box<Any>);
+            extensions.insert(m.params.clone());
         }
 
         (*m.handler).call(request)
@@ -90,8 +89,7 @@ pub trait RequestParams<'a> {
 }
 
 pub fn params<'a>(req: &'a Request) -> &'a router::Params {
-    req.extensions().find(&"router.params")
-        .and_then(|a| a.downcast_ref::<router::Params>())
+    req.extensions().find::<router::Params>()
         .expect("Missing params")
 }
 
@@ -111,7 +109,7 @@ mod tests {
     use {RouteBuilder, RequestParams};
 
     use conduit;
-    use conduit::{Handler, Method, Scheme, Host, Headers, Extensions};
+    use conduit::{Handler, Method, Scheme, Host, Headers, Extensions, TypeMap};
 
     struct RequestSentinel {
         method: Method,
@@ -123,7 +121,7 @@ mod tests {
         fn new(method: Method, path: &'static str) -> RequestSentinel {
             RequestSentinel {
                 path: path.to_string(),
-                extensions: HashMap::new(),
+                extensions: TypeMap::new(),
                 method: method
             }
         }
