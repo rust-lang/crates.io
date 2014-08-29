@@ -117,11 +117,11 @@ pub struct Response {
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler : Sync + Send {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>>;
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>>;
 }
 
 impl<T: Send + Sync + Show> Handler for fn(&mut Request) -> Result<Response, T> {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
-        { (*self)(request) }.map_err(|e| box e as Box<Show>)
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
+        { (*self)(request) }.map_err(|e| box e as Box<Show + 'static>)
     }
 }
