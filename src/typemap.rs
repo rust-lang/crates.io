@@ -3,7 +3,7 @@ use std::intrinsics::TypeId;
 use std::collections::HashMap;
 
 pub struct TypeMap {
-    data: HashMap<TypeId, Box<Any>>
+    data: HashMap<TypeId, Box<Any + 'static>>
 }
 
 impl TypeMap {

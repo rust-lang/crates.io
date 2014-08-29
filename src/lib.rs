@@ -89,7 +89,7 @@ pub trait Request {
     fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions;
 }
 
-pub type HeaderEntries<'a> = Box<Iterator<(&'a str, Vec<&'a str>)>>;
+pub type HeaderEntries<'a> = Box<Iterator<(&'a str, Vec<&'a str>)> + 'a>;
 
 pub trait Headers {
     /// Find the value of a given header. Multi-line headers are represented
