@@ -7,12 +7,12 @@ use std::fmt::Show;
 use conduit::{Request, Response, Handler};
 
 pub trait Middleware: Send + Sync {
-    fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
+    fn before(&self, _: &mut Request) -> Result<(), Box<Show + 'static>> {
         Ok(())
     }
 
-    fn after(&self, _: &mut Request, res: Result<Response, Box<Show>>)
-             -> Result<Response, Box<Show>>
+    fn after(&self, _: &mut Request, res: Result<Response, Box<Show + 'static>>)
+             -> Result<Response, Box<Show + 'static>>
     {
         res
     }
@@ -40,14 +40,14 @@ impl MiddlewareBuilder {
     }
 
     pub fn around<M: AroundMiddleware>(&mut self, mut middleware: M) {
-        let handler = self.handler.take_unwrap();
+        let handler = self.handler.take().unwrap();
         middleware.with_handler(handler);
         self.handler = Some(box middleware as Box<Handler + Send + Sync>);
     }
 }
 
 impl Handler for MiddlewareBuilder {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let mut error = None;
 
         for (i, middleware) in self.middlewares.iter().enumerate() {
@@ -66,7 +66,7 @@ impl Handler for MiddlewareBuilder {
                 run_afters(middlewares, req, Err(err))
             },
             None => {
-                let res = { self.handler.get_ref().call(req) };
+                let res = { self.handler.as_ref().unwrap().call(req) };
                 let middlewares = self.middlewares.as_slice();
 
                 run_afters(middlewares, req, res)
@@ -77,8 +77,8 @@ impl Handler for MiddlewareBuilder {
 
 fn run_afters(middleware: &[Box<Middleware>],
                   req: &mut Request,
-                  res: Result<Response, Box<Show>>)
-                  -> Result<Response, Box<Show>>
+                  res: Result<Response, Box<Show + 'static>>)
+                  -> Result<Response, Box<Show + 'static>>
 {
     middleware.iter().rev().fold(res, |res, m| m.after(req, res))
 }
@@ -141,7 +141,7 @@ mod tests {
     struct MyMiddleware;
 
     impl Middleware for MyMiddleware {
-        fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Show>> {
+        fn before<'a>(&self, req: &'a mut Request) -> Result<(), Box<Show + 'static>> {
             req.mut_extensions().insert("hello".to_string());
             Ok(())
         }
@@ -150,8 +150,8 @@ mod tests {
     struct ErrorRecovery;
 
     impl Middleware for ErrorRecovery {
-        fn after(&self, _: &mut Request, res: Result<Response, Box<Show>>)
-                     -> Result<Response, Box<Show>>
+        fn after(&self, _: &mut Request, res: Result<Response, Box<Show + 'static>>)
+                     -> Result<Response, Box<Show + 'static>>
         {
             res.or_else(|e| {
                 Ok(Response {
@@ -166,16 +166,16 @@ mod tests {
     struct ProducesError;
 
     impl Middleware for ProducesError {
-        fn before(&self, _: &mut Request) -> Result<(), Box<Show>> {
-            Err(box "Nope".to_string() as Box<Show>)
+        fn before(&self, _: &mut Request) -> Result<(), Box<Show + 'static>> {
+            Err(box "Nope".to_string() as Box<Show + 'static>)
         }
     }
 
     struct NotReached;
 
     impl Middleware for NotReached {
-        fn after(&self, _: &mut Request, _: Result<Response, Box<Show>>)
-                     -> Result<Response, Box<Show>>
+        fn after(&self, _: &mut Request, _: Result<Response, Box<Show + 'static>>)
+                     -> Result<Response, Box<Show + 'static>>
         {
             Ok(Response {
                 status: (200, "OK"),
@@ -204,14 +204,14 @@ mod tests {
     }
 
     impl Handler for MyAroundMiddleware {
-        fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
+        fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
             req.mut_extensions().insert("hello".to_string());
-            self.handler.get_ref().call(req)
+            self.handler.as_ref().unwrap().call(req)
         }
     }
 
     struct Shower<'a> {
-        inner: &'a Show
+        inner: &'a Show + 'a
     }
 
     impl<'a> Show for Shower<'a> {
