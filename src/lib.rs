@@ -64,7 +64,7 @@ impl RouteBuilder {
 }
 
 impl conduit::Handler for RouteBuilder {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let m = {
             let method = request.method();
             let path = request.path();
@@ -93,7 +93,7 @@ pub fn params<'a>(req: &'a Request) -> &'a router::Params {
         .expect("Missing params")
 }
 
-impl<'a> RequestParams<'a> for &'a Request {
+impl<'a> RequestParams<'a> for &'a Request + 'a {
     fn params(self) -> &'a router::Params {
         params(self)
     }
