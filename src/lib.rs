@@ -11,7 +11,7 @@ use time::{Tm, strptime};
 use conduit::Request;
 use middleware::Middleware;
 
-type Response = Result<conduit::Response, Box<Show>>;
+type Response = Result<conduit::Response, Box<Show + 'static>>;
 
 pub struct ConditionalGet;
 
@@ -81,7 +81,7 @@ fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
 
 fn header_val<'a>(header: Vec<&'a str>) -> MaybeOwned<'a> {
     if header.len() == 1 {
-        Slice(*header.get(0))
+        Slice(header[0])
     } else {
         Owned(header.concat())
     }
@@ -89,7 +89,7 @@ fn header_val<'a>(header: Vec<&'a str>) -> MaybeOwned<'a> {
 
 fn res_header_val<'a>(header: &'a Vec<String>) -> MaybeOwned<'a> {
     if header.len() == 1 {
-        Slice(header.get(0).as_slice())
+        Slice(header[0].as_slice())
     } else {
         Owned(header.concat())
     }
@@ -134,7 +134,7 @@ mod tests {
     macro_rules! returning(
         ($code:expr, $($header:expr => $value:expr),+) => ({
             let mut headers = HashMap::new();
-            $(headers.insert($header.to_str(), vec!($value.to_str()));)+
+            $(headers.insert($header.to_string(), vec!($value.to_string()));)+
             let handler = SimpleHandler::new(headers, $code, "hello");
             let mut stack = MiddlewareBuilder::new(handler);
             stack.add(ConditionalGet);
@@ -148,7 +148,7 @@ mod tests {
     macro_rules! request(
         ($($header:expr => $value:expr),+) => ({
             let mut req = test::MockRequest::new(conduit::Get, "/");
-            $(req.header($header, $value.to_str());)+
+            $(req.header($header, $value.to_string());)+
             req
         })
     )
@@ -156,68 +156,92 @@ mod tests {
     #[test]
     fn test_sends_304() {
         let handler = returning!("Last-Modified" => httpdate(time::now()));
-        expect_304(handler.call(&mut request!("If-Modified-Since" => httpdate(time::now()))));
+        expect_304(handler.call(&mut request!(
+            "If-Modified-Since" => httpdate(time::now())
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_304_if_older_than_now() {
         let handler = returning!("Last-Modified" => before_now());
-        expect_304(handler.call(&mut request!("If-Modified-Since" => httpdate(time::now()))));
+        expect_304(handler.call(&mut request!(
+            "If-Modified-Since" => httpdate(time::now())
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_304_with_etag() {
         let handler = returning!("ETag" => "1234");
-        expect_304(handler.call(&mut request!("If-None-Match" => "1234")));
+        expect_304(handler.call(&mut request!(
+            "If-None-Match" => "1234"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_200_with_fresh_time_but_not_etag() {
         let handler = returning!("Last-Modified" => before_now(), "ETag" => "1234");
-        expect_200(handler.call(&mut request!("If-Modified-Since" => now(), "If-None-Match" => "4321")));
+        expect_200(handler.call(&mut request!(
+            "If-Modified-Since" => now(),
+            "If-None-Match" => "4321"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_200_with_fresh_etag_but_not_time() {
         let handler = returning!("Last-Modified" => now(), "ETag" => "1234");
-        expect_200(handler.call(&mut request!("If-Modified-Since" => before_now(), "If-None-Match" => "1234")));
+        expect_200(handler.call(&mut request!(
+            "If-Modified-Since" => before_now(),
+            "If-None-Match" => "1234"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_200_with_fresh_etag() {
         let handler = returning!("ETag" => "1234");
-        expect_200(handler.call(&mut request!("If-None-Match" => "4321")));
+        expect_200(handler.call(&mut request!(
+            "If-None-Match" => "4321"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_200_with_fresh_time() {
         let handler = returning!("Last-Modified" => now());
-        expect_200(handler.call(&mut request!("If-Modified-Since" => before_now())));
+        expect_200(handler.call(&mut request!(
+            "If-Modified-Since" => before_now()
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_sends_304_with_fresh_time_and_etag() {
         let handler = returning!("Last-Modified" => before_now(), "ETag" => "1234");
-        expect_304(handler.call(&mut request!("If-Modified-Since" => now(), "If-None-Match" => "1234")));
+        expect_304(handler.call(&mut request!(
+            "If-Modified-Since" => now(),
+            "If-None-Match" => "1234"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_does_not_affect_non_200() {
         let code = (302, "Found");
         let handler = returning!(code, "Last-Modified" => before_now(), "ETag" => "1234");
-        expect(code, handler.call(&mut request!("If-Modified-Since" => now(), "If-None-Match" => "1234")));
+        expect(code, handler.call(&mut request!(
+            "If-Modified-Since" => now(),
+            "If-None-Match" => "1234"
+        ) as &mut conduit::Request));
     }
 
     #[test]
     fn test_does_not_affect_malformed_timestamp() {
         let bad_stamp = time::now().strftime("%Y-%m-%d %H:%M:%S %z");
         let handler = returning!("Last-Modified" => before_now());
-        expect_200(handler.call(&mut request!("If-Modified-Since" => bad_stamp)));
+        expect_200(handler.call(&mut request!(
+            "If-Modified-Since" => bad_stamp
+        ) as &mut conduit::Request));
     }
 
     fn expect_304(response: Result<Response, Box<Show>>) {
         let mut response = response.ok().expect("No response");
-        let body = response.body.read_to_str().ok().expect("No body");
+        let body = response.body.read_to_string().ok().expect("No body");
 
         assert_eq!(response.status, (304, "Not Modified"));
         assert_eq!(body.as_slice(), "");
@@ -229,7 +253,7 @@ mod tests {
 
     fn expect(status: (uint, &'static str), response: Result<Response, Box<Show>>) {
         let mut response = response.ok().expect("No response");
-        let body = response.body.read_to_str().ok().expect("No body");
+        let body = response.body.read_to_string().ok().expect("No body");
 
         assert_eq!(response.status, status);
         assert_eq!(body.as_slice(), "hello");
@@ -250,11 +274,11 @@ mod tests {
     }
 
     impl Handler for SimpleHandler {
-        fn call(&self, _: &mut Request) -> Result<Response, Box<Show>> {
+        fn call(&self, _: &mut Request) -> Result<Response, Box<Show + 'static>> {
             Ok(Response {
                 status: self.status,
                 headers: self.map.clone(),
-                body: box MemReader::new(self.body.to_str().into_bytes()) as Box<Reader + Send>
+                body: box MemReader::new(self.body.to_string().into_bytes()) as Box<Reader + Send>
             })
         }
     }

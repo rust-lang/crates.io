@@ -4,18 +4,11 @@ name = "conduit-conditional-get"
 version = "0.5.0"
 authors = ["wycats@gmail.com"]
 
-[[lib]]
-
-name = "conduit-conditional-get"
-
 [dependencies.conduit]
-
 git = "https://github.com/conduit-rust/conduit.git"
 
 [dependencies.conduit-test]
-
 git = "https://github.com/conduit-rust/conduit-test.git"
 
 [dependencies.conduit-middleware]
-
 git = "https://github.com/conduit-rust/conduit-middleware.git"
