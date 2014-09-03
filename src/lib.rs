@@ -25,7 +25,7 @@ impl Static {
 }
 
 impl Handler for Static {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let request_path = request.path().slice_from(1);
         let path = self.path.join(request_path);
 
