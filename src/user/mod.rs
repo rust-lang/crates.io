@@ -8,11 +8,10 @@ use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
 use pg::{PostgresConnection, PostgresRow};
-use pg::error::PgDbError;
 
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, CargoError, internal, Require, ChainError};
+use util::{RequestUtils, CargoResult, internal, Require, ChainError};
 use util::errors::NotFound;
 
 pub use self::middleware::{Middleware, RequestUser};
@@ -27,7 +26,7 @@ pub struct User {
     pub api_token: String,
 }
 
-#[deriving(Encodable)]
+#[deriving(Decodable, Encodable)]
 pub struct EncodableUser {
     pub id: i32,
     pub email: String,

@@ -1,12 +1,14 @@
 use conduit_test::MockRequest;
 use conduit::{mod, Handler};
 
-use cargo_registry::user::User;
+use cargo_registry::user::{User, EncodableUser};
 
 #[deriving(Decodable)]
 struct AuthResponse { url: String, state: String }
 #[deriving(Decodable)]
 struct TokenResponse { ok: bool, error: Option<String> }
+#[deriving(Decodable)]
+struct MeResponse { ok: bool, error: Option<EncodableUser> }
 
 #[test]
 fn auth_gives_a_token() {
@@ -43,4 +45,12 @@ fn user_insert() {
     let user2 = t!(User::find_or_insert(&tx, "foo", "baz"));
     assert!(user != user2);
     assert_eq!(user2.gh_access_token.as_slice(), "baz");
+}
+
+#[test]
+fn me() {
+    let middle = ::middleware();
+    let mut req = MockRequest::new(conduit::Get, "/me");
+    let response = t!(middle.call(&mut req).map_err(|e| (&*e).to_string()));
+    assert_eq!(response.status.val0(), 403);
 }
