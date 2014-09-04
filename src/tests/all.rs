@@ -22,6 +22,7 @@ macro_rules! t_resp( ($e:expr) => ({
     resp
 }) )
 
+mod middleware;
 mod user;
 
 fn app() -> cargo_registry::App {
@@ -66,4 +67,13 @@ fn json<T>(r: &mut conduit::Response) -> T
     let data = r.body.read_to_end().unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
     json::decode(s).unwrap()
+}
+
+fn user() -> cargo_registry::user::User {
+    cargo_registry::user::User {
+        id: 10000,
+        email: "foo@example.com".to_string(),
+        gh_access_token: "foo".to_string(),
+        api_token: "bar".to_string(),
+    }
 }

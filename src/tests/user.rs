@@ -8,7 +8,7 @@ struct AuthResponse { url: String, state: String }
 #[deriving(Decodable)]
 struct TokenResponse { ok: bool, error: Option<String> }
 #[deriving(Decodable)]
-struct MeResponse { ok: bool, error: Option<EncodableUser> }
+struct MeResponse { ok: bool, user: EncodableUser }
 
 #[test]
 fn auth_gives_a_token() {
@@ -49,8 +49,17 @@ fn user_insert() {
 
 #[test]
 fn me() {
-    let middle = ::middleware();
+    let mut middle = ::middleware();
     let mut req = MockRequest::new(conduit::Get, "/me");
     let response = t!(middle.call(&mut req).map_err(|e| (&*e).to_string()));
     assert_eq!(response.status.val0(), 403);
+
+    let user = ::user();
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut response = t_resp!(middle.call(&mut req));
+    let json: MeResponse = ::json(&mut response);
+    assert!(json.ok);
+    assert_eq!(json.user.email, user.email);
+    assert_eq!(json.user.api_token, user.api_token);
+    assert_eq!(json.user.id, user.id);
 }
