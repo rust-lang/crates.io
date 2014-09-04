@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use conduit::Response;
 use curl::ErrCode;
-use pg::error::PostgresError;
+use pg::error::{PostgresError, PostgresConnectError};
 use serialize::json;
 
 pub trait CargoError: Send {
@@ -78,7 +78,7 @@ impl<'a> Show for &'a CargoError + Send {
 
 impl Show for Box<CargoError + Send> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let me: &CargoError + Send = *self;
+        let me: &CargoError + Send = &**self;
         me.fmt(f)
     }
 }
@@ -149,6 +149,12 @@ impl CargoError for PostgresError {
 
 from_error!(PostgresError)
 
+impl CargoError for PostgresConnectError {
+    fn description(&self) -> String { self.to_string() }
+}
+
+from_error!(PostgresConnectError)
+
 impl CargoError for ErrCode {
     fn description(&self) -> String { self.to_string() }
 }
@@ -160,6 +166,12 @@ impl CargoError for json::DecoderError {
 }
 
 from_error!(json::DecoderError)
+
+impl<T: CargoError + Send> FromError<T> for Box<Show + 'static> {
+    fn from_error(t: T) -> Box<Show + 'static> {
+        box() (box t as Box<CargoError + Send>) as Box<Show + 'static>
+    }
+}
 
 pub struct ConcreteCargoError {
     description: String,
@@ -183,7 +195,7 @@ impl CargoError for ConcreteCargoError {
     }
 
     fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> {
-        self.cause.as_ref().map(|c| { let err: &CargoError + Send = *c; err })
+        self.cause.as_ref().map(|c| { let err: &CargoError + Send = &**c; err })
     }
 
     fn with_cause<E: CargoError + Send>(mut self,

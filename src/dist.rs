@@ -8,7 +8,7 @@ use conduit_static::Static;
 use semver;
 
 pub struct Middleware {
-    handler: Option<Box<Handler + Send + Share>>,
+    handler: Option<Box<Handler + Send + Sync>>,
     dist: Static,
 }
 
@@ -22,13 +22,13 @@ impl Middleware {
 }
 
 impl conduit_middleware::AroundMiddleware for Middleware {
-    fn with_handler(&mut self, handler: Box<Handler + Send + Share>) {
+    fn with_handler(&mut self, handler: Box<Handler + Send + Sync>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for Middleware {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
         // First, attempt to serve a static file. If we're missing a static
         // file, then keep going.
         match self.dist.call(req) {
@@ -48,11 +48,11 @@ impl Handler for Middleware {
                 path_override: "/index.html",
             })
         } else {
-            self.handler.get_ref().call(req)
+            self.handler.as_ref().unwrap().call(req)
         };
 
         struct RequestProxy<'a> {
-            other: &'a mut Request,
+            other: &'a mut Request + 'a,
             path_override: &'a str,
         }
         impl<'a> Request for RequestProxy<'a> {

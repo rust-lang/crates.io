@@ -1,61 +1,66 @@
 [project]
-
-name = "cargo-website"
-authors = ["alex@alexcrichton.com"]
+name = "cargo-registry"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.1.0"
 
-[dependencies.civet]
+[[bin]]
+name = "cargo-registry"
+test = false
 
+[[test]]
+name = "all"
+path = "src/tests/all.rs"
+
+[dependencies.civet]
 git = "https://github.com/wycats/rust-civet"
 
 [dependencies.conduit-router]
-
 git = "https://github.com/conduit-rust/conduit-router"
 
 [dependencies.conduit-middleware]
-
 git = "https://github.com/conduit-rust/conduit-middleware"
 
 [dependencies.conduit-cookie]
-
 git = "https://github.com/conduit-rust/conduit-cookie"
 
-[dependencies.rust-postgres]
-
+[dependencies.postgres]
 git = "https://github.com/sfackler/rust-postgres"
 
 [dependencies.html]
-
 path = "src/html"
 
 [dependencies.s3]
-
 path = "src/s3"
 
 [dependencies.oauth2]
-
 git = "https://github.com/alexcrichton/oauth2-rs"
 
 [dependencies.curl]
-
 git = "https://github.com/carllerche/curl-rust"
 
 [dependencies.conduit-log-requests]
-
 git = "https://github.com/conduit-rust/conduit-log-requests"
 
 [dependencies.conduit-conditional-get]
-
 git = "https://github.com/conduit-rust/conduit-conditional-get"
 
 [dependencies.conduit-static]
-
 git = "https://github.com/conduit-rust/conduit-static"
 
 [dependencies.conduit-json-parser]
-
 git = "https://github.com/conduit-rust/conduit-json-parser"
 
 [dependencies.flate2]
-
 git = "https://github.com/alexcrichton/flate2-rs"
+
+[dependencies.semver]
+git = "https://github.com/rust-lang/semver"
+
+[dependencies.url]
+git = "https://github.com/servo/rust-url"
+
+[dependencies.r2d2_postgres]
+git = "https://github.com/sfackler/r2d2-postgres"
+
+[dev-dependencies.conduit-test]
+git = "https://github.com/conduit-rust/conduit-test"

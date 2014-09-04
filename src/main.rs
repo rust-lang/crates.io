@@ -1,79 +1,39 @@
-#![feature(macro_rules)]
-
+extern crate "cargo-registry" as cargo_registry;
+extern crate civet;
 extern crate green;
 extern crate rustuv;
-extern crate serialize;
-extern crate url;
-extern crate semver;
 
-extern crate civet;
-extern crate curl;
-extern crate html;
-extern crate oauth2;
-extern crate pg = "postgres";
-extern crate flate2;
-extern crate s3;
-
-extern crate conduit_router = "conduit-router";
-extern crate conduit;
-extern crate conduit_cookie = "conduit-cookie";
-extern crate conduit_middleware = "conduit-middleware";
-extern crate conduit_conditional_get = "conduit-conditional-get";
-extern crate conduit_log_requests = "conduit-log-requests";
-extern crate conduit_static = "conduit-static";
-extern crate conduit_json_parser = "conduit-json-parser";
-
-use civet::{Config, Server};
-use conduit_router::RouteBuilder;
-use conduit_middleware::MiddlewareBuilder;
-
-use app::App;
-use util::C;
-
-mod macros;
-
-mod app;
-mod db;
-mod dist;
-mod git;
-mod package;
-mod user;
-mod util;
+use std::os;
+use civet::Server;
 
 fn main() {
-    let mut router = RouteBuilder::new();
-
-    router.get("/authorize_url", C(user::github_authorize));
-    router.get("/authorize", C(user::github_access_token));
-    router.get("/logout", C(user::logout));
-    router.get("/me", C(user::me));
-    router.put("/me/reset_token", C(user::reset_token));
-    router.get("/packages", C(package::index));
-    router.get("/packages/:package_id", C(package::show));
-    router.put("/packages/:package_id", {
-        let mut m = MiddlewareBuilder::new(C(package::update));
-        m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
-        m
-    });
-    router.post("/packages/new", C(package::new));
-    router.get("/git/index/*path", C(git::serve_index));
-    router.post("/git/index/*path", C(git::serve_index));
-
-    let app = App::new();
-
-    let mut m = MiddlewareBuilder::new(router);
-    m.add(conduit_log_requests::LogRequests(0));
-    m.add(conduit_conditional_get::ConditionalGet);
-    m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
-    m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
-    m.add(app::AppMiddleware::new(app));
-    m.add(user::Middleware);
-    m.around(dist::Middleware::new());
+    let config = cargo_registry::Config {
+        s3_bucket: env("S3_BUCKET"),
+        s3_access_key: env("S3_ACCESS_KEY"),
+        s3_secret_key: env("S3_SECRET_KEY"),
+        session_key: env("SESSION_KEY"),
+        git_repo_bare: Path::new(env("GIT_REPO_BARE")),
+        git_repo_checkout: Path::new(env("GIT_REPO_CHECKOUT")),
+        gh_client_id: env("GH_CLIENT_ID"),
+        gh_client_secret: env("GH_CLIENT_SECRET"),
+        db_url: env("DATABASE_URL"),
+        env: cargo_registry::Development,
+    };
+    let app = cargo_registry::App::new(&config);
+    app.db_setup();
+    let app = cargo_registry::middleware(app);
 
     let port = 8888;
-    let _a = Server::start(Config { port: port, threads: 8 }, m);
+    let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);
     wait_for_sigint();
+}
+
+fn env(s: &str) -> String {
+    match os::getenv(s) {
+        Some(s) => s,
+        None => fail!("must have `{}` defined", s),
+    }
 }
 
 // libnative doesn't have signal handling yet

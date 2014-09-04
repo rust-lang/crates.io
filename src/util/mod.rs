@@ -12,9 +12,11 @@ use conduit::{Request, Response, Handler};
 pub use self::errors::{CargoError, CargoResult, internal, internal_error};
 pub use self::errors::{ChainError, BoxError};
 pub use self::result::{Require, Wrap};
+pub use self::lazy_cell::LazyCell;
 
 pub mod errors;
 pub mod result;
+mod lazy_cell;
 
 pub trait RequestUtils {
     fn redirect(self, url: String) -> Response;
@@ -23,7 +25,7 @@ pub trait RequestUtils {
     fn query(self) -> HashMap<String, String>;
 }
 
-impl<'a> RequestUtils for &'a Request {
+impl<'a> RequestUtils for &'a Request + 'a {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
         let s = json::encode(t);
         let mut headers = HashMap::new();
@@ -37,14 +39,8 @@ impl<'a> RequestUtils for &'a Request {
     }
 
     fn query(self) -> HashMap<String, String> {
-        self.query_string().unwrap_or("").split('&').filter_map(|s| {
-            let mut parts = s.split('=');
-            let k = parts.next().unwrap_or(s);
-            let v = parts.next().unwrap_or("");
-            let k = try_option!(url::decode_component(k).ok());
-            let v = try_option!(url::decode_component(v).ok());
-            Some((k, v))
-        }).collect()
+        url::form_urlencoded::parse_str(self.query_string().unwrap_or(""))
+            .move_iter().collect()
     }
 
     fn redirect(self, url: String) -> Response {
@@ -61,7 +57,7 @@ impl<'a> RequestUtils for &'a Request {
 pub struct C(pub fn(&mut Request) -> CargoResult<Response>);
 
 impl Handler for C {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let C(f) = *self;
         match f(req) {
             Ok(req) => Ok(req),

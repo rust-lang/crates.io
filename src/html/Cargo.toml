@@ -4,7 +4,9 @@ name = "html"
 version = "0.0.1"
 authors = []
 
-[[lib]]
-
+[lib]
 name = "html"
 path = "lib.rs"
+
+[dependencies.url]
+git = "https://github.com/servo/rust-url"

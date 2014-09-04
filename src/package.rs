@@ -8,7 +8,7 @@ use pg::error::PgDbError;
 use curl::http;
 
 use app::{App, RequestApp};
-use db::Connection;
+use db::{Connection, RequestTransaction};
 use git;
 use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
@@ -25,6 +25,13 @@ pub struct EncodablePackage {
     pub name: String,
 }
 
+#[deriving(Encodable)]
+pub struct EncodablePackageVersion {
+    pub id: String,
+    pub version: String,
+    pub link: String,
+}
+
 impl Package {
     fn from_row(row: &PostgresRow) -> Package {
         Package {
@@ -36,7 +43,7 @@ impl Package {
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Package> {
         let stmt = try!(conn.prepare("SELECT * FROM packages \
                                       WHERE name = $1 LIMIT 1"));
-        match try!(stmt.query([&name])).next() {
+        match try!(stmt.query(&[&name])).next() {
             Some(row) => Ok(Package::from_row(&row)),
             None => Err(NotFound.box_error()),
         }
@@ -49,7 +56,10 @@ impl Package {
 
     fn encodable(self) -> EncodablePackage {
         let Package { name, .. } = self;
-        EncodablePackage { id: name.clone(), name: name }
+        EncodablePackage {
+            id: name.clone(),
+            name: name,
+        }
     }
 }
 
@@ -63,24 +73,24 @@ pub fn setup(conn: &PostgresConnection) {
     conn.execute("ALTER TABLE packages ADD CONSTRAINT \
                   unique_name UNIQUE (name)", []).unwrap();
     conn.execute("INSERT INTO packages (name) VALUES ($1)",
-                 [&"Test"]).unwrap();
+                 &[&"Test"]).unwrap();
     conn.execute("INSERT INTO packages (name) VALUES ($1)",
-                 [&"Test2"]).unwrap();
+                 &[&"Test2"]).unwrap();
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let limit = 10i64;
     let offset = 0i64;
-    let conn = req.app().db();
+    let conn = try!(req.tx());
     let stmt = try!(conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2"));
 
     let mut pkgs = Vec::new();
-    for row in try!(stmt.query([&limit, &offset])) {
+    for row in try!(stmt.query(&[&limit, &offset])) {
         pkgs.push(Package::from_row(&row).encodable());
     }
 
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
-    let row = try!(stmt.query([])).next().unwrap();
+    let row = try!(stmt.query(&[])).next().unwrap();
     let total = row.get(0u);
 
     #[deriving(Encodable)]
@@ -96,7 +106,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["package_id"];
-    let pkg = try!(Package::find_by_name(&req.app().db(), name.as_slice()));
+    let conn = try!(req.tx());
+    let pkg = try!(Package::find_by_name(&*conn, name.as_slice()));
 
     #[deriving(Encodable)]
     struct R { package: EncodablePackage }
@@ -113,9 +124,9 @@ pub struct UpdatePackage {
 
 pub fn update(req: &mut Request) -> CargoResult<Response> {
     try!(req.user());
-    let conn = req.app().db();
+    let conn = try!(req.tx());
     let name = &req.params()["package_id"];
-    let pkg = try!(Package::find_by_name(&conn, name.as_slice()));
+    let pkg = try!(Package::find_by_name(&*conn, name.as_slice()));
 
     let update = conduit_json_parser::json_params::<UpdateRequest>(req).unwrap();
     // TODO: this should do something
@@ -135,9 +146,6 @@ pub struct NewPackage {
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
-    let db = app.db();
-    let mut tx = try!(db.transaction());
-    tx.set_rollback();
 
     // Peel out all input parameters
     fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
@@ -168,7 +176,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Make sure the api token is a valid api token
-    let _user = try!(User::find_by_api_token(&tx, auth.as_slice()));
+    let _user = try!(User::find_by_api_token(try!(req.tx()), auth.as_slice()));
 
     // Validate the name parameter and such
     let name: String = name.as_slice().chars()
@@ -183,16 +191,15 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Persist the new package, if it doesn't already exist
-    match tx.execute("INSERT INTO packages (name) VALUES ($1)", [&new_pkg.name]) {
-        Ok(..) => {}
-        Err(PgDbError(ref e))
-            if e.constraint.as_ref().map(|a| a.as_slice())
-                == Some("unique_name") => {
-                tx.set_rollback();
-                try!(tx.finish());
-                tx = try!(db.transaction());
-            }
-        Err(e) => return Err(e.box_error()),
+    {
+        let tx = try!(try!(req.tx()).transaction());
+        match tx.execute("INSERT INTO packages (name) VALUES ($1)", &[&new_pkg.name]) {
+            Ok(..) => tx.set_commit(),
+            Err(PgDbError(ref e))
+                if e.constraint.as_ref().map(|a| a.as_slice())
+                    == Some("unique_name") => {}
+            Err(e) => return Err(e.box_error()),
+        }
     }
 
     // Upload the package to S3
@@ -200,7 +207,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
                        new_pkg.name, new_pkg.vers);
     let resp = {
-        let s3req = app.bucket.put(&mut handle, path.as_slice(), req.body(),
+        let body = &mut req.body();
+        let s3req = app.bucket.put(&mut handle, path.as_slice(), body,
                                    "application/x-tar")
                               .content_length(length)
                               .header("Content-Encoding", "gzip");
@@ -228,16 +236,16 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             }
         }
     }
-    let mut bomb = Bomb { app: app, path: Some(path), handle: handle };
+    let mut bomb = Bomb { app: app.clone(), path: Some(path), handle: handle };
 
     // Register this package in our local git repo.
-    let pkg = try!(Package::find_by_name(&tx, new_pkg.name.as_slice()));
+    let pkg = try!(Package::find_by_name(try!(req.tx()),
+                                         new_pkg.name.as_slice()));
     try!(git::add_package(&**req.app(), &new_pkg).chain_error(|| {
         internal(format!("could not add package `{}` to the git repo", pkg.name))
     }));
 
     // Now that we've come this far, we're committed!
-    tx.set_commit();
     bomb.path = None;
 
     #[deriving(Encodable)]

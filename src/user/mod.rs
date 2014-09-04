@@ -11,7 +11,7 @@ use pg::{PostgresConnection, PostgresRow};
 use pg::error::PgDbError;
 
 use app::RequestApp;
-use db::Connection;
+use db::{Connection, RequestTransaction};
 use util::{RequestUtils, CargoResult, internal, Require, ChainError};
 use util::errors::NotFound;
 
@@ -37,7 +37,7 @@ pub struct EncodableUser {
 impl User {
     pub fn find(conn: &Connection, id: i32) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1"));
-        return try!(stmt.query([&id])).next().map(User::from_row).require(|| {
+        return try!(stmt.query(&[&id])).next().map(User::from_row).require(|| {
             NotFound
         })
     }
@@ -45,7 +45,7 @@ impl User {
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
-        return try!(stmt.query([&token])).next().map(User::from_row).require(|| {
+        return try!(stmt.query(&[&token])).next().map(User::from_row).require(|| {
             NotFound
         })
     }
@@ -81,7 +81,7 @@ pub fn setup(conn: &PostgresConnection) {
                   unique_email UNIQUE (email)", []).unwrap();
     conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
                   VALUES ($1, $2, $3)",
-                 [&"foo@bar.com", &"wut", &"api-token"]).unwrap();
+                 &[&"foo@bar.com", &"wut", &"api-token"]).unwrap();
 }
 
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
@@ -144,32 +144,34 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }));
 
     // Into the database!
-    let conn = req.app().db();
-    let resp = conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
-                             VALUES ($1, $2, $3)",
-                            [&ghuser.email.as_slice(),
-                             &token.access_token.as_slice(),
-                             &User::new_api_token()]);
-    match resp {
-        Ok(..) => {}
-        Err(PgDbError(ref e))
-            if e.constraint.as_ref().map(|a| a.as_slice())
-                == Some("unique_email") => {}
-        Err(e) => fail!("postgres error: {}", e),
-    }
+    let user = {
+        let conn = try!(req.tx());
+        let resp = conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
+                                 VALUES ($1, $2, $3)",
+                                &[&ghuser.email.as_slice(),
+                                  &token.access_token.as_slice(),
+                                  &User::new_api_token()]);
+        match resp {
+            Ok(..) => {}
+            Err(PgDbError(ref e))
+                if e.constraint.as_ref().map(|a| a.as_slice())
+                    == Some("unique_email") => {}
+            Err(e) => fail!("postgres error: {}", e),
+        }
 
-    // Who did we just insert?
-    let stmt = try!(conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1"));
-    let mut rows = try!(stmt.query([&ghuser.email.as_slice()]));
-    let row = try!(rows.next().require(|| {
-        internal("no user with email we just found")
-    }));
+        // Who did we just insert?
+        let stmt = try!(conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1"));
+        let mut rows = try!(stmt.query(&[&ghuser.email.as_slice()]));
+        let row = try!(rows.next().require(|| {
+            internal("no user with email we just found")
+        }));
 
-    let user = User {
-        api_token: row.get("api_token"),
-        gh_access_token: row.get("gh_access_token"),
-        id: row.get("id"),
-        email: row.get("email"),
+        User {
+            api_token: row.get("api_token"),
+            gh_access_token: row.get("gh_access_token"),
+            id: row.get("id"),
+            email: row.get("email"),
+        }
     };
     req.session().insert("user_id".to_string(), user.id.to_string());
 
@@ -185,9 +187,9 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
     let token = User::new_api_token();
-    let conn = req.app().db();
+    let conn = try!(req.tx());
     try!(conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
-                      [&token, &user.id]));
+                      &[&token, &user.id]));
 
     #[deriving(Encodable)]
     struct R { ok: bool, api_token: String }

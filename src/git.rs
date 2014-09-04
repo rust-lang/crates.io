@@ -52,7 +52,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let line = try!(line);
         if line.as_slice() == "\r\n" { break }
 
-        let mut parts = line.as_slice().splitn(':', 2);
+        let mut parts = line.as_slice().splitn(2, ':');
         let key = parts.next().unwrap();
         let value = parts.next().unwrap();
         let value = value.slice(1, value.len() - 2);
@@ -62,7 +62,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     let (status_code, status_desc) = {
         let line = headers.pop_equiv(&"Status").unwrap_or(Vec::new());
         let line = line.move_iter().next().unwrap_or(String::new());
-        let mut parts = line.as_slice().splitn(' ', 1);
+        let mut parts = line.as_slice().splitn(1, ' ');
         (from_str(parts.next().unwrap_or("")).unwrap_or(200),
          match parts.next() {
              Some("Not Found") => "Not Found",
