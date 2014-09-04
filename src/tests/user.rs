@@ -1,7 +1,11 @@
+use std::fmt::Show;
+
+use conduit::{mod, Handler, Request, Response};
+use conduit_middleware::Middleware;
 use conduit_test::MockRequest;
-use conduit::{mod, Handler};
 
 use cargo_registry::user::{User, EncodableUser};
+use cargo_registry::db::RequestTransaction;
 
 #[deriving(Decodable)]
 struct AuthResponse { url: String, state: String }
@@ -62,4 +66,32 @@ fn me() {
     assert_eq!(json.user.email, user.email);
     assert_eq!(json.user.api_token, user.api_token);
     assert_eq!(json.user.id, user.id);
+}
+
+#[test]
+fn reset_token() {
+    struct ResetTokenTest;
+
+    let mut middle = ::middleware();
+    middle.add(ResetTokenTest);
+    let mut req = MockRequest::new(conduit::Put, "/me/reset_token");
+    t_resp!(middle.call(&mut req));
+
+    impl Middleware for ResetTokenTest {
+        fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
+            let user = User::find_or_insert(req.tx().unwrap(), "foo",
+                                            "bar").unwrap();
+            req.mut_extensions().insert(user);
+            Ok(())
+        }
+
+        fn after(&self, req: &mut Request,
+                 response: Result<Response, Box<Show + 'static>>)
+                 -> Result<Response, Box<Show + 'static>> {
+            let user = req.extensions().find::<User>().unwrap();
+            let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
+            assert!(u2.api_token != user.api_token);
+            response
+        }
+    }
 }
