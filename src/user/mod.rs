@@ -12,14 +12,14 @@ use pg::error::PgDbError;
 
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, internal, Require, ChainError};
+use util::{RequestUtils, CargoResult, CargoError, internal, Require, ChainError};
 use util::errors::NotFound;
 
 pub use self::middleware::{Middleware, RequestUser};
 
 mod middleware;
 
-#[deriving(Clone, Show)]
+#[deriving(Clone, Show, PartialEq, Eq)]
 pub struct User {
     pub id: i32,
     pub email: String,
@@ -48,6 +48,32 @@ impl User {
         return try!(stmt.query(&[&token])).next().map(User::from_row).require(|| {
             NotFound
         })
+    }
+
+    pub fn find_or_insert(conn: &Connection, email: &str,
+                          access_token: &str) -> CargoResult<User> {
+        // TODO: this is racy, but it looks like any other solution is...
+        //       interesting! For now just do the racy thing which will report
+        //       more errors than it needs to.
+
+        let stmt = try!(conn.prepare("UPDATE users SET gh_access_token = $1 \
+                                      WHERE email = $2 \
+                                      RETURNING *"));
+        let mut rows = try!(stmt.query(&[&access_token, &email]));
+        match rows.next() {
+            Some(row) => return Ok(User::from_row(row)),
+            None => {}
+        }
+        let stmt = try!(conn.prepare("INSERT INTO users \
+                                      (email, gh_access_token, \
+                                       api_token) \
+                                      VALUES ($1, $2, $3)
+                                      RETURNING *"));
+        let mut rows = try!(stmt.query(&[&email, &access_token,
+                                         &User::new_api_token()]));
+        Ok(User::from_row(try!(rows.next().require(|| {
+            internal("no user with email we just found")
+        }))))
     }
 
     fn from_row(row: PostgresRow) -> User {
@@ -144,35 +170,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }));
 
     // Into the database!
-    let user = {
-        let conn = try!(req.tx());
-        let resp = conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
-                                 VALUES ($1, $2, $3)",
-                                &[&ghuser.email.as_slice(),
-                                  &token.access_token.as_slice(),
-                                  &User::new_api_token()]);
-        match resp {
-            Ok(..) => {}
-            Err(PgDbError(ref e))
-                if e.constraint.as_ref().map(|a| a.as_slice())
-                    == Some("unique_email") => {}
-            Err(e) => fail!("postgres error: {}", e),
-        }
-
-        // Who did we just insert?
-        let stmt = try!(conn.prepare("SELECT * FROM users WHERE email = $1 LIMIT 1"));
-        let mut rows = try!(stmt.query(&[&ghuser.email.as_slice()]));
-        let row = try!(rows.next().require(|| {
-            internal("no user with email we just found")
-        }));
-
-        User {
-            api_token: row.get("api_token"),
-            gh_access_token: row.get("gh_access_token"),
-            id: row.get("id"),
-            email: row.get("email"),
-        }
-    };
+    let user = try!(User::find_or_insert(try!(req.tx()), ghuser.email.as_slice(),
+                                         token.access_token.as_slice()));
     req.session().insert("user_id".to_string(), user.id.to_string());
 
     Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))

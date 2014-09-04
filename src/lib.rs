@@ -24,7 +24,6 @@ extern crate conduit_json_parser = "conduit-json-parser";
 
 pub use config::Config;
 pub use app::App;
-pub use db::Pool;
 
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
@@ -33,14 +32,14 @@ use util::C;
 
 mod macros;
 
-mod app;
-mod config;
-mod db;
-mod dist;
-mod git;
-mod package;
-mod user;
-mod util;
+pub mod app;
+pub mod config;
+pub mod db;
+pub mod dist;
+pub mod git;
+pub mod package;
+pub mod user;
+pub mod util;
 
 #[deriving(PartialEq, Eq)]
 pub enum Environment {

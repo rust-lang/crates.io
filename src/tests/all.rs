@@ -24,7 +24,7 @@ macro_rules! t_resp( ($e:expr) => ({
 
 mod user;
 
-fn app() -> conduit_middleware::MiddlewareBuilder {
+fn app() -> cargo_registry::App {
     static mut INIT: Once = ONCE_INIT;
 
     let config = cargo_registry::Config {
@@ -43,7 +43,7 @@ fn app() -> conduit_middleware::MiddlewareBuilder {
     unsafe {
         INIT.doit(|| app.db_setup());
     }
-    return cargo_registry::middleware(app);
+    return app;
 
     fn env(s: &str) -> String {
         match std::os::getenv(s) {
@@ -51,6 +51,10 @@ fn app() -> conduit_middleware::MiddlewareBuilder {
             None => fail!("must have `{}` defined", s),
         }
     }
+}
+
+fn middleware() -> conduit_middleware::MiddlewareBuilder {
+    cargo_registry::middleware(app())
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {

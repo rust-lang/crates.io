@@ -3,6 +3,10 @@ name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.1.0"
 
+[lib]
+name = "cargo-registry"
+test = false
+
 [[bin]]
 name = "cargo-registry"
 test = false
