@@ -50,7 +50,8 @@ impl User {
     }
 
     pub fn find_or_insert(conn: &Connection, email: &str,
-                          access_token: &str) -> CargoResult<User> {
+                          access_token: &str,
+                          api_token: &str) -> CargoResult<User> {
         // TODO: this is racy, but it looks like any other solution is...
         //       interesting! For now just do the racy thing which will report
         //       more errors than it needs to.
@@ -68,8 +69,7 @@ impl User {
                                        api_token) \
                                       VALUES ($1, $2, $3)
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&email, &access_token,
-                                         &User::new_api_token()]));
+        let mut rows = try!(stmt.query(&[&email, &access_token, &api_token]));
         Ok(User::from_row(try!(rows.next().require(|| {
             internal("no user with email we just found")
         }))))
@@ -169,8 +169,10 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }));
 
     // Into the database!
+    let api_token = User::new_api_token();
     let user = try!(User::find_or_insert(try!(req.tx()), ghuser.email.as_slice(),
-                                         token.access_token.as_slice()));
+                                         token.access_token.as_slice(),
+                                         api_token.as_slice()));
     req.session().insert("user_id".to_string(), user.id.to_string());
 
     Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))

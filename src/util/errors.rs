@@ -35,7 +35,9 @@ pub trait CargoError: Send {
         box concrete as Box<CargoError + Send>
     }
 
-    fn response(&self) -> Option<Response> { None }
+    fn response(&self) -> Option<Response> {
+        self.cause().and_then(|cause| cause.response())
+    }
 }
 
 pub trait FromError<E> {

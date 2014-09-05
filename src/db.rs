@@ -1,4 +1,3 @@
-use std::default::Default;
 use std::fmt::Show;
 use std::mem;
 use std::sync::Arc;
@@ -27,9 +26,9 @@ type PooledConnnection<'a> =
                                PostgresPoolManager,
                                LoggingErrorHandler<pg::error::PostgresConnectError>>;
 
-pub fn pool(url: &str) -> Pool {
+pub fn pool(url: &str, config: r2d2::Config) -> Pool {
     let mgr = PostgresPoolManager::new(url, pg::NoSsl);
-    r2d2::Pool::new(Default::default(), mgr, LoggingErrorHandler).unwrap()
+    r2d2::Pool::new(config, mgr, LoggingErrorHandler).unwrap()
 }
 
 pub fn setup(conn: &PostgresConnection) {

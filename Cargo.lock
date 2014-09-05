@@ -10,7 +10,7 @@ dependencies = [
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#601ea34555a589cc36b2de131482bc35af5b387e)",
  "conduit-router 0.5.0 (git+https://github.com/conduit-rust/conduit-router#0118e345c0228bf5219230e5aec64622d0b84101)",
  "conduit-static 0.5.0 (git+https://github.com/conduit-rust/conduit-static#65a97a151aa635e556a031119d4e4c2e547b2fc3)",
- "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#f54e9526213dc77cce21bb90a4b2f6781c06cf25)",
+ "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test.git#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b)",
  "curl 0.0.1 (git+https://github.com/carllerche/curl-rust#a98f429071e09d8c61b1b8b946f605ef5aba3ab9)",
  "flate2 0.0.1 (git+https://github.com/alexcrichton/flate2-rs#2ccf4dc3cb613446c6f80fbe1d6950875417de29)",
  "html 0.0.1",
@@ -46,7 +46,7 @@ source = "git+https://github.com/conduit-rust/conduit-conditional-get#883c4abac2
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#601ea34555a589cc36b2de131482bc35af5b387e)",
- "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#f54e9526213dc77cce21bb90a4b2f6781c06cf25)",
+ "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test.git#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b)",
 ]
 
 [[package]]
@@ -108,7 +108,7 @@ dependencies = [
 [[package]]
 name = "conduit-test"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-test#f54e9526213dc77cce21bb90a4b2f6781c06cf25"
+source = "git+https://github.com/conduit-rust/conduit-test.git#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",

@@ -61,9 +61,11 @@ impl Handler for C {
         let C(f) = *self;
         match f(req) {
             Ok(req) => Ok(req),
-            Err(e) => match e.response() {
-                Some(response) => Ok(response),
-                None => Err(box e as Box<Show>),
+            Err(e) => {
+                match e.response() {
+                    Some(response) => Ok(response),
+                    None => Err(box e as Box<Show>),
+                }
             }
         }
     }

@@ -4,7 +4,6 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
-use pg::error::PgDbError;
 use curl::http;
 
 use app::{App, RequestApp};
@@ -14,6 +13,7 @@ use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
 use util::errors::{NotFound, CargoError};
 
+#[deriving(Clone)]
 pub struct Package {
     pub id: i32,
     pub name: String,
@@ -49,6 +49,23 @@ impl Package {
         }
     }
 
+    pub fn find_or_insert(conn: &Connection, name: &str) -> CargoResult<Package> {
+        // TODO: like with users, this is sadly racy
+
+        let stmt = try!(conn.prepare("SELECT * FROM packages WHERE name = $1"));
+        let mut rows = try!(stmt.query(&[&name]));
+        match rows.next() {
+            Some(row) => return Ok(Package::from_row(&row)),
+            None => {}
+        }
+        let stmt = try!(conn.prepare("INSERT INTO packages (name) VALUES ($1) \
+                                      RETURNING *"));
+        let mut rows = try!(stmt.query(&[&name]));
+        Ok(Package::from_row(&try!(rows.next().require(|| {
+            internal("no package returned")
+        }))))
+    }
+
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
         name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
@@ -72,10 +89,6 @@ pub fn setup(conn: &PostgresConnection) {
 
     conn.execute("ALTER TABLE packages ADD CONSTRAINT \
                   unique_name UNIQUE (name)", []).unwrap();
-    conn.execute("INSERT INTO packages (name) VALUES ($1)",
-                 &[&"Test"]).unwrap();
-    conn.execute("INSERT INTO packages (name) VALUES ($1)",
-                 &[&"Test2"]).unwrap();
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
@@ -145,6 +158,8 @@ pub struct NewPackage {
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
+    #[deriving(Encodable)]
+    struct Bad { ok: bool, error: String }
     let app = req.app().clone();
 
     // Peel out all input parameters
@@ -176,7 +191,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Make sure the api token is a valid api token
-    let _user = try!(User::find_by_api_token(try!(req.tx()), auth.as_slice()));
+    let _user = try!(User::find_by_api_token(try!(req.tx()),
+                                             auth.as_slice()));
 
     // Validate the name parameter and such
     let name: String = name.as_slice().chars()
@@ -187,20 +203,14 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         deps: deps,
     };
     if !Package::valid_name(new_pkg.name.as_slice()) {
-        return Err(internal(format!("invalid crate name: `{}`", new_pkg.name)))
+        return Ok(req.json(&Bad {
+            ok: false,
+            error: format!("invalid crate name: `{}`", new_pkg.name),
+        }))
     }
 
     // Persist the new package, if it doesn't already exist
-    {
-        let tx = try!(try!(req.tx()).transaction());
-        match tx.execute("INSERT INTO packages (name) VALUES ($1)", &[&new_pkg.name]) {
-            Ok(..) => tx.set_commit(),
-            Err(PgDbError(ref e))
-                if e.constraint.as_ref().map(|a| a.as_slice())
-                    == Some("unique_name") => {}
-            Err(e) => return Err(e.box_error()),
-        }
-    }
+    try!(Package::find_or_insert(try!(req.tx()), new_pkg.name.as_slice()));
 
     // Upload the package to S3
     let mut handle = http::handle();
@@ -249,6 +259,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     bomb.path = None;
 
     #[deriving(Encodable)]
-    struct R { package: EncodablePackage }
-    Ok(req.json(&R { package: pkg.encodable() }))
+    struct R { ok: bool, package: EncodablePackage }
+    Ok(req.json(&R { ok: true, package: pkg.encodable() }))
 }

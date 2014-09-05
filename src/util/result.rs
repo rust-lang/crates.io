@@ -21,7 +21,7 @@ impl<T> Require<T> for Option<T> {
     fn require<E: CargoError + Send>(self, err: || -> E) -> CargoResult<T> {
         match self {
             Some(x) => Ok(x),
-            None => Err(box err().concrete() as Box<CargoError + Send>)
+            None => Err(box err() as Box<CargoError + Send>)
         }
     }
 }

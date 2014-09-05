@@ -6,6 +6,7 @@ version = "0.1.0"
 [lib]
 name = "cargo-registry"
 test = false
+doctest = false
 
 [[bin]]
 name = "cargo-registry"

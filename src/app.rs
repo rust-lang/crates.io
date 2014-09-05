@@ -1,6 +1,7 @@
 use std::fmt::Show;
 use std::sync::{Arc, Mutex};
 
+use r2d2;
 use conduit::Request;
 use conduit_middleware::Middleware;
 use oauth2;
@@ -31,8 +32,14 @@ impl App {
             "https://github.com/login/oauth/access_token",
         );
 
+        let db_config = r2d2::Config {
+            pool_size: if config.env == ::Production {10} else {1},
+            helper_tasks: if config.env == ::Production {3} else {1},
+            test_on_check_out: false,
+        };
+
         return App {
-            database: db::pool(config.db_url.as_slice()),
+            database: db::pool(config.db_url.as_slice(), db_config),
             github: github,
             bucket: s3::Bucket::new(config.s3_bucket.clone(),
                                     config.s3_access_key.clone(),
