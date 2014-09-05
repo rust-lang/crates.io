@@ -157,7 +157,7 @@ mod tests {
                 Ok(Response {
                     status: (500, "Internal Server Error"),
                     headers: HashMap::new(),
-                    body: box MemReader::new(show(e).to_string().into_bytes())
+                    body: box MemReader::new(show(&*e).to_string().into_bytes())
                 })
             })
         }
