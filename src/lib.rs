@@ -22,7 +22,7 @@ pub struct MockRequest {
 }
 
 impl MockRequest {
-    pub fn new(method: Method, path: &'static str) -> MockRequest {
+    pub fn new(method: Method, path: &str) -> MockRequest {
         let headers = HashMap::new();
 
         MockRequest {
@@ -112,7 +112,7 @@ impl<'a> conduit::Request for MockRequest {
         let body = self.string_body.clone().unwrap_or("".to_string());
         self.reader = Some(MemReader::new(Vec::from_slice(body.as_bytes())));
 
-        self.reader.get_mut_ref() as &mut Reader
+        self.reader.as_mut().unwrap() as &mut Reader
     }
 
     fn extensions<'a>(&'a self) -> &'a Extensions {
