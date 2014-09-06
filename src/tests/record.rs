@@ -19,12 +19,17 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         self.accept.close_accept().unwrap();
-        match self.rx.recv_opt() {
+        let res = self.rx.recv_opt();
+        let stderr = self.iorx.read_to_string().unwrap();
+        match res {
             Err(..) if !task::failing() => {
-                fail!("server subtask failed: {}", self.iorx.read_to_string()
-                                                            .unwrap());
+                fail!("server subtask failed: {}", stderr)
             }
-            _ => {}
+            _ => {
+                if stderr.len() > 0 {
+                    println!("server subtask failed: {}", stderr)
+                }
+            }
         }
     }
 }
