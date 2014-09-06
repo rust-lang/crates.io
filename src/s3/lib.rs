@@ -12,16 +12,19 @@ pub struct Bucket {
     name: String,
     access_key: String,
     secret_key: String,
+    proto: String,
 }
 
 impl Bucket {
     pub fn new(name: String,
                access_key: String,
-               secret_key: String) -> Bucket {
+               secret_key: String,
+               proto: &str) -> Bucket {
         Bucket {
             name: name,
             access_key: access_key,
             secret_key: secret_key,
+            proto: proto.to_string(),
         }
     }
 
@@ -33,7 +36,7 @@ impl Bucket {
         let host = self.host();
         let date = time::now().rfc822z();
         let auth = self.auth("PUT", date.as_slice(), path, "", content_type);
-        let url = format!("https://{}/{}", host, path);
+        let url = format!("{}://{}/{}", self.proto, host, path);
         handle.put(url.as_slice(), content)
               .header("Host", host.as_slice())
               .header("Date", date.as_slice())
@@ -47,7 +50,7 @@ impl Bucket {
         let host = self.host();
         let date = time::now().rfc822z();
         let auth = self.auth("DELETE", date.as_slice(), path, "", "");
-        let url = format!("https://{}/{}", host, path);
+        let url = format!("{}://{}/{}", self.proto, host, path);
         handle.delete(url.as_slice())
               .header("Host", host.as_slice())
               .header("Date", date.as_slice())

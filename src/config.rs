@@ -2,6 +2,7 @@ pub struct Config {
     pub s3_bucket: String,
     pub s3_access_key: String,
     pub s3_secret_key: String,
+    pub s3_proxy: Option<String>,
     pub session_key: String,
     pub git_repo_bare: Path,
     pub git_repo_checkout: Path,

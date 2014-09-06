@@ -1,10 +1,6 @@
-use std::fmt::Show;
 
-use conduit::{mod, Handler, Request, Response};
-use conduit_middleware::Middleware;
+use conduit::{mod, Handler};
 use conduit_test::MockRequest;
-
-use cargo_registry::db::RequestTransaction;
 
 #[deriving(Decodable)]
 struct PackageList { packages: Vec<Package>, meta: PackageMeta }
@@ -16,10 +12,12 @@ struct Package { name: String, id: String }
 struct PackageResponse { package: Package }
 #[deriving(Decodable)]
 struct BadPackage { ok: bool, error: String }
+#[deriving(Decodable)]
+struct GoodPackage { ok: bool, package: Package }
 
 #[test]
 fn index() {
-    let mut middle = ::middleware();
+    let (mut middle, _) = ::middleware();
     let mut req = MockRequest::new(conduit::Get, "/packages");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: PackageList = ::json(&mut response);
@@ -40,7 +38,7 @@ fn index() {
 
 #[test]
 fn show() {
-    let mut middle = ::middleware();
+    let (mut middle, _) = ::middleware();
     let pkg = ::package();
     middle.add(::middleware::MockPackage(pkg.clone()));
     let mut req = MockRequest::new(conduit::Get,
@@ -66,7 +64,7 @@ fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])
 
 #[test]
 fn new_wrong_token() {
-    let mut middle = ::middleware();
+    let (mut middle, _) = ::middleware();
     middle.add(::middleware::MockUser(::user()));
     let mut req = new_req("wrong-token", "foo", "1.0.0", []);
     let response = t_resp!(middle.call(&mut req));
@@ -75,10 +73,29 @@ fn new_wrong_token() {
 
 #[test]
 fn new_bad_names() {
-    let mut middle = ::middleware();
+    fn bad_name(name: &str) {
+        let (mut middle, _) = ::middleware();
+        middle.add(::middleware::MockUser(::user()));
+        let mut req = new_req(::user().api_token.as_slice(), name, "1.0.0", []);
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: BadPackage = ::json(&mut response);
+        assert!(!json.ok);
+        assert!(json.error.as_slice().contains("invalid package name"),
+                "{}", json.error);
+    }
+
+    bad_name("");
+    bad_name("foo bar");
+}
+
+#[test]
+fn new_package() {
+    let (mut middle, bomb) = ::middleware();
     middle.add(::middleware::MockUser(::user()));
-    let mut req = new_req(::user().api_token.as_slice(), "bad name", "1.0.0", []);
+    let mut req = new_req(::user().api_token.as_slice(), "foo", "1.0.0", []);
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: BadPackage = ::json(&mut response);
-    assert!(!json.ok);
+    let json: GoodPackage = ::json(&mut response);
+    assert!(json.ok);
+    assert_eq!(json.package.name.as_slice(), "foo");
+    drop(bomb);
 }

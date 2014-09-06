@@ -11,6 +11,7 @@ fn main() {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
         s3_secret_key: env("S3_SECRET_KEY"),
+        s3_proxy: None,
         session_key: env("SESSION_KEY"),
         git_repo_bare: Path::new(env("GIT_REPO_BARE")),
         git_repo_checkout: Path::new(env("GIT_REPO_CHECKOUT")),

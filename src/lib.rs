@@ -8,19 +8,19 @@ extern crate curl;
 extern crate flate2;
 extern crate html;
 extern crate oauth2;
-extern crate pg = "postgres";
+extern crate "postgres" as pg;
 extern crate r2d2;
 extern crate r2d2_postgres;
 extern crate s3;
 
-extern crate conduit_router = "conduit-router";
+extern crate "conduit-router" as conduit_router;
 extern crate conduit;
-extern crate conduit_cookie = "conduit-cookie";
-extern crate conduit_middleware = "conduit-middleware";
-extern crate conduit_conditional_get = "conduit-conditional-get";
-extern crate conduit_log_requests = "conduit-log-requests";
-extern crate conduit_static = "conduit-static";
-extern crate conduit_json_parser = "conduit-json-parser";
+extern crate "conduit-cookie" as conduit_cookie;
+extern crate "conduit-middleware" as conduit_middleware;
+extern crate "conduit-conditional-get" as conduit_conditional_get;
+extern crate "conduit-log-requests" as conduit_log_requests;
+extern crate "conduit-static" as conduit_static;
+extern crate "conduit-json-parser" as conduit_json_parser;
 
 pub use config::Config;
 pub use app::App;

@@ -1,12 +1,16 @@
 #![feature(macro_rules)]
 
 extern crate "cargo-registry" as cargo_registry;
-extern crate "conduit-test" as conduit_test;
 extern crate "conduit-middleware" as conduit_middleware;
+extern crate "conduit-test" as conduit_test;
 extern crate conduit;
+extern crate curl;
+extern crate git2;
 extern crate serialize;
+extern crate url;
 
 use std::sync::{Once, ONCE_INIT};
+use std::os;
 use serialize::json;
 
 macro_rules! t( ($e:expr) => (
@@ -29,38 +33,44 @@ macro_rules! ok_resp( ($e:expr) => ({
 mod middleware;
 mod package;
 mod user;
+mod record;
+mod git;
 
-fn app() -> cargo_registry::App {
+fn app() -> (cargo_registry::App, record::Bomb) {
     static mut INIT: Once = ONCE_INIT;
 
+    let (proxy, bomb) = record::proxy();
     let config = cargo_registry::Config {
-        s3_bucket: "".to_string(),
-        s3_access_key: "".to_string(),
-        s3_secret_key: "".to_string(),
+        s3_bucket: os::getenv("S3_BUCKET").unwrap_or(String::new()),
+        s3_access_key: os::getenv("S3_ACCESS_KEY").unwrap_or(String::new()),
+        s3_secret_key: os::getenv("S3_SECRET_KEY").unwrap_or(String::new()),
+        s3_proxy: Some(proxy),
         session_key: "test".to_string(),
-        git_repo_bare: Path::new("/"),
-        git_repo_checkout: Path::new("/"),
+        git_repo_bare: git::bare(),
+        git_repo_checkout: git::checkout(),
         gh_client_id: "".to_string(),
         gh_client_secret: "".to_string(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Test,
     };
     let app = cargo_registry::App::new(&config);
+    git::init();
     unsafe {
         INIT.doit(|| app.db_setup());
     }
-    return app;
+    return (app, bomb);
 
     fn env(s: &str) -> String {
-        match std::os::getenv(s) {
+        match os::getenv(s) {
             Some(s) => s,
             None => fail!("must have `{}` defined", s),
         }
     }
 }
 
-fn middleware() -> conduit_middleware::MiddlewareBuilder {
-    cargo_registry::middleware(app())
+fn middleware() -> (conduit_middleware::MiddlewareBuilder, record::Bomb) {
+    let (app, bomb) = app();
+    (cargo_registry::middleware(app), bomb)
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {

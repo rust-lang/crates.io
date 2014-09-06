@@ -205,7 +205,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     if !Package::valid_name(new_pkg.name.as_slice()) {
         return Ok(req.json(&Bad {
             ok: false,
-            error: format!("invalid crate name: `{}`", new_pkg.name),
+            error: format!("invalid package name: `{}`", new_pkg.name),
         }))
     }
 
@@ -213,7 +213,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     try!(Package::find_or_insert(try!(req.tx()), new_pkg.name.as_slice()));
 
     // Upload the package to S3
-    let mut handle = http::handle();
+    let handle = http::handle();
+    let mut handle = match req.app().s3_proxy {
+        Some(ref proxy) => handle.proxy(proxy.as_slice()),
+        None => handle,
+    };
     let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
                        new_pkg.name, new_pkg.vers);
     let resp = {
