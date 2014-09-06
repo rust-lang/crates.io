@@ -11,4 +11,6 @@ addons:
   postgresql: "9.3"
 
 env:
-  - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+  global:
+    - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - S3_BUCKET=alexcrichton-test
