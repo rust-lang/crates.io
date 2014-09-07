@@ -11,6 +11,7 @@ use db::{Connection, RequestTransaction};
 use git;
 use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
+use util::LimitErrorReader;
 use util::errors::{NotFound, CargoError};
 
 #[deriving(Clone)]
@@ -183,6 +184,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let length = try!(req.content_length().require(|| {
         internal("missing Content-Length header")
     }));
+    let max = req.app().config.max_upload_size;
+    if length > max {
+        return Ok(req.json(&Bad {
+            ok: false,
+            error: format!("max upload size is: {}", max),
+        }))
+    }
     {
         let ty = try!(header(req, "Content-Type"))[0];
         if ty != "application/x-tar" {
@@ -234,8 +242,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
                        new_pkg.name, new_pkg.vers);
     let resp = {
-        let body = &mut req.body();
-        let s3req = app.bucket.put(&mut handle, path.as_slice(), body,
+        let mut body = LimitErrorReader::new(req.body(), max);
+        let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
                                    "application/x-tar")
                               .content_length(length)
                               .header("Content-Encoding", "gzip");

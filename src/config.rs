@@ -1,3 +1,4 @@
+#[deriving(Clone)]
 pub struct Config {
     pub s3_bucket: String,
     pub s3_access_key: String,
@@ -10,4 +11,5 @@ pub struct Config {
     pub gh_client_secret: String,
     pub db_url: String,
     pub env: ::Environment,
+    pub max_upload_size: uint,
 }

@@ -17,7 +17,7 @@ pub struct App {
     pub session_key: String,
     pub git_repo_bare: Path,
     pub git_repo_checkout: Mutex<Path>,
-    pub env: ::Environment,
+    pub config: Config,
 }
 
 pub struct AppMiddleware {
@@ -50,7 +50,7 @@ impl App {
             session_key: config.session_key.clone(),
             git_repo_bare: config.git_repo_bare.clone(),
             git_repo_checkout: Mutex::new(config.git_repo_checkout.clone()),
-            env: config.env,
+            config: config.clone(),
         };
     }
 

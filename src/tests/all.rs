@@ -54,6 +54,7 @@ fn app() -> (record::Bomb, cargo_registry::App) {
         gh_client_secret: "".to_string(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Test,
+        max_upload_size: 100,
     };
     let app = cargo_registry::App::new(&config);
     git::init();

@@ -140,3 +140,15 @@ fn new_package_wrong_user() {
     assert!(!json.ok);
     assert!(json.error.as_slice().contains("another user"), "{}", json.error);
 }
+
+#[test]
+fn new_package_too_big() {
+    let (_b, mut middle) = ::middleware();
+    let user = ::user();
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    req.with_body("a".repeat(1000 * 1000).as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: BadPackage = ::json(&mut response);
+    assert!(!json.ok);
+}

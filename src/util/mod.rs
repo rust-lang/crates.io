@@ -13,10 +13,12 @@ pub use self::errors::{CargoError, CargoResult, internal, internal_error};
 pub use self::errors::{ChainError, BoxError};
 pub use self::result::{Require, Wrap};
 pub use self::lazy_cell::LazyCell;
+pub use self::io::LimitErrorReader;
 
 pub mod errors;
 pub mod result;
 mod lazy_cell;
+mod io;
 
 pub trait RequestUtils {
     fn redirect(self, url: String) -> Response;

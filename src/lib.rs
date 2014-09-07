@@ -41,7 +41,7 @@ pub mod package;
 pub mod user;
 pub mod util;
 
-#[deriving(PartialEq, Eq)]
+#[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {
     Development,
     Test,
@@ -68,7 +68,7 @@ pub fn middleware(app: App) -> MiddlewareBuilder {
     router.post("/git/index/*path", C(git::serve_index));
 
     let mut m = MiddlewareBuilder::new(router);
-    let env = app.env;
+    let env = app.config.env;
     if env != Test {
         m.add(conduit_log_requests::LogRequests(0));
     }

@@ -69,7 +69,7 @@ impl Middleware for TransactionMiddleware {
                             .expect("Transaction not present in request");
                 match tx.tx.borrow() {
                     Some(tx) => {
-                        if req.app().env != ::Test {
+                        if req.app().config.env != ::Test {
                             tx.set_commit();
                         }
                     }

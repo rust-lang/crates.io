@@ -19,6 +19,7 @@ fn main() {
         gh_client_secret: env("GH_CLIENT_SECRET"),
         db_url: env("DATABASE_URL"),
         env: cargo_registry::Development,
+        max_upload_size: 2 * 1024 * 1024,
     };
     let app = cargo_registry::App::new(&config);
     app.db_setup();
