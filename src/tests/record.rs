@@ -52,7 +52,8 @@ pub fn proxy() -> (String, Bomb) {
     let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
 
     spawn(proc() {
-        stdio::set_stderr(box iotx);
+        stdio::set_stderr(box iotx.clone());
+        stdio::set_stdout(box iotx);
         let mut file = Some(file);
         let mut data = None;
         for socket in a.incoming() {
@@ -175,7 +176,11 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     let mut expected: HashSet<String> = expected_lines.by_ref()
                                                       .take_while(|l| l.len() > 2)
                                                       .collect();
+    let mut found = HashSet::new();
+    println!("expecting: {}", expected);
     for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
+        println!("received: {}", line.as_slice().trim());
+        if !found.insert(line.clone()) { continue }
         if expected.remove(&line) { continue }
         if line.as_slice().starts_with("Date:") { continue }
         if line.as_slice().starts_with("Authorization:") { continue }
