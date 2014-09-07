@@ -17,6 +17,7 @@ use util::errors::{NotFound, CargoError};
 pub struct Package {
     pub id: i32,
     pub name: String,
+    pub user_id: i32,
 }
 
 #[deriving(Encodable)]
@@ -37,6 +38,7 @@ impl Package {
         Package {
             id: row.get("id"),
             name: row.get("name"),
+            user_id: row.get("user_id"),
         }
     }
 
@@ -49,7 +51,8 @@ impl Package {
         }
     }
 
-    pub fn find_or_insert(conn: &Connection, name: &str) -> CargoResult<Package> {
+    pub fn find_or_insert(conn: &Connection, name: &str,
+                          user_id: i32) -> CargoResult<Package> {
         // TODO: like with users, this is sadly racy
 
         let stmt = try!(conn.prepare("SELECT * FROM packages WHERE name = $1"));
@@ -58,9 +61,10 @@ impl Package {
             Some(row) => return Ok(Package::from_row(&row)),
             None => {}
         }
-        let stmt = try!(conn.prepare("INSERT INTO packages (name) VALUES ($1) \
+        let stmt = try!(conn.prepare("INSERT INTO packages (name, user_id) \
+                                      VALUES ($1, $2) \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&name]));
+        let mut rows = try!(stmt.query(&[&name, &user_id]));
         Ok(Package::from_row(&try!(rows.next().require(|| {
             internal("no package returned")
         }))))
@@ -84,7 +88,8 @@ pub fn setup(conn: &PostgresConnection) {
     conn.execute("DROP TABLE IF EXISTS packages", []).unwrap();
     conn.execute("CREATE TABLE packages (
                     id              SERIAL PRIMARY KEY,
-                    name            VARCHAR NOT NULL
+                    name            VARCHAR NOT NULL,
+                    user_id         INTEGER NOT NULL
                   )", []).unwrap();
 
     conn.execute("ALTER TABLE packages ADD CONSTRAINT \
@@ -191,8 +196,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Make sure the api token is a valid api token
-    let _user = try!(User::find_by_api_token(try!(req.tx()),
-                                             auth.as_slice()));
+    let user = try!(User::find_by_api_token(try!(req.tx()),
+                                            auth.as_slice()));
 
     // Validate the name parameter and such
     let name: String = name.as_slice().chars()
@@ -210,7 +215,15 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Persist the new package, if it doesn't already exist
-    try!(Package::find_or_insert(try!(req.tx()), new_pkg.name.as_slice()));
+    let pkg = try!(Package::find_or_insert(try!(req.tx()),
+                                           new_pkg.name.as_slice(),
+                                           user.id));
+    if pkg.user_id != user.id {
+        return Ok(req.json(&Bad {
+            ok: false,
+            error: format!("package is already uploaded by another user"),
+        }))
+    }
 
     // Upload the package to S3
     let handle = http::handle();

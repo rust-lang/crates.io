@@ -16,7 +16,7 @@ struct MeResponse { ok: bool, user: EncodableUser }
 
 #[test]
 fn auth_gives_a_token() {
-    let (middle, _) = ::middleware();
+    let (_b, middle) = ::middleware();
     let mut req = MockRequest::new(conduit::Get, "/authorize_url");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: AuthResponse = ::json(&mut response);
@@ -25,7 +25,7 @@ fn auth_gives_a_token() {
 
 #[test]
 fn access_token_needs_data() {
-    let (middle, _) = ::middleware();
+    let (_b, middle) = ::middleware();
     let mut req = MockRequest::new(conduit::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: TokenResponse = ::json(&mut response);
@@ -36,7 +36,7 @@ fn access_token_needs_data() {
 
 #[test]
 fn user_insert() {
-    let (app, _) = ::app();
+    let (_b, app) = ::app();
     let conn = t!(app.database.get());
     let tx = t!(conn.transaction());
 
@@ -52,7 +52,7 @@ fn user_insert() {
 
 #[test]
 fn me() {
-    let (mut middle, _) = ::middleware();
+    let (_b, mut middle) = ::middleware();
     let mut req = MockRequest::new(conduit::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.val0(), 403);
@@ -64,14 +64,13 @@ fn me() {
     assert!(json.ok);
     assert_eq!(json.user.email, user.email);
     assert_eq!(json.user.api_token, user.api_token);
-    assert_eq!(json.user.id, user.id);
 }
 
 #[test]
 fn reset_token() {
     struct ResetTokenTest;
 
-    let (mut middle, _) = ::middleware();
+    let (_b, mut middle) = ::middleware();
     middle.add(ResetTokenTest);
     let mut req = MockRequest::new(conduit::Put, "/me/reset_token");
     ok_resp!(middle.call(&mut req));

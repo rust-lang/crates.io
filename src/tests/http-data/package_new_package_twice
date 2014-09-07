@@ -1,0 +1,22 @@
+===REQUEST 353
+PUT http://alexcrichton-test.s3.amazonaws.com/pkg/foo/foo-2.0.0.tar.gz HTTP/1.1
+Accept: */*
+Proxy-Connection: Keep-Alive
+Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:4vWOFt6K1MTIQFFlKztiCnZoOqg=
+Date: Sat, 06 Sep 2014 21:05:54 -0700
+Content-Type: application/x-tar
+Host: alexcrichton-test.s3.amazonaws.com
+Content-Encoding: gzip
+Content-Length: 0
+
+
+===RESPONSE 246
+HTTP/1.1 200
+date: Sun, 07 Sep 2014 04:06:00 GMT
+etag: "d41d8cd98f00b204e9800998ecf8427e"
+x-amz-id-2: Egk2zLhITJ0PBJi4HJgqfm5WfvgX7YoKSrFs7bd+I15Cn7OMwdn5IF31Uhs+KwXm
+server: AmazonS3
+x-amz-request-id: D089A65B8638A988
+content-length: 0
+
+

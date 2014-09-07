@@ -111,7 +111,7 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
 
     macro_rules! git( ($($e:expr),*) => ({
         try!(exec(Command::new("git").cwd(path)$(.arg($e))*))
-    }))
+    }) )
 
     git!("add", dst);
     git!("commit", "-m", format!("Updating package `{}#{}`", package.name,

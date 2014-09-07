@@ -13,6 +13,8 @@ use std::sync::{Once, ONCE_INIT};
 use std::os;
 use serialize::json;
 
+use cargo_registry::user::User;
+
 macro_rules! t( ($e:expr) => (
     match $e {
         Ok(e) => e,
@@ -36,7 +38,7 @@ mod user;
 mod record;
 mod git;
 
-fn app() -> (cargo_registry::App, record::Bomb) {
+fn app() -> (record::Bomb, cargo_registry::App) {
     static mut INIT: Once = ONCE_INIT;
 
     let (proxy, bomb) = record::proxy();
@@ -58,7 +60,7 @@ fn app() -> (cargo_registry::App, record::Bomb) {
     unsafe {
         INIT.doit(|| app.db_setup());
     }
-    return (app, bomb);
+    return (bomb, app);
 
     fn env(s: &str) -> String {
         match os::getenv(s) {
@@ -68,9 +70,9 @@ fn app() -> (cargo_registry::App, record::Bomb) {
     }
 }
 
-fn middleware() -> (conduit_middleware::MiddlewareBuilder, record::Bomb) {
-    let (app, bomb) = app();
-    (cargo_registry::middleware(app), bomb)
+fn middleware() -> (record::Bomb, conduit_middleware::MiddlewareBuilder) {
+    let (bomb, app) = app();
+    (bomb, cargo_registry::middleware(app))
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {
@@ -87,12 +89,12 @@ fn json<T>(r: &mut conduit::Response) -> T
     }
 }
 
-fn user() -> cargo_registry::user::User {
-    cargo_registry::user::User {
+fn user() -> User {
+    User {
         id: 10000,
         email: "foo@example.com".to_string(),
-        gh_access_token: "foo".to_string(),
-        api_token: "bar".to_string(),
+        gh_access_token: User::new_api_token(), // just randomize it
+        api_token: User::new_api_token(),
     }
 }
 
@@ -100,5 +102,6 @@ fn package() -> cargo_registry::package::Package {
     cargo_registry::package::Package {
         id: 10000,
         name: "foo".to_string(),
+        user_id: 100,
     }
 }
