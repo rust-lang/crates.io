@@ -45,6 +45,7 @@ pub fn proxy() -> (String, Bomb) {
 
     let data = Path::new(file!()).dir_path().join("http-data")
                                  .join(me.as_slice().replace("::", "_"));
+    let record = record && !data.exists();
     let file = if record {File::create(&data)} else {File::open(&data)};
     let a2 = a.clone();
 
