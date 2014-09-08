@@ -17,7 +17,7 @@ struct BadPackage { ok: bool, error: String }
 #[deriving(Decodable)]
 struct GoodPackage { ok: bool, package: Package }
 #[deriving(Decodable)]
-struct GitPackage { name: String, vers: String, deps: Vec<String> }
+struct GitPackage { name: String, vers: String, deps: Vec<String>, cksum: String }
 
 #[test]
 fn index() {
@@ -202,6 +202,8 @@ fn new_package_git_upload() {
     assert_eq!(p.name.as_slice(), "foo");
     assert_eq!(p.vers.as_slice(), "1.0.0");
     assert_eq!(p.deps.as_slice(), [].as_slice());
+    assert_eq!(p.cksum.as_slice(),
+               "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 }
 
 #[test]
@@ -210,8 +212,9 @@ fn new_package_git_upload_appends() {
     let user = ::user();
     let path = ::git::checkout().join("fo/oX/foo");
     fs::mkdir_recursive(&path.dir_path(), io::UserRWX).unwrap();
-    File::create(&path).write_str(r#"{"name":"foo","vers":"0.0.1","deps":[]}"#)
-                       .unwrap();
+    File::create(&path).write_str(
+        r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}"#
+    ).unwrap();
 
     middle.add(::middleware::MockUser(user.clone()));
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);

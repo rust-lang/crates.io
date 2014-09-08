@@ -72,6 +72,9 @@ branch = "alexcrichton"
 [dependencies.git2]
 git = "https://github.com/alexcrichton/git2-rs"
 
+[dependencies.openssl]
+git = "https://github.com/sfackler/rust-openssl"
+
 [dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test"
 

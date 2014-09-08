@@ -17,13 +17,13 @@ use util::{CargoResult, LazyCell};
 pub type Pool = r2d2::Pool<pg::PostgresConnection,
                            pg::error::PostgresConnectError,
                            PostgresPoolManager,
-                           LoggingErrorHandler<pg::error::PostgresConnectError>>;
+                           LoggingErrorHandler>;
 type PooledConnnection<'a> =
         r2d2::PooledConnection<'a,
                                pg::PostgresConnection,
                                pg::error::PostgresConnectError,
                                PostgresPoolManager,
-                               LoggingErrorHandler<pg::error::PostgresConnectError>>;
+                               LoggingErrorHandler>;
 
 pub fn pool(url: &str, config: r2d2::Config) -> Pool {
     let mgr = PostgresPoolManager::new(url, pg::NoSsl);

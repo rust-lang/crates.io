@@ -22,7 +22,9 @@ fn main() {
         max_upload_size: 2 * 1024 * 1024,
     };
     let app = cargo_registry::App::new(&config);
-    app.db_setup();
+    if os::getenv("RESET").is_some() {
+        app.db_setup();
+    }
     let app = cargo_registry::middleware(app);
 
     let port = 8888;

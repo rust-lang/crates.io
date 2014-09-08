@@ -9,6 +9,7 @@ extern crate curl;
 extern crate flate2;
 extern crate html;
 extern crate oauth2;
+extern crate openssl;
 extern crate r2d2;
 extern crate r2d2_postgres;
 extern crate s3;

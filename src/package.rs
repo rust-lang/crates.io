@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serialize::hex::ToHex;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -11,7 +12,7 @@ use db::{Connection, RequestTransaction};
 use git;
 use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
-use util::LimitErrorReader;
+use util::{LimitErrorReader, HashingReader};
 use util::errors::{NotFound, CargoError};
 use version::Version;
 
@@ -162,6 +163,7 @@ pub struct NewPackage {
     pub name: String,
     pub vers: String,
     pub deps: Vec<String>,
+    pub cksum: String,
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
@@ -211,10 +213,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Validate the name parameter and such
     let name: String = name.as_slice().chars()
                            .map(|c| c.to_lowercase()).collect();
-    let new_pkg = NewPackage {
+    let mut new_pkg = NewPackage {
         name: name,
         vers: vers,
         deps: deps,
+        cksum: String::new(),
     };
     if !Package::valid_name(new_pkg.name.as_slice()) {
         return Ok(req.json(&Bad {
@@ -262,16 +265,21 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     };
     let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
                        new_pkg.name, new_pkg.vers);
-    let resp = {
-        let mut body = LimitErrorReader::new(req.body(), max);
-        let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
-                                   "application/x-tar")
-                              .content_length(length)
-                              .header("Content-Encoding", "gzip");
-        try!(s3req.exec().chain_error(|| {
-            internal(format!("failed to upload to S3: `{}`", path))
-        }))
+    let (resp, cksum) = {
+        let body = LimitErrorReader::new(req.body(), max);
+        let mut body = HashingReader::new(body);
+        let resp = {
+            let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
+                                       "application/x-tar")
+                                  .content_length(length)
+                                  .header("Content-Encoding", "gzip");
+            try!(s3req.exec().chain_error(|| {
+                internal(format!("failed to upload to S3: `{}`", path))
+            }))
+        };
+        (resp, body.final())
     };
+    new_pkg.cksum = cksum.as_slice().to_hex();
     if resp.get_code() != 200 {
         return Err(internal(format!("failed to get a 200 response from S3: {}",
                                     resp)))
