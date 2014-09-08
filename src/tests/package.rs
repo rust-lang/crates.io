@@ -1,3 +1,5 @@
+use std::io::{mod, fs, File};
+use serialize::json;
 
 use conduit::{mod, Handler};
 use conduit_test::MockRequest;
@@ -14,6 +16,8 @@ struct PackageResponse { package: Package }
 struct BadPackage { ok: bool, error: String }
 #[deriving(Decodable)]
 struct GoodPackage { ok: bool, package: Package }
+#[deriving(Decodable)]
+struct GitPackage { name: String, vers: String, deps: Vec<String> }
 
 #[test]
 fn index() {
@@ -180,4 +184,49 @@ fn new_package_duplicate_version() {
     let json: BadPackage = ::json(&mut response);
     assert!(!json.ok);
     assert!(json.error.as_slice().contains("already uploaded"), "{}", json.error);
+}
+
+#[test]
+fn new_package_git_upload() {
+    let (_b, mut middle) = ::middleware();
+    let user = ::user();
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<GoodPackage>(&mut response);
+
+    let path = ::git::checkout().join("fo/oX/foo");
+    assert!(path.exists());
+    let contents = File::open(&path).read_to_string().unwrap();
+    let p: GitPackage = json::decode(contents.as_slice()).unwrap();
+    assert_eq!(p.name.as_slice(), "foo");
+    assert_eq!(p.vers.as_slice(), "1.0.0");
+    assert_eq!(p.deps.as_slice(), [].as_slice());
+}
+
+#[test]
+fn new_package_git_upload_appends() {
+    let (_b, mut middle) = ::middleware();
+    let user = ::user();
+    let path = ::git::checkout().join("fo/oX/foo");
+    fs::mkdir_recursive(&path.dir_path(), io::UserRWX).unwrap();
+    File::create(&path).write_str(r#"{"name":"foo","vers":"0.0.1","deps":[]}"#)
+                       .unwrap();
+
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<GoodPackage>(&mut response);
+
+    let contents = File::open(&path).read_to_string().unwrap();
+    let mut lines = contents.as_slice().lines();
+    let p1: GitPackage = json::decode(lines.next().unwrap()).unwrap();
+    let p2: GitPackage = json::decode(lines.next().unwrap()).unwrap();
+    assert!(lines.next().is_none());
+    assert_eq!(p1.name.as_slice(), "foo");
+    assert_eq!(p1.vers.as_slice(), "0.0.1");
+    assert_eq!(p1.deps.as_slice(), [].as_slice());
+    assert_eq!(p2.name.as_slice(), "foo");
+    assert_eq!(p2.vers.as_slice(), "1.0.0");
+    assert_eq!(p2.deps.as_slice(), [].as_slice());
 }

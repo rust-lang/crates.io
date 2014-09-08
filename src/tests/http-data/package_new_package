@@ -2,21 +2,21 @@
 PUT http://alexcrichton-test.s3.amazonaws.com/pkg/foo/foo-1.0.0.tar.gz HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
-Content-Type: application/x-tar
-Content-Length: 0
 Host: alexcrichton-test.s3.amazonaws.com
-Date: Sat, 06 Sep 2014 21:05:53 -0700
+Content-Length: 0
+Content-Type: application/x-tar
 Content-Encoding: gzip
-Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:8kl2+KUpTpjsI8nfACwkjYZzYmw=
+Date: Sun, 07 Sep 2014 21:40:12 -0700
+Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:DFrgtGO42YggcrK0SPDg0xBhz6w=
 
 
 ===RESPONSE 246
 HTTP/1.1 200
+x-amz-request-id: 004DE903BA89FCDB
+x-amz-id-2: oC2czbVZTtZUblS1shyi7UNdZn2WhY19J6EHhY6FdQSLiSPkUJ9OfXgzw1rxXV9v
 content-length: 0
+date: Mon, 08 Sep 2014 04:40:19 GMT
 server: AmazonS3
-x-amz-request-id: B5CCB93F3DC44B0A
-date: Sun, 07 Sep 2014 04:06:00 GMT
 etag: "d41d8cd98f00b204e9800998ecf8427e"
-x-amz-id-2: 6/S55ndtv8LQspqCxDHPvGd8zVM5sTw0Fp0WZh4RW7Xt7xbK9VLdImBZnqf26fLC
 
 
