@@ -4,11 +4,11 @@ extern crate serialize;
 extern crate url;
 extern crate semver;
 
+extern crate "postgres" as pg;
 extern crate curl;
 extern crate flate2;
 extern crate html;
 extern crate oauth2;
-extern crate "postgres" as pg;
 extern crate r2d2;
 extern crate r2d2_postgres;
 extern crate s3;
@@ -40,6 +40,7 @@ pub mod git;
 pub mod package;
 pub mod user;
 pub mod util;
+pub mod version;
 
 #[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {

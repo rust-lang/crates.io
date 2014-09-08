@@ -3,9 +3,10 @@ use std::fmt::Show;
 use conduit::Request;
 use conduit_middleware::Middleware;
 
-use cargo_registry::user::User;
-use cargo_registry::package::Package;
 use cargo_registry::db::RequestTransaction;
+use cargo_registry::package::Package;
+use cargo_registry::user::User;
+use cargo_registry::version::Version;
 
 pub struct MockUser(pub User);
 
@@ -26,8 +27,9 @@ impl Middleware for MockPackage {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
         let MockPackage(ref p) = *self;
         let user = req.extensions().find::<User>().unwrap();
-        Package::find_or_insert(req.tx().unwrap(), p.name.as_slice(),
-                                user.id).unwrap();
+        let pkg = Package::find_or_insert(req.tx().unwrap(), p.name.as_slice(),
+                                          user.id).unwrap();
+        Version::insert(req.tx().unwrap(), pkg.id, "1.0.0").unwrap();
         Ok(())
     }
 }

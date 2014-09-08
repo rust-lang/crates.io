@@ -13,6 +13,7 @@ use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
 use util::LimitErrorReader;
 use util::errors::{NotFound, CargoError};
+use version::Version;
 
 #[deriving(Clone)]
 pub struct Package {
@@ -221,6 +222,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             error: format!("invalid package name: `{}`", new_pkg.name),
         }))
     }
+    if !Version::valid(new_pkg.vers.as_slice()) {
+        return Ok(req.json(&Bad {
+            ok: false,
+            error: format!("invalid package version: `{}`", new_pkg.vers),
+        }))
+    }
 
     // Persist the new package, if it doesn't already exist
     let pkg = try!(Package::find_or_insert(try!(req.tx()),
@@ -232,6 +239,20 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             error: format!("package is already uploaded by another user"),
         }))
     }
+
+    // Persist the new version of this package
+    match try!(Version::find_by_num(try!(req.tx()), pkg.id,
+                                    new_pkg.vers.as_slice())) {
+        Some(..) => {
+            return Ok(req.json(&Bad {
+                ok: false,
+                error: format!("package version `{}` is already uploaded",
+                               new_pkg.vers),
+            }))
+        }
+        None => {}
+    }
+    try!(Version::insert(try!(req.tx()), pkg.id, new_pkg.vers.as_slice()));
 
     // Upload the package to S3
     let handle = http::handle();

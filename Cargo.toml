@@ -74,3 +74,4 @@ git = "https://github.com/alexcrichton/git2-rs"
 
 [dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test"
+

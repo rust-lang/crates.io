@@ -11,8 +11,7 @@ use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
 use app::{App, RequestApp};
-use user;
-use package;
+use {user, package, version};
 use util::{CargoResult, LazyCell};
 
 pub type Pool = r2d2::Pool<pg::PostgresConnection,
@@ -34,6 +33,7 @@ pub fn pool(url: &str, config: r2d2::Config) -> Pool {
 pub fn setup(conn: &PostgresConnection) {
     user::setup(conn);
     package::setup(conn);
+    version::setup(conn);
 }
 
 pub struct TransactionMiddleware;

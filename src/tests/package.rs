@@ -92,6 +92,19 @@ fn new_bad_names() {
 }
 
 #[test]
+fn new_bad_versions() {
+    let (_b, mut middle) = ::middleware();
+    let user = ::user();
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0", []);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: BadPackage = ::json(&mut response);
+    assert!(!json.ok);
+    assert!(json.error.as_slice().contains("invalid package version"),
+            "{}", json.error);
+}
+
+#[test]
 fn new_package() {
     let (_b, mut middle) = ::middleware();
     let user = ::user();
@@ -151,4 +164,20 @@ fn new_package_too_big() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: BadPackage = ::json(&mut response);
     assert!(!json.ok);
+}
+
+#[test]
+fn new_package_duplicate_version() {
+    let (_b, mut middle) = ::middleware();
+    let user = ::user();
+    let package = ::package();
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockPackage(package.clone()));
+    let mut req = new_req(user.api_token.as_slice(),
+                          package.name.as_slice(),
+                          "1.0.0", []);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: BadPackage = ::json(&mut response);
+    assert!(!json.ok);
+    assert!(json.error.as_slice().contains("already uploaded"), "{}", json.error);
 }
