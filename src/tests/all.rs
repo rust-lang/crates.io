@@ -9,10 +9,14 @@ extern crate git2;
 extern crate serialize;
 extern crate url;
 
-use std::sync::{Once, ONCE_INIT};
+use std::sync::{Once, ONCE_INIT, Arc};
 use std::os;
 use serialize::json;
 
+use conduit::Request;
+use conduit_test::MockRequest;
+use cargo_registry::app::App;
+use cargo_registry::db;
 use cargo_registry::user::User;
 
 macro_rules! t( ($e:expr) => (
@@ -37,8 +41,9 @@ mod package;
 mod user;
 mod record;
 mod git;
+mod version;
 
-fn app() -> (record::Bomb, cargo_registry::App) {
+fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     static mut INIT: Once = ONCE_INIT;
 
     let (proxy, bomb) = record::proxy();
@@ -56,12 +61,13 @@ fn app() -> (record::Bomb, cargo_registry::App) {
         env: cargo_registry::Test,
         max_upload_size: 100,
     };
-    let app = cargo_registry::App::new(&config);
+    let app = App::new(&config);
     git::init();
     unsafe {
         INIT.doit(|| app.db_setup());
     }
-    return (bomb, app);
+    let app = Arc::new(app);
+    return (bomb, app.clone(), cargo_registry::middleware(app));
 
     fn env(s: &str) -> String {
         match os::getenv(s) {
@@ -71,9 +77,10 @@ fn app() -> (record::Bomb, cargo_registry::App) {
     }
 }
 
-fn middleware() -> (record::Bomb, conduit_middleware::MiddlewareBuilder) {
-    let (bomb, app) = app();
-    (bomb, cargo_registry::middleware(app))
+fn req(app: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
+    let mut req = MockRequest::new(method, path);
+    req.mut_extensions().insert(db::Transaction::new(app));
+    return req;
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {

@@ -29,14 +29,14 @@ name = "civet"
 version = "0.1.0"
 source = "git+https://github.com/wycats/rust-civet#d751fc75e64f72c7de8f3a4d3fc787f5a207fbd0"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",
 ]
 
 [[package]]
 name = "conduit"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35"
+source = "git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f"
 dependencies = [
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",
 ]
@@ -46,7 +46,7 @@ name = "conduit-conditional-get"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-conditional-get#883c4abac2601129fe5e34cdbc56dbf468f54c9c"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#97b4d61f6f66495af180b7fb5b248424752e1afc)",
  "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b)",
 ]
@@ -56,7 +56,7 @@ name = "conduit-cookie"
 version = "0.0.1"
 source = "git+https://github.com/conduit-rust/conduit-cookie#9d0043a099fb08c9e9ad0dfd8c858ff8848a1d4a"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#97b4d61f6f66495af180b7fb5b248424752e1afc)",
  "cookie 0.0.1 (git+https://github.com/alexcrichton/cookie-rs.git#456aca089ed26677af6bf741a62c774a8fa0f530)",
 ]
@@ -66,7 +66,7 @@ name = "conduit-json-parser"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-json-parser#198e99ab6e38835a26b5ebda0d672f5d80773f28"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#97b4d61f6f66495af180b7fb5b248424752e1afc)",
  "conduit-utils 0.5.0 (git+https://github.com/conduit-rust/conduit-utils.git#758a2c7c86e49a617ce2adfb69cc3398bbe2903f)",
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",
@@ -77,7 +77,7 @@ name = "conduit-log-requests"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-log-requests#d6419e2137e785a60a391edd68ba9eee16b976c0"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#97b4d61f6f66495af180b7fb5b248424752e1afc)",
 ]
 
@@ -86,7 +86,7 @@ name = "conduit-middleware"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-middleware#97b4d61f6f66495af180b7fb5b248424752e1afc"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
 ]
 
 [[package]]
@@ -94,7 +94,7 @@ name = "conduit-router"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-router#0118e345c0228bf5219230e5aec64622d0b84101"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "route-recognizer 0.1.0 (git+https://github.com/conduit-rust/route-recognizer.rs.git#a7eee8dfd8c2cd02b1b650e4470a9a0b4bc306ee)",
 ]
 
@@ -103,7 +103,7 @@ name = "conduit-static"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-static#65a97a151aa635e556a031119d4e4c2e547b2fc3"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "mime-types 0.5.0 (git+https://github.com/conduit-rust/mime-types.git#95a182afe24aae27f467222e8f25b769e1eb3379)",
 ]
 
@@ -112,7 +112,7 @@ name = "conduit-test"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-test#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",
 ]
 
@@ -121,7 +121,7 @@ name = "conduit-utils"
 version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-utils.git#758a2c7c86e49a617ce2adfb69cc3398bbe2903f"
 dependencies = [
- "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#64d0de362aa83d9caae1d5f4932e3c64270f3d35)",
+ "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#86f091ec9e8052dd6e4d5c35575799ea604e059f)",
  "semver 0.0.1 (git+https://github.com/rust-lang/semver#df163f7b22686493b037eee1f1f9d1a2742f9bbe)",
 ]
 

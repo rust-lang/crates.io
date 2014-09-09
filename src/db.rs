@@ -47,17 +47,66 @@ pub struct Transaction {
     // Keep a handle to the app which keeps a handle to the database to ensure
     // that this `'static` is indeed at least a little more accurate (in that
     // it's alive for the period of time this `Transaction` is alive.
-    _app_handle: Arc<App>,
+    app: Arc<App>,
+}
+
+impl Transaction {
+    pub fn new(app: Arc<App>) -> Transaction {
+        Transaction {
+            app: app,
+            slot: LazyCell::new(),
+            tx: LazyCell::new(),
+        }
+    }
+
+    pub fn conn(&self) -> CargoResult<&PostgresConnection> {
+        // Here we want to tie the lifetime of a single connection the lifetime
+        // of this request. Currently the lifetime of a connection is tied to
+        // the lifetime of the pool from which it came from, which is the
+        // mismatch.
+        //
+        // The unsafety here is frobbing lifetimes to ensure that they work out.
+        // Additionally, any extension in a Request needs to live for the static
+        // lifetime (yay!).
+        //
+        // To solve these problems, the private `Transaction` extension stores a
+        // reference both to the pool (to keep it alive) as well as a connection
+        // transmuted to the 'static lifetime. This allows us to allocate a
+        // connection up front and then repeatedly hand it out.
+        unsafe {
+            if !self.slot.filled() {
+                let conn: PooledConnnection = try!(self.app.database.get());
+                self.slot.fill(mem::transmute::<_, PooledConnnection<'static>>(conn));
+            }
+        }
+        Ok(&**self.slot.borrow().unwrap())
+    }
+
+    fn tx<'a>(&'a self) -> CargoResult<&'a pg::PostgresTransaction<'a>> {
+        // Similar to above, the transaction for this request is actually tied
+        // to the connection in the request itself, not 'static. We transmute it
+        // to static as its paired with the inner connection to achieve the
+        // desired effect.
+        unsafe {
+            if !self.tx.filled() {
+                let conn = try!(self.conn());
+                let t = try!(conn.transaction());
+                let t = mem::transmute::<_, pg::PostgresTransaction<'static>>(t);
+                self.tx.fill(t);
+            }
+        }
+        let tx = self.tx.borrow();
+        let tx: &'a pg::PostgresTransaction<'static> = tx.unwrap();
+        Ok(tx)
+    }
 }
 
 impl Middleware for TransactionMiddleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
-        let app = req.app().clone();
-        req.mut_extensions().insert(Transaction {
-            _app_handle: app,
-            slot: LazyCell::new(),
-            tx: LazyCell::new(),
-        });
+        if !req.extensions().contains::<Transaction>() {
+            let app = req.app().clone();
+            req.mut_extensions().insert(Transaction::new(app));
+        }
         Ok(())
     }
 
@@ -97,48 +146,15 @@ pub trait RequestTransaction<'a> {
 
 impl<'a> RequestTransaction<'a> for &'a Request + 'a {
     fn db_conn(self) -> CargoResult<&'a PostgresConnection> {
-        let tx = self.extensions().find::<Transaction>()
-                     .expect("Transaction not present in request");
-        // Here we want to tie the lifetime of a single connection the lifetime
-        // of this request. Currently the lifetime of a connection is tied to
-        // the lifetime of the pool from which it came from, which is the
-        // mismatch.
-        //
-        // The unsafety here is frobbing lifetimes to ensure that they work out.
-        // Additionally, any extension in a Request needs to live for the static
-        // lifetime (yay!).
-        //
-        // To solve these problems, the private `Transaction` extension stores a
-        // reference both to the pool (to keep it alive) as well as a connection
-        // transmuted to the 'static lifetime. This allows us to allocate a
-        // connection up front and then repeatedly hand it out.
-        unsafe {
-            if !tx.slot.filled() {
-                let conn: PooledConnnection = try!(self.app().database.get());
-                tx.slot.fill(mem::transmute::<_, PooledConnnection<'static>>(conn));
-            }
-        }
-        Ok(&**tx.slot.borrow().unwrap())
+        self.extensions().find::<Transaction>()
+            .expect("Transaction not present in request")
+            .conn()
     }
 
     fn tx(self) -> CargoResult<&'a pg::PostgresTransaction<'a>> {
-        let tx = self.extensions().find::<Transaction>()
-                     .expect("Transaction not present in request");
-        // Similar to above, the transaction for this request is actually tied
-        // to the connection in the request itself, not 'static. We transmute it
-        // to static as its paired with the inner connection to achieve the
-        // desired effect.
-        unsafe {
-            if !tx.tx.filled() {
-                let conn = try!(self.db_conn());
-                let t = try!(conn.transaction());
-                let t = mem::transmute::<_, pg::PostgresTransaction<'static>>(t);
-                tx.tx.fill(t);
-            }
-        }
-        let tx = tx.tx.borrow();
-        let tx: &'a pg::PostgresTransaction<'static> = tx.unwrap();
-        Ok(tx)
+        self.extensions().find::<Transaction>()
+            .expect("Transaction not present in request")
+            .tx()
     }
 }
 

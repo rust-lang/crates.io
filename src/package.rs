@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use serialize::hex::ToHex;
 
@@ -23,7 +24,7 @@ pub struct Package {
     pub user_id: i32,
 }
 
-#[deriving(Encodable)]
+#[deriving(Encodable, Decodable)]
 pub struct EncodablePackage {
     pub id: String,
     pub name: String,
@@ -109,13 +110,35 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let limit = 10i64;
     let offset = 0i64;
     let conn = try!(req.tx());
-    let stmt = try!(conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2"));
 
+    // Collect all the packages
+    let stmt = try!(conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2"));
     let mut pkgs = Vec::new();
     for row in try!(stmt.query(&[&limit, &offset])) {
-        pkgs.push(Package::from_row(&row).encodable(Vec::new()));
+        pkgs.push(Package::from_row(&row));
     }
 
+    // Collect all the version ids
+    //
+    // TODO: can rust-postgres do this escaping?
+    let pkgids: Vec<i32> = pkgs.iter().map(|p| p.id).collect();
+    let mut map = HashMap::new();
+    let query = format!("'{{{:#}}}'::int[]", pkgids.as_slice());
+    let stmt = try!(conn.prepare(format!("SELECT id, package_id FROM versions \
+                                          WHERE package_id = ANY({})",
+                                         query).as_slice()));
+    for row in try!(stmt.query(&[])) {
+        map.find_or_insert(row.get("package_id"), Vec::new())
+           .push(row.get("id"));
+    }
+
+    // Massage a response
+    let pkgs = pkgs.move_iter().map(|p| {
+        let id = p.id;
+        p.encodable(map.pop(&id).unwrap())
+    }).collect();
+
+    // Query for the total count of packages
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
     let row = try!(stmt.query(&[])).next().unwrap();
     let total = row.get(0u);

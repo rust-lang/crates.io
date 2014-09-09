@@ -46,7 +46,6 @@ pub fn proxy() -> (String, Bomb) {
     let data = Path::new(file!()).dir_path().join("http-data")
                                  .join(me.as_slice().replace("::", "_"));
     let record = record && !data.exists();
-    let file = if record {File::create(&data)} else {File::open(&data)};
     let a2 = a.clone();
 
     let (iotx, iorx) = channel();
@@ -55,22 +54,26 @@ pub fn proxy() -> (String, Bomb) {
     spawn(proc() {
         stdio::set_stderr(box iotx.clone());
         stdio::set_stdout(box iotx);
-        let mut file = Some(file);
-        let mut data = None;
+        let mut file = None;
         for socket in a.incoming() {
             let socket = match socket { Ok(s) => s, Err(..) => break };
 
-            if data.is_none() {
-                data = Some(BufferedStream::new(file.take().unwrap().unwrap()));
+            if file.is_none() {
+                let io = if record {
+                    File::create(&data)
+                } else {
+                    File::open(&data)
+                };
+                file = Some(BufferedStream::new(io.unwrap()));
             }
 
             if record {
-                record_http(socket, data.as_mut().unwrap());
+                record_http(socket, file.as_mut().unwrap());
             } else {
-                replay_http(socket, data.as_mut().unwrap());
+                replay_http(socket, file.as_mut().unwrap());
             }
         }
-        match data {
+        match file {
             Some(ref mut f) => assert!(f.read_line().is_err()),
             None => {}
         }

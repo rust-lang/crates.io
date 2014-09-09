@@ -4,26 +4,25 @@ use serialize::json;
 use conduit::{mod, Handler};
 use conduit_test::MockRequest;
 
+use cargo_registry::package::EncodablePackage;
+use cargo_registry::version::EncodableVersion;
+
 #[deriving(Decodable)]
-struct PackageList { packages: Vec<Package>, meta: PackageMeta }
+struct PackageList { packages: Vec<EncodablePackage>, meta: PackageMeta }
 #[deriving(Decodable)]
 struct PackageMeta { total: int, page: int }
 #[deriving(Decodable)]
-struct Package { name: String, id: String, versions: Vec<i32> }
-#[deriving(Decodable)]
-struct Version { id: i32, pkg: String, num: String, url: String }
-#[deriving(Decodable)]
-struct PackageResponse { package: Package, versions: Vec<Version> }
+struct PackageResponse { package: EncodablePackage, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
 struct BadPackage { ok: bool, error: String }
 #[deriving(Decodable)]
-struct GoodPackage { ok: bool, package: Package }
+struct GoodPackage { ok: bool, package: EncodablePackage }
 #[deriving(Decodable)]
 struct GitPackage { name: String, vers: String, deps: Vec<String>, cksum: String }
 
 #[test]
 fn index() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let mut req = MockRequest::new(conduit::Get, "/packages");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: PackageList = ::json(&mut response);
@@ -41,12 +40,12 @@ fn index() {
     assert_eq!(json.meta.page, 0);
     assert_eq!(json.packages[0].name, pkg.name);
     assert_eq!(json.packages[0].id, pkg.name);
-    assert_eq!(json.packages[0].versions.len(), 0);
+    assert_eq!(json.packages[0].versions.len(), 1);
 }
 
 #[test]
 fn show() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let pkg = ::package();
     middle.add(::middleware::MockUser(::user()));
     middle.add(::middleware::MockPackage(pkg.clone()));
@@ -81,7 +80,7 @@ fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])
 
 #[test]
 fn new_wrong_token() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     middle.add(::middleware::MockUser(::user()));
     let mut req = new_req("wrong-token", "foo", "1.0.0", []);
     let response = t_resp!(middle.call(&mut req));
@@ -91,7 +90,7 @@ fn new_wrong_token() {
 #[test]
 fn new_bad_names() {
     fn bad_name(name: &str) {
-        let (_b, mut middle) = ::middleware();
+        let (_b, _app, mut middle) = ::app();
         let user = ::user();
         middle.add(::middleware::MockUser(user.clone()));
         let mut req = new_req(user.api_token.as_slice(), name, "1.0.0", []);
@@ -108,7 +107,7 @@ fn new_bad_names() {
 
 #[test]
 fn new_bad_versions() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0", []);
@@ -121,7 +120,7 @@ fn new_bad_versions() {
 
 #[test]
 fn new_package() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
@@ -133,7 +132,7 @@ fn new_package() {
 
 #[test]
 fn new_package_twice() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let package = ::package();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
@@ -149,7 +148,7 @@ fn new_package_twice() {
 
 #[test]
 fn new_package_wrong_user() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
 
     // Package will be owned by u2 (the last user)
     let mut u1 = ::user();
@@ -171,7 +170,7 @@ fn new_package_wrong_user() {
 
 #[test]
 fn new_package_too_big() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
@@ -183,7 +182,7 @@ fn new_package_too_big() {
 
 #[test]
 fn new_package_duplicate_version() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     let package = ::package();
     middle.add(::middleware::MockUser(user.clone()));
@@ -199,7 +198,7 @@ fn new_package_duplicate_version() {
 
 #[test]
 fn new_package_git_upload() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
@@ -219,7 +218,7 @@ fn new_package_git_upload() {
 
 #[test]
 fn new_package_git_upload_appends() {
-    let (_b, mut middle) = ::middleware();
+    let (_b, _app, mut middle) = ::app();
     let user = ::user();
     let path = ::git::checkout().join("fo/oX/foo");
     fs::mkdir_recursive(&path.dir_path(), io::UserRWX).unwrap();

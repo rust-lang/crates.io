@@ -1,8 +1,12 @@
+use std::collections::{HashSet, HashMap};
+
+use conduit::{Request, Response};
 use pg::{PostgresConnection, PostgresRow};
 use semver;
+use url;
 
-use app::App;
-use db::Connection;
+use app::{App, RequestApp};
+use db::{Connection, RequestTransaction};
 use package::Package;
 use util::{RequestUtils, CargoResult, Require, internal};
 
@@ -13,7 +17,7 @@ pub struct Version {
     pub num: String,
 }
 
-#[deriving(Encodable)]
+#[deriving(Encodable, Decodable)]
 pub struct EncodableVersion {
     pub id: i32,
     pub pkg: String,
@@ -75,4 +79,55 @@ pub fn setup(conn: &PostgresConnection) {
                   )", []).unwrap();
     conn.execute("ALTER TABLE versions ADD CONSTRAINT \
                   unique_num UNIQUE (package_id, num)", []).unwrap();
+}
+
+pub fn index(req: &mut Request) -> CargoResult<Response> {
+    let conn = try!(req.tx());
+
+    // Extract all ids requested.
+    let query = url::form_urlencoded::parse_str(req.query_string().unwrap_or(""));
+    let ids = query.iter().filter_map(|&(ref a, ref b)| {
+        if a.as_slice() == "ids[]" {
+            from_str(b.as_slice())
+        } else {
+            None
+        }
+    }).collect::<Vec<i32>>();
+
+    // Load all versions
+    //
+    // TODO: can rust-postgres do this for us?
+    let mut versions = Vec::new();
+    let mut set = HashSet::new();
+    let query = format!("'{{{:#}}}'::int[]", ids.as_slice());
+    let stmt = try!(conn.prepare(format!("SELECT * FROM versions \
+                                          WHERE id = ANY({})",
+                                         query).as_slice()));
+    for row in try!(stmt.query(&[])) {
+        let v = Version::from_row(&row);
+        set.insert(v.package_id);
+        versions.push(v);
+    }
+
+    // Load all packages
+    let ids = set.move_iter().collect::<Vec<i32>>();
+    let query = format!("'{{{:#}}}'::int[]", ids.as_slice());
+    let stmt = try!(conn.prepare(format!("SELECT * FROM packages \
+                                          WHERE id = ANY({})",
+                                         query).as_slice()));
+    let mut map = HashMap::new();
+    for row in try!(stmt.query(&[])) {
+        let p = Package::from_row(&row);
+        map.insert(p.id, p);
+    }
+
+    // And respond!
+    let versions = versions.move_iter().map(|v| {
+        let id = v.package_id;
+        v.encodable(&**req.app(), map.find(&id).unwrap())
+    }).collect();
+
+    #[deriving(Encodable)]
+    struct R { versions: Vec<EncodableVersion> }
+    Ok(req.json(&R { versions: versions }))
 }

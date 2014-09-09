@@ -26,6 +26,8 @@ extern crate "conduit-json-parser" as conduit_json_parser;
 pub use config::Config;
 pub use app::App;
 
+use std::sync::Arc;
+
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
@@ -50,7 +52,7 @@ pub enum Environment {
     Production,
 }
 
-pub fn middleware(app: App) -> MiddlewareBuilder {
+pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut router = RouteBuilder::new();
 
     router.get("/authorize_url", C(user::github_authorize));
@@ -59,6 +61,7 @@ pub fn middleware(app: App) -> MiddlewareBuilder {
     router.get("/me", C(user::me));
     router.put("/me/reset_token", C(user::reset_token));
     router.get("/packages", C(package::index));
+    router.get("/versions", C(version::index));
     router.get("/packages/:package_id", C(package::show));
     router.put("/packages/:package_id", {
         let mut m = MiddlewareBuilder::new(C(package::update));

@@ -60,8 +60,8 @@ impl App {
 }
 
 impl AppMiddleware {
-    pub fn new(app: App) -> AppMiddleware {
-        AppMiddleware { app: Arc::new(app) }
+    pub fn new(app: Arc<App>) -> AppMiddleware {
+        AppMiddleware { app: app }
     }
 }
 

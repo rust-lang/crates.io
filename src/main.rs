@@ -4,6 +4,7 @@ extern crate green;
 extern crate rustuv;
 
 use std::os;
+use std::sync::Arc;
 use civet::Server;
 
 fn main() {
@@ -25,7 +26,7 @@ fn main() {
     if os::getenv("RESET").is_some() {
         app.db_setup();
     }
-    let app = cargo_registry::middleware(app);
+    let app = cargo_registry::middleware(Arc::new(app));
 
     let port = 8888;
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
