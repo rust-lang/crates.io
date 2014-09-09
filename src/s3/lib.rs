@@ -57,7 +57,7 @@ impl Bucket {
               .header("Authorization", auth.as_slice())
     }
 
-    fn host(&self) -> String {
+    pub fn host(&self) -> String {
         format!("{}.s3.amazonaws.com", self.name)
     }
 

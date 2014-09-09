@@ -9,9 +9,11 @@ struct PackageList { packages: Vec<Package>, meta: PackageMeta }
 #[deriving(Decodable)]
 struct PackageMeta { total: int, page: int }
 #[deriving(Decodable)]
-struct Package { name: String, id: String }
+struct Package { name: String, id: String, versions: Vec<i32> }
 #[deriving(Decodable)]
-struct PackageResponse { package: Package }
+struct Version { id: i32, pkg: String, num: String, url: String }
+#[deriving(Decodable)]
+struct PackageResponse { package: Package, versions: Vec<Version> }
 #[deriving(Decodable)]
 struct BadPackage { ok: bool, error: String }
 #[deriving(Decodable)]
@@ -39,6 +41,7 @@ fn index() {
     assert_eq!(json.meta.page, 0);
     assert_eq!(json.packages[0].name, pkg.name);
     assert_eq!(json.packages[0].id, pkg.name);
+    assert_eq!(json.packages[0].versions.len(), 0);
 }
 
 #[test]
@@ -53,6 +56,14 @@ fn show() {
     let json: PackageResponse = ::json(&mut response);
     assert_eq!(json.package.name, pkg.name);
     assert_eq!(json.package.id, pkg.name);
+    assert_eq!(json.package.versions.len(), 1);
+    assert_eq!(json.versions.len(), 1);
+    assert_eq!(json.versions[0].id, json.package.versions[0]);
+    assert_eq!(json.versions[0].pkg, json.package.id);
+    assert_eq!(json.versions[0].num, "1.0.0".to_string());
+    let suffix = "/pkg/foo/foo-1.0.0.tar.gz";
+    assert!(json.versions[0].url.as_slice().ends_with(suffix),
+            "bad suffix {}", json.versions[0].url);
 }
 
 fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])

@@ -14,7 +14,7 @@ use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError};
 use util::{LimitErrorReader, HashingReader};
 use util::errors::{NotFound, CargoError};
-use version::Version;
+use version::{Version, EncodableVersion};
 
 #[deriving(Clone)]
 pub struct Package {
@@ -27,17 +27,11 @@ pub struct Package {
 pub struct EncodablePackage {
     pub id: String,
     pub name: String,
-}
-
-#[deriving(Encodable)]
-pub struct EncodablePackageVersion {
-    pub id: String,
-    pub version: String,
-    pub link: String,
+    pub versions: Vec<i32>,
 }
 
 impl Package {
-    fn from_row(row: &PostgresRow) -> Package {
+    pub fn from_row(row: &PostgresRow) -> Package {
         Package {
             id: row.get("id"),
             name: row.get("name"),
@@ -78,12 +72,24 @@ impl Package {
         name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
     }
 
-    fn encodable(self) -> EncodablePackage {
+    fn encodable(self, versions: Vec<i32>) -> EncodablePackage {
         let Package { name, .. } = self;
         EncodablePackage {
             id: name.clone(),
             name: name,
+            versions: versions,
         }
+    }
+
+    pub fn versions(&self, conn: &Connection) -> CargoResult<Vec<Version>> {
+        let stmt = try!(conn.prepare("SELECT * FROM versions \
+                                      WHERE package_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        Ok(rows.map(|r| Version::from_row(&r)).collect())
+    }
+
+    pub fn path(&self, version: &str) -> String {
+        format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
 }
 
@@ -107,7 +113,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     let mut pkgs = Vec::new();
     for row in try!(stmt.query(&[&limit, &offset])) {
-        pkgs.push(Package::from_row(&row).encodable());
+        pkgs.push(Package::from_row(&row).encodable(Vec::new()));
     }
 
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
@@ -129,10 +135,16 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["package_id"];
     let conn = try!(req.tx());
     let pkg = try!(Package::find_by_name(&*conn, name.as_slice()));
+    let versions = try!(pkg.versions(&*conn));
 
     #[deriving(Encodable)]
-    struct R { package: EncodablePackage }
-    Ok(req.json(&R { package: pkg.encodable() }))
+    struct R { package: EncodablePackage, versions: Vec<EncodableVersion>, }
+    Ok(req.json(&R {
+        package: pkg.clone().encodable(versions.iter().map(|v| v.id).collect()),
+        versions: versions.move_iter().map(|v| {
+            v.encodable(&**req.app(), &pkg)
+        }).collect(),
+    }))
 }
 
 #[deriving(Decodable)]
@@ -155,7 +167,7 @@ pub fn update(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { package: EncodablePackage }
-    Ok(req.json(&R { package: pkg.encodable() }))
+    Ok(req.json(&R { package: pkg.encodable(Vec::new()) }))
 }
 
 #[deriving(Encodable)]
@@ -181,7 +193,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let name = try!(header(req, "X-Cargo-Pkg-Name"))[0].to_string();
     let vers = try!(header(req, "X-Cargo-Pkg-Version"))[0].to_string();
     let deps = req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
-                  .move_iter().map(|s| s.to_string()).collect();
+                  .iter().flat_map(|s| s.as_slice().split(';'))
+                  .map(|s| s.to_string()).collect();
 
     // Make sure the tarball being uploaded looks sane
     let length = try!(req.content_length().require(|| {
@@ -263,8 +276,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         Some(ref proxy) => handle.proxy(proxy.as_slice()),
         None => handle,
     };
-    let path = format!("/pkg/{}/{}-{}.tar.gz", new_pkg.name,
-                       new_pkg.name, new_pkg.vers);
+    let path = pkg.path(new_pkg.vers.as_slice());
     let (resp, cksum) = {
         let body = LimitErrorReader::new(req.body(), max);
         let mut body = HashingReader::new(body);
@@ -314,5 +326,5 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { ok: bool, package: EncodablePackage }
-    Ok(req.json(&R { ok: true, package: pkg.encodable() }))
+    Ok(req.json(&R { ok: true, package: pkg.encodable(Vec::new()) }))
 }

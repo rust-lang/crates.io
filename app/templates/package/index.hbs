@@ -3,9 +3,20 @@
   <dd>{{name}}</dd>
   <dt>Slug</dt>
   <dd>{{id}}</dd>
-  <dt>Source</dt>
-  <dd><a href="{{source}}">{{source}}</a></dd>
 </dl>
+
+<table>
+  <tr>
+    <th>Version</th>
+    <th>&nbsp;</th>
+  </tr>
+  {{#each versions}}
+    <tr>
+      <td>{{num}}</td>
+      <td><a {{bindAttr href="url"}}>{{url}}</a></td>
+    </tr>
+  {{/each}}
+</table>
 
 {{#if session.isLoggedIn}}
   {{#link-to "package.edit" this}}[edit]{{/link-to}}
