@@ -28,7 +28,7 @@ impl TypeMap {
         self.data.remove(&TypeId::of::<T>())
     }
 
-    pub fn contains<T: 'static>(&mut self) -> bool {
+    pub fn contains<T: 'static>(&self) -> bool {
         self.data.contains_key(&TypeId::of::<T>())
     }
 
