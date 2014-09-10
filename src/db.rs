@@ -12,7 +12,7 @@ use conduit_middleware::Middleware;
 
 use app::{App, RequestApp};
 use {user, package, version};
-use util::{CargoResult, LazyCell};
+use util::{CargoResult, LazyCell, internal};
 
 pub type Pool = r2d2::Pool<pg::PostgresConnection,
                            pg::error::PostgresConnectError,
@@ -75,7 +75,10 @@ impl Transaction {
         // connection up front and then repeatedly hand it out.
         unsafe {
             if !self.slot.filled() {
-                let conn: PooledConnnection = try!(self.app.database.get());
+                let conn = try!(self.app.database.get().map_err(|()| {
+                    internal("failed to get a database connection")
+                }));
+                let conn: PooledConnnection = conn;
                 self.slot.fill(mem::transmute::<_, PooledConnnection<'static>>(conn));
             }
         }
