@@ -2,7 +2,7 @@
 
 extern crate time;
 extern crate conduit;
-extern crate middleware = "conduit-middleware";
+extern crate "conduit-middleware" as middleware;
 
 use std::str::{MaybeOwned, Slice, Owned};
 use std::fmt::Show;
@@ -118,7 +118,7 @@ fn parse_asctime(string: &str) -> Result<Tm, String> {
 
 #[cfg(test)]
 mod tests {
-    extern crate test = "conduit-test";
+    extern crate "conduit-test" as test;
 
     use std::fmt::Show;
     use std::io::MemReader;
