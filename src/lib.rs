@@ -1,5 +1,5 @@
 extern crate conduit;
-extern crate mime = "mime-types";
+extern crate "mime-types" as mime;
 extern crate time;
 
 use std::fmt::Show;
@@ -73,7 +73,7 @@ fn not_found() -> Response {
 
 #[cfg(test)]
 mod tests {
-    extern crate test = "conduit-test";
+    extern crate "conduit-test" as test;
 
     use std::io::{fs, File, TempDir, UserRWX};
 
