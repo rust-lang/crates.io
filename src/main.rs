@@ -49,7 +49,8 @@ fn main() {
     }
     let app = cargo_registry::middleware(Arc::new(app));
 
-    let port = 8888;
+    let port = os::getenv("PORT").and_then(|s| from_str(s.as_slice()))
+                                 .unwrap_or(8888);
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);
     wait_for_sigint();
