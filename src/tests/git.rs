@@ -23,8 +23,7 @@ pub fn init() {
     let url = Url::from_file_path(&bare()).unwrap().to_string();
 
     // Setup the `origin` remote
-    let mut origin = checkout.remote_create("origin",
-                                            url.as_slice()).unwrap();
+    let mut origin = checkout.remote("origin", url.as_slice()).unwrap();
     origin.set_pushurl(Some(url.as_slice())).unwrap();
     origin.add_push("refs/heads/master").unwrap();
     origin.save().unwrap();
@@ -35,14 +34,14 @@ pub fn init() {
     config.set_str("user.email", "email").unwrap();
     let mut index = checkout.index().unwrap();
     let id = index.write_tree().unwrap();
-    let tree = git2::Tree::lookup(&checkout, id).unwrap();
-    let sig = git2::Signature::default(&checkout).unwrap();
-    git2::Commit::new(&checkout, Some("HEAD"), &sig, &sig,
-                      "Initial Commit",
-                      &tree, []).unwrap();
+    let tree = checkout.find_tree(id).unwrap();
+    let sig = checkout.signature().unwrap();
+    checkout.commit(Some("HEAD"), &sig, &sig,
+                    "Initial Commit",
+                    &tree, []).unwrap();
 
     // Push the commit to the remote repo
-    let mut origin = checkout.remote_load("origin").unwrap();
+    let mut origin = checkout.find_remote("origin").unwrap();
     let mut push = origin.push().unwrap();
     push.add_refspec("refs/heads/master").unwrap();
     push.finish().unwrap();
@@ -51,7 +50,7 @@ pub fn init() {
     push.update_tips(None, None).unwrap();
 
     // Set up master to track origin/master
-    let branch = git2::Reference::lookup(&checkout, "refs/heads/master");
+    let branch = checkout.find_reference("refs/heads/master");
     let mut branch = git2::Branch::wrap(branch.unwrap());
     branch.set_upstream(Some("origin/master")).unwrap();
 

@@ -13,10 +13,10 @@ dependencies = [
  "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b)",
  "curl 0.0.1 (git+https://github.com/carllerche/curl-rust#a98f429071e09d8c61b1b8b946f605ef5aba3ab9)",
  "flate2 0.0.1 (git+https://github.com/alexcrichton/flate2-rs#a59b2a103642550bc1500c302c5031479ec7d9e1)",
- "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#2a12e9b158b667d31d87bfad2ca1a6edd0505c65)",
+ "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#89ccd9e9413876d89b0da451e4e7372bb623f344)",
  "html 0.0.1",
  "oauth2 0.0.1 (git+https://github.com/alexcrichton/oauth2-rs#3715f02bb8a090cbcda118367995ea514120f421)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#e7e6ef5da2f96f231fabe746eafdf681224f5bc9)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#89facce1d2755f53a977e97923a013ed71526886)",
  "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#76eecf1f24665f451112bba561fb22e65dec5391)",
  "r2d2_postgres 0.0.0 (git+https://github.com/alexcrichton/r2d2-postgres?ref=alexcrichton#21d38db7060d9e920c8fffe3f7c010b42c82833e)",
  "s3 0.0.1",
@@ -130,7 +130,7 @@ name = "cookie"
 version = "0.0.1"
 source = "git+https://github.com/alexcrichton/cookie-rs.git#456aca089ed26677af6bf741a62c774a8fa0f530"
 dependencies = [
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#e7e6ef5da2f96f231fabe746eafdf681224f5bc9)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#89facce1d2755f53a977e97923a013ed71526886)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#bfdf809365600a7941a77524f9bb065886de3379)",
 ]
 
@@ -155,9 +155,9 @@ source = "git+https://github.com/alexcrichton/flate2-rs#a59b2a103642550bc1500c30
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#2a12e9b158b667d31d87bfad2ca1a6edd0505c65"
+source = "git+https://github.com/alexcrichton/git2-rs#89ccd9e9413876d89b0da451e4e7372bb623f344"
 dependencies = [
- "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#2a12e9b158b667d31d87bfad2ca1a6edd0505c65)",
+ "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#89ccd9e9413876d89b0da451e4e7372bb623f344)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#bfdf809365600a7941a77524f9bb065886de3379)",
 ]
 
@@ -171,9 +171,9 @@ dependencies = [
 [[package]]
 name = "libgit2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#2a12e9b158b667d31d87bfad2ca1a6edd0505c65"
+source = "git+https://github.com/alexcrichton/git2-rs#89ccd9e9413876d89b0da451e4e7372bb623f344"
 dependencies = [
- "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#9db278a48dd4f137f7ca75d20bddeb43a71a00ed)",
+ "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#d6fb271a309c9bcbe8f0992967272e7a765ff735)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#e378605ce4099008b1dab8f39619d91dc8887946)",
  "openssl-static-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-static-sys#b8f2500c39932e9d022dcc2590493ab0cc144e2a)",
 ]
@@ -181,7 +181,7 @@ dependencies = [
 [[package]]
 name = "libssh2-static-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/libssh2-static-sys#9db278a48dd4f137f7ca75d20bddeb43a71a00ed"
+source = "git+https://github.com/alexcrichton/libssh2-static-sys#d6fb271a309c9bcbe8f0992967272e7a765ff735"
 
 [[package]]
 name = "link-config"
@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "openssl"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-openssl#e7e6ef5da2f96f231fabe746eafdf681224f5bc9"
+source = "git+https://github.com/sfackler/rust-openssl#89facce1d2755f53a977e97923a013ed71526886"
 
 [[package]]
 name = "openssl-static-sys"
@@ -227,7 +227,7 @@ name = "postgres"
 version = "0.0.0"
 source = "git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#76eecf1f24665f451112bba561fb22e65dec5391"
 dependencies = [
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#e7e6ef5da2f96f231fabe746eafdf681224f5bc9)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#89facce1d2755f53a977e97923a013ed71526886)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#6c3683f28fc7b395f0925044aecbd4b30fb367f6)",
  "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf#6c3683f28fc7b395f0925044aecbd4b30fb367f6)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#bfdf809365600a7941a77524f9bb065886de3379)",
@@ -257,7 +257,7 @@ name = "s3"
 version = "0.0.1"
 dependencies = [
  "curl 0.0.1 (git+https://github.com/carllerche/curl-rust#a98f429071e09d8c61b1b8b946f605ef5aba3ab9)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#e7e6ef5da2f96f231fabe746eafdf681224f5bc9)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#89facce1d2755f53a977e97923a013ed71526886)",
 ]
 
 [[package]]
