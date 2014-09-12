@@ -3,7 +3,7 @@ extern crate rustuv;
 
 extern crate civet;
 extern crate conduit;
-extern crate conduit_static = "conduit-static";
+extern crate "conduit-static" as conduit_static;
 
 use std::os;
 
