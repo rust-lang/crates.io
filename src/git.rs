@@ -1,8 +1,9 @@
-use std::io;
-use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
 use std::ascii::StrAsciiExt;
 use std::collections::HashMap;
+use std::io::fs::PathExtensions;
 use std::io::util;
+use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
+use std::io;
 use serialize::json;
 use flate2::reader::GzDecoder;
 
