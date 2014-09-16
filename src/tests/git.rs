@@ -16,7 +16,12 @@ pub fn init() {
     let _ = fs::rmdir_recursive(&checkout());
     let _ = fs::rmdir_recursive(&bare());
     // Prepare a bare remote repo
-    git2::Repository::init_bare(&bare()).unwrap();
+    {
+        let bare = git2::Repository::init_bare(&bare()).unwrap();
+        let mut config = bare.config().unwrap();
+        config.set_str("user.name", "name").unwrap();
+        config.set_str("user.email", "email").unwrap();
+    }
 
     // Initialize a fresh checkout
     let checkout = git2::Repository::init(&checkout()).unwrap();
