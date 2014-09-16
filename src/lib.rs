@@ -8,6 +8,7 @@ use std::io::MemReader;
 use std::collections::HashMap;
 use std::fmt::Show;
 
+use semver::Version;
 use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
 
 pub struct MockRequest {
@@ -75,12 +76,12 @@ impl Headers for MockHeaders {
 }
 
 impl<'a> conduit::Request for MockRequest {
-    fn http_version(&self) -> semver::Version {
-        semver::parse("1.1.0").unwrap()
+    fn http_version(&self) -> Version {
+        Version::parse("1.1.0").unwrap()
     }
 
-    fn conduit_version(&self) -> semver::Version {
-        semver::parse("0.1.0").unwrap()
+    fn conduit_version(&self) -> Version {
+        Version::parse("0.1.0").unwrap()
     }
 
     fn method(&self) -> Method { self.method }
@@ -127,7 +128,7 @@ impl<'a> conduit::Request for MockRequest {
 mod tests {
     use super::MockRequest;
     use conduit;
-    use semver;
+    use semver::Version;
 
     use std::io::net::ip::Ipv4Addr;
 
@@ -137,8 +138,8 @@ mod tests {
     fn simple_request_test() {
         let mut req = MockRequest::new(conduit::Get, "/");
 
-        assert_eq!(req.http_version(), semver::parse("1.1.0").unwrap());
-        assert_eq!(req.conduit_version(), semver::parse("0.1.0").unwrap());
+        assert_eq!(req.http_version(), Version::parse("1.1.0").unwrap());
+        assert_eq!(req.conduit_version(), Version::parse("0.1.0").unwrap());
         assert_eq!(req.method(), conduit::Get);
         assert_eq!(req.scheme(), conduit::Http);
         assert_eq!(req.host(), conduit::HostName("example.com"));
