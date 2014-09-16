@@ -1,10 +1,11 @@
 use std::fmt::Show;
 use std::sync::{Arc, Mutex};
 
-use r2d2;
 use conduit::Request;
 use conduit_middleware::Middleware;
+use git2;
 use oauth2;
+use r2d2;
 use s3;
 
 use {db, Config};
@@ -15,8 +16,8 @@ pub struct App {
     pub bucket: s3::Bucket,
     pub s3_proxy: Option<String>,
     pub session_key: String,
-    pub git_repo_bare: Path,
-    pub git_repo_checkout: Mutex<Path>,
+    pub git_repo: Mutex<git2::Repository>,
+    pub git_repo_checkout: Path,
     pub config: Config,
 }
 
@@ -39,6 +40,7 @@ impl App {
             test_on_check_out: false,
         };
 
+        let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
         return App {
             database: db::pool(config.db_url.as_slice(), db_config),
             github: github,
@@ -48,8 +50,8 @@ impl App {
                                     if config.env == ::Test {"http"} else {"https"}),
             s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
-            git_repo_bare: config.git_repo_bare.clone(),
-            git_repo_checkout: Mutex::new(config.git_repo_checkout.clone()),
+            git_repo: Mutex::new(repo),
+            git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
         };
     }

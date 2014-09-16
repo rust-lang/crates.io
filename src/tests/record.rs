@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
 use std::io::{ChanReader, ChanWriter, util, stdio};
 use std::io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
+use std::io::fs::PathExtensions;
 use std::os;
 use std::str;
 use std::task;

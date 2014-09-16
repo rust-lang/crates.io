@@ -7,6 +7,7 @@ use conduit::Response;
 use curl::ErrCode;
 use pg::error::{PostgresError, PostgresConnectError};
 use serialize::json;
+use git2;
 
 pub trait CargoError: Send {
     fn description(&self) -> String;
@@ -168,6 +169,12 @@ impl CargoError for json::DecoderError {
 }
 
 from_error!(json::DecoderError)
+
+impl CargoError for git2::Error {
+    fn description(&self) -> String { self.to_string() }
+}
+
+from_error!(git2::Error)
 
 impl<T: CargoError + Send> FromError<T> for Box<Show + 'static> {
     fn from_error(t: T) -> Box<Show + 'static> {

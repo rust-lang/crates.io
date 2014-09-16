@@ -7,6 +7,7 @@ extern crate semver;
 extern crate "postgres" as pg;
 extern crate curl;
 extern crate flate2;
+extern crate git2;
 extern crate html;
 extern crate oauth2;
 extern crate openssl;

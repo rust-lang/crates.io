@@ -13,7 +13,7 @@ dependencies = [
  "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#dcbfa8aa2d2cf064e9b9516510631aa61df27a2b)",
  "curl 0.0.1 (git+https://github.com/carllerche/curl-rust#a98f429071e09d8c61b1b8b946f605ef5aba3ab9)",
  "flate2 0.0.1 (git+https://github.com/alexcrichton/flate2-rs#a59b2a103642550bc1500c302c5031479ec7d9e1)",
- "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#d36102579e8e42b275f63bf606a7a2eac006a98c)",
+ "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#cdd808164c97fa04d9df5039fc915cbbb8b2876c)",
  "html 0.0.1",
  "oauth2 0.0.1 (git+https://github.com/alexcrichton/oauth2-rs#3715f02bb8a090cbcda118367995ea514120f421)",
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#cec41181c04e7ad4e644034d870626571acbdbdb)",
@@ -155,9 +155,9 @@ source = "git+https://github.com/alexcrichton/flate2-rs#a59b2a103642550bc1500c30
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#d36102579e8e42b275f63bf606a7a2eac006a98c"
+source = "git+https://github.com/alexcrichton/git2-rs#cdd808164c97fa04d9df5039fc915cbbb8b2876c"
 dependencies = [
- "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#d36102579e8e42b275f63bf606a7a2eac006a98c)",
+ "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#cdd808164c97fa04d9df5039fc915cbbb8b2876c)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#bfdf809365600a7941a77524f9bb065886de3379)",
 ]
 
@@ -171,7 +171,7 @@ dependencies = [
 [[package]]
 name = "libgit2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#d36102579e8e42b275f63bf606a7a2eac006a98c"
+source = "git+https://github.com/alexcrichton/git2-rs#cdd808164c97fa04d9df5039fc915cbbb8b2876c"
 dependencies = [
  "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#6a5d3ad7b62db6ca0721c528402f4976a1876036)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#1d3cd271612036b47c015a55f33a97e1524569ae)",

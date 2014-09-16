@@ -4,13 +4,16 @@ use std::io::fs::PathExtensions;
 use std::io::util;
 use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
 use std::io;
-use serialize::json;
+use std::os;
+
 use flate2::reader::GzDecoder;
+use git2;
+use serialize::json;
 
 use conduit::{Request, Response};
 
 use app::{App, RequestApp};
-use util::{CargoResult, exec};
+use util::{CargoResult, internal};
 use package::NewPackage;
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
@@ -20,7 +23,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     // Required environment variables
     cmd.env("REQUEST_METHOD",
             req.method().to_string().as_slice().to_ascii_upper());
-    cmd.env("GIT_PROJECT_ROOT", &req.app().git_repo_bare);
+    cmd.env("GIT_PROJECT_ROOT", &req.app().git_repo_checkout);
     cmd.env("PATH_INFO", req.path().replace("/git/index", ""));
     cmd.env("REMOTE_USER", "");
     cmd.env("REMOTE_ADDR", req.remote_ip().to_string());
@@ -88,18 +91,19 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
-    let path = app.git_repo_checkout.lock();
-    let path = &*path;
+    let repo = app.git_repo.lock();
+    let repo = &*repo;
     let name = package.name.as_slice();
     let (c1, c2) = match name.len() {
         0 => unreachable!(),
-        1 => (format!("{}X", name.slice_to(1)), format!("XX")),
-        2 => (format!("{}", name.slice_to(2)), format!("XX")),
-        3 => (format!("{}", name.slice_to(2)), format!("{}X", name.char_at(2))),
+        1 => (format!("{}:", name.slice_to(1)), format!("::")),
+        2 => (format!("{}", name.slice_to(2)), format!("::")),
+        3 => (format!("{}", name.slice_to(2)), format!("{}:", name.char_at(2))),
         _ => (name.slice_to(2).to_string(), name.slice(2, 4).to_string()),
     };
 
-    let dst = path.join(c1).join(c2).join(name);
+    let part = Path::new(c1).join(c2).join(name);
+    let dst = repo.path().dir_path().join(&part);
     try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
     let prev = if dst.exists() {
         try!(File::open(&dst).read_to_string())
@@ -110,14 +114,54 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
     let new = if prev.len() == 0 {s} else {prev + "\n" + s};
     try!(File::create(&dst).write(new.as_bytes()));
 
-    macro_rules! git( ($($e:expr),*) => ({
-        try!(exec(Command::new("git").cwd(path)$(.arg($e))*))
-    }) )
+    // git add $file
+    let mut index = try!(repo.index());
+    try!(index.add_path(&part));
+    try!(index.write());
+    let tree_id = try!(index.write_tree());
+    let tree = try!(repo.find_tree(tree_id));
 
-    git!("add", dst);
-    git!("commit", "-m", format!("Updating package `{}#{}`", package.name,
-                                 package.vers));
-    git!("push");
+    // git commit -m "..."
+    let head = try!(repo.head());
+    let parent = try!(repo.find_commit(head.target().unwrap()));
+    let sig = try!(repo.signature());
+    let msg = format!("Updating package `{}#{}`", package.name, package.vers);
+    try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
+                     &tree, &[&parent]));
 
-    Ok(())
+    // git push
+    let origin = try!(repo.find_remote("origin"));
+    let cfg = try!(repo.config());
+    with_authentication(origin.pushurl().unwrap(), &cfg, |f| {
+        let mut origin = try!(repo.find_remote("origin"));
+        let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
+        origin.set_callbacks(&mut callbacks);
+
+        let mut push = try!(origin.push());
+        try!(push.add_refspec("refs/heads/master"));
+        try!(push.finish());
+        if !push.unpack_ok() {
+            return Err(internal("failed to push some remote refspecs"))
+        }
+        try!(push.update_tips(None, None));
+
+        Ok(())
+    })
+}
+
+pub fn with_authentication<T>(url: &str,
+                              cfg: &git2::Config,
+                              f: |git2::Credentials| -> T)
+                              -> T {
+    let mut cred_helper = git2::CredentialHelper::new(url);
+    cred_helper.config(cfg);
+    // TODO: read username/pass from the environment
+    f(|_url, _username, _allowed| {
+        match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {
+            (Some(u), Some(p)) => {
+                git2::Cred::userpass_plaintext(u.as_slice(), p.as_slice())
+            }
+            _ => Err(git2::Error::from_str("no authentication set"))
+        }
+    })
 }
