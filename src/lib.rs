@@ -69,7 +69,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
         m
     });
-    router.post("/packages/new", C(package::new));
+    router.put("/packages/new", C(package::new));
     router.get("/git/index/*path", C(git::serve_index));
     router.post("/git/index/*path", C(git::serve_index));
 

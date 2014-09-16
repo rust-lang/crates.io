@@ -68,7 +68,7 @@ fn show() {
 
 fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])
            -> MockRequest {
-    let mut req = MockRequest::new(conduit::Post, "/packages/new");
+    let mut req = MockRequest::new(conduit::Put, "/packages/new");
     req.header("X-Cargo-Auth", api_token)
        .header("X-Cargo-Pkg-Name", pkg)
        .header("X-Cargo-Pkg-Version", version)
