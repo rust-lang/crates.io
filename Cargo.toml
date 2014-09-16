@@ -7,7 +7,7 @@ authors = ["wycats@gmail.com"]
 [dependencies.conduit]
 git = "https://github.com/conduit-rust/conduit.git"
 
-[dependencies.conduit-test]
+[dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test.git"
 
 [dependencies.conduit-middleware]
