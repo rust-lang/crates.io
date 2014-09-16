@@ -13,8 +13,8 @@ fn main() {
     let url = env("GIT_REPO_URL");
     let checkout = Path::new(env("GIT_REPO_CHECKOUT"));
 
-    match git2::Repository::open(&checkout) {
-        Ok(..) => {}
+    let repo = match git2::Repository::open(&checkout) {
+        Ok(r) => r,
         Err(..) => {
             let _ = fs::rmdir_recursive(&checkout);
             fs::mkdir_recursive(&checkout, io::UserDir).unwrap();
@@ -22,13 +22,15 @@ fn main() {
             let url = url.as_slice();
             cargo_registry::git::with_authentication(url, &config, |f| {
                 let cb = git2::RemoteCallbacks::new().credentials(f);
-                try!(git2::build::RepoBuilder::new()
-                                              .remote_callbacks(cb)
-                                              .clone(url, &checkout));
-                Ok(())
-            }).unwrap();
+                git2::build::RepoBuilder::new()
+                                         .remote_callbacks(cb)
+                                         .clone(url, &checkout)
+            }).unwrap()
         }
-    }
+    };
+    let mut cfg = repo.config().unwrap();
+    cfg.set_str("user.name", "bors").unwrap();
+    cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
     let config = cargo_registry::Config {
         s3_bucket: env("S3_BUCKET"),
