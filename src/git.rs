@@ -132,7 +132,7 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
     // git push
     let origin = try!(repo.find_remote("origin"));
     let cfg = try!(repo.config());
-    with_authentication(origin.pushurl().unwrap(), &cfg, |f| {
+    with_authentication(origin.url().unwrap(), &cfg, |f| {
         let mut origin = try!(repo.find_remote("origin"));
         let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
         origin.set_callbacks(&mut callbacks);
