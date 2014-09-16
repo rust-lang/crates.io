@@ -45,6 +45,7 @@ mod version;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     static mut INIT: Once = ONCE_INIT;
+    git::init();
 
     let (proxy, bomb) = record::proxy();
     let config = cargo_registry::Config {
@@ -61,7 +62,6 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         max_upload_size: 100,
     };
     let app = App::new(&config);
-    git::init();
     unsafe {
         INIT.doit(|| app.db_setup());
     }
