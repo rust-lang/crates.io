@@ -54,7 +54,7 @@ impl Version {
     }
 
     pub fn valid(version: &str) -> bool {
-        semver::parse(version).is_some()
+        semver::Version::parse(version).is_ok()
     }
 
     pub fn encodable(self, app: &App, pkg: &Package) -> EncodableVersion {
