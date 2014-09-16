@@ -38,6 +38,11 @@ impl MockRequest {
         }
     }
 
+    pub fn with_path(&mut self, path: &str) -> &mut MockRequest {
+        self.path = path.to_string();
+        self
+    }
+
     pub fn with_query<'a, S: Show>(&'a mut self, string: S) -> &'a mut MockRequest {
         self.query_string = Some(string.to_string());
         self
