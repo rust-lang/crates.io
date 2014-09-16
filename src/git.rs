@@ -104,49 +104,72 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
 
     let part = Path::new(c1).join(c2).join(name);
     let dst = repo.path().dir_path().join(&part);
-    try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
-    let prev = if dst.exists() {
-        try!(File::open(&dst).read_to_string())
-    } else {
-        String::new()
-    };
-    let s = json::encode(package);
-    let new = if prev.len() == 0 {s} else {prev + "\n" + s};
-    try!(File::create(&dst).write(new.as_bytes()));
 
-    // git add $file
-    let mut index = try!(repo.index());
-    try!(index.add_path(&part));
-    try!(index.write());
-    let tree_id = try!(index.write_tree());
-    let tree = try!(repo.find_tree(tree_id));
+    // Attempt to commit the package in a loop. It's possible that we're going
+    // to need to rebase our repository, and after that it's possible that we're
+    // going to race to commit the changes. For now we just cap out the maximum
+    // number of retries at a fixed number.
+    for _ in range(0i, 20) {
+        // Add the package to its relevant file
+        try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
+        let prev = if dst.exists() {
+            try!(File::open(&dst).read_to_string())
+        } else {
+            String::new()
+        };
+        let s = json::encode(package);
+        let new = if prev.len() == 0 {s} else {prev + "\n" + s};
+        try!(File::create(&dst).write(new.as_bytes()));
 
-    // git commit -m "..."
-    let head = try!(repo.head());
-    let parent = try!(repo.find_commit(head.target().unwrap()));
-    let sig = try!(repo.signature());
-    let msg = format!("Updating package `{}#{}`", package.name, package.vers);
-    try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
-                     &tree, &[&parent]));
+        // git add $file
+        let mut index = try!(repo.index());
+        try!(index.add_path(&part));
+        try!(index.write());
+        let tree_id = try!(index.write_tree());
+        let tree = try!(repo.find_tree(tree_id));
 
-    // git push
-    let origin = try!(repo.find_remote("origin"));
-    let cfg = try!(repo.config());
-    with_authentication(origin.url().unwrap(), &cfg, |f| {
+        // git commit -m "..."
+        let head = try!(repo.head());
+        let parent = try!(repo.find_commit(head.target().unwrap()));
+        let sig = try!(repo.signature());
+        let msg = format!("Updating package `{}#{}`", package.name, package.vers);
+        try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
+                         &tree, &[&parent]));
+
+        // git push
         let mut origin = try!(repo.find_remote("origin"));
-        let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
-        origin.set_callbacks(&mut callbacks);
+        let cfg = try!(repo.config());
+        let ok = try!(with_authentication(origin.url().unwrap(), &cfg, |f| {
+            let mut origin = try!(repo.find_remote("origin"));
+            let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
+            origin.set_callbacks(&mut callbacks);
 
-        let mut push = try!(origin.push());
-        try!(push.add_refspec("refs/heads/master"));
-        try!(push.finish());
-        if !push.unpack_ok() {
-            return Err(internal("failed to push some remote refspecs"))
-        }
-        try!(push.update_tips(None, None));
+            let mut push = try!(origin.push());
+            try!(push.add_refspec("refs/heads/master"));
 
-        Ok(())
-    })
+            match push.finish() {
+                Ok(()) => {}
+                Err(..) => return Ok(false)
+            }
+
+            if !push.unpack_ok() {
+                return Err(internal("failed to push some remote refspecs"))
+            }
+            try!(push.update_tips(None, None));
+
+            Ok(true)
+        }));
+        if ok { return Ok(()) }
+
+        // Ok, we need to update, so fetch and reset --hard
+        try!(origin.add_fetch("refs/heads/*:refs/heads/*"));
+        try!(origin.fetch(None, None));
+        let head = try!(repo.head()).target().unwrap();
+        let obj = try!(repo.find_object(head, None));
+        try!(repo.reset(&obj, git2::Hard, None, None));
+    }
+
+    Err(internal("Too many rebase failures"))
 }
 
 pub fn with_authentication<T>(url: &str,

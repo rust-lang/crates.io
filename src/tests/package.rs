@@ -1,6 +1,7 @@
 use std::io::{mod, fs, File};
 use std::io::fs::PathExtensions;
 use serialize::json;
+use git2;
 
 use conduit::{mod, Handler};
 use conduit_test::MockRequest;
@@ -243,4 +244,25 @@ fn new_package_git_upload_appends() {
     assert_eq!(p2.name.as_slice(), "foo");
     assert_eq!(p2.vers.as_slice(), "1.0.0");
     assert_eq!(p2.deps.as_slice(), [].as_slice());
+}
+
+#[test]
+fn new_package_git_upload_with_conflicts() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+
+    {
+        let repo = git2::Repository::open(&::git::bare()).unwrap();
+        let target = repo.head().unwrap().target().unwrap();
+        let sig = repo.signature().unwrap();
+        let parent = repo.find_commit(target).unwrap();
+        let tree = repo.find_tree(parent.tree_id()).unwrap();
+        repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree,
+                    &[&parent]).unwrap();
+    }
+
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<GoodPackage>(&mut response);
 }
