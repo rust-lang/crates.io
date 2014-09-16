@@ -6,6 +6,8 @@ use cargo_registry::version::{EncodableVersion, Version};
 
 #[deriving(Decodable)]
 struct VersionList { versions: Vec<EncodableVersion> }
+#[deriving(Decodable)]
+struct VersionResponse { version: EncodableVersion }
 
 #[test]
 fn index() {
@@ -27,4 +29,20 @@ fn index() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);
+}
+
+#[test]
+fn show() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/versions");
+    let v = {
+        let req = &mut req as &mut Request;
+        let tx = req.tx().unwrap();
+        let pkg = Package::find_or_insert(tx, "foo", 32).unwrap();
+        Version::insert(tx, pkg.id, "1.0.0").unwrap()
+    };
+    req.with_path(format!("/versions/{}", v.id).as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: VersionResponse = ::json(&mut response);
+    assert_eq!(json.version.id, v.id);
 }

@@ -40,6 +40,15 @@ impl Package {
         }
     }
 
+    pub fn find(conn: &Connection, id: i32) -> CargoResult<Package> {
+        let stmt = try!(conn.prepare("SELECT * FROM packages \
+                                      WHERE id = $1"));
+        match try!(stmt.query(&[&id])).next() {
+            Some(row) => Ok(Package::from_row(&row)),
+            None => Err(NotFound.box_error()),
+        }
+    }
+
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Package> {
         let stmt = try!(conn.prepare("SELECT * FROM packages \
                                       WHERE name = $1 LIMIT 1"));

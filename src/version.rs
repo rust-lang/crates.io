@@ -1,6 +1,7 @@
 use std::collections::{HashSet, HashMap};
 
 use conduit::{Request, Response};
+use conduit_router::RequestParams;
 use pg::{PostgresConnection, PostgresRow};
 use semver;
 use url;
@@ -8,7 +9,8 @@ use url;
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
 use package::Package;
-use util::{RequestUtils, CargoResult, Require, internal};
+use util::{RequestUtils, CargoResult, Require, internal, CargoError};
+use util::errors::NotFound;
 
 #[deriving(Clone)]
 pub struct Version {
@@ -31,6 +33,17 @@ impl Version {
             id: row.get("id"),
             package_id: row.get("package_id"),
             num: row.get("num"),
+        }
+    }
+
+    pub fn find(conn: &Connection, version_id: i32)
+                -> CargoResult<Version> {
+        let stmt = try!(conn.prepare("SELECT * FROM versions \
+                                      WHERE id = $1"));
+        let mut rows = try!(stmt.query(&[&version_id]));
+        match rows.next().map(|r| Version::from_row(&r)) {
+            Some(version) => Ok(version),
+            None => Err(NotFound.box_error()),
         }
     }
 
@@ -130,4 +143,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { versions: Vec<EncodableVersion> }
     Ok(req.json(&R { versions: versions }))
+}
+
+pub fn show(req: &mut Request) -> CargoResult<Response> {
+    let id = &req.params()["version_id"];
+    let id = from_str(id.as_slice()).unwrap_or(0);
+    let conn = try!(req.tx());
+    let version = try!(Version::find(&*conn, id));
+    let pkg = try!(Package::find(&*conn, version.package_id));
+
+    #[deriving(Encodable)]
+    struct R { version: EncodableVersion }
+    Ok(req.json(&R { version: version.encodable(&**req.app(), &pkg) }))
 }
