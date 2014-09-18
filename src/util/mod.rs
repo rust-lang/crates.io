@@ -44,7 +44,7 @@ impl<'a> RequestUtils for &'a Request + 'a {
 
     fn query(self) -> HashMap<String, String> {
         url::form_urlencoded::parse_str(self.query_string().unwrap_or(""))
-            .move_iter().collect()
+            .into_iter().collect()
     }
 
     fn redirect(self, url: String) -> Response {

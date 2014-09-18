@@ -3,6 +3,7 @@ use std::collections::{HashSet, HashMap};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg::{PostgresConnection, PostgresRow};
+use pg::types::ToSql;
 use semver;
 use url;
 
@@ -51,7 +52,7 @@ impl Version {
                        -> CargoResult<Option<Version>> {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE package_id = $1 AND num = $2"));
-        let mut rows = try!(stmt.query(&[&package_id, &num]));
+        let mut rows = try!(stmt.query(&[&package_id, &num as &ToSql]));
         Ok(rows.next().map(|r| Version::from_row(&r)))
     }
 
@@ -60,7 +61,7 @@ impl Version {
         let stmt = try!(conn.prepare("INSERT INTO versions (package_id, num) \
                                       VALUES ($1, $2) \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&package_id, &num]));
+        let mut rows = try!(stmt.query(&[&package_id, &num as &ToSql]));
         Ok(Version::from_row(&try!(rows.next().require(|| {
             internal("no version returned")
         }))))
@@ -123,7 +124,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Load all packages
-    let ids = set.move_iter().collect::<Vec<i32>>();
+    let ids = set.into_iter().collect::<Vec<i32>>();
     let query = format!("'{{{:#}}}'::int[]", ids.as_slice());
     let stmt = try!(conn.prepare(format!("SELECT * FROM packages \
                                           WHERE id = ANY({})",
@@ -135,7 +136,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     // And respond!
-    let versions = versions.move_iter().map(|v| {
+    let versions = versions.into_iter().map(|v| {
         let id = v.package_id;
         v.encodable(&**req.app(), map.find(&id).unwrap())
     }).collect();

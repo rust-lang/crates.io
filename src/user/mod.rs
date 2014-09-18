@@ -8,6 +8,7 @@ use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
 use pg::{PostgresConnection, PostgresRow};
+use pg::types::ToSql;
 
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
@@ -44,7 +45,8 @@ impl User {
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
-        return try!(stmt.query(&[&token])).next().map(User::from_row).require(|| {
+        return try!(stmt.query(&[&token as &ToSql])).next()
+                        .map(User::from_row).require(|| {
             NotFound
         })
     }
@@ -59,7 +61,8 @@ impl User {
         let stmt = try!(conn.prepare("UPDATE users SET gh_access_token = $1 \
                                       WHERE email = $2 \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&access_token, &email]));
+        let mut rows = try!(stmt.query(&[&access_token as &ToSql,
+                                         &email as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(User::from_row(row)),
             None => {}
@@ -69,7 +72,9 @@ impl User {
                                        api_token) \
                                       VALUES ($1, $2, $3)
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&email, &access_token, &api_token]));
+        let mut rows = try!(stmt.query(&[&email as &ToSql,
+                                         &access_token as &ToSql,
+                                         &api_token as &ToSql]));
         Ok(User::from_row(try!(rows.next().require(|| {
             internal("no user with email we just found")
         }))))
@@ -106,7 +111,9 @@ pub fn setup(conn: &PostgresConnection) {
                   unique_email UNIQUE (email)", []).unwrap();
     conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
                   VALUES ($1, $2, $3)",
-                 &[&"foo@bar.com", &"wut", &"api-token"]).unwrap();
+                 &[&"foo@bar.com" as &ToSql,
+                   &"wut" as &ToSql,
+                   &"api-token" as &ToSql]).unwrap();
 }
 
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {

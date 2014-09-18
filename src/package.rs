@@ -6,6 +6,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
 use pg::{PostgresConnection, PostgresRow};
+use pg::types::ToSql;
 use curl::http;
 
 use app::{App, RequestApp};
@@ -52,7 +53,7 @@ impl Package {
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Package> {
         let stmt = try!(conn.prepare("SELECT * FROM packages \
                                       WHERE name = $1 LIMIT 1"));
-        match try!(stmt.query(&[&name])).next() {
+        match try!(stmt.query(&[&name as &ToSql])).next() {
             Some(row) => Ok(Package::from_row(&row)),
             None => Err(NotFound.box_error()),
         }
@@ -63,7 +64,7 @@ impl Package {
         // TODO: like with users, this is sadly racy
 
         let stmt = try!(conn.prepare("SELECT * FROM packages WHERE name = $1"));
-        let mut rows = try!(stmt.query(&[&name]));
+        let mut rows = try!(stmt.query(&[&name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Package::from_row(&row)),
             None => {}
@@ -71,7 +72,7 @@ impl Package {
         let stmt = try!(conn.prepare("INSERT INTO packages (name, user_id) \
                                       VALUES ($1, $2) \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&name, &user_id]));
+        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id]));
         Ok(Package::from_row(&try!(rows.next().require(|| {
             internal("no package returned")
         }))))
@@ -142,7 +143,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Massage a response
-    let pkgs = pkgs.move_iter().map(|p| {
+    let pkgs = pkgs.into_iter().map(|p| {
         let id = p.id;
         p.encodable(map.pop(&id).unwrap())
     }).collect();
@@ -173,7 +174,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R { package: EncodablePackage, versions: Vec<EncodableVersion>, }
     Ok(req.json(&R {
         package: pkg.clone().encodable(versions.iter().map(|v| v.id).collect()),
-        versions: versions.move_iter().map(|v| {
+        versions: versions.into_iter().map(|v| {
             v.encodable(&**req.app(), &pkg)
         }).collect(),
     }))
