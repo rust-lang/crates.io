@@ -32,6 +32,12 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
+    let heroku = os::getenv("HEROKU").is_some();
+    let cargo_env = if heroku {
+        cargo_registry::Production
+    } else {
+        cargo_registry::Development
+    };
     let config = cargo_registry::Config {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
@@ -42,7 +48,7 @@ fn main() {
         gh_client_id: env("GH_CLIENT_ID"),
         gh_client_secret: env("GH_CLIENT_SECRET"),
         db_url: env("DATABASE_URL"),
-        env: cargo_registry::Development,
+        env: cargo_env,
         max_upload_size: 2 * 1024 * 1024,
     };
     let app = cargo_registry::App::new(&config);
@@ -51,7 +57,6 @@ fn main() {
     }
     let app = cargo_registry::middleware(Arc::new(app));
 
-    let heroku = os::getenv("HEROKU").is_some();
     let port = if heroku {
         8888
     } else {
