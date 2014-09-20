@@ -6,7 +6,7 @@ extern crate git2;
 
 use std::os;
 use std::sync::Arc;
-use std::io::{mod, fs};
+use std::io::{mod, fs, File};
 use civet::Server;
 
 fn main() {
@@ -51,10 +51,18 @@ fn main() {
     }
     let app = cargo_registry::middleware(Arc::new(app));
 
-    let port = os::getenv("PORT").and_then(|s| from_str(s.as_slice()))
-                                 .unwrap_or(8888);
+    let heroku = os::getenv("HEROKU").is_some();
+    let port = if heroku {
+        8888
+    } else {
+        os::getenv("PORT").and_then(|s| from_str(s.as_slice()))
+                          .unwrap_or(8888)
+    };
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);
+    if heroku {
+        File::create(&Path::new("/tmp/app-initialized")).unwrap();
+    }
     wait_for_sigint();
 }
 

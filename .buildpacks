@@ -2,4 +2,4 @@ https://github.com/rcaught/heroku-buildpack-cmake
 https://github.com/alexcrichton/heroku-buildpack-zlib-pkgconfig
 https://github.com/alexcrichton/heroku-buildpack-rust
 https://github.com/tonycoco/heroku-buildpack-ember-cli.git
-
+https://github.com/ryandotsmith/nginx-buildpack.git
