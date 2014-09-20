@@ -36,6 +36,7 @@ http {
 		listen <%= ENV["PORT"] %>;
 		server_name _;
 		keepalive_timeout 5;
+                add_header Strict-Transport-Security "max-age=31536000; includeSubdomains";
 
                 location ~ ^/assets/ {
                         add_header Cache-Control public;
