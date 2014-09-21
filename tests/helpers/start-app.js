@@ -1,24 +1,19 @@
-/* global require */
-
-var Application = require('cargo/app')['default'];
-var Router = require('cargo/router')['default'];
 import Ember from 'ember';
+import Application from '../../app';
+import Router from '../../router';
+import config from '../../config/environments/test';
 
 export default function startApp(attrs) {
   var App;
 
-  var attributes = Ember.merge({
-    // useful Test defaults
-    rootElement: '#ember-testing',
-    LOG_ACTIVE_GENERATION:false,
-    LOG_VIEW_LOOKUPS: false
-  }, attrs); // but you can override;
+  var attributes = Ember.merge({}, config.APP);
+  attributes = Ember.merge(attributes, attrs); // use defaults, but you can override;
 
   Router.reopen({
     location: 'none'
   });
 
-  Ember.run(function(){
+  Ember.run(function() {
     App = Application.create(attributes);
     App.setupForTesting();
     App.injectTestHelpers();

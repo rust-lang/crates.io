@@ -14,13 +14,12 @@
   </head>
   <body>
     <script>
-      window.CargoENV = {{ENV}};
-      window.EmberENV = window.CargoENV.EmberENV;
+      window.EmberENV = {{EMBER_ENV}};
     </script>
     <script src="assets/vendor.js"></script>
     <script src="assets/cargo.js"></script>
     <script>
-      window.Cargo = require('cargo/app')['default'].create(CargoENV.APP);
+      window.Cargo = require('cargo/app')['default'].create({{APP_CONFIG}});
     </script>
   </body>
 </html>
