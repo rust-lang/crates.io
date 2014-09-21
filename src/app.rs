@@ -57,7 +57,7 @@ impl App {
     }
 
     pub fn db_setup(&self) {
-        print!(" - setting up the db\n")
+        println!(" - setting up the db")
         db::setup(&*self.database.get().unwrap())
     }
 }
