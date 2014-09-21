@@ -24,7 +24,7 @@ This README outlines the details of collaborating on this Ember application.
 ## Running
 
 * `cargo build`
-* `./target/cargo-registry`
+* `./target/cargo-registry` (note: first run use: `RESET=1 ./target/cargo_registry` to setup the database)
 * `ember server --proxy http://localhost:8888`
 * Visit your app at [http://localhost:4200](http://localhost:4200).
 
