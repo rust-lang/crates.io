@@ -33,6 +33,9 @@ This README outlines the details of collaborating on this Ember application.
 * `ember test`
 * `ember test --server`
 
+* `export TEST_DATABASE_URL=cargo.test`
+* `cargo test`
+
 ## Building
 
 * `cargo build`
