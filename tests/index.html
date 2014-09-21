@@ -11,7 +11,7 @@
 
     <link rel="stylesheet" href="assets/vendor.css">
     <link rel="stylesheet" href="assets/cargo.css">
-    <link rel="stylesheet" href="assets/qunit.css">
+    <link rel="stylesheet" href="assets/test-support.css">
     <style>
       #ember-testing-container {
         position: absolute;
@@ -34,12 +34,10 @@
     <div id="qunit-fixture"></div>
 
     <script>
-      window.CargoENV = {{ENV}};
-      window.EmberENV = window.CargoENV.EmberENV;
+      window.EmberENV = {{EMBER_ENV}};
     </script>
-    <script src="assets/qunit.js"></script>
-    <script src="assets/qunit-notifications.js"></script>
     <script src="assets/vendor.js"></script>
+    <script src="assets/test-support.js"></script>
     <script src="assets/cargo.js"></script>
     <script src="testem.js"></script>
     <script>
