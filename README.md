@@ -54,7 +54,7 @@ RESET=1 cargo run
 
 ## Running Tests
 
-* `cargo test`
+* `TEST_DATABASE_URL=... cargo test`
 
 JS tests (note these are not written yet)
 
