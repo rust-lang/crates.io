@@ -73,6 +73,7 @@ fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])
     req.header("X-Cargo-Auth", api_token)
        .header("X-Cargo-Pkg-Name", pkg)
        .header("X-Cargo-Pkg-Version", version)
+       .header("X-Cargo-Pkg-Feature", "{}")
        .with_body("")
        .header("Content-Type", "application/x-tar")
        .header("Content-Encoding", "x-gzip");

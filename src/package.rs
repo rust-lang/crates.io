@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use serialize::json;
 use serialize::hex::ToHex;
 
 use conduit::{Request, Response};
@@ -11,6 +12,7 @@ use curl::http;
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
+use dependency::Dependency;
 use git;
 use user::{RequestUser, User};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
@@ -195,8 +197,9 @@ pub fn update(req: &mut Request) -> CargoResult<Response> {
 pub struct NewPackage {
     pub name: String,
     pub vers: String,
-    pub deps: Vec<String>,
+    pub deps: Vec<Dependency>,
     pub cksum: String,
+    pub features: HashMap<String, Vec<String>>,
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
@@ -293,9 +296,15 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(NewPackage, User)> {
     let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
     let name = try!(header(req, "X-Cargo-Pkg-Name"))[0].to_string();
     let vers = try!(header(req, "X-Cargo-Pkg-Version"))[0].to_string();
-    let deps = req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
-                  .iter().flat_map(|s| s.as_slice().split(';'))
-                  .map(|s| s.to_string()).collect();
+    let feat = try!(header(req, "X-Cargo-Pkg-Feature"))[0].to_string();
+    let deps = try!(req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
+                       .iter().flat_map(|s| s.as_slice().split(';'))
+                       .map(Dependency::parse)
+                       .collect::<CargoResult<Vec<_>>>());
+    let feat = match json::decode(feat.as_slice()) {
+        Ok(map) => map,
+        Err(..) => return Err(human("malformed feature header")),
+    };
 
     // Make sure the tarball being uploaded looks sane
     let length = try!(req.content_length().require(|| {
@@ -326,6 +335,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(NewPackage, User)> {
         name: name.as_slice().chars().map(|c| c.to_lowercase()).collect(),
         vers: vers,
         deps: deps,
+        features: feat,
         cksum: String::new(),
     };
     if !Package::valid_name(new_pkg.name.as_slice()) {

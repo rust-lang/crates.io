@@ -39,6 +39,7 @@ mod macros;
 pub mod app;
 pub mod config;
 pub mod db;
+pub mod dependency;
 pub mod dist;
 pub mod git;
 pub mod package;
