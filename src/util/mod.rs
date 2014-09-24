@@ -9,7 +9,7 @@ use url;
 
 use conduit::{Request, Response, Handler};
 
-pub use self::errors::{CargoError, CargoResult, internal, internal_error};
+pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
 pub use self::errors::{ChainError, BoxError};
 pub use self::result::{Require, Wrap};
 pub use self::lazy_cell::LazyCell;
@@ -29,17 +29,23 @@ pub trait RequestUtils {
     fn query(self) -> HashMap<String, String>;
 }
 
+pub fn json_response<'a, T>(t: &T) -> Response
+                            where T: Encodable<json::Encoder<'a>, IoError> {
+    let s = json::encode(t);
+    let mut headers = HashMap::new();
+    headers.insert("Content-Type".to_string(),
+                   vec!["application/json; charset=utf-8".to_string()]);
+    Response {
+        status: (200, "OK"),
+        headers: headers,
+        body: box MemReader::new(s.into_bytes()),
+    }
+}
+
+
 impl<'a> RequestUtils for &'a Request + 'a {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
-        let s = json::encode(t);
-        let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(),
-                       vec!["application/json; charset=utf-8".to_string()]);
-        Response {
-            status: (200, "OK"),
-            headers: headers,
-            body: box MemReader::new(s.into_bytes()),
-        }
+        json_response(t)
     }
 
     fn query(self) -> HashMap<String, String> {

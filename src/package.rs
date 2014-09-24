@@ -13,7 +13,7 @@ use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
 use git;
 use user::{RequestUser, User};
-use util::{RequestUtils, CargoResult, Require, internal, ChainError};
+use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
 use util::{LimitErrorReader, HashingReader};
 use util::errors::{NotFound, CargoError};
 use version::{Version, EncodableVersion};
@@ -200,92 +200,24 @@ pub struct NewPackage {
 }
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
-    #[deriving(Encodable)]
-    struct Bad { ok: bool, error: String }
     let app = req.app().clone();
 
-    // Peel out all input parameters
-    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
-        req.headers().find(hdr).require(|| {
-            internal(format!("missing {} header", hdr))
-        })
-    }
-    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
-    let name = try!(header(req, "X-Cargo-Pkg-Name"))[0].to_string();
-    let vers = try!(header(req, "X-Cargo-Pkg-Version"))[0].to_string();
-    let deps = req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
-                  .iter().flat_map(|s| s.as_slice().split(';'))
-                  .map(|s| s.to_string()).collect();
-
-    // Make sure the tarball being uploaded looks sane
-    let length = try!(req.content_length().require(|| {
-        internal("missing Content-Length header")
-    }));
-    let max = req.app().config.max_upload_size;
-    if length > max {
-        return Ok(req.json(&Bad {
-            ok: false,
-            error: format!("max upload size is: {}", max),
-        }))
-    }
-    {
-        let ty = try!(header(req, "Content-Type"))[0];
-        if ty != "application/x-tar" {
-            return Err(internal(format!("expected `application/x-tar`, \
-                                         found `{}`", ty)))
-        }
-        let enc = try!(header(req, "Content-Encoding"))[0];
-        if enc != "gzip" && enc != "x-gzip" {
-            return Err(internal(format!("expected `gzip`, found `{}`", enc)))
-        }
-    }
-
-    // Make sure the api token is a valid api token
-    let user = try!(User::find_by_api_token(try!(req.tx()),
-                                            auth.as_slice()));
-
-    // Validate the name parameter and such
-    let name: String = name.as_slice().chars()
-                           .map(|c| c.to_lowercase()).collect();
-    let mut new_pkg = NewPackage {
-        name: name,
-        vers: vers,
-        deps: deps,
-        cksum: String::new(),
-    };
-    if !Package::valid_name(new_pkg.name.as_slice()) {
-        return Ok(req.json(&Bad {
-            ok: false,
-            error: format!("invalid package name: `{}`", new_pkg.name),
-        }))
-    }
-    if !Version::valid(new_pkg.vers.as_slice()) {
-        return Ok(req.json(&Bad {
-            ok: false,
-            error: format!("invalid package version: `{}`", new_pkg.vers),
-        }))
-    }
+    let (mut new_pkg, user) = try!(parse_new_headers(req));
 
     // Persist the new package, if it doesn't already exist
     let pkg = try!(Package::find_or_insert(try!(req.tx()),
                                            new_pkg.name.as_slice(),
                                            user.id));
     if pkg.user_id != user.id {
-        return Ok(req.json(&Bad {
-            ok: false,
-            error: format!("package is already uploaded by another user"),
-        }))
+        return Err(human("package name has already been claimed by another user"))
     }
 
     // Persist the new version of this package
     match try!(Version::find_by_num(try!(req.tx()), pkg.id,
                                     new_pkg.vers.as_slice())) {
         Some(..) => {
-            return Ok(req.json(&Bad {
-                ok: false,
-                error: format!("package version `{}` is already uploaded",
-                               new_pkg.vers),
-            }))
+            return Err(human(format!("package version `{}` is already uploaded",
+                                     new_pkg.vers)))
         }
         None => {}
     }
@@ -299,7 +231,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     };
     let path = pkg.path(new_pkg.vers.as_slice());
     let (resp, cksum) = {
-        let body = LimitErrorReader::new(req.body(), max);
+        let length = req.content_length().unwrap();
+        let body = LimitErrorReader::new(req.body(), app.config.max_upload_size);
         let mut body = HashingReader::new(body);
         let resp = {
             let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
@@ -348,4 +281,58 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { ok: bool, package: EncodablePackage }
     Ok(req.json(&R { ok: true, package: pkg.encodable(Vec::new()) }))
+}
+
+fn parse_new_headers(req: &mut Request) -> CargoResult<(NewPackage, User)> {
+    // Peel out all input parameters
+    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
+        req.headers().find(hdr).require(|| {
+            human(format!("missing header: {}", hdr))
+        })
+    }
+    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
+    let name = try!(header(req, "X-Cargo-Pkg-Name"))[0].to_string();
+    let vers = try!(header(req, "X-Cargo-Pkg-Version"))[0].to_string();
+    let deps = req.headers().find("X-Cargo-Pkg-Dep").unwrap_or(Vec::new())
+                  .iter().flat_map(|s| s.as_slice().split(';'))
+                  .map(|s| s.to_string()).collect();
+
+    // Make sure the tarball being uploaded looks sane
+    let length = try!(req.content_length().require(|| {
+        human("missing header: Content-Length")
+    }));
+    let max = req.app().config.max_upload_size;
+    if length > max { return Err(human(format!("max upload size is: {}", max))) }
+    {
+        let ty = try!(header(req, "Content-Type"))[0];
+        if ty != "application/x-tar" {
+            return Err(human(format!("expected `application/x-tar`, \
+                                      found `{}`", ty)))
+        }
+        let enc = try!(header(req, "Content-Encoding"))[0];
+        if enc != "gzip" && enc != "x-gzip" {
+            return Err(human(format!("expected `gzip`, found `{}`", enc)))
+        }
+    }
+
+    // Make sure the api token is a valid api token
+    let user = try!(User::find_by_api_token(try!(req.tx()),
+                                            auth.as_slice()).map_err(|_| {
+        human("invalid or unknown auth token supplied")
+    }));
+
+    // Validate the name parameter and such
+    let new_pkg = NewPackage {
+        name: name.as_slice().chars().map(|c| c.to_lowercase()).collect(),
+        vers: vers,
+        deps: deps,
+        cksum: String::new(),
+    };
+    if !Package::valid_name(new_pkg.name.as_slice()) {
+        return Err(human(format!("invalid package name: `{}`", new_pkg.name)))
+    }
+    if !Version::valid(new_pkg.vers.as_slice()) {
+        return Err(human(format!("invalid package version: `{}`", new_pkg.vers)))
+    }
+    Ok((new_pkg, user))
 }

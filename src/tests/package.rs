@@ -85,8 +85,9 @@ fn new_wrong_token() {
     let (_b, _app, mut middle) = ::app();
     middle.add(::middleware::MockUser(::user()));
     let mut req = new_req("wrong-token", "foo", "1.0.0", []);
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.val0(), 404);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: BadPackage = ::json(&mut response);
+    assert!(!json.ok);
 }
 
 #[test]

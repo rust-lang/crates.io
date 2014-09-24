@@ -9,6 +9,8 @@ use pg::error::{PostgresError, PostgresConnectError};
 use serialize::json;
 use git2;
 
+use util::json_response;
+
 pub trait CargoError: Send {
     fn description(&self) -> String;
     fn detail(&self) -> Option<String> { None }
@@ -27,6 +29,7 @@ pub trait CargoError: Send {
             description: self.description(),
             detail: self.detail(),
             cause: self.cause().map(|c| box c.concrete() as Box<CargoError + Send>),
+            human: false,
         }
     }
 
@@ -37,8 +40,18 @@ pub trait CargoError: Send {
     }
 
     fn response(&self) -> Option<Response> {
-        self.cause().and_then(|cause| cause.response())
+        #[deriving(Encodable)] struct Bad { ok: bool, error: String }
+
+        if self.human() {
+            Some(json_response(&Bad {
+                ok: false,
+                error: self.description(),
+            }))
+        } else {
+            self.cause().and_then(|cause| cause.response())
+        }
     }
+    fn human(&self) -> bool { false }
 }
 
 pub trait FromError<E> {
@@ -186,6 +199,7 @@ pub struct ConcreteCargoError {
     description: String,
     detail: Option<String>,
     cause: Option<Box<CargoError + Send>>,
+    human: bool,
 }
 
 impl Show for ConcreteCargoError {
@@ -212,6 +226,7 @@ impl CargoError for ConcreteCargoError {
         self.cause = Some(err.box_error());
         box self as Box<CargoError + Send>
     }
+    fn human(&self) -> bool { self.human }
 }
 
 pub struct NotFound;
@@ -252,6 +267,7 @@ pub fn internal_error<S1: Str, S2: Str>(error: S1,
         description: error.as_slice().to_string(),
         detail: Some(detail.as_slice().to_string()),
         cause: None,
+        human: false,
     } as Box<CargoError + Send>
 }
 
@@ -260,5 +276,15 @@ pub fn internal<S: Show>(error: S) -> Box<CargoError + Send> {
         description: error.to_string(),
         detail: None,
         cause: None,
+        human: false,
+    } as Box<CargoError + Send>
+}
+
+pub fn human<S: Show>(error: S) -> Box<CargoError + Send> {
+    box ConcreteCargoError {
+        description: error.to_string(),
+        detail: None,
+        cause: None,
+        human: true,
     } as Box<CargoError + Send>
 }
