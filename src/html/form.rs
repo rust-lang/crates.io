@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use url;
-
 macro_rules! try_option( ($e:expr) => (
     match $e { Some(k) => k, None => return None }
 ) )

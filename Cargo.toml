@@ -42,7 +42,8 @@ path = "src/s3"
 git = "https://github.com/alexcrichton/oauth2-rs"
 
 [dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
+git = "https://github.com/alexcrichton/curl-rust"
+branch = "bundle"
 
 [dependencies.conduit-log-requests]
 git = "https://github.com/conduit-rust/conduit-log-requests"
