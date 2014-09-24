@@ -79,5 +79,9 @@ fn migrations() -> Vec<Migration> {
                                 unique_num UNIQUE (package_id, num)"),
                        format!("ALTER TABLE versions DROP CONSTRAINT \
                                 unique_num")),
+        Migration::add_table(20140924120803, "version_dependencies", "
+            version_id      INTEGER NOT NULL,
+            depends_on_id   INTEGER NOT NULL
+        "),
     ]
 }

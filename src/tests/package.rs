@@ -268,3 +268,14 @@ fn new_package_git_upload_with_conflicts() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodPackage>(&mut response);
 }
+
+#[test]
+fn new_package_dependency_missing() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+    middle.add(::middleware::MockUser(user.clone()));
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    req.header("X-Cargo-Pkg-Dep", "bar||>=1.0.0");
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<BadPackage>(&mut response);
+}

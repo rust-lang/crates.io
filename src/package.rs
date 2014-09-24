@@ -224,7 +224,19 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         }
         None => {}
     }
-    try!(Version::insert(try!(req.tx()), pkg.id, new_pkg.vers.as_slice()));
+    let vers = try!(Version::insert(try!(req.tx()), pkg.id,
+                                    new_pkg.vers.as_slice()));
+
+    // Link this new version to all dependencies
+    for dep in new_pkg.deps.iter() {
+        let tx = try!(req.tx());
+        let pkg = try!(Package::find_by_name(tx, dep.name.as_slice()).map_err(|_| {
+            human(format!("no known package named `{}`", dep.name))
+        }));
+        try!(tx.execute("INSERT INTO version_dependencies \
+                         (version_id, depends_on_id) VALUES ($1, $2)",
+                        &[&vers.id, &pkg.id]));
+    }
 
     // Upload the package to S3
     let handle = http::handle();
