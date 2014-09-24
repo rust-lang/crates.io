@@ -45,11 +45,10 @@ server.
 
 ## Initialize the database
 
-To initialize the database (this will wipe all existing data!) run the rust
-binary with a `RESET=1` env var.
+To initialize the database (or run any recent migrations):
 
 ```
-RESET=1 cargo run
+./target/migrate
 ```
 
 ## Running Tests
