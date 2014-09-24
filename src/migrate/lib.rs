@@ -43,6 +43,8 @@ impl Migration {
         let rm_sql = format!("ALTER TABLE {} DROP COLUMN {}", table, column);
         Migration::new(version, run(add_sql), run(rm_sql))
     }
+
+    pub fn version(&self) -> i64 { self.version }
 }
 
 fn run(sql: String) -> Step {
@@ -73,6 +75,10 @@ impl<'a> Manager<'a> {
             assert!(self.versions.insert(row.get("version")));
         }
         Ok(())
+    }
+
+    pub fn contains(&self, version: i64) -> bool {
+        self.versions.contains(&version)
     }
 
     pub fn apply(&mut self, migration: Migration) -> PostgresResult<()> {

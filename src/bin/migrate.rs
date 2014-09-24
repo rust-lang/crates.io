@@ -17,7 +17,12 @@ fn main() {
                                             db_config);
     let conn = database.get().unwrap();
     let migrations = migrations();
-    apply(conn.transaction().unwrap(), migrations).unwrap();
+
+    if os::args().as_slice().get(1).map(|s| s.as_slice()) == Some("rollback") {
+        rollback(conn.transaction().unwrap(), migrations).unwrap();
+    } else {
+        apply(conn.transaction().unwrap(), migrations).unwrap();
+    }
 
     fn env(s: &str) -> String {
         match os::getenv(s) {
@@ -29,10 +34,22 @@ fn main() {
 
 fn apply(tx: PostgresTransaction,
          migrations: Vec<Migration>) -> PostgresResult<()> {
-
     let mut mgr = try!(migrate::Manager::new(tx));
     for m in migrations.into_iter() {
         try!(mgr.apply(m));
+    }
+    mgr.set_commit();
+    mgr.finish()
+}
+
+fn rollback(tx: PostgresTransaction,
+            migrations: Vec<Migration>) -> PostgresResult<()> {
+    let mut mgr = try!(migrate::Manager::new(tx));
+    for m in migrations.into_iter().rev() {
+        if mgr.contains(m.version()) {
+            try!(mgr.rollback(m));
+            break
+        }
     }
     mgr.set_commit();
     mgr.finish()
