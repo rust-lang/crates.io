@@ -10,7 +10,8 @@ name = "s3"
 path = "lib.rs"
 
 [dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
+git = "https://github.com/alexcrichton/curl-rust"
+branch = "bundle"
 
 [dependencies.openssl]
 git = "https://github.com/sfackler/rust-openssl"

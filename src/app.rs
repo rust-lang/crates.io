@@ -55,11 +55,6 @@ impl App {
             config: config.clone(),
         };
     }
-
-    pub fn db_setup(&self) {
-        println!(" - setting up the db")
-        db::setup(&*self.database.get().unwrap())
-    }
 }
 
 impl AppMiddleware {

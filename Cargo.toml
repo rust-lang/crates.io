@@ -9,7 +9,11 @@ test = false
 doctest = false
 
 [[bin]]
-name = "cargo-registry"
+name = "server"
+test = false
+
+[[bin]]
+name = "migrate"
 test = false
 
 [[test]]
@@ -37,6 +41,9 @@ path = "src/html"
 
 [dependencies.s3]
 path = "src/s3"
+
+[dependencies.migrate]
+path = "src/migrate"
 
 [dependencies.oauth2]
 git = "https://github.com/alexcrichton/oauth2-rs"

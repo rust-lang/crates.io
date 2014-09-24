@@ -7,7 +7,7 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg::{PostgresConnection, PostgresRow};
+use pg::PostgresRow;
 use pg::types::ToSql;
 
 use app::RequestApp;
@@ -97,23 +97,6 @@ impl User {
         let User { id, email, api_token, .. } = self;
         EncodableUser { id: id, email: email, api_token: api_token }
     }
-}
-
-pub fn setup(conn: &PostgresConnection) {
-    conn.execute("DROP TABLE IF EXISTS users", []).unwrap();
-    conn.execute("CREATE TABLE users (
-                    id              SERIAL PRIMARY KEY,
-                    email           VARCHAR NOT NULL,
-                    gh_access_token VARCHAR NOT NULL,
-                    api_token       VARCHAR NOT NULL
-                  )", []).unwrap();
-    conn.execute("ALTER TABLE users ADD CONSTRAINT \
-                  unique_email UNIQUE (email)", []).unwrap();
-    conn.execute("INSERT INTO users (email, gh_access_token, api_token) \
-                  VALUES ($1, $2, $3)",
-                 &[&"foo@bar.com" as &ToSql,
-                   &"wut" as &ToSql,
-                   &"api-token" as &ToSql]).unwrap();
 }
 
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {

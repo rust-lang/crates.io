@@ -5,7 +5,7 @@ use serialize::hex::ToHex;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
-use pg::{PostgresConnection, PostgresRow};
+use pg::PostgresRow;
 use pg::types::ToSql;
 use curl::http;
 
@@ -102,18 +102,6 @@ impl Package {
     pub fn path(&self, version: &str) -> String {
         format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
-}
-
-pub fn setup(conn: &PostgresConnection) {
-    conn.execute("DROP TABLE IF EXISTS packages", []).unwrap();
-    conn.execute("CREATE TABLE packages (
-                    id              SERIAL PRIMARY KEY,
-                    name            VARCHAR NOT NULL,
-                    user_id         INTEGER NOT NULL
-                  )", []).unwrap();
-
-    conn.execute("ALTER TABLE packages ADD CONSTRAINT \
-                  unique_name UNIQUE (name)", []).unwrap();
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {

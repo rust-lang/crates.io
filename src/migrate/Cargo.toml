@@ -1,0 +1,12 @@
+[project]
+name = "migrate"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+version = "0.1.0"
+
+[lib]
+name = "migrate"
+path = "lib.rs"
+
+[dependencies.postgres]
+git = "https://github.com/alexcrichton/rust-postgres"
+branch = "servo-url"

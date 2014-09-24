@@ -2,7 +2,7 @@ use std::collections::{HashSet, HashMap};
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use pg::{PostgresConnection, PostgresRow};
+use pg::PostgresRow;
 use pg::types::ToSql;
 use semver;
 use url;
@@ -82,17 +82,6 @@ impl Version {
             pkg: pkg.name.clone(),
         }
     }
-}
-
-pub fn setup(conn: &PostgresConnection) {
-    conn.execute("DROP TABLE IF EXISTS versions", []).unwrap();
-    conn.execute("CREATE TABLE versions (
-                    id              SERIAL PRIMARY KEY,
-                    package_id      INTEGER NOT NULL,
-                    num             VARCHAR NOT NULL
-                  )", []).unwrap();
-    conn.execute("ALTER TABLE versions ADD CONSTRAINT \
-                  unique_num UNIQUE (package_id, num)", []).unwrap();
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {

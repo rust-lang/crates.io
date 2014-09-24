@@ -39,7 +39,7 @@ export GIT_REPO_CHECKOUT=path/to/checkout
 To run the registry, you need to run both the API server and the ember frontend
 server.
 
-* `cargo run`
+* `cargo build && ./target/server`
 * `ember server --proxy http://localhost:8888`
 * Visit the registry at [http://localhost:4200](http://localhost:4200).
 

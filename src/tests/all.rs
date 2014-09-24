@@ -11,6 +11,8 @@ extern crate url;
 
 use std::sync::{Once, ONCE_INIT, Arc};
 use std::os;
+use std::io::Command;
+use std::io::process::InheritFd;
 use serialize::json;
 
 use conduit::Request;
@@ -61,10 +63,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         env: cargo_registry::Test,
         max_upload_size: 100,
     };
+    unsafe { INIT.doit(|| db_setup(config.db_url.as_slice())); }
     let app = App::new(&config);
-    unsafe {
-        INIT.doit(|| app.db_setup());
-    }
     let app = Arc::new(app);
     return (bomb, app.clone(), cargo_registry::middleware(app));
 
@@ -73,6 +73,14 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
             Some(s) => s,
             None => fail!("must have `{}` defined", s),
         }
+    }
+
+    fn db_setup(db: &str) {
+        let migrate = os::self_exe_name().unwrap().join("../migrate");
+        assert!(Command::new(migrate).env("DATABASE_URL", db)
+                        .stdout(InheritFd(1))
+                        .stderr(InheritFd(2))
+                        .status().unwrap().success());
     }
 }
 
