@@ -165,6 +165,31 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
+pub fn summary(req: &mut Request) -> CargoResult<Response> {
+    let tx = try!(req.tx());
+    let num_packages = try!(tx.execute("SELECT COUNT(*) FROM packages", []));
+    let num_downloads = {
+        let stmt = try!(tx.prepare("SELECT total_downloads FROM metadata"));
+        let mut rows = try!(stmt.query(&[]));
+        rows.next().unwrap().get("total_downloads")
+    };
+    #[deriving(Encodable)]
+    struct R {
+        num_downloads: i64,
+        num_packages: u64,
+        new_packages: Vec<()>,
+        most_downloaded: Vec<()>,
+        just_updated: Vec<()>,
+    }
+    Ok(req.json(&R {
+        num_downloads: num_downloads,
+        num_packages: num_packages as u64,
+        new_packages: Vec::new(),
+        most_downloaded: Vec::new(),
+        just_updated: Vec::new(),
+    }))
+}
+
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["package_id"];
     let conn = try!(req.tx());

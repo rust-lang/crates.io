@@ -116,5 +116,15 @@ fn migrations() -> Vec<Migration> {
                              DROP DEFAULT", []));
             Ok(())
         }, proc(_) Ok(())),
+        Migration::add_table(20140925153704, "metadata", "
+            total_downloads        BIGINT NOT NULL
+        "),
+        Migration::new(20140925153705, proc(tx) {
+            try!(tx.execute("INSERT INTO metadata (total_downloads) \
+                             VALUES ($1)", &[&0i64]));
+            Ok(())
+        }, proc(tx) {
+            try!(tx.execute("DELETE FROM metadata", [])); Ok(())
+        }),
     ]
 }

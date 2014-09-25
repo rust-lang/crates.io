@@ -64,6 +64,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/me", C(user::me));
     router.put("/me/reset_token", C(user::reset_token));
     router.get("/packages", C(package::index));
+    router.get("/summary", C(package::summary));
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
     router.get("/packages/:package_id", C(package::show));
