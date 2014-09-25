@@ -7,6 +7,7 @@ extern crate conduit;
 extern crate curl;
 extern crate git2;
 extern crate serialize;
+extern crate time;
 extern crate url;
 
 use std::sync::{Once, ONCE_INIT, Arc};
@@ -118,5 +119,7 @@ fn package() -> cargo_registry::package::Package {
         id: 10000,
         name: "foo".to_string(),
         user_id: 100,
+        updated_at: time::now().to_timespec(),
+        created_at: time::now().to_timespec(),
     }
 }

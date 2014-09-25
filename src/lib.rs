@@ -1,8 +1,7 @@
 #![feature(macro_rules)]
 
 extern crate serialize;
-extern crate url;
-extern crate semver;
+extern crate time;
 
 extern crate "postgres" as pg;
 extern crate curl;
@@ -14,6 +13,8 @@ extern crate openssl;
 extern crate r2d2;
 extern crate r2d2_postgres;
 extern crate s3;
+extern crate semver;
+extern crate url;
 
 extern crate "conduit-router" as conduit_router;
 extern crate conduit;
@@ -90,4 +91,12 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.around(dist::Middleware::new());
     }
     return m;
+}
+
+pub fn now() -> time::Timespec {
+    time::now_utc().to_timespec()
+}
+
+pub fn encode_time(ts: time::Timespec) -> String {
+    time::at_utc(ts).rfc3339()
 }

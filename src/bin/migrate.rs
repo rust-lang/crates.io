@@ -83,5 +83,38 @@ fn migrations() -> Vec<Migration> {
             version_id      INTEGER NOT NULL,
             depends_on_id   INTEGER NOT NULL
         "),
+        Migration::add_column(20140925132248, "packages", "updated_at",
+                              "TIMESTAMP NOT NULL DEFAULT now()"),
+        Migration::add_column(20140925132249, "packages", "created_at",
+                              "TIMESTAMP NOT NULL DEFAULT now()"),
+        Migration::new(20140925132250, proc(tx) {
+            try!(tx.execute("UPDATE packages SET updated_at = now() \
+                             WHERE updated_at IS NULL", []));
+            try!(tx.execute("UPDATE packages SET created_at = now() \
+                             WHERE created_at IS NULL", []));
+            Ok(())
+        }, proc(_) Ok(())),
+        Migration::add_column(20140925132251, "versions", "updated_at",
+                              "TIMESTAMP NOT NULL DEFAULT now()"),
+        Migration::add_column(20140925132252, "versions", "created_at",
+                              "TIMESTAMP NOT NULL DEFAULT now()"),
+        Migration::new(20140925132253, proc(tx) {
+            try!(tx.execute("UPDATE versions SET updated_at = now() \
+                             WHERE updated_at IS NULL", []));
+            try!(tx.execute("UPDATE versions SET created_at = now() \
+                             WHERE created_at IS NULL", []));
+            Ok(())
+        }, proc(_) Ok(())),
+        Migration::new(20140925132254, proc(tx) {
+            try!(tx.execute("ALTER TABLE versions ALTER COLUMN updated_at \
+                             DROP DEFAULT", []));
+            try!(tx.execute("ALTER TABLE versions ALTER COLUMN created_at \
+                             DROP DEFAULT", []));
+            try!(tx.execute("ALTER TABLE packages ALTER COLUMN updated_at \
+                             DROP DEFAULT", []));
+            try!(tx.execute("ALTER TABLE packages ALTER COLUMN created_at \
+                             DROP DEFAULT", []));
+            Ok(())
+        }, proc(_) Ok(())),
     ]
 }

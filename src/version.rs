@@ -1,4 +1,5 @@
 use std::collections::{HashSet, HashMap};
+use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -18,6 +19,8 @@ pub struct Version {
     pub id: i32,
     pub package_id: i32,
     pub num: String,
+    pub updated_at: Timespec,
+    pub created_at: Timespec,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -26,6 +29,8 @@ pub struct EncodableVersion {
     pub pkg: String,
     pub num: String,
     pub url: String,
+    pub updated_at: String,
+    pub created_at: String,
 }
 
 impl Version {
@@ -34,6 +39,8 @@ impl Version {
             id: row.get("id"),
             package_id: row.get("package_id"),
             num: row.get("num"),
+            updated_at: row.get("updated_at"),
+            created_at: row.get("created_at"),
         }
     }
 
@@ -58,10 +65,12 @@ impl Version {
 
     pub fn insert(conn: &Connection, package_id: i32,
                   num: &str) -> CargoResult<Version> {
-        let stmt = try!(conn.prepare("INSERT INTO versions (package_id, num) \
-                                      VALUES ($1, $2) \
+        let stmt = try!(conn.prepare("INSERT INTO versions \
+                                      (package_id, num, updated_at, created_at) \
+                                      VALUES ($1, $2, $3, $4) \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&package_id, &num as &ToSql]));
+        let now = ::now();
+        let mut rows = try!(stmt.query(&[&package_id, &num as &ToSql, &now, &now]));
         Ok(Version::from_row(&try!(rows.next().require(|| {
             internal("no version returned")
         }))))
@@ -72,7 +81,7 @@ impl Version {
     }
 
     pub fn encodable(self, app: &App, pkg: &Package) -> EncodableVersion {
-        let Version { id, package_id, num } = self;
+        let Version { id, package_id, num, updated_at, created_at } = self;
         assert_eq!(pkg.id, package_id);
         EncodableVersion {
             url: format!("https://{}{}",
@@ -80,6 +89,8 @@ impl Version {
             num: num,
             id: id,
             pkg: pkg.name.clone(),
+            updated_at: ::encode_time(updated_at),
+            created_at: ::encode_time(created_at),
         }
     }
 }

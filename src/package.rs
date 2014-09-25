@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use serialize::json;
 use serialize::hex::ToHex;
+use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -25,6 +26,8 @@ pub struct Package {
     pub id: i32,
     pub name: String,
     pub user_id: i32,
+    pub updated_at: Timespec,
+    pub created_at: Timespec,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -32,6 +35,8 @@ pub struct EncodablePackage {
     pub id: String,
     pub name: String,
     pub versions: Vec<i32>,
+    pub updated_at: String,
+    pub created_at: String,
 }
 
 impl Package {
@@ -40,6 +45,8 @@ impl Package {
             id: row.get("id"),
             name: row.get("name"),
             user_id: row.get("user_id"),
+            updated_at: row.get("updated_at"),
+            created_at: row.get("created_at"),
         }
     }
 
@@ -71,10 +78,12 @@ impl Package {
             Some(row) => return Ok(Package::from_row(&row)),
             None => {}
         }
-        let stmt = try!(conn.prepare("INSERT INTO packages (name, user_id) \
-                                      VALUES ($1, $2) \
+        let stmt = try!(conn.prepare("INSERT INTO packages \
+                                      (name, user_id, created_at, updated_at) \
+                                      VALUES ($1, $2, $3, $4) \
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id]));
+        let now = ::now();
+        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
         Ok(Package::from_row(&try!(rows.next().require(|| {
             internal("no package returned")
         }))))
@@ -86,11 +95,13 @@ impl Package {
     }
 
     fn encodable(self, versions: Vec<i32>) -> EncodablePackage {
-        let Package { name, .. } = self;
+        let Package { name, created_at, updated_at, .. } = self;
         EncodablePackage {
             id: name.clone(),
             name: name,
             versions: versions,
+            updated_at: ::encode_time(updated_at),
+            created_at: ::encode_time(created_at),
         }
     }
 
