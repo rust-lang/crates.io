@@ -66,8 +66,9 @@ impl Version {
     pub fn insert(conn: &Connection, package_id: i32,
                   num: &str) -> CargoResult<Version> {
         let stmt = try!(conn.prepare("INSERT INTO versions \
-                                      (package_id, num, updated_at, created_at) \
-                                      VALUES ($1, $2, $3, $4) \
+                                      (package_id, num, updated_at, \
+                                       created_at, downloads) \
+                                      VALUES ($1, $2, $3, $4, 0) \
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&package_id, &num as &ToSql, &now, &now]));

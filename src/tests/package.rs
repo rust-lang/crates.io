@@ -282,7 +282,7 @@ fn new_package_dependency_missing() {
 
 #[test]
 fn summary_doesnt_die() {
-    let (_b, _app, mut middle) = ::app();
+    let (_b, _app, middle) = ::app();
     let mut req = MockRequest::new(conduit::Get, "/summary");
     ok_resp!(middle.call(&mut req));
 }

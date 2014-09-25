@@ -126,5 +126,16 @@ fn migrations() -> Vec<Migration> {
         }, proc(tx) {
             try!(tx.execute("DELETE FROM metadata", [])); Ok(())
         }),
+        Migration::add_column(20140925161623, "packages", "downloads",
+                              "INTEGER NOT NULL DEFAULT 0"),
+        Migration::add_column(20140925161624, "versions", "downloads",
+                              "INTEGER NOT NULL DEFAULT 0"),
+        Migration::new(20140925161625, proc(tx) {
+            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             DROP DEFAULT", []));
+            try!(tx.execute("ALTER TABLE packages ALTER COLUMN downloads \
+                             DROP DEFAULT", []));
+            Ok(())
+        }, proc(_) Ok(())),
     ]
 }

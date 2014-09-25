@@ -7,7 +7,7 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use conduit_json_parser;
-use pg::PostgresRow;
+use pg::{PostgresRow, PostgresStatement};
 use pg::types::ToSql;
 use curl::http;
 
@@ -79,8 +79,9 @@ impl Package {
             None => {}
         }
         let stmt = try!(conn.prepare("INSERT INTO packages \
-                                      (name, user_id, created_at, updated_at) \
-                                      VALUES ($1, $2, $3, $4) \
+                                      (name, user_id, created_at,
+                                       updated_at, downloads) \
+                                      VALUES ($1, $2, $3, $4, 0) \
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
@@ -115,6 +116,26 @@ impl Package {
     pub fn path(&self, version: &str) -> String {
         format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
+
+    pub fn encode_many(conn: &Connection, pkgs: Vec<Package>)
+                       -> CargoResult<Vec<EncodablePackage>> {
+        // TODO: can rust-postgres do this escaping?
+        let pkgids: Vec<i32> = pkgs.iter().map(|p| p.id).collect();
+        let mut map = HashMap::new();
+        let query = format!("'{{{:#}}}'::int[]", pkgids.as_slice());
+        let stmt = try!(conn.prepare(format!("SELECT id, package_id FROM versions \
+                                              WHERE package_id = ANY({})",
+                                             query).as_slice()));
+        for row in try!(stmt.query(&[])) {
+            map.find_or_insert(row.get("package_id"), Vec::new())
+               .push(row.get("id"));
+        }
+
+        Ok(pkgs.into_iter().map(|p| {
+            let id = p.id;
+            p.encodable(map.pop(&id).unwrap())
+        }).collect())
+    }
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
@@ -128,26 +149,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     for row in try!(stmt.query(&[&limit, &offset])) {
         pkgs.push(Package::from_row(&row));
     }
-
-    // Collect all the version ids
-    //
-    // TODO: can rust-postgres do this escaping?
-    let pkgids: Vec<i32> = pkgs.iter().map(|p| p.id).collect();
-    let mut map = HashMap::new();
-    let query = format!("'{{{:#}}}'::int[]", pkgids.as_slice());
-    let stmt = try!(conn.prepare(format!("SELECT id, package_id FROM versions \
-                                          WHERE package_id = ANY({})",
-                                         query).as_slice()));
-    for row in try!(stmt.query(&[])) {
-        map.find_or_insert(row.get("package_id"), Vec::new())
-           .push(row.get("id"));
-    }
-
-    // Massage a response
-    let pkgs = pkgs.into_iter().map(|p| {
-        let id = p.id;
-        p.encodable(map.pop(&id).unwrap())
-    }).collect();
+    let pkgs = try!(Package::encode_many(conn, pkgs));
 
     // Query for the total count of packages
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
@@ -173,20 +175,32 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         let mut rows = try!(stmt.query(&[]));
         rows.next().unwrap().get("total_downloads")
     };
+
+    let to_pkgs = |stmt: PostgresStatement| {
+        let rows = try!(stmt.query([]));
+        Package::encode_many(tx, rows.map(|r| Package::from_row(&r)).collect())
+    };
+    let new_packages = try!(tx.prepare("SELECT * FROM packages \
+                                        ORDER BY created_at DESC LIMIT 10"));
+    let just_updated = try!(tx.prepare("SELECT * FROM packages \
+                                        ORDER BY updated_at DESC LIMIT 10"));
+    let most_downloaded = try!(tx.prepare("SELECT * FROM packages \
+                                           ORDER BY downloads DESC LIMIT 10"));
+
     #[deriving(Encodable)]
     struct R {
         num_downloads: i64,
         num_packages: u64,
-        new_packages: Vec<()>,
-        most_downloaded: Vec<()>,
-        just_updated: Vec<()>,
+        new_packages: Vec<EncodablePackage>,
+        most_downloaded: Vec<EncodablePackage>,
+        just_updated: Vec<EncodablePackage>,
     }
     Ok(req.json(&R {
         num_downloads: num_downloads,
         num_packages: num_packages as u64,
-        new_packages: Vec::new(),
-        most_downloaded: Vec::new(),
-        just_updated: Vec::new(),
+        new_packages: try!(to_pkgs(new_packages)),
+        most_downloaded: try!(to_pkgs(most_downloaded)),
+        just_updated: try!(to_pkgs(just_updated)),
     }))
 }
 
