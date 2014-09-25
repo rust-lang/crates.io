@@ -1,41 +1,79 @@
+@import "helpers";
+
+$html-bg: #3b6837;
+$main-color: #383838;
+$main-bg: #f9f7ec;
+
+@import "home";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+    background: url(noise.png);
+    background-color: $html-bg;
+}
+
 html, body { margin: 0; }
 
-#header {
-  background: #c6c6c6;
-  padding: 10px;
-
-  #logo { height: 50px; }
-
-  .nav { float: right; }
-
-  .links {
-    position: absolute;
-    bottom: 0;
-    left: 200px;
-  }
+body {
+  font-family: sans-serif;
+  display: -webkit-flex;
+  display:         flex;
+  -webkit-flex-direction: column;
+          flex-direction: column;
+  -webkit-align-items: center;
+          align-items: center;
 }
 
-.inner-content {
-  width: 900px;
-  margin: 0 auto;
-  position: relative;
-}
 
 #main {
-  margin-top: 10px;
+  display: -webkit-flex;
+  display:         flex;
+  -webkit-flex-direction: column;
+          flex-direction: column;
+
+  // width: 100%;
+  width: 900px;
+  margin-bottom: 10px;
+
+  background-color: $main-bg;
+  padding: 15px;
+  @include border-radius(10px);
+  box-shadow: 0px 0px 5px 2px #3b6837;
+  border: 5px solid #62865f;
+  color: $main-color;
 }
 
-button.loading {
-  display: none;
-}
+#header {
+    color: white;
+    position: relative;
+    height: 100px;
 
-.loading-gif {
-  display: none;
+    > * {
+        display: inline-block;
+        float: left;
+        margin: 0;
+        @include vertical-align;
+    }
 
-  &.visible {
-    background: url(/assets/ajax-loader.gif) no-repeat 50% 50%;
-    height: 18px;
-    width: 40px;
-    display: inline-block;
-  }
+    a { color: white; text-decoration: none; }
+    a:hover { color: darken(white, 15%); }
+
+    // h1 { font-weight: bold; }
+
+    .nav { float: right; }
+    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+
+    input.search {
+        font-size: 90%;
+        border: none;
+        margin-left: 30px;
+        padding: 5px 5px 5px 25px;
+        background-image: url(search.png);
+        background-repeat: no-repeat;
+        background-position: 6px 6px;
+        @include border-radius(15px);
+    }
 }

@@ -1,22 +1,32 @@
 <div id="header">
-  <div class='inner-content'>
-    {{#link-to "index"}}
-      <img src="assets/Cargo-Logo-Small.png" id="logo"/>
-    {{/link-to}}
+  {{#link-to "index"}}
+    <img src="assets/Cargo-Logo-Small.png" id="logo"
+         height=100 width=100/>
+  {{/link-to}}
+  {{#link-to "index"}}
+    <h1>CARGO</h2>
+  {{/link-to}}
 
-    <div class='nav'>
-      {{#if session.isLoggedIn}}
-        {{#link-to "me"}}Account{{/link-to}}
-        &middot;
-        {{#link-to "logout"}}Log out{{/link-to}}
-      {{else}}
-        {{#link-to "login"}}Log in{{/link-to}}
-      {{/if}}
-    </div>
+  <div class='search'>
+    {{input type="text" class="search"
+            placeholder="Search"
+            value=search
+            action="query"}}
+  </div>
 
-    <div class='links'>
-      {{#link-to "packages"}}packages{{/link-to}}
-    </div>
+  <div class='nav'>
+    {{#link-to "packages"}}Browse All Packages{{/link-to}}
+    <span class="sep">|</span>
+    {{#if session.isLoggedIn}}
+      {{#link-to "me"}}Account{{/link-to}}
+      &middot;
+      {{#link-to "logout"}}Log out{{/link-to}}
+    {{else}}
+      {{#link-to "login"}}Log in{{/link-to}}
+    {{/if}}
+  </div>
+
+  <div class='links'>
   </div>
 </div>
 

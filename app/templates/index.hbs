@@ -1,1 +1,44 @@
-THIS IS AN INDEX PAGE
+<div id='title-header'>
+    <h1>The Rust community's package hosting service</h1>
+
+    <div class='links'>
+        {{#link-to "download"}}Install Cargo{{/link-to}}
+        <a href='http://crates.io/guide.html'>Getting Started</a>
+    </div>
+</div>
+
+<div id='blurb'>
+    <div id='intro'>
+        Instantly publish your packages and install them. Use the API to
+        interact and find out more information about available packages. Become
+        a contributor and enhance the site with your work.
+    </div>
+
+    <div id='stats'>
+        <div class='downloads'>
+            <span class='icon'>&nbsp;</span>
+            <span class='num'>{{format-num num_downloads}}</span>
+            <span class='desc'>Downloads</span>
+        </div>
+        <div class='packages'>
+            <span class='icon'>&nbsp;</span>
+            <span class='num'>{{format-num num_packages}}</span>
+            <span class='desc'>Packages created</span>
+        </div>
+    </div>
+</div>
+
+<div id='package-lists'>
+    <div id='new-packages'>
+        <h2>New Packages</h2>
+        {{render "package-list" new_packages}}
+    </div>
+    <div id='most-downloaded'>
+        <h2>Most Downloaded</h2>
+        {{render "package-list" most_downloaded}}
+    </div>
+    <div id='just-updated'>
+        <h2>Just Updated</h2>
+        {{render "package-list" just_updated}}
+    </div>
+</div>

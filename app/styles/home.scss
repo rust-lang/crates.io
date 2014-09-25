@@ -1,0 +1,86 @@
+$home-border: #d5d3cb;
+
+#title-header {
+    text-align: center;
+    border-bottom: 5px solid $home-border;
+    padding-bottom: 40px;
+
+    h1 { font-size: 60px; }
+
+    a {
+        padding: 15px 40px;
+        display: inline-block;
+        color: $main-color;
+        text-decoration: none;
+        font-weight: bold;
+        @include border-radius(30px);
+        @include vertical-gradient(#fede9e, #fdc452);
+    }
+
+    a:not(first-child) {
+        margin: 0 20px;
+    }
+}
+
+.dl {
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+#blurb {
+    margin: 30px 0 40px 0;
+    display: flex;
+    flex-direction: row;
+
+    #intro { width: 60%; line-height: 25px; padding: 10px;}
+
+    #stats {
+        width: 40%;
+        border-left: 1px solid $home-border;
+        padding: 10px;
+
+        span { margin-left: 10px; }
+
+        .icon {
+            display: block;
+            float: left;
+            width: 30px;
+            height: 30px;
+            @include border-radius(15px);
+            background-color: white;
+        }
+        .num {
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .desc {
+            color: lighten($main-color, 40%);
+            font-size: 80%;
+        }
+        .downloads, .packages { clear: both; overflow: auto; }
+        .packages { margin-top: 10px; }
+    }
+}
+
+#package-lists {
+    display: flex;
+    flex-direction: row;
+
+    h2 { font-size: 105%; }
+    > div { width: 33%; }
+
+    ul { list-style: none; padding: 0; }
+    li { margin: 8px; }
+
+    $bg: #edebdd;
+    li a {
+        display: inline-block;
+        width: 100%;
+        color: lighten($main-color, 10%);
+        text-decoration: none;
+        background-color: $bg;
+        font-size: 90%;
+        padding: 20px 10px;
+    }
+    li a:hover { background-color: darken($bg, 5%); }
+}

@@ -15,6 +15,8 @@ Router.map(function() {
     this.route('edit');
   });
   this.route('me');
+  this.route('download');
+  this.route('guide');
 });
 
 export default Router;
