@@ -17,7 +17,7 @@ use util::errors::NotFound;
 pub struct Version {
     pub id: i32,
     pub package_id: i32,
-    pub num: String,
+    pub num: semver::Version,
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
@@ -36,10 +36,11 @@ pub struct EncodableVersion {
 
 impl Version {
     pub fn from_row(row: &PostgresRow) -> Version {
+        let num: String = row.get("num");
         Version {
             id: row.get("id"),
             package_id: row.get("package_id"),
-            num: row.get("num"),
+            num: semver::Version::parse(num.as_slice()).unwrap(),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
@@ -87,6 +88,7 @@ impl Version {
         let Version { id, package_id, num, updated_at, created_at,
                       downloads } = self;
         assert_eq!(pkg.id, package_id);
+        let num = num.to_string();
         EncodableVersion {
             dl_path: pkg.dl_path(num.as_slice()),
             num: num,
