@@ -1,19 +1,21 @@
 <dl>
   <dt>Name</dt>
   <dd>{{name}}</dd>
-  <dt>Slug</dt>
-  <dd>{{id}}</dd>
+  <dt>Downloads</dt>
+  <dd>{{downloads}}</dd>
 </dl>
 
 <table>
   <tr>
     <th>Version</th>
+    <th>Downloads</th>
     <th>&nbsp;</th>
   </tr>
   {{#each versions}}
     <tr>
       <td>{{num}}</td>
-      <td><a {{bind-attr href="url"}}>{{url}}</a></td>
+      <td>{{downloads}}</td>
+      <td><a download {{bind-attr href="dl_path"}}>{{dl_path}}</a></td>
     </tr>
   {{/each}}
 </table>
