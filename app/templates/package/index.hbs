@@ -5,6 +5,8 @@
   <dd>{{downloads}}</dd>
 </dl>
 
+<iframe id='download-frame' style='display:none'></iframe>
+
 <table>
   <tr>
     <th>Version</th>
@@ -15,7 +17,11 @@
     <tr>
       <td>{{num}}</td>
       <td>{{downloads}}</td>
-      <td><a download {{bind-attr href="dl_path"}}>{{dl_path}}</a></td>
+      <td><a download
+             {{action 'download' this}}
+             {{bind-attr href="dl_path"}}>
+        {{dl_path}}
+      </a></td>
     </tr>
   {{/each}}
 </table>
