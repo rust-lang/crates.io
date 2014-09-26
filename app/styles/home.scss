@@ -67,10 +67,10 @@ $home-border: #d5d3cb;
     flex-direction: row;
 
     h2 { font-size: 105%; }
-    > div { width: 33%; }
+    > div { width: 33%; margin: 0 15px; }
 
     ul { list-style: none; padding: 0; }
-    li { margin: 8px; }
+    li { margin: 8px 8px 8px 0; }
 
     $bg: #edebdd;
     li a {
