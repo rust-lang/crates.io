@@ -1,5 +1,5 @@
 <ul>
 {{#each}}
-    <li><a href='#'>{{name}} ({{version}})</a></li>
+    <li>{{#link-to 'package' this}}{{name}}{{/link-to}}</li>
 {{/each}}
 </ul>
