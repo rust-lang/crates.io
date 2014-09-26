@@ -121,5 +121,6 @@ fn package() -> cargo_registry::package::Package {
         user_id: 100,
         updated_at: time::now().to_timespec(),
         created_at: time::now().to_timespec(),
+        downloads: 10,
     }
 }

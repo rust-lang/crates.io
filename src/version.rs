@@ -21,6 +21,7 @@ pub struct Version {
     pub num: String,
     pub updated_at: Timespec,
     pub created_at: Timespec,
+    pub downloads: i32,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -31,6 +32,7 @@ pub struct EncodableVersion {
     pub url: String,
     pub updated_at: String,
     pub created_at: String,
+    pub downloads: i32,
 }
 
 impl Version {
@@ -41,6 +43,7 @@ impl Version {
             num: row.get("num"),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
+            downloads: row.get("downloads"),
         }
     }
 
@@ -82,7 +85,8 @@ impl Version {
     }
 
     pub fn encodable(self, app: &App, pkg: &Package) -> EncodableVersion {
-        let Version { id, package_id, num, updated_at, created_at } = self;
+        let Version { id, package_id, num, updated_at, created_at,
+                      downloads } = self;
         assert_eq!(pkg.id, package_id);
         EncodableVersion {
             url: format!("https://{}{}",
@@ -92,6 +96,7 @@ impl Version {
             pkg: pkg.name.clone(),
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
+            downloads: downloads,
         }
     }
 }

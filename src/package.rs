@@ -28,6 +28,7 @@ pub struct Package {
     pub user_id: i32,
     pub updated_at: Timespec,
     pub created_at: Timespec,
+    pub downloads: i32,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -37,6 +38,7 @@ pub struct EncodablePackage {
     pub versions: Vec<i32>,
     pub updated_at: String,
     pub created_at: String,
+    pub downloads: i32,
 }
 
 impl Package {
@@ -47,6 +49,7 @@ impl Package {
             user_id: row.get("user_id"),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
+            downloads: row.get("downloads"),
         }
     }
 
@@ -96,13 +99,14 @@ impl Package {
     }
 
     fn encodable(self, versions: Vec<i32>) -> EncodablePackage {
-        let Package { name, created_at, updated_at, .. } = self;
+        let Package { name, created_at, updated_at, downloads, .. } = self;
         EncodablePackage {
             id: name.clone(),
             name: name,
             versions: versions,
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
+            downloads: downloads,
         }
     }
 
