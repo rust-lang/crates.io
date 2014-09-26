@@ -1,32 +1,22 @@
 import Ember from 'ember';
+import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
   model: function() {
-    return {
-        num_downloads: 250374858,
-        num_packages: 2939959,
-        new_packages: [
-            {"name": "foo", "version": "0.0.1"},
-            {"name": "bar", "version": "0.0.1"},
-            {"name": "foobar", "version": "0.0.1"},
-            {"name": "baz", "version": "0.0.1"},
-            {"name": "test", "version": "0.0.1"},
-        ],
-        most_downloaded: [
-            {"name": "foo", "version": "0.0.1"},
-            {"name": "bar", "version": "0.0.1"},
-            {"name": "foobar", "version": "0.0.1"},
-            {"name": "baz", "version": "0.0.1"},
-            {"name": "test", "version": "0.0.1"},
-        ],
-        just_updated: [
-            {"name": "foo", "version": "0.0.1"},
-            {"name": "bar", "version": "0.0.1"},
-            {"name": "foobar", "version": "0.0.1"},
-            {"name": "baz", "version": "0.0.1"},
-            {"name": "test", "version": "0.0.1"},
-        ],
+    var self = this;
+
+    var addPackages = function(pkgs) {
+        for (var i = 0; i < pkgs.length; i++) {
+            pkgs[i] = self.store.push('package', pkgs[i]);
+        }
     };
+    return ajax('/summary').then(function(data) {
+        addPackages(data.new_packages);
+        addPackages(data.most_downloaded);
+        addPackages(data.just_updated);
+        console.log(data.new_packages);
+        return data;
+    });
   }
 });
 
