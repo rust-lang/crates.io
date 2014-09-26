@@ -148,30 +148,40 @@ impl Package {
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let limit = 10i64;
-    let offset = 0i64;
     let conn = try!(req.tx());
+    let query = req.query();
+    let page = query.find_equiv(&"page").map(|s| s.as_slice())
+                    .and_then(from_str::<i64>).unwrap_or(1);
+    let offset = (page - 1) * limit;
+    let pattern = query.find_equiv(&"letter")
+                       .map(|s| s.as_slice().char_at(0).to_lowercase())
+                       .map(|s| format!("{}%", s))
+                       .unwrap_or("%".to_string());
 
     // Collect all the packages
-    let stmt = try!(conn.prepare("SELECT * FROM packages LIMIT $1 OFFSET $2"));
+    let stmt = try!(conn.prepare("SELECT * FROM packages \
+                                  WHERE name LIKE $3 \
+                                  LIMIT $1 OFFSET $2"));
     let mut pkgs = Vec::new();
-    for row in try!(stmt.query(&[&limit, &offset])) {
+    for row in try!(stmt.query(&[&limit, &offset, &pattern])) {
         pkgs.push(Package::from_row(&row));
     }
     let pkgs = try!(Package::encode_many(conn, pkgs));
 
     // Query for the total count of packages
-    let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages"));
-    let row = try!(stmt.query(&[])).next().unwrap();
+    let stmt = try!(conn.prepare("SELECT COUNT(*) FROM packages \
+                                  WHERE name LIKE $1"));
+    let row = try!(stmt.query(&[&pattern])).next().unwrap();
     let total = row.get(0u);
 
     #[deriving(Encodable)]
     struct R { packages: Vec<EncodablePackage>, meta: Meta }
     #[deriving(Encodable)]
-    struct Meta { total: i64, page: i64 }
+    struct Meta { total: i64 }
 
     Ok(req.json(&R {
         packages: pkgs,
-        meta: Meta { total: total, page: offset / limit }
+        meta: Meta { total: total },
     }))
 }
 

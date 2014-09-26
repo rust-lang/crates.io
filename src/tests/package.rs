@@ -13,7 +13,7 @@ use cargo_registry::version::EncodableVersion;
 #[deriving(Decodable)]
 struct PackageList { packages: Vec<EncodablePackage>, meta: PackageMeta }
 #[deriving(Decodable)]
-struct PackageMeta { total: int, page: int }
+struct PackageMeta { total: int }
 #[deriving(Decodable)]
 struct PackageResponse { package: EncodablePackage, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
@@ -31,7 +31,6 @@ fn index() {
     let json: PackageList = ::json(&mut response);
     assert_eq!(json.packages.len(), 0);
     assert_eq!(json.meta.total, 0);
-    assert_eq!(json.meta.page, 0);
 
     let pkg = ::package();
     middle.add(::middleware::MockUser(::user()));
@@ -40,7 +39,6 @@ fn index() {
     let json: PackageList = ::json(&mut response);
     assert_eq!(json.packages.len(), 1);
     assert_eq!(json.meta.total, 1);
-    assert_eq!(json.meta.page, 0);
     assert_eq!(json.packages[0].name, pkg.name);
     assert_eq!(json.packages[0].id, pkg.name);
     assert_eq!(json.packages[0].versions.len(), 1);
