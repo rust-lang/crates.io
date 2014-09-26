@@ -7,6 +7,12 @@ $home-border: #d5d3cb;
 
     h1 { font-size: 60px; }
 
+    img {
+        float: left;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
     a {
         padding: 15px 40px;
         display: inline-block;
@@ -41,14 +47,7 @@ $home-border: #d5d3cb;
 
         span { margin-left: 10px; }
 
-        .icon {
-            display: block;
-            float: left;
-            width: 30px;
-            height: 30px;
-            @include border-radius(15px);
-            background-color: white;
-        }
+        img { display: block; float: left; }
         .num {
             font-size: 30px;
             font-weight: bold;
@@ -72,15 +71,14 @@ $home-border: #d5d3cb;
     ul { list-style: none; padding: 0; }
     li { margin: 8px 8px 8px 0; }
 
-    $bg: #edebdd;
     li a {
         display: inline-block;
         width: 100%;
         color: lighten($main-color, 10%);
         text-decoration: none;
-        background-color: $bg;
+        background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
     }
-    li a:hover { background-color: darken($bg, 5%); }
+    li a:hover { background-color: darken($main-bg-dark, 5%); }
 }

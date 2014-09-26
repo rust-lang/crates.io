@@ -1,0 +1,107 @@
+#all-packages {
+    width: 100%;
+    padding: 20px;
+    background-color: $main-bg-dark;
+    margin-bottom: 20px;
+    @include border-radius(5px);
+
+    h1 { display: inline-block; }
+    h2 {
+        color: $main-color-light;
+        display: inline-block;
+        padding-left: 10px;
+    }
+    img {
+        float: left;
+        display: inline-block;
+        margin-top: 18px;
+        margin-right: 10px;
+    }
+}
+
+#selection {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    @include border-radius(5px);
+    background-color: white;
+    margin-bottom: 40px;
+
+    a {
+        text-decoration: none;
+        font-weight: bold;
+        color: inherit;
+        padding: 5px;
+    }
+    a:hover { background-color: $main-bg-dark; }
+    a.active { background-color: $main-bg-dark; }
+}
+
+#results {
+    width: 100%;
+    display: flex;
+    color: $main-color-light;
+    font-size: 80%;
+    margin-bottom: 10px;
+
+    .cur, .total { color: $main-color; font-weight: bold; }
+}
+
+#packages {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.package {
+    width: 100%;
+    display: flex;
+    border-bottom: 2px solid #d5d3cb;
+    padding-top: 20px;
+
+    .desc {
+        padding-top: 5px;
+        display: flex;
+        flex-direction: column;
+        width: 85%;
+    }
+
+    .info a {
+        color: $main-color;
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 120%;
+    }
+    .vers {
+        margin-left: 10px;
+        color: $main-color-light;
+        font-size: 90%;
+    }
+
+    .stats {
+        width: 15%;
+        color: $main-color-light;
+    }
+    .downloads { display: flex; }
+    .num { align-self: center; }
+
+    &:last-of-type { border: none; }
+}
+
+.pagination {
+    text-align: center;
+    font-size: 90%;
+    margin-bottom: 20px;
+
+    a {
+        color: $main-color-light;
+        text-decoration: none;
+        padding: 5px 6px;
+    }
+    a:hover { background-color: $main-bg-dark; }
+    a.active { background-color: $main-bg-dark; }
+}

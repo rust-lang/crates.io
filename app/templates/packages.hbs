@@ -1,17 +1,52 @@
-<table>
-  <tr>
-    <th>Name</th>
-    <th>&nbsp;</th>
-  </tr>
-  {{#each}}
-    <tr>
-      <td>{{ name }}</td>
-      <td>
-        {{#link-to "package" this}}[show]{{/link-to}}
-        {{#if controller.session.isLoggedIn}}
-          &middot; {{#link-to "package.edit" this}}[edit]{{/link-to}}
-        {{/if}}
-      </td>
-    </tr>
-  {{/each}}
-</table>
+<div id='all-packages'>
+    <img src="assets/package.png"/>
+    <h1>All Packages</h1>
+    <h2>starting with '{{ letter }}'</h2>
+</div>
+<div id='selection'>
+    {{#each alphabet}}
+        {{#link-to 'packages' (query-params letter=this)}}
+            {{ this }}
+        {{/link-to}}
+    {{/each}}
+</div>
+
+<div id='results'>
+    <div class='nav'>
+        <span class='amt'>
+            Displaying
+            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+            of <span class='total'>{{ totalItems }}</span> total results
+        </span>
+    </div>
+</div>
+
+<div id='packages'>
+    {{#each}}
+        <div class='package'>
+            <div class='desc'>
+                <div class='info'>
+                    {{#link-to "package" this}}{{ name }}{{/link-to}}
+                    <span class='vers'>{{ max_version }}</span>
+                </div>
+                <div class='summary'>
+                    &nbsp;
+                </div>
+            </div>
+            <div class='stats'>
+                <div class='downloads'>
+                    <img src="assets/download.png"/>
+                    <span class='num'>{{ downloads }}</span>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+</div>
+
+<div class='pagination'>
+    {{#linkTo 'packages' (query-params page=prevPage) class="prev"}}Prev{{/linkTo}}
+    {{#each pages}}
+        {{#link-to 'packages' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{/each}}
+    {{#linkTo 'packages' (query-params page=nextPage) class="next"}}Next{{/linkTo}}
+</div>

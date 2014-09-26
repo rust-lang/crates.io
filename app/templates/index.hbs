@@ -2,8 +2,14 @@
     <h1>The Rust community's package hosting service</h1>
 
     <div class='links'>
-        {{#link-to "download"}}Install Cargo{{/link-to}}
-        <a href='http://crates.io/guide.html'>Getting Started</a>
+        {{#link-to "download"}}
+            <img src="assets/button-download.png"/>
+            Install Cargo
+        {{/link-to}}
+        <a href='http://crates.io/guide.html'>
+            <img src="assets/flag.png"/>
+            Getting Started
+        </a>
     </div>
 </div>
 
@@ -16,12 +22,12 @@
 
     <div id='stats'>
         <div class='downloads'>
-            <span class='icon'>&nbsp;</span>
+            <img src="assets/download.png"/>
             <span class='num'>{{format-num num_downloads}}</span>
             <span class='desc'>Downloads</span>
         </div>
         <div class='packages'>
-            <span class='icon'>&nbsp;</span>
+            <img src="assets/package.png"/>
             <span class='num'>{{format-num num_packages}}</span>
             <span class='desc'>Packages created</span>
         </div>

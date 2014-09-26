@@ -6,4 +6,5 @@ export default DS.Model.extend({
     versions: DS.hasMany('versions', {async:true}),
     created_at: DS.attr('date'),
     updated_at: DS.attr('date'),
+    max_version: DS.attr('string'),
 });
