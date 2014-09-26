@@ -147,11 +147,13 @@ impl Package {
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let limit = 10i64;
     let conn = try!(req.tx());
     let query = req.query();
     let page = query.find_equiv(&"page").map(|s| s.as_slice())
                     .and_then(from_str::<i64>).unwrap_or(1);
+    let limit = query.find_equiv(&"per_page").map(|s| s.as_slice())
+                     .and_then(from_str::<i64>).unwrap_or(10);
+    if limit > 100 { return Err(human("cannot request more than 100 packages")) }
     let offset = (page - 1) * limit;
     let pattern = query.find_equiv(&"letter")
                        .map(|s| s.as_slice().char_at(0).to_lowercase())
