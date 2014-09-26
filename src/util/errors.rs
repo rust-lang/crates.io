@@ -100,21 +100,12 @@ impl Show for Box<CargoError + Send> {
 }
 
 impl CargoError for Box<CargoError + Send> {
-    fn description(&self) -> String {
-        (*self).description()
-    }
-
-    fn detail(&self) -> Option<String> {
-        (*self).detail()
-    }
-
-    fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> {
-        (*self).cause()
-    }
-
-    fn box_error(self) -> Box<CargoError + Send> {
-        self
-    }
+    fn description(&self) -> String { (*self).description() }
+    fn detail(&self) -> Option<String> { (*self).detail() }
+    fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> { (*self).cause() }
+    fn box_error(self) -> Box<CargoError + Send> { self }
+    fn human(&self) -> bool { (*self).human() }
+    fn response(&self) -> Option<Response> { (*self).response() }
 }
 
 pub type CargoResult<T> = Result<T, Box<CargoError + Send>>;

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::io::util::NullReader;
 use serialize::json;
 use serialize::hex::ToHex;
 use time::Timespec;
@@ -420,12 +419,12 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let pkg_name = req.params()["package_id"].as_slice();
     let filename = req.params()["filename"].as_slice();
     if !filename.starts_with(pkg_name) || !filename.ends_with(".tar.gz") {
-        return Err(NotFound.box_error())
+        return Err(human("download filename is not a tarball with the package \
+                          name as a prefix"))
     }
     let version = filename.slice(pkg_name.len() + 1,
                                  filename.len() - ".tar.gz".len());
     let tx = try!(req.tx());
-    println!("{} {}", pkg_name, version);
     let stmt = try!(tx.prepare("SELECT packages.id as package_id,
                                        versions.id as version_id
                                 FROM packages
@@ -435,7 +434,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                   AND versions.num = $2
                                 LIMIT 1"));
     let mut rows = try!(stmt.query(&[&pkg_name as &ToSql, &version as &ToSql]));
-    let row = try!(rows.next().require(|| NotFound));
+    let row = try!(rows.next().require(|| human("package or version not found")));
     let package_id: i32 = row.get("package_id");
     let version_id: i32 = row.get("version_id");
 
@@ -457,11 +456,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",
                                req.app().bucket.host(),
                                pkg_name, pkg_name, version);
-    let mut headers = HashMap::new();
-    headers.insert("Location".to_string(), vec![redirect_url]);
-    Ok(Response {
-        status: (302, "Found"),
-        headers: headers,
-        body: box NullReader,
-    })
+    #[deriving(Encodable)]
+    struct R { ok: bool, url: String }
+    Ok(req.json(&R{ ok: true, url: redirect_url }))
 }

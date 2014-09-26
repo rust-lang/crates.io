@@ -298,8 +298,7 @@ fn download() {
     let rel = format!("/{}/{}-1.0.0.tar.gz", package.name, package.name);
     let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
                                                         .as_slice());
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.val0(), 302);
+    ok_resp!(middle.call(&mut req));
     {
         let conn = (&mut req as &mut Request).tx().unwrap();
         let pkg = Package::find_by_name(conn, package.name.as_slice()).unwrap();
@@ -310,7 +309,7 @@ fn download() {
 }
 
 #[test]
-fn download_404() {
+fn download_bad() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     let package = ::package();
@@ -319,6 +318,6 @@ fn download_404() {
     let rel = format!("/{}/{}-0.1.0.tar.gz", package.name, package.name);
     let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
                                                         .as_slice());
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.val0(), 404);
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<BadPackage>(&mut response);
 }
