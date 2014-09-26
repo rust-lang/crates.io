@@ -7,6 +7,8 @@ use std::os;
 use migrate::Migration;
 use postgres::{PostgresTransaction, PostgresResult};
 
+use cargo_registry::package::Package;
+
 fn main() {
     let db_config = r2d2::Config {
         pool_size: 1,
@@ -137,5 +139,29 @@ fn migrations() -> Vec<Migration> {
                              DROP DEFAULT", []));
             Ok(())
         }, proc(_) Ok(())),
+        Migration::add_column(20140926130044, "packages", "max_version",
+                              "VARCHAR"),
+        Migration::new(20140926130045, proc(tx) {
+            let stmt = try!(tx.prepare("SELECT * FROM packages"));
+            for row in try!(stmt.query(&[])) {
+                let pkg = Package::from_row(&row);
+                let versions = pkg.versions(tx).unwrap();
+                let v = versions.iter().max_by(|v| &v.num).unwrap();
+                let max = v.num.to_string();
+                try!(tx.execute("UPDATE packages SET max_version = $1 \
+                                 WHERE id = $2",
+                                &[&max, &pkg.id]));
+            }
+            Ok(())
+        }, proc(_) Ok(())),
+        Migration::new(20140926130046, proc(tx) {
+            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             SET NOT NULL", []));
+            Ok(())
+        }, proc(tx) {
+            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             DROP NOT NULL", []));
+            Ok(())
+        }),
     ]
 }
