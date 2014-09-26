@@ -3,10 +3,11 @@ use std::io::fs::PathExtensions;
 use serialize::json;
 use git2;
 
-use conduit::{mod, Handler};
+use conduit::{mod, Handler, Request};
 use conduit_test::MockRequest;
 
-use cargo_registry::package::EncodablePackage;
+use cargo_registry::db::RequestTransaction;
+use cargo_registry::package::{EncodablePackage, Package};
 use cargo_registry::version::EncodableVersion;
 
 #[deriving(Decodable)]
@@ -62,9 +63,9 @@ fn show() {
     assert_eq!(json.versions[0].id, json.package.versions[0]);
     assert_eq!(json.versions[0].pkg, json.package.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
-    let suffix = "/pkg/foo/foo-1.0.0.tar.gz";
-    assert!(json.versions[0].url.as_slice().ends_with(suffix),
-            "bad suffix {}", json.versions[0].url);
+    let suffix = "/download/foo/foo-1.0.0.tar.gz";
+    assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
+            "bad suffix {}", json.versions[0].dl_path);
 }
 
 fn new_req(api_token: &str, pkg: &str, version: &str, deps: &[&str])
@@ -285,4 +286,39 @@ fn summary_doesnt_die() {
     let (_b, _app, middle) = ::app();
     let mut req = MockRequest::new(conduit::Get, "/summary");
     ok_resp!(middle.call(&mut req));
+}
+
+#[test]
+fn download() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+    let package = ::package();
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockPackage(package.clone()));
+    let rel = format!("/{}/{}-1.0.0.tar.gz", package.name, package.name);
+    let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
+                                                        .as_slice());
+    let response = t_resp!(middle.call(&mut req));
+    assert_eq!(response.status.val0(), 302);
+    {
+        let conn = (&mut req as &mut Request).tx().unwrap();
+        let pkg = Package::find_by_name(conn, package.name.as_slice()).unwrap();
+        assert_eq!(pkg.downloads, 1);
+        let versions = pkg.versions(conn).unwrap();
+        assert_eq!(versions[0].downloads, 1);
+    }
+}
+
+#[test]
+fn download_404() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+    let package = ::package();
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockPackage(package.clone()));
+    let rel = format!("/{}/{}-0.1.0.tar.gz", package.name, package.name);
+    let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
+                                                        .as_slice());
+    let response = t_resp!(middle.call(&mut req));
+    assert_eq!(response.status.val0(), 404);
 }

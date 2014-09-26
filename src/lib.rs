@@ -68,6 +68,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
     router.get("/packages/:package_id", C(package::show));
+    router.get("/download/:package_id/:filename", C(package::download));
     router.put("/packages/:package_id", {
         let mut m = MiddlewareBuilder::new(C(package::update));
         m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);

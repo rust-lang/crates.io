@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::io::util::NullReader;
 use serialize::json;
 use serialize::hex::ToHex;
 use time::Timespec;
@@ -117,7 +118,11 @@ impl Package {
         Ok(rows.map(|r| Version::from_row(&r)).collect())
     }
 
-    pub fn path(&self, version: &str) -> String {
+    pub fn dl_path(&self, version: &str) -> String {
+        format!("/download/{}/{}-{}.tar.gz", self.name, self.name, version)
+    }
+
+    pub fn s3_path(&self, version: &str) -> String {
         format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
 
@@ -218,9 +223,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R { package: EncodablePackage, versions: Vec<EncodableVersion>, }
     Ok(req.json(&R {
         package: pkg.clone().encodable(versions.iter().map(|v| v.id).collect()),
-        versions: versions.into_iter().map(|v| {
-            v.encodable(&**req.app(), &pkg)
-        }).collect(),
+        versions: versions.into_iter().map(|v| v.encodable(&pkg)).collect(),
     }))
 }
 
@@ -298,7 +301,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         Some(ref proxy) => handle.proxy(proxy.as_slice()),
         None => handle,
     };
-    let path = pkg.path(new_pkg.vers.as_slice());
+    let path = pkg.s3_path(new_pkg.vers.as_slice());
     let (resp, cksum) = {
         let length = req.content_length().unwrap();
         let body = LimitErrorReader::new(req.body(), app.config.max_upload_size);
@@ -411,4 +414,54 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(NewPackage, User)> {
         return Err(human(format!("invalid package version: `{}`", new_pkg.vers)))
     }
     Ok((new_pkg, user))
+}
+
+pub fn download(req: &mut Request) -> CargoResult<Response> {
+    let pkg_name = req.params()["package_id"].as_slice();
+    let filename = req.params()["filename"].as_slice();
+    if !filename.starts_with(pkg_name) || !filename.ends_with(".tar.gz") {
+        return Err(NotFound.box_error())
+    }
+    let version = filename.slice(pkg_name.len() + 1,
+                                 filename.len() - ".tar.gz".len());
+    let tx = try!(req.tx());
+    println!("{} {}", pkg_name, version);
+    let stmt = try!(tx.prepare("SELECT packages.id as package_id,
+                                       versions.id as version_id
+                                FROM packages
+                                LEFT JOIN versions ON
+                                    packages.id = versions.package_id
+                                WHERE packages.name = $1
+                                  AND versions.num = $2
+                                LIMIT 1"));
+    let mut rows = try!(stmt.query(&[&pkg_name as &ToSql, &version as &ToSql]));
+    let row = try!(rows.next().require(|| NotFound));
+    let package_id: i32 = row.get("package_id");
+    let version_id: i32 = row.get("version_id");
+
+    // Bump download counts.
+    //
+    // Note that this is *not* an atomic update, and that's somewhat
+    // intentional. It doesn't appear that postgres supports an atomic update of
+    // a counter, so we just do the hopefully "least racy" thing. This is
+    // largely ok because these download counters are just that, counters. No
+    // need to have super high-fidelity counter.
+    try!(tx.execute("UPDATE packages SET downloads = downloads + 1
+                     WHERE id = $1", &[&package_id]));
+    try!(tx.execute("UPDATE versions SET downloads = downloads + 1
+                     WHERE id = $1", &[&version_id]));
+    try!(tx.execute("UPDATE metadata SET total_downloads = total_downloads + 1",
+                    &[]));
+
+    // Now that we've done our business, redirect to the actual data.
+    let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",
+                               req.app().bucket.host(),
+                               pkg_name, pkg_name, version);
+    let mut headers = HashMap::new();
+    headers.insert("Location".to_string(), vec![redirect_url]);
+    Ok(Response {
+        status: (302, "Found"),
+        headers: headers,
+        body: box NullReader,
+    })
 }

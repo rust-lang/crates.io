@@ -8,7 +8,6 @@ use pg::types::ToSql;
 use semver;
 use url;
 
-use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
 use package::Package;
 use util::{RequestUtils, CargoResult, Require, internal, CargoError};
@@ -29,7 +28,7 @@ pub struct EncodableVersion {
     pub id: i32,
     pub pkg: String,
     pub num: String,
-    pub url: String,
+    pub dl_path: String,
     pub updated_at: String,
     pub created_at: String,
     pub downloads: i32,
@@ -84,13 +83,12 @@ impl Version {
         semver::Version::parse(version).is_ok()
     }
 
-    pub fn encodable(self, app: &App, pkg: &Package) -> EncodableVersion {
+    pub fn encodable(self, pkg: &Package) -> EncodableVersion {
         let Version { id, package_id, num, updated_at, created_at,
                       downloads } = self;
         assert_eq!(pkg.id, package_id);
         EncodableVersion {
-            url: format!("https://{}{}",
-                         app.bucket.host(), pkg.path(num.as_slice())),
+            dl_path: pkg.dl_path(num.as_slice()),
             num: num,
             id: id,
             pkg: pkg.name.clone(),
@@ -144,7 +142,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // And respond!
     let versions = versions.into_iter().map(|v| {
         let id = v.package_id;
-        v.encodable(&**req.app(), map.find(&id).unwrap())
+        v.encodable(map.find(&id).unwrap())
     }).collect();
 
     #[deriving(Encodable)]
@@ -161,5 +159,5 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { version: EncodableVersion }
-    Ok(req.json(&R { version: version.encodable(&**req.app(), &pkg) }))
+    Ok(req.json(&R { version: version.encodable(&pkg) }))
 }
