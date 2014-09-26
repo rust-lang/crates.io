@@ -9,6 +9,7 @@ extern crate git2;
 extern crate serialize;
 extern crate time;
 extern crate url;
+extern crate semver;
 
 use std::sync::{Once, ONCE_INIT, Arc};
 use std::os;
@@ -122,5 +123,6 @@ fn package() -> cargo_registry::package::Package {
         updated_at: time::now().to_timespec(),
         created_at: time::now().to_timespec(),
         downloads: 10,
+        max_version: semver::Version::parse("0.0.0").unwrap(),
     }
 }

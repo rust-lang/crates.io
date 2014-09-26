@@ -5,11 +5,12 @@ use serialize::hex::ToHex;
 use time::Timespec;
 
 use conduit::{Request, Response};
-use conduit_router::RequestParams;
 use conduit_json_parser;
-use pg::{PostgresRow, PostgresStatement};
-use pg::types::ToSql;
+use conduit_router::RequestParams;
 use curl::http;
+use pg::types::ToSql;
+use pg::{PostgresRow, PostgresStatement};
+use semver;
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
@@ -29,6 +30,7 @@ pub struct Package {
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
+    pub max_version: semver::Version,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -39,10 +41,12 @@ pub struct EncodablePackage {
     pub updated_at: String,
     pub created_at: String,
     pub downloads: i32,
+    pub max_version: String,
 }
 
 impl Package {
     pub fn from_row(row: &PostgresRow) -> Package {
+        let max: String = row.get("max_version");
         Package {
             id: row.get("id"),
             name: row.get("name"),
@@ -50,6 +54,7 @@ impl Package {
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
+            max_version: semver::Version::parse(max.as_slice()).unwrap(),
         }
     }
 
@@ -83,8 +88,8 @@ impl Package {
         }
         let stmt = try!(conn.prepare("INSERT INTO packages \
                                       (name, user_id, created_at,
-                                       updated_at, downloads) \
-                                      VALUES ($1, $2, $3, $4, 0) \
+                                       updated_at, downloads, max_version) \
+                                      VALUES ($1, $2, $3, $4, 0, '0.0.0') \
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
@@ -99,7 +104,8 @@ impl Package {
     }
 
     fn encodable(self, versions: Vec<i32>) -> EncodablePackage {
-        let Package { name, created_at, updated_at, downloads, .. } = self;
+        let Package { name, created_at, updated_at, downloads,
+                      max_version, .. } = self;
         EncodablePackage {
             id: name.clone(),
             name: name,
@@ -107,6 +113,7 @@ impl Package {
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
+            max_version: max_version.to_string(),
         }
     }
 
@@ -143,6 +150,17 @@ impl Package {
             let id = p.id;
             p.encodable(map.pop(&id).unwrap())
         }).collect())
+    }
+
+    pub fn add_version(&self, conn: &Connection, num: &str)
+                       -> CargoResult<Version> {
+        let ver = semver::Version::parse(num).unwrap();
+        let max = if ver > self.max_version {&ver} else {&self.max_version};
+        let max = max.to_string();
+        try!(conn.execute("UPDATE packages SET updated_at = $1, max_version = $2
+                           WHERE id = $3",
+                          &[&::now(), &max, &self.id]));
+        Version::insert(conn, self.id, num)
     }
 }
 
@@ -296,8 +314,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         }
         None => {}
     }
-    let vers = try!(Version::insert(try!(req.tx()), pkg.id,
-                                    new_pkg.vers.as_slice()));
+    let vers = try!(pkg.add_version(try!(req.tx()), new_pkg.vers.as_slice()));
 
     // Link this new version to all dependencies
     for dep in new_pkg.deps.iter() {

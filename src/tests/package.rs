@@ -131,6 +131,7 @@ fn new_package() {
     let json: GoodPackage = ::json(&mut response);
     assert!(json.ok);
     assert_eq!(json.package.name.as_slice(), "foo");
+    assert_eq!(json.package.max_version.as_slice(), "1.0.0");
 }
 
 #[test]
