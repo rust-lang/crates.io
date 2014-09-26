@@ -187,7 +187,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
-    let num_packages = try!(tx.execute("SELECT COUNT(*) FROM packages", []));
+    let num_packages = {
+        let stmt = try!(tx.prepare("SELECT COUNT(*) FROM packages"));
+        let mut rows = try!(stmt.query(&[]));
+        rows.next().unwrap().get("count")
+    };
     let num_downloads = {
         let stmt = try!(tx.prepare("SELECT total_downloads FROM metadata"));
         let mut rows = try!(stmt.query(&[]));
@@ -208,14 +212,14 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R {
         num_downloads: i64,
-        num_packages: u64,
+        num_packages: i64,
         new_packages: Vec<EncodablePackage>,
         most_downloaded: Vec<EncodablePackage>,
         just_updated: Vec<EncodablePackage>,
     }
     Ok(req.json(&R {
         num_downloads: num_downloads,
-        num_packages: num_packages as u64,
+        num_packages: num_packages,
         new_packages: try!(to_pkgs(new_packages)),
         most_downloaded: try!(to_pkgs(most_downloaded)),
         just_updated: try!(to_pkgs(just_updated)),
