@@ -49,7 +49,7 @@ fn main() {
         gh_client_secret: env("GH_CLIENT_SECRET"),
         db_url: env("DATABASE_URL"),
         env: cargo_env,
-        max_upload_size: 2 * 1024 * 1024,
+        max_upload_size: 10 * 1024 * 1024,
     };
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
