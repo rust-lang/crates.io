@@ -94,16 +94,15 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
     let repo = app.git_repo.lock();
     let repo = &*repo;
     let name = package.name.as_slice();
-    let (c1, c2) = match name.len() {
-        0 => unreachable!(),
-        1 => (format!("{}:", name.slice_to(1)), format!("::")),
-        2 => (format!("{}", name.slice_to(2)), format!("::")),
-        3 => (format!("{}", name.slice_to(2)), format!("{}:", name.char_at(2))),
-        _ => (name.slice_to(2).to_string(), name.slice(2, 4).to_string()),
+    let repo_path = repo.path().dir_path();
+    let dst = match name.len() {
+        1 => repo_path.join("1").join(name),
+        2 => repo_path.join("2").join(name),
+        3 => repo_path.join("3").join(name.slice_to(1)).join(name),
+        _ => repo_path.join(name.slice(0, 2))
+                      .join(name.slice(2, 4))
+                      .join(name),
     };
-
-    let part = Path::new(c1).join(c2).join(name);
-    let dst = repo.path().dir_path().join(&part);
 
     // Attempt to commit the package in a loop. It's possible that we're going
     // to need to rebase our repository, and after that it's possible that we're
@@ -123,7 +122,7 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
 
         // git add $file
         let mut index = try!(repo.index());
-        try!(index.add_path(&part));
+        try!(index.add_path(&dst.path_relative_from(&repo_path).unwrap()));
         try!(index.write());
         let tree_id = try!(index.write_tree());
         let tree = try!(repo.find_tree(tree_id));

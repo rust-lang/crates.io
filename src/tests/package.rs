@@ -208,7 +208,7 @@ fn new_package_git_upload() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodPackage>(&mut response);
 
-    let path = ::git::checkout().join("fo/o:/foo");
+    let path = ::git::checkout().join("3/f/foo");
     assert!(path.exists());
     let contents = File::open(&path).read_to_string().unwrap();
     let p: GitPackage = json::decode(contents.as_slice()).unwrap();
@@ -223,7 +223,7 @@ fn new_package_git_upload() {
 fn new_package_git_upload_appends() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
-    let path = ::git::checkout().join("fo/o:/foo");
+    let path = ::git::checkout().join("3/f/foo");
     fs::mkdir_recursive(&path.dir_path(), io::UserRWX).unwrap();
     File::create(&path).write_str(
         r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}"#
