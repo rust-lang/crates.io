@@ -108,20 +108,17 @@ impl Middleware for TransactionMiddleware {
 
     fn after(&self, req: &mut Request, res: Result<Response, Box<Show + 'static>>)
              -> Result<Response, Box<Show + 'static>> {
-        match res {
-            Ok(ref res) if res.status.val0() == 200 => {
-                let tx = req.extensions().find::<Transaction>()
-                            .expect("Transaction not present in request");
-                match tx.tx.borrow() {
-                    Some(tx) => {
-                        if req.app().config.env != ::Test {
-                            tx.set_commit();
-                        }
+        if res.is_ok() {
+            let tx = req.extensions().find::<Transaction>()
+                        .expect("Transaction not present in request");
+            match tx.tx.borrow() {
+                Some(tx) => {
+                    if req.app().config.env != ::Test {
+                        tx.set_commit();
                     }
-                    None => {}
                 }
+                None => {}
             }
-            _ => {}
         }
         return res;
     }
