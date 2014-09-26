@@ -296,7 +296,8 @@ fn download() {
     let rel = format!("/{}/{}-1.0.0.tar.gz", package.name, package.name);
     let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
                                                         .as_slice());
-    ok_resp!(middle.call(&mut req));
+    let resp = t_resp!(middle.call(&mut req));
+    assert_eq!(resp.status.val0(), 302);
     {
         let conn = (&mut req as &mut Request).tx().unwrap();
         let pkg = Package::find_by_name(conn, package.name.as_slice()).unwrap();

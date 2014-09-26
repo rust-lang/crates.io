@@ -466,7 +466,12 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",
                                req.app().bucket.host(),
                                pkg_name, pkg_name, version);
-    #[deriving(Encodable)]
-    struct R { ok: bool, url: String }
-    Ok(req.json(&R{ ok: true, url: redirect_url }))
+
+    if req.wants_json() {
+        #[deriving(Encodable)]
+        struct R { ok: bool, url: String }
+        Ok(req.json(&R{ ok: true, url: redirect_url }))
+    } else {
+        Ok(req.redirect(redirect_url))
+    }
 }

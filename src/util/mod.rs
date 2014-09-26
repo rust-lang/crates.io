@@ -27,6 +27,7 @@ pub trait RequestUtils {
 
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response;
     fn query(self) -> HashMap<String, String>;
+    fn wants_json(self) -> bool;
 }
 
 pub fn json_response<'a, T>(t: &T) -> Response
@@ -61,6 +62,11 @@ impl<'a> RequestUtils for &'a Request + 'a {
             headers: headers,
             body: box MemReader::new(Vec::new()),
         }
+    }
+
+    fn wants_json(self) -> bool {
+        let content = self.headers().find("Accept").unwrap_or(Vec::new());
+        content.iter().any(|s| s.contains("json"))
     }
 }
 
