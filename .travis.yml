@@ -2,10 +2,14 @@ language: rust
 
 before_script:
   - psql -c 'create database cargo_registry_test;' -U postgres
+  - npm install -g phantomjs ember-cli bower
+  - npm install
+  - bower install
 
 script:
   - cargo build
   - cargo test
+  - ember test
 
 addons:
   postgresql: "9.3"
