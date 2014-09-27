@@ -7,10 +7,13 @@ export default Ember.ObjectController.extend({
         download: function(version) {
             this.set('isLoading', true);
             var self = this;
-            var pkg_downloads = this.get('model').get('downloads');
+            var crate_downloads = this.get('model').get('downloads');
             var ver_downloads = version.get('downloads');
-            return ajax(version.get('dl_path')).then(function(data) {
-                self.get('model').set('downloads', pkg_downloads + 1);
+            return ajax({
+                url: version.get('dl_path'),
+                dataType: 'json',
+            }).then(function(data) {
+                self.get('model').set('downloads', crate_downloads + 1);
                 version.set('downloads', ver_downloads + 1);
                 Ember.$('#download-frame').attr('src', data.url);
             }).finally(function() {
