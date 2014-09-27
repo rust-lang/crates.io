@@ -14,7 +14,7 @@ use conduit::{Request, Response};
 
 use app::{App, RequestApp};
 use util::{CargoResult, internal};
-use package::NewPackage;
+use krate::NewCrate;
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     let mut cmd = Command::new("git");
@@ -90,10 +90,10 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
-pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
+pub fn add_crate(app: &App, krate: &NewCrate) -> CargoResult<()> {
     let repo = app.git_repo.lock();
     let repo = &*repo;
-    let name = package.name.as_slice();
+    let name = krate.name.as_slice();
     let repo_path = repo.path().dir_path();
     let dst = match name.len() {
         1 => repo_path.join("1").join(name),
@@ -104,19 +104,19 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
                       .join(name),
     };
 
-    // Attempt to commit the package in a loop. It's possible that we're going
+    // Attempt to commit the crate in a loop. It's possible that we're going
     // to need to rebase our repository, and after that it's possible that we're
     // going to race to commit the changes. For now we just cap out the maximum
     // number of retries at a fixed number.
     for _ in range(0i, 20) {
-        // Add the package to its relevant file
+        // Add the crate to its relevant file
         try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
         let prev = if dst.exists() {
             try!(File::open(&dst).read_to_string())
         } else {
             String::new()
         };
-        let s = json::encode(package);
+        let s = json::encode(krate);
         let new = if prev.len() == 0 {s} else {prev + "\n" + s};
         try!(File::create(&dst).write(new.as_bytes()));
 
@@ -131,7 +131,7 @@ pub fn add_package(app: &App, package: &NewPackage) -> CargoResult<()> {
         let head = try!(repo.head());
         let parent = try!(repo.find_commit(head.target().unwrap()));
         let sig = try!(repo.signature());
-        let msg = format!("Updating package `{}#{}`", package.name, package.vers);
+        let msg = format!("Updating crate `{}#{}`", krate.name, krate.vers);
         try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
                          &tree, &[&parent]));
 

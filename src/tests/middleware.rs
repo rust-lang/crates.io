@@ -4,7 +4,7 @@ use conduit::Request;
 use conduit_middleware::Middleware;
 
 use cargo_registry::db::RequestTransaction;
-use cargo_registry::package::Package;
+use cargo_registry::krate::Crate;
 use cargo_registry::user::User;
 use cargo_registry::version::Version;
 
@@ -21,15 +21,15 @@ impl Middleware for MockUser {
     }
 }
 
-pub struct MockPackage(pub Package);
+pub struct MockCrate(pub Crate);
 
-impl Middleware for MockPackage {
+impl Middleware for MockCrate {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
-        let MockPackage(ref p) = *self;
+        let MockCrate(ref p) = *self;
         let user = req.extensions().find::<User>().unwrap();
-        let pkg = Package::find_or_insert(req.tx().unwrap(), p.name.as_slice(),
+        let krate = Crate::find_or_insert(req.tx().unwrap(), p.name.as_slice(),
                                           user.id).unwrap();
-        Version::insert(req.tx().unwrap(), pkg.id, "1.0.0").unwrap();
+        Version::insert(req.tx().unwrap(), krate.id, "1.0.0").unwrap();
         Ok(())
     }
 }

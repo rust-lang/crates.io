@@ -1,0 +1,22 @@
+===REQUEST 355
+PUT http://alexcrichton-test.s3.amazonaws.com/crate/foo/foo-1.0.0.tar.gz HTTP/1.1
+Accept: */*
+Proxy-Connection: Keep-Alive
+Host: alexcrichton-test.s3.amazonaws.com
+Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:PFYzfsg+qpCkgTNJtS6dwMn27AI=
+Content-Length: 0
+Date: Fri, 26 Sep 2014 20:23:19 -0700
+Content-Type: application/x-tar
+Content-Encoding: gzip
+
+
+===RESPONSE 246
+HTTP/1.1 200
+date: Sat, 27 Sep 2014 03:23:49 GMT
+content-length: 0
+etag: "d41d8cd98f00b204e9800998ecf8427e"
+x-amz-id-2: zutQ6NO0vsAFyO0ld4ZIU1uNbT4KxnuDSOYuwp89hY7rCxGpq2ZMOqclfkXG/rw5
+x-amz-request-id: 397B972C77DE6FEE
+server: AmazonS3
+
+

@@ -43,7 +43,7 @@ pub mod db;
 pub mod dependency;
 pub mod dist;
 pub mod git;
-pub mod package;
+pub mod krate;
 pub mod user;
 pub mod util;
 pub mod version;
@@ -63,18 +63,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/logout", C(user::logout));
     router.get("/me", C(user::me));
     router.put("/me/reset_token", C(user::reset_token));
-    router.get("/packages", C(package::index));
-    router.get("/summary", C(package::summary));
+    router.get("/summary", C(krate::summary));
+    router.get("/crates", C(krate::index));
+    router.get("/crates/:crate_id", C(krate::show));
+    router.put("/crates/new", C(krate::new));
+    router.get("/download/:crate_id/:filename", C(krate::download));
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
-    router.get("/packages/:package_id", C(package::show));
-    router.get("/download/:package_id/:filename", C(package::download));
-    router.put("/packages/:package_id", {
-        let mut m = MiddlewareBuilder::new(C(package::update));
-        m.add(conduit_json_parser::BodyReader::<package::UpdateRequest>);
-        m
-    });
-    router.put("/packages/new", C(package::new));
     router.get("/git/index/*path", C(git::serve_index));
     router.post("/git/index/*path", C(git::serve_index));
 

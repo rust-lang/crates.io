@@ -7,7 +7,7 @@ use std::os;
 use migrate::Migration;
 use postgres::{PostgresTransaction, PostgresResult};
 
-use cargo_registry::package::Package;
+use cargo_registry::krate::Crate;
 
 fn main() {
     let db_config = r2d2::Config {
@@ -74,7 +74,7 @@ fn migrations() -> Vec<Migration> {
         Migration::add_table(20140924114059, "versions", "
             id              SERIAL PRIMARY KEY,
             package_id      INTEGER NOT NULL,
-            num             VARCHAR NOT NULL UNIQUE
+            num             VARCHAR NOT NULL
         "),
         Migration::run(20140924115329,
                        format!("ALTER TABLE versions ADD CONSTRAINT \
@@ -144,7 +144,7 @@ fn migrations() -> Vec<Migration> {
         Migration::new(20140926130045, proc(tx) {
             let stmt = try!(tx.prepare("SELECT * FROM packages"));
             for row in try!(stmt.query(&[])) {
-                let pkg = Package::from_row(&row);
+                let pkg = Crate::from_row(&row);
                 let versions = pkg.versions(tx).unwrap();
                 let v = versions.iter().max_by(|v| &v.num).unwrap();
                 let max = v.num.to_string();
@@ -161,6 +161,17 @@ fn migrations() -> Vec<Migration> {
         }, proc(tx) {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
                              DROP NOT NULL", []));
+            Ok(())
+        }),
+        Migration::new(20140926174020, proc(tx) {
+            try!(tx.execute("ALTER TABLE packages RENAME TO crates", []));
+            try!(tx.execute("ALTER TABLE versions RENAME COLUMN package_id \
+                             TO crate_id", []));
+            Ok(())
+        }, proc(tx) {
+            try!(tx.execute("ALTER TABLE crates RENAME TO packages", []));
+            try!(tx.execute("ALTER TABLE versions RENAME COLUMN crate_id \
+                             TO package_id", []));
             Ok(())
         }),
     ]

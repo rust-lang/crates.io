@@ -41,7 +41,7 @@ macro_rules! ok_resp( ($e:expr) => ({
 }) )
 
 mod middleware;
-mod package;
+mod krate;
 mod user;
 mod record;
 mod git;
@@ -115,8 +115,8 @@ fn user() -> User {
     }
 }
 
-fn package() -> cargo_registry::package::Package {
-    cargo_registry::package::Package {
+fn krate() -> cargo_registry::krate::Crate {
+    cargo_registry::krate::Crate {
         id: 10000,
         name: "foo".to_string(),
         user_id: 100,
