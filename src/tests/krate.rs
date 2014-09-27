@@ -1,6 +1,6 @@
 use std::io::{mod, fs, File};
 use std::io::fs::PathExtensions;
-use serialize::json;
+use serialize::{json, Decoder, Decodable};
 use git2;
 
 use conduit::{mod, Handler, Request};
@@ -15,13 +15,35 @@ struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[deriving(Decodable)]
 struct CrateMeta { total: int }
 #[deriving(Decodable)]
-struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
-#[deriving(Decodable)]
 struct BadCrate { ok: bool, error: String }
 #[deriving(Decodable)]
-struct GoodCrate { ok: bool, krate: EncodableCrate }
-#[deriving(Decodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
+struct GoodCrate { ok: bool, krate: EncodableCrate }
+struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
+
+impl<E, D: Decoder<E>> Decodable<D, E> for CrateResponse {
+    fn decode(d: &mut D) -> Result<CrateResponse, E> {
+        d.read_struct("CrateResponse", 2, |d| {
+            Ok(CrateResponse {
+                krate: try!(d.read_struct_field("crate", 0, Decodable::decode)),
+                versions: try!(d.read_struct_field("versions", 1,
+                                                   Decodable::decode)),
+            })
+        })
+    }
+}
+
+impl<E, D: Decoder<E>> Decodable<D, E> for GoodCrate {
+    fn decode(d: &mut D) -> Result<GoodCrate, E> {
+        d.read_struct("GoodCrate", 2, |d| {
+            Ok(GoodCrate {
+                ok: try!(d.read_struct_field("ok", 0, Decodable::decode)),
+                krate: try!(d.read_struct_field("crate", 1,
+                                                Decodable::decode)),
+            })
+        })
+    }
+}
 
 #[test]
 fn index() {
@@ -61,7 +83,7 @@ fn show() {
     assert_eq!(json.versions[0].id, json.krate.versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
-    let suffix = "/download/foo/foo-1.0.0.tar.gz";
+    let suffix = "/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
 }
@@ -294,9 +316,8 @@ fn download() {
     let krate = ::krate();
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
-    let rel = format!("/{}/{}-1.0.0.tar.gz", krate.name, krate.name);
-    let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
-                                                        .as_slice());
+    let rel = format!("/crates/{}/1.0.0/download", krate.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.val0(), 302);
     {
@@ -315,9 +336,8 @@ fn download_bad() {
     let krate = ::krate();
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
-    let rel = format!("/{}/{}-0.1.0.tar.gz", krate.name, krate.name);
-    let mut req = MockRequest::new(conduit::Get, format!("/download{}", rel)
-                                                        .as_slice());
+    let rel = format!("/crates/{}/0.1.0/download", krate.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<BadCrate>(&mut response);
 }

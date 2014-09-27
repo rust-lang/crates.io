@@ -124,11 +124,11 @@ impl Crate {
     }
 
     pub fn dl_path(&self, version: &str) -> String {
-        format!("/download/{}/{}-{}.tar.gz", self.name, self.name, version)
+        format!("/crates/{}/{}/download", self.name, version)
     }
 
     pub fn s3_path(&self, version: &str) -> String {
-        format!("/crate/{}/{}-{}.tar.gz", self.name, self.name, version)
+        format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
 
     pub fn encode_many(conn: &Connection, crates: Vec<Crate>)
@@ -425,13 +425,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(NewCrate, User)> {
 
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
-    let filename = req.params()["filename"].as_slice();
-    if !filename.starts_with(crate_name) || !filename.ends_with(".tar.gz") {
-        return Err(human("download filename is not a tarball with the crate \
-                          name as a prefix"))
-    }
-    let version = filename.slice(crate_name.len() + 1,
-                                 filename.len() - ".tar.gz".len());
+    let version = req.params()["version"].as_slice();
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT crates.id as crate_id,
                                        versions.id as version_id
@@ -461,7 +455,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                     &[]));
 
     // Now that we've done our business, redirect to the actual data.
-    let redirect_url = format!("https://{}/crate/{}/{}-{}.tar.gz",
+    let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",
                                req.app().bucket.host(),
                                crate_name, crate_name, version);
 
