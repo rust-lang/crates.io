@@ -10,10 +10,8 @@ Router.map(function() {
   this.resource('login');
   this.resource('github_login');
   this.resource('github_authorize', { path: '/authorize/github' });
-  this.resource('packages');
-  this.resource('package', { path: '/packages/:package_id' }, function() {
-    this.route('edit');
-  });
+  this.resource('crates');
+  this.resource('crate', { path: '/crates/:crate_id' });
   this.route('me');
   this.route('download');
   this.route('guide');

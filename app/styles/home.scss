@@ -56,12 +56,12 @@ $home-border: #d5d3cb;
             color: lighten($main-color, 40%);
             font-size: 80%;
         }
-        .downloads, .packages { clear: both; overflow: auto; }
-        .packages { margin-top: 10px; }
+        .downloads, .crates { clear: both; overflow: auto; }
+        .crates { margin-top: 10px; }
     }
 }
 
-#package-lists {
+#crate-lists {
     display: flex;
     flex-direction: row;
 

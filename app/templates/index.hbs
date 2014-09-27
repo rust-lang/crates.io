@@ -1,5 +1,5 @@
 <div id='title-header'>
-    <h1>The Rust community's package hosting service</h1>
+    <h1>The Rust community's crate hosting service</h1>
 
     <div class='links'>
         {{#link-to "download"}}
@@ -15,8 +15,8 @@
 
 <div id='blurb'>
     <div id='intro'>
-        Instantly publish your packages and install them. Use the API to
-        interact and find out more information about available packages. Become
+        Instantly publish your crates and install them. Use the API to
+        interact and find out more information about available crates. Become
         a contributor and enhance the site with your work.
     </div>
 
@@ -26,25 +26,25 @@
             <span class='num'>{{format-num num_downloads}}</span>
             <span class='desc'>Downloads</span>
         </div>
-        <div class='packages'>
-            <img src="assets/package.png"/>
-            <span class='num'>{{format-num num_packages}}</span>
-            <span class='desc'>Packages created</span>
+        <div class='crates'>
+            <img src="assets/crate.png"/>
+            <span class='num'>{{format-num num_crates}}</span>
+            <span class='desc'>Crates created</span>
         </div>
     </div>
 </div>
 
-<div id='package-lists'>
-    <div id='new-packages'>
-        <h2>New Packages</h2>
-        {{render "package-list" new_packages}}
+<div id='crate-lists'>
+    <div id='new-crates'>
+        <h2>New Crates</h2>
+        {{render "crate-list" new_crates}}
     </div>
     <div id='most-downloaded'>
         <h2>Most Downloaded</h2>
-        {{render "package-list" most_downloaded}}
+        {{render "crate-list" most_downloaded}}
     </div>
     <div id='just-updated'>
         <h2>Just Updated</h2>
-        {{render "package-list" just_updated}}
+        {{render "crate-list" just_updated}}
     </div>
 </div>

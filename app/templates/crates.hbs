@@ -1,11 +1,11 @@
-<div id='all-packages'>
-    <img src="assets/package.png"/>
-    <h1>All Packages</h1>
+<div id='all-crates'>
+    <img src="assets/crates.png"/>
+    <h1>All Crates</h1>
     <h2>starting with '{{ letter }}'</h2>
 </div>
 <div id='selection'>
     {{#each alphabet}}
-        {{#link-to 'packages' (query-params letter=this)}}
+        {{#link-to 'crates' (query-params letter=this)}}
             {{ this }}
         {{/link-to}}
     {{/each}}
@@ -21,12 +21,12 @@
     </div>
 </div>
 
-<div id='packages'>
+<div id='crates'>
     {{#each}}
-        <div class='package'>
+        <div class='crate'>
             <div class='desc'>
                 <div class='info'>
-                    {{#link-to "package" this}}{{ name }}{{/link-to}}
+                    {{#link-to "crate" this}}{{ name }}{{/link-to}}
                     <span class='vers'>{{ max_version }}</span>
                 </div>
                 <div class='summary'>
@@ -44,9 +44,9 @@
 </div>
 
 <div class='pagination'>
-    {{#linkTo 'packages' (query-params page=prevPage) class="prev"}}Prev{{/linkTo}}
+    {{#linkTo 'crates' (query-params page=prevPage) class="prev"}}Prev{{/linkTo}}
     {{#each pages}}
-        {{#link-to 'packages' (query-params page=this)}}{{ this }}{{/link-to}}
+        {{#link-to 'crates' (query-params page=this)}}{{ this }}{{/link-to}}
     {{/each}}
-    {{#linkTo 'packages' (query-params page=nextPage) class="next"}}Next{{/linkTo}}
+    {{#linkTo 'crates' (query-params page=nextPage) class="next"}}Next{{/linkTo}}
 </div>

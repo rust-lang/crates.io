@@ -7,6 +7,6 @@ export default Ember.Route.extend({
     },
 
     model: function(params) {
-        return this.store.find('package', params);
+        return this.store.find('crate', params);
     },
 });

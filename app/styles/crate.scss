@@ -1,4 +1,4 @@
-#all-packages {
+#all-crates {
     width: 100%;
     padding: 20px;
     background-color: $main-bg-dark;
@@ -48,7 +48,7 @@
     .cur, .total { color: $main-color; font-weight: bold; }
 }
 
-#packages {
+#crates {
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@
     margin-bottom: 20px;
 }
 
-.package {
+.crate {
     width: 100%;
     display: flex;
     border-bottom: 2px solid #d5d3cb;

@@ -5,16 +5,15 @@ export default Ember.Route.extend({
   model: function() {
     var self = this;
 
-    var addPackages = function(pkgs) {
-        for (var i = 0; i < pkgs.length; i++) {
-            pkgs[i] = self.store.push('package', pkgs[i]);
+    var addCrates = function(crates) {
+        for (var i = 0; i < crates.length; i++) {
+            crates[i] = self.store.push('crate', crates[i]);
         }
     };
     return ajax('/summary').then(function(data) {
-        addPackages(data.new_packages);
-        addPackages(data.most_downloaded);
-        addPackages(data.just_updated);
-        console.log(data.new_packages);
+        addCrates(data.new_crates);
+        addCrates(data.most_downloaded);
+        addCrates(data.just_updated);
         return data;
     });
   }
