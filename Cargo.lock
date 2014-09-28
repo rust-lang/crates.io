@@ -18,7 +18,7 @@ dependencies = [
  "migrate 0.1.0",
  "oauth2 0.0.1 (git+https://github.com/alexcrichton/oauth2-rs#6d674a11399f0c1e5bc7cca12f703e9d96482c08)",
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f3786e3e006ba5c15701deafcff797e418d79588)",
- "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#0594d2b7a9b3bdf5f7e9675a671bdc938d1e21e0)",
+ "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#433cf2bbe95997eb3553e1758f393830314b7ed9)",
  "r2d2_postgres 0.0.0 (git+https://github.com/alexcrichton/r2d2-postgres?ref=alexcrichton#21d38db7060d9e920c8fffe3f7c010b42c82833e)",
  "s3 0.0.1",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver#c88a711f543c57368be347686a549aa4254ec48f)",
@@ -199,7 +199,7 @@ source = "git+https://github.com/alexcrichton/link-config#1d3cd271612036b47c015a
 name = "migrate"
 version = "0.1.0"
 dependencies = [
- "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#0594d2b7a9b3bdf5f7e9675a671bdc938d1e21e0)",
+ "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#433cf2bbe95997eb3553e1758f393830314b7ed9)",
 ]
 
 [[package]]
@@ -239,7 +239,7 @@ source = "git+https://github.com/sfackler/rust-phf#06254fdde7708630a6397c41c6c17
 [[package]]
 name = "postgres"
 version = "0.0.0"
-source = "git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#0594d2b7a9b3bdf5f7e9675a671bdc938d1e21e0"
+source = "git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#433cf2bbe95997eb3553e1758f393830314b7ed9"
 dependencies = [
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f3786e3e006ba5c15701deafcff797e418d79588)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#06254fdde7708630a6397c41c6c17ef81a4b66a0)",
@@ -257,7 +257,7 @@ name = "r2d2_postgres"
 version = "0.0.0"
 source = "git+https://github.com/alexcrichton/r2d2-postgres?ref=alexcrichton#21d38db7060d9e920c8fffe3f7c010b42c82833e"
 dependencies = [
- "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#0594d2b7a9b3bdf5f7e9675a671bdc938d1e21e0)",
+ "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#433cf2bbe95997eb3553e1758f393830314b7ed9)",
  "r2d2 0.0.0 (git+https://github.com/sfackler/r2d2#45053ff8dd74427975e8f17ec0a215eca16b6ed7)",
 ]
 
