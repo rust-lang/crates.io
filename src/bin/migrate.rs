@@ -189,5 +189,13 @@ fn migrations() -> Vec<Migration> {
         Migration::run(20140929103753,
                        "CREATE INDEX version_num ON versions (num)",
                        "DROP INDEX version_num"),
+        Migration::run(20140929103754,
+                       "CREATE INDEX version_dependencies_version_id \
+                        ON version_dependencies (version_id)",
+                       "DROP INDEX version_dependencies_version_id"),
+        Migration::run(20140929103755,
+                       "CREATE INDEX version_dependencies_depends_on_id \
+                        ON version_dependencies (depends_on_id)",
+                       "DROP INDEX version_dependencies_depends_on_id"),
     ]
 }
