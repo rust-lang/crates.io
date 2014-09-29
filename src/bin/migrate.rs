@@ -174,5 +174,14 @@ fn migrations() -> Vec<Migration> {
                              TO package_id", []));
             Ok(())
         }),
+        Migration::run(20140929103749,
+                       "CREATE INDEX crate_updated_at ON crates (updated_at)".to_string(),
+                       "DROP INDEX crate_updated_at".to_string()),
+        Migration::run(20140929103750,
+                       "CREATE INDEX crate_created_at ON crates (created_at)".to_string(),
+                       "DROP INDEX crate_created_at".to_string()),
+        Migration::run(20140929103751,
+                       "CREATE INDEX crate_downloads ON crates (downloads)".to_string(),
+                       "DROP INDEX crate_downloads".to_string()),
     ]
 }
