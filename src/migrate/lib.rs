@@ -26,8 +26,9 @@ impl Migration {
         }
     }
 
-    pub fn run(version: i64, up: String, down: String) -> Migration {
-        Migration::new(version, run(up), run(down))
+    pub fn run<T: Str>(version: i64, up: T, down: T) -> Migration {
+        Migration::new(version, run(up.as_slice().to_string()),
+                       run(down.as_slice().to_string()))
     }
 
     pub fn add_table(version: i64, table: &str, rest: &str) -> Migration {
