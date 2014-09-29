@@ -4,6 +4,7 @@ extern crate postgres;
 extern crate r2d2;
 
 use std::os;
+use std::collections::HashSet;
 use migrate::Migration;
 use postgres::{PostgresTransaction, PostgresResult};
 
@@ -59,7 +60,7 @@ fn rollback(tx: PostgresTransaction,
 
 fn migrations() -> Vec<Migration> {
     // Generate a new id via `date +"%Y%m%d%H%M%S"`
-    vec![
+    let migrations = vec![
         Migration::add_table(20140924113530, "users", "
             id              SERIAL PRIMARY KEY,
             email           VARCHAR NOT NULL UNIQUE,
@@ -175,27 +176,73 @@ fn migrations() -> Vec<Migration> {
             Ok(())
         }),
         Migration::run(20140929103749,
-                       "CREATE INDEX crate_updated_at ON crates (updated_at)",
-                       "DROP INDEX crate_updated_at"),
+                       "CREATE INDEX index_crate_updated_at ON crates (updated_at)",
+                       "DROP INDEX index_crate_updated_at"),
         Migration::run(20140929103750,
-                       "CREATE INDEX crate_created_at ON crates (created_at)",
-                       "DROP INDEX crate_created_at"),
+                       "CREATE INDEX index_crate_created_at ON crates (created_at)",
+                       "DROP INDEX index_crate_created_at"),
         Migration::run(20140929103751,
-                       "CREATE INDEX crate_downloads ON crates (downloads)",
-                       "DROP INDEX crate_downloads"),
+                       "CREATE INDEX index_crate_downloads ON crates (downloads)",
+                       "DROP INDEX index_crate_downloads"),
         Migration::run(20140929103752,
-                       "CREATE INDEX version_crate_id ON versions (crate_id)",
-                       "DROP INDEX version_crate_id"),
+                       "CREATE INDEX index_version_crate_id ON versions (crate_id)",
+                       "DROP INDEX index_version_crate_id"),
         Migration::run(20140929103753,
-                       "CREATE INDEX version_num ON versions (num)",
-                       "DROP INDEX version_num"),
+                       "CREATE INDEX index_version_num ON versions (num)",
+                       "DROP INDEX index_version_num"),
         Migration::run(20140929103754,
-                       "CREATE INDEX version_dependencies_version_id \
+                       "CREATE INDEX index_version_dependencies_version_id \
                         ON version_dependencies (version_id)",
-                       "DROP INDEX version_dependencies_version_id"),
+                       "DROP INDEX index_version_dependencies_version_id"),
         Migration::run(20140929103755,
-                       "CREATE INDEX version_dependencies_depends_on_id \
+                       "CREATE INDEX index_version_dependencies_depends_on_id \
                         ON version_dependencies (depends_on_id)",
-                       "DROP INDEX version_dependencies_depends_on_id"),
-    ]
+                       "DROP INDEX index_version_dependencies_depends_on_id"),
+        Migration::add_table(20140929103756, "crate_downloads", "
+            crate_id        INTEGER NOT NULL,
+            downloads       INTEGER NOT NULL,
+            date            TIMESTAMP NOT NULL,
+            processed       BOOLEAN NOT NULL
+        "),
+        Migration::run(20140929103757,
+                       "CREATE INDEX index_crate_downloads_crate_id \
+                        ON crate_downloads (crate_id)",
+                       "DROP INDEX index_crate_downloads_crate_id"),
+        Migration::run(20140929103758,
+                       "CREATE INDEX index_crate_downloads_date \
+                        ON crate_downloads (date(date))",
+                       "DROP INDEX index_crate_downloads_date"),
+        Migration::add_table(20140929103759, "version_downloads", "
+            version_id      INTEGER NOT NULL,
+            downloads       INTEGER NOT NULL,
+            date            TIMESTAMP NOT NULL,
+            processed       BOOLEAN NOT NULL
+        "),
+        Migration::run(20140929103760,
+                       "CREATE INDEX index_version_downloads_version_id \
+                        ON version_downloads (version_id)",
+                       "DROP INDEX index_version_downloads_version_id"),
+        Migration::run(20140929103761,
+                       "CREATE INDEX index_version_downloads_date \
+                        ON version_downloads (date(date))",
+                       "DROP INDEX index_version_downloads_date"),
+        Migration::run(20140929103762,
+                       "CREATE INDEX index_crate_downloads_processed \
+                        ON crate_downloads (processed)
+                        WHERE processed = FALSE",
+                       "DROP INDEX index_crate_downloads_processed"),
+        Migration::run(20140929103763,
+                       "CREATE INDEX index_version_downloads_processed \
+                        ON version_downloads (processed)
+                        WHERE processed = FALSE",
+                       "DROP INDEX index_version_downloads_processed"),
+    ];
+
+    let mut seen = HashSet::new();
+    for m in migrations.iter() {
+        if !seen.insert(m.version()) {
+            fail!("duplicate id: {}", m.version());
+        }
+    }
+    return migrations;
 }
