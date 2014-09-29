@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::sync::Arc;
 use serialize::json;
 use serialize::hex::ToHex;
@@ -141,8 +141,10 @@ impl Crate {
                                               WHERE crate_id = ANY({})",
                                              query).as_slice()));
         for row in try!(stmt.query(&[])) {
-            map.find_or_insert(row.get("crate_id"), Vec::new())
-               .push(row.get("id"));
+            match map.entry(row.get("crate_id")) {
+                Occupied(e) => e.into_mut(),
+                Vacant(e) => e.set(Vec::new()),
+            }.push(row.get("id"));
         }
 
         Ok(crates.into_iter().map(|p| {

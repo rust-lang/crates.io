@@ -1,5 +1,5 @@
 use std::ascii::StrAsciiExt;
-use std::collections::HashMap;
+use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::io::fs::PathExtensions;
 use std::io::util;
 use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
@@ -60,7 +60,10 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let key = parts.next().unwrap();
         let value = parts.next().unwrap();
         let value = value.slice(1, value.len() - 2);
-        headers.find_or_insert(key.to_string(), Vec::new()).push(value.to_string());
+        match headers.entry(key.to_string()) {
+            Occupied(e) => e.into_mut(),
+            Vacant(e) => e.set(Vec::new()),
+        }.push(value.to_string());
     }
 
     let (status_code, status_desc) = {
