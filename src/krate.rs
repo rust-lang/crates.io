@@ -146,7 +146,7 @@ impl Crate {
 
         let mut map = {
             let mut query = MemWriter::new();
-            let _ = write!(query, "INSERT INTO crateids (id) VALUES (");
+            let _ = write!(query, "INSERT INTO crateids (id) VALUES ");
             let mut crateids: Vec<&ToSql> = vec![];
             let mut first = true;
             for (i, krate) in crates.iter().enumerate() {
@@ -154,10 +154,9 @@ impl Crate {
                     let _ = write!(query, ", ");
                 }
                 first = false;
-                let _ = write!(query, "${}", i+1);
+                let _ = write!(query, "(${})", i+1);
                 crateids.push(&krate.id);
             }
-            let _ = write!(query, ")");
             let query = String::from_utf8(query.unwrap()).unwrap();
             try!(trans.execute(query.as_slice(), crateids.as_slice()));
 
