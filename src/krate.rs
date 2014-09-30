@@ -160,8 +160,8 @@ impl Crate {
             let query = String::from_utf8(query.unwrap()).unwrap();
             try!(trans.execute(query.as_slice(), crateids.as_slice()));
 
-            let stmt = try!(conn.prepare("SELECT v.id, v.crate_id FROM versions v
-                                          INNER JOIN crateids c ON v.id = c.id"));
+            let stmt = try!(trans.prepare("SELECT v.id, v.crate_id FROM versions v
+                                           INNER JOIN crateids c ON v.id = c.id"));
 
             let mut map = HashMap::new();
             for row in try!(stmt.query(&[])) {
