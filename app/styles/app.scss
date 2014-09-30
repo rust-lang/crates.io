@@ -14,7 +14,7 @@ $main-bg-dark: #edebdd;
 }
 
 html {
-    background: url(noise.png);
+    background: url('/assets/noise.png');
     background-color: $html-bg;
 }
 
@@ -74,7 +74,7 @@ body {
         border: none;
         margin-left: 30px;
         padding: 5px 5px 5px 25px;
-        background-image: url(search.png);
+        background-image: url('/assets/search.png');
         background-repeat: no-repeat;
         background-position: 6px 6px;
         @include border-radius(15px);
