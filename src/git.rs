@@ -14,7 +14,15 @@ use conduit::{Request, Response};
 
 use app::{App, RequestApp};
 use util::{CargoResult, internal};
-use krate::NewCrate;
+
+#[deriving(Encodable)]
+pub struct GitCrate {
+    pub name: String,
+    pub vers: String,
+    pub deps: Vec<String>,
+    pub cksum: String,
+    pub features: HashMap<String, Vec<String>>,
+}
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     let mut cmd = Command::new("git");
@@ -93,7 +101,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
-pub fn add_crate(app: &App, krate: &NewCrate) -> CargoResult<()> {
+pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
     let repo = app.git_repo.lock();
     let repo = &*repo;
     let name = krate.name.as_slice();

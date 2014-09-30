@@ -9,6 +9,7 @@ use migrate::Migration;
 use postgres::{PostgresTransaction, PostgresResult};
 
 use cargo_registry::krate::Crate;
+use cargo_registry::model::Model;
 
 fn main() {
     let db_config = r2d2::Config {
@@ -145,7 +146,7 @@ fn migrations() -> Vec<Migration> {
         Migration::new(20140926130045, proc(tx) {
             let stmt = try!(tx.prepare("SELECT * FROM packages"));
             for row in try!(stmt.query(&[])) {
-                let pkg = Crate::from_row(&row);
+                let pkg: Crate = Model::from_row(&row);
                 let versions = pkg.versions(tx).unwrap();
                 let v = versions.iter().max_by(|v| &v.num).unwrap();
                 let max = v.num.to_string();
@@ -237,6 +238,22 @@ fn migrations() -> Vec<Migration> {
                        "CREATE INDEX index_crates_name_search \
                         ON crates USING gin(to_tsvector('english', name))",
                        "DROP INDEX index_crates_name_search"),
+        Migration::run(20140930082104,
+                       "DROP TABLE version_dependencies",
+                       "CREATE TABLE version_dependencies (
+                            version_id INTEGER
+                        )"),
+        Migration::add_table(20140930082105, "dependencies", "
+            id              SERIAL PRIMARY KEY,
+            version_id      INTEGER NOT NULL,
+            crate_id        INTEGER NOT NULL,
+            req             VARCHAR NOT NULL,
+            optional        BOOLEAN NOT NULL,
+            defaults        BOOLEAN NOT NULL,
+            features        VARCHAR NOT NULL
+        "),
+        Migration::add_column(20140930085441, "versions", "features",
+                              "VARCHAR"),
     ];
 
     let mut seen = HashSet::new();

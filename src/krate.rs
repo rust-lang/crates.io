@@ -1,7 +1,7 @@
 use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::sync::Arc;
-use serialize::json;
 use serialize::hex::ToHex;
+use serialize::json;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -13,13 +13,14 @@ use semver;
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
-use dependency::Dependency;
 use git;
 use user::User;
+use upload;
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
 use util::{LimitErrorReader, HashingReader};
 use util::errors::{NotFound, CargoError};
 use version::{Version, EncodableVersion};
+use model::Model;
 
 #[deriving(Clone)]
 pub struct Crate {
@@ -44,33 +45,15 @@ pub struct EncodableCrate {
 }
 
 impl Crate {
-    pub fn from_row(row: &PostgresRow) -> Crate {
-        let max: String = row.get("max_version");
-        Crate {
-            id: row.get("id"),
-            name: row.get("name"),
-            user_id: row.get("user_id"),
-            updated_at: row.get("updated_at"),
-            created_at: row.get("created_at"),
-            downloads: row.get("downloads"),
-            max_version: semver::Version::parse(max.as_slice()).unwrap(),
-        }
-    }
-
     pub fn find(conn: &Connection, id: i32) -> CargoResult<Crate> {
-        let stmt = try!(conn.prepare("SELECT * FROM crates \
-                                      WHERE id = $1"));
-        match try!(stmt.query(&[&id])).next() {
-            Some(row) => Ok(Crate::from_row(&row)),
-            None => Err(NotFound.box_error()),
-        }
+        Model::find(conn, id)
     }
 
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE name = $1 LIMIT 1"));
         match try!(stmt.query(&[&name as &ToSql])).next() {
-            Some(row) => Ok(Crate::from_row(&row)),
+            Some(row) => Ok(Model::from_row(&row)),
             None => Err(NotFound.box_error()),
         }
     }
@@ -82,7 +65,7 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM crates WHERE name = $1"));
         let mut rows = try!(stmt.query(&[&name as &ToSql]));
         match rows.next() {
-            Some(row) => return Ok(Crate::from_row(&row)),
+            Some(row) => return Ok(Model::from_row(&row)),
             None => {}
         }
         let stmt = try!(conn.prepare("INSERT INTO crates \
@@ -92,7 +75,7 @@ impl Crate {
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
-        Ok(Crate::from_row(&try!(rows.next().require(|| {
+        Ok(Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
         }))))
     }
@@ -120,7 +103,7 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
-        Ok(rows.map(|r| Version::from_row(&r)).collect())
+        Ok(rows.map(|r| Model::from_row(&r)).collect())
     }
 
     pub fn dl_path(&self, version: &str) -> String {
@@ -153,16 +136,40 @@ impl Crate {
         }).collect())
     }
 
-    pub fn add_version(&self, conn: &Connection, num: &str)
+    pub fn add_version(&mut self, conn: &Connection, ver: &semver::Version,
+                       features: &HashMap<String, Vec<String>>)
                        -> CargoResult<Version> {
-        let ver = semver::Version::parse(num).unwrap();
-        let max = if ver > self.max_version {&ver} else {&self.max_version};
-        let max = max.to_string();
+        match try!(Version::find_by_num(conn, self.id, ver)) {
+            Some(..) => {
+                return Err(human(format!("crate version `{}` is already uploaded",
+                                         ver)))
+            }
+            None => {}
+        }
+        if *ver > self.max_version { self.max_version = ver.clone(); }
+        self.updated_at = ::now();
         try!(conn.execute("UPDATE crates SET updated_at = $1, max_version = $2
                            WHERE id = $3",
-                          &[&::now(), &max, &self.id]));
-        Version::insert(conn, self.id, num)
+                          &[&self.updated_at, &self.max_version.to_string(),
+                            &self.id]));
+        Version::insert(conn, self.id, ver, features)
     }
+}
+
+impl Model for Crate {
+    fn from_row(row: &PostgresRow) -> Crate {
+        let max: String = row.get("max_version");
+        Crate {
+            id: row.get("id"),
+            name: row.get("name"),
+            user_id: row.get("user_id"),
+            updated_at: row.get("updated_at"),
+            created_at: row.get("created_at"),
+            downloads: row.get("downloads"),
+            max_version: semver::Version::parse(max.as_slice()).unwrap(),
+        }
+    }
+    fn table_name(_: Option<Crate>) -> &'static str { "crates" }
 }
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
@@ -210,7 +217,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let stmt = try!(conn.prepare(q));
     let mut crates = Vec::new();
     for row in try!(stmt.query(args.as_slice())) {
-        crates.push(Crate::from_row(&row));
+        crates.push(Model::from_row(&row));
     }
     let crates = try!(Crate::encode_many(conn, crates));
 
@@ -246,7 +253,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
     let to_crates = |stmt: PostgresStatement| {
         let rows = try!(stmt.query([]));
-        Crate::encode_many(tx, rows.map(|r| Crate::from_row(&r)).collect())
+        Crate::encode_many(tx, rows.map(|r| Model::from_row(&r)).collect())
     };
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
                                         ORDER BY created_at DESC LIMIT 10"));
@@ -285,48 +292,31 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         versions: versions.into_iter().map(|v| v.encodable(&krate)).collect(),
     }))
 }
-#[deriving(Encodable)]
-pub struct NewCrate {
-    pub name: String,
-    pub vers: String,
-    pub deps: Vec<Dependency>,
-    pub cksum: String,
-    pub features: HashMap<String, Vec<String>>,
-}
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
 
-    let (mut new_crate, user) = try!(parse_new_headers(req));
+    let (new_crate, user) = try!(parse_new_headers(req));
+    let name = new_crate.name.as_slice();
+    let vers = &*new_crate.vers;
+    let features = new_crate.features.iter().map(|(k, v)| {
+        ((**k).to_string(), v.iter().map(|v| (**v).to_string()).collect())
+    }).collect::<HashMap<String, Vec<String>>>();
 
     // Persist the new crate, if it doesn't already exist
-    let krate = try!(Crate::find_or_insert(try!(req.tx()),
-                                           new_crate.name.as_slice(),
-                                           user.id));
+    let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id));
     if krate.user_id != user.id {
         return Err(human("crate name has already been claimed by another user"))
     }
 
     // Persist the new version of this crate
-    match try!(Version::find_by_num(try!(req.tx()), krate.id,
-                                    new_crate.vers.as_slice())) {
-        Some(..) => {
-            return Err(human(format!("crate version `{}` is already uploaded",
-                                     new_crate.vers)))
-        }
-        None => {}
-    }
-    let vers = try!(krate.add_version(try!(req.tx()), new_crate.vers.as_slice()));
+    let mut version = try!(krate.add_version(try!(req.tx()), vers, &features));
 
     // Link this new version to all dependencies
+    let mut deps = Vec::new();
     for dep in new_crate.deps.iter() {
-        let tx = try!(req.tx());
-        let krate = try!(Crate::find_by_name(tx, dep.name.as_slice()).map_err(|_| {
-            human(format!("no known crate named `{}`", dep.name))
-        }));
-        try!(tx.execute("INSERT INTO version_dependencies \
-                         (version_id, depends_on_id) VALUES ($1, $2)",
-                        &[&vers.id, &krate.id]));
+        let (dep, krate) = try!(version.add_dependency(try!(req.tx()), dep));
+        deps.push(dep.git_encode(krate.name.as_slice()));
     }
 
     // Upload the crate to S3
@@ -335,15 +325,15 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         Some(ref proxy) => handle.proxy(proxy.as_slice()),
         None => handle,
     };
-    let path = krate.s3_path(new_crate.vers.as_slice());
+    let path = krate.s3_path(vers.to_string().as_slice());
     let (resp, cksum) = {
-        let length = req.content_length().unwrap();
+        let length = try!(req.body().read_le_u32());
         let body = LimitErrorReader::new(req.body(), app.config.max_upload_size);
         let mut body = HashingReader::new(body);
         let resp = {
             let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
                                        "application/x-tar")
-                                  .content_length(length)
+                                  .content_length(length as uint)
                                   .header("Content-Encoding", "gzip");
             try!(s3req.exec().chain_error(|| {
                 internal(format!("failed to upload to S3: `{}`", path))
@@ -351,7 +341,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         };
         (resp, body.final())
     };
-    new_crate.cksum = cksum.as_slice().to_hex();
     if resp.get_code() != 200 {
         return Err(internal(format!("failed to get a 200 response from S3: {}",
                                     resp)))
@@ -375,10 +364,15 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let mut bomb = Bomb { app: app.clone(), path: Some(path), handle: handle };
 
     // Register this crate in our local git repo.
-    let krate = try!(Crate::find_by_name(try!(req.tx()),
-                                         new_crate.name.as_slice()));
-    try!(git::add_crate(&**req.app(), &new_crate).chain_error(|| {
-        internal(format!("could not add crate `{}` to the git repo", krate.name))
+    let git_crate = git::GitCrate {
+        name: name.to_string(),
+        vers: vers.to_string(),
+        cksum: cksum.as_slice().to_hex(),
+        features: features,
+        deps: deps,
+    };
+    try!(git::add_crate(&**req.app(), &git_crate).chain_error(|| {
+        internal(format!("could not add crate `{}` to the git repo", name))
     }));
 
     // Now that we've come this far, we're committed!
@@ -389,43 +383,32 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true, krate: krate.encodable(Vec::new()) }))
 }
 
-fn parse_new_headers(req: &mut Request) -> CargoResult<(NewCrate, User)> {
-    // Peel out all input parameters
-    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
-        req.headers().find(hdr).require(|| {
-            human(format!("missing header: {}", hdr))
-        })
-    }
-    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
-    let name = try!(header(req, "X-Cargo-Crate-Name"))[0].to_string();
-    let vers = try!(header(req, "X-Cargo-Crate-Version"))[0].to_string();
-    let feat = try!(header(req, "X-Cargo-Crate-Feature"))[0].to_string();
-    let deps = try!(req.headers().find("X-Cargo-Crate-Dep").unwrap_or(Vec::new())
-                       .iter().flat_map(|s| s.as_slice().split(';'))
-                       .map(Dependency::parse)
-                       .collect::<CargoResult<Vec<_>>>());
-    let feat = match json::decode(feat.as_slice()) {
-        Ok(map) => map,
-        Err(..) => return Err(human("malformed feature header")),
-    };
-
+fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
     // Make sure the tarball being uploaded looks sane
     let length = try!(req.content_length().require(|| {
         human("missing header: Content-Length")
     }));
     let max = req.app().config.max_upload_size;
     if length > max { return Err(human(format!("max upload size is: {}", max))) }
-    {
-        let ty = try!(header(req, "Content-Type"))[0];
-        if ty != "application/x-tar" {
-            return Err(human(format!("expected `application/x-tar`, \
-                                      found `{}`", ty)))
-        }
-        let enc = try!(header(req, "Content-Encoding"))[0];
-        if enc != "gzip" && enc != "x-gzip" {
-            return Err(human(format!("expected `gzip`, found `{}`", enc)))
-        }
+
+    // Read the json upload request
+    let amt = try!(req.body().read_le_u32()) as uint;
+    if amt > max { return Err(human(format!("max upload size is: {}", max))) }
+    let json = try!(req.body().read_exact(amt));
+    let json = try!(String::from_utf8(json).map_err(|_| {
+        human("json body was not valid utf-8")
+    }));
+    let new: upload::NewCrate = try!(json::decode(json.as_slice()).map_err(|e| {
+        human(format!("invalid upload request: {}", e))
+    }));
+
+    // Peel out authentication
+    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
+        req.headers().find(hdr).require(|| {
+            human(format!("missing header: {}", hdr))
+        })
     }
+    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
 
     // Make sure the api token is a valid api token
     let user = try!(User::find_by_api_token(try!(req.tx()),
@@ -433,21 +416,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(NewCrate, User)> {
         human("invalid or unknown auth token supplied")
     }));
 
-    // Validate the name parameter and such
-    let new_crate = NewCrate {
-        name: name.as_slice().chars().map(|c| c.to_lowercase()).collect(),
-        vers: vers,
-        deps: deps,
-        features: feat,
-        cksum: String::new(),
-    };
-    if !Crate::valid_name(new_crate.name.as_slice()) {
-        return Err(human(format!("invalid crate name: `{}`", new_crate.name)))
-    }
-    if !Version::valid(new_crate.vers.as_slice()) {
-        return Err(human(format!("invalid crate version: `{}`", new_crate.vers)))
-    }
-    Ok((new_crate, user))
+    Ok((new, user))
 }
 
 pub fn download(req: &mut Request) -> CargoResult<Response> {

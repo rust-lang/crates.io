@@ -1,14 +1,17 @@
-use std::io::{mod, fs, File};
+use std::io::{mod, fs, File, MemWriter};
 use std::io::fs::PathExtensions;
+use std::collections::HashMap;
 use serialize::{json, Decoder, Decodable};
-use git2;
 
 use conduit::{mod, Handler, Request};
 use conduit_test::MockRequest;
+use git2;
+use semver;
 
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::krate::{EncodableCrate, Crate};
 use cargo_registry::version::EncodableVersion;
+use cargo_registry::upload as u;
 
 #[deriving(Decodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
@@ -136,17 +139,24 @@ fn show() {
             "bad suffix {}", json.versions[0].dl_path);
 }
 
-fn new_req(api_token: &str, krate: &str, version: &str, deps: &[&str])
-           -> MockRequest {
+fn new_req(api_token: &str, krate: &str, version: &str,
+           deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = MockRequest::new(conduit::Put, "/crates/new");
-    req.header("X-Cargo-Auth", api_token)
-       .header("X-Cargo-Crate-Name", krate)
-       .header("X-Cargo-Crate-Version", version)
-       .header("X-Cargo-Crate-Feature", "{}")
-       .with_body("")
-       .header("Content-Type", "application/x-tar")
-       .header("Content-Encoding", "x-gzip");
-    drop(deps);
+    req.header("X-Cargo-Auth", api_token);
+
+    let json = u::NewCrate {
+        name: u::CrateName(krate.to_string()),
+        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+        features: HashMap::new(),
+        deps: deps,
+    };
+    let json = json::encode(&json);
+    let mut body = MemWriter::new();
+    println!("{} {}", json.len(), json);
+    body.write_le_u32(json.len() as u32).unwrap();
+    body.write_str(json.as_slice()).unwrap();
+    body.write_le_u32(0).unwrap();
+    req.with_body(body.unwrap().as_slice());
     return req;
 }
 
@@ -154,7 +164,7 @@ fn new_req(api_token: &str, krate: &str, version: &str, deps: &[&str])
 fn new_wrong_token() {
     let (_b, _app, mut middle) = ::app();
     middle.add(::middleware::MockUser(::user()));
-    let mut req = new_req("wrong-token", "foo", "1.0.0", []);
+    let mut req = new_req("wrong-token", "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: BadCrate = ::json(&mut response);
     assert!(!json.ok);
@@ -166,7 +176,7 @@ fn new_bad_names() {
         let (_b, _app, mut middle) = ::app();
         let user = ::user();
         middle.add(::middleware::MockUser(user.clone()));
-        let mut req = new_req(user.api_token.as_slice(), name, "1.0.0", []);
+        let mut req = new_req(user.api_token.as_slice(), name, "1.0.0", Vec::new());
         let mut response = ok_resp!(middle.call(&mut req));
         let json: BadCrate = ::json(&mut response);
         assert!(!json.ok);
@@ -179,24 +189,11 @@ fn new_bad_names() {
 }
 
 #[test]
-fn new_bad_versions() {
-    let (_b, _app, mut middle) = ::app();
-    let user = ::user();
-    middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0", []);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: BadCrate = ::json(&mut response);
-    assert!(!json.ok);
-    assert!(json.error.as_slice().contains("invalid crate version"),
-            "{}", json.error);
-}
-
-#[test]
 fn new_krate() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert!(json.ok);
@@ -213,7 +210,7 @@ fn new_krate_twice() {
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = new_req(user.api_token.as_slice(),
                           krate.name.as_slice(),
-                          "2.0.0", []);
+                          "2.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert!(json.ok);
@@ -235,7 +232,7 @@ fn new_krate_wrong_user() {
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = new_req(u1.api_token.as_slice(),
                           krate.name.as_slice(),
-                          "2.0.0", []);
+                          "2.0.0", Vec::new());
     let mut response = t_resp!(middle.call(&mut req));
     let json: BadCrate = ::json(&mut response);
     assert!(!json.ok);
@@ -247,7 +244,7 @@ fn new_krate_too_big() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     req.with_body("a".repeat(1000 * 1000).as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: BadCrate = ::json(&mut response);
@@ -263,7 +260,7 @@ fn new_krate_duplicate_version() {
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = new_req(user.api_token.as_slice(),
                           krate.name.as_slice(),
-                          "1.0.0", []);
+                          "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: BadCrate = ::json(&mut response);
     assert!(!json.ok);
@@ -275,7 +272,7 @@ fn new_krate_git_upload() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
@@ -301,7 +298,7 @@ fn new_krate_git_upload_appends() {
     ).unwrap();
 
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
@@ -334,7 +331,7 @@ fn new_krate_git_upload_with_conflicts() {
     }
 
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 }
@@ -344,8 +341,14 @@ fn new_krate_dependency_missing() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
-    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", []);
-    req.header("X-Cargo-Crate-Dep", "bar||>=1.0.0");
+    let dep = u::CrateDependency {
+        optional: false,
+        default_features: true,
+        name: u::CrateName("bar".to_string()),
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0.0.0").unwrap()),
+    };
+    let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", vec![dep]);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<BadCrate>(&mut response);
 }

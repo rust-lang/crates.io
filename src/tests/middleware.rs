@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use std::fmt::Show;
 
 use conduit::Request;
 use conduit_middleware::Middleware;
+use semver;
 
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::krate::Crate;
@@ -29,7 +31,9 @@ impl Middleware for MockCrate {
         let user = req.extensions().find::<User>().unwrap();
         let krate = Crate::find_or_insert(req.tx().unwrap(), p.name.as_slice(),
                                           user.id).unwrap();
-        Version::insert(req.tx().unwrap(), krate.id, "1.0.0").unwrap();
+        Version::insert(req.tx().unwrap(), krate.id,
+                        &semver::Version::parse("1.0.0").unwrap(),
+                        &HashMap::new()).unwrap();
         Ok(())
     }
 }

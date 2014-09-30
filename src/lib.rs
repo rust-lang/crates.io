@@ -25,8 +25,13 @@ extern crate "conduit-log-requests" as conduit_log_requests;
 extern crate "conduit-static" as conduit_static;
 extern crate "conduit-json-parser" as conduit_json_parser;
 
-pub use config::Config;
 pub use app::App;
+pub use config::Config;
+pub use self::dependency::Dependency;
+pub use self::download::{CrateDownload, VersionDownload};
+pub use self::krate::Crate;
+pub use self::model::Model;
+pub use self::version::Version;
 
 use std::sync::Arc;
 
@@ -48,6 +53,8 @@ pub mod user;
 pub mod util;
 pub mod version;
 pub mod download;
+pub mod upload;
+pub mod model;
 
 #[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {

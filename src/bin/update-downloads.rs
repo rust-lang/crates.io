@@ -1,5 +1,6 @@
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
+extern crate semver;
 extern crate time;
 
 use std::os;
@@ -8,8 +9,7 @@ use std::time::Duration;
 use postgres::{PostgresResult, PostgresRows};
 use postgres::{PostgresTransaction, PostgresConnection};
 
-use cargo_registry::version::Version;
-use cargo_registry::download::VersionDownload;
+use cargo_registry::{VersionDownload, Version};
 
 static LIMIT: i64 = 10000;
 
@@ -127,9 +127,12 @@ fn collect(tx: &PostgresTransaction,
 
 #[cfg(test)]
 mod test {
-    use cargo_registry::version::Version;
-    use cargo_registry::krate::Crate;
+    use std::collections::HashMap;
+
     use postgres::{mod, PostgresConnection, PostgresTransaction};
+    use semver;
+
+    use cargo_registry::{Version, Crate};
 
     fn conn() -> PostgresConnection {
         PostgresConnection::connect(::env("TEST_DATABASE_URL").as_slice(),
@@ -149,7 +152,9 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
-        let version = Version::insert(&tx, krate.id, "1.0.0").unwrap();
+        let version = Version::insert(&tx, krate.id,
+                                      &semver::Version::parse("1.0.0").unwrap(),
+                                      &HashMap::new()).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 1, 0, current_date, false)",
@@ -171,7 +176,9 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
-        let version = Version::insert(&tx, krate.id, "1.0.0").unwrap();
+        let version = Version::insert(&tx, krate.id,
+                                      &semver::Version::parse("1.0.0").unwrap(),
+                                      &HashMap::new()).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 1, current_date, false)",
