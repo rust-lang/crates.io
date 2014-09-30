@@ -244,13 +244,13 @@ fn migrations() -> Vec<Migration> {
                             version_id INTEGER
                         )"),
         Migration::add_table(20140930082105, "dependencies", "
-            id              SERIAL PRIMARY KEY,
-            version_id      INTEGER NOT NULL,
-            crate_id        INTEGER NOT NULL,
-            req             VARCHAR NOT NULL,
-            optional        BOOLEAN NOT NULL,
-            defaults        BOOLEAN NOT NULL,
-            features        VARCHAR NOT NULL
+            id               SERIAL PRIMARY KEY,
+            version_id       INTEGER NOT NULL,
+            crate_id         INTEGER NOT NULL,
+            req              VARCHAR NOT NULL,
+            optional         BOOLEAN NOT NULL,
+            default_features BOOLEAN NOT NULL,
+            features         VARCHAR NOT NULL
         "),
         Migration::add_column(20140930085441, "versions", "features",
                               "VARCHAR"),

@@ -63,7 +63,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         gh_client_secret: "".to_string(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Test,
-        max_upload_size: 100,
+        max_upload_size: 1000,
     };
     unsafe { INIT.doit(|| db_setup(config.db_url.as_slice())); }
     let app = App::new(&config);

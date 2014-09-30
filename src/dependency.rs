@@ -24,7 +24,7 @@ impl Dependency {
         let features = features.connect(",");
         let stmt = try!(conn.prepare("INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
-                                       default, features)
+                                       default_features, features)
                                       VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *"));
         let mut rows = try!(stmt.query(&[&version_id, &crate_id, &req,
@@ -53,7 +53,7 @@ impl Model for Dependency {
             crate_id: row.get("crate_id"),
             req: semver::VersionReq::parse(req.as_slice()).unwrap(),
             optional: row.get("optional"),
-            default_features: row.get("defaults"),
+            default_features: row.get("default_features"),
             features: features.as_slice().split(',').map(|s| s.to_string())
                               .collect(),
         }

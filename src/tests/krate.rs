@@ -152,7 +152,6 @@ fn new_req(api_token: &str, krate: &str, version: &str,
     };
     let json = json::encode(&json);
     let mut body = MemWriter::new();
-    println!("{} {}", json.len(), json);
     body.write_le_u32(json.len() as u32).unwrap();
     body.write_str(json.as_slice()).unwrap();
     body.write_le_u32(0).unwrap();
@@ -199,6 +198,26 @@ fn new_krate() {
     assert!(json.ok);
     assert_eq!(json.krate.name.as_slice(), "foo");
     assert_eq!(json.krate.max_version.as_slice(), "1.0.0");
+}
+
+#[test]
+fn new_krate_with_dependency() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+    let crate_dep = ::krate();
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockCrate(crate_dep.clone()));
+    let dep = u::CrateDependency {
+        name: u::CrateName(crate_dep.name.clone()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+    };
+    let mut req = new_req(user.api_token.as_slice(), "new", "1.0.0", vec![dep]);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert!(json.ok);
 }
 
 #[test]
