@@ -134,6 +134,10 @@ impl Crate {
 
     pub fn encode_many(conn: &Connection, crates: Vec<Crate>)
                        -> CargoResult<Vec<EncodableCrate>> {
+        if crates.is_empty() {
+            return Ok(vec![]);
+        }
+
         let trans = try!(conn.transaction());
 
         try!(trans.execute("CREATE TEMPORARY TABLE crateids (
