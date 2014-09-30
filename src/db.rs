@@ -3,7 +3,7 @@ use std::mem;
 use std::sync::Arc;
 
 use pg;
-use pg::{PostgresConnection, PostgresStatement, PostgresResult};
+use pg::{PostgresConnection, PostgresTransaction, PostgresStatement, PostgresResult};
 use pg::types::ToSql;
 use r2d2::{mod, LoggingErrorHandler};
 use r2d2_postgres::PostgresPoolManager;
@@ -154,6 +154,7 @@ impl<'a> RequestTransaction<'a> for &'a Request + 'a {
 pub trait Connection {
     fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>>;
     fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint>;
+    fn transaction<'a>(&'a self) -> PostgresResult<PostgresTransaction<'a>>;
 }
 
 impl Connection for pg::PostgresConnection {
@@ -162,6 +163,9 @@ impl Connection for pg::PostgresConnection {
     }
     fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
         self.execute(query, params)
+    }
+    fn transaction<'a>(&'a self) -> PostgresResult<PostgresTransaction<'a>> {
+        self.transaction()
     }
 }
 //
@@ -180,5 +184,8 @@ impl<'a> Connection for pg::PostgresTransaction<'a> {
     }
     fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
         self.execute(query, params)
+    }
+    fn transaction<'a>(&'a self) -> PostgresResult<PostgresTransaction<'a>> {
+        self.transaction()
     }
 }
