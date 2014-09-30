@@ -233,6 +233,10 @@ fn migrations() -> Vec<Migration> {
                         ON version_downloads (processed)
                         WHERE processed = FALSE",
                        "DROP INDEX index_version_downloads_processed"),
+        Migration::run(20140929185718,
+                       "CREATE INDEX index_crates_name_search \
+                        ON crates USING gin(to_tsvector('english', name))",
+                       "DROP INDEX index_crates_name_search"),
     ];
 
     let mut seen = HashSet::new();

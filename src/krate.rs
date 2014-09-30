@@ -174,25 +174,50 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                      .and_then(from_str::<i64>).unwrap_or(10);
     if limit > 100 { return Err(human("cannot request more than 100 crates")) }
     let offset = (page - 1) * limit;
-    let pattern = query.find_equiv(&"letter")
-                       .map(|s| s.as_slice().char_at(0).to_lowercase())
-                       .map(|s| format!("{}%", s))
-                       .unwrap_or("%".to_string());
+
+    // Different queries for different parameters
+    let mut pattern;
+    let mut args = vec![&limit as &ToSql, &offset as &ToSql];
+    let (q, cnt) = match (query.find_equiv(&"q"), query.find_equiv(&"letter")) {
+        (Some(query), _) => {
+            args.insert(0, query as &ToSql);
+            ("SELECT crates.* FROM crates,
+                                   plainto_tsquery($1) q,
+                                   to_tsvector('english', name) txt,
+                                   ts_rank_cd(txt, q) rank
+              WHERE q @@ txt
+              ORDER BY rank DESC LIMIT $2 OFFSET $3",
+             "SELECT COUNT(crates.*) FROM crates,
+                                          plainto_tsquery($1) q,
+                                          to_tsvector('english', name) txt
+              WHERE q @@ txt")
+        }
+        (None, Some(letter)) => {
+            pattern = format!("{}%", letter.as_slice().char_at(0)
+                                           .to_lowercase());
+            args.insert(0, &pattern as &ToSql);
+            ("SELECT * FROM crates WHERE name LIKE $1 ORDER BY name ASC
+              LIMIT $2 OFFSET $3",
+             "SELECT COUNT(*) FROM crates WHERE name LIKE $1")
+        },
+        (None, None) => {
+            ("SELECT * FROM crates ORDER BY name ASC LIMIT $1 OFFSET $2",
+             "SELECT COUNT(*) FROM crates")
+        }
+    };
 
     // Collect all the crates
-    let stmt = try!(conn.prepare("SELECT * FROM crates \
-                                  WHERE name LIKE $3 \
-                                  LIMIT $1 OFFSET $2"));
+    let stmt = try!(conn.prepare(q));
     let mut crates = Vec::new();
-    for row in try!(stmt.query(&[&limit, &offset, &pattern])) {
+    for row in try!(stmt.query(args.as_slice())) {
         crates.push(Crate::from_row(&row));
     }
     let crates = try!(Crate::encode_many(conn, crates));
 
     // Query for the total count of crates
-    let stmt = try!(conn.prepare("SELECT COUNT(*) FROM crates \
-                                  WHERE name LIKE $1"));
-    let row = try!(stmt.query(&[&pattern])).next().unwrap();
+    let stmt = try!(conn.prepare(cnt));
+    let args = if args.len() > 2 {args.slice_to(1)} else {args.slice_to(0)};
+    let row = try!(stmt.query(args)).next().unwrap();
     let total = row.get(0u);
 
     #[deriving(Encodable)]

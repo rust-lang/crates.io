@@ -67,6 +67,54 @@ fn index() {
 }
 
 #[test]
+fn index_search() {
+    let (_b, _app, mut middle) = ::app();
+    let krate = ::krate();
+    middle.add(::middleware::MockUser(::user()));
+    middle.add(::middleware::MockCrate(krate.clone()));
+
+    let mut req = MockRequest::new(conduit::Get, "/crates");
+    req.with_query("q=bar");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 0);
+    assert_eq!(json.meta.total, 0);
+    drop(req);
+
+    let mut req = MockRequest::new(conduit::Get, "/crates");
+    req.with_query("q=foo");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.meta.total, 1);
+    drop(req);
+}
+
+#[test]
+fn index_letter() {
+    let (_b, _app, mut middle) = ::app();
+    let krate = ::krate();
+    middle.add(::middleware::MockUser(::user()));
+    middle.add(::middleware::MockCrate(krate.clone()));
+
+    let mut req = MockRequest::new(conduit::Get, "/crates");
+    req.with_query("letter=B");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 0);
+    assert_eq!(json.meta.total, 0);
+    drop(req);
+
+    let mut req = MockRequest::new(conduit::Get, "/crates");
+    req.with_query("letter=F");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.meta.total, 1);
+    drop(req);
+}
+
+#[test]
 fn show() {
     let (_b, _app, mut middle) = ::app();
     let krate = ::krate();
