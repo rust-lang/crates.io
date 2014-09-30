@@ -2,7 +2,8 @@
   "predef": {
     "document": true,
     "window": true,
-    "-Promise": true
+    "-Promise": true,
+    "moment": true
   },
   "browser" : true,
   "boss" : true,
