@@ -7,6 +7,7 @@ use std::io::net::ip::{IpAddr, Ipv4Addr};
 use std::io::MemReader;
 use std::collections::HashMap;
 use std::fmt::Show;
+use std::path::BytesContainer;
 
 use semver::Version;
 use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
@@ -15,7 +16,7 @@ pub struct MockRequest {
     path: String,
     method: Method,
     query_string: Option<String>,
-    string_body: Option<String>,
+    body: Option<Vec<u8>>,
     build_headers: HashMap<String, String>,
     headers: MockHeaders,
     extensions: TypeMap,
@@ -30,7 +31,7 @@ impl MockRequest {
             path: path.to_string(),
             extensions: TypeMap::new(),
             query_string: None,
-            string_body: None,
+            body: None,
             build_headers: headers,
             headers: MockHeaders { headers: HashMap::new() },
             method: method,
@@ -48,8 +49,8 @@ impl MockRequest {
         self
     }
 
-    pub fn with_body<'a, S: Show>(&'a mut self, string: S) -> &'a mut MockRequest {
-        self.string_body = Some(string.to_string());
+    pub fn with_body<'a, S: BytesContainer>(&'a mut self, string: S) -> &'a mut MockRequest {
+        self.body = Some(string.container_as_bytes().to_vec());
         self
     }
 
@@ -107,7 +108,7 @@ impl<'a> conduit::Request for MockRequest {
     }
 
     fn content_length(&self) -> Option<uint> {
-        self.string_body.as_ref().map(|b| b.len())
+        self.body.as_ref().map(|b| b.len())
     }
 
     fn headers<'a>(&'a self) -> &'a Headers {
@@ -115,8 +116,8 @@ impl<'a> conduit::Request for MockRequest {
     }
 
     fn body<'a>(&'a mut self) -> &'a mut Reader {
-        let body = self.string_body.clone().unwrap_or("".to_string());
-        self.reader = Some(MemReader::new(Vec::from_slice(body.as_bytes())));
+        let body = self.body.clone().unwrap_or(Vec::new());
+        self.reader = Some(MemReader::new(body));
 
         self.reader.as_mut().unwrap() as &mut Reader
     }
