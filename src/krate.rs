@@ -1,3 +1,4 @@
+use std::io::MemWriter;
 use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::sync::Arc;
 use serialize::json;
@@ -140,18 +141,20 @@ impl Crate {
                             ) ON COMMIT DROP", []));
 
         let mut map = {
-            let mut query = "INSERT INTO crateids (id) VALUES (".to_string();
+            let mut query = MemWriter::new();
+            let _ = write!(query, "INSERT INTO crateids (id) VALUES (");
             let mut crateids: Vec<&ToSql> = vec![];
             let mut first = true;
             for (i, krate) in crates.iter().enumerate() {
                 if !first {
-                    query.push_str(", ");
+                    let _ = write!(query, ", ");
                 }
                 first = false;
-                query.push_str(format!("${}", i+1).as_slice());
+                let _ = write!(query, "${}", i+1);
                 crateids.push(&krate.id);
             }
-            query.push_str(")");
+            let _ = write!(query, ")");
+            let query = String::from_utf8(query.unwrap()).unwrap();
             try!(trans.execute(query.as_slice(), crateids.as_slice()));
 
             let stmt = try!(conn.prepare("SELECT v.id, v.crate_id FROM versions v
