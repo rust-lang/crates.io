@@ -17,6 +17,7 @@ Router.map(function() {
   this.route('me');
   this.route('guide');
   this.route('install');
+  this.route('search');
 });
 
 export default Router;

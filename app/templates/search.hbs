@@ -1,14 +1,9 @@
 <div id='all-crates'>
     <img src="assets/crate.png"/>
-    <h1>All Crates</h1>
-    <h2>starting with '{{ letter }}'</h2>
-</div>
-<div id='selection'>
-    {{#each alphabet}}
-        {{#link-to 'crates' (query-params letter=this)}}
-            {{ this }}
-        {{/link-to}}
-    {{/each}}
+    <h1>Search Results</h1>
+    {{#if q}}
+        <h2>for '{{ q }}'</h2>
+    {{/if}}
 </div>
 
 <div id='results'>
@@ -28,9 +23,9 @@
 </div>
 
 <div class='pagination'>
-    {{#link-to 'crates' (query-params page=prevPage) class="prev"}}Prev{{/link-to}}
+    {{#link-to 'search' (query-params page=prevPage) class="prev"}}Prev{{/link-to}}
     {{#each pages}}
-        {{#link-to 'crates' (query-params page=this)}}{{ this }}{{/link-to}}
+        {{#link-to 'search' (query-params page=this)}}{{ this }}{{/link-to}}
     {{/each}}
-    {{#link-to 'crates' (query-params page=nextPage) class="next"}}Next{{/link-to}}
+    {{#link-to 'search' (query-params page=nextPage) class="next"}}Next{{/link-to}}
 </div>
