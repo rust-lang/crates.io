@@ -133,19 +133,36 @@ impl Crate {
 
     pub fn encode_many(conn: &Connection, crates: Vec<Crate>)
                        -> CargoResult<Vec<EncodableCrate>> {
-        // TODO: can rust-postgres do this escaping?
-        let crateids: Vec<i32> = crates.iter().map(|p| p.id).collect();
-        let mut map = HashMap::new();
-        let query = format!("'{{{:#}}}'::int[]", crateids.as_slice());
-        let stmt = try!(conn.prepare(format!("SELECT id, crate_id FROM versions \
-                                              WHERE crate_id = ANY({})",
-                                             query).as_slice()));
-        for row in try!(stmt.query(&[])) {
-            match map.entry(row.get("crate_id")) {
-                Occupied(e) => e.into_mut(),
-                Vacant(e) => e.set(Vec::new()),
-            }.push(row.get("id"));
-        }
+        let trans = try!(conn.transaction());
+
+        try!(trans.execute("CREATE TEMPORARY TABLE crateids (
+                                id INT PRIMARY KEY
+                            ) ON COMMIT DROP", []));
+
+        let mut map = {
+            let mut query = "INSERT INTO crateids (id) VALUES (".to_string();
+            let mut crateids: Vec<&ToSql> = vec![];
+            for (i, krate) in crates.iter().enumerate() {
+                query.push_str(format!("${}", i+1).as_slice());
+                crateids.push(&krate.id);
+            }
+            query.push_str(")");
+            try!(trans.execute(query.as_slice(), crateids.as_slice()));
+
+            let stmt = try!(conn.prepare("SELECT v.id, v.crate_id FROM versions v
+                                          INNER JOIN crateids c ON v.id = c.id"));
+
+            let mut map = HashMap::new();
+            for row in try!(stmt.query(&[])) {
+                match map.entry(row.get("crate_id")) {
+                    Occupied(e) => e.into_mut(),
+                    Vacant(e) => e.set(Vec::new()),
+                }.push(row.get("id"));
+            }
+            map
+        };
+
+        try!(trans.finish());
 
         Ok(crates.into_iter().map(|p| {
             let id = p.id;
