@@ -142,7 +142,12 @@ impl Crate {
         let mut map = {
             let mut query = "INSERT INTO crateids (id) VALUES (".to_string();
             let mut crateids: Vec<&ToSql> = vec![];
+            let mut first = true;
             for (i, krate) in crates.iter().enumerate() {
+                if !first {
+                    query.push_str(", ");
+                }
+                first = false;
                 query.push_str(format!("${}", i+1).as_slice());
                 crateids.push(&krate.id);
             }
