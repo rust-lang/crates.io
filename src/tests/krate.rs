@@ -323,9 +323,16 @@ fn download() {
     {
         let conn = (&mut req as &mut Request).tx().unwrap();
         let krate = Crate::find_by_name(conn, krate.name.as_slice()).unwrap();
-        assert_eq!(krate.downloads, 1);
+        assert_eq!(krate.downloads, 0); // updated later
         let versions = krate.versions(conn).unwrap();
-        assert_eq!(versions[0].downloads, 1);
+        assert_eq!(versions[0].downloads, 0); // updated later
+
+        let stmt = conn.prepare("SELECT * FROM version_downloads").unwrap();
+        let mut rows = stmt.query(&[]).unwrap();
+        let row = rows.next().unwrap();
+        assert!(rows.next().is_none());
+        let downloads: i32 = row.get("downloads");
+        assert_eq!(downloads, 1);
     }
 }
 

@@ -429,8 +429,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
     let version = req.params()["version"].as_slice();
     let tx = try!(req.tx());
-    let stmt = try!(tx.prepare("SELECT crates.id as crate_id,
-                                       versions.id as version_id
+    let stmt = try!(tx.prepare("SELECT versions.id as version_id
                                 FROM crates
                                 LEFT JOIN versions ON
                                     crates.id = versions.crate_id
@@ -439,8 +438,8 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                 LIMIT 1"));
     let mut rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));
     let row = try!(rows.next().require(|| human("crate or version not found")));
-    let crate_id: i32 = row.get("crate_id");
     let version_id: i32 = row.get("version_id");
+    let now = ::now();
 
     // Bump download counts.
     //
@@ -449,12 +448,20 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     // a counter, so we just do the hopefully "least racy" thing. This is
     // largely ok because these download counters are just that, counters. No
     // need to have super high-fidelity counter.
-    try!(tx.execute("UPDATE crates SET downloads = downloads + 1
-                     WHERE id = $1", &[&crate_id]));
-    try!(tx.execute("UPDATE versions SET downloads = downloads + 1
-                     WHERE id = $1", &[&version_id]));
-    try!(tx.execute("UPDATE metadata SET total_downloads = total_downloads + 1",
-                    &[]));
+    //
+    // Also, we only update the counter for *today*, nothing else. We have lots
+    // of other counters, but they're all updated later on via the
+    // update-downloads script.
+    let amt = try!(tx.execute("UPDATE version_downloads
+                               SET downloads = downloads + 1
+                               WHERE version_id = $1 AND date($2) = date(date)",
+                              &[&version_id, &now]));
+    if amt == 0 {
+        try!(tx.execute("INSERT INTO version_downloads
+                         (version_id, downloads, counted, date, processed)
+                         VALUES ($1, 1, 0, date($2), false)",
+                        &[&version_id, &now]));
+    }
 
     // Now that we've done our business, redirect to the actual data.
     let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",

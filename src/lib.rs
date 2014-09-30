@@ -47,6 +47,7 @@ pub mod krate;
 pub mod user;
 pub mod util;
 pub mod version;
+pub mod download;
 
 #[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {

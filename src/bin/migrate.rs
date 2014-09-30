@@ -199,10 +199,10 @@ fn migrations() -> Vec<Migration> {
                         ON version_dependencies (depends_on_id)",
                        "DROP INDEX index_version_dependencies_depends_on_id"),
         Migration::add_table(20140929103756, "crate_downloads", "
+            id              SERIAL PRIMARY KEY,
             crate_id        INTEGER NOT NULL,
             downloads       INTEGER NOT NULL,
-            date            TIMESTAMP NOT NULL,
-            processed       BOOLEAN NOT NULL
+            date            TIMESTAMP NOT NULL
         "),
         Migration::run(20140929103757,
                        "CREATE INDEX index_crate_downloads_crate_id \
@@ -213,8 +213,10 @@ fn migrations() -> Vec<Migration> {
                         ON crate_downloads (date(date))",
                        "DROP INDEX index_crate_downloads_date"),
         Migration::add_table(20140929103759, "version_downloads", "
+            id              SERIAL PRIMARY KEY,
             version_id      INTEGER NOT NULL,
             downloads       INTEGER NOT NULL,
+            counted         INTEGER NOT NULL,
             date            TIMESTAMP NOT NULL,
             processed       BOOLEAN NOT NULL
         "),
@@ -226,11 +228,6 @@ fn migrations() -> Vec<Migration> {
                        "CREATE INDEX index_version_downloads_date \
                         ON version_downloads (date(date))",
                        "DROP INDEX index_version_downloads_date"),
-        Migration::run(20140929103762,
-                       "CREATE INDEX index_crate_downloads_processed \
-                        ON crate_downloads (processed)
-                        WHERE processed = FALSE",
-                       "DROP INDEX index_crate_downloads_processed"),
         Migration::run(20140929103763,
                        "CREATE INDEX index_version_downloads_processed \
                         ON version_downloads (processed)

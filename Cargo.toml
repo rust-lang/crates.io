@@ -16,6 +16,9 @@ test = false
 name = "migrate"
 test = false
 
+[[bin]]
+name = "update-downloads"
+
 [[test]]
 name = "all"
 path = "src/tests/all.rs"

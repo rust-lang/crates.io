@@ -1,0 +1,190 @@
+extern crate "cargo-registry" as cargo_registry;
+extern crate postgres;
+extern crate time;
+
+use std::os;
+use std::collections::HashMap;
+use std::time::Duration;
+use postgres::{PostgresResult, PostgresRows};
+use postgres::{PostgresTransaction, PostgresConnection};
+
+use cargo_registry::version::Version;
+use cargo_registry::download::VersionDownload;
+
+static LIMIT: i64 = 10000;
+
+fn main() {
+    let args = os::args();
+    loop {
+        let conn = PostgresConnection::connect(env("DATABASE_URL").as_slice(),
+                                               &postgres::NoSsl).unwrap();
+        {
+            let tx = conn.transaction().unwrap();
+            update(&tx).unwrap();
+            tx.set_commit();
+            tx.finish().unwrap();
+        }
+        drop(conn);
+        if args.len() > 1 && args[1].as_slice() == "daemon" {
+            let sleep = from_str::<i64>(args[2].as_slice()).unwrap();
+            std::io::timer::sleep(Duration::seconds(sleep));
+        } else {
+            break
+        }
+    }
+}
+
+fn env(s: &str) -> String {
+    match os::getenv(s) {
+        Some(s) => s,
+        None => fail!("must have `{}` defined", s),
+    }
+}
+
+fn update(tx: &PostgresTransaction) -> PostgresResult<()> {
+    let mut max = 0;
+    loop {
+        let tx = try!(tx.transaction());
+        {
+            let stmt = try!(tx.prepare("SELECT * FROM version_downloads \
+                                        WHERE processed = FALSE AND id > $1
+                                        ORDER BY id ASC
+                                        LIMIT $2"));
+            let mut rows = try!(stmt.query(&[&max, &LIMIT]));
+            match try!(collect(&tx, &mut rows)) {
+                None => break,
+                Some(m) => max = m,
+            }
+        }
+        tx.set_commit();
+        try!(tx.finish());
+    }
+    Ok(())
+}
+
+fn collect(tx: &PostgresTransaction,
+           rows: &mut PostgresRows) -> PostgresResult<Option<i32>> {
+
+    // Anything older than 24 hours ago will be frozen and will not be queried
+    // against again.
+    let cutoff = time::now_utc().to_timespec();
+    let cutoff = cutoff + Duration::days(-1);
+
+    let mut map = HashMap::new();
+    for row in rows {
+        let download = VersionDownload::from_row(&row);
+        assert!(map.insert(download.id, download));
+    }
+    println!("updating {} versions", map.len());
+    if map.len() == 0 { return Ok(None) }
+
+    let mut max = 0;
+    let mut total = 0;
+    for (id, download) in map.iter() {
+        if *id > max { max = *id; }
+        if download.counted == download.downloads { continue }
+        let amt = download.downloads - download.counted;
+
+        let crate_id = Version::find(tx, download.version_id).unwrap().crate_id;
+
+        // Update the total number of version downloads
+        try!(tx.execute("UPDATE versions
+                         SET downloads = downloads + $1
+                         WHERE id = $2",
+                        &[&amt, &download.version_id]));
+        // Update the total number of crate downloads
+        try!(tx.execute("UPDATE crates SET downloads = downloads + $1
+                         WHERE id = $2", &[&amt, &crate_id]));
+
+        // Update the total number of crate downloads for today
+        let cnt = try!(tx.execute("UPDATE crate_downloads
+                                   SET downloads = downloads + $2
+                                   WHERE crate_id = $1 AND date = date($3)",
+                                  &[&crate_id, &amt, &download.date]));
+        if cnt == 0 {
+            try!(tx.execute("INSERT INTO crate_downloads
+                             (crate_id, downloads, date)
+                             VALUES ($1, $2, $3)",
+                            &[&crate_id, &amt, &download.date]));
+        }
+
+        // Flag this row as having been processed if we're passed the cutoff,
+        // and unconditionally increment the number of counted downloads.
+        try!(tx.execute("UPDATE version_downloads
+                         SET processed = $2, counted = downloads
+                         WHERE id = $1",
+                        &[id, &(download.date < cutoff)]));
+        total += amt as i64;
+    }
+
+    // After everything else is done, update the global counter of total
+    // downloads.
+    try!(tx.execute("UPDATE metadata SET total_downloads = total_downloads + $1",
+                    &[&total]));
+
+    Ok(Some(max))
+}
+
+#[cfg(test)]
+mod test {
+    use cargo_registry::version::Version;
+    use cargo_registry::krate::Crate;
+    use postgres::{mod, PostgresConnection, PostgresTransaction};
+
+    fn conn() -> PostgresConnection {
+        PostgresConnection::connect(::env("TEST_DATABASE_URL").as_slice(),
+                                    &postgres::NoSsl).unwrap()
+    }
+
+    fn crate_downloads(tx: &PostgresTransaction, id: i32, expected: uint) {
+        let stmt = tx.prepare("SELECT * FROM crate_downloads
+                               WHERE crate_id = $1").unwrap();
+        let dl: i32 = stmt.query(&[&id]).unwrap()
+                          .next().unwrap().get("downloads");
+        assert_eq!(dl, expected as i32);
+    }
+
+    #[test]
+    fn increment() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
+        let version = Version::insert(&tx, krate.id, "1.0.0").unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 1, 0, current_date, false)",
+                   &[&version.id]).unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 1, 0, current_date, true)",
+                   &[&version.id]).unwrap();
+        ::update(&tx).unwrap();
+        assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
+        assert_eq!(Crate::find(&tx, krate.id).unwrap().downloads, 1);
+        crate_downloads(&tx, krate.id, 1);
+        ::update(&tx).unwrap();
+        assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
+    }
+
+    #[test]
+    fn increment_a_little() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
+        let version = Version::insert(&tx, krate.id, "1.0.0").unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 2, 1, current_date, false)",
+                   &[&version.id]).unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 1, 0, current_date, false)",
+                   &[&version.id]).unwrap();
+        ::update(&tx).unwrap();
+        assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
+        assert_eq!(Crate::find(&tx, krate.id).unwrap().downloads, 2);
+        crate_downloads(&tx, krate.id, 2);
+        ::update(&tx).unwrap();
+        assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
+    }
+}
