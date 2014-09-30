@@ -116,9 +116,10 @@ impl<'a> conduit::Request for MockRequest {
     }
 
     fn body<'a>(&'a mut self) -> &'a mut Reader {
-        let body = self.body.clone().unwrap_or(Vec::new());
-        self.reader = Some(MemReader::new(body));
-
+        if self.reader.is_none() {
+            let body = self.body.clone().unwrap_or(Vec::new());
+            self.reader = Some(MemReader::new(body));
+        }
         self.reader.as_mut().unwrap() as &mut Reader
     }
 
