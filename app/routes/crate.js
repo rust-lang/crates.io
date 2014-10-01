@@ -12,6 +12,8 @@ export default Ember.Route.extend({
         var self = this;
         this._super(controller, data.crate);
         controller.set('showAllVersions', false);
+        controller.set('fetchingVersions', true);
+        controller.set('fetchingDownloads', true);
 
         // Try to find the requested version in the versions we fetch
         var max = data.crate.get('max_version');
@@ -33,6 +35,11 @@ export default Ember.Route.extend({
                     controller.set('currentVersion', version);
                 }
             });
+        }).then(function() {
+            return controller.get('currentVersion').get('version_downloads');
+        }).then(function(downloads) {
+            controller.set('fetchingDownloads', false);
+            controller.send('renderChart', downloads);
         });
     },
 

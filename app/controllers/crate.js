@@ -2,9 +2,10 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.ObjectController.extend({
-    isLoading: false,
+    isDownloading: false,
 
     fetchingVersions: true,
+    fetchingDownloads: true,
     showAllVersions: false,
     currentVersion: null,
     requestedVersion: null,
@@ -15,7 +16,7 @@ export default Ember.ObjectController.extend({
 
     actions: {
         download: function(version) {
-            this.set('isLoading', true);
+            this.set('isDownloading', true);
             var self = this;
             var crate_downloads = this.get('model').get('downloads');
             var ver_downloads = version.get('downloads');
@@ -27,12 +28,16 @@ export default Ember.ObjectController.extend({
                 version.set('downloads', ver_downloads + 1);
                 Ember.$('#download-frame').attr('src', data.url);
             }).finally(function() {
-                self.set('isLoading', false);
+                self.set('isDownloading', false);
             });
         },
 
         toggleVersions: function() {
             this.set('showAllVersions', !this.get('showAllVersions'));
+        },
+
+        renderChart: function(downloads) {
+            // TODO: actually render a chart
         },
     },
 });

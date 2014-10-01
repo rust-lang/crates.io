@@ -3,8 +3,7 @@
     "document": true,
     "window": true,
     "-Promise": true,
-    "moment": true,
-    "Chart": true
+    "moment": true
   },
   "browser" : true,
   "boss" : true,
