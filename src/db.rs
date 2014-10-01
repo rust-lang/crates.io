@@ -6,7 +6,7 @@ use pg;
 use pg::{PostgresConnection, PostgresStatement, PostgresResult};
 use pg::types::ToSql;
 use r2d2::{mod, LoggingErrorHandler};
-use r2d2_postgres::PostgresPoolManager;
+use r2d2_postgres::{PostgresPoolManager, Error};
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
@@ -14,13 +14,13 @@ use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
 pub type Pool = r2d2::Pool<pg::PostgresConnection,
-                           pg::error::PostgresConnectError,
+                           Error,
                            PostgresPoolManager,
                            LoggingErrorHandler>;
 type PooledConnnection<'a> =
         r2d2::PooledConnection<'a,
                                pg::PostgresConnection,
-                               pg::error::PostgresConnectError,
+                               Error,
                                PostgresPoolManager,
                                LoggingErrorHandler>;
 
