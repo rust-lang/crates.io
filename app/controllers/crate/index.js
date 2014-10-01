@@ -1,6 +1,8 @@
 import Ember from 'ember';
 import ajax from 'ic-ajax';
 
+var NUM_VERSIONS = 5;
+
 export default Ember.ObjectController.extend({
     isDownloading: false,
 
@@ -13,6 +15,14 @@ export default Ember.ObjectController.extend({
     sortedVersions: function() {
         return this.get("model").get("versions").sortBy("num").reverse();
     }.property('model.versions.[]'),
+
+    smallSortedVersions: function() {
+        return this.get('sortedVersions').slice(0, NUM_VERSIONS);
+    }.property('sortedVersions'),
+
+    hasMoreVersions: function() {
+        return this.get("sortedVersions").length > NUM_VERSIONS;
+    }.property('sortedVersions'),
 
     actions: {
         download: function(version) {

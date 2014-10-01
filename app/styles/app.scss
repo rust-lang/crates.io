@@ -6,6 +6,7 @@ $main-color-light: lighten($main-color, 30%);
 $main-bg: #f9f7ec;
 $main-bg-dark: #edebdd;
 $gray-border: #d5d3cb;
+$link-color: rgb(0, 172, 91);
 
 @import "home";
 @import "crate";
@@ -87,6 +88,10 @@ body {
 span.small {
     color: $main-color-light;
     font-size: 80%;
+    .num {
+        font-weight: bold;
+        color: $main-color;
+    }
 }
 
 span.loading {
@@ -110,4 +115,16 @@ span.loading {
     &.shown {
         display: block;
     }
+}
+
+a {
+    color: $link-color;
+    text-decoration: none;
+    &:hover { color: darken($link-color, 10%); }
+}
+.small a {
+    color: $main-color-light;
+    text-decoration: underline;
+    font-weight: normal;
+    &:hover { color: darken($main-color-light, 10%); }
 }

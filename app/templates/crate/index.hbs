@@ -86,7 +86,7 @@
                 <li class='all'>
                     {{#link-to 'crate.index' this}}All Versions{{/link-to}}
                 </li>
-                {{#each sortedVersions}}
+                {{#each smallSortedVersions}}
                     <li>{{#link-to 'crate.index' this}}
                         {{ num }}
                     {{/link-to}}</li>
@@ -152,12 +152,19 @@
     <div class='section'>
         <h3>Versions</h3>
         <ul>
-            {{#each sortedVersions}}
+            {{#each smallSortedVersions}}
                 <li>
                     {{#link-to 'crate' this}}{{ num }}{{/link-to}}
                     <span class='date'>{{ date-small created_at }}</span>
                 </li>
             {{/each}}
         </ul>
+        <span class='small'>
+            {{#if hasMoreVersions}}
+                {{#link-to 'crate.versions' this}}
+                    show all {{ versions.length }} versions
+                {{/link-to}}
+            {{/if}}
+        </span>
     </div>
 </div>

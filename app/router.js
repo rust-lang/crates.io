@@ -13,6 +13,7 @@ Router.map(function() {
   this.resource('crates');
   this.resource('crate', { path: '/crates/*crate_id' }, function() {
     this.route('download');
+    this.route('versions');
   });
   this.route('me');
   this.route('guide');

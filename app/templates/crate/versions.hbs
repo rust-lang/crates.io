@@ -1,0 +1,20 @@
+<div class='all-versions-back'>
+    {{#link-to 'crate' this}}&#11013; Back to Main Page{{/link-to}}
+</div>
+
+<div class='info'>
+    <span class='small'>
+        All <span class='num'>{{ versions.length }}</span>
+        versions of <span class='num'>{{ name }}</span> since
+        {{ date-long created_at }}
+    </span>
+</div>
+
+<div id='all-versions' class='white-rows'>
+    {{#each versions}}
+        <div class='row'>
+            {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+            <span class='small'>{{ date-long created_at }}</span>
+        </div>
+    {{/each}}
+</div>
