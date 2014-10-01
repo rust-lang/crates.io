@@ -22,7 +22,7 @@
       &middot;
       {{#link-to "logout"}}Log out{{/link-to}}
     {{else}}
-      {{#link-to "login"}}Log in{{/link-to}}
+      {{#link-to "login"}}Log in with GitHub{{/link-to}}
     {{/if}}
   </div>
 
@@ -34,4 +34,10 @@
   <p id='flash' {{bind-attr class="flashError:shown"}}>{{flashError}}</p>
 
   {{outlet}}
+</div>
+
+<div class='after-main-links'>
+    {{#link-to 'install'}}Downloads{{/link-to}}
+    <span class="sep">|</span>
+    <a>About</a>
 </div>

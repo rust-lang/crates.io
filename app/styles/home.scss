@@ -35,9 +35,7 @@
 
     h1 { font-size: 60px; }
 
-    a:not(first-child) {
-        margin: 0 20px;
-    }
+    .link:not(first-child) { margin: 0 20px; }
 }
 
 .dl {

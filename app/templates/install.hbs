@@ -1,1 +1,42 @@
+<div id='crates-heading'>
+    <img class='logo' src="/assets/download.png"/>
+    <h1>Install Cargo</h1>
+</div>
 
+<p>
+    The easiest way to get Cargo is to get the Rust nightly build by using the
+    <code>rustup</code> script:
+</p>
+
+<pre>
+$ curl https://static.rust-lang.org/rustup.sh | sudo bash
+</pre>
+
+<h2>Only Cargo</h2>
+
+<p>
+    To install just Cargo, the current recommended installation method is
+    through the official nightly builds. Note that Cargo will also require that
+    <a href='http://www.rust-lang.org/'>Rust</a> is already installed on the
+    system
+</p>
+
+<div id='install-downloads'>
+    <table>
+        <tr>
+            <td class='label'>Linux binaries (.tar.gz)</td>
+            <td><a {{ bind-attr href=linux64 }}>64-bit</a></td>
+            <td><a {{ bind-attr href=linux32 }}>32-bit</a></td>
+        </tr>
+        <tr>
+            <td class='label'>Mac binaries (.tar.gz)</td>
+            <td><a {{ bind-attr href=mac64 }}>64-bit</a></td>
+            <td><a {{ bind-attr href=mac32 }}>32-bit</a></td>
+        </tr>
+        <tr>
+            <td class='label'>Windows binaries (.tar.gz)</td>
+            <td><a {{ bind-attr href=win64 }}>64-bit</a></td>
+            <td><a {{ bind-attr href=win32 }}>32-bit</a></td>
+        </tr>
+    </table>
+</div>

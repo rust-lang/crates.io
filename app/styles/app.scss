@@ -10,6 +10,7 @@ $link-color: rgb(0, 172, 91);
 
 @import "home";
 @import "crate";
+@import "install";
 
 * {
   box-sizing: border-box;
@@ -127,4 +128,18 @@ a {
     text-decoration: underline;
     font-weight: normal;
     &:hover { color: darken($main-color-light, 10%); }
+}
+
+.after-main-links {
+    margin: 40px;
+
+    a { color: white; }
+    a:hover { color: darken(white, 10%); }
+    .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+}
+
+pre {
+    background: $main-color;
+    color: white;
+    padding: 20px;
 }
