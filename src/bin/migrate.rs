@@ -254,6 +254,14 @@ fn migrations() -> Vec<Migration> {
         "),
         Migration::add_column(20140930085441, "versions", "features",
                               "VARCHAR"),
+        Migration::run(20140930203145,
+                       "CREATE INDEX index_dependencies_version_id \
+                        ON dependencies (version_id)",
+                       "DROP INDEX index_dependencies_version_id"),
+        Migration::run(20140930203146,
+                       "CREATE INDEX index_dependencies_crate_id \
+                        ON dependencies (crate_id)",
+                       "DROP INDEX index_dependencies_crate_id"),
     ];
 
     let mut seen = HashSet::new();

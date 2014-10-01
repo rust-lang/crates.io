@@ -40,12 +40,12 @@ pub trait CargoError: Send {
     }
 
     fn response(&self) -> Option<Response> {
-        #[deriving(Encodable)] struct Bad { ok: bool, error: String }
+        #[deriving(Encodable)] struct Error { detail: String }
+        #[deriving(Encodable)] struct Bad { errors: Vec<Error> }
 
         if self.human() {
             Some(json_response(&Bad {
-                ok: false,
-                error: self.description(),
+                errors: vec![Error { detail: self.description() }]
             }))
         } else {
             self.cause().and_then(|cause| cause.response())

@@ -13,6 +13,7 @@ use semver;
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
+use dependency::EncodableDependency;
 use git;
 use user::User;
 use upload;
@@ -90,7 +91,7 @@ impl Crate {
                       max_version, .. } = self;
         EncodableCrate {
             id: name.clone(),
-            name: name,
+            name: name.clone(),
             versions: versions,
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
@@ -379,8 +380,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     bomb.path = None;
 
     #[deriving(Encodable)]
-    struct R { ok: bool, krate: EncodableCrate }
-    Ok(req.json(&R { ok: true, krate: krate.encodable(Vec::new()) }))
+    struct R { krate: EncodableCrate }
+    Ok(req.json(&R { krate: krate.encodable(Vec::new()) }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
@@ -464,9 +465,32 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
 
     if req.wants_json() {
         #[deriving(Encodable)]
-        struct R { ok: bool, url: String }
-        Ok(req.json(&R{ ok: true, url: redirect_url }))
+        struct R { url: String }
+        Ok(req.json(&R{ url: redirect_url }))
     } else {
         Ok(req.redirect(redirect_url))
     }
+}
+
+pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = req.params()["crate_id"].as_slice();
+    let semver = req.params()["version"].as_slice();
+    let semver = try!(semver::Version::parse(semver).map_err(|_| {
+        human(format!("invalid semver: {}", semver))
+    }));
+    let tx = try!(req.tx());
+    let krate = try!(Crate::find_by_name(tx, crate_name));
+    let version = try!(Version::find_by_num(tx, krate.id, &semver));
+    let version = try!(version.require(|| {
+        human(format!("crate `{}` does not have a version `{}`",
+                      crate_name, semver))
+    }));
+    let deps = try!(version.dependencies(tx));
+    let deps = deps.into_iter().map(|(dep, crate_name)| {
+        dep.encodable(crate_name.as_slice())
+    }).collect();
+
+    #[deriving(Encodable)]
+    struct R { dependencies: Vec<EncodableDependency> }
+    Ok(req.json(&R{ dependencies: deps }))
 }

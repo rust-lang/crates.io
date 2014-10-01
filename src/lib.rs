@@ -31,6 +31,7 @@ pub use self::dependency::Dependency;
 pub use self::download::{CrateDownload, VersionDownload};
 pub use self::krate::Crate;
 pub use self::model::Model;
+pub use self::user::User;
 pub use self::version::Version;
 
 use std::sync::Arc;
@@ -76,6 +77,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/crates/:crate_id", C(krate::show));
     router.put("/crates/new", C(krate::new));
     router.get("/crates/:crate_id/:version/download", C(krate::download));
+    router.get("/crates/:crate_id/:version/dependencies", C(krate::dependencies));
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
     router.get("/git/index/*path", C(git::serve_index));

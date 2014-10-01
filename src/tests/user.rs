@@ -10,9 +10,7 @@ use cargo_registry::db::RequestTransaction;
 #[deriving(Decodable)]
 struct AuthResponse { url: String, state: String }
 #[deriving(Decodable)]
-struct TokenResponse { ok: bool, error: Option<String> }
-#[deriving(Decodable)]
-struct MeResponse { ok: bool, user: EncodableUser }
+struct MeResponse { user: EncodableUser }
 
 #[test]
 fn auth_gives_a_token() {
@@ -28,10 +26,8 @@ fn access_token_needs_data() {
     let (_b, _app, middle) = ::app();
     let mut req = MockRequest::new(conduit::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: TokenResponse = ::json(&mut response);
-    assert!(!json.ok);
-    assert!(json.error.is_some());
-    assert!(json.error.unwrap().as_slice().contains("invalid state"));
+    let json: ::Bad = ::json(&mut response);
+    assert!(json.errors[0].detail.as_slice().contains("invalid state"));
 }
 
 #[test]
@@ -61,7 +57,6 @@ fn me() {
     middle.add(::middleware::MockUser(user.clone()));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: MeResponse = ::json(&mut response);
-    assert!(json.ok);
     assert_eq!(json.user.email, user.email);
     assert_eq!(json.user.api_token, user.api_token);
 }

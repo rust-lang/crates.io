@@ -12,7 +12,7 @@ use pg::types::ToSql;
 
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, internal, Require, ChainError};
+use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
 use util::errors::NotFound;
 
 pub use self::middleware::{Middleware, RequestUser};
@@ -111,9 +111,6 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
-    #[deriving(Encodable)]
-    struct R { ok: bool, error: Option<String>, user: Option<EncodableUser> }
-
     // Parse the url query
     let mut query = req.query();
     let code = query.pop_equiv(&"code").unwrap_or(String::new());
@@ -125,18 +122,14 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         let session_state = req.session().pop(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| a.as_slice());
         if Some(state.as_slice()) != session_state {
-            return Ok(req.json(&R {
-                ok: false,
-                error: Some(format!("invalid state parameter")),
-                user: None,
-            }))
+            return Err(human("invalid state parameter"))
         }
     }
 
     // Fetch the access token from github using the code we just got
     let token = match req.app().github.exchange(code.clone()) {
         Ok(token) => token,
-        Err(s) => return Ok(req.json(&R { ok: false, error: Some(s), user: None }))
+        Err(s) => return Err(human(s)),
     };
 
     let resp = try!(http::handle().get("https://api.github.com/user")
@@ -165,7 +158,9 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
                                          api_token.as_slice()));
     req.session().insert("user_id".to_string(), user.id.to_string());
 
-    Ok(req.json(&R { ok: true, error: None, user: Some(user.encodable()) }))
+    #[deriving(Encodable)]
+    struct R { user: EncodableUser }
+    Ok(req.json(&R { user: user.encodable() }))
 }
 
 pub fn logout(req: &mut Request) -> CargoResult<Response> {
@@ -182,14 +177,14 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
                       &[&token, &user.id]));
 
     #[deriving(Encodable)]
-    struct R { ok: bool, api_token: String }
-    Ok(req.json(&R { ok: true, api_token: token }))
+    struct R { api_token: String }
+    Ok(req.json(&R { api_token: token }))
 }
 
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
     #[deriving(Encodable)]
-    struct R { ok: bool, user: EncodableUser }
-    Ok(req.json(&R{ ok: true, user: user.clone().encodable() }))
+    struct R { user: EncodableUser }
+    Ok(req.json(&R{ user: user.clone().encodable() }))
 }

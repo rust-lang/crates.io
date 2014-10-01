@@ -2,9 +2,9 @@ use semver;
 
 use pg::PostgresRow;
 
+use Model;
 use db::Connection;
 use util::{CargoResult};
-use model::Model;
 
 pub struct Dependency {
     pub id: i32,
@@ -14,6 +14,17 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub features: Vec<String>,
+}
+
+#[deriving(Encodable, Decodable)]
+pub struct EncodableDependency {
+    pub id: i32,
+    pub version_id: i32,
+    pub crate_id: String,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: String,
 }
 
 impl Dependency {
@@ -40,6 +51,20 @@ impl Dependency {
                 crate_name,
                 self.features.connect(","),
                 self.req)
+    }
+
+    pub fn encodable(self, crate_name: &str) -> EncodableDependency {
+        let Dependency { id, version_id, crate_id: _, req, optional,
+                         default_features, features } = self;
+        EncodableDependency {
+            id: id,
+            version_id: version_id,
+            crate_id: crate_name.to_string(),
+            req: req.to_string(),
+            optional: optional,
+            default_features: default_features,
+            features: features.as_slice().connect(","),
+        }
     }
 }
 

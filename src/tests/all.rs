@@ -40,6 +40,11 @@ macro_rules! ok_resp( ($e:expr) => ({
     resp
 }) )
 
+#[deriving(Decodable, Show)]
+struct Error { detail: String }
+#[deriving(Decodable)]
+struct Bad { errors: Vec<Error> }
+
 mod middleware;
 mod krate;
 mod user;

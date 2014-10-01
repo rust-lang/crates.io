@@ -36,6 +36,12 @@ pub struct EncodableVersion {
     pub created_at: String,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
+    pub links: VersionLinks,
+}
+
+#[deriving(Encodable, Decodable)]
+pub struct VersionLinks {
+    pub dependencies: String,
 }
 
 impl Version {
@@ -81,13 +87,17 @@ impl Version {
         let num = num.to_string();
         EncodableVersion {
             dl_path: krate.dl_path(num.as_slice()),
-            num: num,
+            num: num.clone(),
             id: id,
             krate: krate.name.clone(),
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
             features: features,
+            links: VersionLinks {
+                dependencies: format!("/crates/{}/{}/dependencies",
+                                      krate.name, num),
+            },
         }
     }
 
@@ -108,6 +118,20 @@ impl Version {
                                           dep.default_features,
                                           features.as_slice()));
         Ok((dep, krate))
+    }
+
+    /// Returns (dependency, crate dependency name)
+    pub fn dependencies(&self, conn: &Connection)
+                        -> CargoResult<Vec<(Dependency, String)>> {
+        let stmt = try!(conn.prepare("SELECT dependencies.*,
+                                             crates.name AS crate_name
+                                      FROM dependencies
+                                      LEFT JOIN crates
+                                        ON crates.id = dependencies.crate_id
+                                      WHERE dependencies.version_id = $1"));
+        Ok(try!(stmt.query(&[&self.id])).map(|r| {
+            (Model::from_row(&r), r.get("crate_name"))
+        }).collect())
     }
 }
 

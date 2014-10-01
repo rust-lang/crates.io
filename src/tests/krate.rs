@@ -10,6 +10,7 @@ use semver;
 
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::krate::{EncodableCrate, Crate};
+use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::upload as u;
 
@@ -18,11 +19,11 @@ struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[deriving(Decodable)]
 struct CrateMeta { total: int }
 #[deriving(Decodable)]
-struct BadCrate { ok: bool, error: String }
-#[deriving(Decodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
-struct GoodCrate { ok: bool, krate: EncodableCrate }
+struct GoodCrate { krate: EncodableCrate }
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
+#[deriving(Decodable)]
+struct Deps { dependencies: Vec<EncodableDependency> }
 
 impl<E, D: Decoder<E>> Decodable<D, E> for CrateResponse {
     fn decode(d: &mut D) -> Result<CrateResponse, E> {
@@ -38,11 +39,9 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateResponse {
 
 impl<E, D: Decoder<E>> Decodable<D, E> for GoodCrate {
     fn decode(d: &mut D) -> Result<GoodCrate, E> {
-        d.read_struct("GoodCrate", 2, |d| {
+        d.read_struct("GoodCrate", 1, |d| {
             Ok(GoodCrate {
-                ok: try!(d.read_struct_field("ok", 0, Decodable::decode)),
-                krate: try!(d.read_struct_field("crate", 1,
-                                                Decodable::decode)),
+                krate: try!(d.read_struct_field("crate", 0, Decodable::decode)),
             })
         })
     }
@@ -165,8 +164,8 @@ fn new_wrong_token() {
     middle.add(::middleware::MockUser(::user()));
     let mut req = new_req("wrong-token", "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: BadCrate = ::json(&mut response);
-    assert!(!json.ok);
+    let json: ::Bad = ::json(&mut response);
+    assert!(json.errors.len() > 0);
 }
 
 #[test]
@@ -177,10 +176,10 @@ fn new_bad_names() {
         middle.add(::middleware::MockUser(user.clone()));
         let mut req = new_req(user.api_token.as_slice(), name, "1.0.0", Vec::new());
         let mut response = ok_resp!(middle.call(&mut req));
-        let json: BadCrate = ::json(&mut response);
-        assert!(!json.ok);
-        assert!(json.error.as_slice().contains("invalid crate name"),
-                "{}", json.error);
+        let json: ::Bad = ::json(&mut response);
+        assert!(json.errors.len() > 0);
+        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+                "{}", json.errors);
     }
 
     bad_name("");
@@ -195,7 +194,6 @@ fn new_krate() {
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
-    assert!(json.ok);
     assert_eq!(json.krate.name.as_slice(), "foo");
     assert_eq!(json.krate.max_version.as_slice(), "1.0.0");
 }
@@ -216,8 +214,7 @@ fn new_krate_with_dependency() {
     };
     let mut req = new_req(user.api_token.as_slice(), "new", "1.0.0", vec![dep]);
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
-    assert!(json.ok);
+    ::json::<GoodCrate>(&mut response);
 }
 
 #[test]
@@ -232,7 +229,6 @@ fn new_krate_twice() {
                           "2.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
-    assert!(json.ok);
     assert_eq!(json.krate.name.as_slice(), krate.name.as_slice());
 }
 
@@ -253,9 +249,10 @@ fn new_krate_wrong_user() {
                           krate.name.as_slice(),
                           "2.0.0", Vec::new());
     let mut response = t_resp!(middle.call(&mut req));
-    let json: BadCrate = ::json(&mut response);
-    assert!(!json.ok);
-    assert!(json.error.as_slice().contains("another user"), "{}", json.error);
+    let json: ::Bad = ::json(&mut response);
+    assert!(json.errors.len() > 0);
+    assert!(json.errors[0].detail.as_slice().contains("another user"),
+            "{}", json.errors);
 }
 
 #[test]
@@ -266,8 +263,8 @@ fn new_krate_too_big() {
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", Vec::new());
     req.with_body("a".repeat(1000 * 1000).as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: BadCrate = ::json(&mut response);
-    assert!(!json.ok);
+    let json: ::Bad = ::json(&mut response);
+    assert!(json.errors.len() > 0);
 }
 
 #[test]
@@ -281,9 +278,10 @@ fn new_krate_duplicate_version() {
                           krate.name.as_slice(),
                           "1.0.0", Vec::new());
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: BadCrate = ::json(&mut response);
-    assert!(!json.ok);
-    assert!(json.error.as_slice().contains("already uploaded"), "{}", json.error);
+    let json: ::Bad = ::json(&mut response);
+    assert!(json.errors.len() > 0);
+    assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
+            "{}", json.errors);
 }
 
 #[test]
@@ -369,7 +367,7 @@ fn new_krate_dependency_missing() {
     };
     let mut req = new_req(user.api_token.as_slice(), "foo", "1.0.0", vec![dep]);
     let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<BadCrate>(&mut response);
+    ::json::<::Bad>(&mut response);
 }
 
 #[test]
@@ -416,5 +414,27 @@ fn download_bad() {
     let rel = format!("/crates/{}/0.1.0/download", krate.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<BadCrate>(&mut response);
+    ::json::<::Bad>(&mut response);
+}
+
+#[test]
+fn dependencies() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user();
+    let c1 = ::krate();
+    let mut c2 = ::krate();
+    c2.name = "bar".to_string();
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
+    let rel = format!("/crates/{}/1.0.0/dependencies", c1.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<Deps>(&mut response);
+    assert_eq!(deps.dependencies[0].crate_id.as_slice(), "bar");
+    drop(req);
+
+    let rel = format!("/crates/{}/1.0.2/dependencies", c1.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<::Bad>(&mut response);
 }
