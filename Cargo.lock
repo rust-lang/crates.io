@@ -95,7 +95,7 @@ version = "0.5.0"
 source = "git+https://github.com/conduit-rust/conduit-router#a27ae29c44db39649b7cd937c6600d6abb05a15b"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#17b3153a76e57e5fde33b5c65171a72aad704c35)",
- "route-recognizer 0.1.0 (git+https://github.com/conduit-rust/route-recognizer.rs.git#dd71753013c2c573222c0ec1382b425cbaa8e67f)",
+ "route-recognizer 0.1.0 (git+https://github.com/conduit-rust/route-recognizer.rs.git#9dfb3413c30436ed5ca1a2d45a597611d5e005d2)",
 ]
 
 [[package]]
@@ -264,7 +264,7 @@ dependencies = [
 [[package]]
 name = "route-recognizer"
 version = "0.1.0"
-source = "git+https://github.com/conduit-rust/route-recognizer.rs.git#dd71753013c2c573222c0ec1382b425cbaa8e67f"
+source = "git+https://github.com/conduit-rust/route-recognizer.rs.git#9dfb3413c30436ed5ca1a2d45a597611d5e005d2"
 
 [[package]]
 name = "s3"
