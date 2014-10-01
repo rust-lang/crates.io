@@ -1,22 +1,18 @@
-#all-crates {
+#crates-heading {
     width: 100%;
     padding: 20px;
     background-color: $main-bg-dark;
     margin-bottom: 20px;
     @include border-radius(5px);
 
-    h1 { display: inline-block; }
+    > * { display: inline-block; vertical-align: middle; }
+
     h2 {
         color: $main-color-light;
-        display: inline-block;
         padding-left: 10px;
     }
-    img {
-        float: left;
-        display: inline-block;
-        margin-top: 18px;
-        margin-right: 10px;
-    }
+
+    a { float: right; margin-left: 20px; }
 }
 
 #selection {
@@ -41,8 +37,6 @@
 #results {
     width: 100%;
     display: flex;
-    color: $main-color-light;
-    font-size: 80%;
     margin-bottom: 10px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
@@ -60,7 +54,7 @@
 .crate {
     width: 100%;
     display: flex;
-    border-bottom: 2px solid #d5d3cb;
+    border-bottom: 2px solid $gray-border;
     padding-top: 20px;
 
     .desc {
@@ -76,11 +70,7 @@
         text-decoration: none;
         font-size: 120%;
     }
-    .vers {
-        margin-left: 10px;
-        color: $main-color-light;
-        font-size: 90%;
-    }
+    .vers { margin-left: 10px; }
 
     .stats {
         width: 15%;
@@ -104,4 +94,145 @@
     }
     a:hover { background-color: $main-bg-dark; }
     a.active { background-color: $main-bg-dark; }
+}
+
+.crate-info {
+    width: 100%;
+    padding-bottom: 20px;
+    border-bottom: 5px solid $gray-border;
+    margin-bottom: 20px;
+
+    .docs {
+        width: 70%;
+        float: left;
+        padding-right: 40px;
+    }
+    .authorship {
+        width: 30%;
+        float: left;
+    }
+    .install {
+        font-size: 120%;
+        padding: 10px 10px 10px 0;
+        background-color: darken($main-bg-dark, 8%);
+
+        * { display: inline-block; }
+        .action {
+            width: 20%;
+            float: left;
+            text-align: center;
+            padding-top: 18px;
+        }
+        code {
+            width: 80%;
+            background: $main-color;
+            color: white;
+            padding: 20px;
+        }
+    }
+
+    .authorship {
+        border-left: 2px solid $gray-border;
+        padding-left: 20px;
+    }
+
+    .last-update {
+        color: $main-color-light;
+        font-size: 90%;
+        line-height: 25px;
+    }
+    .date {
+        font-weight: bold;
+        margin-bottom: 40px;
+    }
+}
+
+#crate-downloads {
+    .stat {
+        width: 50%;
+        border-left: 1px solid $gray-border;
+        margin-top: 10px;
+        padding-left: 20px;
+        float: left;
+
+        img { clear: both; display: inline-block; vertical-align: middle; }
+        .num {
+            font-size: 160%;
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+    }
+
+    .stats { width: 70%; float: left; overflow: auto; }
+    .versions { width: 30%; float: left; text-align: center; }
+    .versions .small { padding: 10px; display: inline-block; }
+
+    .button-holder { position: relative; display: inline-block; }
+    button::after { content: "▼"; }
+    button.active::after { content: "▲"; }
+
+    #all-versions {
+        display: none;
+        visibility: none;
+        position: absolute;
+        top: 100%;
+        left: 10%;
+        width: 80%;
+        opacity: 0;
+        margin: 0;
+        text-align: left;
+        padding: 0;
+        background: white;
+        border: 1px solid $gray-border;
+        list-style: none;
+        z-index: 10;
+        @include border-radius(5px);
+
+        li a {
+            font-size: 90%;
+            width: 100%;
+            display: inline-block;
+            &:hover { background: $main-bg-dark; }
+            padding: 5px 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+    }
+    #all-versions.open {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .graph {
+        float: left;
+        width: 100%;
+        padding-bottom: 30px;
+        margin: 30px 0;
+        border-bottom: 5px solid $gray-border;
+
+        h4 { color: $main-color-light; }
+    }
+}
+
+#crate-links {
+    $link-color: rgb(0, 172, 91);
+    h3 { margin-bottom: 5px; }
+    .section {
+        float: left;
+        width: 25%;
+
+        li { line-height: 24px; }
+
+        a {
+            color: $link-color;
+            text-decoration: none;
+            font-weight: bold;
+            &:hover { color: darken($link-color, 10%); }
+        }
+        .date { color: $main-color-light; padding-left: 5px; }
+    }
+
+    ul { list-style: none; padding: 0; }
 }

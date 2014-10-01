@@ -3,6 +3,16 @@ import ajax from 'ic-ajax';
 
 export default Ember.ObjectController.extend({
     isLoading: false,
+
+    fetchingVersions: true,
+    showAllVersions: false,
+    currentVersion: null,
+    requestedVersion: null,
+
+    sortedVersions: function() {
+        return this.get("model").get("versions").sortBy("num").reverse();
+    }.property('model.versions.[]'),
+
     actions: {
         download: function(version) {
             this.set('isLoading', true);
@@ -19,7 +29,11 @@ export default Ember.ObjectController.extend({
             }).finally(function() {
                 self.set('isLoading', false);
             });
-        }
-    }
+        },
+
+        toggleVersions: function() {
+            this.set('showAllVersions', !this.get('showAllVersions'));
+        },
+    },
 });
 

@@ -2,12 +2,12 @@
     <h1>The Rust community's crate hosting service</h1>
 
     <div class='links'>
-        {{#link-to "install"}}
-            <img src="assets/button-download.png"/>
+        {{#link-to "install" class='yellow-button'}}
+            <img src="/assets/button-download.png"/>
             Install Cargo
         {{/link-to}}
-        <a href='http://crates.io/guide.html'>
-            <img src="assets/flag.png"/>
+        <a href='http://crates.io/guide.html' class='yellow-button'>
+            <img src="/assets/flag.png"/>
             Getting Started
         </a>
     </div>
@@ -22,14 +22,14 @@
 
     <div id='stats'>
         <div class='downloads'>
-            <img src="assets/download.png"/>
+            <img src="/assets/download.png"/>
             <span class='num'>{{format-num num_downloads}}</span>
-            <span class='desc'>Downloads</span>
+            <span class='desc small'>Downloads</span>
         </div>
         <div class='crates'>
-            <img src="assets/crate.png"/>
+            <img src="/assets/crate.png"/>
             <span class='num'>{{format-num num_crates}}</span>
-            <span class='desc'>Crates created</span>
+            <span class='desc small'>Crates created</span>
         </div>
     </div>
 </div>

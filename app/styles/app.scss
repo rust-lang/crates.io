@@ -5,6 +5,7 @@ $main-color: #383838;
 $main-color-light: lighten($main-color, 30%);
 $main-bg: #f9f7ec;
 $main-bg-dark: #edebdd;
+$gray-border: #d5d3cb;
 
 @import "home";
 @import "crate";
@@ -21,7 +22,7 @@ html {
 html, body { margin: 0; }
 
 body {
-  font-family: sans-serif;
+  font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
   display: -webkit-flex;
   display:         flex;
   -webkit-flex-direction: column;
@@ -72,11 +73,41 @@ body {
     input.search {
         font-size: 90%;
         border: none;
+        color: black;
+        outline: 0;
         margin-left: 30px;
         padding: 5px 5px 5px 25px;
         background-image: url('/assets/search.png');
         background-repeat: no-repeat;
         background-position: 6px 6px;
         @include border-radius(15px);
+    }
+}
+
+span.small {
+    color: $main-color-light;
+    font-size: 80%;
+}
+
+span.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url(/assets/ajax-loader.gif);
+}
+
+#flash {
+    display: none;
+    font-weight: bold;
+    font-size: 110%;
+    background-color: rgb(255, 213, 213);
+    border: 2px solid rgb(228, 136, 136);
+    text-align: center;
+    margin: 0 0 10px 0;
+    padding: 10px;
+    @include border-radius(5px);
+
+    &.shown {
+        display: block;
     }
 }

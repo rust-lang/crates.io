@@ -1,0 +1,149 @@
+<div id='crates-heading'>
+    <img class='logo' src="/assets/crate.png"/>
+    <h1>{{ name }}</h1>
+    <h2>{{ currentVersion.num }}</h2>
+
+    <a class='yellow-button' download
+       {{action 'download' currentVersion}}
+       {{bind-attr href=currentVersion.dl_path}}>
+        <img src="/assets/button-download.png"/>
+        Download
+    </a>
+
+    <a class='tan-button' {{action 'follow' this}}>
+        Follow
+    </a>
+</div>
+
+{{! This is used to set the url of to actually download a file }}
+<iframe id='download-frame' style='display:none'></iframe>
+
+<div class='crate-info'>
+    <div class='docs'>
+        {{#if description}}
+            <div class='about'>
+                <h2>About This Package</h2>
+                <p>{{ description }}</p>
+            </div>
+        {{/if}}
+        <div class='install'>
+            <div class='action'>Depend</div>
+            <code>{{ name }} = "~{{ currentVersion.num }}"</code>
+        </div>
+    </div>
+    <div class='authorship'>
+        <div class='last-update'><span class='small'>Last Updated</span></div>
+        <div class='date'>{{ from-now updated_at }}</div>
+
+        <h3>Authors</h3>
+        <ul>
+            <li>data here</li>
+        </ul>
+
+        <h3>Owners</h3>
+        <ul>
+            <li>data here</li>
+        </ul>
+    </div>
+</div>
+
+<div id='crate-downloads'>
+    <div class='stats'>
+        <h3>Stats Overview</h3>
+        <div class='stat'>
+            <span class='num'>
+                {{#if requestedVersion}}
+                    {{ format-num currentVersion.downloads }}
+                {{else}}
+                    {{ format-num downloads }}
+                {{/if}}
+            </span>
+            <img src="/assets/download.png"/>
+            <span class='desc small'>Downloads all time</span>
+        </div>
+        <div class='stat'>
+            <span {{bind-attr class="fetchingVersions:loading :num"}}>
+                FIXME
+            </span>
+            <img src="/assets/download.png"/>
+            <span class='desc small'>Downloads today</span>
+        </div>
+    </div>
+
+    <div class='versions'>
+        <span class='small'>Showing stats for</span>
+        <div class='button-holder'>
+            <button {{action 'toggleVersions'}}
+                     {{bind-attr class="showAllVersions:active :tan-button"}}>
+                {{#if requestedVersion}}
+                    {{ requestedVersion }}
+                {{else}}
+                    All Versions
+                {{/if}}
+            </button>
+
+            <ul id='all-versions' {{bind-attr class="showAllVersions:open"}}>
+                <li class='all'>
+                    {{#link-to 'crate.index' this}}All Versions{{/link-to}}
+                </li>
+                {{#each sortedVersions}}
+                    <li>{{#link-to 'crate.index' this}}
+                        {{ num }}
+                    {{/link-to}}</li>
+                {{/each}}
+            </ul>
+        </div>
+    </div>
+    <div class='graph'>
+        <h4>Downloads over the last 90 days</h4>
+        <div id='graph-data'></div>
+    </div>
+</div>
+
+<div id='crate-links'>
+    <div class='section'>
+        <h3>Links</h3>
+        <ul>
+            {{#if homepage}}
+                <li><a href="{{ homepage }}">Homepage</a></li>
+            {{/if}}
+            {{#if wiki}}
+                <li><a href="{{ wiki }}">Wiki</a></li>
+            {{/if}}
+            {{#if mailing_list}}
+                <li><a href="{{ mailing_list }}">Mailing List</a></li>
+            {{/if}}
+            {{#if documentation}}
+                <li><a href="{{ documentation }}">Documentation</a></li>
+            {{/if}}
+        </ul>
+    </div>
+
+    <div class='section'>
+        <h3>Dependencies</h3>
+        <ul>
+            {{#each dependencies}}
+                <li>{{ crate.name }}</li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class='section'>
+        <h3>Dev-Dependencies</h3>
+        <ul>
+            <li>...</li>
+        </ul>
+    </div>
+
+    <div class='section'>
+        <h3>Versions</h3>
+        <ul>
+            {{#each sortedVersions}}
+                <li>
+                    {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+                    <span class='date'>{{ date-small created_at }}</span>
+                </li>
+            {{/each}}
+        </ul>
+    </div>
+</div>
