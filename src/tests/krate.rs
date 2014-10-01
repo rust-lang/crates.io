@@ -3,14 +3,14 @@ use std::io::fs::PathExtensions;
 use std::collections::HashMap;
 use serialize::{json, Decoder, Decodable};
 
-use conduit::{mod, Handler, Request};
+use conduit::{mod, Handler};
 use conduit_test::MockRequest;
 use git2;
 use semver;
 
-use cargo_registry::db::RequestTransaction;
-use cargo_registry::krate::{EncodableCrate, Crate};
+use cargo_registry::krate::EncodableCrate;
 use cargo_registry::dependency::EncodableDependency;
+use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::upload as u;
 
@@ -24,6 +24,8 @@ struct GoodCrate { krate: EncodableCrate }
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
+#[deriving(Decodable)]
+struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 
 impl<E, D: Decoder<E>> Decodable<D, E> for CrateResponse {
     fn decode(d: &mut D) -> Result<CrateResponse, E> {
@@ -379,29 +381,17 @@ fn summary_doesnt_die() {
 
 #[test]
 fn download() {
-    let (_b, _app, mut middle) = ::app();
-    let user = ::user();
-    let krate = ::krate();
-    middle.add(::middleware::MockUser(user.clone()));
-    middle.add(::middleware::MockCrate(krate.clone()));
-    let rel = format!("/crates/{}/1.0.0/download", krate.name);
-    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/crates/foo/1.0.0/download");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.val0(), 302);
-    {
-        let conn = (&mut req as &mut Request).tx().unwrap();
-        let krate = Crate::find_by_name(conn, krate.name.as_slice()).unwrap();
-        assert_eq!(krate.downloads, 0); // updated later
-        let versions = krate.versions(conn).unwrap();
-        assert_eq!(versions[0].downloads, 0); // updated later
 
-        let stmt = conn.prepare("SELECT * FROM version_downloads").unwrap();
-        let mut rows = stmt.query(&[]).unwrap();
-        let row = rows.next().unwrap();
-        assert!(rows.next().is_none());
-        let downloads: i32 = row.get("downloads");
-        assert_eq!(downloads, 1);
-    }
+    req.with_path("/crates/foo/1.0.0/downloads");
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
 }
 
 #[test]

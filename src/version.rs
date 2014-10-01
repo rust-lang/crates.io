@@ -1,4 +1,5 @@
 use std::collections::{HashSet, HashMap};
+use std::time::Duration;
 use serialize::json;
 use time::Timespec;
 
@@ -9,7 +10,8 @@ use semver;
 use url;
 
 use db::{Connection, RequestTransaction};
-use dependency::Dependency;
+use dependency::{Dependency, EncodableDependency};
+use download::{VersionDownload, EncodableVersionDownload};
 use krate::Crate;
 use upload;
 use util::{RequestUtils, CargoResult, Require, internal, human};
@@ -42,6 +44,7 @@ pub struct EncodableVersion {
 #[deriving(Encodable, Decodable)]
 pub struct VersionLinks {
     pub dependencies: String,
+    pub version_downloads: String,
 }
 
 impl Version {
@@ -97,6 +100,8 @@ impl Version {
             links: VersionLinks {
                 dependencies: format!("/crates/{}/{}/dependencies",
                                       krate.name, num),
+                version_downloads: format!("/crates/{}/{}/downloads",
+                                           krate.name, num),
             },
         }
     }
@@ -216,4 +221,52 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { version: EncodableVersion }
     Ok(req.json(&R { version: version.encodable(&krate) }))
+}
+
+fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
+    let crate_name = req.params()["crate_id"].as_slice();
+    let semver = req.params()["version"].as_slice();
+    let semver = try!(semver::Version::parse(semver).map_err(|_| {
+        human(format!("invalid semver: {}", semver))
+    }));
+    let tx = try!(req.tx());
+    let krate = try!(Crate::find_by_name(tx, crate_name));
+    let version = try!(Version::find_by_num(tx, krate.id, &semver));
+    let version = try!(version.require(|| {
+        human(format!("crate `{}` does not have a version `{}`",
+                      crate_name, semver))
+    }));
+    Ok((version, krate))
+}
+
+pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
+    let (version, _) = try!(version_and_crate(req));
+    let tx = try!(req.tx());
+    let deps = try!(version.dependencies(tx));
+    let deps = deps.into_iter().map(|(dep, crate_name)| {
+        dep.encodable(crate_name.as_slice())
+    }).collect();
+
+    #[deriving(Encodable)]
+    struct R { dependencies: Vec<EncodableDependency> }
+    Ok(req.json(&R{ dependencies: deps }))
+}
+
+pub fn downloads(req: &mut Request) -> CargoResult<Response> {
+    let (version, _) = try!(version_and_crate(req));
+
+    let tx = try!(req.tx());
+    let cutoff_date = ::now() + Duration::days(-90);
+    let stmt = try!(tx.prepare("SELECT * FROM version_downloads
+                                WHERE date > $1 AND version_id = $2
+                                ORDER BY date ASC"));
+    let mut downloads = Vec::new();
+    for row in try!(stmt.query(&[&cutoff_date, &version.id])) {
+        let download: VersionDownload = Model::from_row(&row);
+        downloads.push(download.encodable());
+    }
+
+    #[deriving(Encodable)]
+    struct R { version_downloads: Vec<EncodableVersionDownload> }
+    Ok(req.json(&R{ version_downloads: downloads }))
 }

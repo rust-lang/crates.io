@@ -9,7 +9,7 @@ use std::time::Duration;
 use postgres::{PostgresResult, PostgresRows};
 use postgres::{PostgresTransaction, PostgresConnection};
 
-use cargo_registry::{VersionDownload, Version};
+use cargo_registry::{VersionDownload, Version, Model};
 
 static LIMIT: i64 = 10000;
 
@@ -72,7 +72,7 @@ fn collect(tx: &PostgresTransaction,
 
     let mut map = HashMap::new();
     for row in rows {
-        let download = VersionDownload::from_row(&row);
+        let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download));
     }
     println!("updating {} versions", map.len());

@@ -11,17 +11,18 @@ extern crate time;
 extern crate url;
 extern crate semver;
 
-use std::sync::{Once, ONCE_INIT, Arc};
-use std::os;
+use std::collections::HashMap;
 use std::io::Command;
 use std::io::process::InheritFd;
+use std::os;
+use std::sync::{Once, ONCE_INIT, Arc};
 use serialize::json;
 
 use conduit::Request;
 use conduit_test::MockRequest;
 use cargo_registry::app::App;
-use cargo_registry::db;
-use cargo_registry::user::User;
+use cargo_registry::db::{mod, RequestTransaction};
+use cargo_registry::{User, Crate, Version};
 
 macro_rules! t( ($e:expr) => (
     match $e {
@@ -120,7 +121,7 @@ fn user() -> User {
     }
 }
 
-fn krate() -> cargo_registry::krate::Crate {
+fn krate() -> Crate {
     cargo_registry::krate::Crate {
         id: 10000,
         name: "foo".to_string(),
@@ -130,4 +131,22 @@ fn krate() -> cargo_registry::krate::Crate {
         downloads: 10,
         max_version: semver::Version::parse("0.0.0").unwrap(),
     }
+}
+
+fn mock_user(req: &mut Request, u: User) -> User {
+    let u = User::find_or_insert(req.tx().unwrap(), u.email.as_slice(),
+                                 u.gh_access_token.as_slice(),
+                                 u.api_token.as_slice()).unwrap();
+    req.mut_extensions().insert(u.clone());
+    return u;
+}
+
+fn mock_crate(req: &mut Request, name: &str) -> Crate {
+    let user = req.extensions().find::<User>().unwrap();
+    let krate = Crate::find_or_insert(req.tx().unwrap(), name,
+                                      user.id).unwrap();
+    Version::insert(req.tx().unwrap(), krate.id,
+                    &semver::Version::parse("1.0.0").unwrap(),
+                    &HashMap::new()).unwrap();
+    return krate;
 }

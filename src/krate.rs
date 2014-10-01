@@ -1,5 +1,6 @@
 use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::sync::Arc;
+use std::time::Duration;
 use serialize::hex::ToHex;
 use serialize::json;
 use time::Timespec;
@@ -13,15 +14,15 @@ use semver;
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
-use dependency::EncodableDependency;
+use download::{VersionDownload, EncodableVersionDownload};
 use git;
-use user::User;
-use upload;
-use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
-use util::{LimitErrorReader, HashingReader};
-use util::errors::{NotFound, CargoError};
-use version::{Version, EncodableVersion};
 use model::Model;
+use upload;
+use user::User;
+use util::errors::{NotFound, CargoError};
+use util::{LimitErrorReader, HashingReader};
+use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
+use version::{Version, EncodableVersion};
 
 #[deriving(Clone)]
 pub struct Crate {
@@ -43,6 +44,12 @@ pub struct EncodableCrate {
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
+    pub links: CrateLinks,
+}
+
+#[deriving(Encodable, Decodable)]
+pub struct CrateLinks {
+    pub version_downloads: String,
 }
 
 impl Crate {
@@ -97,6 +104,9 @@ impl Crate {
             created_at: ::encode_time(created_at),
             downloads: downloads,
             max_version: max_version.to_string(),
+            links: CrateLinks {
+                version_downloads: format!("/crates/{}/downloads", name),
+            },
         }
     }
 
@@ -472,25 +482,24 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
-pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
+pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
-    let semver = req.params()["version"].as_slice();
-    let semver = try!(semver::Version::parse(semver).map_err(|_| {
-        human(format!("invalid semver: {}", semver))
-    }));
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
-    let version = try!(Version::find_by_num(tx, krate.id, &semver));
-    let version = try!(version.require(|| {
-        human(format!("crate `{}` does not have a version `{}`",
-                      crate_name, semver))
-    }));
-    let deps = try!(version.dependencies(tx));
-    let deps = deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(crate_name.as_slice())
-    }).collect();
+
+    let cutoff_date = ::now() + Duration::days(-90);
+    let stmt = try!(tx.prepare("SELECT * FROM version_downloads
+                                LEFT JOIN versions
+                                    ON versions.id = version_downloads.version_id
+                                WHERE date > $1 AND versions.crate_id = $2
+                                ORDER BY date ASC"));
+    let mut downloads = Vec::new();
+    for row in try!(stmt.query(&[&cutoff_date, &krate.id])) {
+        let download: VersionDownload = Model::from_row(&row);
+        downloads.push(download.encodable());
+    }
 
     #[deriving(Encodable)]
-    struct R { dependencies: Vec<EncodableDependency> }
-    Ok(req.json(&R{ dependencies: deps }))
+    struct R { version_downloads: Vec<EncodableVersionDownload> }
+    Ok(req.json(&R{ version_downloads: downloads }))
 }
