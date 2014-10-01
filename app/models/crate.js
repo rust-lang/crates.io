@@ -14,6 +14,5 @@ export default DS.Model.extend({
     issues: DS.attr('string'),
     documentation: DS.attr('string'),
 
-    versions: DS.hasMany('versions', { async: true }),
-    dependencies: DS.hasMany('dependencies', { async: true }),
+    versions: DS.hasMany('versions', {async: true}),
 });

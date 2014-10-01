@@ -20,8 +20,8 @@ export default Ember.Route.extend({
         return;
       }
       var data = response.data;
-      if (!data.ok) {
-        var error = "Failed to log in: " + data.error;
+      if (data.errors) {
+        var error = "Failed to log in: " + data.errors[0];
         self.controllerFor('application').set('flashError', error);
         return;
       }

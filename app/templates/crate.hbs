@@ -122,8 +122,14 @@
     <div class='section'>
         <h3>Dependencies</h3>
         <ul>
-            {{#each dependencies}}
-                <li>{{ crate.name }}</li>
+            {{#each currentVersion.dependencies}}
+                {{#unless optional}}
+                    <li>
+                        {{#link-to 'crate' crate_id}}
+                            {{ crate_id}} {{ req }}
+                        {{/link-to}}
+                    </li>
+                {{/unless}}
             {{/each}}
         </ul>
     </div>
@@ -131,7 +137,15 @@
     <div class='section'>
         <h3>Dev-Dependencies</h3>
         <ul>
-            <li>...</li>
+            {{#each currentVersion.dependencies}}
+                {{#if optional}}
+                    <li>
+                        {{#link-to 'crate' crate_id}}
+                            {{ crate_id}} {{ req }}
+                        {{/link-to}}
+                    </li>
+                {{/if}}
+            {{/each}}
         </ul>
     </div>
 
