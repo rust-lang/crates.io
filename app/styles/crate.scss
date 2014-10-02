@@ -37,9 +37,18 @@
 #results {
     width: 100%;
     display: flex;
-    margin-bottom: 10px;
+    justify-content: space-between;
+    margin-bottom: 25px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
+
+    .dropdown-container { font-size: 85%; }
+    a.dropdown {
+        background-color: $main-bg-dark;
+        padding: 10px;
+        display: inline-block;
+        @include border-radius(5px);
+    }
 }
 
 .white-rows {

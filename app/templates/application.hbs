@@ -18,7 +18,7 @@
         {{#link-to "crates"}}Browse All Crates{{/link-to}}
         <span class="sep">|</span>
         {{#if session.currentUser}}
-            <div style='position:relative;display:inline-block'>
+            <div class='dropdown-container'>
                 <button {{action 'toggleUserOptions'}}
                         {{bind-attr class='showUserOptions:active :dropdown'}}>
                     <img {{bind-attr src=session.currentUser.smallAvatar}}

@@ -19,6 +19,35 @@
             of <span class='total'>{{ totalItems }}</span> total results
         </span>
     </div>
+
+    <div class='sort'>
+        <span class='small'>Sort by</span>
+        <div class='dropdown-container'>
+            <a {{action 'toggleShowSortBy'}}
+               {{bind-attr class='showSortBy:active :dropdown'}}>
+                <img src="/assets/sort.png"/>
+                {{ currentSortBy }}
+                <span class='arrow'></span>
+            </a>
+            <ul {{bind-attr class='showSortBy:open :dropdown'}}>
+                <li>
+                    {{#link-to 'crates' (query-params sort="alpha")}}
+                        Alphabetical
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to 'crates' (query-params sort="downloads")}}
+                        Downloads today
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to 'crates' (query-params sort="downloads-all")}}
+                        Total Downloads
+                    {{/link-to}}
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <div id='crates' class='white-rows'>
