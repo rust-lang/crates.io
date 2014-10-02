@@ -36,7 +36,6 @@ pub struct EncodableUser {
     pub login: String,
     pub email: Option<String>,
     pub name: Option<String>,
-    pub api_token: String,
     pub avatar: Option<String>,
 }
 
@@ -114,12 +113,11 @@ impl User {
     }
 
     pub fn encodable(self) -> EncodableUser {
-        let User { id, email, api_token, gh_access_token: _,
+        let User { id, email, api_token: _, gh_access_token: _,
                    name, gh_login, avatar } = self;
         EncodableUser {
             id: id,
             email: email,
-            api_token: api_token,
             avatar: avatar,
             login: gh_login,
             name: name,
@@ -225,6 +223,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
     #[deriving(Encodable)]
-    struct R { user: EncodableUser }
-    Ok(req.json(&R{ user: user.clone().encodable() }))
+    struct R { user: EncodableUser, api_token: String }
+    let token = user.api_token.clone();
+    Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
 }

@@ -10,7 +10,7 @@ use cargo_registry::db::RequestTransaction;
 #[deriving(Decodable)]
 struct AuthResponse { url: String, state: String }
 #[deriving(Decodable)]
-struct MeResponse { user: EncodableUser }
+struct MeResponse { user: EncodableUser, api_token: String }
 
 #[test]
 fn auth_gives_a_token() {
@@ -60,7 +60,7 @@ fn me() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: MeResponse = ::json(&mut response);
     assert_eq!(json.user.email, user.email);
-    assert_eq!(json.user.api_token, user.api_token);
+    assert_eq!(json.api_token, user.api_token);
 }
 
 #[test]
