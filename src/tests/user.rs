@@ -36,12 +36,14 @@ fn user_insert() {
     let conn = t!(app.database.get());
     let tx = t!(conn.transaction());
 
-    let user = t!(User::find_or_insert(&tx, "foo", "bar", "baz"));
+    let user = t!(User::find_or_insert(&tx, "foo", None, None, None, "bar", "baz"));
     assert_eq!(t!(User::find_by_api_token(&tx, "baz")), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
-    assert_eq!(t!(User::find_or_insert(&tx, "foo", "bar", "api")), user);
-    let user2 = t!(User::find_or_insert(&tx, "foo", "baz", "api"));
+    assert_eq!(t!(User::find_or_insert(&tx, "foo", None, None, None,
+                                       "bar", "api")), user);
+    let user2 = t!(User::find_or_insert(&tx, "foo", None, None, None,
+                                        "baz", "api"));
     assert!(user != user2);
     assert_eq!(user2.gh_access_token.as_slice(), "baz");
 }
@@ -72,8 +74,8 @@ fn reset_token() {
 
     impl Middleware for ResetTokenTest {
         fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
-            let user = User::find_or_insert(req.tx().unwrap(), "foo",
-                                            "bar", "baz").unwrap();
+            let user = User::find_or_insert(req.tx().unwrap(), "foo", None,
+                                            None, None, "bar", "baz").unwrap();
             req.mut_extensions().insert(user);
             Ok(())
         }

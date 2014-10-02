@@ -262,6 +262,17 @@ fn migrations() -> Vec<Migration> {
                        "CREATE INDEX index_dependencies_crate_id \
                         ON dependencies (crate_id)",
                        "DROP INDEX index_dependencies_crate_id"),
+        Migration::add_column(20141001190227, "users", "gh_login",
+                              "VARCHAR NOT NULL"),
+        Migration::add_column(20141001190228, "users", "name", "VARCHAR"),
+        Migration::run(20141001190229,
+                       "CREATE INDEX index_users_gh_login \
+                        ON users (gh_login)",
+                       "DROP INDEX index_users_gh_login"),
+        Migration::run(20141001190230,
+                       "ALTER TABLE users ALTER COLUMN email DROP NOT NULL",
+                       "ALTER TABLE users ALTER COLUMN email SET NOT NULL"),
+        Migration::add_column(20141001190231, "users", "gh_avatar", "VARCHAR"),
     ];
 
     let mut seen = HashSet::new();

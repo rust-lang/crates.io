@@ -240,7 +240,7 @@ fn new_krate_wrong_user() {
 
     // Crate will be owned by u2 (the last user)
     let mut u1 = ::user();
-    u1.email = "some-new-email".to_string();
+    u1.gh_login = "some-new-login".to_string();
     let u2 = ::user();
     middle.add(::middleware::MockUser(u1.clone()));
     middle.add(::middleware::MockUser(u2));

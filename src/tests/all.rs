@@ -115,7 +115,10 @@ fn json<T>(r: &mut conduit::Response) -> T
 fn user() -> User {
     User {
         id: 10000,
-        email: "foo@example.com".to_string(),
+        gh_login: "foo@example.com".to_string(),
+        email: None,
+        name: None,
+        avatar: None,
         gh_access_token: User::new_api_token(), // just randomize it
         api_token: User::new_api_token(),
     }
@@ -134,7 +137,11 @@ fn krate() -> Crate {
 }
 
 fn mock_user(req: &mut Request, u: User) -> User {
-    let u = User::find_or_insert(req.tx().unwrap(), u.email.as_slice(),
+    let u = User::find_or_insert(req.tx().unwrap(),
+                                 u.gh_login.as_slice(),
+                                 u.email.as_ref().map(|s| s.as_slice()),
+                                 u.name.as_ref().map(|s| s.as_slice()),
+                                 u.avatar.as_ref().map(|s| s.as_slice()),
                                  u.gh_access_token.as_slice(),
                                  u.api_token.as_slice()).unwrap();
     req.mut_extensions().insert(u.clone());

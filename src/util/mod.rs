@@ -14,7 +14,7 @@ pub use self::errors::{ChainError, BoxError};
 pub use self::result::{Require, Wrap};
 pub use self::lazy_cell::LazyCell;
 pub use self::io::LimitErrorReader;
-pub use self::hasher::HashingReader;
+pub use self::hasher::{HashingReader};
 
 pub mod errors;
 pub mod result;

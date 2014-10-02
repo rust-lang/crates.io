@@ -22,7 +22,10 @@ mod middleware;
 #[deriving(Clone, Show, PartialEq, Eq)]
 pub struct User {
     pub id: i32,
-    pub email: String,
+    pub gh_login: String,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub avatar: Option<String>,
     pub gh_access_token: String,
     pub api_token: String,
 }
@@ -30,8 +33,11 @@ pub struct User {
 #[deriving(Decodable, Encodable)]
 pub struct EncodableUser {
     pub id: i32,
-    pub email: String,
+    pub login: String,
+    pub email: Option<String>,
+    pub name: Option<String>,
     pub api_token: String,
+    pub avatar: Option<String>,
 }
 
 impl User {
@@ -51,30 +57,41 @@ impl User {
         })
     }
 
-    pub fn find_or_insert(conn: &Connection, email: &str,
+    pub fn find_or_insert(conn: &Connection,
+                          login: &str,
+                          email: Option<&str>,
+                          name: Option<&str>,
+                          avatar: Option<&str>,
                           access_token: &str,
                           api_token: &str) -> CargoResult<User> {
         // TODO: this is racy, but it looks like any other solution is...
         //       interesting! For now just do the racy thing which will report
         //       more errors than it needs to.
 
-        let stmt = try!(conn.prepare("UPDATE users SET gh_access_token = $1 \
-                                      WHERE email = $2 \
+        let stmt = try!(conn.prepare("UPDATE users
+                                      SET gh_access_token = $1,
+                                          email = $2,
+                                          name = $3,
+                                          gh_avatar = $4
+                                      WHERE gh_login = $5
                                       RETURNING *"));
         let mut rows = try!(stmt.query(&[&access_token as &ToSql,
-                                         &email as &ToSql]));
+                                         &email, &name, &avatar,
+                                         &login as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(User::from_row(row)),
             None => {}
         }
-        let stmt = try!(conn.prepare("INSERT INTO users \
-                                      (email, gh_access_token, \
-                                       api_token) \
-                                      VALUES ($1, $2, $3)
+        let stmt = try!(conn.prepare("INSERT INTO users
+                                      (email, gh_access_token, api_token,
+                                       gh_login, name, gh_avatar)
+                                      VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *"));
         let mut rows = try!(stmt.query(&[&email as &ToSql,
                                          &access_token as &ToSql,
-                                         &api_token as &ToSql]));
+                                         &api_token as &ToSql,
+                                         &login as &ToSql,
+                                         &name, &avatar]));
         Ok(User::from_row(try!(rows.next().require(|| {
             internal("no user with email we just found")
         }))))
@@ -86,6 +103,9 @@ impl User {
             email: row.get("email"),
             gh_access_token: row.get("gh_access_token"),
             api_token: row.get("api_token"),
+            gh_login: row.get("gh_login"),
+            name: row.get("name"),
+            avatar: row.get("gh_avatar"),
         }
     }
 
@@ -94,8 +114,16 @@ impl User {
     }
 
     pub fn encodable(self) -> EncodableUser {
-        let User { id, email, api_token, .. } = self;
-        EncodableUser { id: id, email: email, api_token: api_token }
+        let User { id, email, api_token, gh_access_token: _,
+                   name, gh_login, avatar } = self;
+        EncodableUser {
+            id: id,
+            email: email,
+            api_token: api_token,
+            avatar: avatar,
+            login: gh_login,
+            name: name,
+        }
     }
 }
 
@@ -143,7 +171,12 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     #[deriving(Decodable)]
-    struct GithubUser { email: String }
+    struct GithubUser {
+        email: Option<String>,
+        name: Option<String>,
+        login: String,
+        avatar_url: Option<String>,
+    }
     let json = try!(str::from_utf8(resp.get_body()).require(||{
         internal("github didn't send a utf8-response")
     }));
@@ -153,7 +186,14 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
 
     // Into the database!
     let api_token = User::new_api_token();
-    let user = try!(User::find_or_insert(try!(req.tx()), ghuser.email.as_slice(),
+    let user = try!(User::find_or_insert(try!(req.tx()),
+                                         ghuser.login.as_slice(),
+                                         ghuser.email.as_ref()
+                                               .map(|s| s.as_slice()),
+                                         ghuser.name.as_ref()
+                                               .map(|s| s.as_slice()),
+                                         ghuser.avatar_url.as_ref()
+                                               .map(|s| s.as_slice()),
                                          token.access_token.as_slice(),
                                          api_token.as_slice()));
     req.session().insert("user_id".to_string(), user.id.to_string());
