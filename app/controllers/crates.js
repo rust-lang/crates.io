@@ -23,9 +23,7 @@ export default Ember.ArrayController.extend(PaginationMixin, {
 
     currentSortBy: function() {
         if (this.get('sort') === 'downloads') {
-            return 'Downloads today';
-        } else if (this.get('sort') === 'downloads-all') {
-            return 'Total Downloads';
+            return 'Downloads';
         } else {
             return 'Alphabetical';
         }
