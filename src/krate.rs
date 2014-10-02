@@ -192,6 +192,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                      .and_then(from_str::<i64>).unwrap_or(10);
     if limit > 100 { return Err(human("cannot request more than 100 crates")) }
     let offset = (page - 1) * limit;
+    let sort = query.find_equiv(&"sort").map(|s| s.as_slice()).unwrap_or("alpha");
+    let sort_sql = match sort {
+        "downloads" => "ORDER BY downloads DESC",
+        _ => "ORDER BY name ASC",
+    };
 
     // Different queries for different parameters
     let mut pattern;
@@ -204,7 +209,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                    to_tsvector('english', name) txt,
                                    ts_rank_cd(txt, q) rank
               WHERE q @@ txt
-              ORDER BY rank DESC LIMIT $2 OFFSET $3",
+              ORDER BY rank DESC LIMIT $2 OFFSET $3".to_string(),
              "SELECT COUNT(crates.*) FROM crates,
                                           plainto_tsquery($1) q,
                                           to_tsvector('english', name) txt
@@ -214,18 +219,18 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             pattern = format!("{}%", letter.as_slice().char_at(0)
                                            .to_lowercase());
             args.insert(0, &pattern as &ToSql);
-            ("SELECT * FROM crates WHERE name LIKE $1 ORDER BY name ASC
-              LIMIT $2 OFFSET $3",
+            (format!("SELECT * FROM crates WHERE name LIKE $1 {}
+                      LIMIT $2 OFFSET $3", sort_sql),
              "SELECT COUNT(*) FROM crates WHERE name LIKE $1")
         },
         (None, None) => {
-            ("SELECT * FROM crates ORDER BY name ASC LIMIT $1 OFFSET $2",
+            (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2", sort_sql),
              "SELECT COUNT(*) FROM crates")
         }
     };
 
     // Collect all the crates
-    let stmt = try!(conn.prepare(q));
+    let stmt = try!(conn.prepare(q.as_slice()));
     let mut crates = Vec::new();
     for row in try!(stmt.query(args.as_slice())) {
         crates.push(Model::from_row(&row));
