@@ -28,9 +28,13 @@
 </div>
 
 <div class='pagination'>
-    {{#link-to 'crates' (query-params page=prevPage) class="prev"}}Prev{{/link-to}}
+    {{#link-to 'crates' (query-params page=prevPage) class="prev"}}
+        <img src="/assets/left-pag.png"/>
+    {{/link-to}}
     {{#each pages}}
         {{#link-to 'crates' (query-params page=this)}}{{ this }}{{/link-to}}
     {{/each}}
-    {{#link-to 'crates' (query-params page=nextPage) class="next"}}Next{{/link-to}}
+    {{#link-to 'crates' (query-params page=nextPage) class="next"}}
+        <img src="/assets/right-pag.png"/>
+    {{/link-to}}
 </div>

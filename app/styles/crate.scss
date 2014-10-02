@@ -53,6 +53,7 @@
         border-bottom: 2px solid $gray-border;
         padding: 20px 0;
         display: flex;
+        justify-content: space-between;
 
         &:last-of-type { border: none; }
     }
@@ -165,45 +166,16 @@
     }
 
     .stats { width: 70%; float: left; overflow: auto; }
-    .versions { width: 30%; float: left; text-align: center; }
-    .versions .small { padding: 10px; display: inline-block; }
-
-    .button-holder { position: relative; display: inline-block; }
-    button::after { content: "▼"; }
-    button.active::after { content: "▲"; }
-
-    #all-versions {
-        display: none;
-        visibility: none;
-        position: absolute;
-        top: 100%;
-        left: 10%;
-        width: 80%;
-        opacity: 0;
-        margin: 0;
-        text-align: left;
-        padding: 0;
-        background: white;
-        border: 1px solid $gray-border;
-        list-style: none;
-        z-index: 10;
-        @include border-radius(5px);
-
-        li a {
-            font-size: 90%;
-            width: 100%;
-            display: inline-block;
-            &:hover { background: $main-bg-dark; }
-            padding: 5px 10px;
-            text-decoration: none;
-            color: inherit;
-        }
+    .versions {
+        width: 30%;
+        float: left;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        .small { padding: 10px; }
     }
-    #all-versions.open {
-        display: block;
-        visibility: visible;
-        opacity: 1;
-    }
+
+    .button-holder { position: relative; }
 
     .graph {
         float: left;
@@ -234,8 +206,13 @@
 }
 
 .all-versions-back { margin-bottom: 20px; }
-#all-versions {
+
+#crate-all-versions {
     margin-top: 10px;
 
     .small { margin-left: 20px; display: inline-block; }
+    a.arrow {
+        display: inline-block;
+        float: right;
+    }
 }

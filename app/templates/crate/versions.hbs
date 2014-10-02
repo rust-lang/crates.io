@@ -10,11 +10,16 @@
     </span>
 </div>
 
-<div id='all-versions' class='white-rows'>
+<div id='crate-all-versions' class='white-rows'>
     {{#each versions}}
         <div class='row'>
-            {{#link-to 'crate' this}}{{ num }}{{/link-to}}
-            <span class='small'>{{ date-long created_at }}</span>
+            <div>
+                {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+                <span class='small'>{{ date-long created_at }}</span>
+            </div>
+            {{#link-to 'crate' this class='arrow'}}
+                <img src="/assets/right-arrow-all-versions.png"/>
+            {{/link-to}}
         </div>
     {{/each}}
 </div>

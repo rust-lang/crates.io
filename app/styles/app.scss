@@ -67,10 +67,9 @@ body {
     a { color: white; text-decoration: none; }
     a:hover { color: darken(white, 15%); }
 
-    // h1 { font-weight: bold; }
-
     .nav { float: right; }
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+    img { vertical-align: middle; }
 
     input.search {
         font-size: 90%;
@@ -83,6 +82,24 @@ body {
         background-repeat: no-repeat;
         background-position: 6px 6px;
         @include border-radius(15px);
+    }
+
+    button {
+        background: none;
+        outline: 0;
+        border: 0;
+        padding: 10px;
+
+        &.active {
+            background: rgb(42, 79, 39);
+            box-shadow: inset -2px 2px 4px 0px rgb(36, 61, 38);
+        }
+    }
+
+    #current-user-links {
+        display: none;
+
+        &.open { display: block; }
     }
 }
 
@@ -142,4 +159,49 @@ pre {
     background: $main-color;
     color: white;
     padding: 20px;
+}
+
+.pagination {
+    img { vertical-align: middle; }
+    .next.active, .prev.active { background: none; }
+}
+
+button.dropdown {
+    .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
+    .arrow::after { content: "▼"; }
+    &.active .arrow::after { content: "▲"; }
+}
+
+ul.dropdown {
+    display: none;
+    visibility: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    margin: 0;
+    text-align: left;
+    padding: 0;
+    background: white;
+    border: 1px solid $gray-border;
+    list-style: none;
+    z-index: 10;
+    @include border-radius(5px);
+
+    li a {
+        font-size: 90%;
+        width: 100%;
+        display: inline-block;
+        &:hover { background: $main-bg-dark; }
+        padding: 8px 10px;
+        text-decoration: none;
+        color: $main-color !important;
+    }
+    li.last { border-top: 1px solid $gray-border; }
+    &.open {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+    }
 }

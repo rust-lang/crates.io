@@ -1,5 +1,10 @@
 <ul>
-{{#each}}
-    <li>{{#link-to 'crate' this}}{{ name }} ({{ max_version }}){{/link-to}}</li>
-{{/each}}
+    {{#each}}
+        <li>
+            {{#link-to 'crate' this class='name'}}
+                {{ name }} ({{ max_version }})
+                <img src="/assets/right-arrow.png"/>
+            {{/link-to}}
+        </li>
+    {{/each}}
 </ul>

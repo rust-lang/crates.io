@@ -85,6 +85,8 @@
         background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
+
+        img { float: right; }
     }
     li a:hover { background-color: darken($main-bg-dark, 5%); }
 }

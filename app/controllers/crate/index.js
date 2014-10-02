@@ -4,6 +4,7 @@ import ajax from 'ic-ajax';
 var NUM_VERSIONS = 5;
 
 export default Ember.ObjectController.extend({
+    needs: ['application'],
     isDownloading: false,
 
     fetchingVersions: true,
@@ -43,7 +44,8 @@ export default Ember.ObjectController.extend({
         },
 
         toggleVersions: function() {
-            this.set('showAllVersions', !this.get('showAllVersions'));
+            this.get('controllers.application')
+                .resetDropdownOption(this, 'showAllVersions');
         },
 
         renderChart: function(downloads) {

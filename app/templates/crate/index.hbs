@@ -74,15 +74,16 @@
         <span class='small'>Showing stats for</span>
         <div class='button-holder'>
             <button {{action 'toggleVersions'}}
-                     {{bind-attr class="showAllVersions:active :tan-button"}}>
+                     {{bind-attr class="showAllVersions:active :tan-button :dropdown"}}>
                 {{#if requestedVersion}}
                     {{ requestedVersion }}
                 {{else}}
                     All Versions
                 {{/if}}
+                <span class='arrow'></span>
             </button>
 
-            <ul id='all-versions' {{bind-attr class="showAllVersions:open"}}>
+            <ul id='all-versions' {{bind-attr class="showAllVersions:open :dropdown"}}>
                 <li class='all'>
                     {{#link-to 'crate.index' this}}All Versions{{/link-to}}
                 </li>
