@@ -8,6 +8,10 @@ export default DS.Model.extend({
     avatar: DS.attr('string'),
 
     smallAvatar: function() {
-        return this.get('avatar') + '?s=22';
+        return this.get('avatar') + '&s=22';
+    }.property('avatar'),
+
+    mediumAvatar: function() {
+        return this.get('avatar') + '&s=85';
     }.property('avatar'),
 });

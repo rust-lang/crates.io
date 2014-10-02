@@ -11,6 +11,7 @@ $link-color: rgb(0, 172, 91);
 @import "home";
 @import "crate";
 @import "install";
+@import "me";
 
 * {
   box-sizing: border-box;
@@ -205,3 +206,5 @@ ul.dropdown {
         opacity: 1;
     }
 }
+
+.hidden { display: none; }

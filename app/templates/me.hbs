@@ -1,18 +1,41 @@
-<dl>
-  <dt>Email</dt>
-  <dd>{{ email }}</dd>
-  <dt>Cargo API Token</dt>
-  <dd>
-    {{ api_token }}
-    <button id='user-reset-token'
-            {{bind-attr class="isResetting:loading"}}
-            {{action "resetToken"}}>Reset Token</button>
-    <span class='loading-gif'
-          {{bind-attr class="isResetting:visible"}}></span>
-  </dd>
-</dl>
+<div id='crates-heading'>
+    <img class='logo' src="/assets/gear.png"/>
+    <h1>Account Settings</h1>
+</div>
 
-<p>Log in via the command line:
-<pre>
+<div id='me-profile'>
+    <h2>Profile Information</h2>
+
+    <div class='info'>
+        <img {{bind-attr src=mediumAvatar}} width=85 height=85/>
+
+        <dl>
+            <dt>Name</dt>
+            <dd>{{ name }}</dt>
+            <dt>GitHub Account</dt>
+            <dd>{{ login }}</dd>
+            <dt>Email</dt>
+            <dd>{{ email }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div id='me-api'>
+    <h2>API Access</h2>
+
+    <p>Your API key is <strong>{{ api_token }}</strong></p>
+    <p>
+        If you want to use package commands from the command line, you'll need a
+        <code>~/.cargo/config</code> which can be generated with:
+    </p>
+    <pre>
 cargo login {{ api_token }}
 </pre>
+
+    <button {{action "resetToken"}} class='yellow-button'>
+        Reset my API key
+    </button>
+
+    <img src="/assets/ajax-loader.gif"
+         {{bind-attr class="isResetting::hidden"}}/>
+</div>

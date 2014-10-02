@@ -7,6 +7,7 @@
     text-decoration: none;
     font-weight: bold;
     border: none;
+    outline: 0;
     @include border-radius(30px);
     @include vertical-gradient($start, $end);
 

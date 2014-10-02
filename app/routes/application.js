@@ -9,6 +9,7 @@ export default Ember.Route.extend({
         {
             return ajax('/me').then(function(response) {
                 var user = self.store.push('user', response.user);
+                user.set('api_token', response.api_token);
                 self.session.set('currentUser', user);
             }).catch(function() {
                 self.session.logoutUser();
