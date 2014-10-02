@@ -65,19 +65,21 @@ export default Ember.ObjectController.extend({
             for (var date in dates) {
                 data.push([dates[date].date.toDate(), dates[date].cnt]);
             }
-
             data = google.visualization.arrayToDataTable(data);
-            var el = document.getElementById('graph-data');
-            var chart = new google.visualization.LineChart(el);
-            chart.draw(data, {
-                chartArea: {'width': '80%', 'height': '80%'},
-                hAxis: {
-                    minorGridlines: { count: 8 },
-                },
-                vAxis: {
-                    minorGridlines: { count: 5 },
-                    viewWindow: { min: 0, },
-                },
+
+            Ember.run.scheduleOnce('afterRender', this, function() {
+                var el = document.getElementById('graph-data');
+                var chart = new google.visualization.LineChart(el);
+                chart.draw(data, {
+                    chartArea: {'width': '80%', 'height': '80%'},
+                    hAxis: {
+                        minorGridlines: { count: 8 },
+                    },
+                    vAxis: {
+                        minorGridlines: { count: 5 },
+                        viewWindow: { min: 0, },
+                    },
+                });
             });
         },
     },
