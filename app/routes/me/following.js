@@ -8,7 +8,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
     },
 
     model: function(params) {
-        params.user_id = this.session.get('currentUser.id');
+        params.following = 1;
         return this.store.find('crate', params);
     },
 });
