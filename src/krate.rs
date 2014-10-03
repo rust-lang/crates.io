@@ -565,3 +565,20 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     struct R { following: bool }
     Ok(req.json(&R { following: rows.next().is_some() }))
 }
+
+pub fn versions(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = req.params()["crate_id"].as_slice();
+    let tx = try!(req.tx());
+    let krate = try!(Crate::find_by_name(tx, crate_name));
+
+    let stmt = try!(tx.prepare("SELECT * FROM versions WHERE crate_id = $1"));
+    let mut versions = Vec::new();
+    for row in try!(stmt.query(&[&krate.id])) {
+        let version: Version = Model::from_row(&row);
+        versions.push(version.encodable(crate_name));
+    }
+
+    #[deriving(Encodable)]
+    struct R { versions: Vec<EncodableVersion> }
+    Ok(req.json(&R{ versions: versions }))
+}

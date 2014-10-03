@@ -17,6 +17,8 @@ use cargo_registry::upload as u;
 #[deriving(Decodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[deriving(Decodable)]
+struct VersionsList { versions: Vec<EncodableVersion> }
+#[deriving(Decodable)]
 struct CrateMeta { total: int }
 #[deriving(Decodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
@@ -138,6 +140,17 @@ fn show() {
     let suffix = "/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
+}
+
+#[test]
+fn versions() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/crates/foo/versions");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: VersionsList = ::json(&mut response);
+    assert_eq!(json.versions.len(), 1);
 }
 
 fn new_req(api_token: &str, krate: &str, version: &str,

@@ -31,7 +31,7 @@ pub struct Version {
 #[deriving(Encodable, Decodable)]
 pub struct EncodableVersion {
     pub id: i32,
-    pub krate: String,
+    pub crate_id: String,
     pub num: String,
     pub dl_path: String,
     pub updated_at: String,
@@ -91,7 +91,7 @@ impl Version {
             dl_path: format!("/crates/{}/{}/download", crate_name, num),
             num: num.clone(),
             id: id,
-            krate: crate_name.to_string(),
+            crate_id: crate_name.to_string(),
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
