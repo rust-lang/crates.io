@@ -15,8 +15,6 @@ use cargo_registry::version::EncodableVersion;
 use cargo_registry::upload as u;
 
 #[deriving(Decodable)]
-struct Crates { crates: Vec<EncodableCrate> }
-#[deriving(Decodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[deriving(Decodable)]
 struct CrateMeta { total: int }
@@ -444,27 +442,40 @@ fn following() {
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
 
-    req.with_path("/crates/foo/follow");
+    req.with_path("/crates/foo/follow")
+       .with_method(conduit::Put);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
-    req.with_path("/crates/foo/following");
+    req.with_path("/crates/foo/following")
+       .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<F>(&mut response).following);
 
-    req.with_path("/me/following");
+    req.with_path("/crates")
+       .with_query("following=1");
     let mut response = ok_resp!(middle.call(&mut req));
-    assert_eq!(::json::<Crates>(&mut response).crates.len(), 1);
+    let l = ::json::<CrateList>(&mut response);
+    println!("{} {}", l.crates.len(), l.meta.total);
+    assert_eq!(l.crates.len(), 1);
 
-    req.with_path("/crates/foo/unfollow");
+    req.with_path("/crates/foo/unfollow")
+       .with_method(conduit::Put);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
-    req.with_path("/crates/foo/following");
+    req.with_path("/crates/foo/following")
+       .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
+
+    req.with_path("/crates")
+       .with_query("following=1")
+       .with_method(conduit::Get);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 }

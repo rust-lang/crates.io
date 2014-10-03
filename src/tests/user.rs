@@ -95,9 +95,10 @@ fn reset_token() {
 #[test]
 fn my_packages() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/me/crates");
-    ::mock_user(&mut req, ::user());
+    let mut req = ::req(app, conduit::Get, "/crates");
+    let u = ::mock_user(&mut req, ::user());
     ::mock_crate(&mut req, "foo");
+    req.with_query(format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[deriving(Decodable)]

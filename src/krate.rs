@@ -189,12 +189,13 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let query = req.query();
     let sort = query.find_equiv(&"sort").map(|s| s.as_slice()).unwrap_or("alpha");
     let sort_sql = match sort {
-        "downloads" => "ORDER BY downloads DESC",
-        _ => "ORDER BY name ASC",
+        "downloads" => "ORDER BY crates.downloads DESC",
+        _ => "ORDER BY crates.name ASC",
     };
 
     // Different queries for different parameters
     let mut pattern;
+    let mut id;
     let mut args = vec![&limit as &ToSql, &offset as &ToSql];
     let (q, cnt) = match (query.find_equiv(&"q"), query.find_equiv(&"letter")) {
         (Some(query), _) => {
@@ -219,8 +220,38 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
              "SELECT COUNT(*) FROM crates WHERE name LIKE $1")
         },
         (None, None) => {
-            (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2", sort_sql),
-             "SELECT COUNT(*) FROM crates")
+            let user_id = query.find_equiv(&"user_id").map(|s| s.as_slice())
+                               .and_then(from_str::<i32>);
+            let following = query.find_equiv(&"following").is_some();
+            match (user_id, following) {
+                (Some(user_id), _) => {
+                    id = user_id;
+                    args.insert(0, &id as &ToSql);
+                    (format!("SELECT * FROM crates WHERE user_id = $1 {} \
+                              LIMIT $2 OFFSET $3",
+                             sort_sql),
+                     "SELECT COUNT(*) FROM crates WHERE user_id = $1")
+                }
+                (None, true) => {
+                    let me = try!(req.user());
+                    id = me.id;
+                    args.insert(0, &id as &ToSql);
+                    (format!("SELECT crates.* FROM crates
+                              INNER JOIN follows
+                                 ON follows.crate_id = crates.id AND
+                                    follows.user_id = $1
+                              {} LIMIT $2 OFFSET $3", sort_sql),
+                     "SELECT COUNT(crates.*) FROM crates
+                      INNER JOIN follows
+                         ON follows.crate_id = crates.id AND
+                            follows.user_id = $1")
+                }
+                (None, false) => {
+                    (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2",
+                             sort_sql),
+                     "SELECT COUNT(*) FROM crates")
+                }
+            }
         }
     };
 
