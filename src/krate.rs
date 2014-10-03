@@ -117,10 +117,6 @@ impl Crate {
         Ok(rows.map(|r| Model::from_row(&r)).collect())
     }
 
-    pub fn dl_path(&self, version: &str) -> String {
-        format!("/crates/{}/{}/download", self.name, version)
-    }
-
     pub fn s3_path(&self, version: &str) -> String {
         format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
     }
@@ -332,7 +328,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R { krate: EncodableCrate, versions: Vec<EncodableVersion>, }
     Ok(req.json(&R {
         krate: krate.clone().encodable(versions.iter().map(|v| v.id).collect()),
-        versions: versions.into_iter().map(|v| v.encodable(&krate)).collect(),
+        versions: versions.into_iter().map(|v| {
+            v.encodable(krate.name.as_slice())
+        }).collect(),
     }))
 }
 

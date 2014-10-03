@@ -83,25 +83,24 @@ impl Version {
         semver::Version::parse(version).is_ok()
     }
 
-    pub fn encodable(self, krate: &Crate) -> EncodableVersion {
-        let Version { id, crate_id, num, updated_at, created_at,
+    pub fn encodable(self, crate_name: &str) -> EncodableVersion {
+        let Version { id, crate_id: _, num, updated_at, created_at,
                       downloads, features } = self;
-        assert_eq!(krate.id, crate_id);
         let num = num.to_string();
         EncodableVersion {
-            dl_path: krate.dl_path(num.as_slice()),
+            dl_path: format!("/crates/{}/{}/download", crate_name, num),
             num: num.clone(),
             id: id,
-            krate: krate.name.clone(),
+            krate: crate_name.to_string(),
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
             features: features,
             links: VersionLinks {
                 dependencies: format!("/crates/{}/{}/dependencies",
-                                      krate.name, num),
+                                      crate_name, num),
                 version_downloads: format!("/crates/{}/{}/downloads",
-                                           krate.name, num),
+                                           crate_name, num),
             },
         }
     }
@@ -206,7 +205,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // And respond!
     let versions = versions.into_iter().map(|v| {
         let id = v.crate_id;
-        v.encodable(map.find(&id).unwrap())
+        v.encodable(map.find(&id).unwrap().as_slice())
     }).collect();
 
     #[deriving(Encodable)]
@@ -223,7 +222,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { version: EncodableVersion }
-    Ok(req.json(&R { version: version.encodable(&krate) }))
+    Ok(req.json(&R { version: version.encodable(krate.name.as_slice()) }))
 }
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
