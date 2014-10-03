@@ -1,0 +1,14 @@
+<ul>
+    {{#each}}
+        <li>
+            {{#link-to 'crate' this class='name'}}
+                {{ name }} ({{ max_version }})
+                <div class='right'>
+                    <img src="/assets/download-clear-back.png"/>
+                    {{ format-num downloads }}
+                </div>
+            {{/link-to}}
+        </li>
+    {{/each}}
+</ul>
+

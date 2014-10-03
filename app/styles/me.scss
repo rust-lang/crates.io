@@ -18,3 +18,13 @@
         dd { float: left; margin-left: 10px; }
     }
 }
+
+#my-crate-lists {
+    flex-direction: column;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        * { align-self: center; }
+    }
+}
