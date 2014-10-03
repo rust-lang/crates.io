@@ -197,10 +197,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
                                          token.access_token.as_slice(),
                                          api_token.as_slice()));
     req.session().insert("user_id".to_string(), user.id.to_string());
-
-    #[deriving(Encodable)]
-    struct R { user: EncodableUser }
-    Ok(req.json(&R { user: user.encodable() }))
+    req.mut_extensions().insert(user);
+    me(req)
 }
 
 pub fn logout(req: &mut Request) -> CargoResult<Response> {
