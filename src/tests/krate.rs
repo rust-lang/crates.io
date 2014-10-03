@@ -428,3 +428,37 @@ fn dependencies() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }
+
+#[test]
+fn following() {
+    #[deriving(Decodable)] struct F { following: bool }
+    #[deriving(Decodable)] struct O { ok: bool }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/crates/foo/following");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(!::json::<F>(&mut response).following);
+
+    req.with_path("/crates/foo/follow");
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+
+    req.with_path("/crates/foo/following");
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<F>(&mut response).following);
+
+    req.with_path("/crates/foo/unfollow");
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+
+    req.with_path("/crates/foo/following");
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(!::json::<F>(&mut response).following);
+}

@@ -18,7 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use model::Model;
 use upload;
-use user::User;
+use user::{User, RequestUser};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
@@ -502,4 +502,49 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
+}
+
+fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
+    let user = try!(req.user());
+    let crate_name = req.params()["crate_id"].as_slice();
+    let tx = try!(req.tx());
+    let krate = try!(Crate::find_by_name(tx, crate_name));
+    Ok((user.clone(), krate))
+}
+
+pub fn follow(req: &mut Request) -> CargoResult<Response> {
+    let (user, krate) = try!(user_and_crate(req));
+    let tx = try!(req.tx());
+    let stmt = try!(tx.prepare("SELECT 1 FROM follows
+                                WHERE user_id = $1 AND crate_id = $2"));
+    let mut rows = try!(stmt.query(&[&user.id, &krate.id]));
+    if !rows.next().is_some() {
+        try!(tx.execute("INSERT INTO follows (user_id, crate_id)
+                         VALUES ($1, $2)", &[&user.id, &krate.id]));
+    }
+    #[deriving(Encodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
+    let (user, krate) = try!(user_and_crate(req));
+    let tx = try!(req.tx());
+    try!(tx.execute("DELETE FROM follows
+                     WHERE user_id = $1 AND crate_id = $2",
+                    &[&user.id, &krate.id]));
+    #[deriving(Encodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+pub fn following(req: &mut Request) -> CargoResult<Response> {
+    let (user, krate) = try!(user_and_crate(req));
+    let tx = try!(req.tx());
+    let stmt = try!(tx.prepare("SELECT 1 FROM follows
+                                WHERE user_id = $1 AND crate_id = $2"));
+    let mut rows = try!(stmt.query(&[&user.id, &krate.id]));
+    #[deriving(Encodable)]
+    struct R { following: bool }
+    Ok(req.json(&R { following: rows.next().is_some() }))
 }

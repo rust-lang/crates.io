@@ -276,6 +276,14 @@ fn migrations() -> Vec<Migration> {
                        "CREATE INDEX index_crates_user_id \
                         ON crates (user_id)",
                        "DROP INDEX index_crates_user_id"),
+        Migration::add_table(20141002195940, "follows", "
+            user_id          INTEGER NOT NULL,
+            crate_id         INTEGER NOT NULL
+        "),
+        Migration::run(20141002195941,
+                       "CREATE INDEX index_follows_user_id \
+                        ON follows (user_id)",
+                       "DROP INDEX index_follows_user_id"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
