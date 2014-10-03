@@ -1,7 +1,8 @@
-#![feature(macro_rules)]
+#![feature(macro_rules, phase)]
 
 extern crate serialize;
 extern crate time;
+#[phase(plugin, link)] extern crate log;
 
 extern crate "postgres" as pg;
 extern crate curl;

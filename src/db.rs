@@ -78,7 +78,7 @@ impl Transaction {
         Ok(&**self.slot.borrow().unwrap())
     }
 
-    fn tx<'a>(&'a self) -> CargoResult<&'a pg::PostgresTransaction<'a>> {
+    fn tx<'a>(&'a self) -> CargoResult<&'a Connection + 'a> {
         // Similar to above, the transaction for this request is actually tied
         // to the connection in the request itself, not 'static. We transmute it
         // to static as its paired with the inner connection to achieve the
@@ -93,7 +93,7 @@ impl Transaction {
         }
         let tx = self.tx.borrow();
         let tx: &'a pg::PostgresTransaction<'static> = tx.unwrap();
-        Ok(tx)
+        Ok(tx as &Connection)
     }
 }
 
@@ -134,7 +134,7 @@ pub trait RequestTransaction<'a> {
     ///
     /// The transaction will live for the duration of the request, and it will
     /// only be set to commit() if a successful response code of 200 is seen.
-    fn tx(self) -> CargoResult<&'a pg::PostgresTransaction<'a>>;
+    fn tx(self) -> CargoResult<&'a Connection + 'a>;
 }
 
 impl<'a> RequestTransaction<'a> for &'a Request + 'a {
@@ -144,7 +144,7 @@ impl<'a> RequestTransaction<'a> for &'a Request + 'a {
             .conn()
     }
 
-    fn tx(self) -> CargoResult<&'a pg::PostgresTransaction<'a>> {
+    fn tx(self) -> CargoResult<&'a Connection + 'a> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .tx()
@@ -164,21 +164,14 @@ impl Connection for pg::PostgresConnection {
         self.execute(query, params)
     }
 }
-//
-// impl Connection for pg::pool::PooledPostgresConnection {
-//     fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>> {
-//         self.prepare(query)
-//     }
-//     fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
-//         self.execute(query, params)
-//     }
-// }
 
 impl<'a> Connection for pg::PostgresTransaction<'a> {
     fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>> {
+        log!(5, "prepare: {}", query);
         self.prepare(query)
     }
     fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
+        log!(5, "execute: {}", query);
         self.execute(query, params)
     }
 }
