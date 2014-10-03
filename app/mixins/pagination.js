@@ -48,4 +48,11 @@ export default Ember.Mixin.create({
         return Math.ceil((this.get('totalItems') /
                           this.get('itemsPerPage')) || 1);
     }.property('totalItems', 'itemsPerPage'),
+
+    // wire up these ember-style variables to the expected query parameters
+    itemsPerPage: function() {
+        return this.get('per_page');
+    }.property('per_page'),
+
+    selectedPage: function() { return this.get('page'); }.property('page'),
 });

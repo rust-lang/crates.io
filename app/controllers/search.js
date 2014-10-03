@@ -7,13 +7,7 @@ export default Ember.ArrayController.extend(PaginationMixin, {
     page: '1',
     per_page: 10,
 
-    selectedPage: function() { return this.get('page'); }.property('page'),
-
     totalItems: function() {
         return this.store.metadataFor('crate').total;
     }.property('model'),
-
-    itemsPerPage: function() {
-        return this.get('per_page');
-    }.property('per_page'),
 });

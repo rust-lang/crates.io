@@ -11,15 +11,9 @@ export default Ember.ArrayController.extend(PaginationMixin, {
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
     showSortBy: false,
 
-    selectedPage: function() { return this.get('page'); }.property('page'),
-
     totalItems: function() {
         return this.store.metadataFor('crate').total;
     }.property('model'),
-
-    itemsPerPage: function() {
-        return this.get('per_page');
-    }.property('per_page'),
 
     currentSortBy: function() {
         if (this.get('sort') === 'downloads') {
