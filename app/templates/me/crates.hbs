@@ -1,0 +1,59 @@
+<div id='crates-heading'>
+    <img class='logo' src="/assets/crate.png"/>
+    <h1>My Crates</h1>
+</div>
+
+{{! TODO: reduce duplication with templates/crates.hbs }}
+
+<div id='results'>
+    <div class='nav'>
+        <span class='amt small'>
+            Displaying
+            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+            of <span class='total'>{{ totalItems }}</span> total results
+        </span>
+    </div>
+
+    <div class='sort'>
+        <span class='small'>Sort by</span>
+        <div class='dropdown-container'>
+            <a {{action 'toggleShowSortBy'}}
+               {{bind-attr class='showSortBy:active :dropdown'}}>
+                <img src="/assets/sort.png"/>
+                {{ currentSortBy }}
+                <span class='arrow'></span>
+            </a>
+            <ul {{bind-attr class='showSortBy:open :dropdown'}}>
+                <li>
+                    {{#link-to 'me.crates' (query-params sort="alpha")}}
+                        Alphabetical
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to 'me.crates' (query-params sort="downloads")}}
+                        Downloads
+                    {{/link-to}}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id='crates' class='white-rows'>
+    {{#each}}
+        {{render "crate-row" this}}
+    {{/each}}
+</div>
+
+<div class='pagination'>
+    {{#link-to 'me.crates' (query-params page=prevPage) class="prev"}}
+        <img src="/assets/left-pag.png"/>
+    {{/link-to}}
+    {{#each pages}}
+        {{#link-to 'me.crates' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{/each}}
+    {{#link-to 'me.crates' (query-params page=nextPage) class="next"}}
+        <img src="/assets/right-pag.png"/>
+    {{/link-to}}
+</div>
+

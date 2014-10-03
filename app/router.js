@@ -15,7 +15,10 @@ Router.map(function() {
     this.route('download');
     this.route('versions');
   });
-  this.route('me');
+  this.route('me', function() {
+    this.route('crates');
+    this.route('following');
+  });
   this.route('guide');
   this.route('install');
   this.route('search');
