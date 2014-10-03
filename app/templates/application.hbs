@@ -28,6 +28,7 @@
                 </button>
                 <ul id='current-user-links'
                     {{bind-attr class='showUserOptions:open :dropdown'}}>
+                    <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
                 </ul>
