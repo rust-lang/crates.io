@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 use std::time::Duration;
 use serialize::json;
 use time::Timespec;
@@ -176,37 +176,18 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     //
     // TODO: can rust-postgres do this for us?
     let mut versions = Vec::new();
-    let mut set = HashSet::new();
     if ids.len() > 0 {
-        let stmt = try!(conn.prepare(format!("SELECT * FROM versions \
-                                              WHERE id IN({:#})",
-                                             ids).as_slice()));
+        let sql = format!("SELECT versions.*, crates.name AS crate_name
+                             FROM versions
+                           LEFT JOIN crates ON crates.id = versions.crate_id
+                           WHERE versions.id IN({:#})", ids);
+        let stmt = try!(conn.prepare(sql.as_slice()));
         for row in try!(stmt.query(&[])) {
             let v: Version = Model::from_row(&row);
-            set.insert(v.crate_id);
-            versions.push(v);
+            let crate_name: String = row.get("crate_name");
+            versions.push(v.encodable(crate_name.as_slice()));
         }
     }
-
-    // Load all crates
-    let mut map = HashMap::new();
-    if set.len() > 0 {
-        let ids = set.into_iter().collect::<Vec<i32>>();
-        let stmt = try!(conn.prepare(format!("SELECT id, name FROM crates \
-                                              WHERE id IN({:#})",
-                                             ids).as_slice()));
-        for row in try!(stmt.query(&[])) {
-            let id: i32 = row.get("id");
-            let name: String = row.get("name");
-            map.insert(id, name);
-        }
-    }
-
-    // And respond!
-    let versions = versions.into_iter().map(|v| {
-        let id = v.crate_id;
-        v.encodable(map.find(&id).unwrap().as_slice())
-    }).collect();
 
     #[deriving(Encodable)]
     struct R { versions: Vec<EncodableVersion> }
