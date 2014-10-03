@@ -3,18 +3,27 @@
     <h1>{{ name }}</h1>
     <h2>{{ currentVersion.num }}</h2>
 
-    <a class='yellow-button' download
-       {{action 'download' currentVersion}}
-       {{bind-attr href=currentVersion.dl_path}}>
-        <img src="/assets/button-download.png"/>
-        Download
-    </a>
-
-    {{#if session.currentUser}}
-        <a class='tan-button' {{action 'follow' this}}>
-            Follow
+    <div class='right'>
+        <a class='yellow-button' download
+           {{action 'download' currentVersion}}
+           {{bind-attr href=currentVersion.dl_path}}>
+            <img src="/assets/button-download.png"/>
+            Download
         </a>
-    {{/if}}
+        {{#if session.currentUser}}
+            <button class='tan-button' {{action 'toggleFollow' this}}>
+                {{#if fetchingFollowing}}
+                    <img src="/assets/ajax-loader.gif"/>
+                {{else}}
+                    {{#if following}}
+                        Unfollow
+                    {{else}}
+                        Follow
+                    {{/if}}
+                {{/if}}
+            </button>
+        {{/if}}
+    </div>
 </div>
 
 {{! This is used to set the url of to actually download a file }}

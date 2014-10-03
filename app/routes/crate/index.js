@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import ajax from 'ic-ajax';
 import Version from 'cargo/models/version';
 import Crate from 'cargo/models/crate';
 
@@ -14,6 +15,16 @@ export default Ember.Route.extend({
         controller.set('showAllVersions', false);
         controller.set('fetchingVersions', true);
         controller.set('fetchingDownloads', true);
+        controller.set('fetchingFollowing', true);
+
+        if (this.session.get('currentUser')) {
+            var url = '/crates/' + data.crate.get('name') + '/following';
+            ajax(url).then(function(d) {
+                controller.set('following', d.following);
+            }).finally(function() {
+                controller.set('fetchingFollowing', false);
+            });
+        }
 
         // Try to find the requested version in the versions we fetch
         var max = data.crate.get('max_version');

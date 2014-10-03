@@ -9,6 +9,8 @@ export default Ember.ObjectController.extend({
 
     fetchingVersions: true,
     fetchingDownloads: true,
+    fetchingFollowing: true,
+    following: false,
     showAllVersions: false,
     currentVersion: null,
     requestedVersion: null,
@@ -46,6 +48,21 @@ export default Ember.ObjectController.extend({
         toggleVersions: function() {
             this.get('controllers.application')
                 .resetDropdownOption(this, 'showAllVersions');
+        },
+
+        toggleFollow: function() {
+            this.set('fetchingFollowing', true);
+            this.set('following', !this.get('following'));
+            var url;
+            if (this.get('following')) {
+                url = '/crates/' + this.get('model').get('name') + '/follow';
+            } else {
+                url = '/crates/' + this.get('model').get('name') + '/unfollow';
+            }
+            var self = this;
+            ajax(url).finally(function() {
+                self.set('fetchingFollowing', false);
+            });
         },
 
         renderChart: function(downloads) {
