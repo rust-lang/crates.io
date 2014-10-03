@@ -94,7 +94,7 @@ impl Crate {
         name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
     }
 
-    fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
+    pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate { name, created_at, updated_at, downloads,
                     max_version, .. } = self;
         let versions_link = match versions {

@@ -1,4 +1,5 @@
 use std::any::AnyRefExt;
+use std::collections::HashMap;
 use std::rand::{task_rng, Rng};
 use std::str;
 use serialize::json;
@@ -13,6 +14,7 @@ use pg::types::ToSql;
 use {Model, Version};
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
+use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
 use version::EncodableVersion;
@@ -232,32 +234,55 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
     let (offset, limit) = try!(req.pagination(10, 100));
     let tx = try!(req.tx());
-    let sql = "SELECT versions.*, crates.name AS crate_name
-                 FROM versions
+    let sql = "SELECT versions.* FROM versions
                INNER JOIN follows
                   ON follows.user_id = $1 AND
                      follows.crate_id = versions.crate_id
-               INNER JOIN crates
-                  ON crates.id = versions.crate_id
-               ORDER BY versions.created_at DESC
-               OFFSET $2 LIMIT $3";
+               ORDER BY versions.created_at DESC OFFSET $2 LIMIT $3";
 
+    // Load all versions
     let stmt = try!(tx.prepare(sql));
     let mut versions = Vec::new();
+    let mut crate_ids = Vec::new();
     for row in try!(stmt.query(&[&user.id, &offset, &limit])) {
         let version: Version = Model::from_row(&row);
-        let name: String = row.get("crate_name");
-        versions.push(version.encodable(name.as_slice()));
+        crate_ids.push(version.crate_id);
+        versions.push(version);
     }
 
+    // Load all crates
+    let mut map = HashMap::new();
+    let mut crates = Vec::new();
+    if crate_ids.len() > 0 {
+        let sql = format!("SELECT * FROM crates WHERE id IN ({:#})", crate_ids);
+        let stmt = try!(tx.prepare(sql.as_slice()));
+        for row in try!(stmt.query(&[])) {
+            let krate: Crate = Model::from_row(&row);
+            map.insert(krate.id, krate.name.clone());
+            crates.push(krate);
+        }
+    }
+
+    // Encode everything!
+    let crates = crates.into_iter().map(|c| c.encodable(None)).collect();
+    let versions = versions.into_iter().map(|v| {
+        let id = v.crate_id;
+        v.encodable(map[id].as_slice())
+    }).collect();
+
+    // Check if we have another
     let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
     let stmt = try!(tx.prepare(sql.as_slice()));
     let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
                   .next().is_some();
 
     #[deriving(Encodable)]
-    struct R { versions: Vec<EncodableVersion>, meta: Meta }
+    struct R {
+        versions: Vec<EncodableVersion>,
+        crates: Vec<EncodableCrate>,
+        meta: Meta,
+    }
     #[deriving(Encodable)]
     struct Meta { more: bool }
-    Ok(req.json(&R{ versions: versions, meta: Meta { more: more } }))
+    Ok(req.json(&R{ versions: versions, crates: crates, meta: Meta { more: more } }))
 }
