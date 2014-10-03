@@ -10,9 +10,11 @@
         Download
     </a>
 
-    <a class='tan-button' {{action 'follow' this}}>
-        Follow
-    </a>
+    {{#if session.currentUser}}
+        <a class='tan-button' {{action 'follow' this}}>
+            Follow
+        </a>
+    {{/if}}
 </div>
 
 {{! This is used to set the url of to actually download a file }}
