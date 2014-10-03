@@ -127,13 +127,14 @@ impl Crate {
 
     pub fn encode_many(conn: &Connection, crates: Vec<Crate>)
                        -> CargoResult<Vec<EncodableCrate>> {
+        if crates.len() == 0 { return Ok(Vec::new()) }
+
         // TODO: can rust-postgres do this escaping?
         let crateids: Vec<i32> = crates.iter().map(|p| p.id).collect();
         let mut map = HashMap::new();
-        let query = format!("'{{{:#}}}'::int[]", crateids.as_slice());
         let stmt = try!(conn.prepare(format!("SELECT id, crate_id FROM versions \
-                                              WHERE crate_id = ANY({})",
-                                             query).as_slice()));
+                                              WHERE crate_id IN({:#})",
+                                             crateids).as_slice()));
         for row in try!(stmt.query(&[])) {
             match map.entry(row.get("crate_id")) {
                 Occupied(e) => e.into_mut(),

@@ -178,26 +178,29 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // TODO: can rust-postgres do this for us?
     let mut versions = Vec::new();
     let mut set = HashSet::new();
-    let query = format!("'{{{:#}}}'::int[]", ids.as_slice());
-    let stmt = try!(conn.prepare(format!("SELECT * FROM versions \
-                                          WHERE id = ANY({})",
-                                         query).as_slice()));
-    for row in try!(stmt.query(&[])) {
-        let v: Version = Model::from_row(&row);
-        set.insert(v.crate_id);
-        versions.push(v);
+    if ids.len() > 0 {
+        let stmt = try!(conn.prepare(format!("SELECT * FROM versions \
+                                              WHERE id IN({:#})",
+                                             ids).as_slice()));
+        for row in try!(stmt.query(&[])) {
+            let v: Version = Model::from_row(&row);
+            set.insert(v.crate_id);
+            versions.push(v);
+        }
     }
 
     // Load all crates
-    let ids = set.into_iter().collect::<Vec<i32>>();
-    let query = format!("'{{{:#}}}'::int[]", ids.as_slice());
-    let stmt = try!(conn.prepare(format!("SELECT * FROM crates \
-                                          WHERE id = ANY({})",
-                                         query).as_slice()));
     let mut map = HashMap::new();
-    for row in try!(stmt.query(&[])) {
-        let p: Crate = Model::from_row(&row);
-        map.insert(p.id, p);
+    if set.len() > 0 {
+        let ids = set.into_iter().collect::<Vec<i32>>();
+        let stmt = try!(conn.prepare(format!("SELECT id, name FROM crates \
+                                              WHERE id IN({:#})",
+                                             ids).as_slice()));
+        for row in try!(stmt.query(&[])) {
+            let id: i32 = row.get("id");
+            let name: String = row.get("name");
+            map.insert(id, name);
+        }
     }
 
     // And respond!
