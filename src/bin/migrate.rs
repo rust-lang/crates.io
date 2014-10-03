@@ -284,6 +284,14 @@ fn migrations() -> Vec<Migration> {
                        "CREATE INDEX index_follows_user_id \
                         ON follows (user_id)",
                        "DROP INDEX index_follows_user_id"),
+        foreign_key(20141002222426, "crate_downloads", "crate_id", "crates (id)"),
+        foreign_key(20141002222427, "crates", "user_id", "users (id)"),
+        foreign_key(20141002222428, "dependencies", "version_id", "versions (id)"),
+        foreign_key(20141002222429, "dependencies", "crate_id", "crates (id)"),
+        foreign_key(20141002222430, "follows", "crate_id", "crates (id)"),
+        foreign_key(20141002222431, "version_downloads", "version_id",
+                    "versions (id)"),
+        foreign_key(20141002222432, "versions", "crate_id", "crates (id)"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -294,4 +302,14 @@ fn migrations() -> Vec<Migration> {
         }
     }
     return migrations;
+
+    fn foreign_key(id: i64, table: &str, column: &str,
+                   references: &str) -> Migration {
+        let add = format!("ALTER TABLE {table} ADD CONSTRAINT fk_{table}_{col}
+                                 FOREIGN KEY ({col}) REFERENCES {reference}",
+                          table = table, col = column, reference = references);
+        let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
+                          table = table, col = column);
+        Migration::run(id, add.as_slice(), rm.as_slice())
+    }
 }
