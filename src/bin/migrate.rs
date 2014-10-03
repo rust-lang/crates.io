@@ -292,6 +292,7 @@ fn migrations() -> Vec<Migration> {
         foreign_key(20141002222431, "version_downloads", "version_id",
                     "versions (id)"),
         foreign_key(20141002222432, "versions", "crate_id", "crates (id)"),
+        foreign_key(20141002222433, "follows", "user_id", "users (id)"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
