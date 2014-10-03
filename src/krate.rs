@@ -185,13 +185,8 @@ impl Model for Crate {
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
+    let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
-    let page = query.find_equiv(&"page").map(|s| s.as_slice())
-                    .and_then(from_str::<i64>).unwrap_or(1);
-    let limit = query.find_equiv(&"per_page").map(|s| s.as_slice())
-                     .and_then(from_str::<i64>).unwrap_or(10);
-    if limit > 100 { return Err(human("cannot request more than 100 crates")) }
-    let offset = (page - 1) * limit;
     let sort = query.find_equiv(&"sort").map(|s| s.as_slice()).unwrap_or("alpha");
     let sort_sql = match sort {
         "downloads" => "ORDER BY downloads DESC",

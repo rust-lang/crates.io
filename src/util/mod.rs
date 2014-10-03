@@ -28,6 +28,7 @@ pub trait RequestUtils {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response;
     fn query(self) -> HashMap<String, String>;
     fn wants_json(self) -> bool;
+    fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)>;
 }
 
 pub fn json_response<'a, T>(t: &T) -> Response
@@ -79,6 +80,18 @@ impl<'a> RequestUtils for &'a Request + 'a {
     fn wants_json(self) -> bool {
         let content = self.headers().find("Accept").unwrap_or(Vec::new());
         content.iter().any(|s| s.contains("json"))
+    }
+
+    fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)> {
+        let query = self.query();
+        let page = query.find_equiv(&"page").map(|s| s.as_slice())
+                        .and_then(from_str::<uint>).unwrap_or(1);
+        let limit = query.find_equiv(&"per_page").map(|s| s.as_slice())
+                         .and_then(from_str::<uint>).unwrap_or(default);
+        if limit > max {
+            return Err(human(format!("cannot request more than {} items", max)))
+        }
+        Ok((((page - 1) * limit) as i64, limit as i64))
     }
 }
 

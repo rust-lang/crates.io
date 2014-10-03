@@ -4,6 +4,7 @@ use conduit::{mod, Handler, Request, Response};
 use conduit_middleware::Middleware;
 use conduit_test::MockRequest;
 
+use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, EncodableUser};
 use cargo_registry::db::RequestTransaction;
 
@@ -89,4 +90,18 @@ fn reset_token() {
             response
         }
     }
+}
+
+#[test]
+fn my_packages() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/me/crates");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[deriving(Decodable)]
+    struct Response { crates: Vec<EncodableCrate> }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.crates.len(), 1);
 }

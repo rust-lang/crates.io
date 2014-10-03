@@ -10,8 +10,10 @@ use oauth2::Authorization;
 use pg::PostgresRow;
 use pg::types::ToSql;
 
+use Model;
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
+use krate::{Crate, EncodableCrate};
 use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
 use util::errors::NotFound;
 
@@ -226,4 +228,21 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     struct R { user: EncodableUser, api_token: String }
     let token = user.api_token.clone();
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
+}
+
+pub fn my_crates(req: &mut Request) -> CargoResult<Response> {
+    let user = try!(req.user());
+    let (offset, limit) = try!(req.pagination(10, 100));
+
+    let tx = try!(req.tx());
+    let stmt = try!(tx.prepare("SELECT * FROM crates WHERE user_id = $1
+                                OFFSET $2 LIMIT $3"));
+    let mut crates = Vec::new();
+    for row in try!(stmt.query(&[&user.id, &offset, &limit])) {
+        crates.push(Model::from_row(&row));
+    }
+
+    #[deriving(Encodable)]
+    struct R { crates: Vec<EncodableCrate> }
+    Ok(req.json(&R{ crates: try!(Crate::encode_many(tx, crates)) }))
 }
