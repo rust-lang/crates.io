@@ -16,7 +16,7 @@ export default Ember.Controller.extend({
             Ember.$(document).on('mousedown.useroptions', function() {
                 Ember.run.later(function() {
                     controller.set(option, false);
-                }, 100);
+                }, 150);
                 Ember.$(document).off('mousedown.useroptions');
             });
         }
