@@ -234,6 +234,28 @@ pub fn my_crates(req: &mut Request) -> CargoResult<Response> {
 
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT * FROM crates WHERE user_id = $1
+                                ORDER BY downloads DESC
+                                OFFSET $2 LIMIT $3"));
+    let mut crates = Vec::new();
+    for row in try!(stmt.query(&[&user.id, &offset, &limit])) {
+        crates.push(Model::from_row(&row));
+    }
+
+    #[deriving(Encodable)]
+    struct R { crates: Vec<EncodableCrate> }
+    Ok(req.json(&R{ crates: try!(Crate::encode_many(tx, crates)) }))
+}
+
+pub fn my_following(req: &mut Request) -> CargoResult<Response> {
+    let user = try!(req.user());
+    let (offset, limit) = try!(req.pagination(10, 100));
+
+    let tx = try!(req.tx());
+    let stmt = try!(tx.prepare("SELECT crates.* FROM crates
+                                INNER JOIN follows
+                                  ON follows.crate_id = crates.id
+                                WHERE follows.user_id = $1
+                                ORDER BY crates.downloads DESC
                                 OFFSET $2 LIMIT $3"));
     let mut crates = Vec::new();
     for row in try!(stmt.query(&[&user.id, &offset, &limit])) {

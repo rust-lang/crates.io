@@ -15,6 +15,8 @@ use cargo_registry::version::EncodableVersion;
 use cargo_registry::upload as u;
 
 #[deriving(Decodable)]
+struct Crates { crates: Vec<EncodableCrate> }
+#[deriving(Decodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[deriving(Decodable)]
 struct CrateMeta { total: int }
@@ -451,6 +453,10 @@ fn following() {
     req.with_path("/crates/foo/following");
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<F>(&mut response).following);
+
+    req.with_path("/me/following");
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert_eq!(::json::<Crates>(&mut response).crates.len(), 1);
 
     req.with_path("/crates/foo/unfollow");
     let mut response = ok_resp!(middle.call(&mut req));
