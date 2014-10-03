@@ -22,7 +22,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
             controller.set('fetchingFollowing', false);
         });
 
-        if (controller.get('myFeed').length == 0) {
+        if (controller.get('myFeed').length === 0) {
             controller.send('loadMore');
         }
     },
