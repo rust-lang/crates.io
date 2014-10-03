@@ -60,7 +60,6 @@ fn rollback(tx: PostgresTransaction,
 }
 
 fn migrations() -> Vec<Migration> {
-    // Generate a new id via `date +"%Y%m%d%H%M%S"`
     let migrations = vec![
         Migration::add_table(20140924113530, "users", "
             id              SERIAL PRIMARY KEY,
@@ -273,7 +272,12 @@ fn migrations() -> Vec<Migration> {
                        "ALTER TABLE users ALTER COLUMN email DROP NOT NULL",
                        "ALTER TABLE users ALTER COLUMN email SET NOT NULL"),
         Migration::add_column(20141001190231, "users", "gh_avatar", "VARCHAR"),
+        Migration::run(20141002195939,
+                       "CREATE INDEX index_crates_user_id \
+                        ON crates (user_id)",
+                       "DROP INDEX index_crates_user_id"),
     ];
+    // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
     let mut seen = HashSet::new();
     for m in migrations.iter() {
