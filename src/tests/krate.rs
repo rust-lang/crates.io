@@ -67,7 +67,6 @@ fn index() {
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].name, krate.name);
     assert_eq!(json.crates[0].id, krate.name);
-    assert_eq!(json.crates[0].versions.len(), 1);
 }
 
 #[test]
@@ -130,9 +129,10 @@ fn show() {
     let json: CrateResponse = ::json(&mut response);
     assert_eq!(json.krate.name, krate.name);
     assert_eq!(json.krate.id, krate.name);
-    assert_eq!(json.krate.versions.len(), 1);
+    let versions = json.krate.versions.as_ref().unwrap();
+    assert_eq!(versions.len(), 1);
     assert_eq!(json.versions.len(), 1);
-    assert_eq!(json.versions[0].id, json.krate.versions[0]);
+    assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
     let suffix = "/crates/foo/1.0.0/download";

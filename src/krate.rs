@@ -1,4 +1,4 @@
-use std::collections::hashmap::{HashMap, Occupied, Vacant};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use serialize::hex::ToHex;
@@ -39,8 +39,8 @@ pub struct Crate {
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    pub versions: Vec<i32>,
     pub updated_at: String,
+    pub versions: Option<Vec<i32>>,
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
@@ -50,6 +50,7 @@ pub struct EncodableCrate {
 #[deriving(Encodable, Decodable)]
 pub struct CrateLinks {
     pub version_downloads: String,
+    pub versions: Option<String>,
 }
 
 impl Crate {
@@ -93,19 +94,24 @@ impl Crate {
         name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
     }
 
-    fn encodable(self, versions: Vec<i32>) -> EncodableCrate {
+    fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate { name, created_at, updated_at, downloads,
-                      max_version, .. } = self;
+                    max_version, .. } = self;
+        let versions_link = match versions {
+            Some(..) => None,
+            None => Some(format!("/crates/{}/versions", name)),
+        };
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
-            versions: versions,
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
+            versions: versions,
             max_version: max_version.to_string(),
             links: CrateLinks {
                 version_downloads: format!("/crates/{}/downloads", name),
+                versions: versions_link,
             },
         }
     }
@@ -119,29 +125,6 @@ impl Crate {
 
     pub fn s3_path(&self, version: &str) -> String {
         format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
-    }
-
-    pub fn encode_many(conn: &Connection, crates: Vec<Crate>)
-                       -> CargoResult<Vec<EncodableCrate>> {
-        if crates.len() == 0 { return Ok(Vec::new()) }
-
-        // TODO: can rust-postgres do this escaping?
-        let crateids: Vec<i32> = crates.iter().map(|p| p.id).collect();
-        let mut map = HashMap::new();
-        let stmt = try!(conn.prepare(format!("SELECT id, crate_id FROM versions \
-                                              WHERE crate_id IN({:#})",
-                                             crateids).as_slice()));
-        for row in try!(stmt.query(&[])) {
-            match map.entry(row.get("crate_id")) {
-                Occupied(e) => e.into_mut(),
-                Vacant(e) => e.set(Vec::new()),
-            }.push(row.get("id"));
-        }
-
-        Ok(crates.into_iter().map(|p| {
-            let id = p.id;
-            p.encodable(map.pop(&id).unwrap())
-        }).collect())
     }
 
     pub fn add_version(&mut self, conn: &Connection, ver: &semver::Version,
@@ -256,9 +239,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let stmt = try!(conn.prepare(q.as_slice()));
     let mut crates = Vec::new();
     for row in try!(stmt.query(args.as_slice())) {
-        crates.push(Model::from_row(&row));
+        let krate: Crate = Model::from_row(&row);
+        crates.push(krate.encodable(None));
     }
-    let crates = try!(Crate::encode_many(conn, crates));
 
     // Query for the total count of crates
     let stmt = try!(conn.prepare(cnt));
@@ -291,8 +274,11 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     };
 
     let to_crates = |stmt: PostgresStatement| {
-        let rows = try!(stmt.query([]));
-        Crate::encode_many(tx, rows.map(|r| Model::from_row(&r)).collect())
+        let rows = raw_try!(stmt.query([]));
+        Ok(rows.map(|r| {
+            let krate: Crate = Model::from_row(&r);
+            krate.encodable(None)
+        }).collect::<Vec<EncodableCrate>>())
     };
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
                                         ORDER BY created_at DESC LIMIT 10"));
@@ -323,11 +309,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let krate = try!(Crate::find_by_name(&*conn, name.as_slice()));
     let versions = try!(krate.versions(&*conn));
+    let ids = versions.iter().map(|v| v.id).collect();
 
     #[deriving(Encodable)]
     struct R { krate: EncodableCrate, versions: Vec<EncodableVersion>, }
     Ok(req.json(&R {
-        krate: krate.clone().encodable(versions.iter().map(|v| v.id).collect()),
+        krate: krate.clone().encodable(Some(ids)),
         versions: versions.into_iter().map(|v| {
             v.encodable(krate.name.as_slice())
         }).collect(),
@@ -421,7 +408,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[deriving(Encodable)]
     struct R { krate: EncodableCrate }
-    Ok(req.json(&R { krate: krate.encodable(Vec::new()) }))
+    Ok(req.json(&R { krate: krate.encodable(None) }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
