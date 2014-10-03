@@ -135,7 +135,7 @@ fn show() {
     assert_eq!(versions.len(), 1);
     assert_eq!(json.versions.len(), 1);
     assert_eq!(json.versions[0].id, versions[0]);
-    assert_eq!(json.versions[0].krate, json.krate.id);
+    assert_eq!(json.versions[0].crate_id, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
     let suffix = "/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
