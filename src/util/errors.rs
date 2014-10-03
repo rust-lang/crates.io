@@ -11,6 +11,9 @@ use git2;
 
 use util::json_response;
 
+#[deriving(Encodable)] struct Error { detail: String }
+#[deriving(Encodable)] struct Bad { errors: Vec<Error> }
+
 pub trait CargoError: Send {
     fn description(&self) -> String;
     fn detail(&self) -> Option<String> { None }
@@ -40,9 +43,6 @@ pub trait CargoError: Send {
     }
 
     fn response(&self) -> Option<Response> {
-        #[deriving(Encodable)] struct Error { detail: String }
-        #[deriving(Encodable)] struct Bad { errors: Vec<Error> }
-
         if self.human() {
             Some(json_response(&Bad {
                 errors: vec![Error { detail: self.description() }]
@@ -242,11 +242,13 @@ impl CargoError for Unauthorized {
     fn description(&self) -> String { "unauthorized".to_string() }
 
     fn response(&self) -> Option<Response> {
-        Some(Response {
-            status: (403, "Forbidden"),
-            headers: HashMap::new(),
-            body: box MemReader::new(Vec::new()),
-        })
+        let mut response = json_response(&Bad {
+            errors: vec![Error {
+                detail: "must be logged in to perform that action".to_string(),
+            }],
+        });
+        response.status = (403, "Forbidden");
+        return Some(response);
     }
 }
 
