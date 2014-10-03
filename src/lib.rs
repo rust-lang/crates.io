@@ -39,6 +39,11 @@ impl MockRequest {
         }
     }
 
+    pub fn with_method(&mut self, method: Method) -> &mut MockRequest {
+        self.method = method;
+        self
+    }
+
     pub fn with_path(&mut self, path: &str) -> &mut MockRequest {
         self.path = path.to_string();
         self
