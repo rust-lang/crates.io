@@ -60,7 +60,7 @@ export default Ember.ObjectController.extend({
                 url = '/crates/' + this.get('model').get('name') + '/unfollow';
             }
             var self = this;
-            ajax(url).finally(function() {
+            ajax({ method: 'put', url: url }).finally(function() {
                 self.set('fetchingFollowing', false);
             });
         },
