@@ -1,7 +1,6 @@
 extern crate "cargo-registry" as cargo_registry;
 extern crate civet;
 extern crate green;
-extern crate rustuv;
 extern crate git2;
 
 use std::os;
@@ -65,7 +64,10 @@ fn main() {
     if heroku {
         File::create(&Path::new("/tmp/app-initialized")).unwrap();
     }
-    wait_for_sigint();
+
+    // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
+    let (_tx, rx) = channel::<()>();
+    rx.recv();
 }
 
 fn env(s: &str) -> String {
@@ -73,22 +75,4 @@ fn env(s: &str) -> String {
         Some(s) => s,
         None => fail!("must have `{}` defined", s),
     }
-}
-
-// libnative doesn't have signal handling yet
-fn wait_for_sigint() {
-    use green::{SchedPool, PoolConfig, GreenTaskBuilder};
-    use std::io::signal::{Listener, Interrupt};
-    use std::task::TaskBuilder;
-
-    let mut config = PoolConfig::new();
-    config.event_loop_factory = rustuv::event_loop;
-
-    let mut pool = SchedPool::new(config);
-    TaskBuilder::new().green(&mut pool).spawn(proc() {
-        let mut l = Listener::new();
-        l.register(Interrupt).unwrap();
-        l.rx.recv();
-    });
-    pool.shutdown();
 }
