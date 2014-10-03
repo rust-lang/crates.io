@@ -132,11 +132,16 @@ mod test {
     use postgres::{mod, PostgresConnection, PostgresTransaction};
     use semver;
 
-    use cargo_registry::{Version, Crate};
+    use cargo_registry::{Version, Crate, User};
 
     fn conn() -> PostgresConnection {
         PostgresConnection::connect(::env("TEST_DATABASE_URL").as_slice(),
                                     &postgres::NoSsl).unwrap()
+    }
+
+    fn user(conn: &PostgresTransaction) -> User{
+        User::find_or_insert(conn, "login", None, None, None,
+                             "access_token", "api_token").unwrap()
     }
 
     fn crate_downloads(tx: &PostgresTransaction, id: i32, expected: uint) {
@@ -151,7 +156,8 @@ mod test {
     fn increment() {
         let conn = conn();
         let tx = conn.transaction().unwrap();
-        let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
                                       &HashMap::new()).unwrap();
@@ -175,7 +181,8 @@ mod test {
     fn increment_a_little() {
         let conn = conn();
         let tx = conn.transaction().unwrap();
-        let krate = Crate::find_or_insert(&tx, "foo", 1).unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
                                       &HashMap::new()).unwrap();
