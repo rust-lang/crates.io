@@ -73,6 +73,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/logout", C(user::logout));
     router.get("/me", C(user::me));
     router.put("/me/reset_token", C(user::reset_token));
+    router.get("/me/updates", C(user::updates));
     router.get("/summary", C(krate::summary));
     router.get("/crates", C(krate::index));
     router.get("/crates/:crate_id", C(krate::show));

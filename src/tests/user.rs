@@ -7,6 +7,7 @@ use conduit_test::MockRequest;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, EncodableUser};
 use cargo_registry::db::RequestTransaction;
+use cargo_registry::version::EncodableVersion;
 
 #[deriving(Decodable)]
 struct AuthResponse { url: String, state: String }
@@ -105,4 +106,53 @@ fn my_packages() {
     struct Response { crates: Vec<EncodableCrate> }
     let response: Response = ::json(&mut response);
     assert_eq!(response.crates.len(), 1);
+}
+
+#[test]
+fn following() {
+    #[deriving(Decodable)]
+    struct R {
+        versions: Vec<EncodableVersion>,
+        meta: Meta,
+    }
+    #[deriving(Decodable)] struct Meta { more: bool }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, "bar");
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
+                                               .with_method(conduit::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.versions.len(), 0);
+    assert_eq!(r.meta.more, false);
+
+    ok_resp!(middle.call(req.with_path("/crates/foo/follow")
+                            .with_method(conduit::Put)));
+    ok_resp!(middle.call(req.with_path("/crates/bar/follow")
+                            .with_method(conduit::Put)));
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
+                                               .with_method(conduit::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.versions.len(), 2);
+    assert_eq!(r.meta.more, false);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
+                                               .with_method(conduit::Get)
+                                               .with_query("per_page=1")));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.versions.len(), 1);
+    assert_eq!(r.meta.more, true);
+
+    ok_resp!(middle.call(req.with_path("/crates/bar/unfollow")
+                            .with_method(conduit::Put)));
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
+                                               .with_method(conduit::Get)
+                                               .with_query("page=2&per_page=1")));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.versions.len(), 0);
+    assert_eq!(r.meta.more, false);
 }

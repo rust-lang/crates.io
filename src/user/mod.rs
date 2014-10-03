@@ -10,10 +10,12 @@ use oauth2::Authorization;
 use pg::PostgresRow;
 use pg::types::ToSql;
 
+use {Model, Version};
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
 use util::errors::NotFound;
+use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
+use version::EncodableVersion;
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -224,4 +226,38 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     struct R { user: EncodableUser, api_token: String }
     let token = user.api_token.clone();
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
+}
+
+pub fn updates(req: &mut Request) -> CargoResult<Response> {
+    let user = try!(req.user());
+    let (offset, limit) = try!(req.pagination(10, 100));
+    let tx = try!(req.tx());
+    let sql = "SELECT versions.*, crates.name AS crate_name
+                 FROM versions
+               INNER JOIN follows
+                  ON follows.user_id = $1 AND
+                     follows.crate_id = versions.crate_id
+               INNER JOIN crates
+                  ON crates.id = versions.crate_id
+               ORDER BY versions.created_at DESC
+               OFFSET $2 LIMIT $3";
+
+    let stmt = try!(tx.prepare(sql));
+    let mut versions = Vec::new();
+    for row in try!(stmt.query(&[&user.id, &offset, &limit])) {
+        let version: Version = Model::from_row(&row);
+        let name: String = row.get("crate_name");
+        versions.push(version.encodable(name.as_slice()));
+    }
+
+    let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
+    let stmt = try!(tx.prepare(sql.as_slice()));
+    let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
+                  .next().is_some();
+
+    #[deriving(Encodable)]
+    struct R { versions: Vec<EncodableVersion>, meta: Meta }
+    #[deriving(Encodable)]
+    struct Meta { more: bool }
+    Ok(req.json(&R{ versions: versions, meta: Meta { more: more } }))
 }
