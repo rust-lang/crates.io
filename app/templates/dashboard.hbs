@@ -3,39 +3,78 @@
     <h1>My Dashboard</h1>
 </div>
 
-<div id='my-crate-lists' class='crate-lists'>
-    <div id='my-crates'>
-        <div class='header'>
-            <h2>
-                <img src="/assets/my-packages.png"/>
-                My Crates
-            </h2>
+<div id='my-info'>
+    <div id='my-crate-lists' class='crate-lists'>
+        <div id='my-crates'>
+            <div class='header'>
+                <h2>
+                    <img src="/assets/my-packages.png"/>
+                    My Crates
+                </h2>
 
-            {{#if hasMoreCrates}}
-                <span class='small'>{{link-to 'Show all' 'me.crates'}}</span>
+                {{#if hasMoreCrates}}
+                    <span class='small'>
+                        {{link-to 'Show all' 'me.crates'}}
+                    </span>
+                {{/if}}
+            </div>
+            {{#if fetchingCrates}}
+                <img src="/assets/ajax-loader.gif"/>
+            {{else}}
+                {{render "my-crate-list" visibleCrates}}
             {{/if}}
         </div>
-        {{#if fetchingCrates}}
-            <img src="/assets/ajax-loader.gif"/>
-        {{else}}
-            {{render "my-crate-list" visibleCrates}}
-        {{/if}}
+        <div id='my-following'>
+            <div class='header'>
+                <h2>
+                    <img src="/assets/following.png"/>
+                    Following
+                </h2>
+
+                {{#if hasMoreFollowing}}
+                    <span class='small'>
+                        {{link-to 'Show all' 'me.following'}}
+                    </span>
+                {{/if}}
+            </div>
+            {{#if fetchingFollowing}}
+                <img src="/assets/ajax-loader.gif"/>
+            {{else}}
+                {{render "my-crate-list" visibleFollowing}}
+            {{/if}}
+        </div>
     </div>
-    <div id='my-following'>
-        <div class='header'>
-            <h2>
-                <img src="/assets/following.png"/>
-                Following
-            </h2>
 
-            {{#if hasMoreFollowing}}
-                <span class='small'>{{link-to 'Show all' 'me.following'}}</span>
+    <div id='my-feed'>
+        <h2>
+            <img src="/assets/latest-updates.png"/>
+            Latest Updates
+        </h2>
+
+        <div class='white-rows'>
+            {{#each myFeed}}
+                <div class='row'>
+                    <div class='info'>
+                        {{link-to crate.name 'crate' this}}
+                        <span class='small'>{{ num }}</span>
+                        <span class='date small'>
+                            {{from-now created_at}}
+                        </span>
+                    </div>
+                </div>
+            {{/each}}
+
+            {{#if loadingMore}}
+                <span class='load-more'>
+                    <img src="/assets/ajax-loader.gif"/>
+                </span>
+            {{else}}
+                {{#if hasMore}}
+                    <button class='load-more' {{ action 'loadMore' }}>
+                        Load More
+                    </button>
+                {{/if}}
             {{/if}}
         </div>
-        {{#if fetchingFollowing}}
-            <img src="/assets/ajax-loader.gif"/>
-        {{else}}
-            {{render "my-crate-list" visibleFollowing}}
-        {{/if}}
     </div>
 </div>

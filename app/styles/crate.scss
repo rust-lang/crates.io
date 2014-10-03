@@ -51,9 +51,10 @@
 
 .white-rows {
     background-color: white;
-    width: 100%;
     padding: 0 20px;
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
 
     .row {
         width: 100%;

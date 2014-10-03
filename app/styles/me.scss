@@ -21,10 +21,47 @@
 
 #my-crate-lists {
     flex-direction: column;
+    flex-grow: 2;
+    margin-right: 20px;
 
     .header {
         display: flex;
         justify-content: space-between;
         * { align-self: center; }
+    }
+}
+
+#my-info {
+    display: flex;
+}
+#my-feed {
+    flex-grow: 5;
+    h2 { font-size: 105%; }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .small { padding-left: 10px; }
+
+    .info {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+
+        .date { flex-grow: 2; text-align: right; }
+    }
+
+    .load-more {
+        $bg: rgb(219, 217, 207);
+        text-align: center;
+        padding: 10px;
+        outline: 0;
+        border: 0;
+        margin-bottom: 20px;
+        background-color: $bg;
+        color: white;
+        &:hover { background-color: darken($bg, 10%); }
     }
 }
