@@ -56,6 +56,7 @@ impl MockRequest {
 
     pub fn with_body<'a, S: BytesContainer>(&'a mut self, string: S) -> &'a mut MockRequest {
         self.body = Some(string.container_as_bytes().to_vec());
+        self.reader = None;
         self
     }
 
