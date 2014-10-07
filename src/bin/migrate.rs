@@ -293,6 +293,27 @@ fn migrations() -> Vec<Migration> {
                     "versions (id)"),
         foreign_key(20141002222432, "versions", "crate_id", "crates (id)"),
         foreign_key(20141002222433, "follows", "user_id", "users (id)"),
+        Migration::add_table(20141007131146, "version_authors", "
+            id               SERIAL PRIMARY KEY,
+            version_id       INTEGER NOT NULL,
+            user_id          INTEGER,
+            name             VARCHAR NOT NULL
+        "),
+        foreign_key(20141007131147, "version_authors", "user_id", "users (id)"),
+        foreign_key(20141007131148, "version_authors", "version_id", "versions (id)"),
+        index(20141007131149, "version_authors", "version_id"),
+
+        Migration::add_table(20141007131735, "crate_owners", "
+            id               SERIAL PRIMARY KEY,
+            crate_id         INTEGER NOT NULL,
+            user_id          INTEGER NOT NULL,
+            created_at       TIMESTAMP NOT NULL,
+            created_by       INTEGER
+        "),
+        foreign_key(20141007131736, "crate_owners", "user_id", "users (id)"),
+        foreign_key(20141007131737, "crate_owners", "created_by", "users (id)"),
+        foreign_key(20141007131738, "crate_owners", "crate_id", "crates (id)"),
+        index(20141007131739, "crate_owners", "crate_id"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -311,6 +332,15 @@ fn migrations() -> Vec<Migration> {
                           table = table, col = column, reference = references);
         let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
                           table = table, col = column);
+        Migration::run(id, add.as_slice(), rm.as_slice())
+    }
+
+    fn index(id: i64, table: &str, column: &str) -> Migration {
+        let add = format!("CREATE INDEX index_{table}_{column}
+                           ON {table} ({column})",
+                          table = table, column = column);
+        let rm = format!("DROP INDEX index_{table}_{column}",
+                         table = table, column = column);
         Migration::run(id, add.as_slice(), rm.as_slice())
     }
 }
