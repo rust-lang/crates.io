@@ -324,7 +324,7 @@ fn new_krate_git_upload_appends() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
     let path = ::git::checkout().join("3/f/foo");
-    fs::mkdir_recursive(&path.dir_path(), io::UserRWX).unwrap();
+    fs::mkdir_recursive(&path.dir_path(), io::USER_RWX).unwrap();
     File::create(&path).write_str(
         r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}"#
     ).unwrap();

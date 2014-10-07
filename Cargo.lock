@@ -9,20 +9,20 @@ dependencies = [
  "conduit-log-requests 0.5.0 (git+https://github.com/conduit-rust/conduit-log-requests#7a19332a381090b1a927bbde9caeda4eeeb9b3ba)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#40484c59ca28d14cfe9e3be2abf1468f15531055)",
  "conduit-router 0.5.0 (git+https://github.com/conduit-rust/conduit-router#a27ae29c44db39649b7cd937c6600d6abb05a15b)",
- "conduit-static 0.5.0 (git+https://github.com/conduit-rust/conduit-static#2618ad575d73294742198fd28e52808742df96d3)",
+ "conduit-static 0.5.0 (git+https://github.com/conduit-rust/conduit-static#735a9c08e36be7d2f0ca21038c2b26191f7ec68b)",
  "conduit-test 0.5.0 (git+https://github.com/conduit-rust/conduit-test#2b54559e0fcaa1f103090624e720a8c7ab2cee5c)",
- "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4)",
- "flate2 0.0.1 (git+https://github.com/alexcrichton/flate2-rs#210310d36c5c233d24c616a91e7c7c7b15b04209)",
- "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#0e068d21edbb1fb250b4350f314f1e06d7467c77)",
+ "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9)",
+ "flate2 0.0.1 (git+https://github.com/alexcrichton/flate2-rs#af5bb8b38f3899a9594934d432f2bcbc1a7a46a0)",
+ "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#a6f9a3d96f41c2dbb5fcf47f2922c228763e3d29)",
  "html 0.0.1",
  "migrate 0.1.0",
  "oauth2 0.0.1 (git+https://github.com/alexcrichton/oauth2-rs#6d674a11399f0c1e5bc7cca12f703e9d96482c08)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f959b2d680e689621ac6d0f3cf10d80a0e3839ca)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#40c6948818f5a2ad09568307f033fe4ea08110cc)",
  "postgres 0.0.0 (git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#b6b6c7a31a6f6192fd9406ee034e89a0aa135a95)",
  "r2d2_postgres 0.0.0 (git+https://github.com/alexcrichton/r2d2-postgres?ref=alexcrichton#ee602bf64a18fec2da6fa3a083621ba318384877)",
  "s3 0.0.1",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver#5dee918159d4e3d84c1ee54cf6a5305e6f7bd557)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
@@ -58,7 +58,7 @@ source = "git+https://github.com/conduit-rust/conduit-cookie#c14d081c3fa851631d9
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#17b3153a76e57e5fde33b5c65171a72aad704c35)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware#40484c59ca28d14cfe9e3be2abf1468f15531055)",
- "cookie 0.0.1 (git+https://github.com/alexcrichton/cookie-rs.git#29b278cb6c4cedab04ad6036150cfed0662a635a)",
+ "cookie 0.0.1 (git+https://github.com/alexcrichton/cookie-rs.git#a08da806468be524b1e30e187a712d06341289ee)",
 ]
 
 [[package]]
@@ -101,7 +101,7 @@ dependencies = [
 [[package]]
 name = "conduit-static"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-static#2618ad575d73294742198fd28e52808742df96d3"
+source = "git+https://github.com/conduit-rust/conduit-static#735a9c08e36be7d2f0ca21038c2b26191f7ec68b"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#17b3153a76e57e5fde33b5c65171a72aad704c35)",
  "mime-types 0.5.0 (git+https://github.com/conduit-rust/mime-types.git#95a182afe24aae27f467222e8f25b769e1eb3379)",
@@ -128,67 +128,67 @@ dependencies = [
 [[package]]
 name = "cookie"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/cookie-rs.git#29b278cb6c4cedab04ad6036150cfed0662a635a"
+source = "git+https://github.com/alexcrichton/cookie-rs.git#a08da806468be524b1e30e187a712d06341289ee"
 dependencies = [
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f959b2d680e689621ac6d0f3cf10d80a0e3839ca)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#40c6948818f5a2ad09568307f033fe4ea08110cc)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "curl"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9"
 dependencies = [
- "curl-sys 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4)",
+ "curl-sys 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#0afbf50ba545ac379292b6040330f2903ca891d2)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "curl-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9"
 
 [[package]]
 name = "encoding"
 version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#ea41c0226067331a4d13142c81d82b614135c82a"
+source = "git+https://github.com/lifthrasiir/rust-encoding#97e5a56658d11e6386d0d17386560094490b1daf"
 
 [[package]]
 name = "flate2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/flate2-rs#210310d36c5c233d24c616a91e7c7c7b15b04209"
+source = "git+https://github.com/alexcrichton/flate2-rs#af5bb8b38f3899a9594934d432f2bcbc1a7a46a0"
 
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#0e068d21edbb1fb250b4350f314f1e06d7467c77"
+source = "git+https://github.com/alexcrichton/git2-rs#a6f9a3d96f41c2dbb5fcf47f2922c228763e3d29"
 dependencies = [
- "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#0e068d21edbb1fb250b4350f314f1e06d7467c77)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#a6f9a3d96f41c2dbb5fcf47f2922c228763e3d29)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "html"
 version = "0.0.1"
 dependencies = [
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "libgit2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#0e068d21edbb1fb250b4350f314f1e06d7467c77"
+source = "git+https://github.com/alexcrichton/git2-rs#a6f9a3d96f41c2dbb5fcf47f2922c228763e3d29"
 dependencies = [
- "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#e084c0e08e202e813a23e228acc322b77eb308b2)",
+ "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#865801e377893b7ab25991ce71b194601485559e)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#0afbf50ba545ac379292b6040330f2903ca891d2)",
- "openssl-static-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-static-sys#b46ca510c5b0bf8215eeabfa5696932f9acb63b1)",
+ "openssl-static-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-static-sys#b01801397328924055fb1c7c87fd5bf18907e511)",
 ]
 
 [[package]]
 name = "libssh2-static-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/libssh2-static-sys#e084c0e08e202e813a23e228acc322b77eb308b2"
+source = "git+https://github.com/alexcrichton/libssh2-static-sys#865801e377893b7ab25991ce71b194601485559e"
 
 [[package]]
 name = "link-config"
@@ -212,39 +212,39 @@ name = "oauth2"
 version = "0.0.1"
 source = "git+https://github.com/alexcrichton/oauth2-rs#6d674a11399f0c1e5bc7cca12f703e9d96482c08"
 dependencies = [
- "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "openssl"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-openssl#f959b2d680e689621ac6d0f3cf10d80a0e3839ca"
+source = "git+https://github.com/sfackler/rust-openssl#40c6948818f5a2ad09568307f033fe4ea08110cc"
 
 [[package]]
 name = "openssl-static-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/openssl-static-sys#b46ca510c5b0bf8215eeabfa5696932f9acb63b1"
+source = "git+https://github.com/alexcrichton/openssl-static-sys#b01801397328924055fb1c7c87fd5bf18907e511"
 
 [[package]]
 name = "phf"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#4b99d043a45090c4c2a3c36039fe3bc03eeadac8"
+source = "git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91"
 
 [[package]]
 name = "phf_mac"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#4b99d043a45090c4c2a3c36039fe3bc03eeadac8"
+source = "git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91"
 
 [[package]]
 name = "postgres"
 version = "0.0.0"
 source = "git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#b6b6c7a31a6f6192fd9406ee034e89a0aa135a95"
 dependencies = [
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f959b2d680e689621ac6d0f3cf10d80a0e3839ca)",
- "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#4b99d043a45090c4c2a3c36039fe3bc03eeadac8)",
- "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf#4b99d043a45090c4c2a3c36039fe3bc03eeadac8)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#40c6948818f5a2ad09568307f033fe4ea08110cc)",
+ "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91)",
+ "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
@@ -270,8 +270,8 @@ source = "git+https://github.com/conduit-rust/route-recognizer.rs.git#9dfb3413c3
 name = "s3"
 version = "0.0.1"
 dependencies = [
- "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#720d87fa32c738c397252cf3c26d428bdca697d4)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#f959b2d680e689621ac6d0f3cf10d80a0e3839ca)",
+ "curl 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle#afb40ef55a4b9ca54ae1b338de85103588e129d9)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#40c6948818f5a2ad09568307f033fe4ea08110cc)",
 ]
 
 [[package]]
@@ -282,8 +282,8 @@ source = "git+https://github.com/rust-lang/semver#5dee918159d4e3d84c1ee54cf6a530
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#f320b1e64d5caaf3cf4a31c8960f646ff7e865f7"
+source = "git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b"
 dependencies = [
- "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#ea41c0226067331a4d13142c81d82b614135c82a)",
+ "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#97e5a56658d11e6386d0d17386560094490b1daf)",
 ]
 

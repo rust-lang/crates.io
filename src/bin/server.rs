@@ -16,7 +16,7 @@ fn main() {
         Ok(r) => r,
         Err(..) => {
             let _ = fs::rmdir_recursive(&checkout);
-            fs::mkdir_recursive(&checkout, io::UserDir).unwrap();
+            fs::mkdir_recursive(&checkout, io::USER_DIR).unwrap();
             let config = git2::Config::open_default().unwrap();
             let url = url.as_slice();
             cargo_registry::git::with_authentication(url, &config, |f| {
