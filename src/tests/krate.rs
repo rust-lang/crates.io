@@ -8,9 +8,10 @@ use conduit_test::MockRequest;
 use git2;
 use semver;
 
-use cargo_registry::krate::EncodableCrate;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
+use cargo_registry::krate::EncodableCrate;
+use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::upload as u;
 
@@ -491,4 +492,18 @@ fn following() {
        .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+}
+
+#[test]
+fn owners() {
+    #[deriving(Decodable)] struct R { users: Vec<EncodableUser> }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/crates/foo/owners");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, "foo");
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 1);
 }

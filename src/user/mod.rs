@@ -45,17 +45,14 @@ pub struct EncodableUser {
 
 impl User {
     pub fn find(conn: &Connection, id: i32) -> CargoResult<User> {
-        let stmt = try!(conn.prepare("SELECT * FROM users WHERE id = $1 LIMIT 1"));
-        return try!(stmt.query(&[&id])).next().map(User::from_row).require(|| {
-            NotFound
-        })
+        Model::find(conn, id)
     }
 
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
         return try!(stmt.query(&[&token as &ToSql])).next()
-                        .map(User::from_row).require(|| {
+                        .map(|r| Model::from_row(&r)).require(|| {
             NotFound
         })
     }
@@ -82,7 +79,7 @@ impl User {
                                          &email, &name, &avatar,
                                          &login as &ToSql]));
         match rows.next() {
-            Some(row) => return Ok(User::from_row(row)),
+            Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
         }
         let stmt = try!(conn.prepare("INSERT INTO users
@@ -95,21 +92,9 @@ impl User {
                                          &api_token as &ToSql,
                                          &login as &ToSql,
                                          &name, &avatar]));
-        Ok(User::from_row(try!(rows.next().require(|| {
+        Ok(Model::from_row(&try!(rows.next().require(|| {
             internal("no user with email we just found")
         }))))
-    }
-
-    fn from_row(row: PostgresRow) -> User {
-        User {
-            id: row.get("id"),
-            email: row.get("email"),
-            gh_access_token: row.get("gh_access_token"),
-            api_token: row.get("api_token"),
-            gh_login: row.get("gh_login"),
-            name: row.get("name"),
-            avatar: row.get("gh_avatar"),
-        }
     }
 
     pub fn new_api_token() -> String {
@@ -127,6 +112,22 @@ impl User {
             name: name,
         }
     }
+}
+
+impl Model for User {
+    fn from_row(row: &PostgresRow) -> User {
+        User {
+            id: row.get("id"),
+            email: row.get("email"),
+            gh_access_token: row.get("gh_access_token"),
+            api_token: row.get("api_token"),
+            gh_login: row.get("gh_login"),
+            name: row.get("name"),
+            avatar: row.get("gh_avatar"),
+        }
+    }
+
+    fn table_name(_: Option<User>) -> &'static str { "users" }
 }
 
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {

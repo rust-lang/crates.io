@@ -18,7 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use model::Model;
 use upload;
-use user::{User, RequestUser};
+use user::{User, RequestUser, EncodableUser};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
@@ -84,9 +84,15 @@ impl Crate {
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
-        Ok(Model::from_row(&try!(rows.next().require(|| {
+        let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
-        }))))
+        })));
+
+        try!(conn.execute("INSERT INTO crate_owners
+                           (crate_id, user_id, created_at)
+                           VALUES ($1, $2, $3)",
+                          &[&ret.id, &user_id, &now]));
+        return Ok(ret);
     }
 
     pub fn valid_name(name: &str) -> bool {
@@ -119,6 +125,15 @@ impl Crate {
     pub fn versions(&self, conn: &Connection) -> CargoResult<Vec<Version>> {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        Ok(rows.map(|r| Model::from_row(&r)).collect())
+    }
+
+    pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<User>> {
+        let stmt = try!(conn.prepare("SELECT * FROM users
+                                      INNER JOIN crate_owners
+                                         ON crate_owners.user_id = users.id
+                                      WHERE crate_owners.crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
         Ok(rows.map(|r| Model::from_row(&r)).collect())
     }
@@ -453,7 +468,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT versions.id as version_id
                                 FROM crates
-                                LEFT JOIN versions ON
+                                INNER JOIN versions ON
                                     crates.id = versions.crate_id
                                 WHERE crates.name = $1
                                   AND versions.num = $2
@@ -570,15 +585,23 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
-
-    let stmt = try!(tx.prepare("SELECT * FROM versions WHERE crate_id = $1"));
-    let mut versions = Vec::new();
-    for row in try!(stmt.query(&[&krate.id])) {
-        let version: Version = Model::from_row(&row);
-        versions.push(version.encodable(crate_name));
-    }
+    let versions = try!(krate.versions(tx));
+    let versions = versions.into_iter().map(|v| v.encodable(crate_name))
+                           .collect();
 
     #[deriving(Encodable)]
     struct R { versions: Vec<EncodableVersion> }
     Ok(req.json(&R{ versions: versions }))
+}
+
+pub fn owners(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = req.params()["crate_id"].as_slice();
+    let tx = try!(req.tx());
+    let krate = try!(Crate::find_by_name(tx, crate_name));
+    let owners = try!(krate.owners(tx));
+    let owners = owners.into_iter().map(|u| u.encodable()).collect();
+
+    #[deriving(Encodable)]
+    struct R { users: Vec<EncodableUser> }
+    Ok(req.json(&R{ users: owners }))
 }
