@@ -121,7 +121,7 @@ pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
     // number of retries at a fixed number.
     for _ in range(0i, 20) {
         // Add the crate to its relevant file
-        try!(fs::mkdir_recursive(&dst.dir_path(), io::UserRWX));
+        try!(fs::mkdir_recursive(&dst.dir_path(), io::USER_RWX));
         let prev = if dst.exists() {
             try!(File::open(&dst).read_to_string())
         } else {
