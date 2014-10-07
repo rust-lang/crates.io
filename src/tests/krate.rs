@@ -497,13 +497,48 @@ fn following() {
 #[test]
 fn owners() {
     #[deriving(Decodable)] struct R { users: Vec<EncodableUser> }
+    #[deriving(Decodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates/foo/owners");
+    let mut other = ::user();
+    other.gh_login = "foobar".to_string();
+    ::mock_user(&mut req, other);
     ::mock_user(&mut req, ::user());
     ::mock_crate(&mut req, "foo");
 
     let mut response = ok_resp!(middle.call(&mut req));
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
+
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+                                               .with_body("{}")));
+    assert!(::json::<O>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Get)));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 1);
+
+    let body = r#"{"add":["foobar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+                                               .with_body(body)));
+    assert!(::json::<O>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Get)));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 2);
+
+    let body = r#"{"remove":["foobar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+                                               .with_body(body)));
+    assert!(::json::<O>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Get)));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 1);
+
+    let body = r#"{"remove":["foo"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+                                               .with_body(body)));
+    ::json::<::Bad>(&mut response);
 }

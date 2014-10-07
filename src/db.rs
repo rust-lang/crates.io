@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::fmt::Show;
 use std::mem;
 use std::sync::Arc;
@@ -36,6 +37,7 @@ pub struct Transaction {
     // right order.
     tx: LazyCell<pg::PostgresTransaction<'static>>,
     slot: LazyCell<PooledConnnection<'static>>,
+    rollback: Cell<bool>,
 
     // Keep a handle to the app which keeps a handle to the database to ensure
     // that this `'static` is indeed at least a little more accurate (in that
@@ -49,6 +51,7 @@ impl Transaction {
             app: app,
             slot: LazyCell::new(),
             tx: LazyCell::new(),
+            rollback: Cell::new(false),
         }
     }
 
@@ -95,6 +98,8 @@ impl Transaction {
         let tx: &'a pg::PostgresTransaction<'static> = tx.unwrap();
         Ok(tx as &Connection)
     }
+
+    pub fn rollback(&self) { self.rollback.set(true); }
 }
 
 impl Middleware for TransactionMiddleware {
@@ -112,12 +117,10 @@ impl Middleware for TransactionMiddleware {
             let tx = req.extensions().find::<Transaction>()
                         .expect("Transaction not present in request");
             match tx.tx.borrow() {
-                Some(tx) => {
-                    if req.app().config.env != ::Test {
-                        tx.set_commit();
-                    }
+                Some(transaction) if !tx.rollback.get() => {
+                    transaction.set_commit();
                 }
-                None => {}
+                _ => {}
             }
         }
         return res;
@@ -135,6 +138,9 @@ pub trait RequestTransaction<'a> {
     /// The transaction will live for the duration of the request, and it will
     /// only be set to commit() if a successful response code of 200 is seen.
     fn tx(self) -> CargoResult<&'a Connection + 'a>;
+
+    /// Do not commit this request's transaction, even if it finishes ok.
+    fn rollback(self);
 }
 
 impl<'a> RequestTransaction<'a> for &'a Request + 'a {
@@ -148,6 +154,12 @@ impl<'a> RequestTransaction<'a> for &'a Request + 'a {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .tx()
+    }
+
+    fn rollback(self) {
+        self.extensions().find::<Transaction>()
+            .expect("Transaction not present in request")
+            .rollback()
     }
 }
 

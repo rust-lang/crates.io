@@ -314,6 +314,10 @@ fn migrations() -> Vec<Migration> {
         foreign_key(20141007131737, "crate_owners", "created_by", "users (id)"),
         foreign_key(20141007131738, "crate_owners", "crate_id", "crates (id)"),
         index(20141007131739, "crate_owners", "crate_id"),
+        Migration::add_column(20141007131740, "crate_owners", "deleted",
+                              "BOOLEAN NOT NULL"),
+        Migration::add_column(20141007131741, "crate_owners", "updated_at",
+                              "TIMESTAMP NOT NULL"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

@@ -51,6 +51,7 @@ pub struct EncodableCrate {
 pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
+    pub owners: Option<String>,
 }
 
 impl Crate {
@@ -89,8 +90,8 @@ impl Crate {
         })));
 
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, user_id, created_at)
-                           VALUES ($1, $2, $3)",
+                           (crate_id, user_id, created_at, updated_at, deleted)
+                           VALUES ($1, $2, $3, $3, FALSE)",
                           &[&ret.id, &user_id, &now]));
         return Ok(ret);
     }
@@ -118,6 +119,7 @@ impl Crate {
             links: CrateLinks {
                 version_downloads: format!("/crates/{}/downloads", name),
                 versions: versions_link,
+                owners: Some(format!("/crates/{}/owners", name)),
             },
         }
     }
@@ -133,9 +135,31 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       INNER JOIN crate_owners
                                          ON crate_owners.user_id = users.id
-                                      WHERE crate_owners.crate_id = $1"));
+                                      WHERE crate_owners.crate_id = $1
+                                        AND crate_owners.deleted = FALSE"));
         let rows = try!(stmt.query(&[&self.id]));
         Ok(rows.map(|r| Model::from_row(&r)).collect())
+    }
+
+    pub fn owner_add(&self, conn: &Connection, who: i32,
+                     name: &str) -> CargoResult<()> {
+        let user = try!(User::find_by_login(conn, name));
+        try!(conn.execute("INSERT INTO crate_owners
+                           (crate_id, user_id, created_at, updated_at,
+                            created_by, deleted)
+                           VALUES ($1, $2, $3, $3, $4, FALSE)",
+                          &[&self.id, &user.id, &::now(), &who]));
+        Ok(())
+    }
+
+    pub fn owner_remove(&self, conn: &Connection, _who: i32,
+                        name: &str) -> CargoResult<()> {
+        let user = try!(User::find_by_login(conn, name));
+        try!(conn.execute("UPDATE crate_owners
+                              SET deleted = TRUE, updated_at = $1
+                            WHERE crate_id = $2 AND user_id = $3",
+                          &[&::now(), &self.id, &user.id]));
+        Ok(())
     }
 
     pub fn s3_path(&self, version: &str) -> String {
@@ -604,4 +628,45 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { users: Vec<EncodableUser> }
     Ok(req.json(&R{ users: owners }))
+}
+
+pub fn modify_owners(req: &mut Request) -> CargoResult<Response> {
+    let body = try!(req.body().read_to_string());
+    let (user, krate) = try!(user_and_crate(req));
+    let tx = try!(req.tx());
+    let owners = try!(krate.owners(tx));
+    if !owners.iter().any(|u| u.id == user.id) {
+        return Err(human("must already be an owner to modify owners"))
+    }
+
+    #[deriving(Decodable)]
+    struct Request { add: Option<Vec<String>>, remove: Option<Vec<String>> }
+    let request: Request = try!(json::decode(body.as_slice()).map_err(|_| {
+        human("invalid json request")
+    }));
+
+    match request.add {
+        Some(to_add) => {
+            for to_add in to_add.iter() {
+                try!(krate.owner_add(tx, user.id, to_add.as_slice()));
+            }
+        }
+        None => {}
+    }
+    match request.remove {
+        Some(to_remove) => {
+            for to_remove in to_remove.iter() {
+                if to_remove.as_slice() == user.gh_login.as_slice() {
+                    req.rollback();
+                    return Err(human("cannot remove yourself as an owner"))
+                }
+                try!(krate.owner_remove(tx, user.id, to_remove.as_slice()));
+            }
+        }
+        None => {}
+    }
+
+    #[deriving(Encodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R{ ok: true }))
 }

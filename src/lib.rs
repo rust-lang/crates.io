@@ -86,6 +86,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.put("/crates/:crate_id/follow", C(krate::follow));
     router.put("/crates/:crate_id/unfollow", C(krate::unfollow));
     router.get("/crates/:crate_id/following", C(krate::following));
+    router.get("/crates/:crate_id/owners", C(krate::owners));
+    router.put("/crates/:crate_id/owners", C(krate::modify_owners));
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
     router.get("/git/index/*path", C(git::serve_index));

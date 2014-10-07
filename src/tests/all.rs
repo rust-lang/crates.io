@@ -12,6 +12,7 @@ extern crate url;
 extern crate semver;
 
 use std::collections::HashMap;
+use std::fmt;
 use std::io::Command;
 use std::io::process::InheritFd;
 use std::os;
@@ -27,7 +28,7 @@ use cargo_registry::{User, Crate, Version};
 macro_rules! t( ($e:expr) => (
     match $e {
         Ok(e) => e,
-        Err(m) => fail!(concat!(stringify!($e), " failed with: {}"), m),
+        Err(m) => fail!("{} failed with: {}", stringify!($e), m),
     }
 ) )
 
@@ -54,6 +55,7 @@ mod git;
 mod version;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    struct NoCommit;
     static mut INIT: Once = ONCE_INIT;
     git::init();
 
@@ -74,7 +76,9 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     unsafe { INIT.doit(|| db_setup(config.db_url.as_slice())); }
     let app = App::new(&config);
     let app = Arc::new(app);
-    return (bomb, app.clone(), cargo_registry::middleware(app));
+    let mut middleware = cargo_registry::middleware(app.clone());
+    middleware.add(NoCommit);
+    return (bomb, app, middleware);
 
     fn env(s: &str) -> String {
         match os::getenv(s) {
@@ -89,6 +93,17 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
                         .stdout(InheritFd(1))
                         .stderr(InheritFd(2))
                         .status().unwrap().success());
+    }
+
+    impl conduit_middleware::Middleware for NoCommit {
+        fn after(&self, req: &mut Request,
+                 res: Result<conduit::Response, Box<fmt::Show + 'static>>)
+                 -> Result<conduit::Response, Box<fmt::Show + 'static>> {
+            req.extensions().find::<db::Transaction>()
+               .expect("Transaction not present in request")
+               .rollback();
+            return res;
+        }
     }
 }
 
@@ -115,7 +130,7 @@ fn json<T>(r: &mut conduit::Response) -> T
 fn user() -> User {
     User {
         id: 10000,
-        gh_login: "foo@example.com".to_string(),
+        gh_login: "foo".to_string(),
         email: None,
         name: None,
         avatar: None,

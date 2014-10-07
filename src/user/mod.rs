@@ -48,6 +48,16 @@ impl User {
         Model::find(conn, id)
     }
 
+    pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<User> {
+        let stmt = try!(conn.prepare("SELECT * FROM users
+                                      WHERE gh_login = $1"));
+        let mut rows = try!(stmt.query(&[&login as &ToSql]));
+        let row = try!(rows.next().require(|| {
+            NotFound
+        }));
+        Ok(Model::from_row(&row))
+    }
+
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
