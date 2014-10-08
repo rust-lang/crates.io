@@ -87,8 +87,14 @@ impl Crate {
         try!(validate_url(documentation));
 
         // TODO: like with users, this is sadly racy
-        let stmt = try!(conn.prepare("SELECT * FROM crates WHERE name = $1"));
-        let mut rows = try!(stmt.query(&[&name as &ToSql]));
+        let stmt = try!(conn.prepare("UPDATE crates
+                                         SET documentation = $1,
+                                             homepage = $2,
+                                             description = $3
+                                       WHERE name = $4
+                                   RETURNING *"));
+        let mut rows = try!(stmt.query(&[&documentation, &homepage,
+                                         &description, &name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
