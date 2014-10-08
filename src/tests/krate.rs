@@ -61,7 +61,7 @@ fn index() {
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockUser(::user()));
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -75,7 +75,7 @@ fn index() {
 #[test]
 fn index_search() {
     let (_b, _app, mut middle) = ::app();
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockUser(::user()));
     middle.add(::middleware::MockCrate(krate.clone()));
 
@@ -99,7 +99,7 @@ fn index_search() {
 #[test]
 fn index_letter() {
     let (_b, _app, mut middle) = ::app();
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockUser(::user()));
     middle.add(::middleware::MockCrate(krate.clone()));
 
@@ -123,7 +123,10 @@ fn index_letter() {
 #[test]
 fn show() {
     let (_b, _app, mut middle) = ::app();
-    let krate = ::krate();
+    let mut krate = ::krate("foo");
+    krate.description = Some(format!("description"));
+    krate.documentation = Some(format!("https://example.com"));
+    krate.homepage = Some(format!("http://example.com"));
     middle.add(::middleware::MockUser(::user()));
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = MockRequest::new(conduit::Get,
@@ -132,6 +135,9 @@ fn show() {
     let json: CrateResponse = ::json(&mut response);
     assert_eq!(json.krate.name, krate.name);
     assert_eq!(json.krate.id, krate.name);
+    assert_eq!(json.krate.description, krate.description);
+    assert_eq!(json.krate.homepage, krate.homepage);
+    assert_eq!(json.krate.documentation, krate.documentation);
     let versions = json.krate.versions.as_ref().unwrap();
     assert_eq!(versions.len(), 1);
     assert_eq!(json.versions.len(), 1);
@@ -148,7 +154,7 @@ fn versions() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates/foo/versions");
     ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionsList = ::json(&mut response);
     assert_eq!(json.versions.len(), 1);
@@ -164,6 +170,10 @@ fn new_req(api_token: &str, krate: &str, version: &str,
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
         features: HashMap::new(),
         deps: deps,
+        authors: Vec::new(),
+        description: None,
+        homepage: None,
+        documentation: None,
     };
     let json = json::encode(&json);
     let mut body = MemWriter::new();
@@ -218,7 +228,7 @@ fn new_krate() {
 fn new_krate_with_dependency() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
-    let crate_dep = ::krate();
+    let crate_dep = ::krate("foo");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(crate_dep.clone()));
     let dep = u::CrateDependency {
@@ -236,7 +246,7 @@ fn new_krate_with_dependency() {
 #[test]
 fn new_krate_twice() {
     let (_b, _app, mut middle) = ::app();
-    let krate = ::krate();
+    let krate = ::krate("foo");
     let user = ::user();
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
@@ -259,7 +269,7 @@ fn new_krate_wrong_user() {
     middle.add(::middleware::MockUser(u1.clone()));
     middle.add(::middleware::MockUser(u2));
 
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = new_req(u1.api_token.as_slice(),
                           krate.name.as_slice(),
@@ -287,7 +297,7 @@ fn new_krate_too_big() {
 fn new_krate_duplicate_version() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = new_req(user.api_token.as_slice(),
@@ -398,7 +408,7 @@ fn download() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates/foo/1.0.0/download");
     ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, ::krate("foo"));
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.val0(), 302);
 
@@ -412,7 +422,7 @@ fn download() {
 fn download_bad() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
-    let krate = ::krate();
+    let krate = ::krate("foo");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
     let rel = format!("/crates/{}/0.1.0/download", krate.name);
@@ -425,9 +435,8 @@ fn download_bad() {
 fn dependencies() {
     let (_b, _app, mut middle) = ::app();
     let user = ::user();
-    let c1 = ::krate();
-    let mut c2 = ::krate();
-    c2.name = "bar".to_string();
+    let c1 = ::krate("foo");
+    let c2 = ::krate("bar");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
     let rel = format!("/crates/{}/1.0.0/dependencies", c1.name);
@@ -451,7 +460,7 @@ fn following() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates/foo/following");
     ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, ::krate("foo"));
 
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
@@ -505,7 +514,7 @@ fn owners() {
     other.gh_login = "foobar".to_string();
     ::mock_user(&mut req, other);
     ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, ::krate("foo"));
 
     let mut response = ok_resp!(middle.call(&mut req));
     let r: R = ::json(&mut response);

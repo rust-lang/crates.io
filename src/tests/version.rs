@@ -25,7 +25,7 @@ fn index() {
 
     let (v1, v2) = {
         ::mock_user(&mut req, ::user());
-        let c = ::mock_crate(&mut req, "foo");
+        let c = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
         let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &HashMap::new()).unwrap();
@@ -44,7 +44,7 @@ fn show() {
     let mut req = ::req(app, conduit::Get, "/versions");
     let v = {
         ::mock_user(&mut req, ::user());
-        let krate = ::mock_crate(&mut req, "foo");
+        let krate = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
         Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new()).unwrap()

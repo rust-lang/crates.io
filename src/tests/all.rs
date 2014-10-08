@@ -139,15 +139,18 @@ fn user() -> User {
     }
 }
 
-fn krate() -> Crate {
+fn krate(name: &str) -> Crate {
     cargo_registry::krate::Crate {
         id: 10000,
-        name: "foo".to_string(),
+        name: name.to_string(),
         user_id: 100,
         updated_at: time::now().to_timespec(),
         created_at: time::now().to_timespec(),
         downloads: 10,
         max_version: semver::Version::parse("0.0.0").unwrap(),
+        documentation: None,
+        homepage: None,
+        description: None,
     }
 }
 
@@ -163,10 +166,12 @@ fn mock_user(req: &mut Request, u: User) -> User {
     return u;
 }
 
-fn mock_crate(req: &mut Request, name: &str) -> Crate {
+fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
     let user = req.extensions().find::<User>().unwrap();
-    let krate = Crate::find_or_insert(req.tx().unwrap(), name,
-                                      user.id).unwrap();
+    let krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
+                                      user.id, &krate.description,
+                                      &krate.homepage,
+                                      &krate.documentation).unwrap();
     Version::insert(req.tx().unwrap(), krate.id,
                     &semver::Version::parse("1.0.0").unwrap(),
                     &HashMap::new()).unwrap();

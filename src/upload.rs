@@ -11,6 +11,10 @@ pub struct NewCrate {
     pub vers: CrateVersion,
     pub deps: Vec<CrateDependency>,
     pub features: HashMap<CrateName, Vec<CrateName>>,
+    pub authors: Vec<String>,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
 }
 
 #[deriving(PartialEq, Eq, Hash)]

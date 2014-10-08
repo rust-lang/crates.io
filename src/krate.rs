@@ -11,6 +11,7 @@ use curl::http;
 use pg::types::ToSql;
 use pg::{PostgresRow, PostgresStatement};
 use semver;
+use url::{mod, Url};
 
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
@@ -33,6 +34,9 @@ pub struct Crate {
     pub created_at: Timespec,
     pub downloads: i32,
     pub max_version: semver::Version,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -44,6 +48,9 @@ pub struct EncodableCrate {
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
     pub links: CrateLinks,
 }
 
@@ -69,22 +76,34 @@ impl Crate {
     }
 
     pub fn find_or_insert(conn: &Connection, name: &str,
-                          user_id: i32) -> CargoResult<Crate> {
-        // TODO: like with users, this is sadly racy
+                          user_id: i32,
+                          description: &Option<String>,
+                          homepage: &Option<String>,
+                          documentation: &Option<String>) -> CargoResult<Crate> {
+        let description = description.as_ref().map(|s| s.as_slice());
+        let homepage = homepage.as_ref().map(|s| s.as_slice());
+        let documentation = documentation.as_ref().map(|s| s.as_slice());
+        try!(validate_url(homepage));
+        try!(validate_url(documentation));
 
+        // TODO: like with users, this is sadly racy
         let stmt = try!(conn.prepare("SELECT * FROM crates WHERE name = $1"));
         let mut rows = try!(stmt.query(&[&name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
         }
-        let stmt = try!(conn.prepare("INSERT INTO crates \
+        let stmt = try!(conn.prepare("INSERT INTO crates
                                       (name, user_id, created_at,
-                                       updated_at, downloads, max_version) \
-                                      VALUES ($1, $2, $3, $4, 0, '0.0.0') \
+                                       updated_at, downloads, max_version,
+                                       description, homepage, documentation)
+                                      VALUES ($1, $2, $3, $3, 0, '0.0.0',
+                                              $4, $5, $6)
                                       RETURNING *"));
         let now = ::now();
-        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now, &now]));
+        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
+                                         &description, &homepage,
+                                         &documentation]));
         let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
         })));
@@ -94,6 +113,28 @@ impl Crate {
                            VALUES ($1, $2, $3, $3, FALSE)",
                           &[&ret.id, &user_id, &now]));
         return Ok(ret);
+
+        fn validate_url(url: Option<&str>) -> CargoResult<()> {
+            let url = match url {
+                Some(s) => s,
+                None => return Ok(())
+            };
+            let url = match Url::parse(url) {
+                Ok(url) => url,
+                Err(..) => return Err(human(format!("not a valid url: {}", url)))
+            };
+            match url.scheme.as_slice() {
+                "http" | "https" => {}
+                _ => return Err(human(format!("not a valid url scheme: {}", url)))
+            }
+            match url.scheme_data {
+                url::RelativeSchemeData(..) => {}
+                url::NonRelativeSchemeData(..) => {
+                    return Err(human(format!("not a valid url scheme: {}", url)))
+                }
+            }
+            Ok(())
+        }
     }
 
     pub fn valid_name(name: &str) -> bool {
@@ -102,8 +143,10 @@ impl Crate {
     }
 
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
-        let Crate { name, created_at, updated_at, downloads,
-                    max_version, .. } = self;
+        let Crate {
+            name, created_at, updated_at, downloads, max_version, description,
+            homepage, documentation, ..
+        } = self;
         let versions_link = match versions {
             Some(..) => None,
             None => Some(format!("/crates/{}/versions", name)),
@@ -116,6 +159,9 @@ impl Crate {
             downloads: downloads,
             versions: versions,
             max_version: max_version.to_string(),
+            documentation: documentation,
+            homepage: homepage,
+            description: description,
             links: CrateLinks {
                 version_downloads: format!("/crates/{}/downloads", name),
                 versions: versions_link,
@@ -196,6 +242,9 @@ impl Model for Crate {
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
+            description: row.get("description"),
+            documentation: row.get("documentation"),
+            homepage: row.get("homepage"),
             max_version: semver::Version::parse(max.as_slice()).unwrap(),
         }
     }
@@ -371,7 +420,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }).collect::<HashMap<String, Vec<String>>>();
 
     // Persist the new crate, if it doesn't already exist
-    let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id));
+    let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
+                                               &new_crate.description,
+                                               &new_crate.homepage,
+                                               &new_crate.documentation));
     if krate.user_id != user.id {
         return Err(human("crate name has already been claimed by another user"))
     }

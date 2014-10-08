@@ -23,7 +23,7 @@ pub struct MockCrate(pub Crate);
 impl Middleware for MockCrate {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
         let MockCrate(ref p) = *self;
-        ::mock_crate(req, p.name.as_slice());
+        ::mock_crate(req, p.clone());
         Ok(())
     }
 }
@@ -36,10 +36,10 @@ impl Middleware for MockDependency {
         let user = req.extensions().find::<User>().unwrap();
         let crate_a = Crate::find_or_insert(req.tx().unwrap(),
                                             a.name.as_slice(),
-                                            user.id).unwrap();
+                                            user.id, &None, &None, &None).unwrap();
         let crate_b = Crate::find_or_insert(req.tx().unwrap(),
                                             b.name.as_slice(),
-                                            user.id).unwrap();
+                                            user.id, &None, &None, &None).unwrap();
         let va = Version::insert(req.tx().unwrap(), crate_a.id,
                                  &semver::Version::parse("1.0.0").unwrap(),
                                  &HashMap::new()).unwrap();

@@ -98,7 +98,7 @@ fn my_packages() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates");
     let u = ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
+    ::mock_crate(&mut req, ::krate("foo"));
     req.with_query(format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -120,8 +120,8 @@ fn following() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/");
     ::mock_user(&mut req, ::user());
-    ::mock_crate(&mut req, "foo");
-    ::mock_crate(&mut req, "bar");
+    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("bar"));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
                                                .with_method(conduit::Get)));

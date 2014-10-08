@@ -318,6 +318,12 @@ fn migrations() -> Vec<Migration> {
                               "BOOLEAN NOT NULL"),
         Migration::add_column(20141007131741, "crate_owners", "updated_at",
                               "TIMESTAMP NOT NULL"),
+        Migration::add_column(20141007171515, "crates", "description",
+                              "VARCHAR"),
+        Migration::add_column(20141007171516, "crates", "homepage",
+                              "VARCHAR"),
+        Migration::add_column(20141007171517, "crates", "documentation",
+                              "VARCHAR"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
