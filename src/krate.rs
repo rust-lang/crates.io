@@ -431,7 +431,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.homepage,
                                                &new_crate.documentation));
     if krate.user_id != user.id {
-        return Err(human("crate name has already been claimed by another user"))
+        let owners = try!(krate.owners(try!(req.tx())));
+        if !owners.iter().any(|o| o.id == user.id) {
+            return Err(human("crate name has already been claimed by \
+                              another user"))
+        }
     }
 
     // Persist the new version of this crate

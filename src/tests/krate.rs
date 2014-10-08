@@ -3,17 +3,18 @@ use std::io::fs::PathExtensions;
 use std::collections::HashMap;
 use serialize::{json, Decoder, Decodable};
 
-use conduit::{mod, Handler};
+use conduit::{mod, Handler, Request};
 use conduit_test::MockRequest;
 use git2;
 use semver;
 
+use cargo_registry::db;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::krate::{Crate, EncodableCrate};
+use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
-use cargo_registry::upload as u;
 
 #[deriving(Decodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
@@ -286,6 +287,38 @@ fn new_krate_wrong_user() {
     assert!(json.errors.len() > 0);
     assert!(json.errors[0].detail.as_slice().contains("another user"),
             "{}", json.errors);
+}
+
+#[test]
+fn new_crate_owner() {
+    #[deriving(Decodable)] struct O { ok: bool }
+
+    let (_b, app, middle) = ::app();
+
+    let mut u1 = ::user();
+    u1.gh_login = "some-new-login".to_string();
+    let mut u2 = ::user();
+    u2.gh_login = "foobar".to_string();
+
+    let mut req = new_req(u1.api_token.as_slice(), "foo", "1.0.0");
+    req.mut_extensions().insert(db::Transaction::new(app));
+    let u2 = ::mock_user(&mut req, u2);
+    ::mock_user(&mut req, u1);
+    let mut response = t_resp!(middle.call(&mut req));
+    ::json::<GoodCrate>(&mut response);
+
+    let body = r#"{"add":["foobar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_path("/crates/foo/owners")
+                                               .with_method(conduit::Put)
+                                               .with_body(body)));
+    assert!(::json::<O>(&mut response).ok);
+    let tx = req.mut_extensions().pop::<db::Transaction>().unwrap();
+    drop(req);
+
+    let mut req2 = new_req(u2.api_token.as_slice(), "foo", "2.0.0");
+    req2.mut_extensions().insert(tx);
+    let mut response = t_resp!(middle.call(&mut req2));
+    ::json::<GoodCrate>(&mut response);
 }
 
 #[test]
