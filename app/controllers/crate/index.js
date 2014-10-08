@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import DS from 'ember-data';
 import ajax from 'ic-ajax';
 
 var NUM_VERSIONS = 5;
@@ -26,6 +27,23 @@ export default Ember.ObjectController.extend({
     hasMoreVersions: function() {
         return this.get("sortedVersions").length > NUM_VERSIONS;
     }.property('sortedVersions'),
+
+    displayedAuthors: function() {
+        var self = this;
+        return DS.PromiseArray.create({
+            promise: this.get('currentVersion.authors').then(function(authors) {
+                var ret = [];
+                authors.forEach(function(author) {
+                    ret.push(author);
+                });
+                var others = self.store.metadataFor('user');
+                for (var i = 0; i < others.names.length; i++) {
+                    ret.push({name: others.names[i]});
+                }
+                return ret;
+            }),
+        });
+    }.property('currentVersion.authors.@each'),
 
     actions: {
         download: function(version) {

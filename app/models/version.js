@@ -8,6 +8,7 @@ export default DS.Model.extend({
     downloads: DS.attr('number'),
 
     crate: DS.belongsTo('crate'),
+    authors: DS.hasMany('users', {async: true}),
     dependencies: DS.hasMany('dependency', {async: true}),
     version_downloads: DS.hasMany('version-download', {async: true}),
 });

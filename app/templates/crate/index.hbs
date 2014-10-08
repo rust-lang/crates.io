@@ -48,11 +48,13 @@
 
         <h3>Authors</h3>
         <ul>
-            <li>data here</li>
+            {{#each displayedAuthors}}
+                <li>{{ name }}</li>
+            {{/each}}
         </ul>
 
         <h3>Owners</h3>
-        <ul>
+        <ul class='owners'>
             {{#each owners}}
                 {{! TODO: hyperlink to a profile page }}
                 <li><img {{bind-attr src=mediumSmallAvatar}}/></li>
