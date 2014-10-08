@@ -42,10 +42,10 @@ impl Middleware for MockDependency {
                                             user.id, &None, &None, &None).unwrap();
         let va = Version::insert(req.tx().unwrap(), crate_a.id,
                                  &semver::Version::parse("1.0.0").unwrap(),
-                                 &HashMap::new()).unwrap();
+                                 &HashMap::new(), []).unwrap();
         Version::insert(req.tx().unwrap(), crate_b.id,
                         &semver::Version::parse("1.0.0").unwrap(),
-                        &HashMap::new()).unwrap();
+                        &HashMap::new(), []).unwrap();
         Dependency::insert(req.tx().unwrap(), va.id, crate_b.id,
                            &semver::VersionReq::parse(">= 0").unwrap(),
                            false, true, []).unwrap();

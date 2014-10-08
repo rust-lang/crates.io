@@ -219,7 +219,8 @@ impl Crate {
     }
 
     pub fn add_version(&mut self, conn: &Connection, ver: &semver::Version,
-                       features: &HashMap<String, Vec<String>>)
+                       features: &HashMap<String, Vec<String>>,
+                       authors: &[String])
                        -> CargoResult<Version> {
         match try!(Version::find_by_num(conn, self.id, ver)) {
             Some(..) => {
@@ -234,7 +235,7 @@ impl Crate {
                            WHERE id = $3",
                           &[&self.updated_at, &self.max_version.to_string(),
                             &self.id]));
-        Version::insert(conn, self.id, ver, features)
+        Version::insert(conn, self.id, ver, features, authors)
     }
 }
 
@@ -439,7 +440,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Persist the new version of this crate
-    let mut version = try!(krate.add_version(try!(req.tx()), vers, &features));
+    let mut version = try!(krate.add_version(try!(req.tx()), vers, &features,
+                                             new_crate.authors.as_slice()));
 
     // Link this new version to all dependencies
     let mut deps = Vec::new();

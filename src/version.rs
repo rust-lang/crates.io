@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, TreeMap};
 use std::time::Duration;
 use serialize::json;
 use time::Timespec;
@@ -6,16 +6,16 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg::PostgresRow;
+use pg::types::ToSql;
 use semver;
 use url;
 
+use {Model, Crate, User};
 use db::{Connection, RequestTransaction};
 use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
-use krate::Crate;
 use upload;
 use util::{RequestUtils, CargoResult, Require, internal, human};
-use model::Model;
 
 #[deriving(Clone)]
 pub struct Version {
@@ -26,6 +26,11 @@ pub struct Version {
     pub created_at: Timespec,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
+}
+
+pub enum VersionAuthor {
+    AuthorUser(User),
+    AuthorName(String),
 }
 
 #[deriving(Encodable, Decodable)]
@@ -45,6 +50,7 @@ pub struct EncodableVersion {
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
+    pub authors: String,
 }
 
 impl Version {
@@ -63,7 +69,8 @@ impl Version {
 
     pub fn insert(conn: &Connection, crate_id: i32,
                   num: &semver::Version,
-                  features: &HashMap<String, Vec<String>>)
+                  features: &HashMap<String, Vec<String>>,
+                  authors: &[String])
                   -> CargoResult<Version> {
         let num = num.to_string();
         let features = json::encode(features);
@@ -74,9 +81,13 @@ impl Version {
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&crate_id, &num, &now, &features]));
-        Ok(Model::from_row(&try!(rows.next().require(|| {
+        let ret: Version = Model::from_row(&try!(rows.next().require(|| {
             internal("no version returned")
-        }))))
+        })));
+        for author in authors.iter() {
+            try!(ret.add_author(conn, author.as_slice()));
+        }
+        Ok(ret)
     }
 
     pub fn valid(version: &str) -> bool {
@@ -101,6 +112,7 @@ impl Version {
                                       crate_name, num),
                 version_downloads: format!("/crates/{}/{}/downloads",
                                            crate_name, num),
+                authors: format!("/crates/{}/{}/authors", crate_name, num),
             },
         }
     }
@@ -136,6 +148,28 @@ impl Version {
         Ok(try!(stmt.query(&[&self.id])).map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
         }).collect())
+    }
+
+    pub fn authors(&self, conn: &Connection) -> CargoResult<Vec<VersionAuthor>> {
+        let stmt = try!(conn.prepare("SELECT * FROM version_authors
+                                       WHERE version_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        rows.map(|row| {
+            let user_id: Option<i32> = row.get("user_id");
+            let name: String = row.get("name");
+            Ok(match user_id {
+                Some(id) => AuthorUser(try!(User::find(conn, id))),
+                None => AuthorName(name),
+            })
+        }).collect()
+    }
+
+    pub fn add_author(&self, conn: &Connection, name: &str) -> CargoResult<()> {
+        println!("add autohr: {}", name);
+        // TODO: at least try to link `name` to a pre-existing user
+        try!(conn.execute("INSERT INTO version_authors (version_id, name)
+                           VALUES ($1, $2)", &[&self.id, &name as &ToSql]));
+        Ok(())
     }
 }
 
@@ -252,4 +286,22 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
+}
+
+pub fn authors(req: &mut Request) -> CargoResult<Response> {
+    let (version, _) = try!(version_and_crate(req));
+    let tx = try!(req.tx());
+    let (mut users, mut names) = (Vec::new(), Vec::new());
+    for author in try!(version.authors(tx)).into_iter() {
+        match author {
+            AuthorUser(u) => users.push(u.encodable()),
+            AuthorName(n) => names.push(n),
+        }
+    }
+
+    #[deriving(Encodable)]
+    struct R { users: Vec<::user::EncodableUser>, meta: Meta }
+    #[deriving(Encodable)]
+    struct Meta { names: Vec<String> }
+    Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
 }

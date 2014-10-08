@@ -161,7 +161,7 @@ mod test {
                                           &None, &None, &None).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new()).unwrap();
+                                      &HashMap::new(), []).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 1, 0, current_date, false)",
@@ -187,7 +187,7 @@ mod test {
                                           &None, &None).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new()).unwrap();
+                                      &HashMap::new(), []).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 1, current_date, false)",

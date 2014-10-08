@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serialize::json;
 
 use conduit::{mod, Handler, Request};
 use semver;
@@ -28,8 +29,9 @@ fn index() {
         let c = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
-        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &HashMap::new()).unwrap();
-        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &HashMap::new()).unwrap();
+        let m = HashMap::new();
+        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, []).unwrap();
+        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, []).unwrap();
         (v1, v2)
     };
     req.with_query(format!("ids[]={}&ids[]={}", v1.id, v2.id));
@@ -47,10 +49,23 @@ fn show() {
         let krate = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
-        Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new()).unwrap()
+        Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), []).unwrap()
     };
     req.with_path(format!("/versions/{}", v.id).as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionResponse = ::json(&mut response);
     assert_eq!(json.version.id, v.id);
+}
+
+#[test]
+fn authors() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, conduit::Get, "/crates/foo/1.0.0/authors");
+    ::mock_user(&mut req, ::user());
+    ::mock_crate(&mut req, ::krate("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+    let s = response.body.read_to_string().unwrap();
+    let json = json::from_str(s.as_slice()).unwrap();
+    let json = json.as_object().unwrap();
+    assert!(json.contains_key(&"users".to_string()));
 }
