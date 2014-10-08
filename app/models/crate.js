@@ -15,4 +15,5 @@ export default DS.Model.extend({
     documentation: DS.attr('string'),
 
     versions: DS.hasMany('versions', {async: true}),
+    owners: DS.hasMany('users', {async: true}),
 });

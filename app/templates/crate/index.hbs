@@ -33,7 +33,7 @@
     <div class='docs'>
         {{#if description}}
             <div class='about'>
-                <h2>About This Package</h2>
+                <h3>About This Package</h3>
                 <p>{{ description }}</p>
             </div>
         {{/if}}
@@ -53,7 +53,10 @@
 
         <h3>Owners</h3>
         <ul>
-            <li>data here</li>
+            {{#each owners}}
+                {{! TODO: hyperlink to a profile page }}
+                <li><img {{bind-attr src=mediumSmallAvatar}}/></li>
+            {{/each}}
         </ul>
     </div>
 </div>

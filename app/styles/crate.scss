@@ -111,6 +111,11 @@
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
+    .about {
+        line-height: 180%;
+        margin-bottom: 40px;
+    }
+
     .docs {
         width: 70%;
         float: left;
@@ -119,6 +124,15 @@
     .authorship {
         width: 30%;
         float: left;
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li { margin: 0 7px 7px 0; }
     }
     .install {
         font-size: 120%;
