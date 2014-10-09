@@ -46,8 +46,7 @@
 
 #blurb {
     margin: 30px 0 40px 0;
-    display: flex;
-    flex-direction: row;
+    @include flex;
 
     #intro { width: 60%; line-height: 25px; padding: 10px;}
 
@@ -69,7 +68,7 @@
 }
 
 .crate-lists {
-    display: flex;
+    @include flex;
 
     h2 { font-size: 105%; }
     > div { margin: 0 15px; }
@@ -84,12 +83,12 @@
         background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
-        display: flex;
-        justify-content: space-between;
+        @include flex;
+        @include justify-content(space-between);
 
         img { vertical-align: middle; }
     }
     li a:hover { background-color: darken($main-bg-dark, 5%); }
 }
 
-#home-crates > div { flex-grow: 1; }
+#home-crates > div { @include flex-grow(1); }

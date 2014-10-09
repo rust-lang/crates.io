@@ -4,19 +4,23 @@
     background-color: $main-bg-dark;
     margin-bottom: 20px;
     @include border-radius(5px);
-    display: flex;
+    @include flex;
+    @include align-items(center);
 
-    * { align-self: center; }
     h1 { padding-left: 10px; }
     h2 { color: $main-color-light; padding-left: 10px; }
     a, button { margin-left: 20px; }
-    .right { flex-grow: 2; display: flex; flex-direction: row-reverse; }
+    .right {
+        @include flex-grow(2);
+        @include flex;
+        @include flex-direction(row-reverse);
+    }
 }
 
 #selection {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    @include flex;
+    @include justify-content(space-between);
     padding: 20px;
     @include border-radius(5px);
     background-color: white;
@@ -34,8 +38,8 @@
 
 #results {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    @include flex;
+    @include justify-content(space-between);
     margin-bottom: 25px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
@@ -53,15 +57,15 @@
     background-color: white;
     padding: 0 20px;
     margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
+    @include flex;
+    @include flex-direction(column);
 
     .row {
         width: 100%;
         border-bottom: 2px solid $gray-border;
         padding: 20px 0;
-        display: flex;
-        justify-content: space-between;
+        @include flex;
+        @include justify-content(space-between);
 
         &:last-of-type { border: none; }
     }
@@ -70,8 +74,8 @@
 .crate {
     .desc {
         padding-top: 5px;
-        display: flex;
-        flex-direction: column;
+        @include flex;
+        @include flex-direction(column);
         width: 85%;
     }
 
@@ -87,8 +91,7 @@
         width: 15%;
         color: $main-color-light;
     }
-    .downloads { display: flex; }
-    .num { align-self: center; }
+    .downloads { @include flex; @include align-items(center); }
 }
 
 .pagination {
@@ -127,8 +130,8 @@
     }
 
     ul.owners {
-        display: flex;
-        flex-wrap: wrap;
+        @include flex;
+        @include flex-wrap(wrap);
         list-style: none;
         padding: 0;
         margin: 0;
@@ -193,8 +196,8 @@
         width: 30%;
         float: left;
         text-align: center;
-        display: flex;
-        flex-direction: column;
+        @include flex;
+        @include flex-direction(column);
         .small { padding: 10px; }
     }
 

@@ -26,20 +26,15 @@ html, body { margin: 0; }
 
 body {
   font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
-  display: -webkit-flex;
-  display:         flex;
-  -webkit-flex-direction: column;
-          flex-direction: column;
-  -webkit-align-items: center;
-          align-items: center;
+  @include flex;
+  @include flex-direction(column);
+  @include align-items(center);
 }
 
 
 #main {
-  display: -webkit-flex;
-  display:         flex;
-  -webkit-flex-direction: column;
-          flex-direction: column;
+  @include flex;
+  @include flex-direction(column);
 
   // width: 100%;
   width: 900px;
