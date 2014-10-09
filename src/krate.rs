@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -606,15 +607,21 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
+    let mut versions = try!(krate.versions(tx));
+    versions.sort_by(|a, b| b.num.cmp(&a.num));
+
+
+    let to_show = versions.as_slice().slice_to(cmp::min(5, versions.len()));
+    let ids = to_show.iter().map(|i| i.id).collect::<Vec<_>>();
 
     let cutoff_date = ::now() + Duration::days(-90);
-    let stmt = try!(tx.prepare("SELECT * FROM version_downloads
-                                LEFT JOIN versions
-                                    ON versions.id = version_downloads.version_id
-                                WHERE date > $1 AND versions.crate_id = $2
-                                ORDER BY date ASC"));
+    let stmt = try!(tx.prepare(format!("SELECT * FROM version_downloads
+                                         WHERE date > $1
+                                           AND version_id IN({:#})
+                                         ORDER BY date ASC",
+                                       ids.as_slice()).as_slice()));
     let mut downloads = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &krate.id])) {
+    for row in try!(stmt.query(&[&cutoff_date])) {
         let download: VersionDownload = Model::from_row(&row);
         downloads.push(download.encodable());
     }
