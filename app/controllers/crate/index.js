@@ -17,7 +17,7 @@ export default Ember.ObjectController.extend({
     requestedVersion: null,
 
     sortedVersions: function() {
-        return this.get("model").get("versions").sortBy("num").reverse();
+        return this.get("model.versions").sortBy("num").reverse();
     }.property('model.versions.[]'),
 
     smallSortedVersions: function() {
