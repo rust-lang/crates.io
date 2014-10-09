@@ -47,7 +47,11 @@ export default Ember.Route.extend({
                 }
             });
         }).then(function() {
-            return controller.get('currentVersion').get('version_downloads');
+            if (controller.get('requestedVersion')) {
+                return controller.get('currentVersion.version_downloads');
+            } else {
+                return controller.get('model.version_downloads');
+            }
         }).then(function(downloads) {
             controller.set('fetchingDownloads', false);
             controller.send('renderChart', downloads);

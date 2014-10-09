@@ -35,17 +35,8 @@ export default Ember.ObjectController.extend({
             this.set('loadingMore', true);
             var page = (this.get('myFeed').length / 10) + 1;
             ajax('/me/updates?page=' + page).then(function(data) {
-                // Wow, I sure wish I knew why none of this works like it should!
-                //
-                // TODO: fix this so we don't have to push everything in and
-                //       then re-find the things
                 self.store.pushMany('crate', data.crates);
                 var versions = self.store.pushMany('version', data.versions);
-                versions.forEach(function(v) {
-                    self.store.find('crate', v._data.crate_id).then(function(c) {
-                        v.set('crate', c);
-                    });
-                });
                 self.get('myFeed').pushObjects(versions);
                 self.set('hasMore', data.meta.more);
             }).finally(function() {
