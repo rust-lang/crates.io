@@ -88,22 +88,44 @@ export default Ember.ObjectController.extend({
 
         renderChart: function(downloads) {
             var dates = {};
+            var versions = [];
             for (var i = 0; i < 90; i++) {
                 var now = moment().subtract(i, 'days');
-                dates[now.format('MMM D')] = {date: now, cnt: 0};
+                dates[now.format('MMM D')] = {date: now, cnt: {}};
             }
+            var allVersions = {};
             downloads.forEach(function(d) {
+                var version_id = d.get('version.id');
+                allVersions[version_id] = d.get('version.num');
                 var key = moment(d.get('date')).utc().format('MMM D');
                 if (dates[key]) {
-                    dates[key].cnt += d.get('downloads');
+                    var prev = dates[key].cnt[version_id] || 0;
+                    dates[key].cnt[version_id] = prev + d.get('downloads');
                 }
             });
+            for (var id in allVersions) {
+                versions.push({id: id, num: allVersions[id] + ''});
+            }
 
-            var data = [['Date', this.get('currentVersion').get('num')]];
+            var headers = ['Date'];
+            versions.sort(function(b) { return b.num; });
+            for (i = 0; i < versions.length; i++) {
+                headers.push(versions[i].num);
+            }
+            var data = [headers];
             for (var date in dates) {
-                data.push([dates[date].date.toDate(), dates[date].cnt]);
+                var row = [dates[date].date.toDate()];
+                for (i = 0; i < versions.length; i++) {
+                    row.push(dates[date].cnt[versions[i].id] || 0);
+                }
+                data.push(row);
             }
             data = google.visualization.arrayToDataTable(data);
+
+            var fmt = new google.visualization.DateFormat({
+                pattern: 'LLL d, yyyy',
+            });
+            fmt.format(data, 0);
 
             Ember.run.scheduleOnce('afterRender', this, function() {
                 var el = document.getElementById('graph-data');
