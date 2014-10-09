@@ -229,12 +229,12 @@ source = "git+https://github.com/alexcrichton/openssl-static-sys#b01801397328924
 [[package]]
 name = "phf"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91"
+source = "git+https://github.com/sfackler/rust-phf#996edc690403b57e9a11ee3fb920a5f5c6dc9aef"
 
 [[package]]
 name = "phf_mac"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91"
+source = "git+https://github.com/sfackler/rust-phf#996edc690403b57e9a11ee3fb920a5f5c6dc9aef"
 
 [[package]]
 name = "postgres"
@@ -242,8 +242,8 @@ version = "0.0.0"
 source = "git+https://github.com/alexcrichton/rust-postgres?ref=servo-url#5bf1cdcf0a954a28308383545dc82ed5f8911820"
 dependencies = [
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#bd38812880f54ab8c3bb9e61b643d38b8207f4b0)",
- "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91)",
- "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf#a1b503023f516753fcd95061b1b303d21bb44a91)",
+ "phf 0.0.0 (git+https://github.com/sfackler/rust-phf#996edc690403b57e9a11ee3fb920a5f5c6dc9aef)",
+ "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf#996edc690403b57e9a11ee3fb920a5f5c6dc9aef)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
