@@ -30,6 +30,9 @@ export default Ember.ObjectController.extend({
 
     displayedAuthors: function() {
         var self = this;
+        if (!this.get('currentVersion')) {
+            return [];
+        }
         return DS.PromiseArray.create({
             promise: this.get('currentVersion.authors').then(function(authors) {
                 var ret = [];
