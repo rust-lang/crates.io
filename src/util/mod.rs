@@ -34,25 +34,33 @@ pub trait RequestUtils {
 pub fn json_response<'a, T>(t: &T) -> Response
                             where T: Encodable<json::Encoder<'a>, IoError> {
     let s = json::encode(t);
-    let mut json: json::Json = from_str(s.as_slice()).unwrap();
-    match json {
-        json::Object(ref mut object) => {
-            match object.pop(&"krate".to_string()) {
-                Some(obj) => {
-                    object.insert("crate".to_string(), obj);
-                }
-                None => {}
-            }
-        }
-        _ => {}
-    }
+    let json = fixup(from_str(s.as_slice()).unwrap());
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(),
                    vec!["application/json; charset=utf-8".to_string()]);
-    Response {
+    return Response {
         status: (200, "OK"),
         headers: headers,
         body: box MemReader::new(json.to_string().into_bytes()),
+    };
+
+    fn fixup(json: json::Json) -> json::Json {
+        match json {
+            json::Object(object) => {
+                json::Object(object.into_iter().map(|(k, v)| {
+                    let k = if k.as_slice() == "krate" {
+                        "crate".to_string()
+                    } else {
+                        k
+                    };
+                    (k, fixup(v))
+                }).collect())
+            }
+            json::List(list) => {
+                json::List(list.into_iter().map(fixup).collect())
+            }
+            j => j,
+        }
     }
 }
 
