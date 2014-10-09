@@ -1,4 +1,4 @@
-use std::collections::{HashMap, TreeMap};
+use std::collections::HashMap;
 use std::time::Duration;
 use serialize::json;
 use time::Timespec;

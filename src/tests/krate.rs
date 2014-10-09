@@ -1,7 +1,7 @@
 use std::io::{mod, fs, File, MemWriter};
 use std::io::fs::PathExtensions;
 use std::collections::HashMap;
-use serialize::{json, Decoder, Decodable};
+use serialize::{json, Decoder};
 
 use conduit::{mod, Handler, Request};
 use conduit_test::MockRequest;
@@ -24,34 +24,14 @@ struct VersionsList { versions: Vec<EncodableVersion> }
 struct CrateMeta { total: int }
 #[deriving(Decodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
+#[deriving(Decodable)]
 struct GoodCrate { krate: EncodableCrate }
+#[deriving(Decodable)]
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
 #[deriving(Decodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
-
-impl<E, D: Decoder<E>> Decodable<D, E> for CrateResponse {
-    fn decode(d: &mut D) -> Result<CrateResponse, E> {
-        d.read_struct("CrateResponse", 2, |d| {
-            Ok(CrateResponse {
-                krate: try!(d.read_struct_field("crate", 0, Decodable::decode)),
-                versions: try!(d.read_struct_field("versions", 1,
-                                                   Decodable::decode)),
-            })
-        })
-    }
-}
-
-impl<E, D: Decoder<E>> Decodable<D, E> for GoodCrate {
-    fn decode(d: &mut D) -> Result<GoodCrate, E> {
-        d.read_struct("GoodCrate", 1, |d| {
-            Ok(GoodCrate {
-                krate: try!(d.read_struct_field("crate", 0, Decodable::decode)),
-            })
-        })
-    }
-}
 
 #[test]
 fn index() {
@@ -143,7 +123,7 @@ fn show() {
     assert_eq!(versions.len(), 1);
     assert_eq!(json.versions.len(), 1);
     assert_eq!(json.versions[0].id, versions[0]);
-    assert_eq!(json.versions[0].crate_id, json.krate.id);
+    assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
     let suffix = "/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),

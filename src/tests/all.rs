@@ -121,9 +121,35 @@ fn json<T>(r: &mut conduit::Response) -> T
            where T: serialize::Decodable<json::Decoder, json::DecoderError> {
     let data = r.body.read_to_end().unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
-    match json::decode(s) {
+    let j = match json::from_str(s) {
         Ok(t) => t,
         Err(e) => fail!("failed to decode: {}\n{}", e, s),
+    };
+    let j = fixup(j);
+    let s = j.to_string();
+    return match json::decode(s.as_slice()) {
+        Ok(t) => t,
+        Err(e) => fail!("failed to decode: {}\n{}", e, s),
+    };
+
+
+    fn fixup(json: json::Json) -> json::Json {
+        match json {
+            json::Object(object) => {
+                json::Object(object.into_iter().map(|(k, v)| {
+                    let k = if k.as_slice() == "crate" {
+                        "krate".to_string()
+                    } else {
+                        k
+                    };
+                    (k, fixup(v))
+                }).collect())
+            }
+            json::List(list) => {
+                json::List(list.into_iter().map(fixup).collect())
+            }
+            j => j,
+        }
     }
 }
 
