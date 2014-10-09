@@ -93,18 +93,24 @@ export default Ember.ObjectController.extend({
                 var now = moment().subtract(i, 'days');
                 dates[now.format('MMM D')] = {date: now, cnt: {}};
             }
-            var allVersions = {};
             downloads.forEach(function(d) {
                 var version_id = d.get('version.id');
-                allVersions[version_id] = d.get('version.num');
                 var key = moment(d.get('date')).utc().format('MMM D');
                 if (dates[key]) {
                     var prev = dates[key].cnt[version_id] || 0;
                     dates[key].cnt[version_id] = prev + d.get('downloads');
                 }
             });
-            for (var id in allVersions) {
-                versions.push({id: id, num: allVersions[id] + ''});
+            if (this.get('requestedVersion')) {
+                versions.push({
+                    id: this.get('currentVersion.id'),
+                    num: this.get('currentVersion.num'),
+                });
+            } else {
+                var tmp = this.get('smallSortedVersions');
+                for (i = 0; i < tmp.length; i++) {
+                    versions.push({id: tmp[i].get('id'), num: tmp[i].get('num')});
+                }
             }
 
             var headers = ['Date'];
