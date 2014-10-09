@@ -21,6 +21,7 @@ name = "update-downloads"
 
 [[bin]]
 name = "populate"
+test = false
 
 [[test]]
 name = "all"
