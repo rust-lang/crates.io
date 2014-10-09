@@ -16,7 +16,7 @@ pub struct VersionDownload {
 #[deriving(Encodable, Decodable)]
 pub struct EncodableVersionDownload {
     pub id: i32,
-    pub version_id: i32,
+    pub version: i32,
     pub downloads: i32,
     pub date: String,
 }
@@ -31,7 +31,7 @@ impl VersionDownload {
                               date } = self;
         EncodableVersionDownload {
             id: id,
-            version_id: version_id,
+            version: version_id,
             downloads: downloads,
             date: ::encode_time(date),
         }
