@@ -73,7 +73,7 @@ impl Bucket {
         let signature = {
             let mut hmac = hmac::HMAC(hash::SHA1, self.secret_key.as_bytes());
             hmac.update(string.as_bytes());
-            hmac.final().as_slice().to_base64(STANDARD)
+            hmac.finalize().as_slice().to_base64(STANDARD)
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

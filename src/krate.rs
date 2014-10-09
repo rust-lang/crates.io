@@ -471,7 +471,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                 internal(format!("failed to upload to S3: `{}`", path))
             }))
         };
-        (resp, body.final())
+        (resp, body.finalize())
     };
     if resp.get_code() != 200 {
         return Err(internal(format!("failed to get a 200 response from S3: {}",
