@@ -122,16 +122,16 @@
         <h3>Links</h3>
         <ul>
             {{#if homepage}}
-                <li><a href="{{ homepage }}">Homepage</a></li>
+                <li><a {{bind-attr href=homepage}}>Homepage</a></li>
             {{/if}}
             {{#if wiki}}
-                <li><a href="{{ wiki }}">Wiki</a></li>
+                <li><a {{bind-attr href=wiki}}>Wiki</a></li>
             {{/if}}
             {{#if mailing_list}}
-                <li><a href="{{ mailing_list }}">Mailing List</a></li>
+                <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
             {{/if}}
             {{#if documentation}}
-                <li><a href="{{ documentation }}">Documentation</a></li>
+                <li><a {{bind-attr href=documentation}}>Documentation</a></li>
             {{/if}}
         </ul>
     </div>
