@@ -19,6 +19,9 @@ test = false
 [[bin]]
 name = "update-downloads"
 
+[[bin]]
+name = "populate"
+
 [[test]]
 name = "all"
 path = "src/tests/all.rs"
