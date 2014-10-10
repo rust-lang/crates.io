@@ -100,6 +100,7 @@ impl Transaction {
     }
 
     pub fn rollback(&self) { self.rollback.set(true); }
+    pub fn commit(&self) { self.rollback.set(false); }
 }
 
 impl Middleware for TransactionMiddleware {
@@ -141,6 +142,8 @@ pub trait RequestTransaction<'a> {
 
     /// Do not commit this request's transaction, even if it finishes ok.
     fn rollback(self);
+    /// Flag this transaction to be committed (this is the default)
+    fn commit(self);
 }
 
 impl<'a> RequestTransaction<'a> for &'a Request + 'a {
@@ -160,6 +163,12 @@ impl<'a> RequestTransaction<'a> for &'a Request + 'a {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .rollback()
+    }
+
+    fn commit(self) {
+        self.extensions().find::<Transaction>()
+            .expect("Transaction not present in request")
+            .commit()
     }
 }
 

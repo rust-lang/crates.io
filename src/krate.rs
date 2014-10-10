@@ -419,6 +419,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
+    req.rollback();
 
     let (new_crate, user) = try!(parse_new_headers(req));
     let name = new_crate.name.as_slice();
@@ -509,6 +510,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     // Now that we've come this far, we're committed!
     bomb.path = None;
+    req.commit();
 
     #[deriving(Encodable)]
     struct R { krate: EncodableCrate }
