@@ -91,4 +91,4 @@
     li a:hover { background-color: darken($main-bg-dark, 5%); }
 }
 
-#home-crates > div { @include flex-grow(1); }
+#home-crates > div { width: 33%; }
