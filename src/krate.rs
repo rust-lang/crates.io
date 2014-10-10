@@ -703,7 +703,15 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ users: owners }))
 }
 
-pub fn modify_owners(req: &mut Request) -> CargoResult<Response> {
+pub fn add_owners(req: &mut Request) -> CargoResult<Response> {
+    modify_owners(req, true)
+}
+
+pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
+    modify_owners(req, false)
+}
+
+fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let body = try!(req.body().read_to_string());
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
@@ -712,31 +720,21 @@ pub fn modify_owners(req: &mut Request) -> CargoResult<Response> {
         return Err(human("must already be an owner to modify owners"))
     }
 
-    #[deriving(Decodable)]
-    struct Request { add: Option<Vec<String>>, remove: Option<Vec<String>> }
-    let request: Request = try!(json::decode(body.as_slice()).map_err(|_| {
+    #[deriving(Decodable)] struct Request { users: Vec<String> }
+    let request: Request = try!(json::decode(body.as_slice()).map_err(|e| {
         human("invalid json request")
     }));
 
-    match request.add {
-        Some(to_add) => {
-            for to_add in to_add.iter() {
-                try!(krate.owner_add(tx, user.id, to_add.as_slice()));
+    for login in request.users.iter() {
+        if add {
+            try!(krate.owner_add(tx, user.id, login.as_slice()));
+        } else {
+            if login.as_slice() == user.gh_login.as_slice() {
+                req.rollback();
+                return Err(human("cannot remove yourself as an owner"))
             }
+            try!(krate.owner_remove(tx, user.id, login.as_slice()));
         }
-        None => {}
-    }
-    match request.remove {
-        Some(to_remove) => {
-            for to_remove in to_remove.iter() {
-                if to_remove.as_slice() == user.gh_login.as_slice() {
-                    req.rollback();
-                    return Err(human("cannot remove yourself as an owner"))
-                }
-                try!(krate.owner_remove(tx, user.id, to_remove.as_slice()));
-            }
-        }
-        None => {}
     }
 
     #[deriving(Encodable)]

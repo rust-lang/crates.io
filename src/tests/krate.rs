@@ -287,7 +287,7 @@ fn new_crate_owner() {
     let mut response = t_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let body = r#"{"add":["foobar"]}"#;
+    let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_path("/crates/foo/owners")
                                                .with_method(conduit::Put)
                                                .with_body(body)));
@@ -541,15 +541,11 @@ fn owners() {
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
 
-    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
-                                               .with_body("{}")));
-    assert!(::json::<O>(&mut response).ok);
-
     let mut response = ok_resp!(middle.call(req.with_method(conduit::Get)));
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
 
-    let body = r#"{"add":["foobar"]}"#;
+    let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
                                                .with_body(body)));
     assert!(::json::<O>(&mut response).ok);
@@ -558,8 +554,8 @@ fn owners() {
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 2);
 
-    let body = r#"{"remove":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+    let body = r#"{"users":["foobar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Delete)
                                                .with_body(body)));
     assert!(::json::<O>(&mut response).ok);
 
@@ -567,8 +563,8 @@ fn owners() {
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
 
-    let body = r#"{"remove":["foo"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(conduit::Put)
+    let body = r#"{"users":["foo"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(conduit::Delete)
                                                .with_body(body)));
     ::json::<::Bad>(&mut response);
 }
