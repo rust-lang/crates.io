@@ -15,6 +15,7 @@ pub struct NewCrate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
+    pub readme: Option<String>,
 }
 
 #[deriving(PartialEq, Eq, Hash)]

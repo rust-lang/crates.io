@@ -12,14 +12,26 @@ pub struct Middleware;
 
 impl conduit_middleware::Middleware for Middleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
-        let id = match req.session().find_equiv(&"user_id")
+        let user = match req.session().find_equiv(&"user_id")
                           .and_then(|s| from_str(s.as_slice())) {
-            Some(id) => id,
-            None => return Ok(()),
-        };
-        let user = match User::find(try!(req.tx()), id) {
-            Ok(user) => user,
-            Err(..) => return Ok(()),
+            Some(id) => {
+                match User::find(try!(req.tx()), id) {
+                    Ok(user) => user,
+                    Err(..) => return Ok(()),
+                }
+            }
+            None => {
+                let tx = try!(req.tx());
+                match req.headers().find("Authorization") {
+                    Some(headers) => {
+                        match User::find_by_api_token(tx, headers[0].as_slice()) {
+                            Ok(user) => user,
+                            Err(..) => return Ok(())
+                        }
+                    }
+                    None => return Ok(())
+                }
+            }
         };
 
         req.mut_extensions().insert(user);

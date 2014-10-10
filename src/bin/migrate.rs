@@ -324,6 +324,7 @@ fn migrations() -> Vec<Migration> {
                               "VARCHAR"),
         Migration::add_column(20141007171517, "crates", "documentation",
                               "VARCHAR"),
+        Migration::add_column(20141010150327, "crates", "readme", "VARCHAR"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

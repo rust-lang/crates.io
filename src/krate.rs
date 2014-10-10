@@ -38,6 +38,7 @@ pub struct Crate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
+    pub readme: Option<String>,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -80,10 +81,12 @@ impl Crate {
                           user_id: i32,
                           description: &Option<String>,
                           homepage: &Option<String>,
-                          documentation: &Option<String>) -> CargoResult<Crate> {
+                          documentation: &Option<String>,
+                          readme: &Option<String>) -> CargoResult<Crate> {
         let description = description.as_ref().map(|s| s.as_slice());
         let homepage = homepage.as_ref().map(|s| s.as_slice());
         let documentation = documentation.as_ref().map(|s| s.as_slice());
+        let readme = readme.as_ref().map(|s| s.as_slice());
         try!(validate_url(homepage));
         try!(validate_url(documentation));
 
@@ -92,10 +95,12 @@ impl Crate {
                                          SET documentation = $1,
                                              homepage = $2,
                                              description = $3
-                                       WHERE name = $4
+                                             readme = $4
+                                       WHERE name = $5
                                    RETURNING *"));
         let mut rows = try!(stmt.query(&[&documentation, &homepage,
-                                         &description, &name as &ToSql]));
+                                         &description, &name as &ToSql,
+                                         &readme]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
@@ -103,14 +108,15 @@ impl Crate {
         let stmt = try!(conn.prepare("INSERT INTO crates
                                       (name, user_id, created_at,
                                        updated_at, downloads, max_version,
-                                       description, homepage, documentation)
+                                       description, homepage, documentation,
+                                       readme)
                                       VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6)
+                                              $4, $5, $6, &7)
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
                                          &description, &homepage,
-                                         &documentation]));
+                                         &documentation, &readme]));
         let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
         })));
@@ -253,6 +259,7 @@ impl Model for Crate {
             description: row.get("description"),
             documentation: row.get("documentation"),
             homepage: row.get("homepage"),
+            readme: row.get("readme"),
             max_version: semver::Version::parse(max.as_slice()).unwrap(),
         }
     }
@@ -432,7 +439,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
                                                &new_crate.description,
                                                &new_crate.homepage,
-                                               &new_crate.documentation));
+                                               &new_crate.documentation,
+                                               &new_crate.readme));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
         if !owners.iter().any(|o| o.id == user.id) {
@@ -721,7 +729,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     }
 
     #[deriving(Decodable)] struct Request { users: Vec<String> }
-    let request: Request = try!(json::decode(body.as_slice()).map_err(|e| {
+    let request: Request = try!(json::decode(body.as_slice()).map_err(|_| {
         human("invalid json request")
     }));
 
