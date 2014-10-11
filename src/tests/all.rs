@@ -177,6 +177,7 @@ fn krate(name: &str) -> Crate {
         documentation: None,
         homepage: None,
         description: None,
+        readme: None,
     }
 }
 
@@ -197,7 +198,8 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
     let krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
                                       user.id, &krate.description,
                                       &krate.homepage,
-                                      &krate.documentation).unwrap();
+                                      &krate.documentation,
+                                      &krate.readme).unwrap();
     Version::insert(req.tx().unwrap(), krate.id,
                     &semver::Version::parse("1.0.0").unwrap(),
                     &HashMap::new(), []).unwrap();

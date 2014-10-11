@@ -159,6 +159,7 @@ fn new_req_full(api_token: &str, krate: Crate, version: &str,
         description: krate.description,
         homepage: krate.homepage,
         documentation: krate.documentation,
+        readme: krate.readme,
     };
     let json = json::encode(&json);
     let mut body = MemWriter::new();

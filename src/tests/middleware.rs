@@ -35,11 +35,11 @@ impl Middleware for MockDependency {
         let MockDependency(ref a, ref b) = *self;
         let user = req.extensions().find::<User>().unwrap();
         let crate_a = Crate::find_or_insert(req.tx().unwrap(),
-                                            a.name.as_slice(),
-                                            user.id, &None, &None, &None).unwrap();
+                                            a.name.as_slice(), user.id, &None,
+                                            &None, &None, &None).unwrap();
         let crate_b = Crate::find_or_insert(req.tx().unwrap(),
-                                            b.name.as_slice(),
-                                            user.id, &None, &None, &None).unwrap();
+                                            b.name.as_slice(), user.id, &None,
+                                            &None, &None, &None).unwrap();
         let va = Version::insert(req.tx().unwrap(), crate_a.id,
                                  &semver::Version::parse("1.0.0").unwrap(),
                                  &HashMap::new(), []).unwrap();

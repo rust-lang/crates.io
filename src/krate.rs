@@ -94,13 +94,13 @@ impl Crate {
         let stmt = try!(conn.prepare("UPDATE crates
                                          SET documentation = $1,
                                              homepage = $2,
-                                             description = $3
+                                             description = $3,
                                              readme = $4
                                        WHERE name = $5
                                    RETURNING *"));
         let mut rows = try!(stmt.query(&[&documentation, &homepage,
-                                         &description, &name as &ToSql,
-                                         &readme]));
+                                         &description, &readme,
+                                         &name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
@@ -111,7 +111,7 @@ impl Crate {
                                        description, homepage, documentation,
                                        readme)
                                       VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, &7)
+                                              $4, $5, $6, $7)
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
