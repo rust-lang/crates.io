@@ -42,6 +42,14 @@ macro_rules! ok_resp( ($e:expr) => ({
     resp
 }) )
 
+macro_rules! bad_resp( ($e:expr) => ({
+    let mut resp = t_resp!($e);
+    match ::bad_resp(&mut resp) {
+        None => fail!("ok response: {}", resp.status),
+        Some(b) => b,
+    }
+}) )
+
 #[deriving(Decodable, Show)]
 struct Error { detail: String }
 #[deriving(Decodable)]
@@ -117,6 +125,12 @@ fn ok_resp(r: &conduit::Response) -> bool {
     r.status.val0() == 200
 }
 
+fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
+    let bad = json::<Bad>(r);
+    if bad.errors.len() == 0 { return None }
+    Some(bad)
+}
+
 fn json<T>(r: &mut conduit::Response) -> T
            where T: serialize::Decodable<json::Decoder, json::DecoderError> {
     let data = r.body.read_to_end().unwrap();
@@ -153,10 +167,10 @@ fn json<T>(r: &mut conduit::Response) -> T
     }
 }
 
-fn user() -> User {
+fn user(login: &str) -> User {
     User {
         id: 10000,
-        gh_login: "foo".to_string(),
+        gh_login: login.to_string(),
         email: None,
         name: None,
         avatar: None,
@@ -204,4 +218,8 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
                     &semver::Version::parse("1.0.0").unwrap(),
                     &HashMap::new(), []).unwrap();
     return krate;
+}
+
+fn logout(req: &mut Request) {
+    req.mut_extensions().pop::<User>();
 }

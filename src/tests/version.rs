@@ -25,7 +25,7 @@ fn index() {
     assert_eq!(json.versions.len(), 0);
 
     let (v1, v2) = {
-        ::mock_user(&mut req, ::user());
+        ::mock_user(&mut req, ::user("foo"));
         let c = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
@@ -45,7 +45,7 @@ fn show() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/versions");
     let v = {
-        ::mock_user(&mut req, ::user());
+        ::mock_user(&mut req, ::user("foo"));
         let krate = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
@@ -61,7 +61,7 @@ fn show() {
 fn authors() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates/foo/1.0.0/authors");
-    ::mock_user(&mut req, ::user());
+    ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let s = response.body.read_to_string().unwrap();

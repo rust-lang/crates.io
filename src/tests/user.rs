@@ -57,7 +57,7 @@ fn me() {
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.val0(), 403);
 
-    let user = ::user();
+    let user = ::user("foo");
     middle.add(::middleware::MockUser(user.clone()));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: MeResponse = ::json(&mut response);
@@ -97,7 +97,7 @@ fn reset_token() {
 fn my_packages() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/crates");
-    let u = ::mock_user(&mut req, ::user());
+    let u = ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     req.with_query(format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -119,7 +119,7 @@ fn following() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, conduit::Get, "/");
-    ::mock_user(&mut req, ::user());
+    ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     ::mock_crate(&mut req, ::krate("bar"));
 

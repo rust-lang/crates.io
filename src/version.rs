@@ -11,10 +11,13 @@ use semver;
 use url;
 
 use {Model, Crate, User};
+use app::RequestApp;
 use db::{Connection, RequestTransaction};
 use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
+use git;
 use upload;
+use user::RequestUser;
 use util::{RequestUtils, CargoResult, Require, internal, human};
 
 #[deriving(Clone)]
@@ -26,6 +29,7 @@ pub struct Version {
     pub created_at: Timespec,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
+    pub yanked: bool,
 }
 
 pub enum VersionAuthor {
@@ -43,6 +47,7 @@ pub struct EncodableVersion {
     pub created_at: String,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
+    pub yanked: bool,
     pub links: VersionLinks,
 }
 
@@ -96,7 +101,7 @@ impl Version {
 
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version { id, crate_id: _, num, updated_at, created_at,
-                      downloads, features } = self;
+                      downloads, features, yanked } = self;
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/crates/{}/{}/download", crate_name, num),
@@ -107,6 +112,7 @@ impl Version {
             created_at: ::encode_time(created_at),
             downloads: downloads,
             features: features,
+            yanked: yanked,
             links: VersionLinks {
                 dependencies: format!("/crates/{}/{}/dependencies",
                                       crate_name, num),
@@ -165,10 +171,16 @@ impl Version {
     }
 
     pub fn add_author(&self, conn: &Connection, name: &str) -> CargoResult<()> {
-        println!("add autohr: {}", name);
+        println!("add author: {}", name);
         // TODO: at least try to link `name` to a pre-existing user
         try!(conn.execute("INSERT INTO version_authors (version_id, name)
                            VALUES ($1, $2)", &[&self.id, &name as &ToSql]));
+        Ok(())
+    }
+
+    pub fn yank(&self, conn: &Connection, yanked: bool) -> CargoResult<()> {
+        try!(conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
+                          &[&yanked, &self.id]));
         Ok(())
     }
 }
@@ -188,6 +200,7 @@ impl Model for Version {
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
             features: features,
+            yanked: row.get("yanked"),
         }
     }
     fn table_name(_: Option<Version>) -> &'static str { "versions" }
@@ -229,11 +242,17 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let id = &req.params()["version_id"];
-    let id = from_str(id.as_slice()).unwrap_or(0);
-    let conn = try!(req.tx());
-    let version = try!(Version::find(&*conn, id));
-    let krate = try!(Crate::find(&*conn, version.crate_id));
+    let (version, krate) = match req.params().find("crate_id") {
+        Some(..) => try!(version_and_crate(req)),
+        None => {
+            let id = &req.params()["version_id"];
+            let id = from_str(id.as_slice()).unwrap_or(0);
+            let conn = try!(req.tx());
+            let version = try!(Version::find(&*conn, id));
+            let krate = try!(Crate::find(&*conn, version.crate_id));
+            (version, krate)
+        }
+    };
 
     #[deriving(Encodable)]
     struct R { version: EncodableVersion }
@@ -304,4 +323,31 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct Meta { names: Vec<String> }
     Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
+}
+
+pub fn yank(req: &mut Request) -> CargoResult<Response> {
+    modify_yank(req, true)
+}
+
+pub fn unyank(req: &mut Request) -> CargoResult<Response> {
+    modify_yank(req, false)
+}
+
+fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
+    let (version, krate) = try!(version_and_crate(req));
+    let user = try!(req.user());
+    let tx = try!(req.tx());
+    let owners = try!(krate.owners(tx));
+    if !owners.iter().any(|u| u.id == user.id) {
+        return Err(human("must already be an owner to yank or unyank"))
+    }
+
+    if version.yanked != yanked {
+        try!(version.yank(tx, yanked));
+        try!(git::yank(&**req.app(), krate.name.as_slice(), &version.num, yanked));
+    }
+
+    #[deriving(Encodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R{ ok: true }))
 }

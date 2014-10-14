@@ -8,6 +8,7 @@ use serialize::{json, Encodable};
 use url;
 
 use conduit::{Request, Response, Handler};
+use db::RequestTransaction;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
 pub use self::errors::{ChainError, BoxError};
@@ -109,7 +110,7 @@ impl Handler for C {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let C(f) = *self;
         match f(req) {
-            Ok(req) => Ok(req),
+            Ok(resp) => { req.commit(); Ok(resp) }
             Err(e) => {
                 match e.response() {
                     Some(response) => Ok(response),

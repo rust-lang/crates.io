@@ -78,6 +78,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/crates", C(krate::index));
     router.get("/crates/:crate_id", C(krate::show));
     router.put("/crates/new", C(krate::new));
+    router.get("/crates/:crate_id/:version", C(version::show));
     router.get("/crates/:crate_id/:version/download", C(krate::download));
     router.get("/crates/:crate_id/:version/dependencies", C(version::dependencies));
     router.get("/crates/:crate_id/:version/downloads", C(version::downloads));
@@ -90,6 +91,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/crates/:crate_id/owners", C(krate::owners));
     router.put("/crates/:crate_id/owners", C(krate::add_owners));
     router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
+    router.delete("/crates/:crate_id/:version/yank", C(version::yank));
+    router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     router.get("/versions", C(version::index));
     router.get("/versions/:version_id", C(version::show));
     router.get("/git/index/*path", C(git::serve_index));

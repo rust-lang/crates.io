@@ -202,7 +202,9 @@ impl Crate {
 
     pub fn owner_add(&self, conn: &Connection, who: i32,
                      name: &str) -> CargoResult<()> {
-        let user = try!(User::find_by_login(conn, name));
+        let user = try!(User::find_by_login(conn, name).map_err(|_| {
+            human(format!("could not find user with login `{}`", name))
+        }));
         try!(conn.execute("INSERT INTO crate_owners
                            (crate_id, user_id, created_at, updated_at,
                             created_by, deleted)
@@ -213,7 +215,9 @@ impl Crate {
 
     pub fn owner_remove(&self, conn: &Connection, _who: i32,
                         name: &str) -> CargoResult<()> {
-        let user = try!(User::find_by_login(conn, name));
+        let user = try!(User::find_by_login(conn, name).map_err(|_| {
+            human(format!("could not find user with login `{}`", name))
+        }));
         try!(conn.execute("UPDATE crate_owners
                               SET deleted = TRUE, updated_at = $1
                             WHERE crate_id = $2 AND user_id = $3",
@@ -426,7 +430,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
-    req.rollback();
 
     let (new_crate, user) = try!(parse_new_headers(req));
     let name = new_crate.name.as_slice();
@@ -511,6 +514,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         cksum: cksum.as_slice().to_hex(),
         features: features,
         deps: deps,
+        yanked: Some(false),
     };
     try!(git::add_crate(&**req.app(), &git_crate).chain_error(|| {
         internal(format!("could not add crate `{}` to the git repo", name))
@@ -518,7 +522,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     // Now that we've come this far, we're committed!
     bomb.path = None;
-    req.commit();
 
     #[deriving(Encodable)]
     struct R { krate: EncodableCrate }
@@ -544,21 +547,8 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
         human(format!("invalid upload request: {}", e))
     }));
 
-    // Peel out authentication
-    fn header<'a>(req: &'a Request, hdr: &str) -> CargoResult<Vec<&'a str>> {
-        req.headers().find(hdr).require(|| {
-            human(format!("missing header: {}", hdr))
-        })
-    }
-    let auth = try!(header(req, "X-Cargo-Auth"))[0].to_string();
-
-    // Make sure the api token is a valid api token
-    let user = try!(User::find_by_api_token(try!(req.tx()),
-                                            auth.as_slice()).map_err(|_| {
-        human("invalid or unknown auth token supplied")
-    }));
-
-    Ok((new, user))
+    let user = try!(req.user());
+    Ok((new, user.clone()))
 }
 
 pub fn download(req: &mut Request) -> CargoResult<Response> {
@@ -738,7 +728,6 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             try!(krate.owner_add(tx, user.id, login.as_slice()));
         } else {
             if login.as_slice() == user.gh_login.as_slice() {
-                req.rollback();
                 return Err(human("cannot remove yourself as an owner"))
             }
             try!(krate.owner_remove(tx, user.id, login.as_slice()));

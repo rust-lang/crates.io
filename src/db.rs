@@ -37,7 +37,7 @@ pub struct Transaction {
     // right order.
     tx: LazyCell<pg::PostgresTransaction<'static>>,
     slot: LazyCell<PooledConnnection<'static>>,
-    rollback: Cell<bool>,
+    commit: Cell<bool>,
 
     // Keep a handle to the app which keeps a handle to the database to ensure
     // that this `'static` is indeed at least a little more accurate (in that
@@ -51,7 +51,7 @@ impl Transaction {
             app: app,
             slot: LazyCell::new(),
             tx: LazyCell::new(),
-            rollback: Cell::new(false),
+            commit: Cell::new(false),
         }
     }
 
@@ -99,8 +99,8 @@ impl Transaction {
         Ok(tx as &Connection)
     }
 
-    pub fn rollback(&self) { self.rollback.set(true); }
-    pub fn commit(&self) { self.rollback.set(false); }
+    pub fn rollback(&self) { self.commit.set(false); }
+    pub fn commit(&self) { self.commit.set(true); }
 }
 
 impl Middleware for TransactionMiddleware {
@@ -118,7 +118,7 @@ impl Middleware for TransactionMiddleware {
             let tx = req.extensions().find::<Transaction>()
                         .expect("Transaction not present in request");
             match tx.tx.borrow() {
-                Some(transaction) if !tx.rollback.get() => {
+                Some(transaction) if tx.commit.get() => {
                     transaction.set_commit();
                 }
                 _ => {}
@@ -140,9 +140,9 @@ pub trait RequestTransaction<'a> {
     /// only be set to commit() if a successful response code of 200 is seen.
     fn tx(self) -> CargoResult<&'a Connection + 'a>;
 
-    /// Do not commit this request's transaction, even if it finishes ok.
+    /// Flag the transaction to not be committed
     fn rollback(self);
-    /// Flag this transaction to be committed (this is the default)
+    /// Flag this transaction to be committed
     fn commit(self);
 }
 

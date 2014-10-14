@@ -6,6 +6,7 @@ use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
 use std::io;
 use std::os;
 
+use semver;
 use flate2::reader::GzDecoder;
 use git2;
 use serialize::json;
@@ -15,13 +16,14 @@ use conduit::{Request, Response};
 use app::{App, RequestApp};
 use util::{CargoResult, internal};
 
-#[deriving(Encodable)]
+#[deriving(Encodable, Decodable)]
 pub struct GitCrate {
     pub name: String,
     pub vers: String,
     pub deps: Vec<String>,
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
+    pub yanked: Option<bool>,
 }
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
@@ -101,25 +103,24 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
+fn index_file(base: &Path, name: &str) -> Path {
+    match name.len() {
+        1 => base.join("1").join(name),
+        2 => base.join("2").join(name),
+        3 => base.join("3").join(name.slice_to(1)).join(name),
+        _ => base.join(name.slice(0, 2))
+                 .join(name.slice(2, 4))
+                 .join(name),
+    }
+}
+
 pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
     let repo = app.git_repo.lock();
     let repo = &*repo;
-    let name = krate.name.as_slice();
     let repo_path = repo.path().dir_path();
-    let dst = match name.len() {
-        1 => repo_path.join("1").join(name),
-        2 => repo_path.join("2").join(name),
-        3 => repo_path.join("3").join(name.slice_to(1)).join(name),
-        _ => repo_path.join(name.slice(0, 2))
-                      .join(name.slice(2, 4))
-                      .join(name),
-    };
+    let dst = index_file(&repo_path, krate.name.as_slice());
 
-    // Attempt to commit the crate in a loop. It's possible that we're going
-    // to need to rebase our repository, and after that it's possible that we're
-    // going to race to commit the changes. For now we just cap out the maximum
-    // number of retries at a fixed number.
-    for _ in range(0i, 20) {
+    commit_and_push(repo, || {
         // Add the crate to its relevant file
         try!(fs::mkdir_recursive(&dst.dir_path(), io::USER_RWX));
         let prev = if dst.exists() {
@@ -130,6 +131,53 @@ pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
         let s = json::encode(krate);
         let new = if prev.len() == 0 {s} else {prev + "\n" + s};
         try!(File::create(&dst).write(new.as_bytes()));
+
+        Ok((format!("Updating crate `{}#{}`", krate.name, krate.vers),
+            dst.clone()))
+    })
+}
+
+pub fn yank(app: &App, krate: &str, version: &semver::Version,
+            yanked: bool) -> CargoResult<()> {
+    let repo = app.git_repo.lock();
+    let repo = &*repo;
+    let repo_path = repo.path().dir_path();
+    let dst = index_file(&repo_path, krate);
+
+    commit_and_push(repo, || {
+        let prev = try!(File::open(&dst).read_to_string());
+        let new = prev.as_slice().lines().map(|line| {
+            let mut git_crate = try!(json::decode::<GitCrate>(line).map_err(|_| {
+                internal(format!("couldn't decode: `{}`", line))
+            }));
+            if git_crate.name.as_slice() != krate ||
+               git_crate.vers.to_string() != version.to_string() {
+                return Ok(line.to_string())
+            }
+            git_crate.yanked = Some(yanked);
+            Ok(json::encode(&git_crate))
+        }).collect::<CargoResult<Vec<String>>>();
+        let new = try!(new).as_slice().connect("\n");
+        try!(File::create(&dst).write(new.as_bytes()));
+
+        Ok((format!("{} crate `{}#{}`",
+                    if yanked {"Yanking"} else {"Unyanking"},
+                    krate, version),
+            dst.clone()))
+    })
+}
+
+fn commit_and_push(repo: &git2::Repository,
+                   f: || -> CargoResult<(String, Path)>)
+                   -> CargoResult<()> {
+    let repo_path = repo.path().dir_path();
+
+    // Attempt to commit in a loop. It's possible that we're going to need to
+    // rebase our repository, and after that it's possible that we're going to
+    // race to commit the changes. For now we just cap out the maximum number of
+    // retries at a fixed number.
+    for _ in range(0i, 20) {
+        let (msg, dst) = try!(f());
 
         // git add $file
         let mut index = try!(repo.index());
@@ -142,7 +190,6 @@ pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
         let head = try!(repo.head());
         let parent = try!(repo.find_commit(head.target().unwrap()));
         let sig = try!(repo.signature());
-        let msg = format!("Updating crate `{}#{}`", krate.name, krate.vers);
         try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
                          &tree, &[&parent]));
 
