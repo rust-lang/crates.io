@@ -16,6 +16,9 @@
             <div>
                 {{#link-to 'crate' this}}{{ num }}{{/link-to}}
                 <span class='small'>{{ date-long created_at }}</span>
+                {{#if yanked}}
+                    <span class='yanked'>yanked</span>
+                {{/if}}
             </div>
             {{#link-to 'crate' this class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>

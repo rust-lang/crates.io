@@ -6,6 +6,7 @@ export default DS.Model.extend({
     created_at: DS.attr('date'),
     updated_at: DS.attr('date'),
     downloads: DS.attr('number'),
+    yanked: DS.attr('boolean'),
 
     crate: DS.belongsTo('crate'),
     authors: DS.hasMany('users', {async: true}),

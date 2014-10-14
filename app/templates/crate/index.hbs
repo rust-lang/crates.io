@@ -29,6 +29,12 @@
 {{! This is used to set the url of to actually download a file }}
 <iframe id='download-frame' style='display:none'></iframe>
 
+{{#if currentVersion.yanked}}
+    <div class='crate-info'>
+        This crate has been yanked, but it is still available for download for
+        other crates that may be depending on it.
+    </div>
+{{else}}
 <div class='crate-info'>
     <div class='docs'>
         {{#if description}}
@@ -116,6 +122,7 @@
         <div id='graph-data'></div>
     </div>
 </div>
+{{/if}}
 
 <div id='crate-links'>
     <div class='section'>
@@ -173,6 +180,9 @@
                 <li>
                     {{#link-to 'crate' this}}{{ num }}{{/link-to}}
                     <span class='date'>{{ date-small created_at }}</span>
+                    {{#if yanked}}
+                        <span class='yanked'>yanked</span>
+                    {{/if}}
                 </li>
             {{/each}}
         </ul>

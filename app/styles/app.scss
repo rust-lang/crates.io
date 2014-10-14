@@ -110,6 +110,11 @@ span.small {
     }
 }
 
+.yanked {
+    font-size: 80%;
+    color: rgb(166, 0, 0)
+}
+
 span.loading {
     display: inline-block;
     width: 16px;
