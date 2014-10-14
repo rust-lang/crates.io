@@ -7,7 +7,7 @@ extern crate "conduit-middleware" as middleware;
 use std::str::{MaybeOwned, Slice, Owned};
 use std::fmt::Show;
 use std::io::util::NullReader;
-use time::{Tm, strptime};
+use time::{Tm, strptime, ParseError};
 use conduit::Request;
 use middleware::Middleware;
 
@@ -104,15 +104,15 @@ fn parse_http_date<S: Str>(string: S) -> Result<Tm, ()> {
         .map_err(|_| ())
 }
 
-fn parse_rfc1123(string: &str) -> Result<Tm, String> {
+fn parse_rfc1123(string: &str) -> Result<Tm, ParseError> {
     time::strptime(string, "%a, %d %b %Y %T GMT")
 }
 
-fn parse_rfc850(string: &str) -> Result<Tm, String> {
+fn parse_rfc850(string: &str) -> Result<Tm, ParseError> {
     time::strptime(string, "%a, %d-%m-%y %T GMT")
 }
 
-fn parse_asctime(string: &str) -> Result<Tm, String> {
+fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
     time::strptime(string, "%a %m%t%d %T %Y")
 }
 
@@ -294,6 +294,6 @@ mod tests {
     }
 
     fn httpdate(time: Tm) -> String {
-        time.strftime("%a, %d-%m-%y %T GMT")
+        time.strftime("%a, %d-%m-%y %T GMT").unwrap()
     }
 }
