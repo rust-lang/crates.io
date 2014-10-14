@@ -53,7 +53,7 @@ impl Handler for Static {
         headers.insert("Content-Type".to_string(), vec![mime.to_string()]);
         headers.insert("Content-Length".to_string(), vec![stat.size.to_string()]);
         headers.insert("Last-Modified".to_string(),
-                       vec![tm.strftime("%a, %d %b %Y %T GMT")]);
+                       vec![tm.strftime("%a, %d %b %Y %T GMT").unwrap()]);
 
         Ok(Response {
             status: (200, "OK"),
@@ -75,7 +75,7 @@ fn not_found() -> Response {
 mod tests {
     extern crate "conduit-test" as test;
 
-    use std::io::{fs, File, TempDir, UserRWX};
+    use std::io::{fs, File, TempDir, USER_RWX};
 
     use conduit;
     use conduit::Handler;
@@ -101,7 +101,7 @@ mod tests {
     fn test_mime_types() {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
-        fs::mkdir(&root.join("src"), UserRWX).unwrap();
+        fs::mkdir(&root.join("src"), USER_RWX).unwrap();
         File::create(&root.join("src/fixture.css")).unwrap();
 
         let handler = Static::new(root.clone());
@@ -129,7 +129,7 @@ mod tests {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
 
-        fs::mkdir(&root.join("foo"), UserRWX).unwrap();
+        fs::mkdir(&root.join("foo"), USER_RWX).unwrap();
 
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(conduit::Get, "/foo");
