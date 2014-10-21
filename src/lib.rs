@@ -103,6 +103,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env != Test {
         m.add(conduit_log_requests::LogRequests(0));
     }
+    m.around(util::Head::new());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
