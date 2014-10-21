@@ -30,6 +30,7 @@ pub use app::App;
 pub use config::Config;
 pub use self::dependency::Dependency;
 pub use self::download::{CrateDownload, VersionDownload};
+pub use self::keyword::Keyword;
 pub use self::krate::Crate;
 pub use self::model::Model;
 pub use self::user::User;
@@ -49,14 +50,15 @@ pub mod config;
 pub mod db;
 pub mod dependency;
 pub mod dist;
+pub mod download;
 pub mod git;
+pub mod keyword;
 pub mod krate;
+pub mod model;
+pub mod upload;
 pub mod user;
 pub mod util;
 pub mod version;
-pub mod download;
-pub mod upload;
-pub mod model;
 
 #[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {
@@ -88,6 +90,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get("/versions", C(version::index));
     api_router.get("/versions/:version_id", C(version::show));
+    api_router.get("/keywords", C(keyword::index));
+    api_router.get("/keywords/:keyword_id", C(keyword::show));
     let api_router = Arc::new(api_router);
 
     let mut router = RouteBuilder::new();

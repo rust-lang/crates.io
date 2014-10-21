@@ -15,16 +15,16 @@ use semver;
 use url::{mod, Url};
 
 use app::{App, RequestApp};
+use {Model, User, Keyword, Version};
 use db::{Connection, RequestTransaction};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
-use model::Model;
 use upload;
-use user::{User, RequestUser, EncodableUser};
+use user::{RequestUser, EncodableUser};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
-use version::{Version, EncodableVersion};
+use version::EncodableVersion;
 
 #[deriving(Clone)]
 pub struct Crate {
@@ -248,6 +248,15 @@ impl Crate {
                             &self.id]));
         Version::insert(conn, self.id, ver, features, authors)
     }
+
+    pub fn keywords(&self, conn: &Connection) -> CargoResult<Vec<Keyword>> {
+        let stmt = try!(conn.prepare("SELECT keywords.* FROM keywords
+                                      LEFT JOIN crates_keywords
+                                      ON keywords.id = crates_keywords.keyword_id
+                                      WHERE crates_keywords.crate_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        Ok(rows.map(|r| Model::from_row(&r)).collect())
+    }
 }
 
 impl Model for Crate {
@@ -460,6 +469,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let (dep, krate) = try!(version.add_dependency(try!(req.tx()), dep));
         deps.push(dep.git_encode(krate.name.as_slice()));
     }
+
+    // Update all keywords for this crate
+    try!(Keyword::update_crate(try!(req.tx()), &krate,
+                               new_crate.keywords.as_ref().map(|s| s.as_slice())
+                                                 .unwrap_or(&[])));
 
     // Upload the crate to S3
     let handle = http::handle();

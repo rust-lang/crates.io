@@ -16,6 +16,7 @@ pub struct NewCrate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
+    pub keywords: Option<Vec<String>>,
 }
 
 #[deriving(PartialEq, Eq, Hash)]

@@ -365,6 +365,23 @@ fn migrations() -> Vec<Migration> {
             tx.batch_execute("DROP TRIGGER trigger_crates_tsvector_update;
                               DROP FUNCTION trigger_crates_name_search")
         }),
+        Migration::add_table(20141021103503, "keywords", "
+            id               SERIAL PRIMARY KEY,
+            keyword          VARCHAR NOT NULL UNIQUE,
+            crates_cnt       INTEGER NOT NULL,
+            created_at       TIMESTAMP NOT NULL
+        "),
+        Migration::add_table(20141021103504, "crates_keywords", "
+            crate_id         INTEGER NOT NULL,
+            keyword_id       INTEGER NOT NULL
+        "),
+        foreign_key(20141021103505, "crates_keywords", "crate_id", "crates (id)"),
+        foreign_key(20141021103506, "crates_keywords", "keyword_id",
+                    "keywords (id)"),
+        index(20141021103507, "crates_keywords", "crate_id"),
+        index(20141021103508, "crates_keywords", "keyword_id"),
+        index(20141021103509, "keywords", "keyword"),
+        index(20141021103510, "keywords", "crates_cnt"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

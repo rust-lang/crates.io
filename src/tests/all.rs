@@ -23,7 +23,7 @@ use conduit::Request;
 use conduit_test::MockRequest;
 use cargo_registry::app::App;
 use cargo_registry::db::{mod, RequestTransaction};
-use cargo_registry::{User, Crate, Version};
+use cargo_registry::{User, Crate, Version, Keyword};
 
 macro_rules! t( ($e:expr) => (
     match $e {
@@ -56,6 +56,7 @@ struct Error { detail: String }
 struct Bad { errors: Vec<Error> }
 
 mod middleware;
+mod keyword;
 mod krate;
 mod user;
 mod record;
@@ -218,6 +219,10 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
                     &semver::Version::parse("1.0.0").unwrap(),
                     &HashMap::new(), []).unwrap();
     return krate;
+}
+
+fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
+    Keyword::find_or_insert(req.tx().unwrap(), name).unwrap()
 }
 
 fn logout(req: &mut Request) {
