@@ -1,13 +1,15 @@
-use std::io::{MemReader, IoError};
-use std::io::process::{ProcessOutput, Command};
 use std::collections::HashMap;
 use std::fmt::Show;
+use std::io::process::{ProcessOutput, Command};
+use std::io::{MemReader, IoError};
 use std::str;
+use std::sync::Arc;
 
 use serialize::{json, Encodable};
 use url;
 
 use conduit::{Request, Response, Handler};
+use conduit_router::{RouteBuilder, RequestParams};
 use db::RequestTransaction;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
@@ -16,12 +18,16 @@ pub use self::result::{Require, Wrap};
 pub use self::lazy_cell::LazyCell;
 pub use self::io::LimitErrorReader;
 pub use self::hasher::{HashingReader};
+pub use self::request_proxy::RequestProxy;
+pub use self::head::Head;
 
 pub mod errors;
 pub mod result;
-mod lazy_cell;
-mod io;
 mod hasher;
+mod head;
+mod io;
+mod lazy_cell;
+mod request_proxy;
 
 pub trait RequestUtils {
     fn redirect(self, url: String) -> Response;
@@ -118,6 +124,20 @@ impl Handler for C {
                 }
             }
         }
+    }
+}
+
+pub struct R(pub Arc<RouteBuilder>);
+
+impl Handler for R {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+        let path = req.params()["path"].to_string();
+        let R(ref sub_router) = *self;
+        sub_router.call(&mut RequestProxy {
+            other: req,
+            path: Some(path.as_slice()),
+            method: None,
+        })
     }
 }
 
