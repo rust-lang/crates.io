@@ -74,14 +74,15 @@ export default Ember.ObjectController.extend({
         toggleFollow: function() {
             this.set('fetchingFollowing', true);
             this.set('following', !this.get('following'));
-            var url;
+            var url = '/api/v1/crates/' + this.get('model.name') + '/follow';
+            var method;
             if (this.get('following')) {
-                url = '/crates/' + this.get('model').get('name') + '/follow';
+                method = 'put';
             } else {
-                url = '/crates/' + this.get('model').get('name') + '/unfollow';
+                method = 'delete';
             }
             var self = this;
-            ajax({ method: 'put', url: url }).finally(function() {
+            ajax({ method: method, url: url }).finally(function() {
                 self.set('fetchingFollowing', false);
             });
         },

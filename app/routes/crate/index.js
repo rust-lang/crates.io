@@ -18,7 +18,7 @@ export default Ember.Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.session.get('currentUser')) {
-            var url = '/crates/' + data.crate.get('name') + '/following';
+            var url = '/api/v1/crates/' + data.crate.get('name') + '/following';
             ajax(url).then(function(d) {
                 controller.set('following', d.following);
             }).finally(function() {
