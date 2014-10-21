@@ -348,6 +348,8 @@ fn migrations() -> Vec<Migration> {
                  setweight(to_tsvector('pg_catalog.english',
                                        coalesce(new.name, '')), 'A') ||
                  setweight(to_tsvector('pg_catalog.english',
+                                       coalesce(new.keywords, '')), 'B') ||
+                 setweight(to_tsvector('pg_catalog.english',
                                        coalesce(new.description, '')), 'C') ||
                  setweight(to_tsvector('pg_catalog.english',
                                        coalesce(new.readme, '')), 'D');
@@ -362,9 +364,12 @@ fn migrations() -> Vec<Migration> {
             Ok(())
 
         }, proc(tx) {
-            tx.batch_execute("DROP TRIGGER trigger_crates_tsvector_update;
-                              DROP FUNCTION trigger_crates_name_search")
+            try!(tx.execute("DROP TRIGGER trigger_crates_tsvector_update
+                                       ON crates", []));
+            try!(tx.execute("DROP FUNCTION trigger_crates_name_search()", []));
+            Ok(())
         }),
+        Migration::add_column(20141020175651, "crates", "keywords", "varchar"),
         Migration::add_table(20141021103503, "keywords", "
             id               SERIAL PRIMARY KEY,
             keyword          VARCHAR NOT NULL UNIQUE,

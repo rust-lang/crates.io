@@ -39,6 +39,7 @@ pub struct Crate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
+    pub keywords: Vec<String>,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -82,11 +83,13 @@ impl Crate {
                           description: &Option<String>,
                           homepage: &Option<String>,
                           documentation: &Option<String>,
-                          readme: &Option<String>) -> CargoResult<Crate> {
+                          readme: &Option<String>,
+                          keywords: &[String]) -> CargoResult<Crate> {
         let description = description.as_ref().map(|s| s.as_slice());
         let homepage = homepage.as_ref().map(|s| s.as_slice());
         let documentation = documentation.as_ref().map(|s| s.as_slice());
         let readme = readme.as_ref().map(|s| s.as_slice());
+        let keywords = keywords.connect(",");
         try!(validate_url(homepage));
         try!(validate_url(documentation));
 
@@ -95,11 +98,12 @@ impl Crate {
                                          SET documentation = $1,
                                              homepage = $2,
                                              description = $3,
-                                             readme = $4
-                                       WHERE name = $5
+                                             readme = $4,
+                                             keywords = $5
+                                       WHERE name = $6
                                    RETURNING *"));
         let mut rows = try!(stmt.query(&[&documentation, &homepage,
-                                         &description, &readme,
+                                         &description, &readme, &keywords,
                                          &name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
@@ -109,14 +113,14 @@ impl Crate {
                                       (name, user_id, created_at,
                                        updated_at, downloads, max_version,
                                        description, homepage, documentation,
-                                       readme)
+                                       readme, keywords)
                                       VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, $7)
+                                              $4, $5, $6, $7, $8)
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
                                          &description, &homepage,
-                                         &documentation, &readme]));
+                                         &documentation, &readme, &keywords]));
         let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
         })));
@@ -262,6 +266,7 @@ impl Crate {
 impl Model for Crate {
     fn from_row(row: &PostgresRow) -> Crate {
         let max: String = row.get("max_version");
+        let kws: Option<String> = row.get("keywords");
         Crate {
             id: row.get("id"),
             name: row.get("name"),
@@ -274,6 +279,8 @@ impl Model for Crate {
             homepage: row.get("homepage"),
             readme: row.get("readme"),
             max_version: semver::Version::parse(max.as_slice()).unwrap(),
+            keywords: kws.unwrap_or(String::new()).as_slice().split(',')
+                         .map(|s| s.to_string()).collect(),
         }
     }
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
@@ -444,13 +451,16 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let features = new_crate.features.iter().map(|(k, v)| {
         ((**k).to_string(), v.iter().map(|v| (**v).to_string()).collect())
     }).collect::<HashMap<String, Vec<String>>>();
+    let keywords = new_crate.keywords.as_ref().map(|s| s.as_slice())
+                                     .unwrap_or(&[]);
 
     // Persist the new crate, if it doesn't already exist
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
                                                &new_crate.description,
                                                &new_crate.homepage,
                                                &new_crate.documentation,
-                                               &new_crate.readme));
+                                               &new_crate.readme,
+                                               keywords));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
         if !owners.iter().any(|o| o.id == user.id) {
@@ -471,9 +481,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Update all keywords for this crate
-    try!(Keyword::update_crate(try!(req.tx()), &krate,
-                               new_crate.keywords.as_ref().map(|s| s.as_slice())
-                                                 .unwrap_or(&[])));
+    try!(Keyword::update_crate(try!(req.tx()), &krate, keywords));
 
     // Upload the crate to S3
     let handle = http::handle();
