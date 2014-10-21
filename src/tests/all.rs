@@ -217,6 +217,8 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
                                       &krate.documentation,
                                       &krate.readme,
                                       krate.keywords.as_slice()).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate,
+                          krate.keywords.as_slice()).unwrap();
     Version::insert(req.tx().unwrap(), krate.id,
                     &semver::Version::parse("1.0.0").unwrap(),
                     &HashMap::new(), []).unwrap();

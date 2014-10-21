@@ -300,65 +300,81 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         _ => "ORDER BY crates.name ASC",
     };
 
-    // Different queries for different parameters
-    let mut pattern;
-    let mut id;
+    // Different queries for different parameters.
+    //
+    // Sure wish we had an arel-like thing here...
+    let mut pattern = String::new();
+    let mut id = -1;
+    let (mut needs_id, mut needs_pattern) = (false, false);
     let mut args = vec![&limit as &ToSql, &offset as &ToSql];
-    let (q, cnt) = match (query.find_equiv(&"q"), query.find_equiv(&"letter")) {
-        (Some(query), _) => {
-            args.insert(0, query as &ToSql);
-            ("SELECT crates.* FROM crates,
-                                   plainto_tsquery($1) q,
-                                   ts_rank_cd(textsearchable_index_col, q) rank
-              WHERE q @@ textsearchable_index_col
-              ORDER BY rank DESC LIMIT $2 OFFSET $3".to_string(),
-             "SELECT COUNT(crates.*) FROM crates,
-                                          plainto_tsquery($1) q
-              WHERE q @@ textsearchable_index_col")
-        }
-        (None, Some(letter)) => {
+    let (q, cnt) = query.find_equiv(&"q").map(|query| {
+        args.insert(0, query as &ToSql);
+        ("SELECT crates.* FROM crates,
+                               plainto_tsquery($1) q,
+                               ts_rank_cd(textsearchable_index_col, q) rank
+          WHERE q @@ textsearchable_index_col
+          ORDER BY rank DESC LIMIT $2 OFFSET $3".to_string(),
+         "SELECT COUNT(crates.*) FROM crates,
+                                      plainto_tsquery($1) q
+          WHERE q @@ textsearchable_index_col".to_string())
+    }).or_else(|| {
+        query.find_equiv(&"letter").map(|letter| {
             pattern = format!("{}%", letter.as_slice().char_at(0)
                                            .to_lowercase());
-            args.insert(0, &pattern as &ToSql);
+            needs_pattern = true;
             (format!("SELECT * FROM crates WHERE name LIKE $1 {}
                       LIMIT $2 OFFSET $3", sort_sql),
-             "SELECT COUNT(*) FROM crates WHERE name LIKE $1")
-        },
-        (None, None) => {
-            let user_id = query.find_equiv(&"user_id").map(|s| s.as_slice())
-                               .and_then(from_str::<i32>);
-            let following = query.find_equiv(&"following").is_some();
-            match (user_id, following) {
-                (Some(user_id), _) => {
-                    id = user_id;
-                    args.insert(0, &id as &ToSql);
-                    (format!("SELECT * FROM crates WHERE user_id = $1 {} \
-                              LIMIT $2 OFFSET $3",
-                             sort_sql),
-                     "SELECT COUNT(*) FROM crates WHERE user_id = $1")
-                }
-                (None, true) => {
-                    let me = try!(req.user());
-                    id = me.id;
-                    args.insert(0, &id as &ToSql);
-                    (format!("SELECT crates.* FROM crates
-                              INNER JOIN follows
-                                 ON follows.crate_id = crates.id AND
-                                    follows.user_id = $1
-                              {} LIMIT $2 OFFSET $3", sort_sql),
-                     "SELECT COUNT(crates.*) FROM crates
+             "SELECT COUNT(*) FROM crates WHERE name LIKE $1".to_string())
+        })
+    }).or_else(|| {
+        query.find_equiv(&"keyword").map(|kw| {
+            args.insert(0, kw as &ToSql);
+            let base = "FROM crates
+                        INNER JOIN crates_keywords
+                                ON crates.id = crates_keywords.crate_id
+                        INNER JOIN keywords
+                                ON crates_keywords.keyword_id = keywords.id
+                        WHERE keywords.keyword = $1";
+            (format!("SELECT crates.* {} {} LIMIT $2 OFFSET $3", base, sort_sql),
+             format!("SELECT COUNT(crates.*) {}", base))
+        })
+    }).or_else(|| {
+        query.find_equiv(&"user_id").map(|s| s.as_slice())
+             .and_then(from_str::<i32>).map(|user_id| {
+            id = user_id;
+            needs_id = true;
+            (format!("SELECT * FROM crates WHERE user_id = $1 {} \
+                      LIMIT $2 OFFSET $3",
+                     sort_sql),
+             "SELECT COUNT(*) FROM crates WHERE user_id = $1".to_string())
+        })
+    }).or_else(|| {
+        query.find_equiv(&"following").map(|_| {
+            needs_id = true;
+            (format!("SELECT crates.* FROM crates
                       INNER JOIN follows
                          ON follows.crate_id = crates.id AND
-                            follows.user_id = $1")
-                }
-                (None, false) => {
-                    (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2",
-                             sort_sql),
-                     "SELECT COUNT(*) FROM crates")
-                }
-            }
+                            follows.user_id = $1
+                      {} LIMIT $2 OFFSET $3", sort_sql),
+             "SELECT COUNT(crates.*) FROM crates
+              INNER JOIN follows
+                 ON follows.crate_id = crates.id AND
+                    follows.user_id = $1".to_string())
+        })
+    }).unwrap_or_else(|| {
+        (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2",
+                 sort_sql),
+         "SELECT COUNT(*) FROM crates".to_string())
+    });
+
+    if needs_id {
+        if id == -1 {
+            id = try!(req.user()).id;
         }
-    };
+        args.insert(0, &id as &ToSql);
+    } else if needs_pattern {
+        args.insert(0, &pattern as &ToSql);
+    }
 
     // Collect all the crates
     let stmt = try!(conn.prepare(q.as_slice()));
@@ -369,7 +385,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Query for the total count of crates
-    let stmt = try!(conn.prepare(cnt));
+    let stmt = try!(conn.prepare(cnt.as_slice()));
     let args = if args.len() > 2 {args.slice_to(1)} else {args.slice_to(0)};
     let row = try!(stmt.query(args)).next().unwrap();
     let total = row.get(0u);
