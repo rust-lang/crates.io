@@ -1,4 +1,4 @@
-use std::ascii::StrAsciiExt;
+use std::ascii::AsciiExt;
 use std::collections::hashmap::{HashMap, Occupied, Vacant};
 use std::io::fs::PathExtensions;
 use std::io::util;

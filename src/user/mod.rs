@@ -1,4 +1,3 @@
-use std::any::AnyRefExt;
 use std::collections::HashMap;
 use std::rand::{task_rng, Rng};
 use std::str;
