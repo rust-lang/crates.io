@@ -56,26 +56,28 @@ fn index() {
 
 #[test]
 fn index_search() {
-    let (_b, _app, mut middle) = ::app();
-    let krate = ::krate("foo");
-    middle.add(::middleware::MockUser(::user("foo")));
-    middle.add(::middleware::MockCrate(krate.clone()));
+    let (_b, app, middle) = ::app();
 
-    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
-    req.with_query("q=bar");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateList = ::json(&mut response);
-    assert_eq!(json.crates.len(), 0);
-    assert_eq!(json.meta.total, 0);
-    drop(req);
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates");
+    ::mock_user(&mut req, ::user("foo"));
+    let mut krate = ::krate("foo");
+    krate.keywords.push("kw1".to_string());
+    krate.readme = Some("readme".to_string());
+    krate.description = Some("description".to_string());
+    ::mock_crate(&mut req, krate);
 
-    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
-    req.with_query("q=foo");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateList = ::json(&mut response);
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.meta.total, 1);
-    drop(req);
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar")));
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
+
+    // All of these fields should be indexed/searched by the queries
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
+    let mut response = ok_resp!(middle.call(req.with_query("q=kw1")));
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
+    let mut response = ok_resp!(middle.call(req.with_query("q=readme")));
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
+    let mut response = ok_resp!(middle.call(req.with_query("q=description")));
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
 }
 
 #[test]
