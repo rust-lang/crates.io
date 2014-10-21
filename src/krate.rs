@@ -289,14 +289,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             args.insert(0, query as &ToSql);
             ("SELECT crates.* FROM crates,
                                    plainto_tsquery($1) q,
-                                   to_tsvector('english', name) txt,
-                                   ts_rank_cd(txt, q) rank
-              WHERE q @@ txt
+                                   ts_rank_cd(textsearchable_index_col, q) rank
+              WHERE q @@ textsearchable_index_col
               ORDER BY rank DESC LIMIT $2 OFFSET $3".to_string(),
              "SELECT COUNT(crates.*) FROM crates,
-                                          plainto_tsquery($1) q,
-                                          to_tsvector('english', name) txt
-              WHERE q @@ txt")
+                                          plainto_tsquery($1) q
+              WHERE q @@ textsearchable_index_col")
         }
         (None, Some(letter)) => {
             pattern = format!("{}%", letter.as_slice().char_at(0)

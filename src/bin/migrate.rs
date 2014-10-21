@@ -327,6 +327,44 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20141010150327, "crates", "readme", "VARCHAR"),
         Migration::add_column(20141013115510, "versions", "yanked",
                               "BOOLEAN DEFAULT FALSE"),
+        Migration::add_column(20141020175647, "crates",
+                              "textsearchable_index_col", "tsvector"),
+        Migration::run(20141020175648,
+                       "DROP INDEX index_crates_name_search",
+                       "CREATE INDEX index_crates_name_search \
+                        ON crates USING gin(to_tsvector('english', name))"),
+        Migration::run(20141020175649,
+                       "CREATE INDEX index_crates_name_search \
+                        ON crates USING gin(textsearchable_index_col)",
+                       "DROP INDEX index_crates_name_search"),
+
+        // http://www.postgresql.org/docs/8.3/static/textsearch-controls.html
+        // http://www.postgresql.org/docs/8.3/static/textsearch-features.html
+        Migration::new(20141020175650, proc(tx) {
+            try!(tx.batch_execute("
+            CREATE FUNCTION trigger_crates_name_search() RETURNS trigger AS $$
+            begin
+              new.textsearchable_index_col :=
+                 setweight(to_tsvector('pg_catalog.english',
+                                       coalesce(new.name, '')), 'A') ||
+                 setweight(to_tsvector('pg_catalog.english',
+                                       coalesce(new.description, '')), 'C') ||
+                 setweight(to_tsvector('pg_catalog.english',
+                                       coalesce(new.readme, '')), 'D');
+              return new;
+            end
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_crates_tsvector_update BEFORE INSERT OR UPDATE
+            ON crates
+            FOR EACH ROW EXECUTE PROCEDURE trigger_crates_name_search();
+            "));
+            Ok(())
+
+        }, proc(tx) {
+            tx.batch_execute("DROP TRIGGER trigger_crates_tsvector_update;
+                              DROP FUNCTION trigger_crates_name_search")
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
