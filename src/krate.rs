@@ -14,11 +14,12 @@ use pg::{PostgresRow, PostgresStatement};
 use semver;
 use url::{mod, Url};
 
-use app::{App, RequestApp};
 use {Model, User, Keyword, Version};
+use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
+use keyword::EncodableKeyword;
 use upload;
 use user::{RequestUser, EncodableUser};
 use util::errors::{NotFound, CargoError};
@@ -430,17 +431,23 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());
-    let krate = try!(Crate::find_by_name(&*conn, name.as_slice()));
-    let versions = try!(krate.versions(&*conn));
+    let krate = try!(Crate::find_by_name(conn, name.as_slice()));
+    let versions = try!(krate.versions(conn));
     let ids = versions.iter().map(|v| v.id).collect();
+    let kws = try!(krate.keywords(conn));
 
     #[deriving(Encodable)]
-    struct R { krate: EncodableCrate, versions: Vec<EncodableVersion>, }
+    struct R {
+        krate: EncodableCrate,
+        versions: Vec<EncodableVersion>,
+        keywords: Vec<EncodableKeyword>,
+    }
     Ok(req.json(&R {
         krate: krate.clone().encodable(Some(ids)),
         versions: versions.into_iter().map(|v| {
             v.encodable(krate.name.as_slice())
         }).collect(),
+        keywords: kws.into_iter().map(|k| k.encodable()).collect(),
     }))
 }
 
