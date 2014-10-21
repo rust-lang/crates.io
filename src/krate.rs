@@ -283,6 +283,7 @@ impl Model for Crate {
             readme: row.get("readme"),
             max_version: semver::Version::parse(max.as_slice()).unwrap(),
             keywords: kws.unwrap_or(String::new()).as_slice().split(',')
+                         .filter(|s| !s.is_empty())
                          .map(|s| s.to_string()).collect(),
         }
     }
