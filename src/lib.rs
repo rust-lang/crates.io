@@ -40,7 +40,7 @@ use std::sync::Arc;
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
-use util::C;
+use util::{C, R};
 
 mod macros;
 
@@ -66,7 +66,39 @@ pub enum Environment {
 }
 
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
+    let mut api_router = RouteBuilder::new();
+
+    api_router.get("/crates", C(krate::index));
+    api_router.get("/crates/:crate_id", C(krate::show));
+    api_router.put("/crates/new", C(krate::new));
+    api_router.get("/crates/:crate_id/:version", C(version::show));
+    api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+    api_router.get("/crates/:crate_id/:version/dependencies", C(version::dependencies));
+    api_router.get("/crates/:crate_id/:version/downloads", C(version::downloads));
+    api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
+    api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
+    api_router.get("/crates/:crate_id/versions", C(krate::versions));
+    api_router.put("/crates/:crate_id/follow", C(krate::follow));
+    api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
+    api_router.get("/crates/:crate_id/following", C(krate::following));
+    api_router.get("/crates/:crate_id/owners", C(krate::owners));
+    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
+    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
+    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
+    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
+    api_router.get("/versions", C(version::index));
+    api_router.get("/versions/:version_id", C(version::show));
+    let api_router = Arc::new(api_router);
+
     let mut router = RouteBuilder::new();
+
+    // Mount the router under the /api/v1 path so we're at least somewhat at the
+    // liberty to change things in the future!
+    router.get("/api/v1/*path", R(api_router.clone()));
+    router.put("/api/v1/*path", R(api_router.clone()));
+    router.post("/api/v1/*path", R(api_router.clone()));
+    router.head("/api/v1/*path", R(api_router.clone()));
+    router.delete("/api/v1/*path", R(api_router));
 
     router.get("/authorize_url", C(user::github_authorize));
     router.get("/authorize", C(user::github_access_token));
@@ -75,31 +107,14 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.put("/me/reset_token", C(user::reset_token));
     router.get("/me/updates", C(user::updates));
     router.get("/summary", C(krate::summary));
-    router.get("/crates", C(krate::index));
-    router.get("/crates/:crate_id", C(krate::show));
-    router.put("/crates/new", C(krate::new));
-    router.get("/crates/:crate_id/:version", C(version::show));
-    router.get("/crates/:crate_id/:version/download", C(krate::download));
-    router.get("/crates/:crate_id/:version/dependencies", C(version::dependencies));
-    router.get("/crates/:crate_id/:version/downloads", C(version::downloads));
-    router.get("/crates/:crate_id/:version/authors", C(version::authors));
-    router.get("/crates/:crate_id/downloads", C(krate::downloads));
-    router.get("/crates/:crate_id/versions", C(krate::versions));
-    router.put("/crates/:crate_id/follow", C(krate::follow));
-    router.put("/crates/:crate_id/unfollow", C(krate::unfollow));
-    router.get("/crates/:crate_id/following", C(krate::following));
-    router.get("/crates/:crate_id/owners", C(krate::owners));
-    router.put("/crates/:crate_id/owners", C(krate::add_owners));
-    router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
-    router.delete("/crates/:crate_id/:version/yank", C(version::yank));
-    router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
-    router.get("/versions", C(version::index));
-    router.get("/versions/:version_id", C(version::show));
-    router.get("/git/index/*path", C(git::serve_index));
-    router.post("/git/index/*path", C(git::serve_index));
+
+    let env = app.config.env;
+    if env == Development {
+        router.get("/git/index/*path", C(git::serve_index));
+        router.post("/git/index/*path", C(git::serve_index));
+    }
 
     let mut m = MiddlewareBuilder::new(router);
-    let env = app.config.env;
     if env != Test {
         m.add(conduit_log_requests::LogRequests(0));
     }

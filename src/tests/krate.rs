@@ -37,7 +37,7 @@ struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 #[test]
 fn index() {
     let (_b, _app, mut middle) = ::app();
-    let mut req = MockRequest::new(conduit::Get, "/crates");
+    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.crates.len(), 0);
@@ -61,7 +61,7 @@ fn index_search() {
     middle.add(::middleware::MockUser(::user("foo")));
     middle.add(::middleware::MockCrate(krate.clone()));
 
-    let mut req = MockRequest::new(conduit::Get, "/crates");
+    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
     req.with_query("q=bar");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
@@ -69,7 +69,7 @@ fn index_search() {
     assert_eq!(json.meta.total, 0);
     drop(req);
 
-    let mut req = MockRequest::new(conduit::Get, "/crates");
+    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
     req.with_query("q=foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
@@ -85,7 +85,7 @@ fn index_letter() {
     middle.add(::middleware::MockUser(::user("foo")));
     middle.add(::middleware::MockCrate(krate.clone()));
 
-    let mut req = MockRequest::new(conduit::Get, "/crates");
+    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
     req.with_query("letter=B");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
@@ -93,7 +93,7 @@ fn index_letter() {
     assert_eq!(json.meta.total, 0);
     drop(req);
 
-    let mut req = MockRequest::new(conduit::Get, "/crates");
+    let mut req = MockRequest::new(conduit::Get, "/api/v1/crates");
     req.with_query("letter=F");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
@@ -112,7 +112,7 @@ fn show() {
     middle.add(::middleware::MockUser(::user("foo")));
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = MockRequest::new(conduit::Get,
-                                   format!("/crates/{}", krate.name).as_slice());
+                                   format!("/api/v1/crates/{}", krate.name).as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);
     assert_eq!(json.krate.name, krate.name);
@@ -126,7 +126,7 @@ fn show() {
     assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
-    let suffix = "/crates/foo/1.0.0/download";
+    let suffix = "/api/v1/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
 }
@@ -134,7 +134,7 @@ fn show() {
 #[test]
 fn versions() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/crates/foo/versions");
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates/foo/versions");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -148,7 +148,7 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
                 deps: Vec<u::CrateDependency>) -> MockRequest {
-    let mut req = ::req(app, conduit::Put, "/crates/new");
+    let mut req = ::req(app, conduit::Put, "/api/v1/crates/new");
     req.with_body(new_req_body(krate, version, deps).as_slice());
     return req;
 }
@@ -287,7 +287,7 @@ fn new_crate_owner() {
 
     // Flag the second user as an owner
     let body = r#"{"users":["bar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_path("/crates/foo/owners")
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                                                .with_method(conduit::Put)
                                                .with_body(body)));
     assert!(::json::<O>(&mut response).ok);
@@ -295,7 +295,7 @@ fn new_crate_owner() {
     // And upload a new crate as the first user
     let body = new_req_body(::krate("foo"), "2.0.0", Vec::new());
     req.mut_extensions().insert(u2);
-    let mut response = ok_resp!(middle.call(req.with_path("/crates/new")
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(conduit::Put)
                                                .with_body(body)));
     ::json::<GoodCrate>(&mut response);
@@ -415,13 +415,13 @@ fn summary_doesnt_die() {
 #[test]
 fn download() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/crates/foo/1.0.0/download");
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates/foo/1.0.0/download");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.val0(), 302);
 
-    req.with_path("/crates/foo/1.0.0/downloads");
+    req.with_path("/api/v1/crates/foo/1.0.0/downloads");
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
@@ -434,7 +434,7 @@ fn download_bad() {
     let krate = ::krate("foo");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
-    let rel = format!("/crates/{}/0.1.0/download", krate.name);
+    let rel = format!("/api/v1/crates/{}/0.1.0/download", krate.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
@@ -448,14 +448,14 @@ fn dependencies() {
     let c2 = ::krate("bar");
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
-    let rel = format!("/crates/{}/1.0.0/dependencies", c1.name);
+    let rel = format!("/api/v1/crates/{}/1.0.0/dependencies", c1.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<Deps>(&mut response);
     assert_eq!(deps.dependencies[0].crate_id.as_slice(), "bar");
     drop(req);
 
-    let rel = format!("/crates/{}/1.0.2/dependencies", c1.name);
+    let rel = format!("/api/v1/crates/{}/1.0.2/dependencies", c1.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
@@ -467,45 +467,44 @@ fn following() {
     #[deriving(Decodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/crates/foo/following");
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates/foo/following");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
 
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
 
-    req.with_path("/crates/foo/follow")
+    req.with_path("/api/v1/crates/foo/follow")
        .with_method(conduit::Put);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
-    req.with_path("/crates/foo/following")
+    req.with_path("/api/v1/crates/foo/following")
        .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<F>(&mut response).following);
 
-    req.with_path("/crates")
+    req.with_path("/api/v1/crates")
        .with_query("following=1");
     let mut response = ok_resp!(middle.call(&mut req));
     let l = ::json::<CrateList>(&mut response);
-    println!("{} {}", l.crates.len(), l.meta.total);
     assert_eq!(l.crates.len(), 1);
 
-    req.with_path("/crates/foo/unfollow")
-       .with_method(conduit::Put);
+    req.with_path("/api/v1/crates/foo/follow")
+       .with_method(conduit::Delete);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
-    req.with_path("/crates/foo/following")
+    req.with_path("/api/v1/crates/foo/following")
        .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
 
-    req.with_path("/crates")
+    req.with_path("/api/v1/crates")
        .with_query("following=1")
        .with_method(conduit::Get);
     let mut response = ok_resp!(middle.call(&mut req));
@@ -518,7 +517,7 @@ fn owners() {
     #[deriving(Decodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/crates/foo/owners");
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates/foo/owners");
     let other = ::user("foobar");
     ::mock_user(&mut req, other);
     ::mock_user(&mut req, ::user("foo"));
@@ -573,34 +572,34 @@ fn yank() {
 
     // make sure it's not yanked
     let mut r = ok_resp!(middle.call(req.with_method(conduit::Get)
-                                        .with_path("/crates/foo/1.0.0")));
+                                        .with_path("/api/v1/crates/foo/1.0.0")));
     assert!(!::json::<V>(&mut r).version.yanked);
 
     // yank it
     let mut r = ok_resp!(middle.call(req.with_method(conduit::Delete)
-                                        .with_path("/crates/foo/1.0.0/yank")));
+                                        .with_path("/api/v1/crates/foo/1.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
     assert!(File::open(&path).read_to_string().unwrap().as_slice()
                              .contains("\"yanked\":true"));
     let mut r = ok_resp!(middle.call(req.with_method(conduit::Get)
-                                        .with_path("/crates/foo/1.0.0")));
+                                        .with_path("/api/v1/crates/foo/1.0.0")));
     assert!(::json::<V>(&mut r).version.yanked);
 
     // un-yank it
     let mut r = ok_resp!(middle.call(req.with_method(conduit::Put)
-                                        .with_path("/crates/foo/1.0.0/unyank")));
+                                        .with_path("/api/v1/crates/foo/1.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
     assert!(File::open(&path).read_to_string().unwrap().as_slice()
                              .contains("\"yanked\":false"));
     let mut r = ok_resp!(middle.call(req.with_method(conduit::Get)
-                                        .with_path("/crates/foo/1.0.0")));
+                                        .with_path("/api/v1/crates/foo/1.0.0")));
     assert!(!::json::<V>(&mut r).version.yanked);
 }
 
 #[test]
 fn yank_not_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Delete, "/crates/foo/1.0.0/yank");
+    let mut req = ::req(app, conduit::Delete, "/api/v1/crates/foo/1.0.0/yank");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     ::mock_user(&mut req, ::user("bar"));

@@ -96,7 +96,7 @@ fn reset_token() {
 #[test]
 fn my_packages() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/crates");
+    let mut req = ::req(app, conduit::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     req.with_query(format!("user_id={}", u.id));
@@ -129,9 +129,9 @@ fn following() {
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    ok_resp!(middle.call(req.with_path("/crates/foo/follow")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/follow")
                             .with_method(conduit::Put)));
-    ok_resp!(middle.call(req.with_path("/crates/bar/follow")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
                             .with_method(conduit::Put)));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
@@ -147,8 +147,8 @@ fn following() {
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
-    ok_resp!(middle.call(req.with_path("/crates/bar/unfollow")
-                            .with_method(conduit::Put)));
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
+                            .with_method(conduit::Delete)));
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
                                                .with_method(conduit::Get)
                                                .with_query("page=2&per_page=1")));

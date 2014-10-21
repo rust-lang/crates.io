@@ -41,14 +41,15 @@ pub trait RequestUtils {
 pub fn json_response<'a, T>(t: &T) -> Response
                             where T: Encodable<json::Encoder<'a>, IoError> {
     let s = json::encode(t);
-    let json = fixup(from_str(s.as_slice()).unwrap());
+    let json = fixup(from_str(s.as_slice()).unwrap()).to_string();
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(),
                    vec!["application/json; charset=utf-8".to_string()]);
+    headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
     return Response {
         status: (200, "OK"),
         headers: headers,
-        body: box MemReader::new(json.to_string().into_bytes()),
+        body: box MemReader::new(json.into_bytes()),
     };
 
     fn fixup(json: json::Json) -> json::Json {

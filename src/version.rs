@@ -104,7 +104,7 @@ impl Version {
                       downloads, features, yanked } = self;
         let num = num.to_string();
         EncodableVersion {
-            dl_path: format!("/crates/{}/{}/download", crate_name, num),
+            dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
             num: num.clone(),
             id: id,
             krate: crate_name.to_string(),
@@ -114,11 +114,11 @@ impl Version {
             features: features,
             yanked: yanked,
             links: VersionLinks {
-                dependencies: format!("/crates/{}/{}/dependencies",
+                dependencies: format!("/api/v1/crates/{}/{}/dependencies",
                                       crate_name, num),
-                version_downloads: format!("/crates/{}/{}/downloads",
+                version_downloads: format!("/api/v1/crates/{}/{}/downloads",
                                            crate_name, num),
-                authors: format!("/crates/{}/{}/authors", crate_name, num),
+                authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
         }
     }

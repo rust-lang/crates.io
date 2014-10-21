@@ -162,7 +162,7 @@ impl Crate {
         } = self;
         let versions_link = match versions {
             Some(..) => None,
-            None => Some(format!("/crates/{}/versions", name)),
+            None => Some(format!("/api/v1/crates/{}/versions", name)),
         };
         EncodableCrate {
             id: name.clone(),
@@ -176,9 +176,9 @@ impl Crate {
             homepage: homepage,
             description: description,
             links: CrateLinks {
-                version_downloads: format!("/crates/{}/downloads", name),
+                version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
-                owners: Some(format!("/crates/{}/owners", name)),
+                owners: Some(format!("/api/v1/crates/{}/owners", name)),
             },
         }
     }
