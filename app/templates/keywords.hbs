@@ -1,0 +1,64 @@
+<div id='crates-heading'>
+    <img class='logo' src="/assets/crate.png"/>
+    <h1>All Keywords</h1>
+</div>
+
+<div id='results'>
+    <div class='nav'>
+        <span class='amt small'>
+            Displaying
+            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+            of <span class='total'>{{ totalItems }}</span> total results
+        </span>
+    </div>
+
+    <div class='sort'>
+        <span class='small'>Sort by</span>
+        <div class='dropdown-container'>
+            <a {{action 'toggleShowSortBy'}}
+               {{bind-attr class='showSortBy:active :dropdown'}}>
+                <img src="/assets/sort.png"/>
+                {{ currentSortBy }}
+                <span class='arrow'></span>
+            </a>
+            <ul {{bind-attr class='showSortBy:open :dropdown'}}>
+                <li>
+                    {{#link-to 'keywords' (query-params sort="alpha")}}
+                        Alphabetical
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to 'keywords' (query-params sort="crates")}}
+                        # Crates
+                    {{/link-to}}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class='white-rows'>
+    {{#each}}
+        <div class='row'>
+            <div class='info'>
+                {{link-to keyword "keyword" this}}
+                <span class='vers small'>
+                    {{ format-num crates_cnt }}
+                    crates
+                </span>
+            </div>
+        </div>
+    {{/each}}
+</div>
+
+<div class='pagination'>
+    {{#link-to 'keywords' (query-params page=prevPage) class="prev"}}
+        <img src="/assets/left-pag.png"/>
+    {{/link-to}}
+    {{#each pages}}
+        {{#link-to 'keywords' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{/each}}
+    {{#link-to 'keywords' (query-params page=nextPage) class="next"}}
+        <img src="/assets/right-pag.png"/>
+    {{/link-to}}
+</div>

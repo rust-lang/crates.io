@@ -23,6 +23,9 @@ Router.map(function() {
   this.route('install');
   this.route('search');
   this.route('dashboard');
+  this.resource('keywords');
+  this.resource('keyword', { path: '/keywords/*keyword_id' }, function() {
+  });
 });
 
 export default Router;

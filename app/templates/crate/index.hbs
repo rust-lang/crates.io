@@ -59,6 +59,15 @@
             {{/each}}
         </ul>
 
+        {{#if anyKeywords}}
+            <h3>Keywords</h3>
+            <ul class='keywords'>
+                {{#each keywords}}
+                    <li>{{link-to keyword 'keyword' this}}</li>
+                {{/each}}
+            </ul>
+        {{/if}}
+
         <h3>Owners</h3>
         <ul class='owners'>
             {{#each owners}}

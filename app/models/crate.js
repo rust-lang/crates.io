@@ -17,4 +17,5 @@ export default DS.Model.extend({
     versions: DS.hasMany('versions', {async: true}),
     owners: DS.hasMany('users', {async: true}),
     version_downloads: DS.hasMany('version-download', {async: true}),
+    keywords: DS.hasMany('keywords', {async: true}),
 });

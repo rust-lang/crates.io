@@ -48,6 +48,12 @@ export default Ember.ObjectController.extend({
         });
     }.property('currentVersion.authors.@each'),
 
+    anyKeywords: function() {
+        return this.get('model.keywords').then(function(a) {
+            return a.length > 0;
+        });
+    }.property('model.keywords'),
+
     actions: {
         download: function(version) {
             this.set('isDownloading', true);
