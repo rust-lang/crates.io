@@ -60,10 +60,6 @@ impl Keyword {
         }))))
     }
 
-    pub fn valid(name: &str) -> bool {
-        Crate::valid_name(name)
-    }
-
     pub fn encodable(self) -> EncodableKeyword {
         let Keyword { id: _, crates_cnt, keyword, created_at } = self;
         EncodableKeyword {

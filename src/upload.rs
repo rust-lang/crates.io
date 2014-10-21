@@ -16,13 +16,14 @@ pub struct NewCrate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
-    pub keywords: Option<Vec<String>>,
+    pub keywords: Option<KeywordList>,
 }
 
 #[deriving(PartialEq, Eq, Hash)]
 pub struct CrateName(pub String);
 pub struct CrateVersion(pub semver::Version);
 pub struct CrateVersionReq(pub semver::VersionReq);
+pub struct KeywordList(pub Vec<CrateName>);
 
 #[deriving(Decodable, Encodable)]
 pub struct CrateDependency {
@@ -65,6 +66,22 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersionReq {
     }
 }
 
+impl<E, D: Decoder<E>> Decodable<D, E> for KeywordList {
+    fn decode(d: &mut D) -> Result<KeywordList, E> {
+        let inner: Vec<CrateName> = raw_try!(Decodable::decode(d));
+        if inner.len() > 5 {
+            return Err(d.error("a maximum of 5 keywords per crate are allowed"))
+        }
+        for val in inner.iter() {
+            if val.len() > 20 {
+                return Err(d.error("keywords must contain less than 20 \
+                                    characters"))
+            }
+        }
+        Ok(KeywordList(inner))
+    }
+}
+
 impl<E, D: Encoder<E>> Encodable<D, E> for CrateName {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         d.emit_str(self.as_slice())
@@ -80,6 +97,13 @@ impl<E, D: Encoder<E>> Encodable<D, E> for CrateVersion {
 impl<E, D: Encoder<E>> Encodable<D, E> for CrateVersionReq {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         d.emit_str((**self).to_string().as_slice())
+    }
+}
+
+impl<E, D: Encoder<E>> Encodable<D, E> for KeywordList {
+    fn encode(&self, d: &mut D) -> Result<(), E> {
+        let KeywordList(ref inner) = *self;
+        inner.encode(d)
     }
 }
 
@@ -99,5 +123,12 @@ impl Deref<semver::Version> for CrateVersion {
 impl Deref<semver::VersionReq> for CrateVersionReq {
     fn deref<'a>(&'a self) -> &'a semver::VersionReq {
         let CrateVersionReq(ref s) = *self; s
+    }
+}
+
+impl Deref<[CrateName]> for KeywordList {
+    fn deref<'a>(&'a self) -> &'a [CrateName] {
+        let KeywordList(ref s) = *self;
+        s.as_slice()
     }
 }

@@ -157,6 +157,7 @@ fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
 
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
                 -> Vec<u8> {
+    let kws = krate.keywords.into_iter().map(u::CrateName).collect();
     let json = u::NewCrate {
         name: u::CrateName(krate.name),
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
@@ -167,7 +168,7 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
         homepage: krate.homepage,
         documentation: krate.documentation,
         readme: krate.readme,
-        keywords: None,
+        keywords: Some(u::KeywordList(kws)),
     };
     let json = json::encode(&json);
     let mut body = MemWriter::new();
@@ -608,4 +609,35 @@ fn yank_not_owner() {
     ::mock_user(&mut req, ::user("bar"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
+}
+
+#[test]
+fn bad_keywords() {
+    let (_b, app, middle) = ::app();
+    {
+        let mut krate = ::krate("foo");
+        krate.keywords.push("super-long-keyword-name-oh-no".to_string());
+        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        ::mock_user(&mut req, ::user("foo"));
+        let mut response = ok_resp!(middle.call(&mut req));
+        ::json::<::Bad>(&mut response);
+    }
+    {
+        let mut krate = ::krate("foo");
+        krate.keywords.push("?@?%".to_string());
+        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        ::mock_user(&mut req, ::user("foo"));
+        let mut response = ok_resp!(middle.call(&mut req));
+        ::json::<::Bad>(&mut response);
+    }
+    {
+        let mut krate = ::krate("foo");
+        for i in range(0, 100u) {
+            krate.keywords.push(format!("kw{}", i));
+        }
+        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        ::mock_user(&mut req, ::user("foo"));
+        let mut response = ok_resp!(middle.call(&mut req));
+        ::json::<::Bad>(&mut response);
+    }
 }

@@ -455,6 +455,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }).collect::<HashMap<String, Vec<String>>>();
     let keywords = new_crate.keywords.as_ref().map(|s| s.as_slice())
                                      .unwrap_or(&[]);
+    let keywords = keywords.iter().map(|k| (**k).to_string()).collect::<Vec<_>>();
 
     // Persist the new crate, if it doesn't already exist
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
@@ -462,7 +463,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.homepage,
                                                &new_crate.documentation,
                                                &new_crate.readme,
-                                               keywords));
+                                               keywords.as_slice()));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
         if !owners.iter().any(|o| o.id == user.id) {
@@ -483,7 +484,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Update all keywords for this crate
-    try!(Keyword::update_crate(try!(req.tx()), &krate, keywords));
+    try!(Keyword::update_crate(try!(req.tx()), &krate, keywords.as_slice()));
 
     // Upload the crate to S3
     let handle = http::handle();
