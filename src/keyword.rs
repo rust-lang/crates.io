@@ -21,7 +21,7 @@ pub struct Keyword {
 
 #[deriving(Encodable, Decodable)]
 pub struct EncodableKeyword {
-    pub id: i32,
+    pub id: String,
     pub keyword: String,
     pub created_at: String,
     pub crates_cnt: i32,
@@ -65,9 +65,9 @@ impl Keyword {
     }
 
     pub fn encodable(self) -> EncodableKeyword {
-        let Keyword { id, crates_cnt, keyword, created_at } = self;
+        let Keyword { id: _, crates_cnt, keyword, created_at } = self;
         EncodableKeyword {
-            id: id,
+            id: keyword.clone(),
             created_at: ::encode_time(created_at),
             crates_cnt: crates_cnt,
             keyword: keyword,

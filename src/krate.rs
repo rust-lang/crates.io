@@ -54,6 +54,7 @@ pub struct EncodableCrate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
+    pub keywords: Vec<String>,
     pub links: CrateLinks,
 }
 
@@ -162,7 +163,7 @@ impl Crate {
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
-            homepage, documentation, ..
+            homepage, documentation, keywords, ..
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -179,6 +180,7 @@ impl Crate {
             documentation: documentation,
             homepage: homepage,
             description: description,
+            keywords: keywords,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
