@@ -11,6 +11,7 @@ use url;
 use conduit::{Request, Response, Handler};
 use conduit_router::{RouteBuilder, RequestParams};
 use db::RequestTransaction;
+use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
 pub use self::errors::{ChainError, BoxError};
@@ -128,9 +129,9 @@ impl Handler for C {
     }
 }
 
-pub struct R(pub Arc<RouteBuilder>);
+pub struct R<H>(pub Arc<H>);
 
-impl Handler for R {
+impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
@@ -139,6 +140,21 @@ impl Handler for R {
             path: Some(path.as_slice()),
             method: None,
         })
+    }
+}
+
+pub struct R404(pub RouteBuilder);
+
+impl Handler for R404 {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+        let R404(ref router) = *self;
+        match router.recognize(&req.method(), req.path()) {
+            Ok(m) => {
+                req.mut_extensions().insert(m.params.clone());
+                m.handler.call(req)
+            }
+            Err(..) => Ok(NotFound.response().unwrap()),
+        }
     }
 }
 

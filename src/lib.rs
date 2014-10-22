@@ -41,7 +41,7 @@ use std::sync::Arc;
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
-use util::{C, R};
+use util::{C, R, R404};
 
 mod macros;
 
@@ -92,7 +92,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/versions/:version_id", C(version::show));
     api_router.get("/keywords", C(keyword::index));
     api_router.get("/keywords/:keyword_id", C(keyword::show));
-    let api_router = Arc::new(api_router);
+    let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
 
@@ -118,7 +118,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         router.post("/git/index/*path", C(git::serve_index));
     }
 
-    let mut m = MiddlewareBuilder::new(router);
+    let mut m = MiddlewareBuilder::new(R404(router));
     if env != Test {
         m.add(conduit_log_requests::LogRequests(0));
     }

@@ -1,7 +1,6 @@
-use std::io::{IoError, MemReader};
+use std::io::IoError;
 use std::fmt;
 use std::fmt::{Show, Formatter, FormatError};
-use std::collections::HashMap;
 
 use conduit::Response;
 use curl::ErrCode;
@@ -226,11 +225,11 @@ impl CargoError for NotFound {
     fn description(&self) -> String { "not found".to_string() }
 
     fn response(&self) -> Option<Response> {
-        Some(Response {
-            status: (404, "Not Found"),
-            headers: HashMap::new(),
-            body: box MemReader::new(Vec::new()),
-        })
+        let mut response = json_response(&Bad {
+            errors: vec![Error { detail: "Not Found".to_string() }],
+        });
+        response.status = (404, "Not Found");
+        return Some(response);
     }
 }
 
