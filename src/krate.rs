@@ -555,7 +555,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let mut bomb = Bomb { app: app.clone(), path: Some(path), handle: handle };
 
     // Register this crate in our local git repo.
-    let git_crate = git::GitCrate {
+    let git_crate = git::Crate {
         name: name.to_string(),
         vers: vers.to_string(),
         cksum: cksum.as_slice().to_hex(),

@@ -37,7 +37,7 @@ impl Middleware for MockDependency {
         let va = crate_a.versions(req.tx().unwrap()).unwrap()[0].id;
         Dependency::insert(req.tx().unwrap(), va, crate_b.id,
                            &semver::VersionReq::parse(">= 0").unwrap(),
-                           false, true, []).unwrap();
+                           false, true, [], &None).unwrap();
         Ok(())
     }
 }

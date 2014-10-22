@@ -138,7 +138,8 @@ impl Version {
         let dep = try!(Dependency::insert(conn, self.id, krate.id,
                                           &*dep.version_req, dep.optional,
                                           dep.default_features,
-                                          features.as_slice()));
+                                          features.as_slice(),
+                                          &dep.target));
         Ok((dep, krate))
     }
 

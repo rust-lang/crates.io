@@ -17,13 +17,23 @@ use app::{App, RequestApp};
 use util::{CargoResult, internal};
 
 #[deriving(Encodable, Decodable)]
-pub struct GitCrate {
+pub struct Crate {
     pub name: String,
     pub vers: String,
-    pub deps: Vec<String>,
+    pub deps: Vec<Dependency>,
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: Option<bool>,
+}
+
+#[deriving(Encodable, Decodable)]
+pub struct Dependency {
+    pub name: String,
+    pub req: String,
+    pub features: Vec<String>,
+    pub optional: bool,
+    pub default_features: bool,
+    pub target: Option<String>,
 }
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
@@ -114,7 +124,7 @@ fn index_file(base: &Path, name: &str) -> Path {
     }
 }
 
-pub fn add_crate(app: &App, krate: &GitCrate) -> CargoResult<()> {
+pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     let repo = app.git_repo.lock();
     let repo = &*repo;
     let repo_path = repo.path().dir_path();
@@ -147,7 +157,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
     commit_and_push(repo, || {
         let prev = try!(File::open(&dst).read_to_string());
         let new = prev.as_slice().lines().map(|line| {
-            let mut git_crate = try!(json::decode::<GitCrate>(line).map_err(|_| {
+            let mut git_crate = try!(json::decode::<Crate>(line).map_err(|_| {
                 internal(format!("couldn't decode: `{}`", line))
             }));
             if git_crate.name.as_slice() != krate ||
@@ -158,7 +168,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
             Ok(json::encode(&git_crate))
         }).collect::<CargoResult<Vec<String>>>();
         let new = try!(new).as_slice().connect("\n");
-        try!(File::create(&dst).write(new.as_bytes()));
+        try!(File::create(&dst).write_line(new.as_slice()));
 
         Ok((format!("{} crate `{}#{}`",
                     if yanked {"Yanking"} else {"Unyanking"},

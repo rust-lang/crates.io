@@ -387,6 +387,7 @@ fn migrations() -> Vec<Migration> {
         index(20141021103508, "crates_keywords", "keyword_id"),
         index(20141021103509, "keywords", "keyword"),
         index(20141021103510, "keywords", "crates_cnt"),
+        Migration::add_column(20141022110441, "dependencies", "target", "varchar"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

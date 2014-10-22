@@ -32,6 +32,7 @@ pub struct CrateDependency {
     pub name: CrateName,
     pub features: Vec<CrateName>,
     pub version_req: CrateVersionReq,
+    pub target: Option<String>,
 }
 
 impl<E, D: Decoder<E>> Decodable<D, E> for CrateName {

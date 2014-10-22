@@ -228,6 +228,7 @@ fn new_krate_with_dependency() {
         default_features: true,
         features: Vec::new(),
         version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+        target: None,
     };
     let mut req = new_req_full(app, ::krate("new"), "1.0.0", vec![dep]);
     ::mock_user(&mut req, ::user("foo"));
@@ -392,6 +393,7 @@ fn new_krate_dependency_missing() {
         name: u::CrateName("bar".to_string()),
         features: Vec::new(),
         version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0.0.0").unwrap()),
+        target: None,
     };
     let mut req = new_req_full(app, ::krate("foo"), "1.0.0", vec![dep]);
     ::mock_user(&mut req, ::user("foo"));
