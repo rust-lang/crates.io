@@ -20,11 +20,11 @@ export default Ember.ObjectController.extend({
     }.property('myFollowing'),
 
     hasMoreCrates: function() {
-        return this.get('myCrates').length > TO_SHOW;
+        return this.get('myCrates.length') > TO_SHOW;
     }.property('myCrates'),
 
     hasMoreFollowing: function() {
-        return this.get('myFollowing').length > TO_SHOW;
+        return this.get('myFollowing.length') > TO_SHOW;
     }.property('myFollowing'),
 
     actions: {
