@@ -16,6 +16,12 @@ export default Ember.Route.extend({
         controller.set('fetchingVersions', true);
         controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
+        controller.set('fetchingKeywords', true);
+
+        data.crate.get('keywords').then(function(keywords) {
+            controller.set('fetchingKeywords', false);
+            controller.set('keywords', keywords);
+        });
 
         if (this.session.get('currentUser')) {
             var url = '/api/v1/crates/' + data.crate.get('name') + '/following';

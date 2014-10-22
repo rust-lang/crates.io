@@ -59,20 +59,22 @@
             {{/each}}
         </ul>
 
-        {{#if anyKeywords}}
-            <h3>Keywords</h3>
-            <ul class='keywords'>
-                {{#each keywords}}
-                    <li>{{link-to keyword 'keyword' this}}</li>
-                {{/each}}
-            </ul>
-        {{/if}}
+        {{#unless fetchingKeywords}}
+            {{#if anyKeywords}}
+                <h3>Keywords</h3>
+                <ul class='keywords'>
+                    {{#each keywords}}
+                        <li>{{link-to keyword 'keyword' this}}</li>
+                    {{/each}}
+                </ul>
+            {{/if}}
+        {{/unless}}
 
         <h3>Owners</h3>
         <ul class='owners'>
             {{#each owners}}
                 {{! TODO: hyperlink to a profile page }}
-                <li><img {{bind-attr src=mediumSmallAvatar}}/></li>
+                <li>{{user-avatar user=this size='medium-small'}}</li>
             {{/each}}
         </ul>
     </div>

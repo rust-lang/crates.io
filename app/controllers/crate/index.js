@@ -11,10 +11,12 @@ export default Ember.ObjectController.extend({
     fetchingVersions: true,
     fetchingDownloads: true,
     fetchingFollowing: true,
+    fetchingKeywords: true,
     following: false,
     showAllVersions: false,
     currentVersion: null,
     requestedVersion: null,
+    keywords: [],
 
     sortedVersions: function() {
         return this.get("model.versions").sortBy("num").reverse();
@@ -49,10 +51,8 @@ export default Ember.ObjectController.extend({
     }.property('currentVersion.authors.@each'),
 
     anyKeywords: function() {
-        return this.get('model.keywords').then(function(a) {
-            return a.length > 0;
-        });
-    }.property('model.keywords'),
+        return this.get('keywords').length > 0;
+    }.property('keywords'),
 
     actions: {
         download: function(version) {

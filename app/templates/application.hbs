@@ -21,8 +21,7 @@
             <div class='dropdown-container'>
                 <button {{action 'toggleUserOptions'}}
                         {{bind-attr class='showUserOptions:active :dropdown'}}>
-                    <img {{bind-attr src=session.currentUser.smallAvatar}}
-                         height=22 width=22/>
+                    {{user-avatar user=session.currentUser size='small'}}
                     {{ session.currentUser.name }}
                     <span class='arrow'></span>
                 </button>
