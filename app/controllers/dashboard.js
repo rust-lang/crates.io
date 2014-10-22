@@ -4,8 +4,6 @@ import ajax from 'ic-ajax';
 var TO_SHOW = 5;
 
 export default Ember.ObjectController.extend({
-    fetchingCrates: true,
-    fetchingFollowing: true,
     fetchingFeed: true,
     loadingMore: false,
     hasMore: false,

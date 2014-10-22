@@ -1,33 +1,31 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
 import AuthenticatedRoute from 'cargo/mixins/authenticated-route';
 
 export default Ember.Route.extend(AuthenticatedRoute, {
+    data: {},
+
     setupController: function(controller, model) {
-        var self = this;
-        controller.set('fetchingCrates', true);
-        controller.set('fetchingFollowing', true);
+        this._super(controller, model);
         controller.set('fetchingFeed', true);
-        ajax('/api/v1/crates?user_id=' + model.get('id')).then(function(data) {
-            controller.set('myCrates',
-                           self.store.pushMany('crate', data.crates));
-        }).finally(function() {
-            controller.set('fetchingCrates', false);
-        });
-
-        ajax('/api/v1/crates?following=1').then(function(data) {
-            controller.set('myFollowing',
-                           self.store.pushMany('crate', data.crates));
-        }).finally(function() {
-            controller.set('fetchingFollowing', false);
-        });
-
-        if (controller.get('myFeed').length === 0) {
+        controller.set('myCrates', this.get('data.myCrates'));
+        controller.set('myFollowing', this.get('data.myFollowing'));
+        if (!controller.get('loadingMore')) {
+            controller.set('myFeed', []);
             controller.send('loadMore');
         }
     },
 
     model: function() {
         return this.session.get('currentUser');
+    },
+
+    afterModel: function(user) {
+        var self = this;
+        return Ember.RSVP.hash({
+            myCrates: this.store.find('crate', {user_id: user.get('id')}),
+            myFollowing: this.store.find('crate', {following: 1}),
+        }).then(function(hash) {
+            self.set('data', hash);
+        });
     },
 });
