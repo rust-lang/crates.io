@@ -51,7 +51,7 @@ export default Ember.ObjectController.extend({
     }.property('currentVersion.authors.@each'),
 
     anyKeywords: function() {
-        return this.get('keywords').length > 0;
+        return this.get('keywords.length') > 0;
     }.property('keywords'),
 
     actions: {
