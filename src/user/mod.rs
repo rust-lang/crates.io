@@ -20,7 +20,7 @@ use version::EncodableVersion;
 
 pub use self::middleware::{Middleware, RequestUser};
 
-mod middleware;
+pub mod middleware;
 
 #[deriving(Clone, Show, PartialEq, Eq)]
 pub struct User {

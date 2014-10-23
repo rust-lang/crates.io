@@ -249,7 +249,7 @@ dependencies = [
 [[package]]
 name = "r2d2"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/r2d2#65729b64e97c03828a01dc65ff1cc1f249d38496"
+source = "git+https://github.com/sfackler/r2d2#8e4fd98f712ecb714bc663554a826bcbd5bb55c5"
 
 [[package]]
 name = "r2d2_postgres"
@@ -257,7 +257,7 @@ version = "0.0.0"
 source = "git+https://github.com/sfackler/r2d2-postgres#cde5419dd1684332dbf1cb432716149ce38bad0d"
 dependencies = [
  "postgres 0.0.0 (git+https://github.com/sfackler/rust-postgres#a8b834c8debc46fcd8f0f5e386e1ac89ea0d8ca0)",
- "r2d2 0.0.0 (git+https://github.com/sfackler/r2d2#65729b64e97c03828a01dc65ff1cc1f249d38496)",
+ "r2d2 0.0.0 (git+https://github.com/sfackler/r2d2#8e4fd98f712ecb714bc663554a826bcbd5bb55c5)",
 ]
 
 [[package]]
