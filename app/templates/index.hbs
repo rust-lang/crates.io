@@ -2,17 +2,10 @@
     <h1>The Rust community's crate hosting service</h1>
 
     <div class='links'>
-        {{#if downloadUrl}}
-            <a {{bind-attr href=downloadUrl}} download class='yellow-button'>
-                <img src="/assets/button-download.png"/>
-                Install Cargo
-            </a>
-        {{else}}
-            {{#link-to "install" class='yellow-button'}}
-                <img src="/assets/button-download.png"/>
-                Install Cargo
-            {{/link-to}}
-        {{/if}}
+        {{#link-to "install" class='yellow-button'}}
+            <img src="/assets/button-download.png"/>
+            Install Cargo
+        {{/link-to}}
 
         <a href='http://crates.io/guide.html' class='yellow-button'>
             <img src="/assets/flag.png"/>
