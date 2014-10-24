@@ -59,6 +59,11 @@
             {{/each}}
         </ul>
 
+        {{#if license}}
+            <h3>License</h3>
+            <p>{{ license }}</p>
+        {{/if}}
+
         {{#unless fetchingKeywords}}
             {{#if anyKeywords}}
                 <h3>Keywords</h3>
@@ -150,6 +155,9 @@
             {{/if}}
             {{#if documentation}}
                 <li><a {{bind-attr href=documentation}}>Documentation</a></li>
+            {{/if}}
+            {{#if repository}}
+                <li><a {{bind-attr href=repository}}>Repository</a></li>
             {{/if}}
         </ul>
     </div>
