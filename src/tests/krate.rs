@@ -161,6 +161,8 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
         documentation: krate.documentation,
         readme: krate.readme,
         keywords: Some(u::KeywordList(kws)),
+        license: krate.license,
+        repository: krate.repository,
     };
     let json = json::encode(&json);
     let mut body = MemWriter::new();

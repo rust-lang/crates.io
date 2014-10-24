@@ -41,6 +41,8 @@ pub struct Crate {
     pub documentation: Option<String>,
     pub readme: Option<String>,
     pub keywords: Vec<String>,
+    pub license: Option<String>,
+    pub repository: Option<String>,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -56,6 +58,8 @@ pub struct EncodableCrate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub keywords: Vec<String>,
+    pub license: Option<String>,
+    pub repository: Option<String>,
     pub links: CrateLinks,
 }
 
@@ -86,14 +90,20 @@ impl Crate {
                           homepage: &Option<String>,
                           documentation: &Option<String>,
                           readme: &Option<String>,
-                          keywords: &[String]) -> CargoResult<Crate> {
+                          keywords: &[String],
+                          repository: &Option<String>,
+                          license: &Option<String>) -> CargoResult<Crate> {
         let description = description.as_ref().map(|s| s.as_slice());
         let homepage = homepage.as_ref().map(|s| s.as_slice());
         let documentation = documentation.as_ref().map(|s| s.as_slice());
         let readme = readme.as_ref().map(|s| s.as_slice());
+        let repository = repository.as_ref().map(|s| s.as_slice());
+        let license = license.as_ref().map(|s| s.as_slice());
         let keywords = keywords.connect(",");
         try!(validate_url(homepage));
         try!(validate_url(documentation));
+        try!(validate_url(repository));
+        try!(validate_license(license));
 
         // TODO: like with users, this is sadly racy
         let stmt = try!(conn.prepare("UPDATE crates
@@ -101,11 +111,14 @@ impl Crate {
                                              homepage = $2,
                                              description = $3,
                                              readme = $4,
-                                             keywords = $5
-                                       WHERE name = $6
+                                             keywords = $5,
+                                             license = $6,
+                                             repository = $7
+                                       WHERE name = $8
                                    RETURNING *"));
         let mut rows = try!(stmt.query(&[&documentation, &homepage,
                                          &description, &readme, &keywords,
+                                         &license, &repository,
                                          &name as &ToSql]));
         match rows.next() {
             Some(row) => return Ok(Model::from_row(&row)),
@@ -115,14 +128,15 @@ impl Crate {
                                       (name, user_id, created_at,
                                        updated_at, downloads, max_version,
                                        description, homepage, documentation,
-                                       readme, keywords)
+                                       readme, keywords, repository, license)
                                       VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, $7, $8)
+                                              $4, $5, $6, $7, $8, $9, $10)
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
                                          &description, &homepage,
-                                         &documentation, &readme, &keywords]));
+                                         &documentation, &readme, &keywords,
+                                         &repository, &license]));
         let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
             internal("no crate returned")
         })));
@@ -154,17 +168,36 @@ impl Crate {
             }
             Ok(())
         }
+
+        fn validate_license(license: Option<&str>) -> CargoResult<()> {
+            let ok_licenses = &["MIT", "BSD", "GPL", "LGPL2", "LGPL3", "APL2",
+                                "MPL2", "UNLICENSE", "CDDL", "EPL"];
+            match license {
+                Some(license) => {
+                    if ok_licenses.iter().any(|&l| l == license) {
+                        Ok(())
+                    } else {
+                        Err(human(format!("invalid license `{}`, accepted
+                                           licenses are {}", license,
+                                           ok_licenses.as_slice())))
+                    }
+                }
+                None => Ok(()),
+            }
+        }
     }
 
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
-        name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+        name.char_at(0).is_alphabetic() &&
+            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
     }
 
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
-            homepage, documentation, keywords, ..
+            homepage, documentation, keywords, license, repository,
+            readme: _, id: _, user_id: _,
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -182,6 +215,8 @@ impl Crate {
             homepage: homepage,
             description: description,
             keywords: keywords,
+            license: license,
+            repository: repository,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
@@ -285,6 +320,8 @@ impl Model for Crate {
             keywords: kws.unwrap_or(String::new()).as_slice().split(',')
                          .filter(|s| !s.is_empty())
                          .map(|s| s.to_string()).collect(),
+            license: row.get("license"),
+            repository: row.get("repository"),
         }
     }
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
@@ -487,7 +524,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.homepage,
                                                &new_crate.documentation,
                                                &new_crate.readme,
-                                               keywords.as_slice()));
+                                               keywords.as_slice(),
+                                               &new_crate.repository,
+                                               &new_crate.license));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
         if !owners.iter().any(|o| o.id == user.id) {

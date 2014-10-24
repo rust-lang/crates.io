@@ -17,6 +17,8 @@ pub struct NewCrate {
     pub documentation: Option<String>,
     pub readme: Option<String>,
     pub keywords: Option<KeywordList>,
+    pub license: Option<String>,
+    pub repository: Option<String>,
 }
 
 #[deriving(PartialEq, Eq, Hash)]

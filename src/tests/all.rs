@@ -194,6 +194,8 @@ fn krate(name: &str) -> Crate {
         description: None,
         readme: None,
         keywords: Vec::new(),
+        license: None,
+        repository: None,
     }
 }
 
@@ -216,7 +218,9 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
                                       &krate.homepage,
                                       &krate.documentation,
                                       &krate.readme,
-                                      krate.keywords.as_slice()).unwrap();
+                                      krate.keywords.as_slice(),
+                                      &krate.repository,
+                                      &krate.license).unwrap();
     Keyword::update_crate(req.tx().unwrap(), &krate,
                           krate.keywords.as_slice()).unwrap();
     Version::insert(req.tx().unwrap(), krate.id,
