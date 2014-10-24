@@ -171,13 +171,14 @@ impl Crate {
 
         fn validate_license(license: Option<&str>) -> CargoResult<()> {
             let ok_licenses = &["MIT", "BSD", "GPL", "LGPL2", "LGPL3", "APL2",
-                                "MPL2", "UNLICENSE", "CDDL", "EPL"];
+                                "MPL2", "UNLICENSE", "CDDL", "EPL",
+                                "MIT/APL2"];
             match license {
                 Some(license) => {
                     if ok_licenses.iter().any(|&l| l == license) {
                         Ok(())
                     } else {
-                        Err(human(format!("invalid license `{}`, accepted
+                        Err(human(format!("invalid license `{}`, accepted \
                                            licenses are {}", license,
                                            ok_licenses.as_slice())))
                     }
