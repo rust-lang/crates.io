@@ -2,7 +2,7 @@
 name = "cargo-registry"
 version = "0.1.0"
 dependencies = [
- "civet 0.1.0 (git+https://github.com/wycats/rust-civet#71c6e4a17c5627823f1b49049d4c67e11ace5115)",
+ "civet 0.1.0 (git+https://github.com/wycats/rust-civet#eba2c9def3ec247ab420fc91d919edfbf473a410)",
  "conduit-conditional-get 0.5.0 (git+https://github.com/conduit-rust/conduit-conditional-get#d9095b5b6091c83def1b6ce1d2ad5628139919e3)",
  "conduit-cookie 0.0.1 (git+https://github.com/conduit-rust/conduit-cookie#9c1738fe1b64b9dbb01c6aa302c39745a2d1c1dd)",
  "conduit-json-parser 0.5.0 (git+https://github.com/conduit-rust/conduit-json-parser#85088b9a43f58ad2c8f71bb1d541569293673a9d)",
@@ -28,7 +28,7 @@ dependencies = [
 [[package]]
 name = "civet"
 version = "0.1.0"
-source = "git+https://github.com/wycats/rust-civet#71c6e4a17c5627823f1b49049d4c67e11ace5115"
+source = "git+https://github.com/wycats/rust-civet#eba2c9def3ec247ab420fc91d919edfbf473a410"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git#17b3153a76e57e5fde33b5c65171a72aad704c35)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver#5dee918159d4e3d84c1ee54cf6a5305e6f7bd557)",
