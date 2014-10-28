@@ -4,12 +4,6 @@
     <h2>{{ currentVersion.num }}</h2>
 
     <div class='right'>
-        <a class='yellow-button' download
-           {{action 'download' currentVersion}}
-           {{bind-attr href=currentVersion.dl_path}}>
-            <img src="/assets/button-download.png"/>
-            Download
-        </a>
         {{#if session.currentUser}}
             <button class='tan-button' {{action 'toggleFollow' this}}>
                 {{#if fetchingFollowing}}
@@ -23,6 +17,14 @@
                 {{/if}}
             </button>
         {{/if}}
+        {{!--
+            <a class='yellow-button' download
+               {{action 'download' currentVersion}}
+               {{bind-attr href=currentVersion.dl_path}}>
+                <img src="/assets/button-download.png"/>
+                Download
+            </a>
+        --}}
     </div>
 </div>
 
