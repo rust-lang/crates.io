@@ -225,4 +225,8 @@ ul.dropdown {
     position: absolute;
     top: 0;
     right: 0;
+    display: none;
+}
+@media screen and (min-width: 1180px) {
+    .fork-me { display: block; }
 }
