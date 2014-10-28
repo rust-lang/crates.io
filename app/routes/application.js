@@ -21,5 +21,10 @@ export default Ember.Route.extend({
         didTransition: function() {
             this.controllerFor('application').stepFlash();
         },
+
+        willTransition: function() {
+            this.controllerFor('application').aboutToTransition();
+            return true;
+        },
     },
 });

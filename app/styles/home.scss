@@ -36,7 +36,13 @@
 
     h1 { font-size: 60px; }
 
-    .link:not(first-child) { margin: 0 20px; }
+    .links a:not(:first-child) {
+        margin: 0 20px;
+        @media only screen and (max-width: 570px) {
+            clear: both;
+            margin: 20px 0 0 0;
+        }
+    }
 }
 
 .dl {
@@ -46,29 +52,41 @@
 
 #blurb {
     margin: 30px 0 40px 0;
-    @include flex;
+    @include display-flex;
 
-    #intro { width: 60%; line-height: 25px; padding: 10px;}
+    #intro { @include flex(6); line-height: 25px; padding: 10px;}
 
     #stats {
-        width: 40%;
+        @include flex(4);
+        @include display-flex;
+        @include flex-direction(column);
+
         border-left: 1px solid $gray-border;
         padding: 10px;
 
         span { margin-left: 10px; }
-
-        img { display: block; float: left; }
         .num {
             font-size: 30px;
             font-weight: bold;
         }
-        .downloads, .crates { clear: both; overflow: auto; }
         .crates { margin-top: 10px; }
+        .crates, .downloads {
+            @include display-flex;
+            @include align-items(center);
+        }
+    }
+
+    @media only screen and (max-width: 530px) {
+        @include flex-direction(column);
+        #stats { border: none; }
+        .crates, .downloads {
+            @include justify-content(center);
+        }
     }
 }
 
 .crate-lists {
-    @include flex;
+    @include display-flex;
 
     h2 { font-size: 105%; }
     > div { margin: 0 15px; }
@@ -83,12 +101,19 @@
         background-color: $main-bg-dark;
         font-size: 90%;
         padding: 20px 10px;
-        @include flex;
+        @include display-flex;
         @include justify-content(space-between);
 
         img { vertical-align: middle; }
     }
     li a:hover { background-color: darken($main-bg-dark, 5%); }
+
+    @media only screen and (max-width: 750px) {
+        #just-updated { display: none; }
+    }
+    @media only screen and (max-width: 550px) {
+        #new-crates { display: none; }
+    }
 }
 
-#home-crates > div { width: 33%; }
+#home-crates > div { @include flex(1); }

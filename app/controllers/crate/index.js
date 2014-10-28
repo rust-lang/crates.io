@@ -140,8 +140,11 @@ export default Ember.ObjectController.extend({
             });
             fmt.format(data, 0);
 
-            Ember.run.scheduleOnce('afterRender', this, function() {
+            var drawChart = function() {
                 var el = document.getElementById('graph-data');
+                if (!el) {
+                    return;
+                }
                 var chart = new google.visualization.LineChart(el);
                 chart.draw(data, {
                     chartArea: {'width': '80%', 'height': '80%'},
@@ -153,7 +156,11 @@ export default Ember.ObjectController.extend({
                         viewWindow: { min: 0, },
                     },
                 });
-            });
+            };
+
+            Ember.run.scheduleOnce('afterRender', this, drawChart);
+            Ember.$(window).off('resize.chart');
+            Ember.$(window).on('resize.chart', drawChart);
         },
     },
 });

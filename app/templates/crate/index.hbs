@@ -1,7 +1,9 @@
 <div id='crates-heading'>
-    <img class='logo' src="/assets/crate.png"/>
-    <h1>{{ name }}</h1>
-    <h2>{{ currentVersion.num }}</h2>
+    <div class='info'>
+        <img class='logo' src="/assets/crate.png"/>
+        <h1>{{ name }}</h1>
+        <h2>{{ currentVersion.num }}</h2>
+    </div>
 
     <div class='right'>
         {{#if session.currentUser}}
@@ -51,39 +53,53 @@
         </div>
     </div>
     <div class='authorship'>
-        <div class='last-update'><span class='small'>Last Updated</span></div>
-        <div class='date'>{{ from-now updated_at }}</div>
+        <div class='top'>
+            <div>
+                <div class='last-update'><span class='small'>Last Updated</span></div>
+                <div class='date'>{{ from-now updated_at }}</div>
+            </div>
 
-        <h3>Authors</h3>
-        <ul>
-            {{#each displayedAuthors}}
-                <li>{{ name }}</li>
-            {{/each}}
-        </ul>
-
-        {{#if license}}
-            <h3>License</h3>
-            <p>{{ license }}</p>
-        {{/if}}
-
-        {{#unless fetchingKeywords}}
-            {{#if anyKeywords}}
-                <h3>Keywords</h3>
-                <ul class='keywords'>
-                    {{#each keywords}}
-                        <li>{{link-to keyword 'keyword' this}}</li>
+            <div>
+                <h3>Authors</h3>
+                <ul>
+                    {{#each displayedAuthors}}
+                        <li>{{ name }}</li>
                     {{/each}}
                 </ul>
-            {{/if}}
-        {{/unless}}
+            </div>
+        </div>
 
-        <h3>Owners</h3>
-        <ul class='owners'>
-            {{#each owners}}
-                {{! TODO: hyperlink to a profile page }}
-                <li>{{user-avatar user=this size='medium-small'}}</li>
-            {{/each}}
-        </ul>
+        <div class='bottom'>
+            {{#if license}}
+                <div>
+                    <h3>License</h3>
+                    <p>{{ license }}</p>
+                </div>
+            {{/if}}
+
+            {{#unless fetchingKeywords}}
+                {{#if anyKeywords}}
+                    <div>
+                        <h3>Keywords</h3>
+                        <ul class='keywords'>
+                            {{#each keywords}}
+                                <li>{{link-to keyword 'keyword' this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/if}}
+            {{/unless}}
+
+            <div>
+                <h3>Owners</h3>
+                <ul class='owners'>
+                    {{#each owners}}
+                        {{! TODO: hyperlink to a profile page }}
+                        <li>{{user-avatar user=this size='medium-small'}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -92,21 +108,21 @@
         <h3>Stats Overview</h3>
         <div class='stat'>
             <span class='num'>
+                <img src="/assets/download.png"/>
                 {{#if requestedVersion}}
                     {{ format-num currentVersion.downloads }}
                 {{else}}
                     {{ format-num downloads }}
                 {{/if}}
             </span>
-            <img src="/assets/download.png"/>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span {{bind-attr class="fetchingVersions:loading :num"}}>
-                FIXME
+                <img src="/assets/package.png"/>
+                {{ versions.length }}
             </span>
-            <img src="/assets/download.png"/>
-            <span class='desc small'>Downloads today</span>
+            <span class='desc small'>Versions shipped</span>
         </div>
     </div>
 
@@ -143,7 +159,7 @@
 {{/if}}
 
 <div id='crate-links'>
-    <div class='section'>
+    <div class='section' id='crate-links'>
         <h3>Links</h3>
         <ul>
             {{#if homepage}}
@@ -164,7 +180,7 @@
         </ul>
     </div>
 
-    <div class='section'>
+    <div class='section' id='crate-dependencies'>
         <h3>Dependencies</h3>
         <ul>
             {{#each currentVersion.dependencies}}
@@ -179,7 +195,7 @@
         </ul>
     </div>
 
-    <div class='section'>
+    <div class='section' id='crate-dev-dependencies'>
         <h3>Dev-Dependencies</h3>
         <ul>
             {{#each currentVersion.dependencies}}
@@ -194,7 +210,7 @@
         </ul>
     </div>
 
-    <div class='section'>
+    <div class='section' id='crate-versions'>
         <h3>Versions</h3>
         <ul>
             {{#each smallSortedVersions}}

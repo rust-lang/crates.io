@@ -10,10 +10,17 @@ export default Ember.Controller.extend({
         this.set('nextFlashError', null);
     },
 
+    aboutToTransition: function() {
+        Ember.$(document).trigger('mousedown');
+    },
+
     resetDropdownOption: function(controller, option) {
         controller.set(option, !controller.get(option));
         if (controller.get(option)) {
-            Ember.$(document).on('mousedown.useroptions', function() {
+            Ember.$(document).on('mousedown.useroptions', function(e) {
+                if (Ember.$(e.target).prop('tagName') === 'INPUT') {
+                    return;
+                }
                 Ember.run.later(function() {
                     controller.set(option, false);
                 }, 150);

@@ -24,7 +24,7 @@
     transform: translateY(-50%);
 }
 
-@mixin flex {
+@mixin display-flex {
     display: -ms-flexbox;      /* TWEENER - IE 10 */
     display: -webkit-flex;     /* NEW - Chrome */
     display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
@@ -53,4 +53,14 @@
 @mixin flex-wrap($how) {
     -webkit-flex-wrap: $how;
     flex-wrap: $how;
+}
+
+@mixin flex($stuff) {
+    -webkit-flex: $stuff;
+    flex: $stuff;
+}
+
+@mixin order($ord) {
+    -webkit-order: $ord;
+    order: $ord;
 }

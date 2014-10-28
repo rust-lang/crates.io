@@ -3,7 +3,7 @@
     padding-bottom: 20px;
     margin-bottom: 20px;
 
-    .info { @include flex; }
+    .info { @include display-flex; }
     dl {
         margin-left: 30px;
         line-height: 150%;
@@ -17,6 +17,16 @@
         }
         dd { float: left; margin-left: 10px; }
     }
+
+    @media only screen and (max-width: 550px) {
+        .info img { display: none; }
+    }
+}
+
+#me-api {
+    @media only screen and (max-width: 350px) {
+        .api { display: none; }
+    }
 }
 
 #my-crate-lists {
@@ -25,28 +35,39 @@
     margin-right: 20px;
 
     .header {
-        @include flex;
+        @include display-flex;
         @include justify-content(space-between);
         @include align-items(center);
     }
 }
 
 #my-info {
-    @include flex;
+    @include display-flex;
+
+    @media only screen and (max-width: 750px) {
+        @include flex-direction(column);
+
+        #my-feed { @include order(0); }
+        #my-crate-lists {
+            @include order(1);
+            margin-right: 0;
+        }
+        #my-crates, #my-following { margin: 0; }
+    }
 }
 #my-feed {
     @include flex-grow(5);
     h2 { font-size: 105%; }
 
     .row {
-        @include flex;
+        @include display-flex;
         @include flex-direction(column);
     }
 
     .small { padding-left: 10px; }
 
     .info {
-        @include flex;
+        @include display-flex;
         @include align-items(baseline);
         @include justify-content(space-between);
 

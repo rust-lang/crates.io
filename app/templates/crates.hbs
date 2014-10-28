@@ -1,14 +1,18 @@
-<div id='crates-heading'>
-    <img class='logo' src="/assets/crate.png"/>
-    <h1>All Crates</h1>
+<div id='crates-heading' class='crate-index'>
+    <div class='info'>
+        <img class='logo' src="/assets/crate.png"/>
+        <h1>All Crates</h1>
+    </div>
     <h2>starting with '{{ letter }}'</h2>
 </div>
+
 <div id='selection'>
     {{#each alphabet}}
         {{#link-to 'crates' (query-params letter=this)}}
             {{ this }}
         {{/link-to}}
     {{/each}}
+    {{view Ember.Select content=alphabet value=letter}}
 </div>
 
 <div id='results'>

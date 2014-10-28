@@ -4,22 +4,31 @@
     background-color: $main-bg-dark;
     margin-bottom: 20px;
     @include border-radius(5px);
-    @include flex;
+    @include display-flex;
     @include align-items(center);
 
+    .info {
+        @include display-flex;
+        @include align-items(center);
+    }
     h1 { padding-left: 10px; }
     h2 { color: $main-color-light; padding-left: 10px; }
-    a, button { margin-left: 20px; }
     .right {
-        @include flex-grow(2);
-        @include flex;
+        @include flex(2);
+        @include display-flex;
         @include flex-direction(row-reverse);
+        @include align-items(center);
     }
+    @media only screen and (max-width: 650px) {
+        .right { display: none; }
+    }
+
+    &.crate-index, &.crate-search { @include flex-wrap(wrap); }
 }
 
 #selection {
     width: 100%;
-    @include flex;
+    @include display-flex;
     @include justify-content(space-between);
     padding: 20px;
     @include border-radius(5px);
@@ -34,11 +43,24 @@
     }
     a:hover { background-color: $main-bg-dark; }
     a.active { background-color: $main-bg-dark; }
+
+    select {
+        display: none;
+        width: 100%;
+        padding: 5px;
+    }
+
+    @media only screen and (max-width: 650px) {
+        padding: 0;
+        background-color: inherit;
+        a { display: none; }
+        select { display: block; }
+    }
 }
 
 #results {
     width: 100%;
-    @include flex;
+    @include display-flex;
     @include justify-content(space-between);
     margin-bottom: 25px;
 
@@ -57,14 +79,14 @@
     background-color: white;
     padding: 0 20px;
     margin-bottom: 20px;
-    @include flex;
+    @include display-flex;
     @include flex-direction(column);
 
     .row {
         width: 100%;
         border-bottom: 2px solid $gray-border;
         padding: 20px 0;
-        @include flex;
+        @include display-flex;
         @include justify-content(space-between);
 
         &:last-of-type { border: none; }
@@ -74,7 +96,7 @@
 .crate {
     .desc {
         padding-top: 5px;
-        @include flex;
+        @include display-flex;
         @include flex-direction(column);
         width: 85%;
     }
@@ -91,7 +113,7 @@
         width: 15%;
         color: $main-color-light;
     }
-    .downloads { @include flex; @include align-items(center); }
+    .downloads { @include display-flex; @include align-items(center); }
 }
 
 .pagination {
@@ -109,28 +131,54 @@
 }
 
 .crate-info {
-    width: 100%;
+    @include display-flex;
+    @include flex-direction(column);
     padding-bottom: 20px;
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
+
+    @media only screen and (min-width: 820px) {
+        @include flex-direction(row);
+
+        .docs {
+            @include flex(7);
+            padding-right: 40px;
+        }
+        .authorship {
+            @include flex(3);
+            border-left: 2px solid $gray-border;
+            padding-left: 20px;
+
+            .top, .bottom {
+                @include flex-direction(column);
+            }
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .authorship {
+            .top, .bottom {
+                @include flex-direction(column);
+            }
+        }
+    }
+
+    .authorship {
+        .top, .bottom {
+            @include display-flex;
+
+            > * { @include flex(1); }
+        }
+    }
 
     .about {
         line-height: 180%;
         margin-bottom: 40px;
     }
 
-    .docs {
-        width: 70%;
-        float: left;
-        padding-right: 40px;
-    }
-    .authorship {
-        width: 30%;
-        float: left;
-    }
 
     ul.owners, ul.keywords {
-        @include flex;
+        @include display-flex;
         @include flex-wrap(wrap);
         list-style: none;
         padding: 0;
@@ -140,27 +188,27 @@
 
     .install {
         font-size: 120%;
-        padding: 10px 10px 10px 0;
+        padding: 10px;
         background-color: darken($main-bg-dark, 8%);
+        @include display-flex;
 
-        * { display: inline-block; }
         .action {
-            width: 20%;
-            float: left;
+            display: none;
             text-align: center;
             padding-top: 18px;
+            padding-right: 10px;
         }
         code {
-            width: 80%;
+            @include flex(1);
             background: $main-color;
             color: white;
             padding: 20px;
         }
-    }
 
-    .authorship {
-        border-left: 2px solid $gray-border;
-        padding-left: 20px;
+        @media only screen and (min-width: 500px) {
+            .action { @include flex(2); display: block; }
+            code { @include flex(8); }
+        }
     }
 
     .last-update {
@@ -175,28 +223,34 @@
 }
 
 #crate-downloads {
-    .stat {
-        width: 50%;
-        border-left: 1px solid $gray-border;
-        margin-top: 10px;
-        padding-left: 20px;
-        float: left;
+    @include display-flex;
+    @include flex-wrap(wrap);
 
-        img { clear: both; display: inline-block; vertical-align: middle; }
+    h3 { width: 100%; }
+    .stat {
+        border-left: 1px solid $gray-border;
+        padding: 10px 20px;
+        @include display-flex;
+        @include flex-wrap(wrap);
+        @include flex-direction(column);
+        @include flex-grow(1);
+
         .num {
             font-size: 160%;
-            display: block;
             font-weight: bold;
             margin-bottom: 4px;
         }
     }
 
-    .stats { width: 70%; float: left; overflow: auto; }
+    .stats {
+        @include flex-grow(7);
+        @include display-flex;
+        @include flex-wrap(wrap);
+    }
     .versions {
-        width: 30%;
-        float: left;
+        @include flex-grow(3);
         text-align: center;
-        @include flex;
+        @include display-flex;
         @include flex-direction(column);
         .small { padding: 10px; }
     }
@@ -204,7 +258,7 @@
     .button-holder { position: relative; }
 
     .graph {
-        float: left;
+        @include flex-grow(10);
         width: 100%;
         padding-bottom: 30px;
         margin: 30px 0;
@@ -219,16 +273,26 @@
 }
 
 #crate-links {
+    @include display-flex;
+
     h3 { margin-bottom: 5px; }
     .section {
-        float: left;
-        width: 25%;
-
+        @include flex(1);
         li { line-height: 24px; }
         .date { color: $main-color-light; padding-left: 5px; }
     }
 
     ul { list-style: none; padding: 0; }
+
+    @media only screen and (max-width: 380px) {
+        @include flex-direction(column);
+    }
+    @media only screen and (max-width: 730px) {
+        #crate-dev-dependencies { display: none; }
+    }
+    @media only screen and (max-width: 430px) {
+        #crate-dependencies { display: none; }
+    }
 }
 
 .all-versions-back { margin-bottom: 20px; }

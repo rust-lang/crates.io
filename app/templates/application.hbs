@@ -44,6 +44,33 @@
         {{/if}}
     </div>
 
+    <div class='menu'>
+        <div class='dropdown-container'>
+            <button {{action 'toggleUserOptions'}}
+                    {{bind-attr class='showUserOptions:active :dropdown'}}>
+                Menu
+                <span class='arrow'></span>
+            </button>
+            <ul id='current-user-links'
+                {{bind-attr class='showUserOptions:open :dropdown'}}>
+                <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
+                {{#if session.currentUser}}
+                    <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
+                    <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
+                    <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
+                {{else}}
+                    <li>{{#link-to "login"}}Log in with GitHub{{/link-to}}</li>
+                {{/if}}
+                <li class='search'>
+                    {{input type="text" class="search"
+                            placeholder="Search"
+                            value=search
+                            action="search"}}
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <div class='links'>
     </div>
 </div>

@@ -26,20 +26,23 @@ html, body { margin: 0; }
 
 body {
   font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
-  @include flex;
+  @include display-flex;
   @include flex-direction(column);
   @include align-items(center);
 }
 
+.ember-application > div {
+    width: 900px;
+    @media only screen and (max-width: 900px) {
+        width: 100%;
+    }
+}
 
 #main {
-  @include flex;
+  @include display-flex;
   @include flex-direction(column);
 
-  // width: 100%;
-  width: 900px;
   margin-bottom: 10px;
-
   background-color: $main-bg;
   padding: 15px;
   @include border-radius(10px);
@@ -52,22 +55,32 @@ body {
     color: white;
     position: relative;
     height: 100px;
-
-    > * {
-        display: inline-block;
-        float: left;
-        margin: 0;
-        @include vertical-align;
-    }
+    @include display-flex;
+    @include align-items(center);
+    @include justify-content(space-between);
 
     a {
         color: white; text-decoration: none;
         &:hover { color: darken(white, 15%); }
     }
 
-    .nav { float: right; }
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
-    img { vertical-align: middle; }
+    .nav, .menu { @include flex-grow(2); text-align: right; }
+
+    .menu { display: none; }
+    .menu ul.dropdown {
+        right: 0;
+        left: auto;
+        min-width: 200px;
+
+        li.search {
+            padding: 5px;
+            input.search {
+                margin: 0;
+                border: 1px solid black;
+            }
+        }
+    }
 
     input.search {
         font-size: 90%;
@@ -98,6 +111,11 @@ body {
         display: none;
 
         &.open { display: block; }
+    }
+    @media only screen and (max-width: 820px) {
+        .menu { display: block; }
+        .nav { display: none; }
+        div.search { display: none; }
     }
 }
 
@@ -156,6 +174,20 @@ a {
     a { color: white; }
     a:hover { color: darken(white, 10%); }
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
+
+    @media only screen and (max-width: 450px) {
+        margin: 20px;
+        .sep { display: none; }
+        @include display-flex;
+        @include flex-direction(column);
+
+        a {
+            width: 50%;
+            font-size: 110%;
+            padding: 5px;
+            &:not(:first-child) { border-top: 1px solid darken($html-bg, 10%); }
+        }
+    }
 }
 
 pre {
@@ -225,8 +257,12 @@ ul.dropdown {
     position: absolute;
     top: 0;
     right: 0;
-    display: none;
+
+    @media only screen and (max-width: 1180px) {
+        display: none;
+    }
 }
-@media screen and (min-width: 1180px) {
-    .fork-me { display: block; }
+
+@media only screen and (max-width: 400px) {
+    h1 { font-size: 1.5em; }
 }
