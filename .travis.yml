@@ -11,3 +11,6 @@ after_success: ! '[ $TRAVIS_BRANCH = master ] && [ $TRAVIS_PULL_REQUEST = false 
 env:
   global:
     secure: MRnJx1muQA+Unk5f/jSk/lbakwAf15pVKtrqh+HfEQvbEpQD/Y0JnjMXv8bT3Xpb+kGOIdFGfvEYpyX9t+diEhGbZ5S/C+aYuRGR8i8QGDgQq/AbhrKXIUF1h+Aub/6oFJ53ApJjgMY5t/rFc2FrRD0z26irf9VEG/8HDcI5kWc=
+notifications:
+  email:
+    on_success: never
