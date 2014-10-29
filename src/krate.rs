@@ -230,7 +230,9 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
-        Ok(rows.map(|r| Model::from_row(&r)).collect())
+        let mut ret = rows.map(|r| Model::from_row(&r)).collect::<Vec<Version>>();
+        ret.sort_by(|a, b| b.num.cmp(&a.num));
+        Ok(ret)
     }
 
     pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<User>> {
