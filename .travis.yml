@@ -19,6 +19,6 @@ env:
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - S3_BUCKET=alexcrichton-test
 
-cache:
-  directories:
-    - $HOME/.cargo
+notifications:
+  email:
+    on_success: never
