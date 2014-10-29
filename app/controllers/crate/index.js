@@ -8,10 +8,8 @@ export default Ember.ObjectController.extend({
     needs: ['application'],
     isDownloading: false,
 
-    fetchingVersions: true,
     fetchingDownloads: true,
     fetchingFollowing: true,
-    fetchingKeywords: true,
     following: false,
     showAllVersions: false,
     currentVersion: null,
@@ -19,7 +17,7 @@ export default Ember.ObjectController.extend({
     keywords: [],
 
     sortedVersions: function() {
-        return this.get("model.versions").sortBy("num").reverse();
+        return this.get("model.versions");
     }.property('model.versions.[]'),
 
     smallSortedVersions: function() {
@@ -27,7 +25,7 @@ export default Ember.ObjectController.extend({
     }.property('sortedVersions'),
 
     hasMoreVersions: function() {
-        return this.get("sortedVersions").length > NUM_VERSIONS;
+        return this.get("sortedVersions.length") > NUM_VERSIONS;
     }.property('sortedVersions'),
 
     displayedAuthors: function() {

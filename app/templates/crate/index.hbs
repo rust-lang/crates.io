@@ -77,7 +77,7 @@
                 </div>
             {{/if}}
 
-            {{#unless fetchingKeywords}}
+            {{#unless crate.keywords.isPending}}
                 {{#if anyKeywords}}
                     <div>
                         <h3>Keywords</h3>
@@ -118,7 +118,7 @@
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
-            <span {{bind-attr class="fetchingVersions:loading :num"}}>
+            <span {{bind-attr class="crate.versions.isPending:loading :num"}}>
                 <img src="/assets/package.png"/>
                 {{ versions.length }}
             </span>

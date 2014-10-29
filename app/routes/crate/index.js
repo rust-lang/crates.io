@@ -13,13 +13,10 @@ export default Ember.Route.extend({
         var self = this;
         this._super(controller, data.crate);
         controller.set('showAllVersions', false);
-        controller.set('fetchingVersions', true);
         controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
-        controller.set('fetchingKeywords', true);
 
         data.crate.get('keywords').then(function(keywords) {
-            controller.set('fetchingKeywords', false);
             controller.set('keywords', keywords);
         });
 
@@ -35,7 +32,6 @@ export default Ember.Route.extend({
         // Try to find the requested version in the versions we fetch
         var max = data.crate.get('max_version');
         data.crate.get('versions').then(function(array) {
-            controller.set('fetchingVersions', false);
             var hit = array.any(function(version) {
                 return data.version === version.get('num') ||
                            (data.version == null && version.get('num') === max);
