@@ -21,7 +21,7 @@ fn main() {
 fn env(s: &str) -> String {
     match os::getenv(s) {
         Some(s) => s,
-        None => fail!("must have `{}` defined", s),
+        None => panic!("must have `{}` defined", s),
     }
 }
 

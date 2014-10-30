@@ -127,7 +127,7 @@ mod tests {
             let mut mgr = Manager::new(c.transaction().unwrap()).unwrap();
             mgr.apply(Migration::new(1, |_| {
                 called = true; Ok(())
-            }, |_| fail!())).unwrap();
+            }, |_| panic!())).unwrap();
             mgr.set_commit();
         }
         assert!(called);
@@ -136,7 +136,7 @@ mod tests {
             let mut mgr = Manager::new(c.transaction().unwrap()).unwrap();
             mgr.apply(Migration::new(1, |_| {
                 called = true; Ok(())
-            }, |_| fail!())).unwrap();
+            }, |_| panic!())).unwrap();
             mgr.set_commit();
         }
         assert!(!called);
@@ -149,7 +149,7 @@ mod tests {
         let mut called = false;
         {
             let mut mgr = Manager::new(c.transaction().unwrap()).unwrap();
-            mgr.rollback(Migration::new(1, |_| fail!(), |_| {
+            mgr.rollback(Migration::new(1, |_| panic!(), |_| {
                 called = true; Ok(())
             })).unwrap();
             mgr.set_commit();
@@ -159,14 +159,14 @@ mod tests {
             let mut mgr = Manager::new(c.transaction().unwrap()).unwrap();
             mgr.apply(Migration::new(1, |_| {
                 called = true; Ok(())
-            }, |_| fail!())).unwrap();
+            }, |_| panic!())).unwrap();
             mgr.set_commit();
         }
         assert!(called);
         called = false;
         {
             let mut mgr = Manager::new(c.transaction().unwrap()).unwrap();
-            mgr.rollback(Migration::new(1, |_| fail!(), |_| {
+            mgr.rollback(Migration::new(1, |_| panic!(), |_| {
                 called = true; Ok(())
             })).unwrap();
             mgr.set_commit();

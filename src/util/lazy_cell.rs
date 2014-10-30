@@ -27,7 +27,7 @@ impl<T> LazyCell<T> {
     pub fn fill(&self, t: T) {
         let mut slot = self.inner.borrow_mut();
         if slot.is_some() {
-            fail!("lazy cell is already filled")
+            panic!("lazy cell is already filled")
         }
         *slot = Some(t);
     }

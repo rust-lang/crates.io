@@ -24,7 +24,7 @@ impl Drop for Bomb {
         let stderr = self.iorx.read_to_string().unwrap();
         match res {
             Err(..) if !task::failing() => {
-                fail!("server subtask failed: {}", stderr)
+                panic!("server subtask failed: {}", stderr)
             }
             _ => {
                 if stderr.len() > 0 {
@@ -130,7 +130,7 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
             "POST" => handle.post(url, &mut socket),
             "DELETE" => handle.delete(url),
             "GET" => handle.get(url),
-            _ => fail!("unknown method: {}", method),
+            _ => panic!("unknown method: {}", method),
         };
         for (k, v) in headers.iter() {
             let v = v.as_slice().trim();
@@ -189,12 +189,12 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
         if expected.remove(&line) { continue }
         if line.as_slice().starts_with("Date:") { continue }
         if line.as_slice().starts_with("Authorization:") { continue }
-        fail!("unexpected header: {}", line);
+        panic!("unexpected header: {}", line);
     }
     for line in expected.iter() {
         if line.as_slice().starts_with("Date:") { continue }
         if line.as_slice().starts_with("Authorization:") { continue }
-        fail!("didn't receive header: {}", line);
+        panic!("didn't receive header: {}", line);
     }
 
     // TODO: validate the body

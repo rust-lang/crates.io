@@ -31,7 +31,7 @@ fn main() {
     fn env(s: &str) -> String {
         match os::getenv(s) {
             Some(s) => s,
-            None => fail!("must have `{}` defined", s),
+            None => panic!("must have `{}` defined", s),
         }
     }
 }
@@ -396,7 +396,7 @@ fn migrations() -> Vec<Migration> {
     let mut seen = HashSet::new();
     for m in migrations.iter() {
         if !seen.insert(m.version()) {
-            fail!("duplicate id: {}", m.version());
+            panic!("duplicate id: {}", m.version());
         }
     }
     return migrations;
