@@ -28,7 +28,7 @@ dependencies = [
 [[package]]
 name = "civet"
 version = "0.1.0"
-source = "git+https://github.com/wycats/rust-civet#ff7fd23631fa499384dcf06e98d62c6385cdbdcf"
+source = "git+https://github.com/wycats/rust-civet#35b2b5a948ec5709ab75f6f53cfd8474d5385004"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
@@ -37,7 +37,7 @@ dependencies = [
 [[package]]
 name = "conduit"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit.git#ff23aab3b63fdde4d7c869fb16aa149ea931d058"
+source = "git+https://github.com/conduit-rust/conduit.git#c2663117de903a748d8176504873f404ab95bf7f"
 dependencies = [
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
 ]
@@ -110,7 +110,7 @@ dependencies = [
 [[package]]
 name = "conduit-test"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-test#32c9b5d2562cf909f2950b9cab9816690126a423"
+source = "git+https://github.com/conduit-rust/conduit-test#07305ef5d41c996b91829914b609396aa022a9be"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
@@ -158,12 +158,12 @@ source = "git+https://github.com/lifthrasiir/rust-encoding#6daaad9f4c0fcde452582
 [[package]]
 name = "flate2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/flate2-rs#f74a1f632c09e4f241ecb638e331c2cec4e955e0"
+source = "git+https://github.com/alexcrichton/flate2-rs#67be37548937c059370ce272efe1142fbf198d67"
 
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#fc308a305068392b07999b7c47122244b151cdec"
+source = "git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4"
 dependencies = [
  "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -179,7 +179,7 @@ dependencies = [
 [[package]]
 name = "libgit2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#fc308a305068392b07999b7c47122244b151cdec"
+source = "git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4"
 dependencies = [
  "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config)",
@@ -194,7 +194,7 @@ source = "git+https://github.com/alexcrichton/libssh2-static-sys#80e71a3021618eb
 [[package]]
 name = "link-config"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/link-config#ed9fffa15fc41e8f09e92c7756feead1b0cbb01d"
+source = "git+https://github.com/alexcrichton/link-config#7c56ef12c8a49bedb0357e2a50af9ba79bf0ae1b"
 
 [[package]]
 name = "migrate"
@@ -246,7 +246,7 @@ dependencies = [
 [[package]]
 name = "postgres"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-postgres#867df819d758b3dbeb7d4e5777eeb6d0c12f98bf"
+source = "git+https://github.com/sfackler/rust-postgres#a151a5ba020b7713a4a50081393bc57e6edffa1e"
 dependencies = [
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf)",
@@ -283,7 +283,7 @@ dependencies = [
 [[package]]
 name = "semver"
 version = "0.1.0"
-source = "git+https://github.com/rust-lang/semver#fdaec35ff5db609f53119f1e455fdd8830edc790"
+source = "git+https://github.com/rust-lang/semver#7dca047a9cd40e929a4545b37a1917daff82f156"
 
 [[package]]
 name = "url"

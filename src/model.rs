@@ -1,7 +1,7 @@
 use pg::PostgresRow;
 
 use db::Connection;
-use util::{CargoResult, Require, CargoError};
+use util::{CargoResult, Require};
 use util::errors::NotFound;
 
 pub trait Model {
@@ -13,7 +13,7 @@ pub trait Model {
                           Model::table_name(None::<Self>));
         let stmt = try!(conn.prepare(sql.as_slice()));
         let mut rows = try!(stmt.query(&[&id]));
-        let row = try!(rows.next().require(|| NotFound.box_error()));
+        let row = try!(rows.next().require(|| NotFound));
         Ok(Model::from_row(&row))
     }
 }

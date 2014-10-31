@@ -22,7 +22,7 @@ use git;
 use keyword::EncodableKeyword;
 use upload;
 use user::{RequestUser, EncodableUser};
-use util::errors::{NotFound, CargoError};
+use util::errors::{NotFound, CargoError, FromError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
 use version::EncodableVersion;
@@ -80,7 +80,7 @@ impl Crate {
                                       WHERE name = $1 LIMIT 1"));
         match try!(stmt.query(&[&name as &ToSql])).next() {
             Some(row) => Ok(Model::from_row(&row)),
-            None => Err(NotFound.box_error()),
+            None => Err(FromError::from_error(NotFound)),
         }
     }
 

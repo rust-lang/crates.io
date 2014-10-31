@@ -18,14 +18,6 @@ pub trait CargoError: Send {
     fn detail(&self) -> Option<String> { None }
     fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> { None }
 
-    fn to_error<E: FromError<Self>>(self) -> E {
-        FromError::from_error(self)
-    }
-
-    fn box_error(self) -> Box<CargoError + Send> {
-        box self as Box<CargoError + Send>
-    }
-
     fn concrete(&self) -> ConcreteCargoError {
         ConcreteCargoError {
             description: self.description(),
@@ -33,12 +25,6 @@ pub trait CargoError: Send {
             cause: self.cause().map(|c| box c.concrete() as Box<CargoError + Send>),
             human: false,
         }
-    }
-
-    fn with_cause<E: CargoError + Send>(self, cause: E) -> Box<CargoError + Send> {
-        let mut concrete = self.concrete();
-        concrete.cause = Some(cause.box_error());
-        box concrete as Box<CargoError + Send>
     }
 
     fn response(&self) -> Option<Response> {
@@ -59,7 +45,7 @@ pub trait FromError<E> {
 
 impl<E: CargoError + Send> FromError<E> for Box<CargoError + Send> {
     fn from_error(error: E) -> Box<CargoError + Send> {
-        error.box_error()
+        box error as Box<CargoError + Send>
     }
 }
 
@@ -102,16 +88,11 @@ impl CargoError for Box<CargoError + Send> {
     fn description(&self) -> String { (**self).description() }
     fn detail(&self) -> Option<String> { (**self).detail() }
     fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> { (**self).cause() }
-    fn box_error(self) -> Box<CargoError + Send> { self }
     fn human(&self) -> bool { (**self).human() }
     fn response(&self) -> Option<Response> { (**self).response() }
 }
 
 pub type CargoResult<T> = Result<T, Box<CargoError + Send>>;
-
-pub trait BoxError<T> {
-    fn box_error(self) -> CargoResult<T>;
-}
 
 pub trait ChainError<T> {
     fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T> ;
@@ -119,19 +100,13 @@ pub trait ChainError<T> {
 
 impl<'a, T> ChainError<T> for ||:'a -> CargoResult<T> {
     fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T> {
-        self().map_err(|err| callback().with_cause(err))
-    }
-}
-
-impl<T, E: CargoError + Send> BoxError<T> for Result<T, E> {
-    fn box_error(self) -> CargoResult<T> {
-        self.map_err(|err| err.box_error())
+        self().map_err(|err| callback().concrete().with_cause(err))
     }
 }
 
 impl<T, E: CargoError + Send> ChainError<T> for Result<T, E> {
     fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T>  {
-        self.map_err(|err| callback().with_cause(err))
+        self.map_err(|err| callback().concrete().with_cause(err))
     }
 }
 
@@ -192,6 +167,14 @@ pub struct ConcreteCargoError {
     human: bool,
 }
 
+impl ConcreteCargoError {
+    pub fn with_cause<E>(mut self, cause: E) -> Box<CargoError + Send>
+                        where E: CargoError + Send {
+        self.cause = Some(box cause as Box<CargoError + Send>);
+        box self as Box<CargoError + Send>
+    }
+}
+
 impl Show for ConcreteCargoError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}", self.description)
@@ -211,11 +194,6 @@ impl CargoError for ConcreteCargoError {
         self.cause.as_ref().map(|c| { let err: &CargoError + Send = &**c; err })
     }
 
-    fn with_cause<E: CargoError + Send>(mut self,
-                                        err: E) -> Box<CargoError + Send> {
-        self.cause = Some(err.box_error());
-        box self as Box<CargoError + Send>
-    }
     fn human(&self) -> bool { self.human }
 }
 

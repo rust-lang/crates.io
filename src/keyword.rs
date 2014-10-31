@@ -9,7 +9,7 @@ use pg::types::ToSql;
 use {Model, Crate};
 use db::{Connection, RequestTransaction};
 use util::{RequestUtils, CargoResult, Require, internal};
-use util::errors::{NotFound, CargoError};
+use util::errors::{NotFound, FromError};
 
 #[deriving(Clone)]
 pub struct Keyword {
@@ -172,7 +172,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let kw = match try!(Keyword::find_by_keyword(&*conn, name.as_slice())) {
         Some(kw) => kw,
-        None => return Err(NotFound.box_error()),
+        None => return Err(FromError::from_error(NotFound)),
     };
 
     #[deriving(Encodable)]

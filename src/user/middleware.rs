@@ -6,7 +6,7 @@ use conduit_cookie::RequestSession;
 
 use db::RequestTransaction;
 use super::User;
-use util::errors::{CargoResult, Unauthorized, CargoError};
+use util::errors::{CargoResult, Unauthorized, FromError};
 
 pub struct Middleware;
 
@@ -47,7 +47,7 @@ impl<'a> RequestUser<'a> for &'a Request + 'a {
     fn user(self) -> CargoResult<&'a User> {
         match self.extensions().find::<User>() {
             Some(user) => Ok(user),
-            None => Err(Unauthorized.box_error()),
+            None => Err(FromError::from_error(Unauthorized)),
         }
     }
 }

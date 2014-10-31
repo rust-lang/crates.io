@@ -14,7 +14,7 @@ use db::RequestTransaction;
 use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
-pub use self::errors::{ChainError, BoxError};
+pub use self::errors::{ChainError};
 pub use self::result::{Require, Wrap};
 pub use self::lazy_cell::LazyCell;
 pub use self::io::LimitErrorReader;
