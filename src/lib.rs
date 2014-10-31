@@ -82,8 +82,9 @@ impl Headers for MockHeaders {
         self.headers.contains_key_equiv(&key)
     }
 
-    fn iter<'a>(&'a self) -> conduit::HeaderEntries<'a> {
-        box self.headers.iter().map(|(k,v)| (k.as_slice(), vec!(v.as_slice()))) as conduit::HeaderEntries<'a>
+    fn all(&self) -> Vec<(&str, Vec<&str>)> {
+        self.headers.iter().map(|(k,v)| (k.as_slice(), vec![v.as_slice()]))
+                    .collect()
     }
 }
 
@@ -161,7 +162,7 @@ mod tests {
         assert_eq!(req.query_string(), None);
         assert_eq!(req.remote_ip(), Ipv4Addr(127, 0, 0, 1));
         assert_eq!(req.content_length(), None);
-        assert_eq!(req.headers().iter().count(), 0);
+        assert_eq!(req.headers().all().len(), 0);
         assert_eq!(req.body().read_to_string().ok().expect("No body"),
                    "".to_string());
     }
@@ -192,7 +193,7 @@ mod tests {
         req.header("User-Agent", "lulz");
         req.header("DNT", "1");
 
-        assert_eq!(req.headers().iter().count(), 2);
+        assert_eq!(req.headers().all().len(), 2);
         assert_eq!(req.headers().find("User-Agent").unwrap(), vec!("lulz"));
         assert_eq!(req.headers().find("DNT").unwrap(), vec!("1"));
     }
