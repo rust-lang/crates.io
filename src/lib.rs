@@ -75,11 +75,11 @@ pub struct MockHeaders {
 
 impl Headers for MockHeaders {
     fn find<'a>(&'a self, key: &str) -> Option<Vec<&'a str>> {
-        self.headers.find_equiv(&key).map(|v| vec!(v.as_slice()))
+        self.headers.find_equiv(key).map(|v| vec!(v.as_slice()))
     }
 
     fn has(&self, key: &str) -> bool {
-        self.headers.contains_key_equiv(&key)
+        self.headers.contains_key_equiv(key)
     }
 
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
