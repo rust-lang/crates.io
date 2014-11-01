@@ -23,8 +23,8 @@ impl Middleware for ConditionalGet {
             conduit::Get | conduit::Head => {
                 if is_ok(&res) && is_fresh(req, &res) {
                     res.status = (304, "Not Modified");
-                    res.headers.pop_equiv(&"Content-Type");
-                    res.headers.pop_equiv(&"Content-Length");
+                    res.headers.pop_equiv("Content-Type");
+                    res.headers.pop_equiv("Content-Length");
                     res.body = box NullReader as Box<Reader + Send>;
                 }
             },
@@ -66,13 +66,13 @@ fn is_fresh(req: &Request, res: &conduit::Response) -> bool {
 }
 
 fn etag_matches<S: Str>(none_match: S, res: &conduit::Response) -> bool {
-    res.headers.find_equiv(&"ETag").map(|etag| {
+    res.headers.find_equiv("ETag").map(|etag| {
         res_header_val(etag).as_slice() == none_match.as_slice()
     }).unwrap_or(false)
 }
 
 fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
-    res.headers.find_equiv(&"Last-Modified").and_then(|last_modified| {
+    res.headers.find_equiv("Last-Modified").and_then(|last_modified| {
         parse_http_date(res_header_val(last_modified).as_slice()).ok()
     }).map(|last_modified| {
         modified_since.to_timespec() >= last_modified.to_timespec()
