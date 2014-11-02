@@ -3,13 +3,12 @@ extern crate postgres;
 extern crate time;
 
 use std::os;
-use postgres::{PostgresConnection, PostgresResult, PostgresTransaction};
 use std::time::Duration;
 use std::rand::{StdRng, Rng};
 
 fn main() {
-    let conn = PostgresConnection::connect(env("DATABASE_URL").as_slice(),
-                                           &postgres::NoSsl).unwrap();
+    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+                                             &postgres::NoSsl).unwrap();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();
@@ -25,7 +24,7 @@ fn env(s: &str) -> String {
     }
 }
 
-fn update(tx: &PostgresTransaction) -> PostgresResult<()> {
+fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
     for &id in [48i32, 49, 50, 51, 52, 53].iter() {
         let now = time::now_utc().to_timespec();
         let mut rng = StdRng::new().unwrap();

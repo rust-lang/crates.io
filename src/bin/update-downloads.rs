@@ -6,8 +6,6 @@ extern crate time;
 use std::os;
 use std::collections::HashMap;
 use std::time::Duration;
-use postgres::{PostgresResult, PostgresRows};
-use postgres::{PostgresTransaction, PostgresConnection};
 
 use cargo_registry::{VersionDownload, Version, Model};
 
@@ -16,8 +14,8 @@ static LIMIT: i64 = 10000;
 fn main() {
     let args = os::args();
     loop {
-        let conn = PostgresConnection::connect(env("DATABASE_URL").as_slice(),
-                                               &postgres::NoSsl).unwrap();
+        let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+                                                 &postgres::NoSsl).unwrap();
         {
             let tx = conn.transaction().unwrap();
             update(&tx).unwrap();
@@ -41,7 +39,7 @@ fn env(s: &str) -> String {
     }
 }
 
-fn update(tx: &PostgresTransaction) -> PostgresResult<()> {
+fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
     let mut max = 0;
     loop {
         let tx = try!(tx.transaction());
@@ -62,8 +60,8 @@ fn update(tx: &PostgresTransaction) -> PostgresResult<()> {
     Ok(())
 }
 
-fn collect(tx: &PostgresTransaction,
-           rows: &mut PostgresRows) -> PostgresResult<Option<i32>> {
+fn collect(tx: &postgres::Transaction,
+           rows: &mut postgres::Rows) -> postgres::Result<Option<i32>> {
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
@@ -129,22 +127,22 @@ fn collect(tx: &PostgresTransaction,
 mod test {
     use std::collections::HashMap;
 
-    use postgres::{mod, PostgresConnection, PostgresTransaction};
+    use postgres;
     use semver;
 
     use cargo_registry::{Version, Crate, User};
 
-    fn conn() -> PostgresConnection {
-        PostgresConnection::connect(::env("TEST_DATABASE_URL").as_slice(),
-                                    &postgres::NoSsl).unwrap()
+    fn conn() -> postgres::Connection {
+        postgres::Connection::connect(::env("TEST_DATABASE_URL").as_slice(),
+                                      &postgres::NoSsl).unwrap()
     }
 
-    fn user(conn: &PostgresTransaction) -> User{
+    fn user(conn: &postgres::Transaction) -> User{
         User::find_or_insert(conn, "login", None, None, None,
                              "access_token", "api_token").unwrap()
     }
 
-    fn crate_downloads(tx: &PostgresTransaction, id: i32, expected: uint) {
+    fn crate_downloads(tx: &postgres::Transaction, id: i32, expected: uint) {
         let stmt = tx.prepare("SELECT * FROM crate_downloads
                                WHERE crate_id = $1").unwrap();
         let dl: i32 = stmt.query(&[&id]).unwrap()

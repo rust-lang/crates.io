@@ -3,7 +3,7 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use pg::PostgresRow;
+use pg;
 use pg::types::ToSql;
 
 use {Model, Crate};
@@ -120,7 +120,7 @@ impl Keyword {
 }
 
 impl Model for Keyword {
-    fn from_row(row: &PostgresRow) -> Keyword {
+    fn from_row(row: &pg::Row) -> Keyword {
         Keyword {
             id: row.get("id"),
             created_at: row.get("created_at"),
@@ -135,7 +135,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
-    let sort = query.find_equiv(&"sort").map(|s| s.as_slice()).unwrap_or("alpha");
+    let sort = query.find_equiv("sort").map(|s| s.as_slice()).unwrap_or("alpha");
     let sort_sql = match sort {
         "crates" => "ORDER BY crates_cnt DESC",
         _ => "ORDER BY keyword ASC",

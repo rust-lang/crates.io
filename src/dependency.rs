@@ -1,7 +1,6 @@
 use semver;
 
-use pg::PostgresRow;
-
+use pg;
 use Model;
 use git;
 use db::Connection;
@@ -79,7 +78,7 @@ impl Dependency {
 }
 
 impl Model for Dependency {
-    fn from_row(row: &PostgresRow) -> Dependency {
+    fn from_row(row: &pg::Row) -> Dependency {
         let features: String = row.get("features");
         let req: String = row.get("req");
         Dependency {

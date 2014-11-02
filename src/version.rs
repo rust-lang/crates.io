@@ -5,7 +5,7 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use pg::PostgresRow;
+use pg;
 use pg::types::ToSql;
 use semver;
 use url;
@@ -187,7 +187,7 @@ impl Version {
 }
 
 impl Model for Version {
-    fn from_row(row: &PostgresRow) -> Version {
+    fn from_row(row: &pg::Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {

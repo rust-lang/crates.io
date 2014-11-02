@@ -4,7 +4,6 @@ use std::mem;
 use std::sync::Arc;
 
 use pg;
-use pg::{PostgresConnection, PostgresStatement, PostgresResult};
 use pg::types::ToSql;
 use r2d2::{mod, LoggingErrorHandler};
 use r2d2_postgres::{PostgresPoolManager, Error};
@@ -14,13 +13,13 @@ use conduit_middleware::Middleware;
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
-pub type Pool = r2d2::Pool<pg::PostgresConnection,
+pub type Pool = r2d2::Pool<pg::Connection,
                            Error,
                            PostgresPoolManager,
                            LoggingErrorHandler>;
 type PooledConnnection<'a> =
         r2d2::PooledConnection<'a,
-                               pg::PostgresConnection,
+                               pg::Connection,
                                Error,
                                PostgresPoolManager,
                                LoggingErrorHandler>;
@@ -35,7 +34,7 @@ pub struct TransactionMiddleware;
 pub struct Transaction {
     // fields are destructed top-to-bottom so ensure we destroy them in the
     // right order.
-    tx: LazyCell<pg::PostgresTransaction<'static>>,
+    tx: LazyCell<pg::Transaction<'static>>,
     slot: LazyCell<PooledConnnection<'static>>,
     commit: Cell<bool>,
 
@@ -55,7 +54,7 @@ impl Transaction {
         }
     }
 
-    pub fn conn(&self) -> CargoResult<&PostgresConnection> {
+    pub fn conn(&self) -> CargoResult<&pg::Connection> {
         // Here we want to tie the lifetime of a single connection the lifetime
         // of this request. Currently the lifetime of a connection is tied to
         // the lifetime of the pool from which it came from, which is the
@@ -90,12 +89,12 @@ impl Transaction {
             if !self.tx.filled() {
                 let conn = try!(self.conn());
                 let t = try!(conn.transaction());
-                let t = mem::transmute::<_, pg::PostgresTransaction<'static>>(t);
+                let t = mem::transmute::<_, pg::Transaction<'static>>(t);
                 self.tx.fill(t);
             }
         }
         let tx = self.tx.borrow();
-        let tx: &'a pg::PostgresTransaction<'static> = tx.unwrap();
+        let tx: &'a pg::Transaction<'static> = tx.unwrap();
         Ok(tx as &Connection)
     }
 
@@ -132,7 +131,7 @@ pub trait RequestTransaction<'a> {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
-    fn db_conn(self) -> CargoResult<&'a PostgresConnection>;
+    fn db_conn(self) -> CargoResult<&'a pg::Connection>;
 
     /// Return the lazily initialized postgres transaction for this request.
     ///
@@ -147,7 +146,7 @@ pub trait RequestTransaction<'a> {
 }
 
 impl<'a> RequestTransaction<'a> for &'a Request + 'a {
-    fn db_conn(self) -> CargoResult<&'a PostgresConnection> {
+    fn db_conn(self) -> CargoResult<&'a pg::Connection> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .conn()
@@ -173,25 +172,25 @@ impl<'a> RequestTransaction<'a> for &'a Request + 'a {
 }
 
 pub trait Connection {
-    fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>>;
-    fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint>;
+    fn prepare<'a>(&'a self, query: &str) -> pg::Result<pg::Statement<'a>>;
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint>;
 }
 
-impl Connection for pg::PostgresConnection {
-    fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>> {
+impl Connection for pg::Connection {
+    fn prepare<'a>(&'a self, query: &str) -> pg::Result<pg::Statement<'a>> {
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint> {
         self.execute(query, params)
     }
 }
 
-impl<'a> Connection for pg::PostgresTransaction<'a> {
-    fn prepare<'a>(&'a self, query: &str) -> PostgresResult<PostgresStatement<'a>> {
+impl<'a> Connection for pg::Transaction<'a> {
+    fn prepare<'a>(&'a self, query: &str) -> pg::Result<pg::Statement<'a>> {
         log!(5, "prepare: {}", query);
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> PostgresResult<uint> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint> {
         log!(5, "execute: {}", query);
         self.execute(query, params)
     }

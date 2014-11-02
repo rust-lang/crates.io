@@ -6,7 +6,6 @@ extern crate r2d2;
 use std::os;
 use std::collections::HashSet;
 use migrate::Migration;
-use postgres::{PostgresTransaction, PostgresResult};
 
 use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
@@ -36,8 +35,8 @@ fn main() {
     }
 }
 
-fn apply(tx: PostgresTransaction,
-         migrations: Vec<Migration>) -> PostgresResult<()> {
+fn apply(tx: postgres::Transaction,
+         migrations: Vec<Migration>) -> postgres::Result<()> {
     let mut mgr = try!(migrate::Manager::new(tx));
     for m in migrations.into_iter() {
         try!(mgr.apply(m));
@@ -46,8 +45,8 @@ fn apply(tx: PostgresTransaction,
     mgr.finish()
 }
 
-fn rollback(tx: PostgresTransaction,
-            migrations: Vec<Migration>) -> PostgresResult<()> {
+fn rollback(tx: postgres::Transaction,
+            migrations: Vec<Migration>) -> postgres::Result<()> {
     let mut mgr = try!(migrate::Manager::new(tx));
     for m in migrations.into_iter().rev() {
         if mgr.contains(m.version()) {
