@@ -1,6 +1,6 @@
 use time::Timespec;
-use pg::PostgresRow;
 
+use pg;
 use Model;
 use db::Connection;
 use util::CargoResult;
@@ -39,7 +39,7 @@ impl VersionDownload {
 }
 
 impl Model for VersionDownload {
-    fn from_row(row: &PostgresRow) -> VersionDownload {
+    fn from_row(row: &pg::Row) -> VersionDownload {
         VersionDownload {
             id: row.get("id"),
             version_id: row.get("version_id"),
@@ -66,7 +66,7 @@ impl CrateDownload {
 }
 
 impl Model for CrateDownload {
-    fn from_row(row: &PostgresRow) -> CrateDownload {
+    fn from_row(row: &pg::Row) -> CrateDownload {
         CrateDownload {
             id: row.get("id"),
             crate_id: row.get("crate_id"),

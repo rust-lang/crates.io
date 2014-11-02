@@ -1,11 +1,10 @@
-use pg::PostgresRow;
-
+use pg;
 use db::Connection;
 use util::{CargoResult, Require};
 use util::errors::NotFound;
 
 pub trait Model {
-    fn from_row(row: &PostgresRow) -> Self;
+    fn from_row(row: &pg::Row) -> Self;
     fn table_name(_: Option<Self>) -> &'static str;
 
     fn find(conn: &Connection, id: i32) -> CargoResult<Self> {

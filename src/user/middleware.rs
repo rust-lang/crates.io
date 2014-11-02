@@ -12,7 +12,7 @@ pub struct Middleware;
 
 impl conduit_middleware::Middleware for Middleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
-        let user = match req.session().find_equiv(&"user_id")
+        let user = match req.session().find_equiv("user_id")
                           .and_then(|s| from_str(s.as_slice())) {
             Some(id) => {
                 match User::find(try!(req.tx()), id) {

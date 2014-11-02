@@ -7,7 +7,7 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg::PostgresRow;
+use pg;
 use pg::types::ToSql;
 
 use {Model, Version};
@@ -124,7 +124,7 @@ impl User {
 }
 
 impl Model for User {
-    fn from_row(row: &PostgresRow) -> User {
+    fn from_row(row: &pg::Row) -> User {
         User {
             id: row.get("id"),
             email: row.get("email"),
@@ -153,8 +153,8 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Parse the url query
     let mut query = req.query();
-    let code = query.pop_equiv(&"code").unwrap_or(String::new());
-    let state = query.pop_equiv(&"state").unwrap_or(String::new());
+    let code = query.pop_equiv("code").unwrap_or(String::new());
+    let state = query.pop_equiv("state").unwrap_or(String::new());
 
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.

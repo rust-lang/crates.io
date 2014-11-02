@@ -2,9 +2,7 @@ extern crate postgres;
 
 use std::collections::HashSet;
 
-use postgres::{PostgresTransaction, PostgresResult};
-
-pub type Step = proc(&PostgresTransaction): 'static -> PostgresResult<()>;
+pub type Step = proc(&postgres::Transaction): 'static -> postgres::Result<()>;
 
 pub struct Migration {
     version: i64,
@@ -13,7 +11,7 @@ pub struct Migration {
 }
 
 pub struct Manager<'a> {
-    tx: PostgresTransaction<'a>,
+    tx: postgres::Transaction<'a>,
     versions: HashSet<i64>,
 }
 
@@ -58,13 +56,13 @@ fn run(sql: String) -> Step {
 }
 
 impl<'a> Manager<'a> {
-    pub fn new(tx: PostgresTransaction) -> PostgresResult<Manager> {
+    pub fn new(tx: postgres::Transaction) -> postgres::Result<Manager> {
         let mut mgr = Manager { tx: tx, versions: HashSet::new() };
         try!(mgr.load());
         Ok(mgr)
     }
 
-    fn load(&mut self) -> PostgresResult<()> {
+    fn load(&mut self) -> postgres::Result<()> {
         try!(self.tx.execute("CREATE TABLE IF NOT EXISTS schema_migrations (
             id              SERIAL PRIMARY KEY,
             version         INT8 NOT NULL UNIQUE
@@ -82,7 +80,7 @@ impl<'a> Manager<'a> {
         self.versions.contains(&version)
     }
 
-    pub fn apply(&mut self, migration: Migration) -> PostgresResult<()> {
+    pub fn apply(&mut self, migration: Migration) -> postgres::Result<()> {
         if !self.versions.insert(migration.version) { return Ok(()) }
         println!("applying {}", migration.version);
         try!((migration.up)(&self.tx));
@@ -92,7 +90,7 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    pub fn rollback(&mut self, migration: Migration) -> PostgresResult<()> {
+    pub fn rollback(&mut self, migration: Migration) -> postgres::Result<()> {
         if !self.versions.remove(&migration.version) { return Ok(()) }
         println!("rollback {}", migration.version);
         try!((migration.down)(&self.tx));
@@ -104,7 +102,7 @@ impl<'a> Manager<'a> {
 
     pub fn set_commit(&mut self) { self.tx.set_commit() }
 
-    pub fn finish(self) -> PostgresResult<()> { self.tx.finish() }
+    pub fn finish(self) -> postgres::Result<()> { self.tx.finish() }
 }
 
 #[cfg(test)]

@@ -87,7 +87,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     }
 
     let (status_code, status_desc) = {
-        let line = headers.pop_equiv(&"Status").unwrap_or(Vec::new());
+        let line = headers.pop_equiv("Status").unwrap_or(Vec::new());
         let line = line.into_iter().next().unwrap_or(String::new());
         let mut parts = line.as_slice().splitn(1, ' ');
         (from_str(parts.next().unwrap_or("")).unwrap_or(200),
