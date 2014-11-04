@@ -1,5 +1,5 @@
 use std::ascii::AsciiExt;
-use std::collections::hashmap::{HashMap, Occupied, Vacant};
+use std::collections::hash_map::{HashMap, Occupied, Vacant};
 use std::io::fs::PathExtensions;
 use std::io::util;
 use std::io::{Command, BufferedReader, Process, IoResult, File, fs};

@@ -54,7 +54,7 @@ dependencies = [
 [[package]]
 name = "conduit-cookie"
 version = "0.0.1"
-source = "git+https://github.com/conduit-rust/conduit-cookie#d2a6786609d3725dc7ce4044b9ef0eefbacb766b"
+source = "git+https://github.com/conduit-rust/conduit-cookie#3ccb3ceaf519a50a05d8eacb63c7e3cb8433b19e"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware)",
@@ -92,7 +92,7 @@ dependencies = [
 [[package]]
 name = "conduit-router"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-router#afa647e5c696a802a07826d4ca4483917b765667"
+source = "git+https://github.com/conduit-rust/conduit-router#3651fc7f29cb568be3ccaf2f878082121a924542"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "route-recognizer 0.1.0 (git+https://github.com/conduit-rust/route-recognizer.rs.git)",
@@ -119,7 +119,7 @@ dependencies = [
 [[package]]
 name = "conduit-utils"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-utils.git#b3ffc7bd14486a2738cd07427dcb6eae5b76c888"
+source = "git+https://github.com/conduit-rust/conduit-utils.git#0dbffb23552c9676ea8bc3748cf64a4aa2a7ccff"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
@@ -137,7 +137,7 @@ dependencies = [
 [[package]]
 name = "curl"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#33fe8d738671ff89eb8244822ea388e8b7947560"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#6e63020187bfa13a963367c646f84b7acb88afd2"
 dependencies = [
  "curl-sys 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=bundle)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config)",
@@ -148,7 +148,7 @@ dependencies = [
 [[package]]
 name = "curl-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#33fe8d738671ff89eb8244822ea388e8b7947560"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=bundle#6e63020187bfa13a963367c646f84b7acb88afd2"
 
 [[package]]
 name = "encoding"
@@ -230,7 +230,7 @@ source = "git+https://github.com/alexcrichton/openssl-static-sys#2e1c50a7f35ef52
 [[package]]
 name = "phf"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#f585e4c88f1cd327e0b409c60deb51cd3f3d6b15"
+source = "git+https://github.com/sfackler/rust-phf#18a5ecc028055c3dbd650cc5a064b6fb033d82ef"
 dependencies = [
  "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
 ]
@@ -238,7 +238,7 @@ dependencies = [
 [[package]]
 name = "phf_mac"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#f585e4c88f1cd327e0b409c60deb51cd3f3d6b15"
+source = "git+https://github.com/sfackler/rust-phf#18a5ecc028055c3dbd650cc5a064b6fb033d82ef"
 dependencies = [
  "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
 ]
