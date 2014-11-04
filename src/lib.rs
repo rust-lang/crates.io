@@ -4,7 +4,7 @@
 extern crate "route-recognizer" as router;
 extern crate conduit;
 
-use std::collections::hashmap::{HashMap, Occupied, Vacant};
+use std::collections::hash_map::{HashMap, Occupied, Vacant};
 use std::fmt::Show;
 
 use router::{Router, Match};
