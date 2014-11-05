@@ -4,7 +4,8 @@ use std::fmt::{Show, Formatter, FormatError};
 
 use conduit::Response;
 use curl::ErrCode;
-use pg::error::{PostgresError, PostgresConnectError};
+use pg::Error as PostgresError;
+use pg::ConnectError;
 use serialize::json;
 use git2;
 
@@ -130,11 +131,11 @@ impl CargoError for PostgresError {
 
 from_error!(PostgresError)
 
-impl CargoError for PostgresConnectError {
+impl CargoError for ConnectError {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(PostgresConnectError)
+from_error!(ConnectError)
 
 impl CargoError for ErrCode {
     fn description(&self) -> String { self.to_string() }

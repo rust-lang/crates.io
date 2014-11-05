@@ -246,7 +246,7 @@ dependencies = [
 [[package]]
 name = "postgres"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-postgres#167b9d0209b69e89301193f4e8f597583601dc6c"
+source = "git+https://github.com/sfackler/rust-postgres#8ffc761ecc772f4c83040542af89bc9b93d832c8"
 dependencies = [
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf)",
@@ -261,7 +261,7 @@ source = "git+https://github.com/sfackler/r2d2#d7c2835f9c8d33531683f8022fd0327da
 [[package]]
 name = "r2d2_postgres"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/r2d2-postgres#c20caa156bf28e97c0360884a5f7f9ad3450f3c7"
+source = "git+https://github.com/sfackler/r2d2-postgres#2d5c9c55cec9402e25fe257daa13011d956534f5"
 dependencies = [
  "postgres 0.0.0 (git+https://github.com/sfackler/rust-postgres)",
  "r2d2 0.0.0 (git+https://github.com/sfackler/r2d2)",
