@@ -1,6 +1,9 @@
-# Cargo Registry
+# crates.io
 
-This README outlines the details of collaborating on this application.
+Source code for the default registry for Cargo users. Can be found online at
+[crates.io][crates-io]
+
+[crates-io]: https://crates.io
 
 ## Installation
 
@@ -10,8 +13,8 @@ This README outlines the details of collaborating on this application.
 
 ## Configuration
 
-The registry currently requires some configuration via environment variables to
-start up and run.
+The app currently requires some configuration via environment variables to start
+up and run.
 
 ```
 # Credentials for uploading packages to S3
@@ -36,12 +39,12 @@ export GIT_REPO_CHECKOUT=path/to/checkout
 
 ## Running
 
-To run the registry, you need to run both the API server and the ember frontend
+To run the app, you need to run both the API server and the ember frontend
 server.
 
 * `cargo build && ./target/server`
 * `ember server --proxy http://localhost:8888`
-* Visit the registry at [http://localhost:4200](http://localhost:4200).
+* Visit the app at [http://localhost:4200](http://localhost:4200).
 
 ## Initialize the database
 
