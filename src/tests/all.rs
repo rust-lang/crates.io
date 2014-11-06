@@ -73,6 +73,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         s3_bucket: os::getenv("S3_BUCKET").unwrap_or(String::new()),
         s3_access_key: os::getenv("S3_ACCESS_KEY").unwrap_or(String::new()),
         s3_secret_key: os::getenv("S3_SECRET_KEY").unwrap_or(String::new()),
+        s3_region: os::getenv("S3_REGION"),
         s3_proxy: Some(proxy),
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
