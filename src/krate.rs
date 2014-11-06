@@ -464,7 +464,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
                                         ORDER BY created_at DESC LIMIT 10"));
     let just_updated = try!(tx.prepare("SELECT * FROM crates \
-                                        WHERE updated_at != created_at
+                                        WHERE updated_at::timestamp(0) !=
+                                              created_at::timestamp(0)
                                         ORDER BY updated_at DESC LIMIT 10"));
     let most_downloaded = try!(tx.prepare("SELECT * FROM crates \
                                            ORDER BY downloads DESC LIMIT 10"));
