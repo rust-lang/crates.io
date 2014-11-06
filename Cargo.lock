@@ -137,7 +137,7 @@ dependencies = [
 [[package]]
 name = "curl"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=build-cmd#1b7e22b78a464e7756d142bbb565abe2987891d7"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=build-cmd#b61e5c093ca5ce84ecc2a1564bb56263ce364c00"
 dependencies = [
  "curl-sys 0.0.1 (git+https://github.com/alexcrichton/curl-rust?ref=build-cmd)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -146,7 +146,7 @@ dependencies = [
 [[package]]
 name = "curl-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/curl-rust?ref=build-cmd#1b7e22b78a464e7756d142bbb565abe2987891d7"
+source = "git+https://github.com/alexcrichton/curl-rust?ref=build-cmd#b61e5c093ca5ce84ecc2a1564bb56263ce364c00"
 dependencies = [
  "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
  "openssl-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-sys)",
