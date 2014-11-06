@@ -28,7 +28,7 @@ dependencies = [
 [[package]]
 name = "civet"
 version = "0.1.0"
-source = "git+https://github.com/wycats/rust-civet#95f5c9b604a0bff9d213840486f06b1397c55657"
+source = "git+https://github.com/wycats/rust-civet#39c92f30a867461a39a1cba7a1bdb9fb2e6798e5"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
