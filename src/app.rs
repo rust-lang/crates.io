@@ -45,6 +45,7 @@ impl App {
             database: db::pool(config.db_url.as_slice(), db_config),
             github: github,
             bucket: s3::Bucket::new(config.s3_bucket.clone(),
+                                    config.s3_region.clone(),
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
                                     if config.env == ::Test {"http"} else {"https"}),

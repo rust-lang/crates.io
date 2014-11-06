@@ -10,6 +10,7 @@ use serialize::base64::{ToBase64, STANDARD};
 
 pub struct Bucket {
     name: String,
+    region: Option<String>,
     access_key: String,
     secret_key: String,
     proto: String,
@@ -17,11 +18,13 @@ pub struct Bucket {
 
 impl Bucket {
     pub fn new(name: String,
+               region: Option<String>,
                access_key: String,
                secret_key: String,
                proto: &str) -> Bucket {
         Bucket {
             name: name,
+            region: region,
             access_key: access_key,
             secret_key: secret_key,
             proto: proto.to_string(),
@@ -58,7 +61,11 @@ impl Bucket {
     }
 
     pub fn host(&self) -> String {
-        format!("{}.s3.amazonaws.com", self.name)
+        format!("{}.s3{}.amazonaws.com", self.name,
+                match self.region {
+                    Some(ref r) => format!("-{}", r),
+                    None => String::new(),
+                })
     }
 
     fn auth(&self, verb: &str, date: &str, path: &str,

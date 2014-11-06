@@ -1,6 +1,7 @@
 #[deriving(Clone)]
 pub struct Config {
     pub s3_bucket: String,
+    pub s3_region: Option<String>,
     pub s3_access_key: String,
     pub s3_secret_key: String,
     pub s3_proxy: Option<String>,

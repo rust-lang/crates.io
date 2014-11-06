@@ -41,6 +41,7 @@ fn main() {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
         s3_secret_key: env("S3_SECRET_KEY"),
+        s3_region: os::getenv("S3_REGION"),
         s3_proxy: None,
         session_key: env("SESSION_KEY"),
         git_repo_checkout: checkout,
