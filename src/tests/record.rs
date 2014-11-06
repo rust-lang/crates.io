@@ -39,7 +39,7 @@ pub fn proxy() -> (String, Bomb) {
     let me = task::name().unwrap();
     let record = os::getenv("RECORD").is_some();
 
-    let mut l = TcpListener::bind("127.0.0.1", 0).unwrap();
+    let mut l = TcpListener::bind("127.0.0.1:0").unwrap();
     let ret = format!("http://{}", l.socket_name().unwrap());
     let mut a = l.listen().unwrap();
     let (tx, rx) = channel();

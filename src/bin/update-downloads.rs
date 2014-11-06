@@ -69,7 +69,7 @@ fn collect(tx: &postgres::Transaction,
     let cutoff = cutoff + Duration::days(-1);
 
     let mut map = HashMap::new();
-    for row in rows {
+    for row in *rows {
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download));
     }
