@@ -13,19 +13,19 @@ impl TypeMap {
     }
 
     pub fn find<T: 'static>(&self) -> Option<&T> {
-        self.data.find(&TypeId::of::<T>()).and_then(|a| a.downcast_ref())
+        self.data.get(&TypeId::of::<T>()).and_then(|a| a.downcast_ref())
     }
 
     pub fn find_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        self.data.find_mut(&TypeId::of::<T>()).and_then(|a| a.downcast_mut())
+        self.data.get_mut(&TypeId::of::<T>()).and_then(|a| a.downcast_mut())
     }
 
     pub fn insert<T: 'static>(&mut self, val: T) -> bool {
-        self.data.insert(TypeId::of::<T>(), box val as Box<Any>)
+        self.data.insert(TypeId::of::<T>(), box val as Box<Any>).is_none()
     }
 
     pub fn remove<T: 'static>(&mut self) -> bool {
-        self.data.remove(&TypeId::of::<T>())
+        self.data.remove(&TypeId::of::<T>()).is_some()
     }
 
     pub fn contains<T: 'static>(&self) -> bool {
@@ -33,7 +33,7 @@ impl TypeMap {
     }
 
     pub fn pop<T: 'static>(&mut self) -> Option<T> {
-        let data = match self.data.pop(&TypeId::of::<T>()) {
+        let data = match self.data.remove(&TypeId::of::<T>()) {
             Some(data) => data,
             None => return None,
         };
