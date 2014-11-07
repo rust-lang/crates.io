@@ -71,7 +71,7 @@ fn collect(tx: &postgres::Transaction,
     let mut map = HashMap::new();
     for row in *rows {
         let download: VersionDownload = Model::from_row(&row);
-        assert!(map.insert(download.id, download));
+        assert!(map.insert(download.id, download).is_none());
     }
     println!("updating {} versions", map.len());
     if map.len() == 0 { return Ok(None) }

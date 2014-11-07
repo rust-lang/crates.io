@@ -37,7 +37,7 @@ dependencies = [
 [[package]]
 name = "conduit"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit.git#c2663117de903a748d8176504873f404ab95bf7f"
+source = "git+https://github.com/conduit-rust/conduit.git#53307ac937a0bb5dfb7d8f9d1bbb4c515ba2b99a"
 dependencies = [
  "semver 0.1.0 (git+https://github.com/rust-lang/semver)",
 ]
@@ -54,7 +54,7 @@ dependencies = [
 [[package]]
 name = "conduit-cookie"
 version = "0.0.1"
-source = "git+https://github.com/conduit-rust/conduit-cookie#3ccb3ceaf519a50a05d8eacb63c7e3cb8433b19e"
+source = "git+https://github.com/conduit-rust/conduit-cookie#12b88e3f2b53f1930e3676d9ebaf452164e7922e"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware)",
@@ -92,7 +92,7 @@ dependencies = [
 [[package]]
 name = "conduit-router"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-router#3651fc7f29cb568be3ccaf2f878082121a924542"
+source = "git+https://github.com/conduit-rust/conduit-router#41201e6d4d51231361bf57ae2bfca11504458d32"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "route-recognizer 0.1.0 (git+https://github.com/conduit-rust/route-recognizer.rs.git)",
@@ -155,8 +155,40 @@ dependencies = [
 
 [[package]]
 name = "encoding"
-version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#d5f3d71614542c57527b361c20c13fa5b009b605"
+version = "0.2.0"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+dependencies = [
+ "encoding-index-japanese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding-index-korean 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding-index-simpchinese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding-index-singlebyte 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding-index-tradchinese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
+]
+
+[[package]]
+name = "encoding-index-japanese"
+version = "1.0.20140915"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+
+[[package]]
+name = "encoding-index-korean"
+version = "1.0.20140915"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+
+[[package]]
+name = "encoding-index-simpchinese"
+version = "1.0.20140915"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+
+[[package]]
+name = "encoding-index-singlebyte"
+version = "1.0.20140915"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
+
+[[package]]
+name = "encoding-index-tradchinese"
+version = "1.0.20140915"
+source = "git+https://github.com/lifthrasiir/rust-encoding#a06637cc6d0da37c12c68661e2ee9ca1999764a4"
 
 [[package]]
 name = "flate2"
@@ -174,7 +206,7 @@ source = "git+https://github.com/alexcrichton/gcc-rs#ea28272fde406838608a3c59ace
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#83acfa2834b0bcaea9d2f68c08a311133758869b"
+source = "git+https://github.com/alexcrichton/git2-rs#6a87f97eca8e12821f01a1db4083c313534b6975"
 dependencies = [
  "libgit2-sys 0.0.1 (git+https://github.com/alexcrichton/git2-rs)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -190,7 +222,7 @@ dependencies = [
 [[package]]
 name = "libgit2-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#83acfa2834b0bcaea9d2f68c08a311133758869b"
+source = "git+https://github.com/alexcrichton/git2-rs#6a87f97eca8e12821f01a1db4083c313534b6975"
 dependencies = [
  "libssh2-sys 0.0.1 (git+https://github.com/alexcrichton/ssh2-rs?ref=build-cmd)",
  "openssl-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-sys)",
@@ -281,7 +313,7 @@ source = "git+https://github.com/alexcrichton/pkg-config-rs#d24a08d87d63df8dc952
 [[package]]
 name = "postgres"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-postgres#4f80c3296700de592d58ff841d458bb3f6cd678e"
+source = "git+https://github.com/sfackler/rust-postgres#7479bc741855c08d9a4350aa1628e5af77fbfa68"
 dependencies = [
  "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf)",
@@ -305,7 +337,7 @@ dependencies = [
 [[package]]
 name = "route-recognizer"
 version = "0.1.0"
-source = "git+https://github.com/conduit-rust/route-recognizer.rs.git#217988b4b6182e678333d9d876b51985ae290535"
+source = "git+https://github.com/conduit-rust/route-recognizer.rs.git#4db520368a275e9cebb039fb09547066144443f2"
 
 [[package]]
 name = "s3"
@@ -323,9 +355,9 @@ source = "git+https://github.com/rust-lang/semver#7dca047a9cd40e929a4545b37a1917
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#9142b86a812ac5bc886f76235585557d8e002246"
+source = "git+https://github.com/servo/rust-url#cec3c32168ce4233e179f22ef50215b3a9c34342"
 dependencies = [
- "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding 0.2.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
 
 [[package]]
