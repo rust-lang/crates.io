@@ -1,22 +1,22 @@
-===REQUEST 353
-PUT http://alexcrichton-test.s3.amazonaws.com/pkg/foo/foo-1.0.0.tar.gz HTTP/1.1
+===REQUEST 355
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:rbPKz2LpF4rreW+y4PlDPPuKjTE=
-Date: Fri, 26 Sep 2014 21:01:34 -0700
-Content-Length: 0
 Content-Type: application/x-tar
-Content-Encoding: gzip
+Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:ZxJ9vRtU0NUbUxYb+W3XXR2YEEk=
+Content-Length: 0
+Date: Mon, 10 Nov 2014 15:29:42 -0800
 Host: alexcrichton-test.s3.amazonaws.com
+Content-Encoding: gzip
 
 
 ===RESPONSE 246
 HTTP/1.1 200
-etag: "d41d8cd98f00b204e9800998ecf8427e"
+x-amz-id-2: rt01ucfTzulP2ewBqrNXvJDEkk+UuznUbOV0YWkKktcNwBnZwfOchNO3z7y6EuO7
 content-length: 0
-date: Sat, 27 Sep 2014 04:02:06 GMT
-x-amz-id-2: pdzZAUYcCHd2dQ3Uoy5fB/7YXQrahsEhvcj4IyjJwTnQoU+m3bA+2ATd8FEGgcDZ
 server: AmazonS3
-x-amz-request-id: BB23B5417A99A3D8
+date: Mon, 10 Nov 2014 23:29:47 GMT
+etag: "d41d8cd98f00b204e9800998ecf8427e"
+x-amz-request-id: C68E453428CFBE5E
 
 

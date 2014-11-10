@@ -271,7 +271,7 @@ impl Crate {
     }
 
     pub fn s3_path(&self, version: &str) -> String {
-        format!("/pkg/{}/{}-{}.tar.gz", self.name, self.name, version)
+        format!("/crates/{}/{}-{}.crate", self.name, self.name, version)
     }
 
     pub fn add_version(&mut self, conn: &Connection, ver: &semver::Version,
@@ -681,7 +681,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Now that we've done our business, redirect to the actual data.
-    let redirect_url = format!("https://{}/pkg/{}/{}-{}.tar.gz",
+    let redirect_url = format!("https://{}/crates/{}/{}-{}.crate",
                                req.app().bucket.host(),
                                crate_name, crate_name, version);
 
