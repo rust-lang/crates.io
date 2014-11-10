@@ -159,7 +159,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
     {
-        let session_state = req.session().pop(&"github_oauth_state".to_string());
+        let session_state = req.session().remove(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| a.as_slice());
         if Some(state.as_slice()) != session_state {
             return Err(human("invalid state parameter"))

@@ -37,7 +37,7 @@ impl Bucket {
                                       -> http::Request<'a, 'b> {
         let path = if path.starts_with("/") {path.slice_from(1)} else {path};
         let host = self.host();
-        let date = time::now().rfc822z();
+        let date = time::now().rfc822z().to_string();
         let auth = self.auth("PUT", date.as_slice(), path, "", content_type);
         let url = format!("{}://{}/{}", self.proto, host, path);
         handle.put(url.as_slice(), content)
@@ -51,7 +51,7 @@ impl Bucket {
                           -> http::Request<'a, 'b> {
         let path = if path.starts_with("/") {path.slice_from(1)} else {path};
         let host = self.host();
-        let date = time::now().rfc822z();
+        let date = time::now().rfc822z().to_string();
         let auth = self.auth("DELETE", date.as_slice(), path, "", "");
         let url = format!("{}://{}/{}", self.proto, host, path);
         handle.delete(url.as_slice())

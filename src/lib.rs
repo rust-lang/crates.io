@@ -140,5 +140,5 @@ pub fn now() -> time::Timespec {
 }
 
 pub fn encode_time(ts: time::Timespec) -> String {
-    time::at_utc(ts).rfc3339()
+    time::at_utc(ts).rfc3339().to_string()
 }
