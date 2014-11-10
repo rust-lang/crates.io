@@ -53,7 +53,8 @@ impl Handler for Static {
         headers.insert("Content-Type".to_string(), vec![mime.to_string()]);
         headers.insert("Content-Length".to_string(), vec![stat.size.to_string()]);
         headers.insert("Last-Modified".to_string(),
-                       vec![tm.strftime("%a, %d %b %Y %T GMT").unwrap()]);
+                       vec![tm.strftime("%a, %d %b %Y %T GMT").unwrap()
+                              .to_string()]);
 
         Ok(Response {
             status: (200, "OK"),
