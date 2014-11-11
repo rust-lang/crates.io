@@ -59,6 +59,7 @@ pub mod upload;
 pub mod user;
 pub mod util;
 pub mod version;
+mod licenses;
 
 #[deriving(PartialEq, Eq, Clone)]
 pub enum Environment {

@@ -184,17 +184,18 @@ impl Crate {
         }
 
         fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            let ok_licenses = &["MIT", "BSD", "GPL", "LGPL2", "LGPL3", "APL2",
-                                "MPL2", "UNLICENSE", "CDDL", "EPL",
-                                "MIT/APL2"];
+            use licenses::KNOWN_LICENSES;
             match license {
                 Some(license) => {
-                    if ok_licenses.iter().any(|&l| l == license) {
+                    let ok = license.split('/').all(|l| {
+                        KNOWN_LICENSES.binary_search_elem(&l).found().is_some()
+                    });
+                    if ok {
                         Ok(())
                     } else {
-                        Err(human(format!("invalid license `{}`, accepted \
-                                           licenses are {}", license,
-                                           ok_licenses.as_slice())))
+                        Err(human(format!("unknown license `{}`, \
+                                           see http://opensource.org/licenses \
+                                           for options", license)))
                     }
                 }
                 None => Ok(()),
