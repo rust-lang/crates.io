@@ -345,7 +345,8 @@ fn new_krate_git_upload_appends() {
     let path = ::git::checkout().join("3/f/foo");
     fs::mkdir_recursive(&path.dir_path(), io::USER_RWX).unwrap();
     File::create(&path).write_str(
-        r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}"#
+        r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}
+"#
     ).unwrap();
 
     let mut req = new_req(app, "foo", "1.0.0");
@@ -355,8 +356,8 @@ fn new_krate_git_upload_appends() {
 
     let contents = File::open(&path).read_to_string().unwrap();
     let mut lines = contents.as_slice().lines();
-    let p1: GitCrate = json::decode(lines.next().unwrap()).unwrap();
-    let p2: GitCrate = json::decode(lines.next().unwrap()).unwrap();
+    let p1: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
+    let p2: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
     assert!(lines.next().is_none());
     assert_eq!(p1.name.as_slice(), "foo");
     assert_eq!(p1.vers.as_slice(), "0.0.1");
