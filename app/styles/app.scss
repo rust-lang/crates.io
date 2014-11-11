@@ -266,3 +266,12 @@ ul.dropdown {
 @media only screen and (max-width: 400px) {
     h1 { font-size: 1.5em; }
 }
+
+#p404 {
+    font-size: 120%;
+    line-height: 3em;
+    input {
+        width: 100%;
+        padding: 5px;
+    }
+}

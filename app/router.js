@@ -26,6 +26,7 @@ Router.map(function() {
   this.resource('keywords');
   this.resource('keyword', { path: '/keywords/*keyword_id' }, function() {
   });
+  this.route('catchAll', { path: '*path' });
 });
 
 export default Router;
