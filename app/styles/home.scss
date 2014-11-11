@@ -103,6 +103,7 @@
         padding: 20px 10px;
         @include display-flex;
         @include justify-content(space-between);
+        @include align-items(center);
 
         img { vertical-align: middle; }
     }
