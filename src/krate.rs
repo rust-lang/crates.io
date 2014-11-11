@@ -124,6 +124,20 @@ impl Crate {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
         }
+
+        // Blacklist the current set of crates in the rust distribution
+        match name.as_slice() {
+            "alloc" | "arena" | "collections" | "core" | "flate" |
+            "fmt_macros" | "getopts" | "graphviz" | "green" | "libc" | "log" |
+            "native" | "rand" | "rbml" | "regex" | "regex_macros" |
+            "rustc_back" | "rustc" | "rustc_llvm" | "rustdoc" | "rustrt" |
+            "serialize" | "std" | "sync" | "syntax" | "term" | "test" |
+            "unicode" => {
+                return Err(human("cannot upload a crate with a reserved name"))
+            }
+            _ => {}
+        }
+
         let stmt = try!(conn.prepare("INSERT INTO crates
                                       (name, user_id, created_at,
                                        updated_at, downloads, max_version,
