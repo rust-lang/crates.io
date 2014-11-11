@@ -12,7 +12,7 @@ export default Ember.Route.extend({
         var self = this;
         var a = Ember.RSVP.hash({
             crate: this.store.find('crate', crate_id).catch(function(e) {
-                if (e.status == 404) {
+                if (e.status === 404) {
                     self.controllerFor('application').set('nextFlashError',
                             'No crate named: ' + params.crate_id);
                     return self.transitionTo('index');
