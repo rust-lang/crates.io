@@ -389,6 +389,13 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20141022110441, "dependencies", "target", "varchar"),
         Migration::add_column(20141023180230, "crates", "license", "varchar"),
         Migration::add_column(20141023180231, "crates", "repository", "varchar"),
+
+        Migration::new(20141112082527, proc(tx) {
+            try!(tx.execute("ALTER TABLE users DROP CONSTRAINT IF \
+                             EXISTS users_email_key", &[]));
+            Ok(())
+
+        }, proc(_) Ok(())),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
