@@ -15,18 +15,20 @@ use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
 pub use self::errors::{ChainError};
-pub use self::result::{Require, Wrap};
-pub use self::lazy_cell::LazyCell;
-pub use self::io::LimitErrorReader;
 pub use self::hasher::{HashingReader};
-pub use self::request_proxy::RequestProxy;
 pub use self::head::Head;
+pub use self::io::LimitErrorReader;
+pub use self::launch::LaunchGuard;
+pub use self::lazy_cell::LazyCell;
+pub use self::request_proxy::RequestProxy;
+pub use self::result::{Require, Wrap};
 
 pub mod errors;
 pub mod result;
 mod hasher;
 mod head;
 mod io;
+mod launch;
 mod lazy_cell;
 mod request_proxy;
 

@@ -1,4 +1,5 @@
 extern crate "cargo-registry" as cargo_registry;
+extern crate "conduit-middleware" as conduit_middleware;
 extern crate civet;
 extern crate green;
 extern crate git2;
@@ -53,6 +54,10 @@ fn main() {
     };
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
+
+    // remove this after we've launched
+    let mut app = conduit_middleware::MiddlewareBuilder::new(app);
+    app.around(cargo_registry::util::LaunchGuard::new());
 
     let port = if heroku {
         8888

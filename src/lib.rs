@@ -133,6 +133,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env != Test {
         m.around(dist::Middleware::new());
     }
+
     return m;
 }
 
