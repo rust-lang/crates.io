@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_does_not_affect_malformed_timestamp() {
-        let bad_stamp = time::now().strftime("%Y-%m-%d %H:%M:%S %z");
+        let bad_stamp = time::now().strftime("%Y-%m-%d %H:%M:%S %z").unwrap().to_string();
         let handler = returning!("Last-Modified" => before_now());
         expect_200(handler.call(&mut request!(
             "If-Modified-Since" => bad_stamp
@@ -294,6 +294,6 @@ mod tests {
     }
 
     fn httpdate(time: Tm) -> String {
-        time.strftime("%a, %d-%m-%y %T GMT").unwrap()
+        time.strftime("%a, %d-%m-%y %T GMT").unwrap().to_string()
     }
 }
