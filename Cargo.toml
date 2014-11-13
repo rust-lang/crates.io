@@ -13,5 +13,8 @@ git = "https://github.com/conduit-rust/conduit.git"
 [dependencies.mime-types]
 git = "https://github.com/conduit-rust/mime-types.git"
 
+[dependencies.time]
+git = "https://github.com/rust-lang/time"
+
 [dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test.git"
