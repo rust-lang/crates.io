@@ -188,7 +188,7 @@ impl Crate {
             match license {
                 Some(license) => {
                     let ok = license.split('/').all(|l| {
-                        KNOWN_LICENSES.binary_search_elem(&l).found().is_some()
+                        KNOWN_LICENSES.binary_search_elem(&l.trim()).found().is_some()
                     });
                     if ok {
                         Ok(())
