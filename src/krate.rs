@@ -195,7 +195,8 @@ impl Crate {
                     } else {
                         Err(human(format!("unknown license `{}`, \
                                            see http://opensource.org/licenses \
-                                           for options", license)))
+                                           for options, and http://spdx.org/licenses/ \
+                                           for their identifiers", license)))
                     }
                 }
                 None => Ok(()),
