@@ -55,8 +55,7 @@ path = "src/migrate"
 git = "https://github.com/alexcrichton/oauth2-rs"
 
 [dependencies.curl]
-git = "https://github.com/alexcrichton/curl-rust"
-branch = "build-cmd"
+git = "https://github.com/carllerche/curl-rust"
 
 [dependencies.conduit-log-requests]
 git = "https://github.com/conduit-rust/conduit-log-requests"
