@@ -126,7 +126,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.around(util::Head::new());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
-    m.add(conduit_cookie::SessionMiddleware::new("cargo_session"));
+    m.add(conduit_cookie::SessionMiddleware::new("cargo_session",
+                                                 env == Env::Production));
     m.add(app::AppMiddleware::new(app));
     m.add(db::TransactionMiddleware);
     m.add(user::Middleware);

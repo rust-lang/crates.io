@@ -24,7 +24,7 @@ export default Ember.Route.extend({
             }
             var data = response.data;
             if (data.errors) {
-                var error = "Failed to log in: " + data.errors[0];
+                var error = "Failed to log in: " + data.errors[0].detail;
                 self.controllerFor('application').set('flashError', error);
                 return;
             }
