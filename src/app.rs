@@ -35,8 +35,8 @@ impl App {
         );
 
         let db_config = r2d2::Config {
-            pool_size: if config.env == ::Production {10} else {1},
-            helper_tasks: if config.env == ::Production {3} else {1},
+            pool_size: if config.env == ::Env::Production {10} else {1},
+            helper_tasks: if config.env == ::Env::Production {3} else {1},
             test_on_check_out: false,
         };
 
@@ -48,7 +48,7 @@ impl App {
                                     config.s3_region.clone(),
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
-                                    if config.env == ::Test {"http"} else {"https"}),
+                                    if config.env == ::Env::Test {"http"} else {"https"}),
             s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),

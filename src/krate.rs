@@ -350,7 +350,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
-    let sort = query.find_equiv("sort").map(|s| s.as_slice()).unwrap_or("alpha");
+    let sort = query.get("sort").map(|s| s.as_slice()).unwrap_or("alpha");
     let sort_sql = match sort {
         "downloads" => "ORDER BY crates.downloads DESC",
         _ => "ORDER BY crates.name ASC",
@@ -363,7 +363,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut id = -1;
     let (mut needs_id, mut needs_pattern) = (false, false);
     let mut args = vec![&limit as &ToSql, &offset as &ToSql];
-    let (q, cnt) = query.find_equiv("q").map(|query| {
+    let (q, cnt) = query.get("q").map(|query| {
         args.insert(0, query as &ToSql);
         ("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
@@ -374,7 +374,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                       plainto_tsquery($1) q
           WHERE q @@ textsearchable_index_col".to_string())
     }).or_else(|| {
-        query.find_equiv("letter").map(|letter| {
+        query.get("letter").map(|letter| {
             pattern = format!("{}%", letter.as_slice().char_at(0)
                                            .to_lowercase());
             needs_pattern = true;
@@ -383,7 +383,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
              "SELECT COUNT(*) FROM crates WHERE name LIKE $1".to_string())
         })
     }).or_else(|| {
-        query.find_equiv("keyword").map(|kw| {
+        query.get("keyword").map(|kw| {
             args.insert(0, kw as &ToSql);
             let base = "FROM crates
                         INNER JOIN crates_keywords
@@ -395,7 +395,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
              format!("SELECT COUNT(crates.*) {}", base))
         })
     }).or_else(|| {
-        query.find_equiv("user_id").map(|s| s.as_slice())
+        query.get("user_id").map(|s| s.as_slice())
              .and_then(from_str::<i32>).map(|user_id| {
             id = user_id;
             needs_id = true;
@@ -405,7 +405,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
              "SELECT COUNT(*) FROM crates WHERE user_id = $1".to_string())
         })
     }).or_else(|| {
-        query.find_equiv("following").map(|_| {
+        query.get("following").map(|_| {
             needs_id = true;
             (format!("SELECT crates.* FROM crates
                       INNER JOIN follows
@@ -471,7 +471,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     };
 
     let to_crates = |stmt: pg::Statement| {
-        let rows = raw_try!(stmt.query([]));
+        let rows = raw_try!(stmt.query(&[]));
         Ok(rows.map(|r| {
             let krate: Crate = Model::from_row(&r);
             krate.encodable(None)

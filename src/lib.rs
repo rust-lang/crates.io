@@ -62,7 +62,7 @@ pub mod version;
 mod licenses;
 
 #[deriving(PartialEq, Eq, Clone)]
-pub enum Environment {
+pub enum Env {
     Development,
     Test,
     Production,
@@ -114,13 +114,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/summary", C(krate::summary));
 
     let env = app.config.env;
-    if env == Development {
+    if env == Env::Development {
         router.get("/git/index/*path", C(git::serve_index));
         router.post("/git/index/*path", C(git::serve_index));
     }
 
     let mut m = MiddlewareBuilder::new(R404(router));
-    if env != Test {
+    if env != Env::Test {
         m.add(conduit_log_requests::LogRequests(0));
     }
     m.around(util::Head::new());
@@ -130,7 +130,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.add(app::AppMiddleware::new(app));
     m.add(db::TransactionMiddleware);
     m.add(user::Middleware);
-    if env != Test {
+    if env != Env::Test {
         m.around(dist::Middleware::new());
     }
 

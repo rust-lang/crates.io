@@ -48,7 +48,7 @@ impl Migration {
 
 fn run(sql: String) -> Step {
     proc(tx) {
-        tx.execute(sql.as_slice(), []).map(|_| ()).map_err(|e| {
+        tx.execute(sql.as_slice(), &[]).map(|_| ()).map_err(|e| {
             println!("failed to run `{}`", sql);
             e
         })
@@ -66,11 +66,11 @@ impl<'a> Manager<'a> {
         try!(self.tx.execute("CREATE TABLE IF NOT EXISTS schema_migrations (
             id              SERIAL PRIMARY KEY,
             version         INT8 NOT NULL UNIQUE
-        )", []));
+        )", &[]));
 
         let stmt = try!(self.tx.prepare("SELECT version FROM \
                                          schema_migrations"));
-        for row in try!(stmt.query([])) {
+        for row in try!(stmt.query(&[])) {
             assert!(self.versions.insert(row.get("version")));
         }
         Ok(())

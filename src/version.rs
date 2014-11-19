@@ -32,9 +32,9 @@ pub struct Version {
     pub yanked: bool,
 }
 
-pub enum VersionAuthor {
-    AuthorUser(User),
-    AuthorName(String),
+pub enum Author {
+    User(User),
+    Name(String),
 }
 
 #[deriving(Encodable, Decodable)]
@@ -157,7 +157,7 @@ impl Version {
         }).collect())
     }
 
-    pub fn authors(&self, conn: &Connection) -> CargoResult<Vec<VersionAuthor>> {
+    pub fn authors(&self, conn: &Connection) -> CargoResult<Vec<Author>> {
         let stmt = try!(conn.prepare("SELECT * FROM version_authors
                                        WHERE version_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
@@ -165,8 +165,8 @@ impl Version {
             let user_id: Option<i32> = row.get("user_id");
             let name: String = row.get("name");
             Ok(match user_id {
-                Some(id) => AuthorUser(try!(User::find(conn, id))),
-                None => AuthorName(name),
+                Some(id) => Author::User(try!(User::find(conn, id))),
+                None => Author::Name(name),
             })
         }).collect()
     }
@@ -314,8 +314,8 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     let (mut users, mut names) = (Vec::new(), Vec::new());
     for author in try!(version.authors(tx)).into_iter() {
         match author {
-            AuthorUser(u) => users.push(u.encodable()),
-            AuthorName(n) => names.push(n),
+            Author::User(u) => users.push(u.encodable()),
+            Author::Name(n) => names.push(n),
         }
     }
 

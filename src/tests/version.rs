@@ -30,8 +30,8 @@ fn index() {
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
         let m = HashMap::new();
-        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, []).unwrap();
-        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, []).unwrap();
+        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, &[]).unwrap();
+        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, &[]).unwrap();
         (v1, v2)
     };
     req.with_query(format!("ids[]={}&ids[]={}", v1.id, v2.id));
@@ -49,7 +49,7 @@ fn show() {
         let krate = ::mock_crate(&mut req, ::krate("foo"));
         let req = &mut req as &mut Request;
         let tx = req.tx().unwrap();
-        Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), []).unwrap()
+        Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), &[]).unwrap()
     };
     req.with_path(format!("/api/v1/versions/{}", v.id).as_slice());
     let mut response = ok_resp!(middle.call(&mut req));

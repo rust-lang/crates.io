@@ -25,7 +25,7 @@ type PooledConnnection<'a> =
                                LoggingErrorHandler>;
 
 pub fn pool(url: &str, config: r2d2::Config) -> Pool {
-    let mgr = PostgresPoolManager::new(url, pg::NoSsl);
+    let mgr = PostgresPoolManager::new(url, pg::SslMode::None);
     r2d2::Pool::new(config, mgr, LoggingErrorHandler).unwrap()
 }
 

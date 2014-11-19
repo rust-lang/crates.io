@@ -8,7 +8,7 @@ use std::rand::{StdRng, Rng};
 
 fn main() {
     let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
-                                             &postgres::NoSsl).unwrap();
+                                             &postgres::SslMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();

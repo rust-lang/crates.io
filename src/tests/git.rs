@@ -6,7 +6,7 @@ use git2;
 use url::Url;
 
 fn root() -> Path {
-    os::getcwd().join("tmp").join(task::name().unwrap())
+    os::getcwd().unwrap().join("tmp").join(task::name().unwrap())
 }
 
 pub fn checkout() -> Path { root().join("checkout") }
@@ -43,7 +43,7 @@ pub fn init() {
     let sig = checkout.signature().unwrap();
     checkout.commit(Some("HEAD"), &sig, &sig,
                     "Initial Commit",
-                    &tree, []).unwrap();
+                    &tree, &[]).unwrap();
 
     // Push the commit to the remote repo
     let mut origin = checkout.find_remote("origin").unwrap();

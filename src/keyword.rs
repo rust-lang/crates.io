@@ -135,7 +135,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
-    let sort = query.find_equiv("sort").map(|s| s.as_slice()).unwrap_or("alpha");
+    let sort = query.get("sort").map(|s| s.as_slice()).unwrap_or("alpha");
     let sort_sql = match sort {
         "crates" => "ORDER BY crates_cnt DESC",
         _ => "ORDER BY keyword ASC",

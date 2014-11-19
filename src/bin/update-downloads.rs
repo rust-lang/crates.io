@@ -15,7 +15,7 @@ fn main() {
     let args = os::args();
     loop {
         let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
-                                                 &postgres::NoSsl).unwrap();
+                                                 &postgres::SslMode::None).unwrap();
         {
             let tx = conn.transaction().unwrap();
             update(&tx).unwrap();
@@ -134,7 +134,7 @@ mod test {
 
     fn conn() -> postgres::Connection {
         postgres::Connection::connect(::env("TEST_DATABASE_URL").as_slice(),
-                                      &postgres::NoSsl).unwrap()
+                                      &postgres::SslMode::None).unwrap()
     }
 
     fn user(conn: &postgres::Transaction) -> User{
@@ -156,10 +156,10 @@ mod test {
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
         let krate = Crate::find_or_insert(&tx, "foo", user.id, &None, &None,
-                                          &None, &None, [], &None, &None).unwrap();
+                                          &None, &None, &[], &None, &None).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), []).unwrap();
+                                      &HashMap::new(), &[]).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 1, 0, current_date, false)",
@@ -182,11 +182,11 @@ mod test {
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
         let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
-                                          &None, &None, &None, [], &None,
+                                          &None, &None, &None, &[], &None,
                                           &None).unwrap();
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), []).unwrap();
+                                      &HashMap::new(), &[]).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 1, current_date, false)",

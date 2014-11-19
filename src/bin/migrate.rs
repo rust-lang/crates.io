@@ -91,9 +91,9 @@ fn migrations() -> Vec<Migration> {
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::new(20140925132250, proc(tx) {
             try!(tx.execute("UPDATE packages SET updated_at = now() \
-                             WHERE updated_at IS NULL", []));
+                             WHERE updated_at IS NULL", &[]));
             try!(tx.execute("UPDATE packages SET created_at = now() \
-                             WHERE created_at IS NULL", []));
+                             WHERE created_at IS NULL", &[]));
             Ok(())
         }, proc(_) Ok(())),
         Migration::add_column(20140925132251, "versions", "updated_at",
@@ -102,20 +102,20 @@ fn migrations() -> Vec<Migration> {
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::new(20140925132253, proc(tx) {
             try!(tx.execute("UPDATE versions SET updated_at = now() \
-                             WHERE updated_at IS NULL", []));
+                             WHERE updated_at IS NULL", &[]));
             try!(tx.execute("UPDATE versions SET created_at = now() \
-                             WHERE created_at IS NULL", []));
+                             WHERE created_at IS NULL", &[]));
             Ok(())
         }, proc(_) Ok(())),
         Migration::new(20140925132254, proc(tx) {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN updated_at \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN created_at \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE packages ALTER COLUMN updated_at \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE packages ALTER COLUMN created_at \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             Ok(())
         }, proc(_) Ok(())),
         Migration::add_table(20140925153704, "metadata", "
@@ -126,7 +126,7 @@ fn migrations() -> Vec<Migration> {
                              VALUES ($1)", &[&0i64]));
             Ok(())
         }, proc(tx) {
-            try!(tx.execute("DELETE FROM metadata", [])); Ok(())
+            try!(tx.execute("DELETE FROM metadata", &[])); Ok(())
         }),
         Migration::add_column(20140925161623, "packages", "downloads",
                               "INTEGER NOT NULL DEFAULT 0"),
@@ -134,9 +134,9 @@ fn migrations() -> Vec<Migration> {
                               "INTEGER NOT NULL DEFAULT 0"),
         Migration::new(20140925161625, proc(tx) {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE packages ALTER COLUMN downloads \
-                             DROP DEFAULT", []));
+                             DROP DEFAULT", &[]));
             Ok(())
         }, proc(_) Ok(())),
         Migration::add_column(20140926130044, "packages", "max_version",
@@ -156,22 +156,22 @@ fn migrations() -> Vec<Migration> {
         }, proc(_) Ok(())),
         Migration::new(20140926130046, proc(tx) {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             SET NOT NULL", []));
+                             SET NOT NULL", &[]));
             Ok(())
         }, proc(tx) {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             DROP NOT NULL", []));
+                             DROP NOT NULL", &[]));
             Ok(())
         }),
         Migration::new(20140926174020, proc(tx) {
-            try!(tx.execute("ALTER TABLE packages RENAME TO crates", []));
+            try!(tx.execute("ALTER TABLE packages RENAME TO crates", &[]));
             try!(tx.execute("ALTER TABLE versions RENAME COLUMN package_id \
-                             TO crate_id", []));
+                             TO crate_id", &[]));
             Ok(())
         }, proc(tx) {
-            try!(tx.execute("ALTER TABLE crates RENAME TO packages", []));
+            try!(tx.execute("ALTER TABLE crates RENAME TO packages", &[]));
             try!(tx.execute("ALTER TABLE versions RENAME COLUMN crate_id \
-                             TO package_id", []));
+                             TO package_id", &[]));
             Ok(())
         }),
         Migration::run(20140929103749,
@@ -364,8 +364,8 @@ fn migrations() -> Vec<Migration> {
 
         }, proc(tx) {
             try!(tx.execute("DROP TRIGGER trigger_crates_tsvector_update
-                                       ON crates", []));
-            try!(tx.execute("DROP FUNCTION trigger_crates_name_search()", []));
+                                       ON crates", &[]));
+            try!(tx.execute("DROP FUNCTION trigger_crates_name_search()", &[]));
             Ok(())
         }),
         Migration::add_column(20141020175651, "crates", "keywords", "varchar"),

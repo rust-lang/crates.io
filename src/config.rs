@@ -10,6 +10,6 @@ pub struct Config {
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
-    pub env: ::Environment,
+    pub env: ::Env,
     pub max_upload_size: uint,
 }
