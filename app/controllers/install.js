@@ -15,10 +15,10 @@ export default Ember.Controller.extend({
         return this.link('i686-apple-darwin');
     }.property(),
     win64: function() {
-        return this.link('x86_64-w64-mingw32');
+        return this.link('x86_64-pc-windows-gnu');
     }.property(),
     win32: function() {
-        return this.link('i686-w64-mingw32');
+        return this.link('i686-pc-windows-gnu');
     }.property(),
 
     link: function(target) {
