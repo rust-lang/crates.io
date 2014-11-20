@@ -62,7 +62,7 @@ dependencies = [
 [[package]]
 name = "conduit-cookie"
 version = "0.0.1"
-source = "git+https://github.com/conduit-rust/conduit-cookie#d414bb5e7155398297156ba170e077e16b24ff6e"
+source = "git+https://github.com/conduit-rust/conduit-cookie#2adffbdd3f003fb0ed8daa734fe0a61cbcd89a3a"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware)",

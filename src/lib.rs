@@ -120,6 +120,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
 
     let mut m = MiddlewareBuilder::new(R404(router));
+    m.add(DebugMiddleware);
     if env != Env::Test {
         m.add(conduit_log_requests::LogRequests(0));
     }
@@ -136,6 +137,35 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
 
     return m;
+
+    struct DebugMiddleware;
+
+    impl conduit_middleware::Middleware for DebugMiddleware {
+        fn before(&self, req: &mut conduit::Request)
+                  -> Result<(), Box<std::fmt::Show + 'static>> {
+            println!("version: {}", req.http_version());
+            println!("method: {}", req.method());
+            println!("scheme: {}", req.scheme());
+            println!("host: {}", req.host());
+            println!("path: {}", req.path());
+            println!("query_string: {}", req.query_string());
+            for &(k, ref v) in req.headers().all().iter() {
+                println!("hdr: {}={}", k, v);
+            }
+            Ok(())
+        }
+        fn after(&self, req: &mut conduit::Request,
+                 res: Result<conduit::Response, Box<std::fmt::Show + 'static>>)
+                 -> Result<conduit::Response, Box<std::fmt::Show + 'static>> {
+            res.map(|res| {
+                println!("<- {}", res.status);
+                for (k, v) in res.headers.iter() {
+                    println!("<- {} {}", k, v);
+                }
+                res
+            })
+        }
+    }
 }
 
 pub fn now() -> time::Timespec {
