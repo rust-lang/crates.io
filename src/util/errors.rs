@@ -1,6 +1,7 @@
 use std::io::IoError;
 use std::fmt;
-use std::fmt::{Show, Formatter, FormatError};
+use std::fmt::{Show, Formatter};
+use std::fmt::Error as FormatError;
 
 use conduit::Response;
 use curl::ErrCode;

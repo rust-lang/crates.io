@@ -22,14 +22,14 @@ dependencies = [
  "r2d2_postgres 0.0.0 (git+https://github.com/sfackler/r2d2-postgres)",
  "s3 0.0.1",
  "semver 0.1.1 (git+https://github.com/rust-lang/semver)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
 [[package]]
 name = "civet"
 version = "0.1.0"
-source = "git+https://github.com/wycats/rust-civet#51627308b1b1eeda454402f9fc019db9af675c77"
+source = "git+https://github.com/wycats/rust-civet#b0353083ab1109b6d962a2182a30de223b2d9865"
 dependencies = [
  "civet-sys 0.0.1 (git+https://github.com/wycats/rust-civet)",
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
@@ -39,7 +39,7 @@ dependencies = [
 [[package]]
 name = "civet-sys"
 version = "0.0.1"
-source = "git+https://github.com/wycats/rust-civet#51627308b1b1eeda454402f9fc019db9af675c77"
+source = "git+https://github.com/wycats/rust-civet#b0353083ab1109b6d962a2182a30de223b2d9865"
 
 [[package]]
 name = "conduit"
@@ -56,7 +56,7 @@ source = "git+https://github.com/conduit-rust/conduit-conditional-get#74957eeac3
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
 ]
 
 [[package]]
@@ -87,7 +87,7 @@ source = "git+https://github.com/conduit-rust/conduit-log-requests#3b4258618d6a7
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "conduit-middleware 0.5.0 (git+https://github.com/conduit-rust/conduit-middleware)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
 ]
 
 [[package]]
@@ -110,11 +110,11 @@ dependencies = [
 [[package]]
 name = "conduit-static"
 version = "0.5.0"
-source = "git+https://github.com/conduit-rust/conduit-static#f864784f530df61eadba5492b70e8ba01dbab69a"
+source = "git+https://github.com/conduit-rust/conduit-static#ece07b734d638e373677a15ee5f4e8ba1ed8540d"
 dependencies = [
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
  "mime-types 0.5.0 (git+https://github.com/conduit-rust/mime-types.git)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
 ]
 
 [[package]]
@@ -141,14 +141,14 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/cookie-rs.git#c7e1464489ec0cf338196fb4e2a8e7aa74aa672c"
 dependencies = [
  "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
 [[package]]
 name = "curl"
 version = "0.1.0"
-source = "git+https://github.com/carllerche/curl-rust#c5dc613286e33ea89c9b0acc22a53398a9aa6cd9"
+source = "git+https://github.com/carllerche/curl-rust#c1b96e146f6752353a1e84cca932c628e6bf73af"
 dependencies = [
  "curl-sys 0.1.0 (git+https://github.com/carllerche/curl-rust)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -157,7 +157,7 @@ dependencies = [
 [[package]]
 name = "curl-sys"
 version = "0.1.0"
-source = "git+https://github.com/carllerche/curl-rust#c5dc613286e33ea89c9b0acc22a53398a9aa6cd9"
+source = "git+https://github.com/carllerche/curl-rust#c1b96e146f6752353a1e84cca932c628e6bf73af"
 dependencies = [
  "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
  "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
@@ -166,8 +166,8 @@ dependencies = [
 
 [[package]]
 name = "encoding"
-version = "0.2.1"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+version = "0.2.3"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding-index-japanese 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
  "encoding-index-korean 1.0.20140915 (git+https://github.com/lifthrasiir/rust-encoding)",
@@ -179,7 +179,7 @@ dependencies = [
 [[package]]
 name = "encoding-index-japanese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
@@ -187,7 +187,7 @@ dependencies = [
 [[package]]
 name = "encoding-index-korean"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
@@ -195,7 +195,7 @@ dependencies = [
 [[package]]
 name = "encoding-index-simpchinese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
@@ -203,7 +203,7 @@ dependencies = [
 [[package]]
 name = "encoding-index-singlebyte"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
@@ -211,7 +211,7 @@ dependencies = [
 [[package]]
 name = "encoding-index-tradchinese"
 version = "1.0.20140915"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 dependencies = [
  "encoding_index_tests 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
@@ -219,7 +219,7 @@ dependencies = [
 [[package]]
 name = "encoding_index_tests"
 version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#6a5a95950572590485cbbf64509036b252339205"
+source = "git+https://github.com/lifthrasiir/rust-encoding#b1eee875804b8548eae23dfffdd2e771a900eb9f"
 
 [[package]]
 name = "flate2"
@@ -240,7 +240,7 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/git2-rs#c601ad025c137ef53a71738c0545eaf0b91bc6d4"
 dependencies = [
  "libgit2-sys 0.0.1 (git+https://github.com/alexcrichton/git2-rs)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
@@ -319,7 +319,7 @@ dependencies = [
 [[package]]
 name = "openssl"
 version = "0.0.1"
-source = "git+https://github.com/sfackler/rust-openssl#af5533d936558a77c2de8c5d2d572bb1f89dfada"
+source = "git+https://github.com/sfackler/rust-openssl#33af6a0b7a1037945181db96cf4f6915457a3df6"
 dependencies = [
  "libressl-pnacl-sys 2.0.0 (git+https://github.com/DiamondLovesYou/libressl-pnacl-sys.git)",
  "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
@@ -328,7 +328,7 @@ dependencies = [
 [[package]]
 name = "openssl-sys"
 version = "0.0.1"
-source = "git+https://github.com/sfackler/rust-openssl#af5533d936558a77c2de8c5d2d572bb1f89dfada"
+source = "git+https://github.com/sfackler/rust-openssl#33af6a0b7a1037945181db96cf4f6915457a3df6"
 dependencies = [
  "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
@@ -336,7 +336,7 @@ dependencies = [
 [[package]]
 name = "phf"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#aa3e2d0aedea4d55c2e4cea1bdf6e89418dc1206"
+source = "git+https://github.com/sfackler/rust-phf#2f3c6053c2d754974a94aa45a49b8cce10ae88ba"
 dependencies = [
  "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
 ]
@@ -344,9 +344,9 @@ dependencies = [
 [[package]]
 name = "phf_mac"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#aa3e2d0aedea4d55c2e4cea1bdf6e89418dc1206"
+source = "git+https://github.com/sfackler/rust-phf#2f3c6053c2d754974a94aa45a49b8cce10ae88ba"
 dependencies = [
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
 ]
 
@@ -363,12 +363,12 @@ source = "git+https://github.com/DiamondLovesYou/cargo-pnacl-helper.git#5402d48d
 [[package]]
 name = "postgres"
 version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-postgres#3a0f1897277d0e1f5568e733854649f1e7fd018d"
+source = "git+https://github.com/sfackler/rust-postgres#b21300e344fd8b7b82d53d8afd3d5977c8c1ed63"
 dependencies = [
  "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
  "phf 0.0.0 (git+https://github.com/sfackler/rust-phf)",
  "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "uuid 0.0.2 (git+https://github.com/rust-lang/uuid)",
 ]
 
@@ -397,18 +397,18 @@ version = "0.0.1"
 dependencies = [
  "curl 0.1.0 (git+https://github.com/carllerche/curl-rust)",
  "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
- "time 0.0.2 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (git+https://github.com/rust-lang/time)",
 ]
 
 [[package]]
 name = "semver"
 version = "0.1.1"
-source = "git+https://github.com/rust-lang/semver#0e53c5ff90c240b93b896bfa19476e601b93c069"
+source = "git+https://github.com/rust-lang/semver#bddf6b0ca09ef7c7c7b7c8808f2d6a416b0c09f4"
 
 [[package]]
 name = "time"
-version = "0.0.2"
-source = "git+https://github.com/rust-lang/time#b58210c93a44d7b83a1a9b68b462f5a7fa1942f3"
+version = "0.0.3"
+source = "git+https://github.com/rust-lang/time#72eb792cce324d813e8819b0f936f2cb436d9148"
 dependencies = [
  "gcc 0.0.1 (git+https://github.com/alexcrichton/gcc-rs)",
 ]
@@ -416,9 +416,9 @@ dependencies = [
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#f5fdbe5741ff75d87ef05b468097432c012c3e6e"
+source = "git+https://github.com/servo/rust-url#5d15bee2d296b0fc3cfae84e69d1d2e865cf9335"
 dependencies = [
- "encoding 0.2.1 (git+https://github.com/lifthrasiir/rust-encoding)",
+ "encoding 0.2.3 (git+https://github.com/lifthrasiir/rust-encoding)",
 ]
 
 [[package]]
