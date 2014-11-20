@@ -131,14 +131,20 @@ export default Ember.ObjectController.extend({
                 }
                 data.push(row);
             }
-            data = google.visualization.arrayToDataTable(data);
-
-            var fmt = new google.visualization.DateFormat({
-                pattern: 'LLL d, yyyy',
-            });
-            fmt.format(data, 0);
 
             var drawChart = function() {
+                if (!window.google || !window.googleChartsLoaded) {
+                    Ember.$('.graph').hide();
+                    return;
+                } else {
+                    Ember.$('.graph').show();
+                }
+                data = google.visualization.arrayToDataTable(data);
+
+                var fmt = new google.visualization.DateFormat({
+                    pattern: 'LLL d, yyyy',
+                });
+                fmt.format(data, 0);
                 var el = document.getElementById('graph-data');
                 if (!el) {
                     return;
@@ -159,6 +165,8 @@ export default Ember.ObjectController.extend({
             Ember.run.scheduleOnce('afterRender', this, drawChart);
             Ember.$(window).off('resize.chart');
             Ember.$(window).on('resize.chart', drawChart);
+            Ember.$(document).off('googleChartsLoaded');
+            Ember.$(document).on('googleChartsLoaded', drawChart);
         },
     },
 });

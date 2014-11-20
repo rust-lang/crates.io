@@ -15,7 +15,6 @@ export default Ember.Route.extend({
             if (!win.closed) { return; }
             window.clearInterval(oauthInterval);
             var response = JSON.parse(localStorage.github_response);
-            console.log('loging response', response);
 
             if (!response.ok) {
                 self.controllerFor('application').set('flashError',
