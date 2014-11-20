@@ -120,6 +120,7 @@ pub const KNOWN_LICENSES: &'static [&'static str] = &[
     "FSFULLR",
     "FTL",
     "Fair",
+    "FMOD-commercial",
     "Frameworx-1.0",
     "GFDL-1.1",
     "GFDL-1.2",
