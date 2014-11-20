@@ -92,9 +92,9 @@ mod tests {
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_string().ok().expect("No body");
         assert_eq!(body.as_slice(), "[package]");
-        assert_eq!(res.headers.find_equiv("Content-Type"),
+        assert_eq!(res.headers.get("Content-Type"),
                    Some(&vec!("text/plain".to_string())));
-        assert_eq!(res.headers.find_equiv("Content-Length"),
+        assert_eq!(res.headers.get("Content-Length"),
                    Some(&vec!["9".to_string()]));
     }
 
@@ -108,9 +108,9 @@ mod tests {
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.headers.find_equiv("Content-Type"),
+        assert_eq!(res.headers.get("Content-Type"),
                    Some(&vec!("text/css".to_string())));
-        assert_eq!(res.headers.find_equiv("Content-Length"),
+        assert_eq!(res.headers.get("Content-Length"),
                    Some(&vec!["0".to_string()]));
     }
 
@@ -147,6 +147,6 @@ mod tests {
         let mut req = test::MockRequest::new(conduit::Get, "/test");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.status.val0(), 200);
-        assert!(res.headers.find_equiv("Last-Modified").is_some());
+        assert!(res.headers.get("Last-Modified").is_some());
     }
 }
