@@ -8,7 +8,7 @@
 
 <div id='selection'>
     {{#each alphabet}}
-        {{#link-to 'crates' (query-params letter=this)}}
+        {{#link-to 'crates' (query-params letter=this page=1)}}
             {{ this }}
         {{/link-to}}
     {{/each}}
