@@ -149,7 +149,7 @@ fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
 
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
                 -> Vec<u8> {
-    let kws = krate.keywords.into_iter().map(u::CrateName).collect();
+    let kws = krate.keywords.into_iter().map(u::Keyword).collect();
     let json = u::NewCrate {
         name: u::CrateName(krate.name),
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),

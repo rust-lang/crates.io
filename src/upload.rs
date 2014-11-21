@@ -4,6 +4,7 @@ use serialize::{Decodable, Decoder, Encoder, Encodable};
 use semver;
 use dependency::Kind as DependencyKind;
 
+use keyword::Keyword as CrateKeyword;
 use krate::Crate;
 
 #[deriving(Decodable, Encodable)]
@@ -26,7 +27,8 @@ pub struct NewCrate {
 pub struct CrateName(pub String);
 pub struct CrateVersion(pub semver::Version);
 pub struct CrateVersionReq(pub semver::VersionReq);
-pub struct KeywordList(pub Vec<CrateName>);
+pub struct KeywordList(pub Vec<Keyword>);
+pub struct Keyword(pub String);
 
 #[deriving(Decodable, Encodable)]
 pub struct CrateDependency {
@@ -47,6 +49,17 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateName {
                                        s).as_slice()))
         }
         Ok(CrateName(s))
+    }
+}
+
+impl<E, D: Decoder<E>> Decodable<D, E> for Keyword {
+    fn decode(d: &mut D) -> Result<Keyword, E> {
+        let s = raw_try!(d.read_str());
+        if !CrateKeyword::valid_name(s.as_slice()) {
+            return Err(d.error(format!("invalid keyword specified: {}",
+                                       s).as_slice()))
+        }
+        Ok(Keyword(s))
     }
 }
 
@@ -73,7 +86,7 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersionReq {
 
 impl<E, D: Decoder<E>> Decodable<D, E> for KeywordList {
     fn decode(d: &mut D) -> Result<KeywordList, E> {
-        let inner: Vec<CrateName> = raw_try!(Decodable::decode(d));
+        let inner: Vec<Keyword> = raw_try!(Decodable::decode(d));
         if inner.len() > 5 {
             return Err(d.error("a maximum of 5 keywords per crate are allowed"))
         }
@@ -102,6 +115,12 @@ impl<E, D: Decoder<E>> Decodable<D, E> for DependencyKind {
 }
 
 impl<E, D: Encoder<E>> Encodable<D, E> for CrateName {
+    fn encode(&self, d: &mut D) -> Result<(), E> {
+        d.emit_str(self.as_slice())
+    }
+}
+
+impl<E, D: Encoder<E>> Encodable<D, E> for Keyword {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         d.emit_str(self.as_slice())
     }
@@ -143,6 +162,13 @@ impl Deref<str> for CrateName {
     }
 }
 
+impl Deref<str> for Keyword {
+    fn deref<'a>(&'a self) -> &'a str {
+        let Keyword(ref s) = *self;
+        s.as_slice()
+    }
+}
+
 impl Deref<semver::Version> for CrateVersion {
     fn deref<'a>(&'a self) -> &'a semver::Version {
         let CrateVersion(ref s) = *self; s
@@ -155,8 +181,8 @@ impl Deref<semver::VersionReq> for CrateVersionReq {
     }
 }
 
-impl Deref<[CrateName]> for KeywordList {
-    fn deref<'a>(&'a self) -> &'a [CrateName] {
+impl Deref<[Keyword]> for KeywordList {
+    fn deref<'a>(&'a self) -> &'a [Keyword] {
         let KeywordList(ref s) = *self;
         s.as_slice()
     }

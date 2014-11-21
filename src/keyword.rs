@@ -60,6 +60,12 @@ impl Keyword {
         }))))
     }
 
+    pub fn valid_name(name: &str) -> bool {
+        if name.len() == 0 { return false }
+        name.char_at(0).is_alphanumeric() &&
+        name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+    }
+
     pub fn encodable(self) -> EncodableKeyword {
         let Keyword { id: _, crates_cnt, keyword, created_at } = self;
         EncodableKeyword {
