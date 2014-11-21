@@ -7,12 +7,15 @@ export default Ember.Route.extend({
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null)
         {
-            return ajax('/me').then(function(response) {
+            ajax('/me').then(function(response) {
                 var user = self.store.push('user', response.user);
                 user.set('api_token', response.api_token);
                 self.session.set('currentUser', user);
             }).catch(function() {
                 self.session.logoutUser();
+            }).finally(function() {
+                window.currentUserDetected = true;
+                Ember.$(window).trigger('currentUserDetected');
             });
         }
     },
