@@ -132,7 +132,7 @@ impl Crate {
             "native" | "rand" | "rbml" | "regex" | "regex_macros" |
             "rustc_back" | "rustc" | "rustc_llvm" | "rustdoc" | "rustrt" |
             "serialize" | "std" | "sync" | "syntax" | "term" | "test" |
-            "unicode" => {
+            "unicode" | "rust" | "cargo" => {
                 return Err(human("cannot upload a crate with a reserved name"))
             }
             _ => {}
