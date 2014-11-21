@@ -71,4 +71,9 @@ JS tests (note these are not written yet)
 * `cargo build`
 * `ember build`
 
+## Github application
+
+If you want to login with Github, you need to set your Github application's
+callback url to `http://localhost:4200/authorize/github`.
+
 For more information on using ember-cli, visit [http://iamstef.net/ember-cli/](http://iamstef.net/ember-cli/).
