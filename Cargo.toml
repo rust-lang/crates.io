@@ -20,6 +20,10 @@ test = false
 name = "update-downloads"
 
 [[bin]]
+name = "delete-crate"
+test = false
+
+[[bin]]
 name = "populate"
 test = false
 
