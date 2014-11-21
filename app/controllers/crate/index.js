@@ -53,8 +53,10 @@ export default Ember.ObjectController.extend({
     }.property('keywords'),
 
     currentDependencies: function() {
+        var deps = this.get('currentVersion.dependencies');
+        if (deps === null) { return []; }
         return DS.PromiseArray.create({
-            promise: this.get('currentVersion.dependencies').then(function(deps) {
+            promise: deps.then(function(deps) {
                 return deps.filter(function(dep) {
                     return dep.get('kind') !== 'dev';
                 });
@@ -63,8 +65,10 @@ export default Ember.ObjectController.extend({
     }.property('currentVersion.dependencies'),
 
     currentDevDependencies: function() {
+        var deps = this.get('currentVersion.dependencies');
+        if (deps === null) { return []; }
         return DS.PromiseArray.create({
-            promise: this.get('currentVersion.dependencies').then(function(deps) {
+            promise: deps.then(function(deps) {
                 return deps.filter(function(dep) {
                     return dep.get('kind') === 'dev';
                 });
