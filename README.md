@@ -21,6 +21,7 @@ up and run.
 export S3_BUCKET=...
 export S3_ACCESS_KEY=...
 export S3_SECRET_KEY=...
+export S3_REGION=...
 
 # Credentials for talking to github
 export GH_CLIENT_ID=...
@@ -33,8 +34,27 @@ export SESSION_KEY=...
 export DATABASE_URL=...
 
 # Remote and local locations of the registry index
-export GIT_REPO_URL=https://path/to/repo
-export GIT_REPO_CHECKOUT=path/to/checkout
+export GIT_REPO_URL=file://`pwd`/tmp/index-bare
+export GIT_REPO_CHECKOUT=`pwd`/tmp/index-co
+```
+
+### Set up the git index
+
+First, run these commands in this repository's checkout to create a blank index:
+
+```
+mkdir -p tmp
+git init --bare tmp/index-bare
+git clone tmp/index-bare tmp/index-co
+touch tmp/index-co/.git/git-daemon-export-ok
+```
+
+Second, configure cargo to publish to your local registry by adding this to your
+local `~/.cargo/config`
+
+```
+[registry]
+index = "http://localhost:8888/git/index"
 ```
 
 ## Running
