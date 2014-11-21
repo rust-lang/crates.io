@@ -6,6 +6,7 @@ use semver;
 
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::{Crate, User, Dependency};
+use cargo_registry::dependency::Kind;
 
 pub struct MockUser(pub User);
 
@@ -37,6 +38,7 @@ impl Middleware for MockDependency {
         let va = crate_a.versions(req.tx().unwrap()).unwrap()[0].id;
         Dependency::insert(req.tx().unwrap(), va, crate_b.id,
                            &semver::VersionReq::parse(">= 0").unwrap(),
+                           Kind::Normal,
                            false, true, &[], &None).unwrap();
         Ok(())
     }

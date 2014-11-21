@@ -13,7 +13,7 @@ use url;
 use {Model, Crate, User};
 use app::RequestApp;
 use db::{Connection, RequestTransaction};
-use dependency::{Dependency, EncodableDependency};
+use dependency::{Dependency, EncodableDependency, Kind};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use upload;
@@ -136,7 +136,9 @@ impl Version {
             (**s).to_string()
         }).collect();
         let dep = try!(Dependency::insert(conn, self.id, krate.id,
-                                          &*dep.version_req, dep.optional,
+                                          &*dep.version_req,
+                                          dep.kind.unwrap_or(Kind::Normal),
+                                          dep.optional,
                                           dep.default_features,
                                           features.as_slice(),
                                           &dep.target));

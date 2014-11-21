@@ -396,6 +396,7 @@ fn migrations() -> Vec<Migration> {
             Ok(())
 
         }, proc(_) Ok(())),
+        Migration::add_column(20141120162357, "dependencies", "kind", "INTEGER"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

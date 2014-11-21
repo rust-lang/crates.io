@@ -15,6 +15,7 @@ pub struct Dependency {
     pub default_features: bool,
     pub features: Vec<String>,
     pub target: Option<String>,
+    pub kind: Kind,
 }
 
 #[deriving(Encodable, Decodable)]
@@ -27,30 +28,39 @@ pub struct EncodableDependency {
     pub default_features: bool,
     pub features: String,
     pub target: Option<String>,
+    pub kind: Kind,
+}
+
+#[deriving(FromPrimitive)]
+pub enum Kind {
+    Normal,
+    Build,
+    Dev,
 }
 
 impl Dependency {
     pub fn insert(conn: &Connection, version_id: i32, crate_id: i32,
-                  req: &semver::VersionReq, optional: bool, default_features: bool,
+                  req: &semver::VersionReq, kind: Kind,
+                  optional: bool, default_features: bool,
                   features: &[String], target: &Option<String>)
                   -> CargoResult<Dependency> {
         let req = req.to_string();
         let features = features.connect(",");
         let stmt = try!(conn.prepare("INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
-                                       default_features, features, target)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7)
+                                       default_features, features, target, kind)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                                       RETURNING *"));
         let mut rows = try!(stmt.query(&[&version_id, &crate_id, &req,
                                          &optional, &default_features,
-                                         &features, target]));
+                                         &features, target, &(kind as i32)]));
         Ok(Model::from_row(&rows.next().unwrap()))
     }
 
     pub fn git_encode(&self, crate_name: &str) -> git::Dependency {
         let Dependency { id: _, version_id: _, crate_id: _, ref req,
                          optional, default_features, ref features,
-                         ref target } = *self;
+                         ref target, kind } = *self;
         git::Dependency {
             name: crate_name.to_string(),
             req: req.to_string(),
@@ -58,12 +68,13 @@ impl Dependency {
             optional: optional,
             default_features: default_features,
             target: target.clone(),
+            kind: kind,
         }
     }
 
     pub fn encodable(self, crate_name: &str) -> EncodableDependency {
         let Dependency { id, version_id, crate_id: _, req, optional,
-                         default_features, features, target } = self;
+                         default_features, features, target, kind } = self;
         EncodableDependency {
             id: id,
             version_id: version_id,
@@ -73,6 +84,7 @@ impl Dependency {
             default_features: default_features,
             features: features.as_slice().connect(","),
             target: target,
+            kind: kind,
         }
     }
 }
@@ -81,6 +93,7 @@ impl Model for Dependency {
     fn from_row(row: &pg::Row) -> Dependency {
         let features: String = row.get("features");
         let req: String = row.get("req");
+        let kind: Option<i32> = row.get("kind");
         Dependency {
             id: row.get("id"),
             version_id: row.get("version_id"),
@@ -91,6 +104,7 @@ impl Model for Dependency {
             features: features.as_slice().split(',').map(|s| s.to_string())
                               .collect(),
             target: row.get("target"),
+            kind: FromPrimitive::from_i32(kind.unwrap_or(0)).unwrap(),
         }
     }
 

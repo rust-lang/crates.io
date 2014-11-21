@@ -14,6 +14,7 @@ use serialize::json;
 use conduit::{Request, Response};
 
 use app::{App, RequestApp};
+use dependency::Kind;
 use util::{CargoResult, internal};
 
 #[deriving(Encodable, Decodable)]
@@ -34,6 +35,7 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
+    pub kind: Kind,
 }
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {

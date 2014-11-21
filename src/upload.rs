@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use serialize::{Decodable, Decoder, Encoder, Encodable};
 use semver;
+use dependency::Kind as DependencyKind;
 
 use krate::Crate;
 
@@ -35,6 +36,7 @@ pub struct CrateDependency {
     pub features: Vec<CrateName>,
     pub version_req: CrateVersionReq,
     pub target: Option<String>,
+    pub kind: Option<DependencyKind>,
 }
 
 impl<E, D: Decoder<E>> Decodable<D, E> for CrateName {
@@ -85,6 +87,20 @@ impl<E, D: Decoder<E>> Decodable<D, E> for KeywordList {
     }
 }
 
+impl<E, D: Decoder<E>> Decodable<D, E> for DependencyKind {
+    fn decode(d: &mut D) -> Result<DependencyKind, E> {
+        let s: String = raw_try!(Decodable::decode(d));
+        match s.as_slice() {
+            "dev" => Ok(DependencyKind::Dev),
+            "build" => Ok(DependencyKind::Build),
+            "normal" => Ok(DependencyKind::Normal),
+            s => Err(d.error(format!("invalid dependency kind `{}`, must be \
+                                      one of dev, build, or normal",
+                                     s).as_slice())),
+        }
+    }
+}
+
 impl<E, D: Encoder<E>> Encodable<D, E> for CrateName {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         d.emit_str(self.as_slice())
@@ -107,6 +123,16 @@ impl<E, D: Encoder<E>> Encodable<D, E> for KeywordList {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         let KeywordList(ref inner) = *self;
         inner.encode(d)
+    }
+}
+
+impl<E, D: Encoder<E>> Encodable<D, E> for DependencyKind {
+    fn encode(&self, d: &mut D) -> Result<(), E> {
+        match *self {
+            DependencyKind::Normal => "normal".encode(d),
+            DependencyKind::Build => "build".encode(d),
+            DependencyKind::Dev => "dev".encode(d),
+        }
     }
 }
 
