@@ -10,6 +10,7 @@ export default DS.Model.extend({
     optional: DS.attr('boolean'),
     default_features: DS.attr('boolean'),
     features: DS.attr('string'),
+    kind: DS.attr('string'),
 
     featureList: function() {
         return this.get('features').split(',');

@@ -183,14 +183,12 @@
     <div class='section' id='crate-dependencies'>
         <h3>Dependencies</h3>
         <ul>
-            {{#each currentVersion.dependencies}}
-                {{#unless optional}}
-                    <li>
-                        {{#link-to 'crate' crate_id}}
-                            {{ crate_id}} {{ req }}
-                        {{/link-to}}
-                    </li>
-                {{/unless}}
+            {{#each currentDependencies}}
+                <li>
+                    {{#link-to 'crate' crate_id}}
+                        {{ crate_id}} {{ req }}
+                    {{/link-to}}
+                </li>
             {{/each}}
         </ul>
     </div>
@@ -198,14 +196,12 @@
     <div class='section' id='crate-dev-dependencies'>
         <h3>Dev-Dependencies</h3>
         <ul>
-            {{#each currentVersion.dependencies}}
-                {{#if optional}}
-                    <li>
-                        {{#link-to 'crate' crate_id}}
-                            {{ crate_id}} {{ req }}
-                        {{/link-to}}
-                    </li>
-                {{/if}}
+            {{#each currentDevDependencies}}
+                <li>
+                    {{#link-to 'crate' crate_id}}
+                        {{ crate_id}} {{ req }}
+                    {{/link-to}}
+                </li>
             {{/each}}
         </ul>
     </div>

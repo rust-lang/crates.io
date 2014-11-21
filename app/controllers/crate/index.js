@@ -52,6 +52,26 @@ export default Ember.ObjectController.extend({
         return this.get('keywords.length') > 0;
     }.property('keywords'),
 
+    currentDependencies: function() {
+        return DS.PromiseArray.create({
+            promise: this.get('currentVersion.dependencies').then(function(deps) {
+                return deps.filter(function(dep) {
+                    return dep.get('kind') !== 'dev';
+                });
+            }),
+        });
+    }.property('currentVersion.dependencies'),
+
+    currentDevDependencies: function() {
+        return DS.PromiseArray.create({
+            promise: this.get('currentVersion.dependencies').then(function(deps) {
+                return deps.filter(function(dep) {
+                    return dep.get('kind') === 'dev';
+                });
+            }),
+        });
+    }.property('currentVersion.dependencies'),
+
     actions: {
         download: function(version) {
             this.set('isDownloading', true);
