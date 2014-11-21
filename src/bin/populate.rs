@@ -1,3 +1,9 @@
+// Populate a set of dummy download statistics for a specific version in the
+// database.
+//
+// Usage:
+//      cargo run --bin populate version_id1 version_id2 ...
+
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate time;
@@ -25,7 +31,11 @@ fn env(s: &str) -> String {
 }
 
 fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
-    for &id in [48i32, 49, 50, 51, 52, 53].iter() {
+    let ids = os::args();
+    let mut ids = ids.iter().skip(1).filter_map(|arg| {
+        from_str::<i32>(arg.as_slice())
+    });
+    for id in ids {
         let now = time::now_utc().to_timespec();
         let mut rng = StdRng::new().unwrap();
         let mut dls = rng.gen_range(5000i32, 10000);
