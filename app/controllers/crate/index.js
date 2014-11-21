@@ -139,18 +139,18 @@ export default Ember.ObjectController.extend({
                 } else {
                     Ember.$('.graph').show();
                 }
-                data = google.visualization.arrayToDataTable(data);
+                var myData = google.visualization.arrayToDataTable(data);
 
                 var fmt = new google.visualization.DateFormat({
                     pattern: 'LLL d, yyyy',
                 });
-                fmt.format(data, 0);
+                fmt.format(myData, 0);
                 var el = document.getElementById('graph-data');
                 if (!el) {
                     return;
                 }
                 var chart = new google.visualization.LineChart(el);
-                chart.draw(data, {
+                chart.draw(myData, {
                     chartArea: {'width': '80%', 'height': '80%'},
                     hAxis: {
                         minorGridlines: { count: 8 },
