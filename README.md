@@ -38,24 +38,7 @@ export GIT_REPO_URL=file://`pwd`/tmp/index-bare
 export GIT_REPO_CHECKOUT=`pwd`/tmp/index-co
 ```
 
-### Set up the git index
-
-First, run these commands in this repository's checkout to create a blank index:
-
-```
-mkdir -p tmp
-git init --bare tmp/index-bare
-git clone tmp/index-bare tmp/index-co
-touch tmp/index-co/.git/git-daemon-export-ok
-```
-
-Second, configure cargo to publish to your local registry by adding this to your
-local `~/.cargo/config`
-
-```
-[registry]
-index = "http://localhost:8888/git/index"
-```
+To set up the git index, run `./script/init-local-index.sh`.
 
 ## Running
 
