@@ -63,7 +63,8 @@ impl Keyword {
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
         name.char_at(0).is_alphanumeric() &&
-        name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
+            name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {

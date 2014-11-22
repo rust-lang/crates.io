@@ -207,7 +207,8 @@ impl Crate {
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
         name.char_at(0).is_alphabetic() &&
-            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
+            name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {

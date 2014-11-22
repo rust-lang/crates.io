@@ -273,6 +273,26 @@ fn new_krate_wrong_user() {
 }
 
 #[test]
+fn new_krate_bad_name() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let mut req = new_req(app.clone(), "snow☃", "2.0.0");
+        ::mock_user(&mut req, ::user("foo"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+                "{}", json.errors);
+    }
+    {
+        let mut req = new_req(app, "áccênts", "2.0.0");
+        ::mock_user(&mut req, ::user("foo"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+                "{}", json.errors);
+    }
+}
+
+#[test]
 fn new_crate_owner() {
     #[deriving(Decodable)] struct O { ok: bool }
 
@@ -651,9 +671,15 @@ fn bad_keywords() {
     }
     {
         let mut krate = ::krate("foo");
-        for i in range(0, 100u) {
-            krate.keywords.push(format!("kw{}", i));
-        }
+        krate.keywords.push("?@?%".to_string());
+        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        ::mock_user(&mut req, ::user("foo"));
+        let mut response = ok_resp!(middle.call(&mut req));
+        ::json::<::Bad>(&mut response);
+    }
+    {
+        let mut krate = ::krate("foo");
+        krate.keywords.push("áccênts".to_string());
         let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
