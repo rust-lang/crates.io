@@ -379,9 +379,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             pattern = format!("{}%", letter.as_slice().char_at(0)
                                            .to_lowercase());
             needs_pattern = true;
-            (format!("SELECT * FROM crates WHERE name LIKE $1 {}
+            (format!("SELECT * FROM crates WHERE lower(name) LIKE $1 {}
                       LIMIT $2 OFFSET $3", sort_sql),
-             "SELECT COUNT(*) FROM crates WHERE name LIKE $1".to_string())
+             "SELECT COUNT(*) FROM crates WHERE lower(name) LIKE $1".to_string())
         })
     }).or_else(|| {
         query.get("keyword").map(|kw| {

@@ -65,8 +65,9 @@ fn index_queries() {
     krate.readme = Some("readme".to_string());
     krate.description = Some("description".to_string());
     ::mock_crate(&mut req, krate);
+    ::mock_crate(&mut req, ::krate("BAR"));
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar")));
+    let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
 
     // All of these fields should be indexed/searched by the queries
@@ -81,13 +82,17 @@ fn index_queries() {
 
     let query = format!("user_id={}", u.id);
     let mut response = ok_resp!(middle.call(req.with_query(query.as_slice())));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
     let mut response = ok_resp!(middle.call(req.with_query("user_id=0")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 
     let mut response = ok_resp!(middle.call(req.with_query("letter=F")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
     let mut response = ok_resp!(middle.call(req.with_query("letter=B")));
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    let mut response = ok_resp!(middle.call(req.with_query("letter=b")));
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    let mut response = ok_resp!(middle.call(req.with_query("letter=c")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw1")));
