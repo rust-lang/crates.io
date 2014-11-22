@@ -6,20 +6,30 @@ export default Ember.Object.extend({
     currentUser: null,
 
     init: function() {
-        this.set('isLoggedIn', localStorage.getItem('isLoggedIn') === '1');
+        var isLoggedIn;
+        try {
+            isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
+        } catch (e) {
+            isLoggedIn = false;
+        }
+        this.set('isLoggedIn', isLoggedIn);
         this.set('currentUser', null);
     },
 
     loginUser: function(user) {
         this.set('isLoggedIn', true);
         this.set('currentUser', user);
-        localStorage.setItem('isLoggedIn', '1');
+        try {
+            localStorage.setItem('isLoggedIn', '1');
+        } catch (e) {}
     },
 
     logoutUser: function() {
         this.set('savedTransition', null);
         this.set('isLoggedIn', null);
         this.set('currentUser', null);
-        localStorage.removeItem('isLoggedIn');
+        try {
+            localStorage.removeItem('isLoggedIn');
+        } catch (e) {}
     },
 });
