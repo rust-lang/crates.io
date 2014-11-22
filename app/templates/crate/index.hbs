@@ -94,8 +94,11 @@
                 <h3>Owners</h3>
                 <ul class='owners'>
                     {{#each owners}}
-                        {{! TODO: hyperlink to a profile page }}
-                        <li>{{user-avatar user=this size='medium-small'}}</li>
+                        <li>
+                          {{#user-link user=this}}
+                            {{user-avatar user=this size='medium-small'}}
+                          {{/user-link}}
+                        </li>
                     {{/each}}
                 </ul>
             </div>

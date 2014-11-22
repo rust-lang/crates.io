@@ -7,7 +7,7 @@
     <h2>Profile Information</h2>
 
     <div class='info'>
-        {{user-avatar user=this size='medium'}}
+        {{#user-link user=this }} {{user-avatar user=this size='medium'}} {{/user-link}}
 
         <dl>
             <dt>Name</dt>
