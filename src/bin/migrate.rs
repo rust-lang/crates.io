@@ -397,6 +397,19 @@ fn migrations() -> Vec<Migration> {
 
         }, proc(_) Ok(())),
         Migration::add_column(20141120162357, "dependencies", "kind", "INTEGER"),
+        Migration::new(20141121191309, proc(tx) {
+            try!(tx.execute("ALTER TABLE crates DROP CONSTRAINT \
+                             packages_name_key", &[]));
+            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (lower(name))", &[]));
+            Ok(())
+
+        }, proc(tx) {
+            try!(tx.execute("DROP INDEX index_crates_name", &[]));
+            try!(tx.execute("ALTER TABLE crates ADD CONSTRAINT packages_name_key \
+                             UNIQUE (name)", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

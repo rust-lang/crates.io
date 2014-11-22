@@ -77,7 +77,7 @@ impl Crate {
 
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
-                                      WHERE name = $1 LIMIT 1"));
+                                      WHERE lower(name) = lower($1) LIMIT 1"));
         match try!(stmt.query(&[&name as &ToSql])).next() {
             Some(row) => Ok(Model::from_row(&row)),
             None => Err(FromError::from_error(NotFound)),
@@ -114,7 +114,7 @@ impl Crate {
                                              keywords = $5,
                                              license = $6,
                                              repository = $7
-                                       WHERE name = $8
+                                       WHERE lower(name) = lower($8)
                                    RETURNING *"));
         let mut rows = try!(stmt.query(&[&documentation, &homepage,
                                          &description, &readme, &keywords,
@@ -666,7 +666,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                 FROM crates
                                 INNER JOIN versions ON
                                     crates.id = versions.crate_id
-                                WHERE crates.name = $1
+                                WHERE lower(crates.name) = lower($1)
                                   AND versions.num = $2
                                 LIMIT 1"));
     let mut rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));

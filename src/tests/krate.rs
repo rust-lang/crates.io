@@ -322,6 +322,17 @@ fn new_krate_duplicate_version() {
 }
 
 #[test]
+fn new_crate_similar_name() {
+    let (_b, app, middle) = ::app();
+    let mut req = new_req(app, "foo", "1.0.0");
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, ::krate("Foo"));
+    let json = bad_resp!(middle.call(&mut req));
+    assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
+            "{}", json.errors);
+}
+
+#[test]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "1.0.0");
@@ -425,6 +436,15 @@ fn download() {
     assert_eq!(resp.status.val0(), 302);
 
     req.with_path("/api/v1/crates/foo/1.0.0/downloads");
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
+
+    req.with_path("/api/v1/crates/FOO/1.0.0/download");
+    let resp = t_resp!(middle.call(&mut req));
+    assert_eq!(resp.status.val0(), 302);
+
+    req.with_path("/api/v1/crates/FOO/1.0.0/downloads");
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
