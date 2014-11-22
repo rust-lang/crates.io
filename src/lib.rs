@@ -156,7 +156,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             }
             Ok(())
         }
-        fn after(&self, req: &mut conduit::Request,
+        fn after(&self, _req: &mut conduit::Request,
                  res: Result<conduit::Response, Box<std::fmt::Show + 'static>>)
                  -> Result<conduit::Response, Box<std::fmt::Show + 'static>> {
             res.map(|res| {

@@ -16,7 +16,6 @@ use std::os;
 use std::io;
 
 use cargo_registry::Crate;
-use cargo_registry::util::CargoResult;
 
 fn main() {
     let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
@@ -59,6 +58,7 @@ fn delete(tx: &postgres::Transaction) {
         println!("  {} author records deleted", n);
         let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1",
                            &[&v.id]).unwrap();
+        println!("  {} dependencies deleted", n);
         tx.execute("DELETE FROM versions WHERE id = $1",
                    &[&v.id]).unwrap();
     }

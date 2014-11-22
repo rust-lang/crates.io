@@ -175,8 +175,8 @@ impl Crate {
                 _ => return Err(human(format!("not a valid url scheme: {}", url)))
             }
             match url.scheme_data {
-                url::RelativeSchemeData(..) => {}
-                url::NonRelativeSchemeData(..) => {
+                url::SchemeData::Relative(..) => {}
+                url::SchemeData::NonRelative(..) => {
                     return Err(human(format!("not a valid url scheme: {}", url)))
                 }
             }

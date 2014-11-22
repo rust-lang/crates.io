@@ -213,7 +213,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
 
     // Extract all ids requested.
-    let query = url::form_urlencoded::parse_str(req.query_string().unwrap_or(""));
+    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("")
+                                               .as_bytes());
     let ids = query.iter().filter_map(|&(ref a, ref b)| {
         if a.as_slice() == "ids[]" {
             from_str(b.as_slice())

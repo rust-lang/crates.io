@@ -82,7 +82,8 @@ impl<'a> RequestUtils for &'a Request + 'a {
     }
 
     fn query(self) -> HashMap<String, String> {
-        url::form_urlencoded::parse_str(self.query_string().unwrap_or(""))
+        url::form_urlencoded::parse(self.query_string().unwrap_or("")
+                                        .as_bytes())
             .into_iter().collect()
     }
 
