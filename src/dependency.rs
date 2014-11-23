@@ -68,7 +68,7 @@ impl Dependency {
             optional: optional,
             default_features: default_features,
             target: target.clone(),
-            kind: kind,
+            kind: Some(kind),
         }
     }
 

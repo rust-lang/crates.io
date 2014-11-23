@@ -35,7 +35,7 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Kind,
+    pub kind: Option<Kind>,
 }
 
 pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
