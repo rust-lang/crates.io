@@ -32,6 +32,8 @@ struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
 #[deriving(Decodable)]
+struct RevDeps { reverse_dependencies: Vec<EncodableDependency> }
+#[deriving(Decodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 
 #[test]
@@ -699,4 +701,25 @@ fn bad_keywords() {
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
+}
+
+#[test]
+fn reverse_dependencies() {
+    let (_b, _app, mut middle) = ::app();
+    let user = ::user("foo");
+    let c1 = ::krate("foo");
+    let c2 = ::krate("bar");
+    middle.add(::middleware::MockUser(user.clone()));
+    middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
+    let rel = format!("/api/v1/crates/{}/1.0.0/reverse_dependencies", c2.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.reverse_dependencies[0].crate_id.as_slice(), &*c1.name);
+    drop(req);
+
+    let rel = format!("/api/v1/crates/{}/1.0.2/reverse_dependencies", c1.name);
+    let mut req = MockRequest::new(conduit::Get, rel.as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<::Bad>(&mut response);
 }

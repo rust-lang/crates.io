@@ -69,6 +69,7 @@ pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
     pub owners: Option<String>,
+    pub reverse_dependencies: String,
 }
 
 impl Crate {
@@ -254,6 +255,7 @@ impl Crate {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
+                reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name)
             },
         }
     }
