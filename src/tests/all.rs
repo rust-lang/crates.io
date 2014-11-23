@@ -161,8 +161,8 @@ fn json<T>(r: &mut conduit::Response) -> T
                     (k, fixup(v))
                 }).collect())
             }
-            json::List(list) => {
-                json::List(list.into_iter().map(fixup).collect())
+            json::Array(list) => {
+                json::Array(list.into_iter().map(fixup).collect())
             }
             j => j,
         }

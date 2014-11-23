@@ -17,19 +17,19 @@ dependencies = [
  "html 0.0.1",
  "migrate 0.1.0",
  "oauth2 0.0.1 (git+https://github.com/alexcrichton/oauth2-rs)",
- "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
- "postgres 0.0.0 (git+https://github.com/sfackler/rust-postgres)",
- "r2d2_postgres 0.0.0 (git+https://github.com/sfackler/r2d2-postgres)",
+ "openssl 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
+ "postgres 0.0.1 (git+https://github.com/sfackler/rust-postgres)",
+ "r2d2_postgres 0.1.0 (git+https://github.com/sfackler/r2d2-postgres)",
  "s3 0.0.1",
  "semver 0.1.3 (git+https://github.com/rust-lang/semver)",
- "time 0.0.3 (git+https://github.com/rust-lang/time)",
+ "time 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
 [[package]]
 name = "civet"
 version = "0.1.0"
-source = "git+https://github.com/wycats/rust-civet#b0353083ab1109b6d962a2182a30de223b2d9865"
+source = "git+https://github.com/wycats/rust-civet#552838aa7a0ba0626b179d0317deac6ea22ef8fa"
 dependencies = [
  "civet-sys 0.0.1 (git+https://github.com/wycats/rust-civet)",
  "conduit 0.5.0 (git+https://github.com/conduit-rust/conduit.git)",
@@ -39,7 +39,7 @@ dependencies = [
 [[package]]
 name = "civet-sys"
 version = "0.0.1"
-source = "git+https://github.com/wycats/rust-civet#b0353083ab1109b6d962a2182a30de223b2d9865"
+source = "git+https://github.com/wycats/rust-civet#552838aa7a0ba0626b179d0317deac6ea22ef8fa"
 
 [[package]]
 name = "conduit"
@@ -138,9 +138,9 @@ dependencies = [
 [[package]]
 name = "cookie"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/cookie-rs.git#c7e1464489ec0cf338196fb4e2a8e7aa74aa672c"
+source = "git+https://github.com/alexcrichton/cookie-rs.git#cbeb942c35bc130e578725ab829ff3cb976a7c92"
 dependencies = [
- "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
  "time 0.0.3 (git+https://github.com/rust-lang/time)",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
@@ -160,7 +160,7 @@ version = "0.1.0"
 source = "git+https://github.com/carllerche/curl-rust#c1b96e146f6752353a1e84cca932c628e6bf73af"
 dependencies = [
  "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
- "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
  "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
 
@@ -205,14 +205,14 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/git2-rs#d0d21ca14b4a410806b577b04c2d29f7f8e45f61"
 dependencies = [
  "libssh2-sys 0.0.1 (git+https://github.com/alexcrichton/ssh2-rs)",
- "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
  "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
 
 [[package]]
 name = "libressl-pnacl-sys"
-version = "2.0.1"
-source = "git+https://github.com/DiamondLovesYou/libressl-pnacl-sys.git#9a42eeb52070ae0aa4f666d36198899e1e54cda5"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "pnacl-build-helper 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -223,7 +223,7 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/ssh2-rs#922531da4c22abe7a216672314315d41769d7fb1"
 dependencies = [
  "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
- "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
  "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
 
@@ -239,7 +239,7 @@ dependencies = [
 name = "migrate"
 version = "0.1.0"
 dependencies = [
- "postgres 0.0.0 (git+https://github.com/sfackler/rust-postgres)",
+ "postgres 0.0.1 (git+https://github.com/sfackler/rust-postgres)",
 ]
 
 [[package]]
@@ -266,36 +266,45 @@ dependencies = [
 
 [[package]]
 name = "openssl"
-version = "0.0.1"
-source = "git+https://github.com/sfackler/rust-openssl#efa71212432a9003d35fdae0e422716e6592b9ae"
+version = "0.0.2"
+source = "git+https://github.com/sfackler/rust-openssl#b7c88101f5afd764f1bab5b1a4b8d0c95bc17a52"
 dependencies = [
- "libressl-pnacl-sys 2.0.1 (git+https://github.com/DiamondLovesYou/libressl-pnacl-sys.git)",
- "openssl-sys 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "libressl-pnacl-sys 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
 ]
 
 [[package]]
 name = "openssl-sys"
-version = "0.0.1"
-source = "git+https://github.com/sfackler/rust-openssl#efa71212432a9003d35fdae0e422716e6592b9ae"
+version = "0.0.2"
+source = "git+https://github.com/sfackler/rust-openssl#b7c88101f5afd764f1bab5b1a4b8d0c95bc17a52"
 dependencies = [
- "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
+ "pkg-config 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "phf"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#2f3c6053c2d754974a94aa45a49b8cce10ae88ba"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
+ "phf_mac 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_shared 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "phf_mac"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-phf#2f3c6053c2d754974a94aa45a49b8cce10ae88ba"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "time 0.0.3 (git+https://github.com/rust-lang/time)",
- "xxhash 0.0.1 (git+https://github.com/Jurily/rust-xxhash)",
+ "phf_shared 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "phf_shared"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "xxhash 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -304,34 +313,39 @@ version = "0.0.1"
 source = "git+https://github.com/alexcrichton/pkg-config-rs#d24a08d87d63df8dc9526c503944415b86719220"
 
 [[package]]
+name = "pkg-config"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "pnacl-build-helper"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "postgres"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-postgres#1882d878ad1218d2decef2d154f39334c7303d6a"
+version = "0.0.1"
+source = "git+https://github.com/sfackler/rust-postgres#cbc74e6ea9461c62992dd73867575cf42bcaecf5"
 dependencies = [
- "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
- "phf 0.0.0 (git+https://github.com/sfackler/rust-phf)",
- "phf_mac 0.0.0 (git+https://github.com/sfackler/rust-phf)",
- "time 0.0.3 (git+https://github.com/rust-lang/time)",
- "uuid 0.0.2 (git+https://github.com/rust-lang/uuid)",
+ "openssl 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
+ "phf 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_mac 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "r2d2"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/r2d2#8337055e2a5a2db9151ab62ea6d2e7e401d1c0d5"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "r2d2_postgres"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/r2d2-postgres#6de89ea856e901b7c15c1370bd06a41764d01846"
+version = "0.1.0"
+source = "git+https://github.com/sfackler/r2d2-postgres#da7b5f19ac8d20692ea4e7ea25769194a92409db"
 dependencies = [
- "postgres 0.0.0 (git+https://github.com/sfackler/rust-postgres)",
- "r2d2 0.0.0 (git+https://github.com/sfackler/r2d2)",
+ "postgres 0.0.1 (git+https://github.com/sfackler/rust-postgres)",
+ "r2d2 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -344,7 +358,7 @@ name = "s3"
 version = "0.0.1"
 dependencies = [
  "curl 0.1.0 (git+https://github.com/carllerche/curl-rust)",
- "openssl 0.0.1 (git+https://github.com/sfackler/rust-openssl)",
+ "openssl 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
  "time 0.0.3 (git+https://github.com/rust-lang/time)",
 ]
 
@@ -356,7 +370,15 @@ source = "git+https://github.com/rust-lang/semver#29212953f839337c672d185dde74e1
 [[package]]
 name = "time"
 version = "0.0.3"
-source = "git+https://github.com/rust-lang/time#44aec0e7996fc0f2e76eeb2215f8fd78e1965e46"
+source = "git+https://github.com/rust-lang/time#533d3823dbe200aaa2a2599176a6b30579581232"
+dependencies = [
+ "gcc 0.0.2 (git+https://github.com/alexcrichton/gcc-rs)",
+]
+
+[[package]]
+name = "time"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -369,10 +391,10 @@ source = "git+https://github.com/servo/rust-url#a838a41263472de966f7ec8db758caa9
 [[package]]
 name = "uuid"
 version = "0.0.2"
-source = "git+https://github.com/rust-lang/uuid#f5d94d0043a615756edefaf9c6041f11e52b8370"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "xxhash"
 version = "0.0.1"
-source = "git+https://github.com/Jurily/rust-xxhash#6027ce91f9164f2f936149547f789103b1b671e6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 

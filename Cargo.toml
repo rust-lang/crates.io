@@ -91,8 +91,8 @@ git = "https://github.com/alexcrichton/git2-rs"
 [dependencies.openssl]
 git = "https://github.com/sfackler/rust-openssl"
 
-[dependencies.time]
-git = "https://github.com/rust-lang/time"
+[dependencies]
+time = "*"
 
 [dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test"

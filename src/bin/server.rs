@@ -1,7 +1,6 @@
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate civet;
-extern crate green;
 extern crate git2;
 
 use std::os;
