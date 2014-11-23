@@ -24,7 +24,7 @@ cat > config.json <<-EOF
 EOF
 git add config.json
 git commit -qm 'Initial commit'
-git remote add origin ../index-bare
+git remote add origin file://`pwd`/../index-bare
 git push -q origin master -u > /dev/null
 cd ../..
 touch tmp/index-co/.git/git-daemon-export-ok
@@ -37,4 +37,3 @@ Please add the following to your HOME/.cargo/config:
 
 You will also need to generate a token from in the app itself
 EOF
-
