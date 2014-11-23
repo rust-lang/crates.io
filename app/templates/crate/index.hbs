@@ -106,6 +106,77 @@
     </div>
 </div>
 
+<div id='crate-links'>
+  <div class='section'>
+    <h3>Links</h3>
+    <ul>
+      {{#if homepage}}
+      <li><a {{bind-attr href=homepage}}>Homepage</a></li>
+      {{/if}}
+      {{#if wiki}}
+      <li><a {{bind-attr href=wiki}}>Wiki</a></li>
+      {{/if}}
+      {{#if mailing_list}}
+      <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
+      {{/if}}
+      {{#if documentation}}
+      <li><a {{bind-attr href=documentation}}>Documentation</a></li>
+      {{/if}}
+      {{#if repository}}
+      <li><a {{bind-attr href=repository}}>Repository</a></li>
+      {{/if}}
+    </ul>
+  </div>
+
+  <div class='section' id='crate-dependencies'>
+    <h3>Dependencies</h3>
+    <ul>
+      {{#each currentDependencies}}
+      <li>
+        {{#link-to 'crate' crate_id}}
+        {{ crate_id}} {{ req }}
+        {{/link-to}}
+      </li>
+      {{/each}}
+    </ul>
+  </div>
+
+  <div class='section' id='crate-dev-dependencies'>
+    <h3>Dev-Dependencies</h3>
+    <ul>
+      {{#each currentDevDependencies}}
+      <li>
+        {{#link-to 'crate' crate_id}}
+        {{ crate_id}} {{ req }}
+        {{/link-to}}
+      </li>
+      {{/each}}
+    </ul>
+  </div>
+
+  <div class='section' id='crate-versions'>
+    <h3>Versions</h3>
+    <ul>
+      {{#each smallSortedVersions}}
+      <li>
+        {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+        <span class='date'>{{ date-small created_at }}</span>
+        {{#if yanked}}
+        <span class='yanked'>yanked</span>
+        {{/if}}
+      </li>
+      {{/each}}
+    </ul>
+    <span class='small'>
+      {{#if hasMoreVersions}}
+      {{#link-to 'crate.versions' this}}
+      show all {{ versions.length }} versions
+      {{/link-to}}
+      {{/if}}
+    </span>
+  </div>
+</div>
+
 <div id='crate-downloads'>
     <div class='stats'>
         <h3>Stats Overview</h3>
@@ -160,74 +231,3 @@
     </div>
 </div>
 {{/if}}
-
-<div id='crate-links'>
-    <div class='section'>
-        <h3>Links</h3>
-        <ul>
-            {{#if homepage}}
-                <li><a {{bind-attr href=homepage}}>Homepage</a></li>
-            {{/if}}
-            {{#if wiki}}
-                <li><a {{bind-attr href=wiki}}>Wiki</a></li>
-            {{/if}}
-            {{#if mailing_list}}
-                <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
-            {{/if}}
-            {{#if documentation}}
-                <li><a {{bind-attr href=documentation}}>Documentation</a></li>
-            {{/if}}
-            {{#if repository}}
-                <li><a {{bind-attr href=repository}}>Repository</a></li>
-            {{/if}}
-        </ul>
-    </div>
-
-    <div class='section' id='crate-dependencies'>
-        <h3>Dependencies</h3>
-        <ul>
-            {{#each currentDependencies}}
-                <li>
-                    {{#link-to 'crate' crate_id}}
-                        {{ crate_id}} {{ req }}
-                    {{/link-to}}
-                </li>
-            {{/each}}
-        </ul>
-    </div>
-
-    <div class='section' id='crate-dev-dependencies'>
-        <h3>Dev-Dependencies</h3>
-        <ul>
-            {{#each currentDevDependencies}}
-                <li>
-                    {{#link-to 'crate' crate_id}}
-                        {{ crate_id}} {{ req }}
-                    {{/link-to}}
-                </li>
-            {{/each}}
-        </ul>
-    </div>
-
-    <div class='section' id='crate-versions'>
-        <h3>Versions</h3>
-        <ul>
-            {{#each smallSortedVersions}}
-                <li>
-                    {{#link-to 'crate' this}}{{ num }}{{/link-to}}
-                    <span class='date'>{{ date-small created_at }}</span>
-                    {{#if yanked}}
-                        <span class='yanked'>yanked</span>
-                    {{/if}}
-                </li>
-            {{/each}}
-        </ul>
-        <span class='small'>
-            {{#if hasMoreVersions}}
-                {{#link-to 'crate.versions' this}}
-                    show all {{ versions.length }} versions
-                {{/link-to}}
-            {{/if}}
-        </span>
-    </div>
-</div>
