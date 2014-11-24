@@ -12,7 +12,7 @@ pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
     pub deps: Vec<CrateDependency>,
-    pub features: HashMap<CrateName, Vec<CrateName>>,
+    pub features: HashMap<CrateName, Vec<Feature>>,
     pub authors: Vec<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
