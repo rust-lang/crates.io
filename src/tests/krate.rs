@@ -506,7 +506,7 @@ fn dependencies() {
     let c1 = ::krate("foo");
     let c2 = ::krate("bar");
     middle.add(::middleware::MockUser(user.clone()));
-    middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
+    middle.add(::middleware::MockDependency(c1.clone(), "1.0.0", c2.clone()));
     let rel = format!("/api/v1/crates/{}/1.0.0/dependencies", c1.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
@@ -710,16 +710,24 @@ fn reverse_dependencies() {
     let c1 = ::krate("foo");
     let c2 = ::krate("bar");
     middle.add(::middleware::MockUser(user.clone()));
-    middle.add(::middleware::MockDependency(c1.clone(), c2.clone()));
-    let rel = format!("/api/v1/crates/{}/1.0.0/reverse_dependencies", c2.name);
+    // multiple dependencies of c1 on c2, to detect we handle this
+    // correctly.
+    middle.add(::middleware::MockDependency(c1.clone(), "1.0.0", c2.clone()));
+    middle.add(::middleware::MockDependency(c1.clone(), "1.1.0", c2.clone()));
+
+    let rel = format!("/api/v1/crates/{}/reverse_dependencies", c2.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.reverse_dependencies.len(), 1);
     assert_eq!(deps.reverse_dependencies[0].crate_id.as_slice(), &*c1.name);
     drop(req);
 
-    let rel = format!("/api/v1/crates/{}/1.0.2/reverse_dependencies", c1.name);
+    // c1 has no dependent crates.
+    let rel = format!("/api/v1/crates/{}/reverse_dependencies", c1.name);
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<::Bad>(&mut response);
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.reverse_dependencies.len(), 0);
+    drop(req);
 }
