@@ -152,6 +152,10 @@
             .top, .bottom {
                 @include flex-direction(column);
             }
+
+            ul {
+              padding-left: 20px;
+            }
         }
     }
 

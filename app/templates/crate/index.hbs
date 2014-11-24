@@ -48,7 +48,7 @@
             </div>
         {{/if}}
         <div class='install'>
-            <div class='action'>Depend</div>
+            <div class='action'>Cargo.toml</div>
             <code>{{ name }} = "~{{ currentVersion.num }}"</code>
         </div>
     </div>
@@ -59,11 +59,11 @@
                 <div class='date'>{{ from-now updated_at }}</div>
             </div>
 
-            <div>
+            <div class="authors">
                 <h3>Authors</h3>
                 <ul>
                     {{#each displayedAuthors}}
-                        <li>{{ name }}</li>
+                        <li>{{ format-email name }}</li>
                     {{/each}}
                 </ul>
             </div>
@@ -107,6 +107,7 @@
 </div>
 
 <div id='crate-links'>
+  {{#if anyLinks}}
   <div class='section'>
     <h3>Links</h3>
     <ul>
@@ -127,6 +128,7 @@
       {{/if}}
     </ul>
   </div>
+  {{/if}}
 
   <div class='section' id='crate-dependencies'>
     <h3>Dependencies</h3>
@@ -134,25 +136,29 @@
       {{#each currentDependencies}}
       <li>
         {{#link-to 'crate' crate_id}}
-        {{ crate_id}} {{ req }}
+        {{ crate_id }} {{ format-req req }}
         {{/link-to}}
       </li>
+      {{else}}
+      <li>None</li>
       {{/each}}
     </ul>
   </div>
 
-  <div class='section' id='crate-dev-dependencies'>
-    <h3>Dev-Dependencies</h3>
-    <ul>
-      {{#each currentDevDependencies}}
-      <li>
-        {{#link-to 'crate' crate_id}}
-        {{ crate_id}} {{ req }}
-        {{/link-to}}
-      </li>
-      {{/each}}
-    </ul>
-  </div>
+  {{#if currentDevDependencies}}
+    <div class='section' id='crate-dev-dependencies'>
+      <h3>Dev-Dependencies</h3>
+      <ul>
+        {{#each currentDevDependencies}}
+        <li>
+          {{#link-to 'crate' crate_id}}
+          {{ crate_id}} {{ req }}
+          {{/link-to}}
+        </li>
+        {{/each}}
+      </ul>
+    </div>
+  {{/if}}
 
   <div class='section' id='crate-versions'>
     <h3>Versions</h3>

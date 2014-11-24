@@ -28,6 +28,14 @@ export default Ember.ObjectController.extend({
         return this.get("sortedVersions.length") > NUM_VERSIONS;
     }.property('sortedVersions'),
 
+    anyLinks: function() {
+      return this.get('homepage') ||
+             this.get('wiki') ||
+             this.get('mailing_list') ||
+             this.get('documentation') ||
+             this.get('repository');
+    }.property('homepage', 'wiki', 'mailing_list', 'documentation', 'repository'),
+
     displayedAuthors: function() {
         var self = this;
         if (!this.get('currentVersion')) {
