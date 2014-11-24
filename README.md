@@ -11,67 +11,109 @@ Source code for the default registry for Cargo users. Can be found online at
 * `npm install`
 * `bower install`
 
-## Configuration
+## Making UI tweaks or changes
 
-The app currently requires some configuration via environment variables to start
-up and run.
-
-```
-# Credentials for uploading packages to S3
-export S3_BUCKET=...
-export S3_ACCESS_KEY=...
-export S3_SECRET_KEY=...
-export S3_REGION=...
-
-# Credentials for talking to github
-export GH_CLIENT_ID=...
-export GH_CLIENT_SECRET=...
-
-# Key to sign cookies with
-export SESSION_KEY=...
-
-# Location of the *postgres* database
-export DATABASE_URL=...
-
-# Remote and local locations of the registry index
-export GIT_REPO_URL=file://`pwd`/tmp/index-bare
-export GIT_REPO_CHECKOUT=`pwd`/tmp/index-co
-```
-
-To set up the git index, run `./script/init-local-index.sh`.
-
-## Running
-
-To run the app, you need to run both the API server and the ember frontend
-server.
-
-* `cargo build && ./target/server`
-* `ember server --proxy http://localhost:8888`
-* Visit the app at [http://localhost:4200](http://localhost:4200).
-
-## Initialize the database
-
-To initialize the database (or run any recent migrations):
+This website is built using [Ember.js](http://emberjs.com/) for the frontend,
+which enables tweaking the UI of the site without actually having the server
+running locally. To get up and running, just run:
 
 ```
-./target/migrate
+ember server --proxy https://staging-crates-io.herokuapp.com
 ```
+
+This will give you a local server to browse while using the staging backend
+(hosten on heroku). You can also specify the proxy as `https://crates.io/`, but
+beware that any modifications made are permanent!
+
+## Working on the backend
+
+If you'd like to change the API server (the Rust backend), then the setup is a
+little more complicated.
+
+1. Define some environment variables:
+
+    ```
+    # Credentials for uploading packages to S3, these can be blank if you're not
+    # publishing locally.
+    export S3_BUCKET=...
+    export S3_ACCESS_KEY=...
+    export S3_SECRET_KEY=...
+    export S3_REGION=...      # not needed if the S3 bucket is in US standard
+
+    # Credentials for talking to github, can be blank if you're not logging in.
+    #
+    # When registering a new application, be sure to set the callback url to the
+    # address `http://localhost:4200/authorize/github`.
+    export GH_CLIENT_ID=...
+    export GH_CLIENT_SECRET=...
+
+    # Key to sign and encrypt cookies with
+    export SESSION_KEY=...
+
+    # Location of the *postgres* database
+    #
+    # e.g. postgres://postgres:@localhost/cargo_registry
+    export DATABASE_URL=...
+
+    # Remote and local locations of the registry index
+    export GIT_REPO_URL=file://`pwd`/tmp/index-bare
+    export GIT_REPO_CHECKOUT=`pwd`/tmp/index-co
+    ```
+
+2. Set up the git index
+
+    ```
+    ./script/init-local-index.sh
+    ```
+
+3. Build the server
+
+    ```
+    cargo build
+    ```
+
+4. Run the migrations
+
+    ```
+    ./target/migrate
+    ```
+
+5. Run the servers
+
+    ```
+    # In one window, run the api server
+    ./target/server
+
+    # In another window run the ember-cli server
+    ember server --proxy http://localhost:8888/
+    ```
 
 ## Running Tests
 
-* `TEST_DATABASE_URL=... cargo test`
+1. Configure the location of the test database. Note that this should just be a
+   blank database, the test harness will ensure that migrations are run.
 
-JS tests (note these are not written yet)
+    ```
+    export TEST_DATABASE_URL=...
+    ```
 
-* `ember test`
-* `ember test --server`
+2. Run the API server tests
 
-* `export TEST_DATABASE_URL=cargo.test`
-* `cargo test`
+    ```
+    cargo test
+    ```
 
-## Building
+3. Run frontend tests
 
-* `cargo build`
-* `ember build`
+    ```
+    ember test
+    ember test --server
+    ```
 
-For more information on using ember-cli, visit [http://iamstef.net/ember-cli/](http://iamstef.net/ember-cli/).
+## Tools
+
+For more information on using ember-cli, visit
+[http://iamstef.net/ember-cli/](http://iamstef.net/ember-cli/).
+
+For more information on using cargo, visit
+[doc.crates.io](http://doc.crates.io/).
