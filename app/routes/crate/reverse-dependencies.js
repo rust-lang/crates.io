@@ -2,19 +2,44 @@ import Ember from 'ember';
 import Crate from 'cargo/models/crate';
 
 export default Ember.Route.extend({
-    afterModel: function(data) {
-      console.log("afterModel");
-        if (data instanceof Crate) {
-            return data.get('reverse_dependencies');
-        } else {
-            return data.crate.get('reverse_dependencies');
-        }
+    queryParams: {
+        page: { refreshModel: true },
     },
 
-    setupController: function(controller, data) {
+    crate: null,
+    reverse_dependencies: null,
+    params: null,
+
+    model: function(params, transition) {
+        this.set('params', params);
+        return this._super(params, transition);
+    },
+
+    afterModel: function(data) {
+        var crate;
         if (data instanceof Crate) {
-            data = {crate: data, reverse_dependencies: null};
+            crate = data;
+        } else {
+            crate = data.crate;
         }
-        this._super(controller, data.crate);
+        var self = this;
+
+        var params = this.get('params');
+        params.reverse = true;
+        params.crate = crate;
+
+        return this.store.find('dependency', params).then(function(deps) {
+            var controller = self.controllerFor('crate/reverse_dependencies');
+            if (controller) {
+                controller.set('model', deps);
+            }
+            self.set('reverse_dependencies', deps);
+            self.set('crate', crate);
+        });
+    },
+
+    setupController: function(controller) {
+        this._super(controller, this.get('reverse_dependencies'));
+        controller.set('crate', this.get('crate'));
     },
 });

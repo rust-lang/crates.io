@@ -1,16 +1,20 @@
 <div class='all-versions-back'>
-    {{#link-to 'crate' this}}&#11013; Back to Main Page{{/link-to}}
+    {{#link-to 'crate' crate}}&#11013; Back to {{ crate.name }}{{/link-to}}
 </div>
 
-<div class='info'>
-    <span class='small'>
-        All <span class='num'>{{ reverse_dependencies.length }}</span>
-        reverse dependencies of <span class='num'>{{ name }}</span>
-    </span>
+<div id='results'>
+    <div class='nav'>
+        <span class='amt'>
+            Displaying
+            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+            of <span class='total'>{{ totalItems }}</span> reverse dependencies
+            of <span class='num'>{{ crate.name }}</span>
+        </span>
+    </div>
 </div>
 
 <div id='crate-all-reverse-dependencies' class='white-rows'>
-    {{#each model.reverse_dependencies}}
+    {{#each}}
         <div class='row'>
           <div>
             {{#link-to 'crate' crate_id}}{{crate_id}}{{/link-to}} requires {{req}}
@@ -21,4 +25,16 @@
             {{/link-to}}
         </div>
     {{/each}}
+</div>
+
+<div class='pagination'>
+    {{#link-to 'crate.reverse_dependencies' crate (query-params page=prevPage) class="prev"}}
+        <img src="/assets/left-pag.png"/>
+    {{/link-to}}
+    {{#each pages}}
+        {{#link-to 'crate.reverse_dependencies' crate (query-params page=this)}}{{ this }}{{/link-to}}
+    {{/each}}
+    {{#link-to 'crate.reverse_dependencies' crate (query-params page=nextPage) class="next"}}
+        <img src="/assets/right-pag.png"/>
+    {{/link-to}}
 </div>
