@@ -17,6 +17,7 @@ use url::{mod, Url};
 use {Model, User, Keyword, Version};
 use app::{App, RequestApp};
 use db::{Connection, RequestTransaction};
+use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::EncodableKeyword;
@@ -68,6 +69,7 @@ pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
     pub owners: Option<String>,
+    pub reverse_dependencies: String,
 }
 
 impl Crate {
@@ -253,6 +255,7 @@ impl Crate {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
+                reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name)
             },
         }
     }
@@ -332,6 +335,22 @@ impl Crate {
                                       WHERE crates_keywords.crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
         Ok(rows.map(|r| Model::from_row(&r)).collect())
+    }
+
+    /// Returns (dependency, dependent crate name)
+    pub fn reverse_dependencies(&self, conn: &Connection) -> CargoResult<Vec<(Dependency, String)>> {
+        let stmt = try!(conn.prepare("SELECT dependencies.*,
+                                             crates.name AS crate_name
+                                      FROM dependencies
+                                      INNER JOIN versions
+                                        ON versions.id = dependencies.version_id
+                                      INNER JOIN crates
+                                        ON crates.id = versions.crate_id
+                                      WHERE dependencies.crate_id = $1
+                                        AND versions.num = crates.max_version"));
+        Ok(try!(stmt.query(&[&self.id])).map(|r| {
+            (Model::from_row(&r), r.get("crate_name"))
+        }).collect())
     }
 }
 
@@ -859,4 +878,19 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     #[deriving(Encodable)]
     struct R { ok: bool }
     Ok(req.json(&R{ ok: true }))
+}
+
+pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
+    let name = &req.params()["crate_id"];
+    let conn = try!(req.tx());
+    let krate = try!(Crate::find_by_name(conn, name.as_slice()));
+    let tx = try!(req.tx());
+    let rev_deps = try!(krate.reverse_dependencies(tx));
+    let rev_deps = rev_deps.into_iter().map(|(dep, crate_name)| {
+        dep.encodable(crate_name.as_slice())
+    }).collect();
+
+    #[deriving(Encodable)]
+    struct R { reverse_dependencies: Vec<EncodableDependency> }
+    Ok(req.json(&R{ reverse_dependencies: rev_deps }))
 }

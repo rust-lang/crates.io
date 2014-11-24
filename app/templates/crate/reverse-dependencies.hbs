@@ -1,0 +1,24 @@
+<div class='all-versions-back'>
+    {{#link-to 'crate' this}}&#11013; Back to Main Page{{/link-to}}
+</div>
+
+<div class='info'>
+    <span class='small'>
+        All <span class='num'>{{ reverse_dependencies.length }}</span>
+        reverse dependencies of <span class='num'>{{ name }}</span>
+    </span>
+</div>
+
+<div id='crate-all-reverse-dependencies' class='white-rows'>
+    {{#each model.reverse_dependencies}}
+        <div class='row'>
+          <div>
+            {{#link-to 'crate' crate_id}}{{crate_id}}{{/link-to}} requires {{req}}
+                {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+            </div>
+            {{#link-to 'crate' this class='arrow'}}
+                <img src="/assets/right-arrow-all-versions.png"/>
+            {{/link-to}}
+        </div>
+    {{/each}}
+</div>

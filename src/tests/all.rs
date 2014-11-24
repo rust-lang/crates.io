@@ -24,6 +24,7 @@ use conduit_test::MockRequest;
 use cargo_registry::app::App;
 use cargo_registry::db::{mod, RequestTransaction};
 use cargo_registry::{User, Crate, Version, Keyword};
+use cargo_registry::util::CargoResult;
 
 macro_rules! t( ($e:expr) => (
     match $e {
@@ -213,8 +214,14 @@ fn mock_user(req: &mut Request, u: User) -> User {
 }
 
 fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
+    let (c, v) = mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap());
+    v.unwrap();
+    c
+}
+fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
+                   -> (Crate, CargoResult<Version>) {
     let user = req.extensions().find::<User>().unwrap();
-    let krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
+    let mut krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
                                       user.id, &krate.description,
                                       &krate.homepage,
                                       &krate.documentation,
@@ -224,10 +231,8 @@ fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
                                       &krate.license).unwrap();
     Keyword::update_crate(req.tx().unwrap(), &krate,
                           krate.keywords.as_slice()).unwrap();
-    Version::insert(req.tx().unwrap(), krate.id,
-                    &semver::Version::parse("1.0.0").unwrap(),
-                    &HashMap::new(), &[]).unwrap();
-    return krate;
+    let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
+    (krate, v)
 }
 
 fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
