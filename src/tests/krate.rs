@@ -32,7 +32,7 @@ struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
 #[deriving(Decodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
 #[deriving(Decodable)]
-struct RevDeps { reverse_dependencies: Vec<EncodableDependency> }
+struct RevDeps { dependencies: Vec<EncodableDependency>, meta: CrateMeta }
 #[deriving(Decodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 
@@ -719,8 +719,9 @@ fn reverse_dependencies() {
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
-    assert_eq!(deps.reverse_dependencies.len(), 1);
-    assert_eq!(deps.reverse_dependencies[0].crate_id.as_slice(), &*c1.name);
+    assert_eq!(deps.dependencies.len(), 1);
+    assert_eq!(deps.meta.total, 1);
+    assert_eq!(deps.dependencies[0].crate_id.as_slice(), &*c1.name);
     drop(req);
 
     // c1 has no dependent crates.
@@ -728,6 +729,7 @@ fn reverse_dependencies() {
     let mut req = MockRequest::new(conduit::Get, rel.as_slice());
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
-    assert_eq!(deps.reverse_dependencies.len(), 0);
+    assert_eq!(deps.dependencies.len(), 0);
+    assert_eq!(deps.meta.total, 0);
     drop(req);
 }

@@ -338,19 +338,33 @@ impl Crate {
     }
 
     /// Returns (dependency, dependent crate name)
-    pub fn reverse_dependencies(&self, conn: &Connection) -> CargoResult<Vec<(Dependency, String)>> {
-        let stmt = try!(conn.prepare("SELECT dependencies.*,
-                                             crates.name AS crate_name
-                                      FROM dependencies
-                                      INNER JOIN versions
-                                        ON versions.id = dependencies.version_id
-                                      INNER JOIN crates
-                                        ON crates.id = versions.crate_id
-                                      WHERE dependencies.crate_id = $1
-                                        AND versions.num = crates.max_version"));
-        Ok(try!(stmt.query(&[&self.id])).map(|r| {
+    pub fn reverse_dependencies(&self, conn: &Connection, offset: i64, limit: i64)
+                                -> CargoResult<(Vec<(Dependency, String)>, i64)> {
+        let select_sql = "
+              FROM dependencies
+              INNER JOIN versions
+                ON versions.id = dependencies.version_id
+              INNER JOIN crates
+                ON crates.id = versions.crate_id
+              WHERE dependencies.crate_id = $1
+                AND versions.num = crates.max_version
+        ";
+        let fetch_sql = format!("SELECT dependencies.*,
+                                        crates.name AS crate_name
+                                        {}
+                               ORDER BY crate_name ASC
+                                 OFFSET $2
+                                  LIMIT $3", select_sql);
+        let count_sql = format!("SELECT COUNT(dependencies.*) {}", select_sql);
+
+        let stmt = try!(conn.prepare(fetch_sql.as_slice()));
+        let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit])).map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
-        }).collect())
+        }).collect();
+        let stmt = try!(conn.prepare(count_sql.as_slice()));
+        let cnt: i64 = try!(stmt.query(&[&self.id])).next().unwrap().get(0);
+
+        Ok((vec, cnt))
     }
 }
 
@@ -885,12 +899,16 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let krate = try!(Crate::find_by_name(conn, name.as_slice()));
     let tx = try!(req.tx());
-    let rev_deps = try!(krate.reverse_dependencies(tx));
+    let (offset, limit) = try!(req.pagination(10, 100));
+    let (rev_deps, total) = try!(krate.reverse_dependencies(tx, offset, limit));
     let rev_deps = rev_deps.into_iter().map(|(dep, crate_name)| {
         dep.encodable(crate_name.as_slice())
     }).collect();
 
     #[deriving(Encodable)]
-    struct R { dependencies: Vec<EncodableDependency> }
-    Ok(req.json(&R{ dependencies: rev_deps }))
+    struct R { dependencies: Vec<EncodableDependency>, meta: Meta }
+    #[deriving(Encodable)]
+    struct Meta { total: i64 }
+    Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }
+
