@@ -29,13 +29,14 @@ pub struct CrateVersion(pub semver::Version);
 pub struct CrateVersionReq(pub semver::VersionReq);
 pub struct KeywordList(pub Vec<Keyword>);
 pub struct Keyword(pub String);
+pub struct Feature(pub String);
 
 #[deriving(Decodable, Encodable)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,
     pub name: CrateName,
-    pub features: Vec<CrateName>,
+    pub features: Vec<Feature>,
     pub version_req: CrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
@@ -60,6 +61,17 @@ impl<E, D: Decoder<E>> Decodable<D, E> for Keyword {
                                        s).as_slice()))
         }
         Ok(Keyword(s))
+    }
+}
+
+impl<E, D: Decoder<E>> Decodable<D, E> for Feature {
+    fn decode(d: &mut D) -> Result<Feature, E> {
+        let s = raw_try!(d.read_str());
+        if !Crate::valid_feature_name(s.as_slice()) {
+            return Err(d.error(format!("invalid feature name specified: {}",
+                                       s).as_slice()))
+        }
+        Ok(Feature(s))
     }
 }
 
@@ -126,6 +138,12 @@ impl<E, D: Encoder<E>> Encodable<D, E> for Keyword {
     }
 }
 
+impl<E, D: Encoder<E>> Encodable<D, E> for Feature {
+    fn encode(&self, d: &mut D) -> Result<(), E> {
+        d.emit_str(self.as_slice())
+    }
+}
+
 impl<E, D: Encoder<E>> Encodable<D, E> for CrateVersion {
     fn encode(&self, d: &mut D) -> Result<(), E> {
         d.emit_str((**self).to_string().as_slice())
@@ -165,6 +183,13 @@ impl Deref<str> for CrateName {
 impl Deref<str> for Keyword {
     fn deref<'a>(&'a self) -> &'a str {
         let Keyword(ref s) = *self;
+        s.as_slice()
+    }
+}
+
+impl Deref<str> for Feature {
+    fn deref<'a>(&'a self) -> &'a str {
+        let Feature(ref s) = *self;
         s.as_slice()
     }
 }

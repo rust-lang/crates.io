@@ -211,6 +211,20 @@ impl Crate {
             name.chars().all(|c| c.is_ascii())
     }
 
+    pub fn valid_feature_name(name: &str) -> bool {
+        let mut parts = name.split('/');
+        match parts.next() {
+            Some(part) if !Crate::valid_name(part) => return false,
+            None => return false,
+            _ => {}
+        }
+        match parts.next() {
+            Some(part) if !Crate::valid_name(part) => return false,
+            _ => {}
+        }
+        parts.next().is_none()
+    }
+
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,

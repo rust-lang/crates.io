@@ -327,6 +327,15 @@ fn new_crate_owner() {
 }
 
 #[test]
+fn valid_feature_names() {
+    assert!(Crate::valid_feature_name("foo"));
+    assert!(!Crate::valid_feature_name(""));
+    assert!(!Crate::valid_feature_name("/"));
+    assert!(!Crate::valid_feature_name("%/%"));
+    assert!(Crate::valid_feature_name("a/a"));
+}
+
+#[test]
 fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "1.0.0");
