@@ -891,6 +891,6 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     }).collect();
 
     #[deriving(Encodable)]
-    struct R { reverse_dependencies: Vec<EncodableDependency> }
-    Ok(req.json(&R{ reverse_dependencies: rev_deps }))
+    struct R { dependencies: Vec<EncodableDependency> }
+    Ok(req.json(&R{ dependencies: rev_deps }))
 }

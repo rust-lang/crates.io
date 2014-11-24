@@ -20,5 +20,5 @@ export default DS.Model.extend({
     owners: DS.hasMany('users', {async: true}),
     version_downloads: DS.hasMany('version-download', {async: true}),
     keywords: DS.hasMany('keywords', {async: true}),
-    reverse_dependencies: DS.hasMany('reverse-dependency', {async: true}),
+    reverse_dependencies: DS.hasMany('dependency', {async: true}),
 });
