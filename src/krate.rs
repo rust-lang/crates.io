@@ -94,18 +94,34 @@ impl Crate {
                           readme: &Option<String>,
                           keywords: &[String],
                           repository: &Option<String>,
-                          license: &Option<String>) -> CargoResult<Crate> {
+                          license: &Option<String>,
+                          license_file: &Option<String>) -> CargoResult<Crate> {
         let description = description.as_ref().map(|s| s.as_slice());
         let homepage = homepage.as_ref().map(|s| s.as_slice());
         let documentation = documentation.as_ref().map(|s| s.as_slice());
         let readme = readme.as_ref().map(|s| s.as_slice());
         let repository = repository.as_ref().map(|s| s.as_slice());
-        let license = license.as_ref().map(|s| s.as_slice());
+        let mut license = license.as_ref().map(|s| s.as_slice());
+        let license_file = license_file.as_ref().map(|s| s.as_slice());
         let keywords = keywords.connect(",");
         try!(validate_url(homepage));
         try!(validate_url(documentation));
         try!(validate_url(repository));
-        try!(validate_license(license));
+
+        match license {
+            // If a license is given, validate it to make sure it's actually a
+            // valid license
+            Some(..) => try!(validate_license(license)),
+
+            // If no license is given, but a license file is given, flag this
+            // crate as having a nonstandard license. Note that we don't
+            // actually do anything else with license_file currently.
+            None if license_file.is_some() => {
+                license = Some("non-standard");
+            }
+
+            None => {}
+        }
 
         // TODO: like with users, this is sadly racy
         let stmt = try!(conn.prepare("UPDATE crates
@@ -598,7 +614,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.readme,
                                                keywords.as_slice(),
                                                &new_crate.repository,
-                                               &new_crate.license));
+                                               &new_crate.license,
+                                               &new_crate.license_file));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
         if !owners.iter().any(|o| o.id == user.id) {
@@ -704,6 +721,25 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     let new: upload::NewCrate = try!(json::decode(json.as_slice()).map_err(|e| {
         human(format!("invalid upload request: {}", e))
     }));
+
+    // Make sure required fields are provided
+    fn empty(s: Option<&String>) -> bool { s.map_or(true, |s| s.is_empty()) }
+    let mut missing = Vec::new();
+
+    if empty(new.description.as_ref()) {
+        missing.push("description");
+    }
+    if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
+        missing.push("license");
+    }
+    if new.authors.len() == 0 || new.authors.iter().all(|s| s.is_empty()) {
+        missing.push("authors");
+    }
+    if missing.len() > 0 {
+        return Err(human(format!("missing or empty metadata fields: {}. Please \
+            see http://doc.crates.io/manifest.html#package-metadata for \
+            how to upload metadata", missing.connect(", "))));
+    }
 
     let user = try!(req.user());
     Ok((new, user.clone()))

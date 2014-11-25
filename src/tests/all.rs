@@ -228,7 +228,8 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                                       &krate.readme,
                                       krate.keywords.as_slice(),
                                       &krate.repository,
-                                      &krate.license).unwrap();
+                                      &krate.license,
+                                      &None).unwrap();
     Keyword::update_crate(req.tx().unwrap(), &krate,
                           krate.keywords.as_slice()).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);

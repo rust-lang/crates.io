@@ -157,21 +157,25 @@ fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
                 -> Vec<u8> {
     let kws = krate.keywords.into_iter().map(u::Keyword).collect();
-    let json = u::NewCrate {
+    new_crate_to_body(&u::NewCrate {
         name: u::CrateName(krate.name),
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
         features: HashMap::new(),
         deps: deps,
-        authors: Vec::new(),
-        description: krate.description,
+        authors: vec!["foo".to_string()],
+        description: Some("description".to_string()),
         homepage: krate.homepage,
         documentation: krate.documentation,
         readme: krate.readme,
         keywords: Some(u::KeywordList(kws)),
-        license: krate.license,
+        license: Some("MIT".to_string()),
+        license_file: None,
         repository: krate.repository,
-    };
-    let json = json::encode(&json);
+    })
+}
+
+fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
+    let json = json::encode(&new_crate);
     let mut body = MemWriter::new();
     body.write_le_u32(json.len() as u32).unwrap();
     body.write_str(json.as_slice()).unwrap();
@@ -745,4 +749,52 @@ fn reverse_dependencies() {
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
     drop(req);
+}
+
+#[test]
+fn author_license_and_description_required() {
+    let (_b, app, middle) = ::app();
+    ::user("foo");
+
+    let mut req = ::req(app, conduit::Put, "/api/v1/crates/new");
+    let mut new_crate = u::NewCrate {
+        name: u::CrateName("foo".to_string()),
+        vers: u::CrateVersion(semver::Version::parse("1.0.0").unwrap()),
+        features: HashMap::new(),
+        deps: Vec::new(),
+        authors: Vec::new(),
+        description: None,
+        homepage: None,
+        documentation: None,
+        readme: None,
+        keywords: None,
+        license: None,
+        license_file: None,
+        repository: None,
+    };
+    req.with_body(new_crate_to_body(&new_crate));
+    let json = bad_resp!(middle.call(&mut req));
+    assert!(json.errors[0].detail.as_slice().contains("author") &&
+            json.errors[0].detail.as_slice().contains("description") &&
+            json.errors[0].detail.as_slice().contains("license"),
+            "{}", json.errors);
+
+    new_crate.license = Some("MIT".to_string());
+    new_crate.authors.push("".to_string());
+    req.with_body(new_crate_to_body(&new_crate));
+    let json = bad_resp!(middle.call(&mut req));
+    assert!(json.errors[0].detail.as_slice().contains("author") &&
+            json.errors[0].detail.as_slice().contains("description") &&
+            !json.errors[0].detail.as_slice().contains("license"),
+            "{}", json.errors);
+
+    new_crate.license = None;
+    new_crate.license_file = Some("foo".to_string());
+    new_crate.authors.push("foo".to_string());
+    req.with_body(new_crate_to_body(&new_crate));
+    let json = bad_resp!(middle.call(&mut req));
+    assert!(!json.errors[0].detail.as_slice().contains("author") &&
+            json.errors[0].detail.as_slice().contains("description") &&
+            !json.errors[0].detail.as_slice().contains("license"),
+            "{}", json.errors);
 }
