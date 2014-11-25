@@ -229,6 +229,19 @@ fn new_krate() {
 }
 
 #[test]
+fn new_krate_weird_version() {
+    let (_b, app, middle) = ::app();
+    let mut req = new_req(app, "foo", "0.0.0-pre");
+    let user = ::mock_user(&mut req, ::user("foo"));
+    ::logout(&mut req);
+    req.header("Authorization", user.api_token.as_slice());
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name.as_slice(), "foo");
+    assert_eq!(json.krate.max_version.as_slice(), "0.0.0-pre");
+}
+
+#[test]
 fn new_krate_with_dependency() {
     let (_b, app, middle) = ::app();
     let dep = u::CrateDependency {

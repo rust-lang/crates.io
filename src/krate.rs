@@ -319,7 +319,10 @@ impl Crate {
             }
             None => {}
         }
-        if *ver > self.max_version { self.max_version = ver.clone(); }
+        let zero = semver::Version::parse("0.0.0").unwrap();
+        if *ver > self.max_version || self.max_version == zero {
+            self.max_version = ver.clone();
+        }
         self.updated_at = ::now();
         try!(conn.execute("UPDATE crates SET updated_at = $1, max_version = $2
                            WHERE id = $3",
