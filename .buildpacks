@@ -1,4 +1,4 @@
-https://github.com/rcaught/heroku-buildpack-cmake
-https://github.com/alexcrichton/heroku-buildpack-rust
-https://github.com/tonycoco/heroku-buildpack-ember-cli.git
-https://github.com/ryandotsmith/nginx-buildpack.git
+https://github.com/rcaught/heroku-buildpack-cmake#e4e2c9e
+https://github.com/alexcrichton/heroku-buildpack-rust#d7137d3b6
+https://github.com/tonycoco/heroku-buildpack-ember-cli#426b308
+https://github.com/ryandotsmith/nginx-buildpack.git#af813ba
