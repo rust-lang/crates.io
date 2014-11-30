@@ -29,6 +29,10 @@ export default Ember.Controller.extend({
         }
     },
 
+    currentPathChanged: function () {
+        window.scrollTo(0, 0);
+    }.observes('currentPath'),
+
     actions: {
         search: function(query) {
             this.transitionToRoute('search', {queryParams: {q: query}});
