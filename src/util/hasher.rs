@@ -11,7 +11,7 @@ impl<R: Reader> HashingReader<R> {
         HashingReader { inner: r, hasher: Hasher::new(SHA256) }
     }
 
-    pub fn finalize(&self) -> Vec<u8> { self.hasher.finalize() }
+    pub fn finalize(self) -> Vec<u8> { self.hasher.finalize() }
 }
 
 impl<R: Reader> Reader for HashingReader<R> {

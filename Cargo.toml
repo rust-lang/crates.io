@@ -44,7 +44,8 @@ git = "https://github.com/conduit-rust/conduit-middleware"
 git = "https://github.com/conduit-rust/conduit-cookie"
 
 [dependencies.postgres]
-git = "https://github.com/sfackler/rust-postgres"
+git = "https://github.com/alexcrichton/rust-postgres"
+branch = "git-deps"
 
 [dependencies.html]
 path = "src/html"
@@ -83,7 +84,8 @@ git = "https://github.com/rust-lang/semver"
 git = "https://github.com/servo/rust-url"
 
 [dependencies.r2d2_postgres]
-git = "https://github.com/sfackler/r2d2-postgres"
+git = "https://github.com/alexcrichton/r2d2-postgres"
+branch = "git-deps"
 
 [dependencies.git2]
 git = "https://github.com/alexcrichton/git2-rs"
@@ -91,8 +93,8 @@ git = "https://github.com/alexcrichton/git2-rs"
 [dependencies.openssl]
 git = "https://github.com/sfackler/rust-openssl"
 
-[dependencies]
-time = "*"
+[dependencies.time]
+git = "https://github.com/rust-lang/time"
 
 [dev-dependencies.conduit-test]
 git = "https://github.com/conduit-rust/conduit-test"

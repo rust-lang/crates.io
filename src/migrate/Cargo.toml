@@ -8,4 +8,5 @@ name = "migrate"
 path = "lib.rs"
 
 [dependencies.postgres]
-git = "https://github.com/sfackler/rust-postgres"
+git = "https://github.com/alexcrichton/rust-postgres"
+branch = "git-deps"
