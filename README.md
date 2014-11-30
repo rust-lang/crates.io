@@ -18,6 +18,7 @@ which enables tweaking the UI of the site without actually having the server
 running locally. To get up and running, just run:
 
 ```
+npm install -g ember-cli
 ember server --proxy https://staging-crates-io.herokuapp.com
 ```
 
