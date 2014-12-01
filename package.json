@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "ember server",
+    "startui": "ember server --proxy https://staging-crates-io.herokuapp.com",
     "build": "ember build",
     "test": "ember test"
   },

@@ -15,16 +15,22 @@ Source code for the default registry for Cargo users. Can be found online at
 
 This website is built using [Ember.js](http://emberjs.com/) for the frontend,
 which enables tweaking the UI of the site without actually having the server
-running locally. To get up and running, just run:
+running locally. To get up and running with just the UI, run:
 
 ```
-npm install -g ember-cli
-ember server --proxy https://staging-crates-io.herokuapp.com
+npm run startui
 ```
 
 This will give you a local server to browse while using the staging backend
-(hosten on heroku). You can also specify the proxy as `https://crates.io/`, but
-beware that any modifications made are permanent!
+(hosted on heroku at https://staging-crates-io.herokuapp.com).
+
+If you'd like to run the server with a specific different backend, you can specify specific arguments to `npm start`. For example you can set the proxy to `https://crates.io/` to use the live instance, but do be aware that any modifications made here will be permanent! To do this, run:
+
+```
+npm start -- --proxy https://example.com
+```
+
+This requires NPM 2.0.
 
 ## Working on the backend
 
