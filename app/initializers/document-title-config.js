@@ -1,5 +1,3 @@
-import Ember from 'ember';
-
 import DocumentTitle from "ember-document-title/mixins/document-title";
 
 DocumentTitle.reopen({
