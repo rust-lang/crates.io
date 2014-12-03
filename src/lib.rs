@@ -42,27 +42,27 @@ impl RouteBuilder {
 
     pub fn get<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                -> &'a mut RouteBuilder {
-        self.map(conduit::Get, pattern, handler)
+        self.map(Method::Get, pattern, handler)
     }
 
     pub fn post<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                 -> &'a mut RouteBuilder {
-        self.map(conduit::Post, pattern, handler)
+        self.map(Method::Post, pattern, handler)
     }
 
     pub fn put<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                -> &'a mut RouteBuilder {
-        self.map(conduit::Put, pattern, handler)
+        self.map(Method::Put, pattern, handler)
     }
 
     pub fn delete<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                   -> &'a mut RouteBuilder {
-        self.map(conduit::Delete, pattern, handler)
+        self.map(Method::Delete, pattern, handler)
     }
 
     pub fn head<'a, H: Handler>(&'a mut self, pattern: &str, handler: H)
                                 -> &'a mut RouteBuilder {
-        self.map(conduit::Head, pattern, handler)
+        self.map(Method::Head, pattern, handler)
     }
 }
 
@@ -96,7 +96,7 @@ pub fn params<'a>(req: &'a Request) -> &'a router::Params {
         .expect("Missing params")
 }
 
-impl<'a> RequestParams<'a> for &'a Request + 'a {
+impl<'a> RequestParams<'a> for &'a (Request + 'a) {
     fn params(self) -> &'a router::Params {
         params(self)
     }
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn basic_get() {
         let router = test_router();
-        let mut req = RequestSentinel::new(conduit::Get, "/posts/1");
+        let mut req = RequestSentinel::new(Method::Get, "/posts/1");
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn basic_post() {
         let router = test_router();
-        let mut req = RequestSentinel::new(conduit::Post, "/posts/10");
+        let mut req = RequestSentinel::new(Method::Post, "/posts/10");
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn nonexistent_route() {
         let router = test_router();
-        let mut req = RequestSentinel::new(conduit::Post, "/nonexistent");
+        let mut req = RequestSentinel::new(Method::Post, "/nonexistent");
         router.call(&mut req).err().expect("No response");
     }
 
