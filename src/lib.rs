@@ -4,7 +4,7 @@ extern crate time;
 
 use std::fmt::Show;
 use std::collections::HashMap;
-use std::io;
+use std::io::FileType;
 use std::io::fs::File;
 use std::io::util::NullReader;
 use conduit::{Request, Response, Handler};
@@ -40,7 +40,7 @@ impl Handler for Static {
         };
         let stat = try!(file.stat().map_err(|e| box e as Box<Show>));
         match stat.kind {
-            io::TypeDirectory => return Ok(not_found()),
+            FileType::Directory => return Ok(not_found()),
             _ => {}
         }
         let ts = time::Timespec {
@@ -78,8 +78,7 @@ mod tests {
 
     use std::io::{fs, File, TempDir, USER_RWX};
 
-    use conduit;
-    use conduit::Handler;
+    use conduit::{Handler, Method};
     use Static;
 
     #[test]
@@ -88,7 +87,7 @@ mod tests {
         let root = td.path();
         let handler = Static::new(root.clone());
         File::create(&root.join("Cargo.toml")).write(b"[package]").unwrap();
-        let mut req = test::MockRequest::new(conduit::Get, "/Cargo.toml");
+        let mut req = test::MockRequest::new(Method::Get, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_string().ok().expect("No body");
         assert_eq!(body.as_slice(), "[package]");
@@ -106,7 +105,7 @@ mod tests {
         File::create(&root.join("src/fixture.css")).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(conduit::Get, "/src/fixture.css");
+        let mut req = test::MockRequest::new(Method::Get, "/src/fixture.css");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.headers.get("Content-Type"),
                    Some(&vec!("text/css".to_string())));
@@ -120,7 +119,7 @@ mod tests {
         let root = td.path();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(conduit::Get, "/nope");
+        let mut req = test::MockRequest::new(Method::Get, "/nope");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.status.val0(), 404);
     }
@@ -133,7 +132,7 @@ mod tests {
         fs::mkdir(&root.join("foo"), USER_RWX).unwrap();
 
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(conduit::Get, "/foo");
+        let mut req = test::MockRequest::new(Method::Get, "/foo");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.status.val0(), 404);
     }
@@ -144,7 +143,7 @@ mod tests {
         let root = td.path();
         File::create(&root.join("test")).unwrap();
         let handler = Static::new(root.clone());
-        let mut req = test::MockRequest::new(conduit::Get, "/test");
+        let mut req = test::MockRequest::new(Method::Get, "/test");
         let res = handler.call(&mut req).ok().expect("No response");
         assert_eq!(res.status.val0(), 200);
         assert!(res.headers.get("Last-Modified").is_some());
