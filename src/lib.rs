@@ -75,11 +75,11 @@ pub struct MockHeaders {
 
 impl Headers for MockHeaders {
     fn find<'a>(&'a self, key: &str) -> Option<Vec<&'a str>> {
-        self.headers.find_equiv(key).map(|v| vec!(v.as_slice()))
+        self.headers.get(key).map(|v| vec!(v.as_slice()))
     }
 
     fn has(&self, key: &str) -> bool {
-        self.headers.contains_key_equiv(key)
+        self.headers.contains_key(key)
     }
 
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
@@ -98,8 +98,8 @@ impl<'a> conduit::Request for MockRequest {
     }
 
     fn method(&self) -> Method { self.method }
-    fn scheme(&self) -> Scheme { conduit::Http }
-    fn host<'a>(&'a self) -> Host<'a> { conduit::HostName("example.com") }
+    fn scheme(&self) -> Scheme { Scheme::Http }
+    fn host<'a>(&'a self) -> Host<'a> { Host::Name("example.com") }
     fn virtual_root<'a>(&'a self) -> Option<&'a str> { None }
 
     fn path<'a>(&'a self) -> &'a str {
@@ -141,22 +141,21 @@ impl<'a> conduit::Request for MockRequest {
 #[cfg(test)]
 mod tests {
     use super::MockRequest;
-    use conduit;
     use semver::Version;
 
     use std::io::net::ip::Ipv4Addr;
 
-    use conduit::Request;
+    use conduit::{Request, Method, Host, Scheme};
 
     #[test]
     fn simple_request_test() {
-        let mut req = MockRequest::new(conduit::Get, "/");
+        let mut req = MockRequest::new(Method::Get, "/");
 
         assert_eq!(req.http_version(), Version::parse("1.1.0").unwrap());
         assert_eq!(req.conduit_version(), Version::parse("0.1.0").unwrap());
-        assert_eq!(req.method(), conduit::Get);
-        assert_eq!(req.scheme(), conduit::Http);
-        assert_eq!(req.host(), conduit::HostName("example.com"));
+        assert_eq!(req.method(), Method::Get);
+        assert_eq!(req.scheme(), Scheme::Http);
+        assert_eq!(req.host(), Host::Name("example.com"));
         assert_eq!(req.virtual_root(), None);
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
@@ -169,10 +168,10 @@ mod tests {
 
     #[test]
     fn request_body_test() {
-        let mut req = MockRequest::new(conduit::Post, "/articles");
+        let mut req = MockRequest::new(Method::Post, "/articles");
         req.with_body("Hello world");
 
-        assert_eq!(req.method(), conduit::Post);
+        assert_eq!(req.method(), Method::Post);
         assert_eq!(req.path(), "/articles");
         assert_eq!(req.body().read_to_string().ok().expect("No body"),
                    "Hello world".to_string());
@@ -181,7 +180,7 @@ mod tests {
 
     #[test]
     fn request_query_test() {
-        let mut req = MockRequest::new(conduit::Post, "/articles");
+        let mut req = MockRequest::new(Method::Post, "/articles");
         req.with_query("foo=bar");
 
         assert_eq!(req.query_string().expect("No query string"), "foo=bar");
@@ -189,7 +188,7 @@ mod tests {
 
     #[test]
     fn request_headers() {
-        let mut req = MockRequest::new(conduit::Post, "/articles");
+        let mut req = MockRequest::new(Method::Post, "/articles");
         req.header("User-Agent", "lulz");
         req.header("DNT", "1");
 
