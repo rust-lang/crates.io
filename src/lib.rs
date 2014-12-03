@@ -16,8 +16,8 @@ pub enum Scheme {
 
 #[deriving(PartialEq, Show, Clone)]
 pub enum Host<'a> {
-    HostName(&'a str),
-    HostIp(IpAddr)
+    Name(&'a str),
+    Ip(IpAddr)
 }
 
 #[deriving(PartialEq, Hash, Eq, Show, Clone)]
