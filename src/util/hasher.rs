@@ -1,5 +1,5 @@
 use std::io;
-use openssl::crypto::hash::{Hasher, SHA256};
+use openssl::crypto::hash::{Hasher, HashType};
 
 pub struct HashingReader<R> {
     inner: R,
@@ -8,7 +8,7 @@ pub struct HashingReader<R> {
 
 impl<R: Reader> HashingReader<R> {
     pub fn new(r: R) -> HashingReader<R> {
-        HashingReader { inner: r, hasher: Hasher::new(SHA256) }
+        HashingReader { inner: r, hasher: Hasher::new(HashType::SHA256) }
     }
 
     pub fn finalize(self) -> Vec<u8> { self.hasher.finalize() }

@@ -5,7 +5,7 @@ use conduit::Request;
 use semver;
 
 pub struct RequestProxy<'a> {
-    pub other: &'a mut Request + 'a,
+    pub other: &'a mut (Request + 'a),
     pub path: Option<&'a str>,
     pub method: Option<conduit::Method>,
 }

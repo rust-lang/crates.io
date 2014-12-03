@@ -1,7 +1,7 @@
 use std::io;
 use std::fmt::Show;
 
-use conduit::{mod, Request, Response, Handler};
+use conduit::{Request, Response, Handler, Method};
 use conduit_middleware::AroundMiddleware;
 
 use util::RequestProxy;
@@ -24,11 +24,11 @@ impl AroundMiddleware for Head {
 
 impl Handler for Head {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
-        if req.method() == conduit::Head {
+        if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,
                 path: None,
-                method: Some(conduit::Get),
+                method: Some(Method::Get),
             };
             self.handler.as_ref().unwrap().call(&mut req).map(|r| {
                 Response {

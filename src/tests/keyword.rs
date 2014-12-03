@@ -1,6 +1,6 @@
 use serialize::Decoder;
 
-use conduit::{mod, Handler, Request};
+use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
 
 use cargo_registry::db::{RequestTransaction, Connection};
@@ -16,7 +16,7 @@ struct GoodKeyword { keyword: EncodableKeyword }
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/keywords");
+    let mut req = ::req(app, Method::Get, "/api/v1/keywords");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: KeywordList = ::json(&mut response);
     assert_eq!(json.keywords.len(), 0);
@@ -33,7 +33,7 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/keywords/foo");
+    let mut req = ::req(app, Method::Get, "/api/v1/keywords/foo");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.val0(), 404);
 
@@ -48,7 +48,7 @@ fn tx(req: &Request) -> &Connection { req.tx().unwrap() }
 #[test]
 fn update_crate() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/keywords/foo");
+    let mut req = ::req(app, Method::Get, "/api/v1/keywords/foo");
     let cnt = |req: &mut MockRequest, kw: &str| {
         req.with_path(format!("/api/v1/keywords/{}", kw).as_slice());
         let mut response = ok_resp!(middle.call(req));

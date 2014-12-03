@@ -18,7 +18,7 @@ use util::json_response;
 pub trait CargoError: Send {
     fn description(&self) -> String;
     fn detail(&self) -> Option<String> { None }
-    fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> { None }
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> { None }
 
     fn concrete(&self) -> ConcreteCargoError {
         ConcreteCargoError {
@@ -61,7 +61,7 @@ macro_rules! from_error (
     }
 )
 
-impl<'a> Show for &'a CargoError + Send {
+impl<'a> Show for &'a (CargoError + Send) {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         try!(write!(f, "{}", self.description()));
 
@@ -81,7 +81,7 @@ impl<'a> Show for &'a CargoError + Send {
 
 impl Show for Box<CargoError + Send> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let me: &CargoError + Send = &**self;
+        let me: &(CargoError + Send) = &**self;
         me.fmt(f)
     }
 }
@@ -89,7 +89,7 @@ impl Show for Box<CargoError + Send> {
 impl CargoError for Box<CargoError + Send> {
     fn description(&self) -> String { (**self).description() }
     fn detail(&self) -> Option<String> { (**self).detail() }
-    fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> { (**self).cause() }
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> { (**self).cause() }
     fn human(&self) -> bool { (**self).human() }
     fn response(&self) -> Option<Response> { (**self).response() }
 }
@@ -192,8 +192,8 @@ impl CargoError for ConcreteCargoError {
         self.detail.clone()
     }
 
-    fn cause<'a>(&'a self) -> Option<&'a CargoError + Send> {
-        self.cause.as_ref().map(|c| { let err: &CargoError + Send = &**c; err })
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> {
+        self.cause.as_ref().map(|c| { let err: &(CargoError + Send) = &**c; err })
     }
 
     fn human(&self) -> bool { self.human }

@@ -75,7 +75,7 @@ pub trait RequestApp<'a> {
     fn app(self) -> &'a Arc<App>;
 }
 
-impl<'a> RequestApp<'a> for &'a Request + 'a {
+impl<'a> RequestApp<'a> for &'a (Request + 'a) {
     fn app(self) -> &'a Arc<App> {
         self.extensions().find::<Arc<App>>()
             .expect("Missing app")

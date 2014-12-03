@@ -43,7 +43,7 @@ pub trait RequestUser<'a> {
     fn user(self) -> CargoResult<&'a User>;
 }
 
-impl<'a> RequestUser<'a> for &'a Request + 'a {
+impl<'a> RequestUser<'a> for &'a (Request + 'a) {
     fn user(self) -> CargoResult<&'a User> {
         match self.extensions().find::<User>() {
             Some(user) => Ok(user),

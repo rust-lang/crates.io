@@ -17,7 +17,7 @@ use std::io::Command;
 use std::io::process::InheritFd;
 use std::os;
 use std::sync::{Once, ONCE_INIT, Arc};
-use serialize::json;
+use serialize::json::{mod, Json};
 
 use conduit::Request;
 use conduit_test::MockRequest;
@@ -81,7 +81,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         gh_client_id: "".to_string(),
         gh_client_secret: "".to_string(),
         db_url: env("TEST_DATABASE_URL"),
-        env: cargo_registry::Test,
+        env: cargo_registry::Env::Test,
         max_upload_size: 1000,
     };
     unsafe { INIT.doit(|| db_setup(config.db_url.as_slice())); }
@@ -150,10 +150,10 @@ fn json<T>(r: &mut conduit::Response) -> T
     };
 
 
-    fn fixup(json: json::Json) -> json::Json {
+    fn fixup(json: Json) -> Json {
         match json {
-            json::Object(object) => {
-                json::Object(object.into_iter().map(|(k, v)| {
+            Json::Object(object) => {
+                Json::Object(object.into_iter().map(|(k, v)| {
                     let k = if k.as_slice() == "crate" {
                         "krate".to_string()
                     } else {
@@ -162,8 +162,8 @@ fn json<T>(r: &mut conduit::Response) -> T
                     (k, fixup(v))
                 }).collect())
             }
-            json::Array(list) => {
-                json::Array(list.into_iter().map(fixup).collect())
+            Json::Array(list) => {
+                Json::Array(list.into_iter().map(fixup).collect())
             }
             j => j,
         }

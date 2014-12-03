@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serialize::json;
 
-use conduit::{mod, Handler, Request};
+use conduit::{Handler, Request, Method};
 use semver;
 
 use cargo_registry::db::RequestTransaction;
@@ -19,7 +19,7 @@ fn sv(s: &str) -> semver::Version {
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/versions");
+    let mut req = ::req(app, Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
@@ -43,7 +43,7 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/versions");
+    let mut req = ::req(app, Method::Get, "/api/v1/versions");
     let v = {
         ::mock_user(&mut req, ::user("foo"));
         let krate = ::mock_crate(&mut req, ::krate("foo"));
@@ -60,7 +60,7 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/crates/foo/1.0.0/authors");
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/1.0.0/authors");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));

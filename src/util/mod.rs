@@ -6,6 +6,7 @@ use std::str;
 use std::sync::Arc;
 
 use serialize::{json, Encodable};
+use serialize::json::Json;
 use url;
 
 use conduit::{Request, Response, Handler};
@@ -55,10 +56,10 @@ pub fn json_response<'a, T>(t: &T) -> Response
         body: box MemReader::new(json.into_bytes()),
     };
 
-    fn fixup(json: json::Json) -> json::Json {
+    fn fixup(json: Json) -> Json {
         match json {
-            json::Object(object) => {
-                json::Object(object.into_iter().map(|(k, v)| {
+            Json::Object(object) => {
+                Json::Object(object.into_iter().map(|(k, v)| {
                     let k = if k.as_slice() == "krate" {
                         "crate".to_string()
                     } else {
@@ -67,8 +68,8 @@ pub fn json_response<'a, T>(t: &T) -> Response
                     (k, fixup(v))
                 }).collect())
             }
-            json::Array(list) => {
-                json::Array(list.into_iter().map(fixup).collect())
+            Json::Array(list) => {
+                Json::Array(list.into_iter().map(fixup).collect())
             }
             j => j,
         }
@@ -76,7 +77,7 @@ pub fn json_response<'a, T>(t: &T) -> Response
 }
 
 
-impl<'a> RequestUtils for &'a Request + 'a {
+impl<'a> RequestUtils for &'a (Request + 'a) {
     fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
         json_response(t)
     }

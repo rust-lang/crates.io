@@ -235,7 +235,7 @@ fn commit_and_push(repo: &git2::Repository,
         try!(origin.fetch(None, None));
         let head = try!(repo.head()).target().unwrap();
         let obj = try!(repo.find_object(head, None));
-        try!(repo.reset(&obj, git2::Hard, None, None));
+        try!(repo.reset(&obj, git2::ResetType::Hard, None, None));
     }
 
     Err(internal("Too many rebase failures"))

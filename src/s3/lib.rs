@@ -78,7 +78,7 @@ impl Bucket {
                              headers = "",
                              resource = format!("/{}/{}", self.name, path));
         let signature = {
-            let mut hmac = hmac::HMAC(hash::SHA1, self.secret_key.as_bytes());
+            let mut hmac = hmac::HMAC(hash::HashType::SHA1, self.secret_key.as_bytes());
             hmac.update(string.as_bytes());
             hmac.finalize().as_slice().to_base64(STANDARD)
         };

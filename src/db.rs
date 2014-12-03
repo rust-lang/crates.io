@@ -80,7 +80,7 @@ impl Transaction {
         Ok(&**self.slot.borrow().unwrap())
     }
 
-    fn tx<'a>(&'a self) -> CargoResult<&'a Connection + 'a> {
+    fn tx<'a>(&'a self) -> CargoResult<&'a (Connection + 'a)> {
         // Similar to above, the transaction for this request is actually tied
         // to the connection in the request itself, not 'static. We transmute it
         // to static as its paired with the inner connection to achieve the
@@ -137,7 +137,7 @@ pub trait RequestTransaction<'a> {
     ///
     /// The transaction will live for the duration of the request, and it will
     /// only be set to commit() if a successful response code of 200 is seen.
-    fn tx(self) -> CargoResult<&'a Connection + 'a>;
+    fn tx(self) -> CargoResult<&'a (Connection + 'a)>;
 
     /// Flag the transaction to not be committed
     fn rollback(self);
@@ -145,14 +145,14 @@ pub trait RequestTransaction<'a> {
     fn commit(self);
 }
 
-impl<'a> RequestTransaction<'a> for &'a Request + 'a {
+impl<'a> RequestTransaction<'a> for &'a (Request + 'a) {
     fn db_conn(self) -> CargoResult<&'a pg::Connection> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .conn()
     }
 
-    fn tx(self) -> CargoResult<&'a Connection + 'a> {
+    fn tx(self) -> CargoResult<&'a (Connection + 'a)> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .tx()

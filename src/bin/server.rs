@@ -33,9 +33,9 @@ fn main() {
 
     let heroku = os::getenv("HEROKU").is_some();
     let cargo_env = if heroku {
-        cargo_registry::Production
+        cargo_registry::Env::Production
     } else {
-        cargo_registry::Development
+        cargo_registry::Env::Development
     };
     let config = cargo_registry::Config {
         s3_bucket: env("S3_BUCKET"),

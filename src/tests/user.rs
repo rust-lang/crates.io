@@ -1,6 +1,6 @@
 use std::fmt::Show;
 
-use conduit::{mod, Handler, Request, Response};
+use conduit::{Handler, Request, Response, Method};
 use conduit_middleware::Middleware;
 use conduit_test::MockRequest;
 
@@ -17,7 +17,7 @@ struct MeResponse { user: EncodableUser, api_token: String }
 #[test]
 fn auth_gives_a_token() {
     let (_b, _app, middle) = ::app();
-    let mut req = MockRequest::new(conduit::Get, "/authorize_url");
+    let mut req = MockRequest::new(Method::Get, "/authorize_url");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: AuthResponse = ::json(&mut response);
     assert!(json.url.as_slice().contains(json.state.as_slice()));
@@ -26,7 +26,7 @@ fn auth_gives_a_token() {
 #[test]
 fn access_token_needs_data() {
     let (_b, _app, middle) = ::app();
-    let mut req = MockRequest::new(conduit::Get, "/authorize");
+    let mut req = MockRequest::new(Method::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: ::Bad = ::json(&mut response);
     assert!(json.errors[0].detail.as_slice().contains("invalid state"));
@@ -53,7 +53,7 @@ fn user_insert() {
 #[test]
 fn me() {
     let (_b, _app, mut middle) = ::app();
-    let mut req = MockRequest::new(conduit::Get, "/me");
+    let mut req = MockRequest::new(Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.val0(), 403);
 
@@ -71,7 +71,7 @@ fn reset_token() {
 
     let (_b, _app, mut middle) = ::app();
     middle.add(ResetTokenTest);
-    let mut req = MockRequest::new(conduit::Put, "/me/reset_token");
+    let mut req = MockRequest::new(Method::Put, "/me/reset_token");
     ok_resp!(middle.call(&mut req));
 
     impl Middleware for ResetTokenTest {
@@ -96,7 +96,7 @@ fn reset_token() {
 #[test]
 fn my_packages() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/api/v1/crates");
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     req.with_query(format!("user_id={}", u.id));
@@ -118,39 +118,39 @@ fn following() {
     #[deriving(Decodable)] struct Meta { more: bool }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, conduit::Get, "/");
+    let mut req = ::req(app, Method::Get, "/");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     ::mock_crate(&mut req, ::krate("bar"));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(conduit::Get)));
+                                               .with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/follow")
-                            .with_method(conduit::Put)));
+                            .with_method(Method::Put)));
     ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
-                            .with_method(conduit::Put)));
+                            .with_method(Method::Put)));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(conduit::Get)));
+                                               .with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(conduit::Get)
+                                               .with_method(Method::Get)
                                                .with_query("per_page=1")));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
     ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
-                            .with_method(conduit::Delete)));
+                            .with_method(Method::Delete)));
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(conduit::Get)
+                                               .with_method(Method::Get)
                                                .with_query("page=2&per_page=1")));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
