@@ -4,11 +4,12 @@ extern crate time;
 extern crate conduit;
 extern crate "conduit-middleware" as middleware;
 
-use std::str::{MaybeOwned, Slice, Owned};
+use std::str::CowString;
+use std::borrow::Cow;
 use std::fmt::Show;
 use std::io::util::NullReader;
 use time::{Tm, strptime, ParseError};
-use conduit::Request;
+use conduit::{Request, Method};
 use middleware::Middleware;
 
 type Response = Result<conduit::Response, Box<Show + 'static>>;
@@ -20,11 +21,11 @@ impl Middleware for ConditionalGet {
         let mut res = try!(res);
 
         match req.method() {
-            conduit::Get | conduit::Head => {
+            Method::Get | Method::Head => {
                 if is_ok(&res) && is_fresh(req, &res) {
                     res.status = (304, "Not Modified");
-                    res.headers.pop_equiv("Content-Type");
-                    res.headers.pop_equiv("Content-Length");
+                    res.headers.remove("Content-Type");
+                    res.headers.remove("Content-Length");
                     res.body = box NullReader as Box<Reader + Send>;
                 }
             },
@@ -66,32 +67,32 @@ fn is_fresh(req: &Request, res: &conduit::Response) -> bool {
 }
 
 fn etag_matches<S: Str>(none_match: S, res: &conduit::Response) -> bool {
-    res.headers.find_equiv("ETag").map(|etag| {
+    res.headers.get("ETag").map(|etag| {
         res_header_val(etag).as_slice() == none_match.as_slice()
     }).unwrap_or(false)
 }
 
 fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
-    res.headers.find_equiv("Last-Modified").and_then(|last_modified| {
+    res.headers.get("Last-Modified").and_then(|last_modified| {
         parse_http_date(res_header_val(last_modified).as_slice()).ok()
     }).map(|last_modified| {
         modified_since.to_timespec() >= last_modified.to_timespec()
     }).unwrap_or(false)
 }
 
-fn header_val<'a>(header: Vec<&'a str>) -> MaybeOwned<'a> {
+fn header_val<'a>(header: Vec<&'a str>) -> CowString<'a> {
     if header.len() == 1 {
-        Slice(header[0])
+        Cow::Borrowed(header[0])
     } else {
-        Owned(header.concat())
+        Cow::Owned(header.concat())
     }
 }
 
-fn res_header_val<'a>(header: &'a Vec<String>) -> MaybeOwned<'a> {
+fn res_header_val<'a>(header: &'a Vec<String>) -> CowString<'a> {
     if header.len() == 1 {
-        Slice(header[0].as_slice())
+        Cow::Borrowed(header[0].as_slice())
     } else {
-        Owned(header.concat())
+        Cow::Owned(header.concat())
     }
 }
 
@@ -126,7 +127,7 @@ mod tests {
     use time;
     use time::Tm;
     use conduit;
-    use conduit::{Request, Response, Handler};
+    use conduit::{Request, Response, Handler, Method};
     use middleware::MiddlewareBuilder;
 
     use super::ConditionalGet;
@@ -147,7 +148,7 @@ mod tests {
 
     macro_rules! request(
         ($($header:expr => $value:expr),+) => ({
-            let mut req = test::MockRequest::new(conduit::Get, "/");
+            let mut req = test::MockRequest::new(Method::Get, "/");
             $(req.header($header, $value.to_string());)+
             req
         })
