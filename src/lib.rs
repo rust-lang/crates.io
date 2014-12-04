@@ -211,7 +211,7 @@ mod tests {
     }
 
     struct Shower<'a> {
-        inner: &'a Show + 'a
+        inner: &'a (Show + 'a),
     }
 
     impl<'a> Show for Shower<'a> {
@@ -257,7 +257,7 @@ mod tests {
         let mut builder = MiddlewareBuilder::new(handler);
         builder.add(MyMiddleware);
 
-        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let mut req = RequestSentinel::new(Method::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.body.read_to_string().ok().expect("No body"), "hello".to_string());
@@ -271,7 +271,7 @@ mod tests {
         // the error bubbles up from ProducesError and shouldn't reach here
         builder.add(NotReached);
 
-        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let mut req = RequestSentinel::new(Method::Get, "/");
         let res = builder.call(&mut req).ok().expect("Error not handled");
 
         assert_eq!(res.status, (500, "Internal Server Error"));
@@ -282,7 +282,7 @@ mod tests {
         let mut builder = MiddlewareBuilder::new(error_handler);
         builder.add(ErrorRecovery);
 
-        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let mut req = RequestSentinel::new(Method::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("Error not handled");
 
         assert_eq!(res.status, (500, "Internal Server Error"));
@@ -295,7 +295,7 @@ mod tests {
         builder.add(MyMiddleware);
         builder.around(MyAroundMiddleware::new());
 
-        let mut req = RequestSentinel::new(conduit::Get, "/");
+        let mut req = RequestSentinel::new(Method::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.body.read_to_string().ok().expect("No body"), "hello hello".to_string());
