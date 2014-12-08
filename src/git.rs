@@ -232,7 +232,7 @@ fn commit_and_push(repo: &git2::Repository,
 
         // Ok, we need to update, so fetch and reset --hard
         try!(origin.add_fetch("refs/heads/*:refs/heads/*"));
-        try!(origin.fetch(None, None));
+        try!(origin.fetch(&[], None, None));
         let head = try!(repo.head()).target().unwrap();
         let obj = try!(repo.find_object(head, None));
         try!(repo.reset(&obj, git2::ResetType::Hard, None, None));

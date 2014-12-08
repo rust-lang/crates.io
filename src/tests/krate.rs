@@ -399,7 +399,7 @@ fn new_krate_git_upload() {
     let p: GitCrate = json::decode(contents.as_slice()).unwrap();
     assert_eq!(p.name.as_slice(), "foo");
     assert_eq!(p.vers.as_slice(), "1.0.0");
-    assert_eq!(p.deps.as_slice(), [].as_slice());
+    assert!(p.deps.is_empty());
     assert_eq!(p.cksum.as_slice(),
                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 }
@@ -426,10 +426,10 @@ fn new_krate_git_upload_appends() {
     assert!(lines.next().is_none());
     assert_eq!(p1.name.as_slice(), "foo");
     assert_eq!(p1.vers.as_slice(), "0.0.1");
-    assert_eq!(p1.deps.as_slice(), [].as_slice());
+    assert!(p1.deps.is_empty());
     assert_eq!(p2.name.as_slice(), "foo");
     assert_eq!(p2.vers.as_slice(), "1.0.0");
-    assert_eq!(p2.deps.as_slice(), [].as_slice());
+    assert!(p2.deps.is_empty());
 }
 
 #[test]
