@@ -19,6 +19,8 @@ export default Ember.Route.extend({
                 window.currentUserDetected = true;
                 Ember.$(window).trigger('currentUserDetected');
             });
+        } else {
+            window.currentUserDetected = true;
         }
     },
 
