@@ -146,8 +146,8 @@ impl Crate {
         // Blacklist the current set of crates in the rust distribution
         match name.as_slice() {
             "alloc" | "arena" | "collections" | "core" | "flate" |
-            "fmt_macros" | "getopts" | "graphviz" | "green" | "libc" | "log" |
-            "native" | "rand" | "rbml" | "regex" | "regex_macros" |
+            "fmt_macros" | "graphviz" | "green" | "libc" |
+            "native" | "rand" | "rbml" |
             "rustc_back" | "rustc" | "rustc_llvm" | "rustdoc" | "rustrt" |
             "serialize" | "std" | "sync" | "syntax" | "term" | "test" |
             "unicode" | "rust" | "cargo" => {
