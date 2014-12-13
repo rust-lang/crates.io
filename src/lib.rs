@@ -1,4 +1,5 @@
 #![feature(macro_rules, phase)]
+#![allow(missing_copy_implementations)]
 
 extern crate serialize;
 extern crate time;
@@ -61,7 +62,7 @@ pub mod util;
 pub mod version;
 mod licenses;
 
-#[deriving(PartialEq, Eq, Clone)]
+#[deriving(PartialEq, Eq, Clone, Copy)]
 pub enum Env {
     Development,
     Test,

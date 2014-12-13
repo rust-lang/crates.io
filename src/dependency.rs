@@ -31,7 +31,7 @@ pub struct EncodableDependency {
     pub kind: Kind,
 }
 
-#[deriving(FromPrimitive)]
+#[deriving(FromPrimitive, Copy)]
 pub enum Kind {
     Normal,
     Build,
