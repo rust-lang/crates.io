@@ -1,11 +1,13 @@
 [package]
 
 name = "conduit-test"
-version = "0.5.0"
-authors = ["wycats@gmail.com"]
+version = "0.5.1"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+description = "Testing utilities for conduit-based stacks"
+repository = "https://github.com/conduit-rust/conduit-test"
+license = "MIT"
 
-[dependencies.conduit]
-git = "https://github.com/conduit-rust/conduit.git"
-
-[dependencies.semver]
-git = "https://github.com/rust-lang/semver"
+[dependencies]
+conduit = "0.5.1"
+semver = "0.1.0"
