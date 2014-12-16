@@ -1,8 +1,11 @@
 [package]
 
 name = "conduit"
-version = "0.5.0"
-authors = ["wycats@gmail.com"]
+version = "0.5.1"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+description = "Common HTTP server interface"
+license = "MIT"
 
-[dependencies.semver]
-git = "https://github.com/rust-lang/semver"
+[dependencies]
+semver = "0.1.0"
