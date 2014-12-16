@@ -1,17 +1,19 @@
 [package]
 
 name = "conduit-conditional-get"
-version = "0.5.0"
-authors = ["wycats@gmail.com"]
+version = "0.5.1"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT"
+description = """
+Middleware to transform GET into a conditional response if headers indicate that
+the response is fresh.
+"""
 
-[dependencies.conduit]
-git = "https://github.com/conduit-rust/conduit.git"
+[dependencies]
+conduit = "0.5.0"
+conduit-middleware = "0.5.0"
+time = "0.1.0"
 
-[dependencies.conduit-middleware]
-git = "https://github.com/conduit-rust/conduit-middleware.git"
-
-[dependencies.time]
-git = "https://github.com/rust-lang/time"
-
-[dev-dependencies.conduit-test]
-git = "https://github.com/conduit-rust/conduit-test.git"
+[dev-dependencies]
+conduit-test = "0.5.0"
