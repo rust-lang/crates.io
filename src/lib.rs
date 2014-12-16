@@ -1,3 +1,5 @@
+#![cfg_attr(test, deny(warnings))]
+
 extern crate conduit;
 extern crate "mime-types" as mime;
 extern crate time;
@@ -34,7 +36,7 @@ impl Handler for Static {
         }
 
         let mime = self.types.mime_for_path(&path);
-        let mut file = match File::open(&path) {
+        let file = match File::open(&path) {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
         };
@@ -121,7 +123,7 @@ mod tests {
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(Method::Get, "/nope");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.val0(), 404);
+        assert_eq!(res.status.0, 404);
     }
 
     #[test]
@@ -134,7 +136,7 @@ mod tests {
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(Method::Get, "/foo");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.val0(), 404);
+        assert_eq!(res.status.0, 404);
     }
 
     #[test]
@@ -145,7 +147,7 @@ mod tests {
         let handler = Static::new(root.clone());
         let mut req = test::MockRequest::new(Method::Get, "/test");
         let res = handler.call(&mut req).ok().expect("No response");
-        assert_eq!(res.status.val0(), 200);
+        assert_eq!(res.status.0, 200);
         assert!(res.headers.get("Last-Modified").is_some());
     }
 }
