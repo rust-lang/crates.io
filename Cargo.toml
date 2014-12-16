@@ -1,9 +1,12 @@
 [package]
 
 name = "conduit-middleware"
-version = "0.5.0"
-authors = ["wycats@gmail.com"]
+version = "0.5.1"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+description = "HTTP Middleware interface using the conduit interface"
+repository = "https://github.com/conduit-rust/conduit-middleware"
+license = "MIT"
 
-[dependencies.conduit]
-
-git = "https://github.com/conduit-rust/conduit.git"
+[dependencies]
+conduit = "0.5.0"
