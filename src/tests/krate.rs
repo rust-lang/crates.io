@@ -486,7 +486,7 @@ fn download() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let resp = t_resp!(middle.call(&mut req));
-    assert_eq!(resp.status.val0(), 302);
+    assert_eq!(resp.status.0, 302);
 
     req.with_path("/api/v1/crates/foo/1.0.0/downloads");
     let mut resp = ok_resp!(middle.call(&mut req));
@@ -495,7 +495,7 @@ fn download() {
 
     req.with_path("/api/v1/crates/FOO/1.0.0/download");
     let resp = t_resp!(middle.call(&mut req));
-    assert_eq!(resp.status.val0(), 302);
+    assert_eq!(resp.status.0, 302);
 
     req.with_path("/api/v1/crates/FOO/1.0.0/downloads");
     let mut resp = ok_resp!(middle.call(&mut req));

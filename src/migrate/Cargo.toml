@@ -7,6 +7,5 @@ version = "0.1.0"
 name = "migrate"
 path = "lib.rs"
 
-[dependencies.postgres]
-git = "https://github.com/alexcrichton/rust-postgres"
-branch = "git-deps"
+[dependencies]
+postgres = "0.2.0"

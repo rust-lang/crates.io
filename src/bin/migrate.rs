@@ -89,25 +89,25 @@ fn migrations() -> Vec<Migration> {
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::add_column(20140925132249, "packages", "created_at",
                               "TIMESTAMP NOT NULL DEFAULT now()"),
-        Migration::new(20140925132250, proc(tx) {
+        Migration::new(20140925132250, |tx| {
             try!(tx.execute("UPDATE packages SET updated_at = now() \
                              WHERE updated_at IS NULL", &[]));
             try!(tx.execute("UPDATE packages SET created_at = now() \
                              WHERE created_at IS NULL", &[]));
             Ok(())
-        }, proc(_) Ok(())),
+        }, |_| Ok(())),
         Migration::add_column(20140925132251, "versions", "updated_at",
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::add_column(20140925132252, "versions", "created_at",
                               "TIMESTAMP NOT NULL DEFAULT now()"),
-        Migration::new(20140925132253, proc(tx) {
+        Migration::new(20140925132253, |tx| {
             try!(tx.execute("UPDATE versions SET updated_at = now() \
                              WHERE updated_at IS NULL", &[]));
             try!(tx.execute("UPDATE versions SET created_at = now() \
                              WHERE created_at IS NULL", &[]));
             Ok(())
-        }, proc(_) Ok(())),
-        Migration::new(20140925132254, proc(tx) {
+        }, |_| Ok(())),
+        Migration::new(20140925132254, |tx| {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN updated_at \
                              DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN created_at \
@@ -117,31 +117,31 @@ fn migrations() -> Vec<Migration> {
             try!(tx.execute("ALTER TABLE packages ALTER COLUMN created_at \
                              DROP DEFAULT", &[]));
             Ok(())
-        }, proc(_) Ok(())),
+        }, |_| Ok(())),
         Migration::add_table(20140925153704, "metadata", "
             total_downloads        BIGINT NOT NULL
         "),
-        Migration::new(20140925153705, proc(tx) {
+        Migration::new(20140925153705, |tx| {
             try!(tx.execute("INSERT INTO metadata (total_downloads) \
                              VALUES ($1)", &[&0i64]));
             Ok(())
-        }, proc(tx) {
+        }, |tx| {
             try!(tx.execute("DELETE FROM metadata", &[])); Ok(())
         }),
         Migration::add_column(20140925161623, "packages", "downloads",
                               "INTEGER NOT NULL DEFAULT 0"),
         Migration::add_column(20140925161624, "versions", "downloads",
                               "INTEGER NOT NULL DEFAULT 0"),
-        Migration::new(20140925161625, proc(tx) {
+        Migration::new(20140925161625, |tx| {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
                              DROP DEFAULT", &[]));
             try!(tx.execute("ALTER TABLE packages ALTER COLUMN downloads \
                              DROP DEFAULT", &[]));
             Ok(())
-        }, proc(_) Ok(())),
+        }, |_| Ok(())),
         Migration::add_column(20140926130044, "packages", "max_version",
                               "VARCHAR"),
-        Migration::new(20140926130045, proc(tx) {
+        Migration::new(20140926130045, |tx| {
             let stmt = try!(tx.prepare("SELECT * FROM packages"));
             for row in try!(stmt.query(&[])) {
                 let pkg: Crate = Model::from_row(&row);
@@ -153,22 +153,22 @@ fn migrations() -> Vec<Migration> {
                                 &[&max, &pkg.id]));
             }
             Ok(())
-        }, proc(_) Ok(())),
-        Migration::new(20140926130046, proc(tx) {
+        }, |_| Ok(())),
+        Migration::new(20140926130046, |tx| {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
                              SET NOT NULL", &[]));
             Ok(())
-        }, proc(tx) {
+        }, |tx| {
             try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
                              DROP NOT NULL", &[]));
             Ok(())
         }),
-        Migration::new(20140926174020, proc(tx) {
+        Migration::new(20140926174020, |tx| {
             try!(tx.execute("ALTER TABLE packages RENAME TO crates", &[]));
             try!(tx.execute("ALTER TABLE versions RENAME COLUMN package_id \
                              TO crate_id", &[]));
             Ok(())
-        }, proc(tx) {
+        }, |tx| {
             try!(tx.execute("ALTER TABLE crates RENAME TO packages", &[]));
             try!(tx.execute("ALTER TABLE versions RENAME COLUMN crate_id \
                              TO package_id", &[]));
@@ -339,7 +339,7 @@ fn migrations() -> Vec<Migration> {
 
         // http://www.postgresql.org/docs/8.3/static/textsearch-controls.html
         // http://www.postgresql.org/docs/8.3/static/textsearch-features.html
-        Migration::new(20141020175650, proc(tx) {
+        Migration::new(20141020175650, |tx| {
             try!(tx.batch_execute("
             CREATE FUNCTION trigger_crates_name_search() RETURNS trigger AS $$
             begin
@@ -362,7 +362,7 @@ fn migrations() -> Vec<Migration> {
             "));
             Ok(())
 
-        }, proc(tx) {
+        }, |tx| {
             try!(tx.execute("DROP TRIGGER trigger_crates_tsvector_update
                                        ON crates", &[]));
             try!(tx.execute("DROP FUNCTION trigger_crates_name_search()", &[]));
@@ -390,21 +390,21 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20141023180230, "crates", "license", "varchar"),
         Migration::add_column(20141023180231, "crates", "repository", "varchar"),
 
-        Migration::new(20141112082527, proc(tx) {
+        Migration::new(20141112082527, |tx| {
             try!(tx.execute("ALTER TABLE users DROP CONSTRAINT IF \
                              EXISTS users_email_key", &[]));
             Ok(())
 
-        }, proc(_) Ok(())),
+        }, |_| Ok(())),
         Migration::add_column(20141120162357, "dependencies", "kind", "INTEGER"),
-        Migration::new(20141121191309, proc(tx) {
+        Migration::new(20141121191309, |tx| {
             try!(tx.execute("ALTER TABLE crates DROP CONSTRAINT \
                              packages_name_key", &[]));
             try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
                              ON crates (lower(name))", &[]));
             Ok(())
 
-        }, proc(tx) {
+        }, |tx| {
             try!(tx.execute("DROP INDEX index_crates_name", &[]));
             try!(tx.execute("ALTER TABLE crates ADD CONSTRAINT packages_name_key \
                              UNIQUE (name)", &[]));

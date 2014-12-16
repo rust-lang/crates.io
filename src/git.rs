@@ -141,7 +141,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
             String::new()
         };
         let s = json::encode(krate);
-        let new = prev + s;
+        let new = prev + s.as_slice();
         try!(File::create(&dst).write_line(new.as_slice()));
 
         Ok((format!("Updating crate `{}#{}`", krate.name, krate.vers),

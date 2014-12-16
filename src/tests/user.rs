@@ -55,7 +55,7 @@ fn me() {
     let (_b, _app, mut middle) = ::app();
     let mut req = MockRequest::new(Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.val0(), 403);
+    assert_eq!(response.status.0, 403);
 
     let user = ::user("foo");
     middle.add(::middleware::MockUser(user.clone()));

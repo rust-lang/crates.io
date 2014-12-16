@@ -52,7 +52,7 @@ pub fn proxy() -> (String, Bomb) {
     let (iotx, iorx) = channel();
     let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
 
-    spawn(proc() {
+    spawn(move|| {
         stdio::set_stderr(box iotx.clone());
         stdio::set_stdout(box iotx);
         let mut file = None;

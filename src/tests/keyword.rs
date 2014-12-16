@@ -35,7 +35,7 @@ fn show() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/keywords/foo");
     let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.val0(), 404);
+    assert_eq!(response.status.0, 404);
 
     ::mock_keyword(&mut req, "foo");
     let mut response = ok_resp!(middle.call(&mut req));

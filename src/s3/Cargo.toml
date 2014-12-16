@@ -9,11 +9,7 @@ authors = []
 name = "s3"
 path = "lib.rs"
 
-[dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
-
-[dependencies.openssl]
-git = "https://github.com/sfackler/rust-openssl"
-
-[dependencies.time]
-git = "https://github.com/rust-lang/time"
+[dependencies]
+openssl = "0.2.0"
+time = "0.1.0"
+curl = "0.1.0"

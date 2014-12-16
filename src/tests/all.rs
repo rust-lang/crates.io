@@ -125,7 +125,7 @@ fn req(app: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {
-    r.status.val0() == 200
+    r.status.0 == 200
 }
 
 fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {

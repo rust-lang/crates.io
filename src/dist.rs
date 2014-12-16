@@ -31,7 +31,7 @@ impl Handler for Middleware {
         // First, attempt to serve a static file. If we're missing a static
         // file, then keep going.
         match self.dist.call(req) {
-            Ok(ref resp) if resp.status.val0() == 404 => {}
+            Ok(ref resp) if resp.status.0 == 404 => {}
             ret => return ret,
         }
 
