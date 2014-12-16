@@ -6,6 +6,7 @@ authors = ["wycats@gmail.com",
            "Alex Crichton <alex@alexcrichton.com>"]
 description = "Common HTTP server interface"
 license = "MIT"
+repository = "https://github.com/conduit-rust/conduit"
 
 [dependencies]
 semver = "0.1.0"
