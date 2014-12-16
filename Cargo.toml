@@ -1,20 +1,18 @@
 [package]
 
 name = "conduit-static"
-version = "0.5.0"
-authors = ["wycats@gmail.com"]
+version = "0.5.1"
+authors = ["wycats@gmail.com",
+           "Alex Crichton <alex@alexcrichton.com>"]
+description = "Middleware for serving static files for conduit"
+repository = "https://github.com/conduit-rust/conduit-static"
+license = "MIT"
 
-[dev-dependencies.civet]
-git = "https://github.com/wycats/rust-civet.git"
+[dependencies]
+conduit = "0.5.0"
+conduit-mime-types = "0.5.1"
+time = "0.1.0"
 
-[dependencies.conduit]
-git = "https://github.com/conduit-rust/conduit.git"
-
-[dependencies.mime-types]
-git = "https://github.com/conduit-rust/mime-types.git"
-
-[dependencies.time]
-git = "https://github.com/rust-lang/time"
-
-[dev-dependencies.conduit-test]
-git = "https://github.com/conduit-rust/conduit-test.git"
+[dev-dependencies]
+civet = "0.1.0"
+conduit-test = "0.5.0"

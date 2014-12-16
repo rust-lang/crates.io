@@ -1,7 +1,7 @@
 #![cfg_attr(test, deny(warnings))]
 
 extern crate conduit;
-extern crate "mime-types" as mime;
+extern crate "conduit-mime-types" as mime;
 extern crate time;
 
 use std::fmt::Show;
