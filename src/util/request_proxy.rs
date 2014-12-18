@@ -21,28 +21,28 @@ impl<'a> Request for RequestProxy<'a> {
         self.method.unwrap_or(self.other.method())
     }
     fn scheme(&self) -> conduit::Scheme { self.other.scheme() }
-    fn host<'a>(&'a self) -> conduit::Host<'a> { self.other.host() }
-    fn virtual_root<'a>(&'a self) -> Option<&'a str> {
+    fn host(&self) -> conduit::Host { self.other.host() }
+    fn virtual_root(&self) -> Option<&str> {
         self.other.virtual_root()
     }
-    fn path<'b>(&'b self) -> &'b str {
+    fn path(&self) -> &str {
         self.path.map(|s| &*s).unwrap_or(self.other.path())
     }
-    fn query_string<'a>(&'a self) -> Option<&'a str> {
+    fn query_string(&self) -> Option<&str> {
         self.other.query_string()
     }
     fn remote_ip(&self) -> io::net::ip::IpAddr { self.other.remote_ip() }
     fn content_length(&self) -> Option<uint> {
         self.other.content_length()
     }
-    fn headers<'a>(&'a self) -> &'a conduit::Headers {
+    fn headers(&self) -> &conduit::Headers {
         self.other.headers()
     }
-    fn body<'a>(&'a mut self) -> &'a mut Reader { self.other.body() }
-    fn extensions<'a>(&'a self) -> &'a conduit::Extensions {
+    fn body(&mut self) -> &mut Reader { self.other.body() }
+    fn extensions(&self) -> &conduit::Extensions {
         self.other.extensions()
     }
-    fn mut_extensions<'a>(&'a mut self) -> &'a mut conduit::Extensions {
+    fn mut_extensions(&mut self) -> &mut conduit::Extensions {
         self.other.mut_extensions()
     }
 }

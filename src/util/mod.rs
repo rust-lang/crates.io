@@ -78,7 +78,7 @@ pub fn json_response<'a, T>(t: &T) -> Response
 
 
 impl<'a> RequestUtils for &'a (Request + 'a) {
-    fn json<'a, T: Encodable<json::Encoder<'a>, IoError>>(self, t: &T) -> Response {
+    fn json<'b, T: Encodable<json::Encoder<'b>, IoError>>(self, t: &T) -> Response {
         json_response(t)
     }
 
