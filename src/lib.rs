@@ -49,18 +49,18 @@ impl MockRequest {
         self
     }
 
-    pub fn with_query<'a, S: Show>(&'a mut self, string: S) -> &'a mut MockRequest {
+    pub fn with_query<'a, S: Show>(&mut self, string: S) -> &mut MockRequest {
         self.query_string = Some(string.to_string());
         self
     }
 
-    pub fn with_body<'a, S: BytesContainer>(&'a mut self, string: S) -> &'a mut MockRequest {
+    pub fn with_body<'a, S: BytesContainer>(&mut self, string: S) -> &mut MockRequest {
         self.body = Some(string.container_as_bytes().to_vec());
         self.reader = None;
         self
     }
 
-    pub fn header<'a, S1: Show, S2: Show>(&'a mut self, name: S1, value: S2) -> &'a mut MockRequest {
+    pub fn header<'a, S1: Show, S2: Show>(&mut self, name: S1, value: S2) -> &mut MockRequest {
         self.build_headers.insert(name.to_string(), value.to_string());
         let headers = MockHeaders { headers: self.build_headers.clone() };
         self.headers = headers;
@@ -74,7 +74,7 @@ pub struct MockHeaders {
 }
 
 impl Headers for MockHeaders {
-    fn find<'a>(&'a self, key: &str) -> Option<Vec<&'a str>> {
+    fn find(&self, key: &str) -> Option<Vec<&str>> {
         self.headers.get(key).map(|v| vec!(v.as_slice()))
     }
 
@@ -88,7 +88,7 @@ impl Headers for MockHeaders {
     }
 }
 
-impl<'a> conduit::Request for MockRequest {
+impl conduit::Request for MockRequest {
     fn http_version(&self) -> Version {
         Version::parse("1.1.0").unwrap()
     }
@@ -99,14 +99,14 @@ impl<'a> conduit::Request for MockRequest {
 
     fn method(&self) -> Method { self.method }
     fn scheme(&self) -> Scheme { Scheme::Http }
-    fn host<'a>(&'a self) -> Host<'a> { Host::Name("example.com") }
-    fn virtual_root<'a>(&'a self) -> Option<&'a str> { None }
+    fn host(&self) -> Host { Host::Name("example.com") }
+    fn virtual_root(&self) -> Option<&str> { None }
 
-    fn path<'a>(&'a self) -> &'a str {
+    fn path(&self) -> &str {
         self.path.as_slice()
     }
 
-    fn query_string<'a>(&'a self) -> Option<&'a str> {
+    fn query_string(&self) -> Option<&str> {
         self.query_string.as_ref().map(|s| s.as_slice())
     }
 
@@ -118,11 +118,11 @@ impl<'a> conduit::Request for MockRequest {
         self.body.as_ref().map(|b| b.len())
     }
 
-    fn headers<'a>(&'a self) -> &'a Headers {
+    fn headers(&self) -> &Headers {
         &self.headers as &Headers
     }
 
-    fn body<'a>(&'a mut self) -> &'a mut Reader {
+    fn body(&mut self) -> &mut Reader {
         if self.reader.is_none() {
             let body = self.body.clone().unwrap_or(Vec::new());
             self.reader = Some(MemReader::new(body));
@@ -130,10 +130,10 @@ impl<'a> conduit::Request for MockRequest {
         self.reader.as_mut().unwrap() as &mut Reader
     }
 
-    fn extensions<'a>(&'a self) -> &'a Extensions {
+    fn extensions(&self) -> &Extensions {
         &self.extensions
     }
-    fn mut_extensions<'a>(&'a mut self) -> &'a mut Extensions {
+    fn mut_extensions(&mut self) -> &mut Extensions {
         &mut self.extensions
     }
 }
