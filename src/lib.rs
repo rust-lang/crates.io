@@ -1,3 +1,4 @@
+#![cfg_attr(test, deny(warnings))]
 #![feature(macro_rules)]
 
 extern crate time;
@@ -14,6 +15,7 @@ use middleware::Middleware;
 
 type Response = Result<conduit::Response, Box<Show + 'static>>;
 
+#[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
 
 impl Middleware for ConditionalGet {
@@ -132,7 +134,7 @@ mod tests {
 
     use super::ConditionalGet;
 
-    macro_rules! returning(
+    macro_rules! returning {
         ($code:expr, $($header:expr => $value:expr),+) => ({
             let mut headers = HashMap::new();
             $(headers.insert($header.to_string(), vec!($value.to_string()));)+
@@ -144,15 +146,15 @@ mod tests {
         ($($header:expr => $value:expr),+) => ({
             returning!((200, "OK"), $($header => $value),+)
         })
-    )
+    }
 
-    macro_rules! request(
+    macro_rules! request {
         ($($header:expr => $value:expr),+) => ({
             let mut req = test::MockRequest::new(Method::Get, "/");
             $(req.header($header, $value.to_string());)+
             req
         })
-    )
+    }
 
     #[test]
     fn test_sends_304() {
