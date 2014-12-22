@@ -1,6 +1,6 @@
-macro_rules! try_option( ($e:expr) => (
+macro_rules! try_option{ ($e:expr) => (
     match $e { Some(k) => k, None => return None }
-) )
+) }
 
 // pub fn parse(s: &str) -> Option<HashMap<String, String>> {
 //     let mut map = HashMap::new();

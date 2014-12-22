@@ -133,7 +133,7 @@ impl Version {
             human(format!("no known crate named `{}`", name))
         }));
         let features: Vec<String> = dep.features.iter().map(|s| {
-            (**s).to_string()
+            s[].to_string()
         }).collect();
         let dep = try!(Dependency::insert(conn, self.id, krate.id,
                                           &*dep.version_req,

@@ -1,11 +1,11 @@
 use std::collections::{HashMap, HashSet};
+use std::io::fs::PathExtensions;
 use std::io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
 use std::io::{ChanReader, ChanWriter, util, stdio};
 use std::io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
-use std::io::fs::PathExtensions;
 use std::os;
 use std::str;
-use std::task;
+use std::thread::Thread;
 
 use curl::http;
 
@@ -23,7 +23,7 @@ impl Drop for Bomb {
         let res = self.rx.recv_opt();
         let stderr = self.iorx.read_to_string().unwrap();
         match res {
-            Err(..) if !task::failing() => {
+            Err(..) if !Thread::panicking() => {
                 panic!("server subtask failed: {}", stderr)
             }
             _ => {
@@ -36,7 +36,7 @@ impl Drop for Bomb {
 }
 
 pub fn proxy() -> (String, Bomb) {
-    let me = task::name().unwrap();
+    let me = Thread::current().name().unwrap().to_string();
     let record = os::getenv("RECORD").is_some();
 
     let mut l = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -52,7 +52,7 @@ pub fn proxy() -> (String, Bomb) {
     let (iotx, iorx) = channel();
     let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
 
-    spawn(move|| {
+    Thread::spawn(move|| {
         stdio::set_stderr(box iotx.clone());
         stdio::set_stdout(box iotx);
         let mut file = None;
@@ -79,7 +79,7 @@ pub fn proxy() -> (String, Bomb) {
             None => {}
         }
         tx.send(());
-    });
+    }).detach();
 
     (ret, Bomb { accept: a2, rx: rx, iorx: iorx })
 }

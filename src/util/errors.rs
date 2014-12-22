@@ -51,7 +51,7 @@ impl<E: CargoError + Send> FromError<E> for Box<CargoError + Send> {
     }
 }
 
-macro_rules! from_error (
+macro_rules! from_error {
     ($ty:ty) => {
         impl FromError<$ty> for $ty {
             fn from_error(error: $ty) -> $ty {
@@ -59,7 +59,7 @@ macro_rules! from_error (
             }
         }
     }
-)
+}
 
 impl<'a> Show for &'a (CargoError + Send) {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -116,7 +116,7 @@ impl CargoError for IoError {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(IoError)
+from_error!(IoError);
 
 impl CargoError for FormatError {
     fn description(&self) -> String {
@@ -124,37 +124,37 @@ impl CargoError for FormatError {
     }
 }
 
-from_error!(FormatError)
+from_error!(FormatError);
 
 impl CargoError for PostgresError {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(PostgresError)
+from_error!(PostgresError);
 
 impl CargoError for ConnectError {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(ConnectError)
+from_error!(ConnectError);
 
 impl CargoError for ErrCode {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(ErrCode)
+from_error!(ErrCode);
 
 impl CargoError for json::DecoderError {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(json::DecoderError)
+from_error!(json::DecoderError);
 
 impl CargoError for git2::Error {
     fn description(&self) -> String { self.to_string() }
 }
 
-from_error!(git2::Error)
+from_error!(git2::Error);
 
 impl<T: CargoError + Send> FromError<T> for Box<Show + 'static> {
     fn from_error(t: T) -> Box<Show + 'static> {
@@ -213,7 +213,7 @@ impl CargoError for NotFound {
     }
 }
 
-from_error!(NotFound)
+from_error!(NotFound);
 
 pub struct Unauthorized;
 
@@ -231,7 +231,7 @@ impl CargoError for Unauthorized {
     }
 }
 
-from_error!(Unauthorized)
+from_error!(Unauthorized);
 
 pub fn internal_error<S1: Str, S2: Str>(error: S1,
                                         detail: S2) -> Box<CargoError + Send> {

@@ -15,7 +15,7 @@ use conduit::{Request, Response};
 
 use app::{App, RequestApp};
 use dependency::Kind;
-use util::{CargoResult, internal};
+use util::{CargoResult, internal, ChainError};
 
 #[deriving(Encodable, Decodable)]
 pub struct Crate {
@@ -208,7 +208,8 @@ fn commit_and_push(repo: &git2::Repository,
         // git push
         let mut origin = try!(repo.find_remote("origin"));
         let cfg = try!(repo.config());
-        let ok = try!(with_authentication(origin.url().unwrap(), &cfg, |f| {
+        let ok = try!(with_authentication(origin.url().unwrap(), &cfg,
+                                          |f| -> CargoResult<bool> {
             let mut origin = try!(repo.find_remote("origin"));
             let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
             origin.set_callbacks(&mut callbacks);
@@ -221,9 +222,9 @@ fn commit_and_push(repo: &git2::Repository,
                 Err(..) => return Ok(false)
             }
 
-            if !push.unpack_ok() {
-                return Err(internal("failed to push some remote refspecs"))
-            }
+            try!(push.statuses().chain_error(|| {
+                internal("failed to update some remote refspecs")
+            }));
             try!(push.update_tips(None, None));
 
             Ok(true)

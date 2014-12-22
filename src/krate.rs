@@ -600,11 +600,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let name = new_crate.name.as_slice();
     let vers = &*new_crate.vers;
     let features = new_crate.features.iter().map(|(k, v)| {
-        ((**k).to_string(), v.iter().map(|v| (**v).to_string()).collect())
+        (k[].to_string(), v.iter().map(|v| v[].to_string()).collect())
     }).collect::<HashMap<String, Vec<String>>>();
     let keywords = new_crate.keywords.as_ref().map(|s| s.as_slice())
                                      .unwrap_or(&[]);
-    let keywords = keywords.iter().map(|k| (**k).to_string()).collect::<Vec<_>>();
+    let keywords = keywords.iter().map(|k| k[].to_string()).collect::<Vec<_>>();
 
     // Persist the new crate, if it doesn't already exist
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,

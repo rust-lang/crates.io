@@ -1,12 +1,12 @@
 use std::io::fs;
 use std::os;
-use std::task;
+use std::thread::Thread;
 
 use git2;
 use url::Url;
 
 fn root() -> Path {
-    os::getcwd().unwrap().join("tmp").join(task::name().unwrap())
+    os::getcwd().unwrap().join("tmp").join(Thread::current().name().unwrap())
 }
 
 pub fn checkout() -> Path { root().join("checkout") }
@@ -50,7 +50,6 @@ pub fn init() {
     let mut push = origin.push().unwrap();
     push.add_refspec("refs/heads/master").unwrap();
     push.finish().unwrap();
-    assert!(push.unpack_ok());
     assert!(!push.statuses().unwrap().iter().any(|s| s.message.is_some()));
     push.update_tips(None, None).unwrap();
 

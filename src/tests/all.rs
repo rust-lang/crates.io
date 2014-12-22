@@ -26,30 +26,30 @@ use cargo_registry::db::{mod, RequestTransaction};
 use cargo_registry::{User, Crate, Version, Keyword};
 use cargo_registry::util::CargoResult;
 
-macro_rules! t( ($e:expr) => (
+macro_rules! t{ ($e:expr) => (
     match $e {
         Ok(e) => e,
         Err(m) => panic!("{} failed with: {}", stringify!($e), m),
     }
-) )
+) }
 
-macro_rules! t_resp( ($e:expr) => ({
+macro_rules! t_resp{ ($e:expr) => ({
     t!($e.map_err(|e| (&*e).to_string()))
-}) )
+}) }
 
-macro_rules! ok_resp( ($e:expr) => ({
+macro_rules! ok_resp{ ($e:expr) => ({
     let resp = t_resp!($e);
     if !::ok_resp(&resp) { panic!("bad response: {}", resp.status); }
     resp
-}) )
+}) }
 
-macro_rules! bad_resp( ($e:expr) => ({
+macro_rules! bad_resp{ ($e:expr) => ({
     let mut resp = t_resp!($e);
     match ::bad_resp(&mut resp) {
         None => panic!("ok response: {}", resp.status),
         Some(b) => b,
     }
-}) )
+}) }
 
 #[deriving(Decodable, Show)]
 struct Error { detail: String }
