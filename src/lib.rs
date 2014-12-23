@@ -4,7 +4,7 @@
 extern crate "route-recognizer" as router;
 extern crate conduit;
 
-use std::collections::hash_map::{HashMap, Occupied, Vacant};
+use std::collections::hash_map::{HashMap, Entry};
 use std::fmt::Show;
 
 use router::{Router, Match};
@@ -32,8 +32,8 @@ impl RouteBuilder {
                                handler: H) -> &'a mut RouteBuilder {
         {
             let router = match self.routers.entry(method) {
-                Occupied(e) => e.into_mut(),
-                Vacant(e) => e.set(Router::new()),
+                Entry::Occupied(e) => e.into_mut(),
+                Entry::Vacant(e) => e.set(Router::new()),
             };
             router.add(pattern, box handler as Box<Handler + Send + Sync>);
         }
