@@ -1,12 +1,13 @@
-use std::io::{mod, fs, File, MemWriter};
-use std::io::fs::PathExtensions;
 use std::collections::HashMap;
+use std::io::fs::PathExtensions;
+use std::io::{mod, fs, File, MemWriter};
+use std::iter::repeat;
 use std::sync::Arc;
-use serialize::{json, Decoder};
 
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
 use git2;
+use rustc_serialize::{json, Decoder};
 use semver;
 
 use cargo_registry::App;
@@ -17,23 +18,23 @@ use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
 
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct VersionsList { versions: Vec<EncodableVersion> }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct CrateMeta { total: int }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct GoodCrate { krate: EncodableCrate }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct RevDeps { dependencies: Vec<EncodableDependency>, meta: CrateMeta }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 
 #[test]
@@ -318,7 +319,7 @@ fn new_krate_bad_name() {
 
 #[test]
 fn new_crate_owner() {
-    #[deriving(Decodable)] struct O { ok: bool }
+    #[deriving(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
 
@@ -359,7 +360,7 @@ fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
-    req.with_body("a".repeat(1000 * 1000).as_slice());
+    req.with_body(repeat("a").take(1000 * 1000).collect::<String>().as_slice());
     bad_resp!(middle.call(&mut req));
 }
 
@@ -539,8 +540,8 @@ fn dependencies() {
 
 #[test]
 fn following() {
-    #[deriving(Decodable)] struct F { following: bool }
-    #[deriving(Decodable)] struct O { ok: bool }
+    #[deriving(RustcDecodable)] struct F { following: bool }
+    #[deriving(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/following");
@@ -589,8 +590,8 @@ fn following() {
 
 #[test]
 fn owners() {
-    #[deriving(Decodable)] struct R { users: Vec<EncodableUser> }
-    #[deriving(Decodable)] struct O { ok: bool }
+    #[deriving(RustcDecodable)] struct R { users: Vec<EncodableUser> }
+    #[deriving(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/owners");
@@ -633,8 +634,8 @@ fn owners() {
 
 #[test]
 fn yank() {
-    #[deriving(Decodable)] struct O { ok: bool }
-    #[deriving(Decodable)] struct V { version: EncodableVersion }
+    #[deriving(RustcDecodable)] struct O { ok: bool }
+    #[deriving(RustcDecodable)] struct V { version: EncodableVersion }
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/foo");
 

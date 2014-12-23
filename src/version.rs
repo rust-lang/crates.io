@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::time::Duration;
-use serialize::json;
+use rustc_serialize::json;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -37,7 +37,7 @@ pub enum Author {
     Name(String),
 }
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct EncodableVersion {
     pub id: i32,
     pub krate: String,
@@ -51,7 +51,7 @@ pub struct EncodableVersion {
     pub links: VersionLinks,
 }
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
@@ -217,7 +217,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                                .as_bytes());
     let ids = query.iter().filter_map(|&(ref a, ref b)| {
         if a.as_slice() == "ids[]" {
-            from_str(b.as_slice())
+            b.parse()
         } else {
             None
         }
@@ -240,7 +240,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { versions: Vec<EncodableVersion> }
     Ok(req.json(&R { versions: versions }))
 }
@@ -250,7 +250,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         Some(..) => try!(version_and_crate(req)),
         None => {
             let id = &req.params()["version_id"];
-            let id = from_str(id.as_slice()).unwrap_or(0);
+            let id = id.parse().unwrap_or(0);
             let conn = try!(req.tx());
             let version = try!(Version::find(&*conn, id));
             let krate = try!(Crate::find(&*conn, version.crate_id));
@@ -258,7 +258,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         }
     };
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { version: EncodableVersion }
     Ok(req.json(&R { version: version.encodable(krate.name.as_slice()) }))
 }
@@ -287,7 +287,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
         dep.encodable(crate_name.as_slice())
     }).collect();
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { dependencies: Vec<EncodableDependency> }
     Ok(req.json(&R{ dependencies: deps }))
 }
@@ -306,7 +306,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         downloads.push(download.encodable());
     }
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
 }
@@ -322,9 +322,9 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { users: Vec<::user::EncodableUser>, meta: Meta }
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct Meta { names: Vec<String> }
     Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
 }
@@ -351,7 +351,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
         try!(git::yank(&**req.app(), krate.name.as_slice(), &version.num, yanked));
     }
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R{ ok: true }))
 }

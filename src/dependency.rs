@@ -18,7 +18,7 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct EncodableDependency {
     pub id: i32,
     pub version_id: i32,

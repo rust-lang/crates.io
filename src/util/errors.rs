@@ -7,13 +7,13 @@ use conduit::Response;
 use curl::ErrCode;
 use pg::Error as PostgresError;
 use pg::ConnectError;
-use serialize::json;
+use rustc_serialize::json;
 use git2;
 
 use util::json_response;
 
-#[deriving(Encodable)] struct Error { detail: String }
-#[deriving(Encodable)] struct Bad { errors: Vec<Error> }
+#[deriving(RustcEncodable)] struct Error { detail: String }
+#[deriving(RustcEncodable)] struct Bad { errors: Vec<Error> }
 
 pub trait CargoError: Send {
     fn description(&self) -> String;

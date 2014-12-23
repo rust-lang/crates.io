@@ -5,8 +5,8 @@ use std::io::{MemReader, IoError};
 use std::str;
 use std::sync::Arc;
 
-use serialize::{json, Encodable};
-use serialize::json::Json;
+use rustc_serialize::{json, Encodable};
+use rustc_serialize::json::Json;
 use url;
 
 use conduit::{Request, Response, Handler};
@@ -45,7 +45,7 @@ pub trait RequestUtils {
 pub fn json_response<'a, T>(t: &T) -> Response
                             where T: Encodable<json::Encoder<'a>, IoError> {
     let s = json::encode(t);
-    let json = fixup(from_str(s.as_slice()).unwrap()).to_string();
+    let json = fixup(s.parse().unwrap()).to_string();
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(),
                    vec!["application/json; charset=utf-8".to_string()]);
@@ -105,10 +105,10 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
 
     fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)> {
         let query = self.query();
-        let page = query.get("page").map(|s| s.as_slice())
-                        .and_then(from_str::<uint>).unwrap_or(1);
-        let limit = query.get("per_page").map(|s| s.as_slice())
-                         .and_then(from_str::<uint>).unwrap_or(default);
+        let page = query.get("page").and_then(|s| s.parse::<uint>())
+                        .unwrap_or(1);
+        let limit = query.get("per_page").and_then(|s| s.parse::<uint>())
+                         .unwrap_or(default);
         if limit > max {
             return Err(human(format!("cannot request more than {} items", max)))
         }

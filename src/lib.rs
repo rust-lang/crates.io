@@ -1,7 +1,7 @@
 #![feature(macro_rules, phase, slicing_syntax)]
 #![allow(missing_copy_implementations)]
 
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate time;
 #[phase(plugin, link)] extern crate log;
 

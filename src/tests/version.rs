@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use serialize::json;
+use rustc_serialize::json;
 
 use conduit::{Handler, Request, Method};
 use semver;
@@ -7,9 +7,9 @@ use semver;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::version::{EncodableVersion, Version};
 
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct VersionList { versions: Vec<EncodableVersion> }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct VersionResponse { version: EncodableVersion }
 
 fn sv(s: &str) -> semver::Version {

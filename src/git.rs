@@ -1,5 +1,5 @@
 use std::ascii::AsciiExt;
-use std::collections::hash_map::{HashMap, Occupied, Vacant};
+use std::collections::hash_map::{HashMap, Entry};
 use std::io::fs::PathExtensions;
 use std::io::util;
 use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
@@ -9,7 +9,7 @@ use std::os;
 use semver;
 use flate2::reader::GzDecoder;
 use git2;
-use serialize::json;
+use rustc_serialize::json;
 
 use conduit::{Request, Response};
 
@@ -17,7 +17,7 @@ use app::{App, RequestApp};
 use dependency::Kind;
 use util::{CargoResult, internal, ChainError};
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct Crate {
     pub name: String,
     pub vers: String,
@@ -27,7 +27,7 @@ pub struct Crate {
     pub yanked: Option<bool>,
 }
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct Dependency {
     pub name: String,
     pub req: String,
@@ -83,8 +83,8 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let value = parts.next().unwrap();
         let value = value.slice(1, value.len() - 2);
         match headers.entry(key.to_string()) {
-            Occupied(e) => e.into_mut(),
-            Vacant(e) => e.set(Vec::new()),
+            Entry::Occupied(e) => e.into_mut(),
+            Entry::Vacant(e) => e.set(Vec::new()),
         }.push(value.to_string());
     }
 
@@ -92,7 +92,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let line = headers.remove("Status").unwrap_or(Vec::new());
         let line = line.into_iter().next().unwrap_or(String::new());
         let mut parts = line.as_slice().splitn(1, ' ');
-        (from_str(parts.next().unwrap_or("")).unwrap_or(200),
+        (parts.next().unwrap_or("").parse().unwrap_or(200),
          match parts.next() {
              Some("Not Found") => "Not Found",
              _ => "Ok",

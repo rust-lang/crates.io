@@ -9,9 +9,9 @@ use cargo_registry::user::{User, EncodableUser};
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::version::EncodableVersion;
 
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct AuthResponse { url: String, state: String }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct MeResponse { user: EncodableUser, api_token: String }
 
 #[test]
@@ -102,7 +102,7 @@ fn my_packages() {
     req.with_query(format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[deriving(Decodable)]
+    #[deriving(RustcDecodable)]
     struct Response { crates: Vec<EncodableCrate> }
     let response: Response = ::json(&mut response);
     assert_eq!(response.crates.len(), 1);
@@ -110,12 +110,12 @@ fn my_packages() {
 
 #[test]
 fn following() {
-    #[deriving(Decodable)]
+    #[deriving(RustcDecodable)]
     struct R {
         versions: Vec<EncodableVersion>,
         meta: Meta,
     }
-    #[deriving(Decodable)] struct Meta { more: bool }
+    #[deriving(RustcDecodable)] struct Meta { more: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/");

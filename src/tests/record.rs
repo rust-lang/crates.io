@@ -135,7 +135,7 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
         for (k, v) in headers.iter() {
             let v = v.as_slice().trim();
             match k.as_slice() {
-                "Content-Length" => req = req.content_length(from_str(v).unwrap()),
+                "Content-Length" => req = req.content_length(v.parse().unwrap()),
                 "Content-Type" => req = req.content_type(v),
                 "Transfer-Encoding" => {}
                 k => req = req.header(k, v),
@@ -169,7 +169,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     let request = data.read_line().unwrap();
     let mut request = request.as_slice().split(' ');
     assert_eq!(request.next().unwrap().as_slice(), "===REQUEST");
-    let request_size: uint = from_str(request.next().unwrap().trim()).unwrap();
+    let request_size: uint = request.next().unwrap().trim().parse().unwrap();
 
     let expected = data.read_exact(request_size).unwrap();
     let mut expected_lines = expected.as_slice().split(|b| *b == b'\n')
@@ -203,7 +203,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     let response = data.read_line().unwrap();
     let mut response = response.as_slice().split(' ');
     assert_eq!(response.next().unwrap().as_slice(), "===RESPONSE");
-    let response_size: uint = from_str(response.next().unwrap().trim()).unwrap();
+    let response_size: uint = response.next().unwrap().trim().parse().unwrap();
     let response = data.read_exact(response_size).unwrap();
     let mut lines = response.as_slice().split(|b| *b == b'\n')
                             .map(|s| str::from_utf8(s).unwrap());

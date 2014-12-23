@@ -1,6 +1,6 @@
 extern crate time;
 extern crate curl;
-extern crate serialize;
+extern crate "rustc-serialize" as serialize;
 extern crate openssl;
 
 use curl::http;

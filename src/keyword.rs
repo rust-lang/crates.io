@@ -19,7 +19,7 @@ pub struct Keyword {
     pub crates_cnt: i32,
 }
 
-#[deriving(Encodable, Decodable)]
+#[deriving(RustcEncodable, RustcDecodable)]
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
@@ -163,9 +163,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let row = try!(stmt.query(&[])).next().unwrap();
     let total = row.get(0u);
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct Meta { total: i64 }
 
     Ok(req.json(&R {
@@ -182,7 +182,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         None => return Err(FromError::from_error(NotFound)),
     };
 
-    #[deriving(Encodable)]
+    #[deriving(RustcEncodable)]
     struct R { keyword: EncodableKeyword }
     Ok(req.json(&R { keyword: kw.encodable() }))
 }

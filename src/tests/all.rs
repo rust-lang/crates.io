@@ -3,10 +3,10 @@
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate "conduit-test" as conduit_test;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate conduit;
 extern crate curl;
 extern crate git2;
-extern crate serialize;
 extern crate time;
 extern crate url;
 extern crate semver;
@@ -17,7 +17,7 @@ use std::io::Command;
 use std::io::process::InheritFd;
 use std::os;
 use std::sync::{Once, ONCE_INIT, Arc};
-use serialize::json::{mod, Json};
+use rustc_serialize::json::{mod, Json};
 
 use conduit::Request;
 use conduit_test::MockRequest;
@@ -51,9 +51,9 @@ macro_rules! bad_resp{ ($e:expr) => ({
     }
 }) }
 
-#[deriving(Decodable, Show)]
+#[deriving(RustcDecodable, Show)]
 struct Error { detail: String }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct Bad { errors: Vec<Error> }
 
 mod middleware;
@@ -135,7 +135,7 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
 }
 
 fn json<T>(r: &mut conduit::Response) -> T
-           where T: serialize::Decodable<json::Decoder, json::DecoderError> {
+           where T: rustc_serialize::Decodable<json::Decoder, json::DecoderError> {
     let data = r.body.read_to_end().unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
     let j = match json::from_str(s) {

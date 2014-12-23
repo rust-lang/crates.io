@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use serialize::{Decodable, Decoder, Encoder, Encodable};
+use rustc_serialize::{Decodable, Decoder, Encoder, Encodable};
 use semver;
 use dependency::Kind as DependencyKind;
 
 use keyword::Keyword as CrateKeyword;
 use krate::Crate;
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable)]
 pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
@@ -32,7 +32,7 @@ pub struct KeywordList(pub Vec<Keyword>);
 pub struct Keyword(pub String);
 pub struct Feature(pub String);
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,

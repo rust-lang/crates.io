@@ -1,4 +1,4 @@
-use serialize::Decoder;
+use rustc_serialize::Decoder;
 
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
@@ -6,11 +6,11 @@ use conduit_test::MockRequest;
 use cargo_registry::db::{RequestTransaction, Connection};
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct KeywordList { keywords: Vec<EncodableKeyword>, meta: KeywordMeta }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct KeywordMeta { total: int }
-#[deriving(Decodable)]
+#[deriving(RustcDecodable)]
 struct GoodKeyword { keyword: EncodableKeyword }
 
 #[test]
