@@ -118,7 +118,10 @@ pub trait Handler : Sync + Send {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>>;
 }
 
-impl<T: Send + Sync + Show> Handler for fn(&mut Request) -> Result<Response, T> {
+impl<F, T> Handler for F
+    where F: Fn(&mut Request) -> Result<Response, T> + Sync + Send,
+          T: Send + Show
+{
     fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
         { (*self)(request) }.map_err(|e| box e as Box<Show + 'static>)
     }
