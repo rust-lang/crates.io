@@ -1,9 +1,12 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
+    needs: ['search'],
+
     flashError: null,
     nextFlashError: null,
     showUserOptions: false,
+    search: Ember.computed.oneWay('controllers.search.q'),
 
     stepFlash: function() {
         this.set('flashError', this.get('nextFlashError'));
