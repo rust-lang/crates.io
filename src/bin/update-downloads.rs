@@ -24,7 +24,7 @@ fn main() {
         }
         drop(conn);
         if args.len() > 1 && args[1].as_slice() == "daemon" {
-            let sleep = from_str::<i64>(args[2].as_slice()).unwrap();
+            let sleep = args[2].parse::<i64>().unwrap();
             std::io::timer::sleep(Duration::seconds(sleep));
         } else {
             break

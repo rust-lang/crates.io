@@ -61,8 +61,7 @@ fn main() {
     let port = if heroku {
         8888
     } else {
-        os::getenv("PORT").and_then(|s| from_str(s.as_slice()))
-                          .unwrap_or(8888)
+        os::getenv("PORT").and_then(|s| s.parse()).unwrap_or(8888)
     };
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);

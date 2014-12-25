@@ -33,7 +33,7 @@ fn env(s: &str) -> String {
 fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
     let ids = os::args();
     let mut ids = ids.iter().skip(1).filter_map(|arg| {
-        from_str::<i32>(arg.as_slice())
+        arg.parse::<i32>()
     });
     for id in ids {
         let now = time::now_utc().to_timespec();
