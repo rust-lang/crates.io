@@ -38,7 +38,9 @@ export default Ember.Controller.extend({
 
     actions: {
         search: function(query) {
-            this.transitionToRoute('search', {queryParams: {q: query}});
+            this.transitionToRoute('search', {
+              queryParams: {q: query, page: 1}
+            });
         },
 
         toggleUserOptions: function() {
