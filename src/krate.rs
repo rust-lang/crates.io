@@ -149,7 +149,7 @@ impl Crate {
             "fmt_macros" | "graphviz" | "green" | "libc" |
             "native" | "rand" | "rbml" |
             "rustc_back" | "rustc" | "rustc_llvm" | "rustdoc" | "rustrt" |
-            "serialize" | "std" | "sync" | "syntax" | "term" | "test" |
+            "serialize" | "std" | "sync" | "syntax" | "test" |
             "unicode" | "rust" | "cargo" => {
                 return Err(human("cannot upload a crate with a reserved name"))
             }
