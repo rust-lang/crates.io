@@ -1,5 +1,4 @@
 language: rust
-sudo: false
 script:
   - cargo build --verbose
   - cargo test --verbose
