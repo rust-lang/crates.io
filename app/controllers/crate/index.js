@@ -151,7 +151,7 @@ export default Ember.ObjectController.extend({
             }
 
             var headers = ['Date'];
-            versions.sort(function(b) { return b.num; });
+            versions.sort(function(b) { return b.num; }).reverse();
             for (i = 0; i < versions.length; i++) {
                 headers.push(versions[i].num);
             }
@@ -181,7 +181,7 @@ export default Ember.ObjectController.extend({
                 if (!el) {
                     return;
                 }
-                var chart = new google.visualization.LineChart(el);
+                var chart = new google.visualization.AreaChart(el);
                 chart.draw(myData, {
                     chartArea: {'width': '80%', 'height': '80%'},
                     hAxis: {
@@ -191,6 +191,7 @@ export default Ember.ObjectController.extend({
                         minorGridlines: { count: 5 },
                         viewWindow: { min: 0, },
                     },
+                    isStacked: true,
                 });
             };
 
