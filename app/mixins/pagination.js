@@ -1,14 +1,34 @@
 import Ember from 'ember';
 
+var VIEWABLE_PAGES = 9;
+
 export default Ember.Mixin.create({
+
+    // Gives page numbers to the surrounding 9 pages.
     pages: function() {
-        var availablePages = this.get('availablePages');
         var pages = [];
-        for (var i = 0; i < availablePages; i++) {
+        var currentPage = this.get('currentPage');
+        var availablePages = this.get('availablePages');
+        var lowerBound = 0;
+        var upperBound = 0;
+
+        // Always show the same number of pages even if we're
+        // at the beginning or at the end of the list.
+        if (availablePages - currentPage < Math.ceil(VIEWABLE_PAGES / 2)) {
+            lowerBound = Math.max(0, availablePages - VIEWABLE_PAGES);
+            upperBound = availablePages;
+        } else if (currentPage <= Math.ceil(VIEWABLE_PAGES / 2)) {
+            lowerBound = 0;
+            upperBound = Math.min(availablePages, VIEWABLE_PAGES);
+        } else {
+            lowerBound = currentPage - Math.ceil(VIEWABLE_PAGES / 2);
+            upperBound = currentPage + Math.floor(VIEWABLE_PAGES / 2);
+        }
+        for (var i = lowerBound; i < upperBound; i++) {
             pages.push(i + 1);
         }
         return pages;
-    }.property('availablePages'),
+    }.property('currentPage', 'availablePages'),
 
     currentPage: function() {
         return parseInt(this.get('selectedPage'), 10) || 1;

@@ -4,7 +4,7 @@ import PaginationMixin from 'cargo/mixins/pagination';
 export default Ember.ArrayController.extend(PaginationMixin, {
     needs: ['application'],
     queryParams: ['letter', 'page', 'per_page', 'sort'],
-    letter: 'A',
+    letter: null,
     page: '1',
     per_page: 10,
     sort: 'alpha',

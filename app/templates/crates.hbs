@@ -3,7 +3,9 @@
         <img class='logo' src="/assets/crate.png"/>
         <h1>All Crates</h1>
     </div>
-    <h2>starting with '{{ letter }}'</h2>
+    {{#if letter}}
+        <h2>starting with '{{ letter }}'</h2>
+    {{/if}}
 </div>
 
 <div id='selection'>
@@ -12,7 +14,7 @@
             {{ this }}
         {{/link-to}}
     {{/each}}
-    {{view Ember.Select content=alphabet value=letter}}
+    {{view Ember.Select content=alphabet value=letter prompt="Filter by the letter..."}}
 </div>
 
 <div id='results'>
@@ -35,12 +37,12 @@
             </a>
             <ul {{bind-attr class='showSortBy:open :dropdown'}}>
                 <li>
-                    {{#link-to 'crates' (query-params sort="alpha")}}
+                    {{#link-to 'crates' (query-params page=1 sort="alpha")}}
                         Alphabetical
                     {{/link-to}}
                 </li>
                 <li>
-                    {{#link-to 'crates' (query-params sort="downloads")}}
+                    {{#link-to 'crates' (query-params page=1 sort="downloads")}}
                         Downloads
                     {{/link-to}}
                 </li>
