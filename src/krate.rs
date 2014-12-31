@@ -1,3 +1,4 @@
+use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;

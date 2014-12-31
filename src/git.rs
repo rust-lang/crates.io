@@ -44,7 +44,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 
     // Required environment variables
     cmd.env("REQUEST_METHOD",
-            req.method().to_string().as_slice().to_ascii_upper());
+            req.method().to_string().as_slice().to_ascii_uppercase());
     cmd.env("GIT_PROJECT_ROOT", &req.app().git_repo_checkout);
     cmd.env("PATH_INFO", req.path().replace("/git/index", ""));
     cmd.env("REMOTE_USER", "");
@@ -207,29 +207,24 @@ fn commit_and_push(repo: &git2::Repository,
 
         // git push
         let mut origin = try!(repo.find_remote("origin"));
-        let cfg = try!(repo.config());
-        let ok = try!(with_authentication(origin.url().unwrap(), &cfg,
-                                          |f| -> CargoResult<bool> {
-            let mut origin = try!(repo.find_remote("origin"));
-            let mut callbacks = git2::RemoteCallbacks::new().credentials(f);
-            origin.set_callbacks(&mut callbacks);
+        let mut callbacks = git2::RemoteCallbacks::new();
+        origin.set_callbacks(callbacks.credentials(credentials));
 
+        {
             let mut push = try!(origin.push());
             try!(push.add_refspec("refs/heads/master"));
 
             match push.finish() {
-                Ok(()) => {}
-                Err(..) => return Ok(false)
+                Ok(()) => {
+                    try!(push.statuses().chain_error(|| {
+                        internal("failed to update some remote refspecs")
+                    }));
+                    try!(push.update_tips(None, None));
+                    return Ok(())
+                }
+                Err(..) => {}
             }
-
-            try!(push.statuses().chain_error(|| {
-                internal("failed to update some remote refspecs")
-            }));
-            try!(push.update_tips(None, None));
-
-            Ok(true)
-        }));
-        if ok { return Ok(()) }
+        }
 
         // Ok, we need to update, so fetch and reset --hard
         try!(origin.add_fetch("refs/heads/*:refs/heads/*"));
@@ -242,19 +237,13 @@ fn commit_and_push(repo: &git2::Repository,
     Err(internal("Too many rebase failures"))
 }
 
-pub fn with_authentication<T>(url: &str,
-                              cfg: &git2::Config,
-                              f: |git2::Credentials| -> T)
-                              -> T {
-    let mut cred_helper = git2::CredentialHelper::new(url);
-    cred_helper.config(cfg);
-    // TODO: read username/pass from the environment
-    f(|_url, _username, _allowed| {
-        match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {
-            (Some(u), Some(p)) => {
-                git2::Cred::userpass_plaintext(u.as_slice(), p.as_slice())
-            }
-            _ => Err(git2::Error::from_str("no authentication set"))
+pub fn credentials(_user: &str, _user_from_url: Option<&str>,
+                   _cred: git2::CredentialType)
+                   -> Result<git2::Cred, git2::Error> {
+    match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {
+        (Some(u), Some(p)) => {
+            git2::Cred::userpass_plaintext(u.as_slice(), p.as_slice())
         }
-    })
+        _ => Err(git2::Error::from_str("no authentication set"))
+    }
 }

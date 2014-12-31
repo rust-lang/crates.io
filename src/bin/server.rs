@@ -17,14 +17,11 @@ fn main() {
         Err(..) => {
             let _ = fs::rmdir_recursive(&checkout);
             fs::mkdir_recursive(&checkout, io::USER_DIR).unwrap();
-            let config = git2::Config::open_default().unwrap();
-            let url = url.as_slice();
-            cargo_registry::git::with_authentication(url, &config, |f| {
-                let cb = git2::RemoteCallbacks::new().credentials(f);
-                git2::build::RepoBuilder::new()
-                                         .remote_callbacks(cb)
-                                         .clone(url, &checkout)
-            }).unwrap()
+            let mut cb = git2::RemoteCallbacks::new();
+            cb.credentials(cargo_registry::git::credentials);
+            git2::build::RepoBuilder::new()
+                                     .remote_callbacks(cb)
+                                     .clone(url.as_slice(), &checkout).unwrap()
         }
     };
     let mut cfg = repo.config().unwrap();
