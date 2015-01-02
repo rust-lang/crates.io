@@ -192,6 +192,7 @@ export default Ember.ObjectController.extend({
                         viewWindow: { min: 0, },
                     },
                     isStacked: true,
+                    focusTarget: 'category',
                 });
             };
 
