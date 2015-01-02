@@ -143,6 +143,11 @@
       <li>None</li>
       {{/each}}
     </ul>
+    <div>
+      {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate_id)}}
+      Reverse Dependencies
+      {{/link-to}}
+    </div>
   </div>
 
   {{#if currentDevDependencies}}
