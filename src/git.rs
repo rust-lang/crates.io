@@ -127,7 +127,7 @@ fn index_file(base: &Path, name: &str) -> Path {
 }
 
 pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
-    let repo = app.git_repo.lock();
+    let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;
     let repo_path = repo.path().dir_path();
     let dst = index_file(&repo_path, krate.name.as_slice());
@@ -151,7 +151,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
 
 pub fn yank(app: &App, krate: &str, version: &semver::Version,
             yanked: bool) -> CargoResult<()> {
-    let repo = app.git_repo.lock();
+    let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;
     let repo_path = repo.path().dir_path();
     let dst = index_file(&repo_path, krate);
@@ -237,7 +237,7 @@ fn commit_and_push(repo: &git2::Repository,
     Err(internal("Too many rebase failures"))
 }
 
-pub fn credentials(_user: &str, _user_from_url: Option<&str>,
+pub fn credentials(_user: &str, _user_from_url: &str,
                    _cred: git2::CredentialType)
                    -> Result<git2::Cred, git2::Error> {
     match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {

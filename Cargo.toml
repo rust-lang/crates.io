@@ -47,7 +47,7 @@ postgres = "0.4"
 curl = "0.1.0"
 oauth2 = "0.1.0"
 log = "0.1.0"
-rustc-serialize = "0.1"
+rustc-serialize = "0.2"
 
 conduit-conditional-get = "0.5.0"
 conduit-cookie = "0.1.0"

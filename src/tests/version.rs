@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use rustc_serialize::json;
+use rustc_serialize::json::Json;
 
 use conduit::{Handler, Request, Method};
 use semver;
@@ -65,7 +65,7 @@ fn authors() {
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let s = response.body.read_to_string().unwrap();
-    let json = json::from_str(s.as_slice()).unwrap();
+    let json = Json::from_str(s.as_slice()).unwrap();
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
 }

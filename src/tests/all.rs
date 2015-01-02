@@ -138,7 +138,7 @@ fn json<T>(r: &mut conduit::Response) -> T
            where T: rustc_serialize::Decodable<json::Decoder, json::DecoderError> {
     let data = r.body.read_to_end().unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
-    let j = match json::from_str(s) {
+    let j = match Json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {}\n{}", e, s),
     };

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::rand::{task_rng, Rng};
+use std::rand::{thread_rng, Rng};
 use std::str;
 use rustc_serialize::json;
 
@@ -107,7 +107,7 @@ impl User {
     }
 
     pub fn new_api_token() -> String {
-        task_rng().gen_ascii_chars().take(32).collect()
+        thread_rng().gen_ascii_chars().take(32).collect()
     }
 
     pub fn encodable(self) -> EncodableUser {
@@ -140,7 +140,7 @@ impl Model for User {
 }
 
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
-    let state: String = task_rng().gen_ascii_chars().take(16).collect();
+    let state: String = thread_rng().gen_ascii_chars().take(16).collect();
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
     let url = req.app().github.authorize_url(state.clone());
