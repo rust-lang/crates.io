@@ -1,4 +1,5 @@
 language: rust
+sudo: false
 
 before_script:
   - psql -c 'create database cargo_registry_test;' -U postgres
