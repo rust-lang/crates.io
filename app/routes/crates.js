@@ -8,6 +8,12 @@ export default Ember.Route.extend({
     },
 
     model: function(params) {
+        // The backend throws an error if the letter param is
+        // empty or null.
+        if(!params.letter) {
+            delete params.letter;
+        }
+
         return this.store.find('crate', params);
     },
 });

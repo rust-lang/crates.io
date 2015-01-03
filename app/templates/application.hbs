@@ -19,7 +19,9 @@
     </div>
 
     <div class='nav'>
-        {{#link-to "crates"}}Browse All Crates{{/link-to}}
+        {{#link-to "crates" (query-params letter="null" page=1)}}
+            Browse All Crates
+        {{/link-to}}
         <span class="sep">|</span>
         {{#if session.currentUser}}
             <div class='dropdown-container'>
