@@ -8,19 +8,19 @@ use std::fmt::Show;
 pub use self::typemap::TypeMap;
 mod typemap;
 
-#[deriving(PartialEq, Show, Clone, Copy)]
+#[derive(PartialEq, Show, Clone, Copy)]
 pub enum Scheme {
     Http,
     Https
 }
 
-#[deriving(PartialEq, Show, Clone, Copy)]
+#[derive(PartialEq, Show, Clone, Copy)]
 pub enum Host<'a> {
     Name(&'a str),
     Ip(IpAddr)
 }
 
-#[deriving(PartialEq, Hash, Eq, Show, Clone, Copy)]
+#[derive(PartialEq, Hash, Eq, Show, Clone, Copy)]
 pub enum Method {
     Get,
     Post,
