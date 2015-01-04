@@ -7,9 +7,9 @@ use semver;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::version::{EncodableVersion, Version};
 
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct VersionList { versions: Vec<EncodableVersion> }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct VersionResponse { version: EncodableVersion }
 
 fn sv(s: &str) -> semver::Version {

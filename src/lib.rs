@@ -1,4 +1,5 @@
-#![feature(macro_rules, phase, slicing_syntax)]
+#![feature(macro_rules, phase, slicing_syntax, associated_types)]
+#![feature(old_orphan_check)]
 #![allow(missing_copy_implementations)]
 
 extern crate "rustc-serialize" as rustc_serialize;
@@ -62,7 +63,7 @@ pub mod util;
 pub mod version;
 mod licenses;
 
-#[deriving(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Env {
     Development,
     Test,

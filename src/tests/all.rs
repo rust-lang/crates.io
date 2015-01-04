@@ -1,4 +1,4 @@
-#![feature(macro_rules)]
+#![feature(macro_rules, old_orphan_check)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -17,12 +17,12 @@ use std::io::Command;
 use std::io::process::InheritFd;
 use std::os;
 use std::sync::{Once, ONCE_INIT, Arc};
-use rustc_serialize::json::{mod, Json};
+use rustc_serialize::json::{self, Json};
 
 use conduit::Request;
 use conduit_test::MockRequest;
 use cargo_registry::app::App;
-use cargo_registry::db::{mod, RequestTransaction};
+use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::{User, Crate, Version, Keyword};
 use cargo_registry::util::CargoResult;
 
@@ -51,9 +51,9 @@ macro_rules! bad_resp{ ($e:expr) => ({
     }
 }) }
 
-#[deriving(RustcDecodable, Show)]
+#[derive(RustcDecodable, Show)]
 struct Error { detail: String }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct Bad { errors: Vec<Error> }
 
 mod middleware;
@@ -66,7 +66,7 @@ mod version;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     struct NoCommit;
-    static mut INIT: Once = ONCE_INIT;
+    static INIT: Once = ONCE_INIT;
     git::init();
 
     let (proxy, bomb) = record::proxy();
@@ -84,7 +84,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
     };
-    unsafe { INIT.doit(|| db_setup(config.db_url.as_slice())); }
+    INIT.call_once(|| db_setup(config.db_url.as_slice()));
     let app = App::new(&config);
     let app = Arc::new(app);
     let mut middleware = cargo_registry::middleware(app.clone());

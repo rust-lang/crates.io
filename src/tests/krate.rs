@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::fs::PathExtensions;
-use std::io::{mod, fs, File, MemWriter};
+use std::io::{self, fs, File, MemWriter};
 use std::iter::repeat;
 use std::sync::Arc;
 
@@ -18,23 +18,23 @@ use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
 
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct VersionsList { versions: Vec<EncodableVersion> }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct CrateMeta { total: int }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct GoodCrate { krate: EncodableCrate }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct RevDeps { dependencies: Vec<EncodableDependency>, meta: CrateMeta }
-#[deriving(RustcDecodable)]
+#[derive(RustcDecodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
 
 #[test]
@@ -319,7 +319,7 @@ fn new_krate_bad_name() {
 
 #[test]
 fn new_crate_owner() {
-    #[deriving(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
 
@@ -540,8 +540,8 @@ fn dependencies() {
 
 #[test]
 fn following() {
-    #[deriving(RustcDecodable)] struct F { following: bool }
-    #[deriving(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct F { following: bool }
+    #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/following");
@@ -590,8 +590,8 @@ fn following() {
 
 #[test]
 fn owners() {
-    #[deriving(RustcDecodable)] struct R { users: Vec<EncodableUser> }
-    #[deriving(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct R { users: Vec<EncodableUser> }
+    #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/owners");
@@ -634,8 +634,8 @@ fn owners() {
 
 #[test]
 fn yank() {
-    #[deriving(RustcDecodable)] struct O { ok: bool }
-    #[deriving(RustcDecodable)] struct V { version: EncodableVersion }
+    #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct V { version: EncodableVersion }
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/foo");
 

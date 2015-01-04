@@ -5,6 +5,7 @@ use std::io::{ChanReader, ChanWriter, util, stdio};
 use std::io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
 use std::os;
 use std::str;
+use std::sync::mpsc::{channel, Receiver};
 use std::thread::Thread;
 
 use curl::http;
@@ -20,7 +21,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         self.accept.close_accept().unwrap();
-        let res = self.rx.recv_opt();
+        let res = self.rx.recv();
         let stderr = self.iorx.read_to_string().unwrap();
         match res {
             Err(..) if !Thread::panicking() => {
@@ -78,7 +79,7 @@ pub fn proxy() -> (String, Bomb) {
             Some(ref mut f) => assert!(f.read_line().is_err()),
             None => {}
         }
-        tx.send(());
+        tx.send(()).unwrap();
     }).detach();
 
     (ret, Bomb { accept: a2, rx: rx, iorx: iorx })

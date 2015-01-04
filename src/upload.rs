@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Deref;
 
 use rustc_serialize::{Decodable, Decoder, Encoder, Encodable};
 use semver;
@@ -7,7 +8,7 @@ use dependency::Kind as DependencyKind;
 use keyword::Keyword as CrateKeyword;
 use krate::Crate;
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
@@ -24,7 +25,7 @@ pub struct NewCrate {
     pub repository: Option<String>,
 }
 
-#[deriving(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash)]
 pub struct CrateName(pub String);
 pub struct CrateVersion(pub semver::Version);
 pub struct CrateVersionReq(pub semver::VersionReq);
@@ -32,7 +33,7 @@ pub struct KeywordList(pub Vec<Keyword>);
 pub struct Keyword(pub String);
 pub struct Feature(pub String);
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,
@@ -174,40 +175,46 @@ impl<E, D: Encoder<E>> Encodable<D, E> for DependencyKind {
     }
 }
 
-impl Deref<str> for CrateName {
+impl Deref for CrateName {
+    type Target = str;
     fn deref<'a>(&'a self) -> &'a str {
         let CrateName(ref s) = *self;
         s.as_slice()
     }
 }
 
-impl Deref<str> for Keyword {
+impl Deref for Keyword {
+    type Target = str;
     fn deref<'a>(&'a self) -> &'a str {
         let Keyword(ref s) = *self;
         s.as_slice()
     }
 }
 
-impl Deref<str> for Feature {
+impl Deref for Feature {
+    type Target = str;
     fn deref<'a>(&'a self) -> &'a str {
         let Feature(ref s) = *self;
         s.as_slice()
     }
 }
 
-impl Deref<semver::Version> for CrateVersion {
+impl Deref for CrateVersion {
+    type Target = semver::Version;
     fn deref<'a>(&'a self) -> &'a semver::Version {
         let CrateVersion(ref s) = *self; s
     }
 }
 
-impl Deref<semver::VersionReq> for CrateVersionReq {
+impl Deref for CrateVersionReq {
+    type Target = semver::VersionReq;
     fn deref<'a>(&'a self) -> &'a semver::VersionReq {
         let CrateVersionReq(ref s) = *self; s
     }
 }
 
-impl Deref<[Keyword]> for KeywordList {
+impl Deref for KeywordList {
+    type Target = [Keyword];
     fn deref<'a>(&'a self) -> &'a [Keyword] {
         let KeywordList(ref s) = *self;
         s.as_slice()

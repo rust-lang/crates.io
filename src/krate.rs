@@ -13,7 +13,7 @@ use curl::http;
 use pg;
 use pg::types::ToSql;
 use semver;
-use url::{mod, Url};
+use url::{self, Url};
 
 use {Model, User, Keyword, Version};
 use app::{App, RequestApp};
@@ -29,7 +29,7 @@ use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
 use version::EncodableVersion;
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -47,7 +47,7 @@ pub struct Crate {
     pub repository: Option<String>,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
@@ -65,7 +65,7 @@ pub struct EncodableCrate {
     pub links: CrateLinks,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
@@ -513,9 +513,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let row = try!(stmt.query(args)).next().unwrap();
     let total = row.get(0u);
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { crates: Vec<EncodableCrate>, meta: Meta }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct Meta { total: i64 }
 
     Ok(req.json(&R {
@@ -553,7 +553,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let most_downloaded = try!(tx.prepare("SELECT * FROM crates \
                                            ORDER BY downloads DESC LIMIT 10"));
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R {
         num_downloads: i64,
         num_crates: i64,
@@ -578,7 +578,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let ids = versions.iter().map(|v| v.id).collect();
     let kws = try!(krate.keywords(conn));
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R {
         krate: EncodableCrate,
         versions: Vec<EncodableVersion>,
@@ -698,7 +698,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Now that we've come this far, we're committed!
     bomb.path = None;
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { krate: EncodableCrate }
     Ok(req.json(&R { krate: krate.encodable(None) }))
 }
@@ -789,7 +789,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                crate_name, crate_name, version);
 
     if req.wants_json() {
-        #[deriving(RustcEncodable)]
+        #[derive(RustcEncodable)]
         struct R { url: String }
         Ok(req.json(&R{ url: redirect_url }))
     } else {
@@ -820,7 +820,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         downloads.push(download.encodable());
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
 }
@@ -843,7 +843,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
         try!(tx.execute("INSERT INTO follows (user_id, crate_id)
                          VALUES ($1, $2)", &[&user.id, &krate.id]));
     }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
 }
@@ -854,7 +854,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     try!(tx.execute("DELETE FROM follows
                      WHERE user_id = $1 AND crate_id = $2",
                     &[&user.id, &krate.id]));
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
 }
@@ -865,7 +865,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let stmt = try!(tx.prepare("SELECT 1 FROM follows
                                 WHERE user_id = $1 AND crate_id = $2"));
     let mut rows = try!(stmt.query(&[&user.id, &krate.id]));
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { following: bool }
     Ok(req.json(&R { following: rows.next().is_some() }))
 }
@@ -878,7 +878,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let versions = versions.into_iter().map(|v| v.encodable(crate_name))
                            .collect();
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { versions: Vec<EncodableVersion> }
     Ok(req.json(&R{ versions: versions }))
 }
@@ -890,7 +890,7 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     let owners = try!(krate.owners(tx));
     let owners = owners.into_iter().map(|u| u.encodable()).collect();
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { users: Vec<EncodableUser> }
     Ok(req.json(&R{ users: owners }))
 }
@@ -912,7 +912,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         return Err(human("must already be an owner to modify owners"))
     }
 
-    #[deriving(RustcDecodable)] struct Request { users: Vec<String> }
+    #[derive(RustcDecodable)] struct Request { users: Vec<String> }
     let request: Request = try!(json::decode(body.as_slice()).map_err(|_| {
         human("invalid json request")
     }));
@@ -928,7 +928,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R{ ok: true }))
 }
@@ -944,9 +944,9 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
         dep.encodable(crate_name.as_slice())
     }).collect();
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { dependencies: Vec<EncodableDependency>, meta: Meta }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct Meta { total: i64 }
     Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }

@@ -1,3 +1,5 @@
+use std::num::FromPrimitive;
+
 use semver;
 
 use pg;
@@ -18,7 +20,7 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableDependency {
     pub id: i32,
     pub version_id: i32,
@@ -31,7 +33,7 @@ pub struct EncodableDependency {
     pub kind: Kind,
 }
 
-#[deriving(FromPrimitive, Copy)]
+#[derive(FromPrimitive, Copy)]
 pub enum Kind {
     Normal,
     Build,

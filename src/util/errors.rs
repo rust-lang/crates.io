@@ -12,8 +12,8 @@ use git2;
 
 use util::json_response;
 
-#[deriving(RustcEncodable)] struct Error { detail: String }
-#[deriving(RustcEncodable)] struct Bad { errors: Vec<Error> }
+#[derive(RustcEncodable)] struct Error { detail: String }
+#[derive(RustcEncodable)] struct Bad { errors: Vec<Error> }
 
 pub trait CargoError: Send {
     fn description(&self) -> String;

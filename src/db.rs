@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use pg;
 use pg::types::ToSql;
-use r2d2::{mod, LoggingErrorHandler};
+use r2d2::{self, LoggingErrorHandler};
 use r2d2_postgres::{PostgresPoolManager, Error};
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;

@@ -20,7 +20,7 @@ use upload;
 use user::RequestUser;
 use util::{RequestUtils, CargoResult, Require, internal, human};
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
@@ -37,7 +37,7 @@ pub enum Author {
     Name(String),
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableVersion {
     pub id: i32,
     pub krate: String,
@@ -51,7 +51,7 @@ pub struct EncodableVersion {
     pub links: VersionLinks,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
@@ -240,7 +240,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { versions: Vec<EncodableVersion> }
     Ok(req.json(&R { versions: versions }))
 }
@@ -258,7 +258,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         }
     };
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { version: EncodableVersion }
     Ok(req.json(&R { version: version.encodable(krate.name.as_slice()) }))
 }
@@ -287,7 +287,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
         dep.encodable(crate_name.as_slice())
     }).collect();
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { dependencies: Vec<EncodableDependency> }
     Ok(req.json(&R{ dependencies: deps }))
 }
@@ -306,7 +306,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         downloads.push(download.encodable());
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
 }
@@ -322,9 +322,9 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { users: Vec<::user::EncodableUser>, meta: Meta }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct Meta { names: Vec<String> }
     Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
 }
@@ -351,7 +351,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
         try!(git::yank(&**req.app(), krate.name.as_slice(), &version.num, yanked));
     }
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R{ ok: true }))
 }

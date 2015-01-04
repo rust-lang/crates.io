@@ -13,7 +13,7 @@ pub struct VersionDownload {
     pub date: Timespec,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableVersionDownload {
     pub id: i32,
     pub version: i32,

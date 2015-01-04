@@ -3,9 +3,10 @@ extern crate "conduit-middleware" as conduit_middleware;
 extern crate civet;
 extern crate git2;
 
+use std::io::{self, fs, File};
 use std::os;
 use std::sync::Arc;
-use std::io::{mod, fs, File};
+use std::sync::mpsc::channel;
 use civet::Server;
 
 fn main() {
@@ -68,7 +69,7 @@ fn main() {
 
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
     let (_tx, rx) = channel::<()>();
-    rx.recv();
+    rx.recv().unwrap();
 }
 
 fn env(s: &str) -> String {

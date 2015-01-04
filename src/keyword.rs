@@ -12,7 +12,7 @@ use db::{Connection, RequestTransaction};
 use util::{RequestUtils, CargoResult, Require, internal};
 use util::errors::{NotFound, FromError};
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
@@ -20,7 +20,7 @@ pub struct Keyword {
     pub crates_cnt: i32,
 }
 
-#[deriving(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
@@ -164,9 +164,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let row = try!(stmt.query(&[])).next().unwrap();
     let total = row.get(0u);
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct Meta { total: i64 }
 
     Ok(req.json(&R {
@@ -183,7 +183,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         None => return Err(FromError::from_error(NotFound)),
     };
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { keyword: EncodableKeyword }
     Ok(req.json(&R { keyword: kw.encodable() }))
 }

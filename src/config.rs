@@ -1,4 +1,4 @@
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Config {
     pub s3_bucket: String,
     pub s3_region: Option<String>,

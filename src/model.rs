@@ -3,7 +3,7 @@ use db::Connection;
 use util::{CargoResult, Require};
 use util::errors::NotFound;
 
-pub trait Model {
+pub trait Model: Sized {
     fn from_row(row: &pg::Row) -> Self;
     fn table_name(_: Option<Self>) -> &'static str;
 

@@ -22,7 +22,7 @@ pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
-#[deriving(Clone, Show, PartialEq, Eq)]
+#[derive(Clone, Show, PartialEq, Eq)]
 pub struct User {
     pub id: i32,
     pub gh_login: String,
@@ -33,7 +33,7 @@ pub struct User {
     pub api_token: String,
 }
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct EncodableUser {
     pub id: i32,
     pub login: String,
@@ -145,7 +145,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 
     let url = req.app().github.authorize_url(state.clone());
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { url: String, state: String }
     Ok(req.json(&R { url: url.to_string(), state: state }))
 }
@@ -182,7 +182,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
                                     resp)))
     }
 
-    #[deriving(RustcDecodable)]
+    #[derive(RustcDecodable)]
     struct GithubUser {
         email: Option<String>,
         name: Option<String>,
@@ -226,7 +226,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     try!(conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
                       &[&token, &user.id]));
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { api_token: String }
     Ok(req.json(&R { api_token: token }))
 }
@@ -234,7 +234,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R { user: EncodableUser, api_token: String }
     let token = user.api_token.clone();
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
@@ -286,13 +286,13 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
                   .next().is_some();
 
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct R {
         versions: Vec<EncodableVersion>,
         crates: Vec<EncodableCrate>,
         meta: Meta,
     }
-    #[deriving(RustcEncodable)]
+    #[derive(RustcEncodable)]
     struct Meta { more: bool }
     Ok(req.json(&R{ versions: versions, crates: crates, meta: Meta { more: more } }))
 }
