@@ -5,7 +5,7 @@ extern crate time;
 extern crate conduit;
 extern crate "conduit-middleware" as middleware;
 
-use std::str::CowString;
+use std::string::CowString;
 use std::borrow::Cow;
 use std::fmt::Show;
 use std::io::util::NullReader;
