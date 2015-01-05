@@ -36,6 +36,10 @@ export default Ember.ObjectController.extend({
              this.get('repository');
     }.property('homepage', 'wiki', 'mailing_list', 'documentation', 'repository'),
 
+    versionsCount: function() {
+      return this.get('versions.length');
+    }.property('versions.@each'),
+
     displayedAuthors: function() {
         var self = this;
         if (!this.get('currentVersion')) {
