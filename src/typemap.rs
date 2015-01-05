@@ -1,4 +1,4 @@
-use std::any::{Any, AnyMutRefExt, AnyRefExt};
+use std::any::Any;
 use std::boxed::BoxAny;
 use std::intrinsics::TypeId;
 use std::collections::HashMap;
