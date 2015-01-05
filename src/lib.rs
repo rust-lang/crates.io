@@ -31,9 +31,9 @@ impl RouteBuilder {
     pub fn map<'a, H: Handler>(&'a mut self, method: Method, pattern: &str,
                                handler: H) -> &'a mut RouteBuilder {
         {
-            let router = match self.routers.entry(method) {
+            let router = match self.routers.entry(&method) {
                 Entry::Occupied(e) => e.into_mut(),
-                Entry::Vacant(e) => e.set(Router::new()),
+                Entry::Vacant(e) => e.insert(Router::new()),
             };
             router.add(pattern, box handler as Box<Handler + Send + Sync>);
         }
