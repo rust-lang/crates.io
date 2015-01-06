@@ -82,9 +82,9 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let key = parts.next().unwrap();
         let value = parts.next().unwrap();
         let value = value.slice(1, value.len() - 2);
-        match headers.entry(key.to_string()) {
+        match headers.entry(key) {
             Entry::Occupied(e) => e.into_mut(),
-            Entry::Vacant(e) => e.set(Vec::new()),
+            Entry::Vacant(e) => e.insert(Vec::new()),
         }.push(value.to_string());
     }
 
