@@ -1,5 +1,3 @@
-#![feature(globs)]
-
 extern crate conduit;
 
 use std::fmt::Show;
