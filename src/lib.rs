@@ -1,6 +1,3 @@
-#![feature(macro_rules)]
-#![feature(globs)]
-
 extern crate "route-recognizer" as router;
 extern crate conduit;
 
