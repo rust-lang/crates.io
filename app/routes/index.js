@@ -12,7 +12,7 @@ export default Ember.Route.extend({
     };
     return ajax('/summary').then(function(data) {
         addCrates(data.new_crates);
-        addCrates(data.most_downloaded);
+        addCrates(data.most_directly_depended_upon);
         addCrates(data.just_updated);
         return data;
     });

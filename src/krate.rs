@@ -550,22 +550,22 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
                                         WHERE updated_at::timestamp(0) !=
                                               created_at::timestamp(0)
                                         ORDER BY updated_at DESC LIMIT 10"));
-    let most_downloaded = try!(tx.prepare("SELECT * FROM crates \
-                                           ORDER BY downloads DESC LIMIT 10"));
+    let most_directly_depended_upon = try!(tx.prepare("SELECT * FROM crates \
+                                        ORDER BY dependencies-on DESC LIMIT 10"));
 
     #[derive(RustcEncodable)]
     struct R {
         num_downloads: i64,
         num_crates: i64,
         new_crates: Vec<EncodableCrate>,
-        most_downloaded: Vec<EncodableCrate>,
+        most_directly_depended_upon: Vec<EncodableCrate>,
         just_updated: Vec<EncodableCrate>,
     }
     Ok(req.json(&R {
         num_downloads: num_downloads,
         num_crates: num_crates,
         new_crates: try!(to_crates(new_crates)),
-        most_downloaded: try!(to_crates(most_downloaded)),
+        most_directly_depended_upon: try!(to_crates(most_directly_depended_upon)),
         just_updated: try!(to_crates(just_updated)),
     }))
 }
