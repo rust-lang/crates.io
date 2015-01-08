@@ -18,13 +18,13 @@ use util::json_response;
 pub trait CargoError: Send {
     fn description(&self) -> String;
     fn detail(&self) -> Option<String> { None }
-    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> { None }
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError)> { None }
 
     fn concrete(&self) -> ConcreteCargoError {
         ConcreteCargoError {
             description: self.description(),
             detail: self.detail(),
-            cause: self.cause().map(|c| box c.concrete() as Box<CargoError + Send>),
+            cause: self.cause().map(|c| box c.concrete() as Box<CargoError>),
             human: false,
         }
     }
@@ -45,9 +45,9 @@ pub trait FromError<E> {
     fn from_error(error: E) -> Self;
 }
 
-impl<E: CargoError + Send> FromError<E> for Box<CargoError + Send> {
-    fn from_error(error: E) -> Box<CargoError + Send> {
-        box error as Box<CargoError + Send>
+impl<E: CargoError> FromError<E> for Box<CargoError> {
+    fn from_error(error: E) -> Box<CargoError> {
+        box error as Box<CargoError>
     }
 }
 
@@ -61,7 +61,7 @@ macro_rules! from_error {
     }
 }
 
-impl<'a> Show for &'a (CargoError + Send) {
+impl<'a> Show for &'a (CargoError) {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         try!(write!(f, "{}", self.description()));
 
@@ -79,36 +79,41 @@ impl<'a> Show for &'a (CargoError + Send) {
     }
 }
 
-impl Show for Box<CargoError + Send> {
+impl Show for Box<CargoError> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let me: &(CargoError + Send) = &**self;
+        let me: &(CargoError) = &**self;
         me.fmt(f)
     }
 }
 
-impl CargoError for Box<CargoError + Send> {
+impl CargoError for Box<CargoError> {
     fn description(&self) -> String { (**self).description() }
     fn detail(&self) -> Option<String> { (**self).detail() }
-    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> { (**self).cause() }
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError)> { (**self).cause() }
     fn human(&self) -> bool { (**self).human() }
     fn response(&self) -> Option<Response> { (**self).response() }
 }
 
-pub type CargoResult<T> = Result<T, Box<CargoError + Send>>;
+pub type CargoResult<T> = Result<T, Box<CargoError>>;
 
 pub trait ChainError<T> {
-    fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T> ;
+    fn chain_error<E: CargoError, F>(self, callback: F) -> CargoResult<T>
+        where F: FnOnce() -> E;
 }
 
-impl<'a, T> ChainError<T> for ||:'a -> CargoResult<T> {
-    fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T> {
-        self().map_err(|err| callback().concrete().with_cause(err))
+impl<'a, T, F> ChainError<T> for F where F: FnOnce() -> CargoResult<T> + 'a {
+    fn chain_error<E: CargoError, F>(self, callback: F) -> CargoResult<T>
+        where F: FnOnce() -> E
+    {
+        self().map_err(move |err| callback().concrete().with_cause(err))
     }
 }
 
-impl<T, E: CargoError + Send> ChainError<T> for Result<T, E> {
-    fn chain_error<E: CargoError + Send>(self, callback: || -> E) -> CargoResult<T>  {
-        self.map_err(|err| callback().concrete().with_cause(err))
+impl<T, E: CargoError> ChainError<T> for Result<T, E> {
+    fn chain_error<E: CargoError, F>(self, callback: F) -> CargoResult<T>
+        where F: FnOnce() -> E
+    {
+        self.map_err(move |err| callback().concrete().with_cause(err))
     }
 }
 
@@ -156,24 +161,24 @@ impl CargoError for git2::Error {
 
 from_error!(git2::Error);
 
-impl<T: CargoError + Send> FromError<T> for Box<Show + 'static> {
+impl<T: CargoError> FromError<T> for Box<Show + 'static> {
     fn from_error(t: T) -> Box<Show + 'static> {
-        box() (box t as Box<CargoError + Send>) as Box<Show + 'static>
+        box() (box t as Box<CargoError>) as Box<Show + 'static>
     }
 }
 
 pub struct ConcreteCargoError {
     description: String,
     detail: Option<String>,
-    cause: Option<Box<CargoError + Send>>,
+    cause: Option<Box<CargoError>>,
     human: bool,
 }
 
 impl ConcreteCargoError {
-    pub fn with_cause<E>(mut self, cause: E) -> Box<CargoError + Send>
-                        where E: CargoError + Send {
-        self.cause = Some(box cause as Box<CargoError + Send>);
-        box self as Box<CargoError + Send>
+    pub fn with_cause<E>(mut self, cause: E) -> Box<CargoError>
+                        where E: CargoError {
+        self.cause = Some(box cause as Box<CargoError>);
+        box self as Box<CargoError>
     }
 }
 
@@ -192,8 +197,8 @@ impl CargoError for ConcreteCargoError {
         self.detail.clone()
     }
 
-    fn cause<'a>(&'a self) -> Option<&'a (CargoError + Send)> {
-        self.cause.as_ref().map(|c| { let err: &(CargoError + Send) = &**c; err })
+    fn cause<'a>(&'a self) -> Option<&'a (CargoError)> {
+        self.cause.as_ref().map(|c| { let err: &(CargoError) = &**c; err })
     }
 
     fn human(&self) -> bool { self.human }
@@ -234,29 +239,29 @@ impl CargoError for Unauthorized {
 from_error!(Unauthorized);
 
 pub fn internal_error<S1: Str, S2: Str>(error: S1,
-                                        detail: S2) -> Box<CargoError + Send> {
+                                        detail: S2) -> Box<CargoError> {
     box ConcreteCargoError {
         description: error.as_slice().to_string(),
         detail: Some(detail.as_slice().to_string()),
         cause: None,
         human: false,
-    } as Box<CargoError + Send>
+    } as Box<CargoError>
 }
 
-pub fn internal<S: Show>(error: S) -> Box<CargoError + Send> {
+pub fn internal<S: Show>(error: S) -> Box<CargoError> {
     box ConcreteCargoError {
         description: error.to_string(),
         detail: None,
         cause: None,
         human: false,
-    } as Box<CargoError + Send>
+    } as Box<CargoError>
 }
 
-pub fn human<S: Show>(error: S) -> Box<CargoError + Send> {
+pub fn human<S: Show>(error: S) -> Box<CargoError> {
     box ConcreteCargoError {
         description: error.to_string(),
         detail: None,
         cause: None,
         human: true,
-    } as Box<CargoError + Send>
+    } as Box<CargoError>
 }

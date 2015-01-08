@@ -44,8 +44,8 @@ pub struct CrateDependency {
     pub kind: Option<DependencyKind>,
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for CrateName {
-    fn decode(d: &mut D) -> Result<CrateName, E> {
+impl Decodable for CrateName {
+    fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
         let s = raw_try!(d.read_str());
         if !Crate::valid_name(s.as_slice()) {
             return Err(d.error(format!("invalid crate name specified: {}",
@@ -55,8 +55,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateName {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for Keyword {
-    fn decode(d: &mut D) -> Result<Keyword, E> {
+impl Decodable for Keyword {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Keyword, D::Error> {
         let s = raw_try!(d.read_str());
         if !CrateKeyword::valid_name(s.as_slice()) {
             return Err(d.error(format!("invalid keyword specified: {}",
@@ -66,8 +66,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for Keyword {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for Feature {
-    fn decode(d: &mut D) -> Result<Feature, E> {
+impl Decodable for Feature {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Feature, D::Error> {
         let s = raw_try!(d.read_str());
         if !Crate::valid_feature_name(s.as_slice()) {
             return Err(d.error(format!("invalid feature name specified: {}",
@@ -77,8 +77,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for Feature {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersion {
-    fn decode(d: &mut D) -> Result<CrateVersion, E> {
+impl Decodable for CrateVersion {
+    fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersion, D::Error> {
         let s = raw_try!(d.read_str());
         match semver::Version::parse(s.as_slice()) {
             Ok(v) => Ok(CrateVersion(v)),
@@ -87,8 +87,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersion {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersionReq {
-    fn decode(d: &mut D) -> Result<CrateVersionReq, E> {
+impl Decodable for CrateVersionReq {
+    fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersionReq, D::Error> {
         let s = raw_try!(d.read_str());
         match semver::VersionReq::parse(s.as_slice()) {
             Ok(v) => Ok(CrateVersionReq(v)),
@@ -98,8 +98,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for CrateVersionReq {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for KeywordList {
-    fn decode(d: &mut D) -> Result<KeywordList, E> {
+impl Decodable for KeywordList {
+    fn decode<D: Decoder>(d: &mut D) -> Result<KeywordList, D::Error> {
         let inner: Vec<Keyword> = raw_try!(Decodable::decode(d));
         if inner.len() > 5 {
             return Err(d.error("a maximum of 5 keywords per crate are allowed"))
@@ -114,8 +114,8 @@ impl<E, D: Decoder<E>> Decodable<D, E> for KeywordList {
     }
 }
 
-impl<E, D: Decoder<E>> Decodable<D, E> for DependencyKind {
-    fn decode(d: &mut D) -> Result<DependencyKind, E> {
+impl Decodable for DependencyKind {
+    fn decode<D: Decoder>(d: &mut D) -> Result<DependencyKind, D::Error> {
         let s: String = raw_try!(Decodable::decode(d));
         match s.as_slice() {
             "dev" => Ok(DependencyKind::Dev),
@@ -128,45 +128,45 @@ impl<E, D: Decoder<E>> Decodable<D, E> for DependencyKind {
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for CrateName {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for CrateName {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str(self.as_slice())
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for Keyword {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for Keyword {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str(self.as_slice())
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for Feature {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for Feature {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str(self.as_slice())
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for CrateVersion {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for CrateVersion {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str((**self).to_string().as_slice())
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for CrateVersionReq {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for CrateVersionReq {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str((**self).to_string().as_slice())
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for KeywordList {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for KeywordList {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         let KeywordList(ref inner) = *self;
         inner.encode(d)
     }
 }
 
-impl<E, D: Encoder<E>> Encodable<D, E> for DependencyKind {
-    fn encode(&self, d: &mut D) -> Result<(), E> {
+impl Encodable for DependencyKind {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         match *self {
             DependencyKind::Normal => "normal".encode(d),
             DependencyKind::Build => "build".encode(d),

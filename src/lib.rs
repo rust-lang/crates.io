@@ -1,10 +1,9 @@
-#![feature(macro_rules, phase, slicing_syntax, associated_types)]
-#![feature(old_orphan_check)]
+#![feature(slicing_syntax)]
 #![allow(missing_copy_implementations)]
 
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate time;
-#[phase(plugin, link)] extern crate log;
+#[macro_use] extern crate log;
 
 extern crate "postgres" as pg;
 extern crate curl;
@@ -45,6 +44,7 @@ use conduit_middleware::MiddlewareBuilder;
 
 use util::{C, R, R404};
 
+#[macro_use]
 mod macros;
 
 pub mod app;

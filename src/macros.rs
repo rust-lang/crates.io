@@ -1,5 +1,3 @@
-#![macro_escape]
-
 macro_rules! try{ ($expr:expr) => ({
     use util::errors::FromError;
     match $expr.map_err(FromError::from_error) {

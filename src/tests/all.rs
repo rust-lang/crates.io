@@ -1,5 +1,3 @@
-#![feature(macro_rules, old_orphan_check)]
-
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate "conduit-test" as conduit_test;
@@ -134,8 +132,7 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
     Some(bad)
 }
 
-fn json<T>(r: &mut conduit::Response) -> T
-           where T: rustc_serialize::Decodable<json::Decoder, json::DecoderError> {
+fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     let data = r.body.read_to_end().unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
     let j = match Json::from_str(s) {

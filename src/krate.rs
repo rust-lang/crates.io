@@ -537,7 +537,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         rows.next().unwrap().get("total_downloads")
     };
 
-    let to_crates = |stmt: pg::Statement| {
+    let to_crates = |&: stmt: pg::Statement| {
         let rows = raw_try!(stmt.query(&[]));
         Ok(rows.map(|r| {
             let krate: Crate = Model::from_row(&r);

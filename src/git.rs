@@ -179,9 +179,9 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
     })
 }
 
-fn commit_and_push(repo: &git2::Repository,
-                   f: || -> CargoResult<(String, Path)>)
-                   -> CargoResult<()> {
+fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
+    where F: FnMut() -> CargoResult<(String, Path)>
+{
     let repo_path = repo.path().dir_path();
 
     // Attempt to commit in a loop. It's possible that we're going to need to

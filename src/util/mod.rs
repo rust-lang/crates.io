@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::{self, Show};
+use std::fmt::Show;
 use std::io::process::{ProcessOutput, Command};
 use std::io::MemReader;
 use std::str;
@@ -36,15 +36,13 @@ mod request_proxy;
 pub trait RequestUtils {
     fn redirect(self, url: String) -> Response;
 
-    fn json<T>(self, t: &T) -> Response
-        where T: for<'b> Encodable<json::Encoder<'b>, fmt::Error>;
+    fn json<T: Encodable>(self, t: &T) -> Response;
     fn query(self) -> HashMap<String, String>;
     fn wants_json(self) -> bool;
     fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)>;
 }
 
-pub fn json_response<T>(t: &T) -> Response
-                        where T: for<'a> Encodable<json::Encoder<'a>, fmt::Error> {
+pub fn json_response<T: Encodable>(t: &T) -> Response {
     let s = json::encode(t);
     let json = fixup(s.parse().unwrap()).to_string();
     let mut headers = HashMap::new();
@@ -79,9 +77,7 @@ pub fn json_response<T>(t: &T) -> Response
 
 
 impl<'a> RequestUtils for &'a (Request + 'a) {
-    fn json<T>(self, t: &T) -> Response
-        where T: for<'b> Encodable<json::Encoder<'b>, fmt::Error>
-    {
+    fn json<T: Encodable>(self, t: &T) -> Response {
         json_response(t)
     }
 

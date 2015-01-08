@@ -5,9 +5,7 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
-#![feature(phase)]
-
-#[phase(plugin, link)]
+#[macro_use]
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate time;
