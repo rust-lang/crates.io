@@ -145,16 +145,10 @@ impl Crate {
         }
 
         // Blacklist the current set of crates in the rust distribution
-        match name.as_slice() {
-            "alloc" | "arena" | "collections" | "core" | "flate" |
-            "fmt_macros" | "graphviz" | "green" | "libc" |
-            "native" | "rand" | "rbml" |
-            "rustc_back" | "rustc" | "rustc_llvm" | "rustdoc" | "rustrt" |
-            "serialize" | "std" | "sync" | "syntax" | "test" |
-            "unicode" | "rust" | "cargo" => {
-                return Err(human("cannot upload a crate with a reserved name"))
-            }
-            _ => {}
+        const RESERVED: &'static str = include_str!("reserved_crates.txt");
+
+        if RESERVED.lines().any(|krate| name == krate) {
+            return Err(human("cannot upload a crate with a reserved name"))
         }
 
         let stmt = try!(conn.prepare("INSERT INTO crates
@@ -950,4 +944,3 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     struct Meta { total: i64 }
     Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }
-
