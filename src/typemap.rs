@@ -21,7 +21,7 @@ impl TypeMap {
     }
 
     pub fn insert<T: 'static>(&mut self, val: T) -> bool {
-        self.data.insert(TypeId::of::<T>(), box val as Box<Any>).is_none()
+        self.data.insert(TypeId::of::<T>(), Box::new(val) as Box<Any>).is_none()
     }
 
     pub fn remove<T: 'static>(&mut self) -> bool {

@@ -1,9 +1,9 @@
 extern crate semver;
 
 use std::collections::HashMap;
-use std::io::net::ip::IpAddr;
+use std::error::Error;
 use std::hash::Hash;
-use std::fmt::Show;
+use std::io::net::ip::IpAddr;
 
 pub use self::typemap::TypeMap;
 mod typemap;
@@ -74,7 +74,7 @@ pub trait Request {
     fn remote_ip(&self) -> IpAddr;
 
     /// The byte-size of the body, if any
-    fn content_length(&self) -> Option<uint>;
+    fn content_length(&self) -> Option<u64>;
 
     /// The request's headers, as conduit::Headers.
     fn headers<'a>(&'a self) -> &'a Headers;
@@ -103,7 +103,7 @@ pub trait Headers {
 
 pub struct Response {
     /// The status code as a tuple of the return code and status string
-    pub status: (uint, &'static str),
+    pub status: (u32, &'static str),
 
     /// A Map of the headers
     pub headers: HashMap<String, Vec<String>>,
@@ -115,14 +115,13 @@ pub struct Response {
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler : Sync + Send {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>>;
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>>;
 }
 
-impl<F, T> Handler for F
-    where F: Fn(&mut Request) -> Result<Response, T> + Sync + Send,
-          T: Send + Show
+impl<F> Handler for F
+    where F: Fn(&mut Request) -> Result<Response, Box<Error>> + Sync + Send,
 {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
-        { (*self)(request) }.map_err(|e| box e as Box<Show + 'static>)
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>> {
+        (*self)(request)
     }
 }
