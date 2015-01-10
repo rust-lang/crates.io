@@ -2,7 +2,7 @@ extern crate "route-recognizer" as router;
 extern crate conduit;
 
 use std::collections::hash_map::{HashMap, Entry};
-use std::fmt::Show;
+use std::error::Error;
 
 use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
@@ -11,28 +11,31 @@ pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<Handler + Send + Sync>>>
 }
 
+pub struct RouterError(String);
+
 impl RouteBuilder {
     pub fn new() -> RouteBuilder {
         RouteBuilder { routers: HashMap::new() }
     }
 
     pub fn recognize<'a>(&'a self, method: &Method, path: &str)
-                         -> Result<Match<&'a Box<Handler + Send + Sync>>, String>
+                         -> Result<Match<&'a Box<Handler + Send + Sync>>,
+                                   RouterError>
     {
         match self.routers.get(method) {
-            None => Err(format!("No router found for {}", method)),
-            Some(router) => router.recognize(path)
-        }
+            Some(router) => router.recognize(path),
+            None => Err(format!("No router found for {:?}", method)),
+        }.map_err(RouterError)
     }
 
     pub fn map<'a, H: Handler>(&'a mut self, method: Method, pattern: &str,
                                handler: H) -> &'a mut RouteBuilder {
         {
-            let router = match self.routers.entry(&method) {
+            let router = match self.routers.entry(method) {
                 Entry::Occupied(e) => e.into_mut(),
                 Entry::Vacant(e) => e.insert(Router::new()),
             };
-            router.add(pattern, box handler as Box<Handler + Send + Sync>);
+            router.add(pattern, Box::new(handler));
         }
         self
     }
@@ -64,14 +67,14 @@ impl RouteBuilder {
 }
 
 impl conduit::Handler for RouteBuilder {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>> {
         let m = {
             let method = request.method();
             let path = request.path();
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
-                Err(e) => return Err(box e as Box<Show>)
+                Err(e) => return Err(Box::new(e) as Box<Error>)
             }
         };
 
@@ -82,6 +85,10 @@ impl conduit::Handler for RouteBuilder {
 
         (*m.handler).call(request)
     }
+}
+
+impl Error for RouterError {
+    fn description(&self) -> &str { self.0.as_slice() }
 }
 
 pub trait RequestParams<'a> {
@@ -102,9 +109,10 @@ impl<'a> RequestParams<'a> for &'a (Request + 'a) {
 #[cfg(test)]
 mod tests {
     extern crate semver;
-    use std::io::net::ip::IpAddr;
     use std::collections::HashMap;
+    use std::error::Error;
     use std::io::MemReader;
+    use std::io::net::ip::IpAddr;
 
     use {RouteBuilder, RequestParams};
 
@@ -139,7 +147,7 @@ mod tests {
         }
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
         fn remote_ip(&self) -> IpAddr { unimplemented!() }
-        fn content_length(&self) -> Option<uint> { unimplemented!() }
+        fn content_length(&self) -> Option<u64> { unimplemented!() }
         fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
         fn body<'a>(&'a mut self) -> &'a mut Reader { unimplemented!() }
         fn extensions<'a>(&'a self) -> &'a Extensions {
@@ -184,15 +192,16 @@ mod tests {
         router
     }
 
-    fn test_handler(req: &mut conduit::Request) -> Result<conduit::Response, ()> {
+    fn test_handler(req: &mut conduit::Request)
+                    -> Result<conduit::Response, Box<Error>> {
         let mut res = vec!();
         res.push(req.params()["id"].clone());
-        res.push(format!("{}", req.method()));
+        res.push(format!("{:?}", req.method()));
 
         Ok(conduit::Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: box MemReader::new(res.connect(", ").into_bytes())
+            body: Box::new(MemReader::new(res.connect(", ").into_bytes()))
         })
     }
 }
