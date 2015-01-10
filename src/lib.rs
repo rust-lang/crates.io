@@ -1,11 +1,12 @@
 #![cfg_attr(test, deny(warnings))]
+#![cfg_attr(test, allow(unstable))]
 
 extern crate conduit;
 extern crate "conduit-mime-types" as mime;
 extern crate time;
 
-use std::fmt::Show;
 use std::collections::HashMap;
+use std::error::Error;
 use std::io::FileType;
 use std::io::fs::File;
 use std::io::util::NullReader;
@@ -27,7 +28,7 @@ impl Static {
 }
 
 impl Handler for Static {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>> {
         let request_path = request.path().slice_from(1);
         let path = self.path.join(request_path);
 
@@ -40,7 +41,7 @@ impl Handler for Static {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
         };
-        let stat = try!(file.stat().map_err(|e| box e as Box<Show>));
+        let stat = try!(file.stat().map_err(|e| Box::new(e) as Box<Error>));
         match stat.kind {
             FileType::Directory => return Ok(not_found()),
             _ => {}
@@ -61,7 +62,7 @@ impl Handler for Static {
         Ok(Response {
             status: (200, "OK"),
             headers: headers,
-            body: box file as Box<Reader + Send>
+            body: Box::new(file),
         })
     }
 }
@@ -70,7 +71,7 @@ fn not_found() -> Response {
     Response {
         status: (404, "Not Found"),
         headers: HashMap::new(),
-        body: box NullReader,
+        body: Box::new(NullReader),
     }
 }
 
