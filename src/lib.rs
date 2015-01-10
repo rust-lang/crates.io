@@ -47,18 +47,18 @@ impl MockRequest {
         self
     }
 
-    pub fn with_query<'a, S: Show>(&mut self, string: S) -> &mut MockRequest {
+    pub fn with_query(&mut self, string: &str) -> &mut MockRequest {
         self.query_string = Some(string.to_string());
         self
     }
 
-    pub fn with_body<'a, S: BytesContainer>(&mut self, string: S) -> &mut MockRequest {
-        self.body = Some(string.container_as_bytes().to_vec());
+    pub fn with_body(&mut self, bytes: &[u8]) -> &mut MockRequest {
+        self.body = Some(bytes.to_vec());
         self.reader = None;
         self
     }
 
-    pub fn header<'a, S1: Show, S2: Show>(&mut self, name: S1, value: S2) -> &mut MockRequest {
+    pub fn header(&mut self, name: &str, value: &str) -> &mut MockRequest {
         self.build_headers.insert(name.to_string(), value.to_string());
         let headers = MockHeaders { headers: self.build_headers.clone() };
         self.headers = headers;
@@ -112,8 +112,8 @@ impl conduit::Request for MockRequest {
         Ipv4Addr(127, 0, 0, 1)
     }
 
-    fn content_length(&self) -> Option<uint> {
-        self.body.as_ref().map(|b| b.len())
+    fn content_length(&self) -> Option<u64> {
+        self.body.as_ref().map(|b| b.len() as u64)
     }
 
     fn headers(&self) -> &Headers {
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn request_body_test() {
         let mut req = MockRequest::new(Method::Post, "/articles");
-        req.with_body("Hello world");
+        req.with_body(b"Hello world");
 
         assert_eq!(req.method(), Method::Post);
         assert_eq!(req.path(), "/articles");
