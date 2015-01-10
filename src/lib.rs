@@ -1,19 +1,19 @@
 #![cfg_attr(test, deny(warnings))]
-#![feature(macro_rules)]
+#![cfg_attr(test, allow(unstable))]
 
 extern crate time;
 extern crate conduit;
 extern crate "conduit-middleware" as middleware;
 
-use std::string::CowString;
-use std::borrow::Cow;
-use std::fmt::Show;
-use std::io::util::NullReader;
-use time::{Tm, strptime, ParseError};
 use conduit::{Request, Method};
 use middleware::Middleware;
+use std::borrow::Cow;
+use std::error::Error;
+use std::io::util::NullReader;
+use std::string::CowString;
+use time::{Tm, strptime, ParseError};
 
-type Response = Result<conduit::Response, Box<Show + 'static>>;
+type Response = Result<conduit::Response, Box<Error>>;
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
@@ -28,7 +28,7 @@ impl Middleware for ConditionalGet {
                     res.status = (304, "Not Modified");
                     res.headers.remove("Content-Type");
                     res.headers.remove("Content-Length");
-                    res.body = box NullReader as Box<Reader + Send>;
+                    res.body = Box::new(NullReader);
                 }
             },
             _ => ()
@@ -123,9 +123,9 @@ fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
 mod tests {
     extern crate "conduit-test" as test;
 
-    use std::fmt::Show;
-    use std::io::MemReader;
     use std::collections::HashMap;
+    use std::error::Error;
+    use std::io::MemReader;
     use time;
     use time::Tm;
     use conduit;
@@ -151,7 +151,7 @@ mod tests {
     macro_rules! request {
         ($($header:expr => $value:expr),+) => ({
             let mut req = test::MockRequest::new(Method::Get, "/");
-            $(req.header($header, $value.to_string());)+
+            $(req.header($header, $value.to_string().as_slice());)+
             req
         })
     }
@@ -242,7 +242,7 @@ mod tests {
         ) as &mut conduit::Request));
     }
 
-    fn expect_304(response: Result<Response, Box<Show>>) {
+    fn expect_304(response: Result<Response, Box<Error>>) {
         let mut response = response.ok().expect("No response");
         let body = response.body.read_to_string().ok().expect("No body");
 
@@ -250,11 +250,11 @@ mod tests {
         assert_eq!(body.as_slice(), "");
     }
 
-    fn expect_200(response: Result<Response, Box<Show>>) {
+    fn expect_200(response: Result<Response, Box<Error>>) {
         expect((200, "OK"), response);
     }
 
-    fn expect(status: (uint, &'static str), response: Result<Response, Box<Show>>) {
+    fn expect(status: (u32, &'static str), response: Result<Response, Box<Error>>) {
         let mut response = response.ok().expect("No response");
         let body = response.body.read_to_string().ok().expect("No body");
 
@@ -268,7 +268,7 @@ mod tests {
         body: &'static str
     }
 
-    type Status = (uint, &'static str);
+    type Status = (u32, &'static str);
 
     impl SimpleHandler {
         fn new(map: HashMap<String, Vec<String>>, status: Status, body: &'static str) -> SimpleHandler {
@@ -277,11 +277,11 @@ mod tests {
     }
 
     impl Handler for SimpleHandler {
-        fn call(&self, _: &mut Request) -> Result<Response, Box<Show + 'static>> {
+        fn call(&self, _: &mut Request) -> Result<Response, Box<Error>> {
             Ok(Response {
                 status: self.status,
                 headers: self.map.clone(),
-                body: box MemReader::new(self.body.to_string().into_bytes()) as Box<Reader + Send>
+                body: Box::new(MemReader::new(self.body.to_string().into_bytes())),
             })
         }
     }
