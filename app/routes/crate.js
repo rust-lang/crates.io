@@ -6,7 +6,7 @@ export default Ember.Route.extend({
         var parts = params.crate_id.split('/');
         var crate_id = parts[0];
         var version = null;
-        if (parts.length > 0) {
+        if (parts.length > 0 && parts[1].length > 0) {
             version = parts[1];
         }
         var self = this;
