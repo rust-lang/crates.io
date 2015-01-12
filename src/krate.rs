@@ -24,9 +24,9 @@ use git;
 use keyword::EncodableKeyword;
 use upload;
 use user::{RequestUser, EncodableUser};
-use util::errors::{NotFound, CargoError, FromError};
-use util::{LimitErrorReader, HashingReader};
-use util::{RequestUtils, CargoResult, Require, internal, ChainError, human};
+use util::errors::{NotFound, CargoError};
+use util::{LimitErrorReader, HashingReader, CommaSep};
+use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 
 #[derive(Clone)]
@@ -81,10 +81,9 @@ impl Crate {
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE lower(name) = lower($1) LIMIT 1"));
-        match try!(stmt.query(&[&name as &ToSql])).next() {
-            Some(row) => Ok(Model::from_row(&row)),
-            None => Err(FromError::from_error(NotFound)),
-        }
+        let row = try!(stmt.query(&[&name as &ToSql])).next();
+        let row = try!(row.chain_error(|| NotFound));
+        Ok(Model::from_row(&row))
     }
 
     pub fn find_or_insert(conn: &Connection, name: &str,
@@ -164,7 +163,7 @@ impl Crate {
                                          &description, &homepage,
                                          &documentation, &readme, &keywords,
                                          &repository, &license]));
-        let ret: Crate = Model::from_row(&try!(rows.next().require(|| {
+        let ret: Crate = Model::from_row(&try!(rows.next().chain_error(|| {
             internal("no crate returned")
         })));
 
@@ -505,7 +504,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let stmt = try!(conn.prepare(cnt.as_slice()));
     let args = if args.len() > 2 {args.slice_to(1)} else {args.slice_to(0)};
     let row = try!(stmt.query(args)).next().unwrap();
-    let total = row.get(0u);
+    let total = row.get(0);
 
     #[derive(RustcEncodable)]
     struct R { crates: Vec<EncodableCrate>, meta: Meta }
@@ -531,8 +530,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         rows.next().unwrap().get("total_downloads")
     };
 
-    let to_crates = |&: stmt: pg::Statement| {
-        let rows = raw_try!(stmt.query(&[]));
+    let to_crates = |&: stmt: pg::Statement| -> CargoResult<Vec<EncodableCrate>> {
+        let rows = try!(stmt.query(&[]));
         Ok(rows.map(|r| {
             let krate: Crate = Model::from_row(&r);
             krate.encodable(None)
@@ -646,7 +645,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let resp = {
             let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
                                        "application/x-tar")
-                                  .content_length(length as uint)
+                                  .content_length(length as usize)
                                   .header("Content-Encoding", "gzip");
             try!(s3req.exec().chain_error(|| {
                 internal(format!("failed to upload to S3: `{}`", path))
@@ -699,21 +698,23 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
     // Make sure the tarball being uploaded looks sane
-    let length = try!(req.content_length().require(|| {
+    let length = try!(req.content_length().chain_error(|| {
         human("missing header: Content-Length")
     }));
     let max = req.app().config.max_upload_size;
-    if length > max { return Err(human(format!("max upload size is: {}", max))) }
+    if length > max as u64 {
+        return Err(human(format!("max upload size is: {}", max)))
+    }
 
     // Read the json upload request
-    let amt = try!(req.body().read_le_u32()) as uint;
+    let amt = try!(req.body().read_le_u32()) as usize;
     if amt > max { return Err(human(format!("max upload size is: {}", max))) }
     let json = try!(req.body().read_exact(amt));
     let json = try!(String::from_utf8(json).map_err(|_| {
         human("json body was not valid utf-8")
     }));
     let new: upload::NewCrate = try!(json::decode(json.as_slice()).map_err(|e| {
-        human(format!("invalid upload request: {}", e))
+        human(format!("invalid upload request: {:?}", e))
     }));
 
     // Make sure required fields are provided
@@ -751,7 +752,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                   AND versions.num = $2
                                 LIMIT 1"));
     let mut rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));
-    let row = try!(rows.next().require(|| human("crate or version not found")));
+    let row = try!(rows.next().chain_error(|| human("crate or version not found")));
     let version_id: i32 = row.get("version_id");
     let now = ::now();
 
@@ -805,9 +806,9 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let cutoff_date = ::now() + Duration::days(-90);
     let stmt = try!(tx.prepare(format!("SELECT * FROM version_downloads
                                          WHERE date > $1
-                                           AND version_id IN({:#})
+                                           AND version_id IN({})
                                          ORDER BY date ASC",
-                                       ids.as_slice()).as_slice()));
+                                       CommaSep(&ids[])).as_slice()));
     let mut downloads = Vec::new();
     for row in try!(stmt.query(&[&cutoff_date])) {
         let download: VersionDownload = Model::from_row(&row);

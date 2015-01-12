@@ -11,5 +11,5 @@ pub struct Config {
     pub gh_client_secret: String,
     pub db_url: String,
     pub env: ::Env,
-    pub max_upload_size: uint,
+    pub max_upload_size: usize,
 }

@@ -54,8 +54,8 @@ pub fn proxy() -> (String, Bomb) {
     let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
 
     Thread::spawn(move|| {
-        stdio::set_stderr(box iotx.clone());
-        stdio::set_stdout(box iotx);
+        stdio::set_stderr(Box::new(iotx.clone()));
+        stdio::set_stdout(Box::new(iotx));
         let mut file = None;
         for socket in a.incoming() {
             let socket = match socket { Ok(s) => s, Err(..) => break };
@@ -80,7 +80,7 @@ pub fn proxy() -> (String, Bomb) {
             None => {}
         }
         tx.send(()).unwrap();
-    }).detach();
+    });
 
     (ret, Bomb { accept: a2, rx: rx, iorx: iorx })
 }
@@ -93,8 +93,8 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
 
     let (tx, rx) = channel();
     let (tx, mut rx) = (ChanWriter::new(tx), ChanReader::new(rx));
-    let socket = box socket as Box<Writer + 'static>;
-    let tx = box tx as Box<Writer + 'static>;
+    let socket = Box::new(socket) as Box<Writer + 'static>;
+    let tx = Box::new(tx) as Box<Writer + 'static>;
     respond(http_response, util::MultiWriter::new(vec![socket, tx]));
     let response = rx.read_to_end().unwrap();
 
@@ -170,7 +170,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     let request = data.read_line().unwrap();
     let mut request = request.as_slice().split(' ');
     assert_eq!(request.next().unwrap().as_slice(), "===REQUEST");
-    let request_size: uint = request.next().unwrap().trim().parse().unwrap();
+    let request_size: usize = request.next().unwrap().trim().parse().unwrap();
 
     let expected = data.read_exact(request_size).unwrap();
     let mut expected_lines = expected.as_slice().split(|b| *b == b'\n')
@@ -183,7 +183,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
                                                       .take_while(|l| l.len() > 2)
                                                       .collect();
     let mut found = HashSet::new();
-    println!("expecting: {}", expected);
+    println!("expecting: {:?}", expected);
     for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
         println!("received: {}", line.as_slice().trim());
         if !found.insert(line.clone()) { continue }
@@ -204,7 +204,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     let response = data.read_line().unwrap();
     let mut response = response.as_slice().split(' ');
     assert_eq!(response.next().unwrap().as_slice(), "===RESPONSE");
-    let response_size: uint = response.next().unwrap().trim().parse().unwrap();
+    let response_size: usize = response.next().unwrap().trim().parse().unwrap();
     let response = data.read_exact(response_size).unwrap();
     let mut lines = response.as_slice().split(|b| *b == b'\n')
                             .map(|s| str::from_utf8(s).unwrap());

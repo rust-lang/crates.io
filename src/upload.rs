@@ -46,7 +46,7 @@ pub struct CrateDependency {
 
 impl Decodable for CrateName {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
-        let s = raw_try!(d.read_str());
+        let s = try!(d.read_str());
         if !Crate::valid_name(s.as_slice()) {
             return Err(d.error(format!("invalid crate name specified: {}",
                                        s).as_slice()))
@@ -57,7 +57,7 @@ impl Decodable for CrateName {
 
 impl Decodable for Keyword {
     fn decode<D: Decoder>(d: &mut D) -> Result<Keyword, D::Error> {
-        let s = raw_try!(d.read_str());
+        let s = try!(d.read_str());
         if !CrateKeyword::valid_name(s.as_slice()) {
             return Err(d.error(format!("invalid keyword specified: {}",
                                        s).as_slice()))
@@ -68,7 +68,7 @@ impl Decodable for Keyword {
 
 impl Decodable for Feature {
     fn decode<D: Decoder>(d: &mut D) -> Result<Feature, D::Error> {
-        let s = raw_try!(d.read_str());
+        let s = try!(d.read_str());
         if !Crate::valid_feature_name(s.as_slice()) {
             return Err(d.error(format!("invalid feature name specified: {}",
                                        s).as_slice()))
@@ -79,7 +79,7 @@ impl Decodable for Feature {
 
 impl Decodable for CrateVersion {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersion, D::Error> {
-        let s = raw_try!(d.read_str());
+        let s = try!(d.read_str());
         match semver::Version::parse(s.as_slice()) {
             Ok(v) => Ok(CrateVersion(v)),
             Err(..) => Err(d.error(format!("invalid semver: {}", s).as_slice())),
@@ -89,7 +89,7 @@ impl Decodable for CrateVersion {
 
 impl Decodable for CrateVersionReq {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersionReq, D::Error> {
-        let s = raw_try!(d.read_str());
+        let s = try!(d.read_str());
         match semver::VersionReq::parse(s.as_slice()) {
             Ok(v) => Ok(CrateVersionReq(v)),
             Err(..) => Err(d.error(format!("invalid version req: {}",
@@ -100,7 +100,7 @@ impl Decodable for CrateVersionReq {
 
 impl Decodable for KeywordList {
     fn decode<D: Decoder>(d: &mut D) -> Result<KeywordList, D::Error> {
-        let inner: Vec<Keyword> = raw_try!(Decodable::decode(d));
+        let inner: Vec<Keyword> = try!(Decodable::decode(d));
         if inner.len() > 5 {
             return Err(d.error("a maximum of 5 keywords per crate are allowed"))
         }
@@ -116,7 +116,7 @@ impl Decodable for KeywordList {
 
 impl Decodable for DependencyKind {
     fn decode<D: Decoder>(d: &mut D) -> Result<DependencyKind, D::Error> {
-        let s: String = raw_try!(Decodable::decode(d));
+        let s: String = try!(Decodable::decode(d));
         match s.as_slice() {
             "dev" => Ok(DependencyKind::Dev),
             "build" => Ok(DependencyKind::Build),

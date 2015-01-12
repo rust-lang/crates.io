@@ -5,6 +5,8 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
+#![allow(unstable)]
+
 #[macro_use]
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;

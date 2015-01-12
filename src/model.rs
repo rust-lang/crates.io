@@ -1,6 +1,6 @@
 use pg;
 use db::Connection;
-use util::{CargoResult, Require};
+use util::{CargoResult, ChainError};
 use util::errors::NotFound;
 
 pub trait Model: Sized {
@@ -12,7 +12,7 @@ pub trait Model: Sized {
                           Model::table_name(None::<Self>));
         let stmt = try!(conn.prepare(sql.as_slice()));
         let mut rows = try!(stmt.query(&[&id]));
-        let row = try!(rows.next().require(|| NotFound));
+        let row = try!(rows.next().chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::Show;
+use std::error::Error;
 use std::sync::{Arc, Mutex};
 
 use conduit::Request;
@@ -65,7 +65,7 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
         req.mut_extensions().insert(self.app.clone());
         Ok(())
     }

@@ -1,5 +1,4 @@
-#![feature(slicing_syntax)]
-#![allow(missing_copy_implementations)]
+#![allow(missing_copy_implementations, unstable)]
 
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate time;
@@ -38,14 +37,12 @@ pub use self::user::User;
 pub use self::version::Version;
 
 use std::sync::Arc;
+use std::error::Error;
 
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
 use util::{C, R, R404};
-
-#[macro_use]
-mod macros;
 
 pub mod app;
 pub mod config;
@@ -147,25 +144,25 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     impl conduit_middleware::Middleware for DebugMiddleware {
         fn before(&self, req: &mut conduit::Request)
-                  -> Result<(), Box<std::fmt::Show + 'static>> {
+                  -> Result<(), Box<Error>> {
             println!("  version: {}", req.http_version());
-            println!("  method: {}", req.method());
-            println!("  scheme: {}", req.scheme());
-            println!("  host: {}", req.host());
+            println!("  method: {:?}", req.method());
+            println!("  scheme: {:?}", req.scheme());
+            println!("  host: {:?}", req.host());
             println!("  path: {}", req.path());
-            println!("  query_string: {}", req.query_string());
+            println!("  query_string: {:?}", req.query_string());
             for &(k, ref v) in req.headers().all().iter() {
-                println!("  hdr: {}={}", k, v);
+                println!("  hdr: {}={:?}", k, v);
             }
             Ok(())
         }
         fn after(&self, _req: &mut conduit::Request,
-                 res: Result<conduit::Response, Box<std::fmt::Show + 'static>>)
-                 -> Result<conduit::Response, Box<std::fmt::Show + 'static>> {
+                 res: Result<conduit::Response, Box<Error>>)
+                 -> Result<conduit::Response, Box<Error>> {
             res.map(|res| {
-                println!("  <- {}", res.status);
+                println!("  <- {:?}", res.status);
                 for (k, v) in res.headers.iter() {
-                    println!("  <- {} {}", k, v);
+                    println!("  <- {} {:?}", k, v);
                 }
                 res
             })

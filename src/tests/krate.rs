@@ -23,7 +23,7 @@ struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 #[derive(RustcDecodable)]
 struct VersionsList { versions: Vec<EncodableVersion> }
 #[derive(RustcDecodable)]
-struct CrateMeta { total: int }
+struct CrateMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
@@ -213,7 +213,7 @@ fn new_bad_names() {
         ::logout(&mut req);
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
-                "{}", json.errors);
+                "{:?}", json.errors);
     }
 
     bad_name("");
@@ -294,7 +294,7 @@ fn new_krate_wrong_user() {
 
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("another user"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 }
 
 #[test]
@@ -306,14 +306,14 @@ fn new_krate_bad_name() {
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
-                "{}", json.errors);
+                "{:?}", json.errors);
     }
     {
         let mut req = new_req(app, "áccênts", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
-                "{}", json.errors);
+                "{:?}", json.errors);
     }
 }
 
@@ -334,7 +334,7 @@ fn new_crate_owner() {
     let body = r#"{"users":["bar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                                                .with_method(Method::Put)
-                                               .with_body(body)));
+                                               .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     // And upload a new crate as the first user
@@ -342,7 +342,7 @@ fn new_crate_owner() {
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)
-                                               .with_body(body)));
+                                               .with_body(&body[])));
     ::json::<GoodCrate>(&mut response);
 }
 
@@ -360,7 +360,7 @@ fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
-    req.with_body(repeat("a").take(1000 * 1000).collect::<String>().as_slice());
+    req.with_body(repeat("a").take(1000 * 1000).collect::<String>().as_bytes());
     bad_resp!(middle.call(&mut req));
 }
 
@@ -372,7 +372,7 @@ fn new_krate_duplicate_version() {
     ::mock_crate(&mut req, ::krate("foo"));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 }
 
 #[test]
@@ -383,7 +383,7 @@ fn new_crate_similar_name() {
     ::mock_crate(&mut req, ::krate("Foo"));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 }
 
 #[test]
@@ -610,7 +610,7 @@ fn owners() {
 
     let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Put)
-                                               .with_body(body)));
+                                               .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -619,7 +619,7 @@ fn owners() {
 
     let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                               .with_body(body)));
+                                               .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -628,7 +628,7 @@ fn owners() {
 
     let body = r#"{"users":["foo"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                               .with_body(body)));
+                                               .with_body(body.as_bytes())));
     ::json::<::Bad>(&mut response);
 }
 
@@ -773,29 +773,29 @@ fn author_license_and_description_required() {
         license_file: None,
         repository: None,
     };
-    req.with_body(new_crate_to_body(&new_crate));
+    req.with_body(&new_crate_to_body(&new_crate)[]);
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&
             json.errors[0].detail.as_slice().contains("license"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
-    req.with_body(new_crate_to_body(&new_crate));
+    req.with_body(&new_crate_to_body(&new_crate)[]);
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&
             !json.errors[0].detail.as_slice().contains("license"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 
     new_crate.license = None;
     new_crate.license_file = Some("foo".to_string());
     new_crate.authors.push("foo".to_string());
-    req.with_body(new_crate_to_body(&new_crate));
+    req.with_body(&new_crate_to_body(&new_crate)[]);
     let json = bad_resp!(middle.call(&mut req));
     assert!(!json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&
             !json.errors[0].detail.as_slice().contains("license"),
-            "{}", json.errors);
+            "{:?}", json.errors);
 }

@@ -1,12 +1,12 @@
 use std::cell::Cell;
-use std::fmt::Show;
+use std::error::Error;
 use std::mem;
 use std::sync::Arc;
 
 use pg;
 use pg::types::ToSql;
 use r2d2::{self, LoggingErrorHandler};
-use r2d2_postgres::{PostgresPoolManager, Error};
+use r2d2_postgres::{self, PostgresPoolManager};
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
@@ -14,13 +14,13 @@ use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
 pub type Pool = r2d2::Pool<pg::Connection,
-                           Error,
+                           r2d2_postgres::Error,
                            PostgresPoolManager,
                            LoggingErrorHandler>;
 type PooledConnnection<'a> =
         r2d2::PooledConnection<'a,
                                pg::Connection,
-                               Error,
+                               r2d2_postgres::Error,
                                PostgresPoolManager,
                                LoggingErrorHandler>;
 
@@ -103,7 +103,7 @@ impl Transaction {
 }
 
 impl Middleware for TransactionMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
         if !req.extensions().contains::<Transaction>() {
             let app = req.app().clone();
             req.mut_extensions().insert(Transaction::new(app));
@@ -111,8 +111,8 @@ impl Middleware for TransactionMiddleware {
         Ok(())
     }
 
-    fn after(&self, req: &mut Request, res: Result<Response, Box<Show + 'static>>)
-             -> Result<Response, Box<Show + 'static>> {
+    fn after(&self, req: &mut Request, res: Result<Response, Box<Error>>)
+             -> Result<Response, Box<Error>> {
         if res.is_ok() {
             let tx = req.extensions().find::<Transaction>()
                         .expect("Transaction not present in request");
@@ -173,14 +173,14 @@ impl<'a> RequestTransaction<'a> for &'a (Request + 'a) {
 
 pub trait Connection {
     fn prepare(&self, query: &str) -> pg::Result<pg::Statement>;
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint>;
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize>;
 }
 
 impl Connection for pg::Connection {
     fn prepare(&self, query: &str) -> pg::Result<pg::Statement> {
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize> {
         self.execute(query, params)
     }
 }
@@ -190,7 +190,7 @@ impl<'a> Connection for pg::Transaction<'a> {
         log!(5, "prepare: {}", query);
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<uint> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize> {
         log!(5, "execute: {}", query);
         self.execute(query, params)
     }

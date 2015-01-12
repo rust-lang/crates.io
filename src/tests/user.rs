@@ -1,4 +1,4 @@
-use std::fmt::Show;
+use std::error::Error;
 
 use conduit::{Handler, Request, Response, Method};
 use conduit_middleware::Middleware;
@@ -75,7 +75,7 @@ fn reset_token() {
     ok_resp!(middle.call(&mut req));
 
     impl Middleware for ResetTokenTest {
-        fn before(&self, req: &mut Request) -> Result<(), Box<Show + 'static>> {
+        fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
             let user = User::find_or_insert(req.tx().unwrap(), "foo", None,
                                             None, None, "bar", "baz").unwrap();
             req.mut_extensions().insert(user);
@@ -83,8 +83,8 @@ fn reset_token() {
         }
 
         fn after(&self, req: &mut Request,
-                 response: Result<Response, Box<Show + 'static>>)
-                 -> Result<Response, Box<Show + 'static>> {
+                 response: Result<Response, Box<Error>>)
+                 -> Result<Response, Box<Error>> {
             let user = req.extensions().find::<User>().unwrap();
             let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
             assert!(u2.api_token != user.api_token);
@@ -99,7 +99,7 @@ fn my_packages() {
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
-    req.with_query(format!("user_id={}", u.id));
+    req.with_query(&format!("user_id={}", u.id)[]);
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[derive(RustcDecodable)]

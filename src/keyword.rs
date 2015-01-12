@@ -9,8 +9,8 @@ use pg::types::ToSql;
 
 use {Model, Crate};
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, Require, internal};
-use util::errors::{NotFound, FromError};
+use util::{RequestUtils, CargoResult, ChainError, internal, CommaSep};
+use util::errors::NotFound;
 
 #[derive(Clone)]
 pub struct Keyword {
@@ -56,7 +56,7 @@ impl Keyword {
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&name as &ToSql, &now]));
-        Ok(Model::from_row(&try!(rows.next().require(|| {
+        Ok(Model::from_row(&try!(rows.next().chain_error(|| {
             internal("no version returned")
         }))))
     }
@@ -99,18 +99,21 @@ impl Keyword {
         if to_rm.len() > 0 {
             try!(conn.execute(format!("UPDATE keywords
                                           SET crates_cnt = crates_cnt - 1
-                                        WHERE id IN ({:#})", to_rm).as_slice(),
+                                        WHERE id IN ({})",
+                                      CommaSep(&to_rm[])).as_slice(),
                               &[]));
             try!(conn.execute(format!("DELETE FROM crates_keywords
-                                        WHERE keyword_id IN ({:#})
-                                          AND crate_id = $1", to_rm).as_slice(),
+                                        WHERE keyword_id IN ({})
+                                          AND crate_id = $1",
+                                      CommaSep(&to_rm[])).as_slice(),
                               &[&krate.id]));
         }
 
         if to_add.len() > 0 {
             try!(conn.execute(format!("UPDATE keywords
                                           SET crates_cnt = crates_cnt + 1
-                                        WHERE id IN ({:#})", to_add).as_slice(),
+                                        WHERE id IN ({})",
+                                      CommaSep(&to_add[])).as_slice(),
                               &[]));
             let insert = to_add.iter().map(|id| {
                 let crate_id: i32 = krate.id;
@@ -162,7 +165,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Query for the total count of keywords
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM keywords"));
     let row = try!(stmt.query(&[])).next().unwrap();
-    let total = row.get(0u);
+    let total = row.get(0);
 
     #[derive(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
@@ -178,10 +181,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
     let conn = try!(req.tx());
-    let kw = match try!(Keyword::find_by_keyword(&*conn, name.as_slice())) {
-        Some(kw) => kw,
-        None => return Err(FromError::from_error(NotFound)),
-    };
+    let kw = try!(Keyword::find_by_keyword(&*conn, name.as_slice()));
+    let kw = try!(kw.chain_error(|| NotFound));
 
     #[derive(RustcEncodable)]
     struct R { keyword: EncodableKeyword }

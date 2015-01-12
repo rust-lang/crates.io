@@ -1,5 +1,5 @@
 use std::io;
-use std::fmt::Show;
+use std::error::Error;
 
 use conduit::{Request, Response, Handler, Method};
 use conduit_middleware::AroundMiddleware;
@@ -23,7 +23,7 @@ impl AroundMiddleware for Head {
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
         if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,
@@ -32,7 +32,7 @@ impl Handler for Head {
             };
             self.handler.as_ref().unwrap().call(&mut req).map(|r| {
                 Response {
-                    body: box io::util::NullReader,
+                    body: Box::new(io::util::NullReader),
                     ..r
                 }
             })

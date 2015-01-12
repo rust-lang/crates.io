@@ -18,7 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use upload;
 use user::RequestUser;
-use util::{RequestUtils, CargoResult, Require, internal, human};
+use util::{RequestUtils, CargoResult, ChainError, internal, human, CommaSep};
 
 #[derive(Clone)]
 pub struct Version {
@@ -86,7 +86,7 @@ impl Version {
                                       RETURNING *"));
         let now = ::now();
         let mut rows = try!(stmt.query(&[&crate_id, &num, &now, &features]));
-        let ret: Version = Model::from_row(&try!(rows.next().require(|| {
+        let ret: Version = Model::from_row(&try!(rows.next().chain_error(|| {
             internal("no version returned")
         })));
         for author in authors.iter() {
@@ -231,7 +231,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         let sql = format!("SELECT versions.*, crates.name AS crate_name
                              FROM versions
                            LEFT JOIN crates ON crates.id = versions.crate_id
-                           WHERE versions.id IN({:#})", ids);
+                           WHERE versions.id IN({})", CommaSep(&ids[]));
         let stmt = try!(conn.prepare(sql.as_slice()));
         for row in try!(stmt.query(&[])) {
             let v: Version = Model::from_row(&row);
@@ -272,7 +272,7 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     let version = try!(Version::find_by_num(tx, krate.id, &semver));
-    let version = try!(version.require(|| {
+    let version = try!(version.chain_error(|| {
         human(format!("crate `{}` does not have a version `{}`",
                       crate_name, semver))
     }));

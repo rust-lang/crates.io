@@ -34,7 +34,7 @@ fn index() {
         let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, &[]).unwrap();
         (v1, v2)
     };
-    req.with_query(format!("ids[]={}&ids[]={}", v1.id, v2.id));
+    req.with_query(&format!("ids[]={}&ids[]={}", v1.id, v2.id)[]);
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);

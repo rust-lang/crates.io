@@ -1,3 +1,5 @@
+#![allow(unstable)]
+
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate semver;

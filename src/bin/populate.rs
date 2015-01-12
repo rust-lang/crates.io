@@ -4,6 +4,8 @@
 // Usage:
 //      cargo run --bin populate version_id1 version_id2 ...
 
+#![allow(unstable)]
+
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate time;

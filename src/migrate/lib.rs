@@ -1,4 +1,4 @@
-#![feature(unboxed_closures)]
+#![allow(unstable)]
 
 extern crate postgres;
 
@@ -29,7 +29,7 @@ impl Migration {
                        where F1: FnMut(&Transaction) -> PgResult<()> + 'static,
                              F2: FnMut(&Transaction) -> PgResult<()> + 'static
     {
-        Migration::mk(version, box up, box down)
+        Migration::mk(version, Box::new(up), Box::new(down))
     }
 
     pub fn run<T: Str>(version: i64, up: T, down: T) -> Migration {
@@ -56,12 +56,12 @@ impl Migration {
 }
 
 fn run(sql: String) -> Step {
-    box move |tx| {
+    Box::new(move |&: tx: &Transaction| {
         tx.execute(sql.as_slice(), &[]).map(|_| ()).map_err(|e| {
             println!("failed to run `{}`", sql);
             e
         })
-    }
+    })
 }
 
 impl<'a> Manager<'a> {
@@ -92,7 +92,7 @@ impl<'a> Manager<'a> {
     pub fn apply(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.insert(migration.version) { return Ok(()) }
         println!("applying {}", migration.version);
-        try!(migration.up.call_mut((&self.tx,)));
+        try!((migration.up)(&self.tx));
         let stmt = try!(self.tx.prepare("INSERT into schema_migrations
                                          (version) VALUES ($1)"));
         try!(stmt.execute(&[&migration.version]));
@@ -102,7 +102,7 @@ impl<'a> Manager<'a> {
     pub fn rollback(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.remove(&migration.version) { return Ok(()) }
         println!("rollback {}", migration.version);
-        try!(migration.down.call_mut((&self.tx,)));
+        try!((migration.down)(&self.tx));
         let stmt = try!(self.tx.prepare("DELETE FROM schema_migrations
                                          WHERE version = $1"));
         try!(stmt.execute(&[&migration.version]));

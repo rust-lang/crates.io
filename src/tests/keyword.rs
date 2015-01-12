@@ -9,7 +9,7 @@ use cargo_registry::keyword::{Keyword, EncodableKeyword};
 #[derive(RustcDecodable)]
 struct KeywordList { keywords: Vec<EncodableKeyword>, meta: KeywordMeta }
 #[derive(RustcDecodable)]
-struct KeywordMeta { total: int }
+struct KeywordMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GoodKeyword { keyword: EncodableKeyword }
 
@@ -52,7 +52,7 @@ fn update_crate() {
     let cnt = |&: req: &mut MockRequest, kw: &str| {
         req.with_path(format!("/api/v1/keywords/{}", kw).as_slice());
         let mut response = ok_resp!(middle.call(req));
-        ::json::<GoodKeyword>(&mut response).keyword.crates_cnt as uint
+        ::json::<GoodKeyword>(&mut response).keyword.crates_cnt as usize
     };
     ::mock_user(&mut req, ::user("foo"));
     let krate = ::mock_crate(&mut req, ::krate("foo"));

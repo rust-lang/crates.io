@@ -32,7 +32,7 @@ impl<'a> Request for RequestProxy<'a> {
         self.other.query_string()
     }
     fn remote_ip(&self) -> io::net::ip::IpAddr { self.other.remote_ip() }
-    fn content_length(&self) -> Option<uint> {
+    fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
     fn headers(&self) -> &conduit::Headers {

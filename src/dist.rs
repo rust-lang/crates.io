@@ -1,4 +1,4 @@
-use std::fmt::Show;
+use std::error::Error;
 
 use conduit::{Request, Response, Handler};
 use conduit_static::Static;
@@ -27,7 +27,7 @@ impl AroundMiddleware for Middleware {
 }
 
 impl Handler for Middleware {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
         // First, attempt to serve a static file. If we're missing a static
         // file, then keep going.
         match self.dist.call(req) {

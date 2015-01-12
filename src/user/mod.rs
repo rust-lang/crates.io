@@ -15,7 +15,7 @@ use app::RequestApp;
 use db::{Connection, RequestTransaction};
 use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, internal, Require, ChainError, human};
+use util::{RequestUtils, CargoResult, internal, ChainError, human, CommaSep};
 use version::EncodableVersion;
 
 pub use self::middleware::{Middleware, RequestUser};
@@ -51,7 +51,7 @@ impl User {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       WHERE gh_login = $1"));
         let mut rows = try!(stmt.query(&[&login as &ToSql]));
-        let row = try!(rows.next().require(|| {
+        let row = try!(rows.next().chain_error(|| {
             NotFound
         }));
         Ok(Model::from_row(&row))
@@ -61,7 +61,7 @@ impl User {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
         return try!(stmt.query(&[&token as &ToSql])).next()
-                        .map(|r| Model::from_row(&r)).require(|| {
+                        .map(|r| Model::from_row(&r)).chain_error(|| {
             NotFound
         })
     }
@@ -101,7 +101,7 @@ impl User {
                                          &api_token as &ToSql,
                                          &login as &ToSql,
                                          &name, &avatar]));
-        Ok(Model::from_row(&try!(rows.next().require(|| {
+        Ok(Model::from_row(&try!(rows.next().chain_error(|| {
             internal("no user with email we just found")
         }))))
     }
@@ -189,7 +189,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         login: String,
         avatar_url: Option<String>,
     }
-    let json = try!(str::from_utf8(resp.get_body()).ok().require(||{
+    let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
         internal("github didn't send a utf8-response")
     }));
     let ghuser: GithubUser = try!(json::decode(json).chain_error(|| {
@@ -264,7 +264,8 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let mut map = HashMap::new();
     let mut crates = Vec::new();
     if crate_ids.len() > 0 {
-        let sql = format!("SELECT * FROM crates WHERE id IN ({:#})", crate_ids);
+        let sql = format!("SELECT * FROM crates WHERE id IN ({})",
+                          CommaSep(&crate_ids[]));
         let stmt = try!(tx.prepare(sql.as_slice()));
         for row in try!(stmt.query(&[])) {
             let krate: Crate = Model::from_row(&row);

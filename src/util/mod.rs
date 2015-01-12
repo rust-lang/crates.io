@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use std::fmt::Show;
-use std::io::process::{ProcessOutput, Command};
+use std::error::Error;
+use std::fmt;
 use std::io::MemReader;
+use std::io::process::{ProcessOutput, Command};
 use std::str;
 use std::sync::Arc;
 
@@ -15,21 +16,17 @@ use db::RequestTransaction;
 use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
-pub use self::errors::{ChainError};
+pub use self::errors::{ChainError, std_error};
 pub use self::hasher::{HashingReader};
 pub use self::head::Head;
 pub use self::io::LimitErrorReader;
-pub use self::launch::LaunchGuard;
 pub use self::lazy_cell::LazyCell;
 pub use self::request_proxy::RequestProxy;
-pub use self::result::{Require, Wrap};
 
 pub mod errors;
-pub mod result;
 mod hasher;
 mod head;
 mod io;
-mod launch;
 mod lazy_cell;
 mod request_proxy;
 
@@ -39,7 +36,7 @@ pub trait RequestUtils {
     fn json<T: Encodable>(self, t: &T) -> Response;
     fn query(self) -> HashMap<String, String>;
     fn wants_json(self) -> bool;
-    fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)>;
+    fn pagination(self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
 }
 
 pub fn json_response<T: Encodable>(t: &T) -> Response {
@@ -52,7 +49,7 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
     return Response {
         status: (200, "OK"),
         headers: headers,
-        body: box MemReader::new(json.into_bytes()),
+        body: Box::new(MemReader::new(json.into_bytes())),
     };
 
     fn fixup(json: Json) -> Json {
@@ -93,7 +90,7 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
         Response {
             status: (302, "Found"),
             headers: headers,
-            body: box MemReader::new(Vec::new()),
+            body: Box::new(MemReader::new(Vec::new())),
         }
     }
 
@@ -102,11 +99,11 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
         content.iter().any(|s| s.contains("json"))
     }
 
-    fn pagination(self, default: uint, max: uint) -> CargoResult<(i64, i64)> {
+    fn pagination(self, default: usize, max: usize) -> CargoResult<(i64, i64)> {
         let query = self.query();
-        let page = query.get("page").and_then(|s| s.parse::<uint>())
+        let page = query.get("page").and_then(|s| s.parse::<usize>())
                         .unwrap_or(1);
-        let limit = query.get("per_page").and_then(|s| s.parse::<uint>())
+        let limit = query.get("per_page").and_then(|s| s.parse::<usize>())
                          .unwrap_or(default);
         if limit > max {
             return Err(human(format!("cannot request more than {} items", max)))
@@ -118,14 +115,14 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
 pub struct C(pub fn(&mut Request) -> CargoResult<Response>);
 
 impl Handler for C {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => { req.commit(); Ok(resp) }
             Err(e) => {
                 match e.response() {
                     Some(response) => Ok(response),
-                    None => Err(box e as Box<Show>),
+                    None => Err(std_error(e))
                 }
             }
         }
@@ -135,7 +132,7 @@ impl Handler for C {
 pub struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
         sub_router.call(&mut RequestProxy {
@@ -149,7 +146,7 @@ impl<H: Handler> Handler for R<H> {
 pub struct R404(pub RouteBuilder);
 
 impl Handler for R404 {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Show + 'static>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
         let R404(ref router) = *self;
         match router.recognize(&req.method(), req.path()) {
             Ok(m) => {
@@ -179,4 +176,17 @@ pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
     } else {
         Ok(output)
     }
+}
+
+pub struct CommaSep<'a, T: 'a>(pub &'a [T]);
+
+impl<'a, T: fmt::String> fmt::String for CommaSep<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (i, t) in self.0.iter().enumerate() {
+            if i != 0 { try!(write!(f, ", ")); }
+            try!(write!(f, "{}", t));
+        }
+        Ok(())
+    }
+
 }

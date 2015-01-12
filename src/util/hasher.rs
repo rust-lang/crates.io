@@ -15,7 +15,7 @@ impl<R: Reader> HashingReader<R> {
 }
 
 impl<R: Reader> Reader for HashingReader<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::IoResult<uint> {
+    fn read(&mut self, buf: &mut [u8]) -> io::IoResult<usize> {
         let amt = try!(self.inner.read(buf));
         self.hasher.update(buf.slice_to(amt));
         return Ok(amt)

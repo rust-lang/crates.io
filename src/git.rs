@@ -44,7 +44,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 
     // Required environment variables
     cmd.env("REQUEST_METHOD",
-            req.method().to_string().as_slice().to_ascii_uppercase());
+            format!("{:?}", req.method()).as_slice().to_ascii_uppercase());
     cmd.env("GIT_PROJECT_ROOT", &req.app().git_repo_checkout);
     cmd.env("PATH_INFO", req.path().replace("/git/index", ""));
     cmd.env("REMOTE_USER", "");
@@ -82,7 +82,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let key = parts.next().unwrap();
         let value = parts.next().unwrap();
         let value = value.slice(1, value.len() - 2);
-        match headers.entry(key) {
+        match headers.entry(key.to_string()) {
             Entry::Occupied(e) => e.into_mut(),
             Entry::Vacant(e) => e.insert(Vec::new()),
         }.push(value.to_string());
@@ -101,12 +101,12 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 
     struct ProcessAndBuffer<R> { _p: Process, buf: BufferedReader<R> }
     impl<R: Reader> Reader for ProcessAndBuffer<R> {
-        fn read(&mut self, b: &mut [u8]) -> IoResult<uint> { self.buf.read(b) }
+        fn read(&mut self, b: &mut [u8]) -> IoResult<usize> { self.buf.read(b) }
     }
     return Ok(Response {
         status: (status_code, status_desc),
         headers: headers,
-        body: box ProcessAndBuffer { _p: p, buf: rdr },
+        body: Box::new(ProcessAndBuffer { _p: p, buf: rdr }),
     });
 
     fn header<'a>(req: &'a Request, name: &str) -> &'a str {
@@ -188,7 +188,7 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
     // rebase our repository, and after that it's possible that we're going to
     // race to commit the changes. For now we just cap out the maximum number of
     // retries at a fixed number.
-    for _ in range(0i, 20) {
+    for _ in range(0, 20) {
         let (msg, dst) = try!(f());
 
         // git add $file

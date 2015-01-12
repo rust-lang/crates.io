@@ -1,3 +1,5 @@
+#![allow(unstable)]
+
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate "conduit-test" as conduit_test;
@@ -10,7 +12,7 @@ extern crate url;
 extern crate semver;
 
 use std::collections::HashMap;
-use std::fmt;
+use std::error::Error as StdError;
 use std::io::Command;
 use std::io::process::InheritFd;
 use std::os;
@@ -27,24 +29,24 @@ use cargo_registry::util::CargoResult;
 macro_rules! t{ ($e:expr) => (
     match $e {
         Ok(e) => e,
-        Err(m) => panic!("{} failed with: {}", stringify!($e), m),
+        Err(m) => panic!("{} failed with: {:?}", stringify!($e), m),
     }
 ) }
 
 macro_rules! t_resp{ ($e:expr) => ({
-    t!($e.map_err(|e| (&*e).to_string()))
+    t!($e.map_err(|e| (&*e).description().to_string()))
 }) }
 
 macro_rules! ok_resp{ ($e:expr) => ({
     let resp = t_resp!($e);
-    if !::ok_resp(&resp) { panic!("bad response: {}", resp.status); }
+    if !::ok_resp(&resp) { panic!("bad response: {:?}", resp.status); }
     resp
 }) }
 
 macro_rules! bad_resp{ ($e:expr) => ({
     let mut resp = t_resp!($e);
     match ::bad_resp(&mut resp) {
-        None => panic!("ok response: {}", resp.status),
+        None => panic!("ok response: {:?}", resp.status),
         Some(b) => b,
     }
 }) }
@@ -106,8 +108,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     impl conduit_middleware::Middleware for NoCommit {
         fn after(&self, req: &mut Request,
-                 res: Result<conduit::Response, Box<fmt::Show + 'static>>)
-                 -> Result<conduit::Response, Box<fmt::Show + 'static>> {
+                 res: Result<conduit::Response, Box<StdError>>)
+                 -> Result<conduit::Response, Box<StdError>> {
             req.extensions().find::<db::Transaction>()
                .expect("Transaction not present in request")
                .rollback();
@@ -137,13 +139,13 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     let s = std::str::from_utf8(data.as_slice()).unwrap();
     let j = match Json::from_str(s) {
         Ok(t) => t,
-        Err(e) => panic!("failed to decode: {}\n{}", e, s),
+        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
     let j = fixup(j);
     let s = j.to_string();
     return match json::decode(s.as_slice()) {
         Ok(t) => t,
-        Err(e) => panic!("failed to decode: {}\n{}", e, s),
+        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
 
 

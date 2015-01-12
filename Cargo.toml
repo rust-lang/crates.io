@@ -49,13 +49,13 @@ oauth2 = "0.1.0"
 log = "0.1.0"
 rustc-serialize = "0.2"
 
-conduit-conditional-get = "0.5.0"
-conduit-cookie = "0.1.0"
-conduit-json-parser = "0.5.0"
-conduit-log-requests = "0.5.0"
-conduit-middleware = "0.5.0"
-conduit-router = "0.5.0"
-conduit-static = "0.5.0"
+conduit-conditional-get = "0.6"
+conduit-cookie = "0.6"
+conduit-json-parser = "0.6"
+conduit-log-requests = "0.6"
+conduit-middleware = "0.6"
+conduit-router = "0.6"
+conduit-static = "0.6"
 civet = "0.1.0"
 
 [dependencies.html]
@@ -68,5 +68,5 @@ path = "src/s3"
 path = "src/migrate"
 
 [dev-dependencies]
-conduit-test = "0.5.0"
+conduit-test = "0.6"
 
