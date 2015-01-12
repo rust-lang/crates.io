@@ -58,9 +58,6 @@ conduit-router = "0.6"
 conduit-static = "0.6"
 civet = "0.1.0"
 
-[dependencies.html]
-path = "src/html"
-
 [dependencies.s3]
 path = "src/s3"
 
