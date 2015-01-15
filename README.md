@@ -27,7 +27,7 @@ This will give you a local server to browse while using the staging backend
 If you'd like to run the server with a specific different backend, you can specify specific arguments to `npm start`. For example you can set the proxy to `https://crates.io/` to use the live instance, but do be aware that any modifications made here will be permanent! To do this, run:
 
 ```
-npm start -- --proxy https://example.com
+npm start -- --proxy https://crates.io
 ```
 
 This requires NPM 2.0.
