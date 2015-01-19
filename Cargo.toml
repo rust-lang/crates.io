@@ -49,6 +49,7 @@ oauth2 = "0.1.0"
 log = "0.1.0"
 rustc-serialize = "0.2"
 
+conduit = "0.6"
 conduit-conditional-get = "0.6"
 conduit-cookie = "0.6"
 conduit-json-parser = "0.6"

@@ -231,13 +231,13 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
         try!(origin.fetch(&[], None, None));
         let head = try!(repo.head()).target().unwrap();
         let obj = try!(repo.find_object(head, None));
-        try!(repo.reset(&obj, git2::ResetType::Hard, None, None));
+        try!(repo.reset(&obj, git2::ResetType::Hard, None, None, None));
     }
 
     Err(internal("Too many rebase failures"))
 }
 
-pub fn credentials(_user: &str, _user_from_url: &str,
+pub fn credentials(_user: &str, _user_from_url: Option<&str>,
                    _cred: git2::CredentialType)
                    -> Result<git2::Cred, git2::Error> {
     match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {
