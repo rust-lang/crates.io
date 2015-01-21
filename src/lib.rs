@@ -28,7 +28,7 @@ impl Static {
 }
 
 impl Handler for Static {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
         let request_path = request.path().slice_from(1);
         let path = self.path.join(request_path);
 
@@ -41,7 +41,7 @@ impl Handler for Static {
             Ok(f) => f,
             Err(..) => return Ok(not_found()),
         };
-        let stat = try!(file.stat().map_err(|e| Box::new(e) as Box<Error>));
+        let stat = try!(file.stat().map_err(|e| Box::new(e) as Box<Error+Send>));
         match stat.kind {
             FileType::Directory => return Ok(not_found()),
             _ => {}
