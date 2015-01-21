@@ -67,14 +67,14 @@ impl RouteBuilder {
 }
 
 impl conduit::Handler for RouteBuilder {
-    fn call(&self, request: &mut Request) -> Result<Response, Box<Error>> {
+    fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
         let m = {
             let method = request.method();
             let path = request.path();
 
             match self.recognize(&method, path) {
                 Ok(m) => m,
-                Err(e) => return Err(Box::new(e) as Box<Error>)
+                Err(e) => return Err(Box::new(e) as Box<Error+Send>)
             }
         };
 
@@ -193,7 +193,7 @@ mod tests {
     }
 
     fn test_handler(req: &mut conduit::Request)
-                    -> Result<conduit::Response, Box<Error>> {
+                    -> Result<conduit::Response, Box<Error+Send>> {
         let mut res = vec!();
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
