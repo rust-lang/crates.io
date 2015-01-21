@@ -411,11 +411,11 @@ fn new_krate_git_upload_appends() {
     let path = ::git::checkout().join("3/f/foo");
     fs::mkdir_recursive(&path.dir_path(), io::USER_RWX).unwrap();
     File::create(&path).write_str(
-        r#"{"name":"foo","vers":"0.0.1","deps":[],"cksum":"3j3"}
+        r#"{"name":"FOO","vers":"0.0.1","deps":[],"cksum":"3j3"}
 "#
     ).unwrap();
 
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = new_req(app, "FOO", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -425,10 +425,10 @@ fn new_krate_git_upload_appends() {
     let p1: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
     let p2: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
     assert!(lines.next().is_none());
-    assert_eq!(p1.name.as_slice(), "foo");
+    assert_eq!(p1.name.as_slice(), "FOO");
     assert_eq!(p1.vers.as_slice(), "0.0.1");
     assert!(p1.deps.is_empty());
-    assert_eq!(p2.name.as_slice(), "foo");
+    assert_eq!(p2.name.as_slice(), "FOO");
     assert_eq!(p2.vers.as_slice(), "1.0.0");
     assert!(p2.deps.is_empty());
 }

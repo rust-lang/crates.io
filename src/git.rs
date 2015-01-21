@@ -116,6 +116,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
 }
 
 fn index_file(base: &Path, name: &str) -> Path {
+    let name = name.chars().map(|c| c.to_lowercase()).collect::<String>();
     match name.len() {
         1 => base.join("1").join(name),
         2 => base.join("2").join(name),
