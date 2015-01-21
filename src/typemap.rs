@@ -1,6 +1,5 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::boxed::BoxAny;
-use std::intrinsics::TypeId;
 use std::collections::HashMap;
 
 pub struct TypeMap {
@@ -48,14 +47,14 @@ mod tests {
     #[test]
     fn smoke() {
         let mut m = TypeMap::new();
-        assert!(m.insert(1i));
-        assert_eq!(*m.find::<int>().unwrap(), 1);
-        assert_eq!(*m.find_mut::<int>().unwrap(), 1);
-        assert!(!m.insert(2i));
-        assert!(m.remove::<int>());
-        assert!(!m.contains::<int>());
-        assert!(m.insert(4i));
-        assert_eq!(m.pop::<int>().unwrap(), 4);
+        assert!(m.insert(1));
+        assert_eq!(*m.find::<i32>().unwrap(), 1);
+        assert_eq!(*m.find_mut::<i32>().unwrap(), 1);
+        assert!(!m.insert(2));
+        assert!(m.remove::<i32>());
+        assert!(!m.contains::<i32>());
+        assert!(m.insert(4));
+        assert_eq!(m.pop::<i32>().unwrap(), 4);
     }
 }
 
