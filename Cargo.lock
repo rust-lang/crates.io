@@ -3,14 +3,14 @@ name = "cargo-registry"
 version = "0.1.0"
 dependencies = [
  "civet 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-conditional-get 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-cookie 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-json-parser 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-log-requests 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-middleware 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-router 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-static 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-conditional-get 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-cookie 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-json-parser 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-log-requests 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-middleware 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-router 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-static 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -40,7 +40,7 @@ version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "civet-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -59,7 +59,7 @@ dependencies = [
 
 [[package]]
 name = "conduit"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -67,32 +67,32 @@ dependencies = [
 
 [[package]]
 name = "conduit-conditional-get"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-middleware 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-middleware 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "conduit-cookie"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-middleware 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-middleware 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cookie 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "conduit-json-parser"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-middleware 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-middleware 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-utils 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -100,21 +100,21 @@ dependencies = [
 
 [[package]]
 name = "conduit-log-requests"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-middleware 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-middleware 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "conduit-middleware"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -128,20 +128,20 @@ dependencies = [
 
 [[package]]
 name = "conduit-router"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "route-recognizer 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "conduit-static"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-mime-types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -151,7 +151,7 @@ name = "conduit-test"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -160,7 +160,7 @@ name = "conduit-utils"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "conduit 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

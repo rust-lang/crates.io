@@ -75,7 +75,7 @@ fn reset_token() {
     ok_resp!(middle.call(&mut req));
 
     impl Middleware for ResetTokenTest {
-        fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+        fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
             let user = User::find_or_insert(req.tx().unwrap(), "foo", None,
                                             None, None, "bar", "baz").unwrap();
             req.mut_extensions().insert(user);
@@ -83,8 +83,8 @@ fn reset_token() {
         }
 
         fn after(&self, req: &mut Request,
-                 response: Result<Response, Box<Error>>)
-                 -> Result<Response, Box<Error>> {
+                 response: Result<Response, Box<Error+Send>>)
+                 -> Result<Response, Box<Error+Send>> {
             let user = req.extensions().find::<User>().unwrap();
             let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
             assert!(u2.api_token != user.api_token);

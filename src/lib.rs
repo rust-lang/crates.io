@@ -143,7 +143,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     impl conduit_middleware::Middleware for DebugMiddleware {
         fn before(&self, req: &mut conduit::Request)
-                  -> Result<(), Box<Error>> {
+                  -> Result<(), Box<Error+Send>> {
             println!("  version: {}", req.http_version());
             println!("  method: {:?}", req.method());
             println!("  scheme: {:?}", req.scheme());
@@ -156,8 +156,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             Ok(())
         }
         fn after(&self, _req: &mut conduit::Request,
-                 res: Result<conduit::Response, Box<Error>>)
-                 -> Result<conduit::Response, Box<Error>> {
+                 res: Result<conduit::Response, Box<Error+Send>>)
+                 -> Result<conduit::Response, Box<Error+Send>> {
             res.map(|res| {
                 println!("  <- {:?}", res.status);
                 for (k, v) in res.headers.iter() {

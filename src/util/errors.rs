@@ -122,12 +122,12 @@ impl<E: CargoError> CargoError for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Error> CargoError for E {
+impl<E: Error + Send> CargoError for E {
     fn description(&self) -> &str { Error::description(self) }
     fn detail(&self) -> Option<String> { Error::detail(self) }
 }
 
-impl<E: Error> FromError<E> for Box<CargoError> {
+impl<E: Error + Send> FromError<E> for Box<CargoError> {
     fn from_error(err: E) -> Box<CargoError> {
         Box::new(err) as Box<CargoError>
     }
@@ -214,7 +214,7 @@ pub fn human<S: fmt::String>(error: S) -> Box<CargoError> {
     }) as Box<CargoError>
 }
 
-pub fn std_error(e: Box<CargoError>) -> Box<Error> {
+pub fn std_error(e: Box<CargoError>) -> Box<Error+Send> {
     struct E(Box<CargoError>);
     impl Error for E {
         fn description(&self) -> &str { self.0.description() }

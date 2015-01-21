@@ -7,7 +7,7 @@ use conduit_middleware::AroundMiddleware;
 use util::RequestProxy;
 
 pub struct Head {
-    handler: Option<Box<Handler + Send + Sync>>,
+    handler: Option<Box<Handler>>,
 }
 
 impl Head {
@@ -17,13 +17,13 @@ impl Head {
 }
 
 impl AroundMiddleware for Head {
-    fn with_handler(&mut self, handler: Box<Handler + Send + Sync>) {
+    fn with_handler(&mut self, handler: Box<Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
         if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,

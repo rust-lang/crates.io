@@ -7,7 +7,7 @@ use conduit_middleware::AroundMiddleware;
 use util::RequestProxy;
 
 pub struct Middleware {
-    handler: Option<Box<Handler + Send + Sync>>,
+    handler: Option<Box<Handler>>,
     dist: Static,
 }
 
@@ -21,13 +21,13 @@ impl Middleware {
 }
 
 impl AroundMiddleware for Middleware {
-    fn with_handler(&mut self, handler: Box<Handler + Send + Sync>) {
+    fn with_handler(&mut self, handler: Box<Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for Middleware {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
         // First, attempt to serve a static file. If we're missing a static
         // file, then keep going.
         match self.dist.call(req) {

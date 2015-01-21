@@ -65,7 +65,7 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         req.mut_extensions().insert(self.app.clone());
         Ok(())
     }

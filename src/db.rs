@@ -103,7 +103,7 @@ impl Transaction {
 }
 
 impl Middleware for TransactionMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         if !req.extensions().contains::<Transaction>() {
             let app = req.app().clone();
             req.mut_extensions().insert(Transaction::new(app));
@@ -111,8 +111,8 @@ impl Middleware for TransactionMiddleware {
         Ok(())
     }
 
-    fn after(&self, req: &mut Request, res: Result<Response, Box<Error>>)
-             -> Result<Response, Box<Error>> {
+    fn after(&self, req: &mut Request, res: Result<Response, Box<Error+Send>>)
+             -> Result<Response, Box<Error+Send>> {
         if res.is_ok() {
             let tx = req.extensions().find::<Transaction>()
                         .expect("Transaction not present in request");

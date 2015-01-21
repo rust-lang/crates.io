@@ -108,8 +108,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     impl conduit_middleware::Middleware for NoCommit {
         fn after(&self, req: &mut Request,
-                 res: Result<conduit::Response, Box<StdError>>)
-                 -> Result<conduit::Response, Box<StdError>> {
+                 res: Result<conduit::Response, Box<StdError+Send>>)
+                 -> Result<conduit::Response, Box<StdError+Send>> {
             req.extensions().find::<db::Transaction>()
                .expect("Transaction not present in request")
                .rollback();

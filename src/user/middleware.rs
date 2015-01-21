@@ -11,7 +11,7 @@ use util::errors::{CargoResult, Unauthorized, ChainError, std_error};
 pub struct Middleware;
 
 impl conduit_middleware::Middleware for Middleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         let user = match req.session().get("user_id").and_then(|s| s.parse()) {
             Some(id) => {
                 match User::find(try!(req.tx().map_err(std_error)), id) {

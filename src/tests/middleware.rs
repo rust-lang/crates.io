@@ -11,7 +11,7 @@ use cargo_registry::dependency::Kind;
 pub struct MockUser(pub User);
 
 impl Middleware for MockUser {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         let MockUser(ref u) = *self;
         ::mock_user(req, u.clone());
         Ok(())
@@ -21,7 +21,7 @@ impl Middleware for MockUser {
 pub struct MockCrate(pub Crate);
 
 impl Middleware for MockCrate {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         let MockCrate(ref p) = *self;
         ::mock_crate(req, p.clone());
         Ok(())
@@ -31,7 +31,7 @@ impl Middleware for MockCrate {
 pub struct MockDependency(pub Crate, pub &'static str, pub Crate);
 
 impl Middleware for MockDependency {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         let MockDependency(ref a, version, ref b) = *self;
         let vers = semver::Version::parse(version).unwrap();
         let (_crate_a, va) = ::mock_crate_vers(req, a.clone(), &vers);
