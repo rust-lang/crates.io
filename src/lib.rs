@@ -13,7 +13,7 @@ use std::io::util::NullReader;
 use std::string::CowString;
 use time::{Tm, strptime, ParseError};
 
-type Response = Result<conduit::Response, Box<Error>>;
+type Response = Result<conduit::Response, Box<Error+Send>>;
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
@@ -242,7 +242,7 @@ mod tests {
         ) as &mut conduit::Request));
     }
 
-    fn expect_304(response: Result<Response, Box<Error>>) {
+    fn expect_304(response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
         let body = response.body.read_to_string().ok().expect("No body");
 
@@ -250,11 +250,11 @@ mod tests {
         assert_eq!(body.as_slice(), "");
     }
 
-    fn expect_200(response: Result<Response, Box<Error>>) {
+    fn expect_200(response: Result<Response, Box<Error+Send>>) {
         expect((200, "OK"), response);
     }
 
-    fn expect(status: (u32, &'static str), response: Result<Response, Box<Error>>) {
+    fn expect(status: (u32, &'static str), response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
         let body = response.body.read_to_string().ok().expect("No body");
 
@@ -277,7 +277,7 @@ mod tests {
     }
 
     impl Handler for SimpleHandler {
-        fn call(&self, _: &mut Request) -> Result<Response, Box<Error>> {
+        fn call(&self, _: &mut Request) -> Result<Response, Box<Error+Send>> {
             Ok(Response {
                 status: self.status,
                 headers: self.map.clone(),
