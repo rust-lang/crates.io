@@ -616,6 +616,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                               another user"))
         }
     }
+    if krate.name != name {
+        return Err(human(format!("crate was previously named `{}`", krate.name)))
+    }
 
     // Persist the new version of this crate
     let mut version = try!(krate.add_version(try!(req.tx()), vers, &features,

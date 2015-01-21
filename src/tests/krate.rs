@@ -378,11 +378,11 @@ fn new_krate_duplicate_version() {
 #[test]
 fn new_crate_similar_name() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = new_req(app, "foo", "1.1.0");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("Foo"));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
+    assert!(json.errors[0].detail.as_slice().contains("previously named"),
             "{:?}", json.errors);
 }
 
