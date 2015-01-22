@@ -27,6 +27,10 @@ name = "delete-crate"
 test = false
 
 [[bin]]
+name = "delete-version"
+test = false
+
+[[bin]]
 name = "populate"
 test = false
 
