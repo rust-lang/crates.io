@@ -3,6 +3,7 @@ extern crate conduit;
 
 use std::collections::hash_map::{HashMap, Entry};
 use std::error::Error;
+use std::fmt;
 
 use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
@@ -89,6 +90,12 @@ impl conduit::Handler for RouteBuilder {
 
 impl Error for RouterError {
     fn description(&self) -> &str { self.0.as_slice() }
+}
+
+impl fmt::Display for RouterError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
 }
 
 pub trait RequestParams<'a> {
