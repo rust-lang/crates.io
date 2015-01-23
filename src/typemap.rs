@@ -36,7 +36,7 @@ impl TypeMap {
             Some(data) => data,
             None => return None,
         };
-        Some(*data.downcast::<T>().unwrap())
+        Some(*data.downcast::<T>().ok().unwrap())
     }
 }
 
