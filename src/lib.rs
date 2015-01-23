@@ -29,7 +29,7 @@ impl Static {
 
 impl Handler for Static {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
-        let request_path = request.path().slice_from(1);
+        let request_path = &request.path()[1..];
         let path = self.path.join(request_path);
 
         if !self.path.is_ancestor_of(&path) {
