@@ -78,7 +78,7 @@ impl Version {
                   authors: &[String])
                   -> CargoResult<Version> {
         let num = num.to_string();
-        let features = json::encode(features);
+        let features = json::encode(features).unwrap();
         let stmt = try!(conn.prepare("INSERT INTO versions \
                                       (crate_id, num, updated_at, \
                                        created_at, downloads, features) \

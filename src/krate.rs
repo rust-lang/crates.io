@@ -502,7 +502,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     // Query for the total count of crates
     let stmt = try!(conn.prepare(cnt.as_slice()));
-    let args = if args.len() > 2 {args.slice_to(1)} else {args.slice_to(0)};
+    let args = if args.len() > 2 {&args[..1]} else {&args[..0]};
     let row = try!(stmt.query(args)).next().unwrap();
     let total = row.get(0);
 
@@ -803,7 +803,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     versions.sort_by(|a, b| b.num.cmp(&a.num));
 
 
-    let to_show = versions.as_slice().slice_to(cmp::min(5, versions.len()));
+    let to_show = &versions[..cmp::min(5, versions.len())];
     let ids = to_show.iter().map(|i| i.id).collect::<Vec<_>>();
 
     let cutoff_date = ::now() + Duration::days(-90);

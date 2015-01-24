@@ -81,7 +81,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
         let mut parts = line.as_slice().splitn(2, ':');
         let key = parts.next().unwrap();
         let value = parts.next().unwrap();
-        let value = value.slice(1, value.len() - 2);
+        let value = &value[1 .. value.len() - 2];
         match headers.entry(key.to_string()) {
             Entry::Occupied(e) => e.into_mut(),
             Entry::Vacant(e) => e.insert(Vec::new()),
@@ -120,9 +120,9 @@ fn index_file(base: &Path, name: &str) -> Path {
     match name.len() {
         1 => base.join("1").join(name),
         2 => base.join("2").join(name),
-        3 => base.join("3").join(name.slice_to(1)).join(name),
-        _ => base.join(name.slice(0, 2))
-                 .join(name.slice(2, 4))
+        3 => base.join("3").join(&name[..1]).join(name),
+        _ => base.join(&name[0..2])
+                 .join(&name[2..4])
                  .join(name),
     }
 }
@@ -141,7 +141,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
         } else {
             String::new()
         };
-        let s = json::encode(krate);
+        let s = json::encode(krate).unwrap();
         let new = prev + s.as_slice();
         try!(File::create(&dst).write_line(new.as_slice()));
 
@@ -168,7 +168,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
                 return Ok(line.to_string())
             }
             git_crate.yanked = Some(yanked);
-            Ok(json::encode(&git_crate))
+            Ok(json::encode(&git_crate).unwrap())
         }).collect::<CargoResult<Vec<String>>>();
         let new = try!(new).as_slice().connect("\n");
         try!(File::create(&dst).write_line(new.as_slice()));

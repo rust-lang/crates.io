@@ -144,7 +144,7 @@ mod test {
                              "access_token", "api_token").unwrap()
     }
 
-    fn crate_downloads(tx: &postgres::Transaction, id: i32, expected: uint) {
+    fn crate_downloads(tx: &postgres::Transaction, id: i32, expected: usize) {
         let stmt = tx.prepare("SELECT * FROM crate_downloads
                                WHERE crate_id = $1").unwrap();
         let dl: i32 = stmt.query(&[&id]).unwrap()

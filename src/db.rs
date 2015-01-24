@@ -6,26 +6,22 @@ use std::sync::Arc;
 use pg;
 use pg::types::ToSql;
 use r2d2::{self, LoggingErrorHandler};
-use r2d2_postgres::{self, PostgresPoolManager};
+use r2d2_postgres::PostgresConnectionManager;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
-pub type Pool = r2d2::Pool<pg::Connection,
-                           r2d2_postgres::Error,
-                           PostgresPoolManager,
+pub type Pool = r2d2::Pool<PostgresConnectionManager,
                            LoggingErrorHandler>;
 type PooledConnnection<'a> =
         r2d2::PooledConnection<'a,
-                               pg::Connection,
-                               r2d2_postgres::Error,
-                               PostgresPoolManager,
+                               PostgresConnectionManager,
                                LoggingErrorHandler>;
 
 pub fn pool(url: &str, config: r2d2::Config) -> Pool {
-    let mgr = PostgresPoolManager::new(url, pg::SslMode::None);
+    let mgr = PostgresConnectionManager::new(url, pg::SslMode::None);
     r2d2::Pool::new(config, mgr, LoggingErrorHandler).unwrap()
 }
 
@@ -70,8 +66,8 @@ impl Transaction {
         // connection up front and then repeatedly hand it out.
         unsafe {
             if !self.slot.filled() {
-                let conn = try!(self.app.database.get().map_err(|()| {
-                    internal("failed to get a database connection")
+                let conn = try!(self.app.database.get().map_err(|e| {
+                    internal(format!("failed to get a database connection: {}", e))
                 }));
                 let conn: PooledConnnection = conn;
                 self.slot.fill(mem::transmute::<_, PooledConnnection<'static>>(conn));

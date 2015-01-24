@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::default::Default;
 use std::sync::{Arc, Mutex};
 
 use conduit::Request;
@@ -37,7 +38,7 @@ impl App {
         let db_config = r2d2::Config {
             pool_size: if config.env == ::Env::Production {10} else {1},
             helper_tasks: if config.env == ::Env::Production {3} else {1},
-            test_on_check_out: false,
+            .. Default::default()
         };
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();

@@ -3,7 +3,6 @@
 extern crate "cargo-registry" as cargo_registry;
 extern crate migrate;
 extern crate postgres;
-extern crate r2d2;
 
 use std::os;
 use std::collections::HashSet;
@@ -13,14 +12,8 @@ use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
 
 fn main() {
-    let db_config = r2d2::Config {
-        pool_size: 1,
-        helper_tasks: 1,
-        test_on_check_out: false,
-    };
-    let database = cargo_registry::db::pool(env("DATABASE_URL").as_slice(),
-                                            db_config);
-    let conn = database.get().unwrap();
+    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+                                             &postgres::SslMode::None).unwrap();
     let migrations = migrations();
 
     if os::args().as_slice().get(1).map(|s| s.as_slice()) == Some("rollback") {

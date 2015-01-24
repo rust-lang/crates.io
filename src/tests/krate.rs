@@ -176,7 +176,7 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
 }
 
 fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
-    let json = json::encode(&new_crate);
+    let json = json::encode(&new_crate).unwrap();
     let mut body = MemWriter::new();
     body.write_le_u32(json.len() as u32).unwrap();
     body.write_str(json.as_slice()).unwrap();

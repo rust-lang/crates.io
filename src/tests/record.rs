@@ -121,7 +121,7 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
                 if line.len() < 3 { break }
                 let mut parts = line.as_slice().splitn(1, ':');
                 headers.insert(parts.next().unwrap().to_string(),
-                               parts.next().unwrap().slice_from(1).to_string());
+                               parts.next().unwrap()[1..].to_string());
             }
         }
 

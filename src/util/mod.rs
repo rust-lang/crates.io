@@ -40,7 +40,7 @@ pub trait RequestUtils {
 }
 
 pub fn json_response<T: Encodable>(t: &T) -> Response {
-    let s = json::encode(t);
+    let s = json::encode(t).unwrap();
     let json = fixup(s.parse().unwrap()).to_string();
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(),
@@ -160,7 +160,7 @@ impl Handler for R404 {
 
 pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
     let output = try!(cmd.output().chain_error(|| {
-        internal(format!("failed to run command `{}`", cmd))
+        internal(format!("failed to run command `{:?}`", cmd))
     }));
     if !output.status.success() {
         let mut desc = String::new();
@@ -172,7 +172,7 @@ pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
             desc.push_str("--- stderr\n");
             desc.push_str(str::from_utf8(output.error.as_slice()).unwrap());
         }
-        Err(internal_error(format!("failed to run command `{}`", cmd), desc))
+        Err(internal_error(format!("failed to run command `{:?}`", cmd), desc))
     } else {
         Ok(output)
     }
@@ -180,7 +180,7 @@ pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
 
 pub struct CommaSep<'a, T: 'a>(pub &'a [T]);
 
-impl<'a, T: fmt::String> fmt::String for CommaSep<'a, T> {
+impl<'a, T: fmt::Display> fmt::Display for CommaSep<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (i, t) in self.0.iter().enumerate() {
             if i != 0 { try!(write!(f, ", ")); }
