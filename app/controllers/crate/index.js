@@ -69,9 +69,18 @@ export default Ember.ObjectController.extend({
         if (deps === null) { return []; }
         return DS.PromiseArray.create({
             promise: deps.then(function(deps) {
-                return deps.filter(function(dep) {
+                var non_dev = deps.filter(function(dep) {
                     return dep.get('kind') !== 'dev';
                 });
+                var map = {};
+                var ret = [];
+                non_dev.forEach(function(dep) {
+                    if (!(dep.get('crate_id') in map)) {
+                        map[dep.get('crate_id')] = 1;
+                        ret.push(dep);
+                    }
+                });
+                return ret;
             }),
         });
     }.property('currentVersion.dependencies'),
