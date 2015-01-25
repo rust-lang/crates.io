@@ -519,21 +519,19 @@ fn download_bad() {
 
 #[test]
 fn dependencies() {
-    let (_b, _app, mut middle) = ::app();
-    let user = ::user("foo");
-    let c1 = ::krate("foo");
-    let c2 = ::krate("bar");
-    middle.add(::middleware::MockUser(user.clone()));
-    middle.add(::middleware::MockDependency(c1.clone(), "1.0.0", c2.clone()));
-    let rel = format!("/api/v1/crates/{}/1.0.0/dependencies", c1.name);
-    let mut req = MockRequest::new(Method::Get, rel.as_slice());
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/1.0.0/dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (_, v) = ::mock_crate(&mut req, ::krate("foo"));
+    let (c, _) = ::mock_crate(&mut req, ::krate("bar"));
+    ::mock_dep(&mut req, &v, &c, None);
+
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<Deps>(&mut response);
-    assert_eq!(deps.dependencies[0].crate_id.as_slice(), "bar");
-    drop(req);
+    assert_eq!(deps.dependencies[0].crate_id, "bar");
 
-    let rel = format!("/api/v1/crates/{}/1.0.2/dependencies", c1.name);
-    let mut req = MockRequest::new(Method::Get, rel.as_slice());
+    req.with_path("/api/v1/crates/foo/1.0.2/dependencies");
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }
@@ -723,33 +721,33 @@ fn bad_keywords() {
 
 #[test]
 fn reverse_dependencies() {
-    let (_b, _app, mut middle) = ::app();
-    let user = ::user("foo");
-    let c1 = ::krate("foo");
-    let c2 = ::krate("bar");
-    middle.add(::middleware::MockUser(user.clone()));
-    // multiple dependencies of c1 on c2, to detect we handle this
-    // correctly.
-    middle.add(::middleware::MockDependency(c1.clone(), "1.0.0", c2.clone()));
-    middle.add(::middleware::MockDependency(c1.clone(), "1.1.0", c2.clone()));
+    let (_b, app, middle) = ::app();
 
-    let rel = format!("/api/v1/crates/{}/reverse_dependencies", c2.name);
-    let mut req = MockRequest::new(Method::Get, rel.as_slice());
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v110 = semver::Version::parse("1.1.0").unwrap();
+    let mut req = ::req(app, Method::Get,
+                        "/api/v1/crates/c1/reverse_dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
+    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
+    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v110);
+
+    ::mock_dep(&mut req, &c2v1, &c1, None);
+    ::mock_dep(&mut req, &c2v2, &c1, None);
+    ::mock_dep(&mut req, &c2v2, &c1, Some("foo"));
+
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id.as_slice(), &*c1.name);
-    drop(req);
+    assert_eq!(deps.dependencies[0].crate_id, "c2");
 
     // c1 has no dependent crates.
-    let rel = format!("/api/v1/crates/{}/reverse_dependencies", c1.name);
-    let mut req = MockRequest::new(Method::Get, rel.as_slice());
+    req.with_path("/api/v1/crates/c2/reverse_dependencies");
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
-    drop(req);
 }
 
 #[test]

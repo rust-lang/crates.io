@@ -23,18 +23,18 @@ use conduit::Request;
 use conduit_test::MockRequest;
 use cargo_registry::app::App;
 use cargo_registry::db::{self, RequestTransaction};
-use cargo_registry::{User, Crate, Version, Keyword};
-use cargo_registry::util::CargoResult;
+use cargo_registry::dependency::Kind;
+use cargo_registry::{User, Crate, Version, Keyword, Dependency};
 
 macro_rules! t{ ($e:expr) => (
     match $e {
         Ok(e) => e,
-        Err(m) => panic!("{} failed with: {:?}", stringify!($e), m),
+        Err(m) => panic!("{} failed with: {}", stringify!($e), m),
     }
 ) }
 
 macro_rules! t_resp{ ($e:expr) => ({
-    t!($e.map_err(|e| (&*e).description().to_string()))
+    t!($e)
 }) }
 
 macro_rules! ok_resp{ ($e:expr) => ({
@@ -212,13 +212,11 @@ fn mock_user(req: &mut Request, u: User) -> User {
     return u;
 }
 
-fn mock_crate(req: &mut Request, krate: Crate) -> Crate {
-    let (c, v) = mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap());
-    v.unwrap();
-    c
+fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
+    mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap())
 }
 fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
-                   -> (Crate, CargoResult<Version>) {
+                   -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
     let mut krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
                                       user.id, &krate.description,
@@ -232,7 +230,18 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
     Keyword::update_crate(req.tx().unwrap(), &krate,
                           krate.keywords.as_slice()).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
-    (krate, v)
+    (krate, v.unwrap())
+}
+
+fn mock_dep(req: &mut Request, version: &Version, krate: &Crate,
+            target: Option<&str>) -> Dependency {
+    Dependency::insert(req.tx().unwrap(),
+                       version.id,
+                       krate.id,
+                       &semver::VersionReq::parse(">= 0").unwrap(),
+                       Kind::Normal,
+                       false, true, &[],
+                       &target.map(|s| s.to_string())).unwrap()
 }
 
 fn mock_keyword(req: &mut Request, name: &str) -> Keyword {

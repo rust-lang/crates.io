@@ -362,13 +362,14 @@ impl Crate {
               WHERE dependencies.crate_id = $1
                 AND versions.num = crates.max_version
         ";
-        let fetch_sql = format!("SELECT dependencies.*,
+        let fetch_sql = format!("SELECT DISTINCT ON (crate_name)
+                                        dependencies.*,
                                         crates.name AS crate_name
                                         {}
                                ORDER BY crate_name ASC
                                  OFFSET $2
                                   LIMIT $3", select_sql);
-        let count_sql = format!("SELECT COUNT(dependencies.*) {}", select_sql);
+        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
 
         let stmt = try!(conn.prepare(fetch_sql.as_slice()));
         let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit])).map(|r| {
