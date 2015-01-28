@@ -7,9 +7,9 @@ extern crate time;
 
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::FileType;
-use std::io::fs::File;
-use std::io::util::NullReader;
+use std::old_io::FileType;
+use std::old_io::fs::File;
+use std::old_io::util::NullReader;
 use conduit::{Request, Response, Handler};
 
 pub struct Static {
@@ -79,7 +79,7 @@ fn not_found() -> Response {
 mod tests {
     extern crate "conduit-test" as test;
 
-    use std::io::{fs, File, TempDir, USER_RWX};
+    use std::old_io::{fs, File, TempDir, USER_RWX};
 
     use conduit::{Handler, Method};
     use Static;
@@ -89,7 +89,7 @@ mod tests {
         let td = TempDir::new("conduit-static").unwrap();
         let root = td.path();
         let handler = Static::new(root.clone());
-        File::create(&root.join("Cargo.toml")).write(b"[package]").unwrap();
+        File::create(&root.join("Cargo.toml")).write_all(b"[package]").unwrap();
         let mut req = test::MockRequest::new(Method::Get, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
         let body = res.body.read_to_string().ok().expect("No body");
