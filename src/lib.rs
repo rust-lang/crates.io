@@ -3,7 +3,7 @@ extern crate semver;
 use std::collections::HashMap;
 use std::error::Error;
 use std::hash::Hash;
-use std::io::net::ip::IpAddr;
+use std::old_io::net::ip::IpAddr;
 
 pub use self::typemap::TypeMap;
 mod typemap;
