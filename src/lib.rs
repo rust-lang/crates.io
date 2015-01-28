@@ -1,8 +1,8 @@
 extern crate semver;
 extern crate conduit;
 
-use std::io::net::ip::{IpAddr, Ipv4Addr};
-use std::io::MemReader;
+use std::old_io::net::ip::{IpAddr, Ipv4Addr};
+use std::old_io::MemReader;
 use std::collections::HashMap;
 use std::fmt::Show;
 use std::path::BytesContainer;
@@ -141,7 +141,7 @@ mod tests {
     use super::MockRequest;
     use semver::Version;
 
-    use std::io::net::ip::Ipv4Addr;
+    use std::old_io::net::ip::Ipv4Addr;
 
     use conduit::{Request, Method, Host, Scheme};
 
