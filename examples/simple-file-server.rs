@@ -1,3 +1,5 @@
+#![feature(os)]
+
 extern crate civet;
 extern crate conduit;
 extern crate "conduit-static" as conduit_static;

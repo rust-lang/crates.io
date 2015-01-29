@@ -1,5 +1,6 @@
+#![feature(io, path, collections)]
+#![cfg_attr(test, feature(core))]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, allow(unstable))]
 
 extern crate conduit;
 extern crate "conduit-mime-types" as mime;
