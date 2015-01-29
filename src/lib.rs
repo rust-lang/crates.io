@@ -1,4 +1,4 @@
-#![feature(core, Hash)]
+#![feature(core, hash)]
 
 extern crate semver;
 
