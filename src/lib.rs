@@ -1,3 +1,6 @@
+#![feature(core)]
+#![cfg_attr(test, feature(io, collections))]
+
 extern crate conduit;
 
 use std::error::Error;
@@ -60,7 +63,7 @@ impl Handler for MiddlewareBuilder {
 
         match error {
             Some((err, i)) => {
-                let middlewares = self.middlewares.slice_to(i);
+                let middlewares = &self.middlewares[..i];
                 run_afters(middlewares, req, Err(err))
             },
             None => {
@@ -89,8 +92,8 @@ mod tests {
 
     use std::collections::HashMap;
     use std::error::Error;
-    use std::io::net::ip::IpAddr;
-    use std::io::{self, MemReader};
+    use std::old_io::net::ip::IpAddr;
+    use std::old_io::{self, MemReader};
 
     use conduit;
     use conduit::{Request, Response, Host, Headers, Method, Scheme, Extensions};
@@ -165,7 +168,7 @@ mod tests {
 
     impl Middleware for ProducesError {
         fn before(&self, _: &mut Request) -> Result<(), Box<Error+Send>> {
-            Err(Box::new(io::standard_error(io::OtherIoError)) as Box<Error+Send>)
+            Err(Box::new(old_io::standard_error(old_io::OtherIoError)) as Box<Error+Send>)
         }
     }
 
@@ -226,8 +229,8 @@ mod tests {
     }
 
     fn error_handler(_: &mut Request) -> Result<Response, Box<Error+Send>> {
-        Err(Box::new(io::IoError {
-            kind: io::OtherIoError,
+        Err(Box::new(old_io::IoError {
+            kind: old_io::OtherIoError,
             desc: "Error in handler",
             detail: None,
         }) as Box<Error+Send>)
