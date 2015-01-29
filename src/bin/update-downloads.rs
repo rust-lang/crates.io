@@ -1,4 +1,4 @@
-#![allow(unstable)]
+#![feature(std_misc, core, os, io, collections)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -27,7 +27,7 @@ fn main() {
         drop(conn);
         if args.len() > 1 && args[1].as_slice() == "daemon" {
             let sleep = args[2].parse::<i64>().unwrap();
-            std::io::timer::sleep(Duration::seconds(sleep));
+            std::old_io::timer::sleep(Duration::seconds(sleep));
         } else {
             break
         }

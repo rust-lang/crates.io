@@ -1,4 +1,4 @@
-use std::io;
+use std::old_io;
 
 use conduit;
 use conduit::Request;
@@ -31,7 +31,7 @@ impl<'a> Request for RequestProxy<'a> {
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()
     }
-    fn remote_ip(&self) -> io::net::ip::IpAddr { self.other.remote_ip() }
+    fn remote_ip(&self) -> old_io::net::ip::IpAddr { self.other.remote_ip() }
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }

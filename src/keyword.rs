@@ -80,14 +80,14 @@ impl Keyword {
 
     pub fn update_crate(conn: &Connection, krate: &Crate,
                         keywords: &[String]) -> CargoResult<()> {
-        let new_kws = try!(keywords.iter().map(|k| {
-            let kw = try!(Keyword::find_or_insert(conn, k.as_slice()));
-            Ok((k.as_slice(), kw))
-        }).collect::<CargoResult<HashMap<_, _>>>());
         let old_kws = try!(krate.keywords(conn));
         let old_kws = old_kws.iter().map(|kw| {
             (kw.keyword.as_slice(), kw)
         }).collect::<HashMap<_, _>>();
+        let new_kws = try!(keywords.iter().map(|k| {
+            let kw = try!(Keyword::find_or_insert(conn, k.as_slice()));
+            Ok((k.as_slice(), kw))
+        }).collect::<CargoResult<HashMap<_, _>>>());
 
         let to_rm = old_kws.iter().filter(|&(kw, _)| {
             !new_kws.contains_key(kw)

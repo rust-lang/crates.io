@@ -1,4 +1,4 @@
-#![allow(unstable)]
+#![feature(io, core, collections, os, path, std_misc)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -13,8 +13,8 @@ extern crate semver;
 
 use std::collections::HashMap;
 use std::error::Error as StdError;
-use std::io::Command;
-use std::io::process::InheritFd;
+use std::old_io::Command;
+use std::old_io::process::InheritFd;
 use std::os;
 use std::sync::{Once, ONCE_INIT, Arc};
 use rustc_serialize::json::{self, Json};

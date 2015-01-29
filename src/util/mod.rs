@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
-use std::io::MemReader;
-use std::io::process::{ProcessOutput, Command};
+use std::old_io::MemReader;
+use std::old_io::process::{ProcessOutput, Command};
 use std::str;
 use std::sync::Arc;
 

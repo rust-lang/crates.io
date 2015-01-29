@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
-use std::io::fs::PathExtensions;
-use std::io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
-use std::io::{ChanReader, ChanWriter, util, stdio};
-use std::io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
+use std::old_io::fs::PathExtensions;
+use std::old_io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
+use std::old_io::{ChanReader, ChanWriter, util, stdio};
+use std::old_io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
 use std::os;
 use std::str;
 use std::sync::mpsc::{channel, Receiver};
@@ -152,14 +152,14 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
         for (k, v) in response.get_headers().iter() {
             if k.as_slice() == "transfer-encoding" { continue }
             for v in v.iter() {
-                socket.write(k.as_bytes()).unwrap();
-                socket.write(b": ").unwrap();
-                socket.write(v.as_bytes()).unwrap();
-                socket.write(b"\r\n").unwrap();
+                socket.write_all(k.as_bytes()).unwrap();
+                socket.write_all(b": ").unwrap();
+                socket.write_all(v.as_bytes()).unwrap();
+                socket.write_all(b"\r\n").unwrap();
             }
         }
-        socket.write(b"\r\n").unwrap();
-        socket.write(response.get_body()).unwrap();
+        socket.write_all(b"\r\n").unwrap();
+        socket.write_all(response.get_body()).unwrap();
     }
 }
 
@@ -211,7 +211,7 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     for line in lines {
         if line.starts_with("Date:") { continue }
         writer.write_str(line).unwrap();
-        writer.write(b"\r\n").unwrap();
+        writer.write_all(b"\r\n").unwrap();
     }
     data.read_line().unwrap();
 }

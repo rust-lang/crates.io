@@ -1,4 +1,4 @@
-#![allow(unstable)]
+#![feature(core, collections)]
 
 extern crate time;
 extern crate curl;
@@ -37,7 +37,7 @@ impl Bucket {
                                       path: &str, content: T,
                                       content_type: &str)
                                       -> http::Request<'a, 'b> {
-        let path = if path.starts_with("/") {path.slice_from(1)} else {path};
+        let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
         let auth = self.auth("PUT", date.as_slice(), path, "", content_type);
@@ -51,7 +51,7 @@ impl Bucket {
 
     pub fn delete<'a, 'b>(&self, handle: &'a mut http::Handle, path: &str)
                           -> http::Request<'a, 'b> {
-        let path = if path.starts_with("/") {path.slice_from(1)} else {path};
+        let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
         let auth = self.auth("DELETE", date.as_slice(), path, "", "");

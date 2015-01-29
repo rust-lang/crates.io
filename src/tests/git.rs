@@ -1,4 +1,4 @@
-use std::io::fs;
+use std::old_io::fs;
 use std::os;
 use std::thread::Thread;
 

@@ -1,4 +1,5 @@
-#![allow(missing_copy_implementations, unstable)]
+#![feature(collections, core, std_misc, io, rand, os, path, hash, unicode)]
+#![allow(missing_copy_implementations)]
 
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate time;
@@ -123,7 +124,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(DebugMiddleware);
     }
     if env != Env::Test {
-        m.add(conduit_log_requests::LogRequests(0));
+        m.add(conduit_log_requests::LogRequests(log::LogLevel::Error));
     }
     m.around(util::Head::new());
     m.add(conduit_conditional_get::ConditionalGet);

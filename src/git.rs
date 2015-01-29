@@ -1,9 +1,9 @@
 use std::ascii::AsciiExt;
 use std::collections::hash_map::{HashMap, Entry};
-use std::io::fs::PathExtensions;
-use std::io::util;
-use std::io::{Command, BufferedReader, Process, IoResult, File, fs};
-use std::io;
+use std::old_io::fs::PathExtensions;
+use std::old_io::util;
+use std::old_io::{Command, BufferedReader, Process, IoResult, File, fs};
+use std::old_io;
 use std::os;
 
 use semver;
@@ -51,7 +51,7 @@ pub fn serve_index(req: &mut Request) -> CargoResult<Response> {
     cmd.env("REMOTE_ADDR", req.remote_ip().to_string());
     cmd.env("QUERY_STRING", req.query_string().unwrap_or(""));
     cmd.env("CONTENT_TYPE", header(req, "Content-Type"));
-    cmd.stderr(::std::io::process::InheritFd(2));
+    cmd.stderr(::std::old_io::process::InheritFd(2));
     let mut p = try!(cmd.spawn());
 
     // Pass in the body of the request (if any)
@@ -135,7 +135,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
 
     commit_and_push(repo, || {
         // Add the crate to its relevant file
-        try!(fs::mkdir_recursive(&dst.dir_path(), io::USER_RWX));
+        try!(fs::mkdir_recursive(&dst.dir_path(), old_io::USER_RWX));
         let prev = if dst.exists() {
             try!(File::open(&dst).read_to_string())
         } else {
@@ -207,8 +207,8 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
                          &tree, &[&parent]));
 
         // git push
-        let mut origin = try!(repo.find_remote("origin"));
         let mut callbacks = git2::RemoteCallbacks::new();
+        let mut origin = try!(repo.find_remote("origin"));
         origin.set_callbacks(callbacks.credentials(credentials));
 
         {

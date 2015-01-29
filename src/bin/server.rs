@@ -1,10 +1,11 @@
-#![allow(unstable)]
+#![feature(io, os, core, path, collections)]
+
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate civet;
 extern crate git2;
 
-use std::io::{self, fs, File};
+use std::old_io::{self, fs, File};
 use std::os;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
@@ -18,7 +19,7 @@ fn main() {
         Ok(r) => r,
         Err(..) => {
             let _ = fs::rmdir_recursive(&checkout);
-            fs::mkdir_recursive(&checkout, io::USER_DIR).unwrap();
+            fs::mkdir_recursive(&checkout, old_io::USER_DIR).unwrap();
             let mut cb = git2::RemoteCallbacks::new();
             cb.credentials(cargo_registry::git::credentials);
             git2::build::RepoBuilder::new()

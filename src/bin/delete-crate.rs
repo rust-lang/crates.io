@@ -5,7 +5,7 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
-#![allow(unstable)]
+#![feature(io, collections, core, os)]
 
 #[macro_use]
 extern crate "cargo-registry" as cargo_registry;
@@ -13,7 +13,7 @@ extern crate postgres;
 extern crate time;
 
 use std::os;
-use std::io;
+use std::old_io;
 
 use cargo_registry::Crate;
 
@@ -43,7 +43,7 @@ fn delete(tx: &postgres::Transaction) {
 
     let krate = Crate::find_by_name(tx, name.as_slice()).unwrap();
     print!("Are you sure you want to delete {} ({}) [y/N]: ", name, krate.id);
-    let line = io::stdin().read_line().unwrap();
+    let line = old_io::stdin().read_line().unwrap();
     if !line.starts_with("y") { return }
 
     let versions = krate.versions(tx).unwrap();
@@ -89,7 +89,7 @@ fn delete(tx: &postgres::Transaction) {
     println!("  {} deleted", n);
 
     print!("commit? [y/N]: ");
-    let line = io::stdin().read_line().unwrap();
+    let line = old_io::stdin().read_line().unwrap();
     if !line.starts_with("y") { panic!("aborting transaction"); }
 }
 

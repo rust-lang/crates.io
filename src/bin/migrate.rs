@@ -1,4 +1,4 @@
-#![allow(unstable)]
+#![feature(os, core, collections)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate migrate;

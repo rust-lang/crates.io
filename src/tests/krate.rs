@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::io::fs::PathExtensions;
-use std::io::{self, fs, File, MemWriter};
+use std::old_io::fs::PathExtensions;
+use std::old_io::{self, fs, File, MemWriter};
 use std::iter::repeat;
 use std::sync::Arc;
 
@@ -409,7 +409,7 @@ fn new_krate_git_upload() {
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/foo");
-    fs::mkdir_recursive(&path.dir_path(), io::USER_RWX).unwrap();
+    fs::mkdir_recursive(&path.dir_path(), old_io::USER_RWX).unwrap();
     File::create(&path).write_str(
         r#"{"name":"FOO","vers":"0.0.1","deps":[],"cksum":"3j3"}
 "#

@@ -13,16 +13,13 @@ use conduit_middleware::Middleware;
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
-pub type Pool = r2d2::Pool<PostgresConnectionManager,
-                           LoggingErrorHandler>;
+pub type Pool = r2d2::Pool<PostgresConnectionManager>;
 type PooledConnnection<'a> =
-        r2d2::PooledConnection<'a,
-                               PostgresConnectionManager,
-                               LoggingErrorHandler>;
+        r2d2::PooledConnection<'a, PostgresConnectionManager>;
 
 pub fn pool(url: &str, config: r2d2::Config) -> Pool {
     let mgr = PostgresConnectionManager::new(url, pg::SslMode::None);
-    r2d2::Pool::new(config, mgr, LoggingErrorHandler).unwrap()
+    r2d2::Pool::new(config, mgr, Box::new(LoggingErrorHandler)).unwrap()
 }
 
 pub struct TransactionMiddleware;
@@ -183,11 +180,11 @@ impl Connection for pg::Connection {
 
 impl<'a> Connection for pg::Transaction<'a> {
     fn prepare(&self, query: &str) -> pg::Result<pg::Statement> {
-        log!(5, "prepare: {}", query);
+        trace!("prepare: {}", query);
         self.prepare(query)
     }
     fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize> {
-        log!(5, "execute: {}", query);
+        trace!("execute: {}", query);
         self.execute(query, params)
     }
 }

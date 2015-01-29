@@ -37,7 +37,7 @@ impl App {
 
         let db_config = r2d2::Config {
             pool_size: if config.env == ::Env::Production {10} else {1},
-            helper_tasks: if config.env == ::Env::Production {3} else {1},
+            helper_threads: if config.env == ::Env::Production {3} else {1},
             .. Default::default()
         };
 
