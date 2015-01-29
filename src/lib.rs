@@ -1,5 +1,6 @@
+#![feature(io, core)]
+#![cfg_attr(test, feature(collections))]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, allow(unstable))]
 
 extern crate time;
 extern crate conduit;
@@ -9,7 +10,7 @@ use conduit::{Request, Method};
 use middleware::Middleware;
 use std::borrow::Cow;
 use std::error::Error;
-use std::io::util::NullReader;
+use std::old_io::util::NullReader;
 use std::string::CowString;
 use time::{Tm, strptime, ParseError};
 
@@ -125,7 +126,7 @@ mod tests {
 
     use std::collections::HashMap;
     use std::error::Error;
-    use std::io::MemReader;
+    use std::old_io::MemReader;
     use time;
     use time::Tm;
     use conduit;
