@@ -22,7 +22,7 @@ pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
-#[derive(Clone, Show, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct User {
     pub id: i32,
     pub gh_login: String,

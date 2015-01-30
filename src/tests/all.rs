@@ -51,7 +51,7 @@ macro_rules! bad_resp{ ($e:expr) => ({
     }
 }) }
 
-#[derive(RustcDecodable, Show)]
+#[derive(RustcDecodable, Debug)]
 struct Error { detail: String }
 #[derive(RustcDecodable)]
 struct Bad { errors: Vec<Error> }
