@@ -9,19 +9,19 @@ use std::old_io::net::ip::IpAddr;
 pub use self::typemap::TypeMap;
 mod typemap;
 
-#[derive(PartialEq, Show, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Scheme {
     Http,
     Https
 }
 
-#[derive(PartialEq, Show, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Host<'a> {
     Name(&'a str),
     Ip(IpAddr)
 }
 
-#[derive(PartialEq, Hash, Eq, Show, Clone, Copy)]
+#[derive(PartialEq, Hash, Eq, Debug, Clone, Copy)]
 pub enum Method {
     Get,
     Post,
@@ -115,14 +115,15 @@ pub struct Response {
 
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
-pub trait Handler : Sync + Send {
+pub trait Handler: Sync + Send {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>>;
 }
 
-impl<F> Handler for F
-    where F: Fn(&mut Request) -> Result<Response, Box<Error+Send>> + Sync + Send,
+impl<F, E> Handler for F
+    where F: Fn(&mut Request) -> Result<Response, E> + Sync + Send,
+          E: Error + Send
 {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
-        (*self)(request)
+        (*self)(request).map_err(|e| Box::new(e) as Box<Error+Send>)
     }
 }
