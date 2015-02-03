@@ -1,4 +1,4 @@
-#![feature(io, path, collections)]
+#![feature(io, path)]
 #![cfg_attr(test, feature(core))]
 #![cfg_attr(test, deny(warnings))]
 
