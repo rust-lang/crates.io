@@ -1,5 +1,5 @@
 #![feature(core)]
-#![cfg_attr(test, feature(io, collections))]
+#![cfg_attr(test, feature(io))]
 
 extern crate conduit;
 
