@@ -1,3 +1,6 @@
+#![feature(core, std_misc)]
+#![cfg_attr(test, feature(io))]
+
 extern crate "route-recognizer" as router;
 extern crate conduit;
 
