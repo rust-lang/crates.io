@@ -206,8 +206,8 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
     assert_eq!(response.next().unwrap().as_slice(), "===RESPONSE");
     let response_size: usize = response.next().unwrap().trim().parse().unwrap();
     let response = data.read_exact(response_size).unwrap();
-    let mut lines = response.as_slice().split(|b| *b == b'\n')
-                            .map(|s| str::from_utf8(s).unwrap());
+    let lines = response.split(|b| *b == b'\n')
+                        .map(|s| str::from_utf8(s).unwrap());
     for line in lines {
         if line.starts_with("Date:") { continue }
         writer.write_str(line).unwrap();

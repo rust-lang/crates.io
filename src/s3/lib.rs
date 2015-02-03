@@ -1,4 +1,5 @@
-#![feature(core, collections)]
+#![deny(warnings)]
+#![feature(core, io)]
 
 extern crate time;
 extern crate curl;
@@ -80,9 +81,9 @@ impl Bucket {
                              headers = "",
                              resource = format!("/{}/{}", self.name, path));
         let signature = {
-            let mut hmac = hmac::HMAC(hash::HashType::SHA1, self.secret_key.as_bytes());
-            hmac.update(string.as_bytes());
-            hmac.finalize().as_slice().to_base64(STANDARD)
+            let mut hmac = hmac::HMAC::new(hash::Type::SHA1, self.secret_key.as_bytes());
+            let _ = hmac.write_all(string.as_bytes());
+            hmac.finish().as_slice().to_base64(STANDARD)
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

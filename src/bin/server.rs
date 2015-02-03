@@ -1,4 +1,5 @@
-#![feature(io, os, core, path, collections)]
+#![deny(warnings)]
+#![feature(io, os, core, path)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -57,7 +58,7 @@ fn main() {
     let port = if heroku {
         8888
     } else {
-        os::getenv("PORT").and_then(|s| s.parse()).unwrap_or(8888)
+        os::getenv("PORT").and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);

@@ -1,4 +1,5 @@
-#![feature(std_misc, core, os, io, collections)]
+#![deny(warnings)]
+#![feature(std_misc, core, os, io)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -13,6 +14,7 @@ use cargo_registry::{VersionDownload, Version, Model};
 
 static LIMIT: i64 = 10000;
 
+#[allow(dead_code)] // dead in tests
 fn main() {
     let args = os::args();
     loop {
@@ -71,7 +73,7 @@ fn collect(tx: &postgres::Transaction,
     let cutoff = cutoff + Duration::days(-1);
 
     let mut map = HashMap::new();
-    for row in *rows {
+    for row in rows.by_ref() {
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download).is_none());
     }

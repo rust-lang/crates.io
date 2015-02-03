@@ -217,7 +217,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                                .as_bytes());
     let ids = query.iter().filter_map(|&(ref a, ref b)| {
         if a.as_slice() == "ids[]" {
-            b.parse()
+            b.parse().ok()
         } else {
             None
         }

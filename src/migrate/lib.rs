@@ -1,4 +1,5 @@
-#![feature(collections, core)]
+#![deny(warnings)]
+#![feature(core)]
 
 extern crate postgres;
 

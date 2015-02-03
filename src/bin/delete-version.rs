@@ -5,7 +5,8 @@
 // Usage:
 //      cargo run --bin delete-version crate-name version-number
 
-#![feature(io, core, os, collections)]
+#![deny(warnings)]
+#![feature(io, core, os)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;

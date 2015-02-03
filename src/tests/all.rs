@@ -1,4 +1,5 @@
-#![feature(io, core, collections, os, path, std_misc)]
+#![deny(warnings)]
+#![feature(io, core, os, path, std_misc)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;

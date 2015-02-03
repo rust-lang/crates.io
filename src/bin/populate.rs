@@ -4,7 +4,8 @@
 // Usage:
 //      cargo run --bin populate version_id1 version_id2 ...
 
-#![feature(rand, collections, os, core, std_misc)]
+#![deny(warnings)]
+#![feature(rand, os, core, std_misc)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -34,8 +35,8 @@ fn env(s: &str) -> String {
 
 fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
     let ids = os::args();
-    let mut ids = ids.iter().skip(1).filter_map(|arg| {
-        arg.parse::<i32>()
+    let ids = ids.iter().skip(1).filter_map(|arg| {
+        arg.parse::<i32>().ok()
     });
     for id in ids {
         let now = time::now_utc().to_timespec();

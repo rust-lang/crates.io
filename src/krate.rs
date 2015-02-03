@@ -457,7 +457,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
              format!("SELECT COUNT(crates.*) {}", base))
         })
     }).or_else(|| {
-        query.get("user_id").and_then(|s| s.parse::<i32>()).map(|user_id| {
+        query.get("user_id").and_then(|s| s.parse::<i32>().ok()).map(|user_id| {
             id = user_id;
             needs_id = true;
             (format!("SELECT * FROM crates WHERE user_id = $1 {} \

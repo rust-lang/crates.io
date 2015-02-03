@@ -1,4 +1,5 @@
-#![feature(os, core, collections)]
+#![deny(warnings)]
+#![feature(os, core)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate migrate;

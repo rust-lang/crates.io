@@ -101,9 +101,9 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
 
     fn pagination(self, default: usize, max: usize) -> CargoResult<(i64, i64)> {
         let query = self.query();
-        let page = query.get("page").and_then(|s| s.parse::<usize>())
+        let page = query.get("page").and_then(|s| s.parse::<usize>().ok())
                         .unwrap_or(1);
-        let limit = query.get("per_page").and_then(|s| s.parse::<usize>())
+        let limit = query.get("per_page").and_then(|s| s.parse::<usize>().ok())
                          .unwrap_or(default);
         if limit > max {
             return Err(human(format!("cannot request more than {} items", max)))

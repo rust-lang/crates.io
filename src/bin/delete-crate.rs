@@ -5,7 +5,8 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
-#![feature(io, collections, core, os)]
+#![deny(warnings)]
+#![feature(io, core, os)]
 
 #[macro_use]
 extern crate "cargo-registry" as cargo_registry;
