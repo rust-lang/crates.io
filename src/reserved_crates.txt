@@ -10,7 +10,6 @@ debug
 flate
 fmt_macros
 graphviz
-rand
 rbml
 rustc
 rustc_back
