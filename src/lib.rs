@@ -120,8 +120,7 @@ impl<'a> RequestParams<'a> for &'a (Request + 'a) {
 mod tests {
     extern crate semver;
     use std::collections::HashMap;
-    use std::error::Error;
-    use std::old_io::MemReader;
+    use std::old_io::{MemReader, IoError};
     use std::old_io::net::ip::IpAddr;
 
     use {RouteBuilder, RequestParams};
@@ -203,7 +202,7 @@ mod tests {
     }
 
     fn test_handler(req: &mut conduit::Request)
-                    -> Result<conduit::Response, Box<Error+Send>> {
+                    -> Result<conduit::Response, IoError> {
         let mut res = vec!();
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
