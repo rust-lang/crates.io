@@ -223,20 +223,20 @@ mod tests {
         }
     }
 
-    fn handler(req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn handler(req: &mut Request) -> Result<Response, old_io::IoError> {
         let hello = get_extension::<String>(req);
         Ok(response(hello.clone()))
     }
 
-    fn error_handler(_: &mut Request) -> Result<Response, Box<Error+Send>> {
-        Err(Box::new(old_io::IoError {
+    fn error_handler(_: &mut Request) -> Result<Response, old_io::IoError> {
+        Err(old_io::IoError {
             kind: old_io::OtherIoError,
             desc: "Error in handler",
             detail: None,
-        }) as Box<Error+Send>)
+        })
     }
 
-    fn middle_handler(req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn middle_handler(req: &mut Request) -> Result<Response, old_io::IoError> {
         let hello = get_extension::<String>(req);
         let middle = get_extension::<String>(req);
 
