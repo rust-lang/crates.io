@@ -1,11 +1,11 @@
+#![feature(io, core)]
+
 extern crate semver;
 extern crate conduit;
 
 use std::old_io::net::ip::{IpAddr, Ipv4Addr};
 use std::old_io::MemReader;
 use std::collections::HashMap;
-use std::fmt::Show;
-use std::path::BytesContainer;
 
 use semver::Version;
 use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
