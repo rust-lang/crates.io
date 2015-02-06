@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(io, core, os, path, std_misc)]
+#![feature(io, core, env, path, std_misc)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::old_io::Command;
 use std::old_io::process::InheritFd;
-use std::os;
+use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};
 use rustc_serialize::json::{self, Json};
 
@@ -72,10 +72,10 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     let (proxy, bomb) = record::proxy();
     let config = cargo_registry::Config {
-        s3_bucket: os::getenv("S3_BUCKET").unwrap_or(String::new()),
-        s3_access_key: os::getenv("S3_ACCESS_KEY").unwrap_or(String::new()),
-        s3_secret_key: os::getenv("S3_SECRET_KEY").unwrap_or(String::new()),
-        s3_region: os::getenv("S3_REGION"),
+        s3_bucket: env::var_string("S3_BUCKET").unwrap_or(String::new()),
+        s3_access_key: env::var_string("S3_ACCESS_KEY").unwrap_or(String::new()),
+        s3_secret_key: env::var_string("S3_SECRET_KEY").unwrap_or(String::new()),
+        s3_region: env::var_string("S3_REGION").ok(),
         s3_proxy: Some(proxy),
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
@@ -93,14 +93,14 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     return (bomb, app, middleware);
 
     fn env(s: &str) -> String {
-        match os::getenv(s) {
+        match env::var_string(s).ok() {
             Some(s) => s,
             None => panic!("must have `{}` defined", s),
         }
     }
 
     fn db_setup(db: &str) {
-        let migrate = os::self_exe_name().unwrap().join("../migrate");
+        let migrate = env::current_exe().unwrap().dir_path().join("../migrate");
         assert!(Command::new(migrate).env("DATABASE_URL", db)
                         .stdout(InheritFd(1))
                         .stderr(InheritFd(2))

@@ -1,12 +1,12 @@
 #![deny(warnings)]
-#![feature(std_misc, core, os, io)]
+#![feature(std_misc, core, os, io, env)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate semver;
 extern crate time;
 
-use std::os;
+use std::env;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -16,7 +16,9 @@ static LIMIT: i64 = 10000;
 
 #[allow(dead_code)] // dead in tests
 fn main() {
-    let args = os::args();
+    let daemon = env::args().nth(1).as_ref().map(|s| s.to_str().unwrap())
+                    == Some("daemon");
+    let sleep = env::args().nth(2).map(|s| s.to_str().unwrap().parse::<i64>().unwrap());
     loop {
         let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
                                                  &postgres::SslMode::None).unwrap();
@@ -27,9 +29,8 @@ fn main() {
             tx.finish().unwrap();
         }
         drop(conn);
-        if args.len() > 1 && args[1].as_slice() == "daemon" {
-            let sleep = args[2].parse::<i64>().unwrap();
-            std::old_io::timer::sleep(Duration::seconds(sleep));
+        if daemon {
+            std::old_io::timer::sleep(Duration::seconds(sleep.unwrap()));
         } else {
             break
         }
@@ -37,7 +38,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match os::getenv(s) {
+    match env::var_string(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }

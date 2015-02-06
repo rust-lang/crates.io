@@ -5,15 +5,16 @@
 //      cargo run --bin populate version_id1 version_id2 ...
 
 #![deny(warnings)]
-#![feature(rand, os, core, std_misc)]
+#![feature(env, os, core, std_misc)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate time;
+extern crate rand;
 
-use std::os;
+use std::env;
 use std::time::Duration;
-use std::rand::{StdRng, Rng};
+use rand::{StdRng, Rng};
 
 fn main() {
     let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
@@ -27,16 +28,15 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match os::getenv(s) {
+    match env::var_string(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }
 }
 
 fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
-    let ids = os::args();
-    let ids = ids.iter().skip(1).filter_map(|arg| {
-        arg.parse::<i32>().ok()
+    let ids = env::args().skip(1).filter_map(|arg| {
+        arg.to_str().unwrap().parse::<i32>().ok()
     });
     for id in ids {
         let now = time::now_utc().to_timespec();

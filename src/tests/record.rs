@@ -3,7 +3,7 @@ use std::old_io::fs::PathExtensions;
 use std::old_io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
 use std::old_io::{ChanReader, ChanWriter, util, stdio};
 use std::old_io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
-use std::os;
+use std::env;
 use std::str;
 use std::sync::mpsc::{channel, Receiver};
 use std::thread::Thread;
@@ -38,7 +38,7 @@ impl Drop for Bomb {
 
 pub fn proxy() -> (String, Bomb) {
     let me = Thread::current().name().unwrap().to_string();
-    let record = os::getenv("RECORD").is_some();
+    let record = env::var("RECORD").is_some();
 
     let mut l = TcpListener::bind("127.0.0.1:0").unwrap();
     let ret = format!("http://{}", l.socket_name().unwrap());

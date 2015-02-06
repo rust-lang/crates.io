@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(io, os, core, path)]
+#![feature(io, core, path, env)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -7,7 +7,7 @@ extern crate civet;
 extern crate git2;
 
 use std::old_io::{self, fs, File};
-use std::os;
+use std::env;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 use civet::Server;
@@ -32,7 +32,7 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
-    let heroku = os::getenv("HEROKU").is_some();
+    let heroku = env::var("HEROKU").is_some();
     let cargo_env = if heroku {
         cargo_registry::Env::Production
     } else {
@@ -42,7 +42,7 @@ fn main() {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
         s3_secret_key: env("S3_SECRET_KEY"),
-        s3_region: os::getenv("S3_REGION"),
+        s3_region: env::var_string("S3_REGION").ok(),
         s3_proxy: None,
         session_key: env("SESSION_KEY"),
         git_repo_checkout: checkout,
@@ -58,7 +58,7 @@ fn main() {
     let port = if heroku {
         8888
     } else {
-        os::getenv("PORT").and_then(|s| s.parse().ok()).unwrap_or(8888)
+        env::var_string("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
     let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
     println!("listening on port {}", port);
@@ -72,7 +72,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match os::getenv(s) {
+    match env::var_string(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }

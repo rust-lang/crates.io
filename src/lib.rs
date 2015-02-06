@@ -1,4 +1,4 @@
-#![feature(collections, core, std_misc, io, rand, os, path, hash, unicode)]
+#![feature(collections, core, std_misc, io, env, path, hash, unicode)]
 #![allow(missing_copy_implementations)]
 
 extern crate "rustc-serialize" as rustc_serialize;
@@ -13,6 +13,7 @@ extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
 extern crate r2d2_postgres;
+extern crate rand;
 extern crate s3;
 extern crate semver;
 extern crate url;

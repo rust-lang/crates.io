@@ -1,12 +1,12 @@
 use std::old_io::fs;
-use std::os;
+use std::env;
 use std::thread::Thread;
 
 use git2;
 use url::Url;
 
 fn root() -> Path {
-    os::getcwd().unwrap().join("tmp").join(Thread::current().name().unwrap())
+    env::current_dir().unwrap().join("tmp").join(Thread::current().name().unwrap())
 }
 
 pub fn checkout() -> Path { root().join("checkout") }

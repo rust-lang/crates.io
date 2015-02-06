@@ -1,11 +1,11 @@
 #![deny(warnings)]
-#![feature(os, core)]
+#![feature(os, core, env)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate migrate;
 extern crate postgres;
 
-use std::os;
+use std::env;
 use std::collections::HashSet;
 use migrate::Migration;
 
@@ -17,14 +17,15 @@ fn main() {
                                              &postgres::SslMode::None).unwrap();
     let migrations = migrations();
 
-    if os::args().as_slice().get(1).map(|s| s.as_slice()) == Some("rollback") {
+    let arg = env::args().nth(1);
+    if arg.as_ref().map(|s| s.to_str().unwrap()) == Some("rollback") {
         rollback(conn.transaction().unwrap(), migrations).unwrap();
     } else {
         apply(conn.transaction().unwrap(), migrations).unwrap();
     }
 
     fn env(s: &str) -> String {
-        match os::getenv(s) {
+        match env::var_string(s).ok() {
             Some(s) => s,
             None => panic!("must have `{}` defined", s),
         }

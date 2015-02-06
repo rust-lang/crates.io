@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-use std::rand::{thread_rng, Rng};
 use std::str;
-use rustc_serialize::json;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg;
 use pg::types::ToSql;
+use pg;
+use rand::{thread_rng, Rng};
+use rustc_serialize::json;
 
 use {Model, Version};
 use app::RequestApp;

@@ -1,10 +1,10 @@
 use std::ascii::AsciiExt;
 use std::collections::hash_map::{HashMap, Entry};
+use std::env;
 use std::old_io::fs::PathExtensions;
 use std::old_io::util;
 use std::old_io::{Command, BufferedReader, Process, IoResult, File, fs};
 use std::old_io;
-use std::os;
 
 use semver;
 use flate2::reader::GzDecoder;
@@ -241,8 +241,8 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 pub fn credentials(_user: &str, _user_from_url: Option<&str>,
                    _cred: git2::CredentialType)
                    -> Result<git2::Cred, git2::Error> {
-    match (os::getenv("GIT_HTTP_USER"), os::getenv("GIT_HTTP_PWD")) {
-        (Some(u), Some(p)) => {
+    match (env::var_string("GIT_HTTP_USER"), env::var_string("GIT_HTTP_PWD")) {
+        (Ok(u), Ok(p)) => {
             git2::Cred::userpass_plaintext(u.as_slice(), p.as_slice())
         }
         _ => Err(git2::Error::from_str("no authentication set"))
