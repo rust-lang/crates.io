@@ -100,7 +100,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     }
 
     fn db_setup(db: &str) {
-        let migrate = env::current_exe().unwrap().dir_path().join("../migrate");
+        let migrate = env::current_exe().unwrap().join("../migrate");
         assert!(Command::new(migrate).env("DATABASE_URL", db)
                         .stdout(InheritFd(1))
                         .stderr(InheritFd(2))
