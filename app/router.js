@@ -20,7 +20,6 @@ Router.map(function() {
     this.route('crates');
     this.route('following');
   });
-  this.route('guide');
   this.route('install');
   this.route('search');
   this.route('dashboard');
