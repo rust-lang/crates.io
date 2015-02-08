@@ -3,9 +3,8 @@ sudo: false
 
 before_script:
   - psql -c 'create database cargo_registry_test;' -U postgres
-  - npm install -g phantomjs ember-cli bower
+  - npm install -g phantomjs ember-cli
   - npm install
-  - bower install
 
 script:
   - cargo build
