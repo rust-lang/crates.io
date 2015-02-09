@@ -84,7 +84,7 @@ fn index_queries() {
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
 
     let query = format!("user_id={}", u.id);
-    let mut response = ok_resp!(middle.call(req.with_query(query.as_slice())));
+    let mut response = ok_resp!(middle.call(req.with_query(&query)));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
     let mut response = ok_resp!(middle.call(req.with_query("user_id=0")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
@@ -336,6 +336,13 @@ fn new_crate_owner() {
                                                .with_method(Method::Put)
                                                .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
+
+    // Make sure this shows up as one of their crates.
+    let query = format!("user_id={}", u2.id);
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates")
+                                               .with_method(Method::Get)
+                                               .with_query(&query)));
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
     let body = new_req_body(::krate("foo"), "2.0.0", Vec::new());

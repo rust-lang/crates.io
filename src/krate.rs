@@ -460,10 +460,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query.get("user_id").and_then(|s| s.parse::<i32>().ok()).map(|user_id| {
             id = user_id;
             needs_id = true;
-            (format!("SELECT * FROM crates WHERE user_id = $1 {} \
+            (format!("SELECT crates.* FROM crates
+                       INNER JOIN crate_owners
+                          ON crate_owners.crate_id = crates.id
+                       WHERE crate_owners.user_id = $1 {} \
                       LIMIT $2 OFFSET $3",
                      sort_sql),
-             "SELECT COUNT(*) FROM crates WHERE user_id = $1".to_string())
+             "SELECT COUNT(crates.*) FROM crates
+               INNER JOIN crate_owners
+                  ON crate_owners.crate_id = crates.id
+               WHERE crate_owners.user_id = $1".to_string())
         })
     }).or_else(|| {
         query.get("following").map(|_| {
