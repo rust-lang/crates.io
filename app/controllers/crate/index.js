@@ -136,7 +136,7 @@ export default Ember.ObjectController.extend({
             });
         },
 
-        renderChart: function(downloads) {
+        renderChart: function(downloads, extra) {
             var dates = {};
             var versions = [];
             for (var i = 0; i < 90; i++) {
@@ -151,6 +151,13 @@ export default Ember.ObjectController.extend({
                     dates[key].cnt[version_id] = prev + d.get('downloads');
                 }
             });
+            extra.forEach(function(d) {
+                var key = moment(d.date).utc().format('MMM D');
+                if (dates[key]) {
+                    var prev = dates[key].cnt[null] || 0;
+                    dates[key].cnt[null] = prev + d.downloads;
+                }
+            });
             if (this.get('requestedVersion')) {
                 versions.push({
                     id: this.get('currentVersion.id'),
@@ -161,6 +168,9 @@ export default Ember.ObjectController.extend({
                 for (i = 0; i < tmp.length; i++) {
                     versions.push({id: tmp[i].get('id'), num: tmp[i].get('num')});
                 }
+            }
+            if (extra.length > 0) {
+                versions.push({ id: null, num: 'Other' });
             }
 
             var headers = ['Date'];
