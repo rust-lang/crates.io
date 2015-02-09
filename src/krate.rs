@@ -819,9 +819,34 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         downloads.push(download.encodable());
     }
 
+    let stmt = try!(tx.prepare(&format!("\
+          SELECT COALESCE(to_char(DATE(version_downloads.date), 'YYYY-MM-DD'), '') AS date,
+                 SUM(version_downloads.downloads) AS downloads
+            FROM version_downloads
+           INNER JOIN versions ON
+                 version_id = versions.id
+           WHERE version_downloads.date > $1
+             AND versions.crate_id = $2
+             AND versions.id NOT IN({})
+        GROUP BY DATE(version_downloads.date)
+        ORDER BY DATE(version_downloads.date) ASC",
+                                 CommaSep(&ids))));
+    let mut extra = Vec::new();
+    for row in try!(stmt.query(&[&cutoff_date, &krate.id])) {
+        extra.push(ExtraDownload {
+            downloads: row.get("downloads"),
+            date: row.get("date")
+        });
+    }
+
     #[derive(RustcEncodable)]
-    struct R { version_downloads: Vec<EncodableVersionDownload> }
-    Ok(req.json(&R{ version_downloads: downloads }))
+    struct ExtraDownload { date: String, downloads: i64 }
+    #[derive(RustcEncodable)]
+    struct R { version_downloads: Vec<EncodableVersionDownload>, meta: Meta }
+    #[derive(RustcEncodable)]
+    struct Meta { extra_downloads: Vec<ExtraDownload> }
+    let meta = Meta { extra_downloads: extra };
+    Ok(req.json(&R{ version_downloads: downloads, meta: meta }))
 }
 
 fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
