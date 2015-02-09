@@ -62,7 +62,8 @@ fn main() {
     } else {
         env::var_string("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
-    let _a = Server::start(civet::Config { port: port, threads: 8 }, app);
+    let threads = if cargo_env == cargo_registry::Env::Development {1} else {8};
+    let _a = Server::start(civet::Config { port: port, threads: threads }, app);
     println!("listening on port {}", port);
     if heroku {
         File::create(&Path::new("/tmp/app-initialized")).unwrap();
