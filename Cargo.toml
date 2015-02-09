@@ -52,6 +52,7 @@ postgres = "0.5"
 curl = "0.1.0"
 oauth2 = "0.1.0"
 log = "0.2"
+env_logger = "0.2"
 rustc-serialize = "0.2"
 
 conduit = "0.6"

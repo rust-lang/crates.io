@@ -5,6 +5,7 @@ extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
 extern crate civet;
 extern crate git2;
+extern crate env_logger;
 
 use std::old_io::{self, fs, File};
 use std::env;
@@ -13,6 +14,7 @@ use std::sync::mpsc::channel;
 use civet::Server;
 
 fn main() {
+    env_logger::init().unwrap();
     let url = env("GIT_REPO_URL");
     let checkout = Path::new(env("GIT_REPO_CHECKOUT"));
 

@@ -13,6 +13,7 @@ dependencies = [
  "conduit-static 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "git2 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -193,6 +194,15 @@ dependencies = [
  "libz-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -393,6 +403,11 @@ dependencies = [
  "libc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "regex"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "route-recognizer"
