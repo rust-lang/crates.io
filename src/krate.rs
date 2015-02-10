@@ -949,6 +949,9 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
     for login in request.users.iter() {
         if add {
+            if owners.iter().any(|u| u.gh_login == *login) {
+                return Err(human(format!("user `{}` is already an owner", login)))
+            }
             try!(krate.owner_add(tx, user.id, login.as_slice()));
         } else {
             if login.as_slice() == user.gh_login.as_slice() {

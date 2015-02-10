@@ -407,6 +407,17 @@ fn migrations() -> Vec<Migration> {
                              UNIQUE (name)", &[]));
             Ok(())
         }),
+        Migration::new(20150209202206, |tx| {
+            try!(fix_duplicate_crate_owners(tx));
+            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+                             crate_owners_unique_user_per_crate \
+                             UNIQUE (user_id, crate_id)", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_user_per_crate", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -436,4 +447,27 @@ fn migrations() -> Vec<Migration> {
                          table = table, column = column);
         Migration::run(id, add.as_slice(), rm.as_slice())
     }
+}
+
+fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()> {
+    let v: Vec<(i32, i32)> = {
+        let stmt = try!(tx.prepare("SELECT user_id, crate_id
+                                      FROM crate_owners
+                                     GROUP BY user_id, crate_id
+                                    HAVING COUNT(*) > 1"));
+        try!(stmt.query(&[])).map(|row| {
+            (row.get("user_id"), row.get("crate_id"))
+        }).collect()
+    };
+    for &(user_id, crate_id) in v.iter() {
+        let stmt = try!(tx.prepare("SELECT id FROM crate_owners
+                                    WHERE user_id = $1 AND crate_id = $2
+                                    ORDER BY created_at ASC
+                                    OFFSET 1"));
+        for row in try!(stmt.query(&[&user_id, &crate_id])) {
+            let id: i32 = row.get("id");
+            try!(tx.execute("DELETE FROM crate_owners WHERE id = $1", &[&id]));
+        }
+    }
+    Ok(())
 }

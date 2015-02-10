@@ -336,6 +336,9 @@ fn new_crate_owner() {
                                                .with_method(Method::Put)
                                                .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
+    bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                             .with_method(Method::Put)
+                             .with_body(body.as_bytes())));
 
     // Make sure this shows up as one of their crates.
     let query = format!("user_id={}", u2.id);
