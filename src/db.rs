@@ -166,14 +166,14 @@ impl<'a> RequestTransaction<'a> for &'a (Request + 'a) {
 
 pub trait Connection {
     fn prepare(&self, query: &str) -> pg::Result<pg::Statement>;
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize>;
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64>;
 }
 
 impl Connection for pg::Connection {
     fn prepare(&self, query: &str) -> pg::Result<pg::Statement> {
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64> {
         self.execute(query, params)
     }
 }
@@ -183,7 +183,7 @@ impl<'a> Connection for pg::Transaction<'a> {
         trace!("prepare: {}", query);
         self.prepare(query)
     }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<usize> {
+    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64> {
         trace!("execute: {}", query);
         self.execute(query, params)
     }
