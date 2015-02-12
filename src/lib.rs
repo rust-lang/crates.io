@@ -125,7 +125,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(DebugMiddleware);
     }
     if env != Env::Test {
-        m.add(conduit_log_requests::LogRequests(log::LogLevel::Error));
+        m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
     }
     m.around(util::Head::new());
     m.add(conduit_conditional_get::ConditionalGet);

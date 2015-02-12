@@ -5,6 +5,7 @@ extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
 extern crate semver;
 extern crate time;
+extern crate env_logger;
 
 use std::env;
 use std::collections::HashMap;
@@ -16,6 +17,7 @@ static LIMIT: i64 = 10000;
 
 #[allow(dead_code)] // dead in tests
 fn main() {
+    env_logger::init().unwrap();
     let daemon = env::args().nth(1).as_ref().map(|s| s.to_str().unwrap())
                     == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.to_str().unwrap().parse::<i64>().unwrap());
