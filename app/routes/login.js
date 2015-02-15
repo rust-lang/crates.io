@@ -2,6 +2,8 @@ import Ember from 'ember';
 
 export default Ember.Route.extend({
     beforeModel: function(transition) {
+        try { localStorage.removeItem('github_response'); } catch (e) {}
+        delete window.github_response;
         var win = window.open('/github_login', 'Authorization',
                               'width=1000,height=450,' +
                               'toolbar=0,scrollbars=1,status=1,resizable=1,' +
@@ -14,8 +16,12 @@ export default Ember.Route.extend({
         var oauthInterval = window.setInterval(function(){
             if (!win.closed) { return; }
             window.clearInterval(oauthInterval);
-            var response = JSON.parse(localStorage.github_response);
+            var json = window.github_response;
+            delete window.github_response;
+            if (!json) { return; }
 
+            var response = JSON.parse(json);
+            if (!response) { return; }
             if (!response.ok) {
                 self.controllerFor('application').set('flashError',
                                                       'Failed to log in');
