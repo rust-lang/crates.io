@@ -1,5 +1,5 @@
 #![feature(core)]
-#![cfg_attr(test, feature(io))]
+#![cfg_attr(test, feature(old_io))]
 
 extern crate conduit;
 
@@ -7,7 +7,7 @@ use std::error::Error;
 
 use conduit::{Request, Response, Handler};
 
-pub trait Middleware: Send + Sync {
+pub trait Middleware: Send + Sync + 'static {
     fn before(&self, _: &mut Request) -> Result<(), Box<Error+Send>> {
         Ok(())
     }
