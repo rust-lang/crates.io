@@ -1,4 +1,4 @@
-#![feature(core, hash)]
+#![feature(core, hash, old_io, alloc)]
 
 extern crate semver;
 
@@ -121,7 +121,7 @@ pub trait Handler: Sync + Send {
 
 impl<F, E> Handler for F
     where F: Fn(&mut Request) -> Result<Response, E> + Sync + Send,
-          E: Error + Send
+          E: Error + Send + 'static
 {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
         (*self)(request).map_err(|e| Box::new(e) as Box<Error+Send>)
