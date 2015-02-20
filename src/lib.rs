@@ -10,7 +10,6 @@ use middleware::Middleware;
 use std::borrow::Cow;
 use std::error::Error;
 use std::old_io::util::NullReader;
-use std::string::CowString;
 use time::{Tm, strptime, ParseError};
 
 type Response = Result<conduit::Response, Box<Error+Send>>;
@@ -82,7 +81,7 @@ fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
     }).unwrap_or(false)
 }
 
-fn header_val<'a>(header: Vec<&'a str>) -> CowString<'a> {
+fn header_val<'a>(header: Vec<&'a str>) -> Cow<'a, str> {
     if header.len() == 1 {
         Cow::Borrowed(header[0])
     } else {
@@ -90,7 +89,7 @@ fn header_val<'a>(header: Vec<&'a str>) -> CowString<'a> {
     }
 }
 
-fn res_header_val<'a>(header: &'a Vec<String>) -> CowString<'a> {
+fn res_header_val<'a>(header: &'a Vec<String>) -> Cow<'a, str> {
     if header.len() == 1 {
         Cow::Borrowed(header[0].as_slice())
     } else {
