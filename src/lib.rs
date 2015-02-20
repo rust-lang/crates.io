@@ -1,4 +1,4 @@
-#![feature(io, core)]
+#![feature(old_io, core)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate time;
