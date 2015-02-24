@@ -1,10 +1,11 @@
-#![feature(core, old_io, alloc)]
+#![feature(core, io, alloc, net)]
 
 extern crate semver;
 
+use std::io::prelude::*;
 use std::collections::HashMap;
 use std::error::Error;
-use std::old_io::net::ip::IpAddr;
+use std::net::IpAddr;
 
 pub use self::typemap::TypeMap;
 mod typemap;
@@ -81,7 +82,7 @@ pub trait Request {
     fn headers<'a>(&'a self) -> &'a Headers;
 
     /// A Reader for the body of the request
-    fn body<'a>(&'a mut self) -> &'a mut Reader;
+    fn body<'a>(&'a mut self) -> &'a mut Read;
 
     /// A readable map of extensions
     fn extensions<'a>(&'a self) -> &'a Extensions;
@@ -110,7 +111,7 @@ pub struct Response {
     pub headers: HashMap<String, Vec<String>>,
 
     /// A Writer for body of the response
-    pub body: Box<Reader + Send>
+    pub body: Box<Read + Send>
 }
 
 /// A Handler takes a request and returns a response or an error.
