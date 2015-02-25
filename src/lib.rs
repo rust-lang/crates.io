@@ -1,11 +1,12 @@
-#![feature(io, core)]
+#![feature(io, core, net)]
 
 extern crate semver;
 extern crate conduit;
 
-use std::old_io::net::ip::{IpAddr, Ipv4Addr};
-use std::old_io::MemReader;
 use std::collections::HashMap;
+use std::io::prelude::*;
+use std::io::Cursor;
+use std::net::IpAddr;
 
 use semver::Version;
 use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
@@ -18,7 +19,7 @@ pub struct MockRequest {
     build_headers: HashMap<String, String>,
     headers: MockHeaders,
     extensions: TypeMap,
-    reader: Option<MemReader>
+    reader: Option<Cursor<Vec<u8>>>
 }
 
 impl MockRequest {
@@ -109,7 +110,7 @@ impl conduit::Request for MockRequest {
     }
 
     fn remote_ip(&self) -> IpAddr {
-        Ipv4Addr(127, 0, 0, 1)
+        IpAddr::new_v4(127, 0, 0, 1)
     }
 
     fn content_length(&self) -> Option<u64> {
@@ -120,12 +121,12 @@ impl conduit::Request for MockRequest {
         &self.headers as &Headers
     }
 
-    fn body(&mut self) -> &mut Reader {
+    fn body(&mut self) -> &mut Read {
         if self.reader.is_none() {
             let body = self.body.clone().unwrap_or(Vec::new());
-            self.reader = Some(MemReader::new(body));
+            self.reader = Some(Cursor::new(body));
         }
-        self.reader.as_mut().unwrap() as &mut Reader
+        self.reader.as_mut().unwrap()
     }
 
     fn extensions(&self) -> &Extensions {
