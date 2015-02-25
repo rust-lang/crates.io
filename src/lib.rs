@@ -1,4 +1,4 @@
-#![feature(old_io, core)]
+#![feature(io, core)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate time;
@@ -9,7 +9,7 @@ use conduit::{Request, Method};
 use middleware::Middleware;
 use std::borrow::Cow;
 use std::error::Error;
-use std::old_io::util::NullReader;
+use std::io;
 use time::{Tm, strptime, ParseError};
 
 type Response = Result<conduit::Response, Box<Error+Send>>;
@@ -27,7 +27,7 @@ impl Middleware for ConditionalGet {
                     res.status = (304, "Not Modified");
                     res.headers.remove("Content-Type");
                     res.headers.remove("Content-Length");
-                    res.body = Box::new(NullReader);
+                    res.body = Box::new(io::empty());
                 }
             },
             _ => ()
@@ -124,7 +124,7 @@ mod tests {
 
     use std::collections::HashMap;
     use std::error::Error;
-    use std::old_io::MemReader;
+    use std::io::Cursor;
     use time;
     use time::Tm;
     use conduit;
@@ -243,7 +243,8 @@ mod tests {
 
     fn expect_304(response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
-        let body = response.body.read_to_string().ok().expect("No body");
+        let mut body = String::new();
+        response.body.read_to_string(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, (304, "Not Modified"));
         assert_eq!(body.as_slice(), "");
@@ -255,7 +256,8 @@ mod tests {
 
     fn expect(status: (u32, &'static str), response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
-        let body = response.body.read_to_string().ok().expect("No body");
+        let mut body = String::new();
+        response.body.read_to_string(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, status);
         assert_eq!(body.as_slice(), "hello");
@@ -280,7 +282,7 @@ mod tests {
             Ok(Response {
                 status: self.status,
                 headers: self.map.clone(),
-                body: Box::new(MemReader::new(self.body.to_string().into_bytes())),
+                body: Box::new(Cursor::new(self.body.to_string().into_bytes())),
             })
         }
     }
