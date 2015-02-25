@@ -1,5 +1,5 @@
 #![feature(core, std_misc)]
-#![cfg_attr(test, feature(old_io))]
+#![cfg_attr(test, feature(io, net))]
 
 extern crate "route-recognizer" as router;
 extern crate conduit;
@@ -124,8 +124,8 @@ impl<'a> RequestParams<'a> for &'a (Request + 'a) {
 mod tests {
     extern crate semver;
     use std::collections::HashMap;
-    use std::old_io::{MemReader, IoError};
-    use std::old_io::net::ip::IpAddr;
+    use std::io;
+    use std::net::IpAddr;
 
     use {RouteBuilder, RequestParams};
 
@@ -162,7 +162,7 @@ mod tests {
         fn remote_ip(&self) -> IpAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
         fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
-        fn body<'a>(&'a mut self) -> &'a mut Reader { unimplemented!() }
+        fn body<'a>(&'a mut self) -> &'a mut io::Read { unimplemented!() }
         fn extensions<'a>(&'a self) -> &'a Extensions {
             &self.extensions
         }
@@ -178,7 +178,9 @@ mod tests {
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
-        assert_eq!(res.body.read_to_string().unwrap(), "1, Get".to_string());
+        let mut s = String::new();
+        res.body.read_to_string(&mut s).unwrap();
+        assert_eq!(s, "1, Get".to_string());
     }
 
     #[test]
@@ -188,7 +190,9 @@ mod tests {
         let mut res = router.call(&mut req).ok().expect("No response");
 
         assert_eq!(res.status, (200, "OK"));
-        assert_eq!(res.body.read_to_string().unwrap(), "10, Post".to_string());
+        let mut s = String::new();
+        res.body.read_to_string(&mut s).unwrap();
+        assert_eq!(s, "10, Post".to_string());
     }
 
     #[test]
@@ -205,8 +209,7 @@ mod tests {
         router
     }
 
-    fn test_handler(req: &mut conduit::Request)
-                    -> Result<conduit::Response, IoError> {
+    fn test_handler(req: &mut conduit::Request) -> io::Result<conduit::Response> {
         let mut res = vec!();
         res.push(req.params()["id"].clone());
         res.push(format!("{:?}", req.method()));
@@ -214,7 +217,7 @@ mod tests {
         Ok(conduit::Response {
             status: (200, "OK"),
             headers: HashMap::new(),
-            body: Box::new(MemReader::new(res.connect(", ").into_bytes()))
+            body: Box::new(io::Cursor::new(res.connect(", ").into_bytes()))
         })
     }
 }
