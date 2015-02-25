@@ -1,5 +1,5 @@
 #![feature(core, std_misc)]
-#![cfg_attr(test, feature(io))]
+#![cfg_attr(test, feature(old_io))]
 
 extern crate "route-recognizer" as router;
 extern crate conduit;
@@ -12,8 +12,12 @@ use router::{Router, Match};
 use conduit::{Method, Handler, Request, Response};
 
 pub struct RouteBuilder {
-    routers: HashMap<Method, Router<Box<Handler + Send + Sync>>>
+    routers: HashMap<Method, Router<Box<Handler>>>,
 }
+
+// FIXME(#22655) these should not be necessary
+unsafe impl Sync for RouteBuilder {}
+unsafe impl Send for RouteBuilder {}
 
 pub struct RouterError(String);
 
@@ -23,7 +27,7 @@ impl RouteBuilder {
     }
 
     pub fn recognize<'a>(&'a self, method: &Method, path: &str)
-                         -> Result<Match<&'a Box<Handler + Send + Sync>>,
+                         -> Result<Match<&'a Box<Handler>>,
                                    RouterError>
     {
         match self.routers.get(method) {
