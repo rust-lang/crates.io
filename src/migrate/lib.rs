@@ -8,7 +8,11 @@ use std::collections::HashSet;
 use postgres::Transaction;
 use postgres::Result as PgResult;
 
-pub type Step = Box<for<'a> FnMut(&'a Transaction) -> PgResult<()> + 'static>;
+struct A<'a, 'b: 'a> {
+    t: &'a Transaction<'b>,
+}
+
+pub type Step = Box<FnMut(A) -> PgResult<()> + 'static>;
 
 pub struct Migration {
     version: i64,
@@ -26,11 +30,13 @@ impl Migration {
         Migration { version: version, up: up, down: down }
     }
 
-    pub fn new<F1, F2>(version: i64, up: F1, down: F2) -> Migration
+    pub fn new<F1, F2>(version: i64, mut up: F1, mut down: F2) -> Migration
                        where F1: FnMut(&Transaction) -> PgResult<()> + 'static,
                              F2: FnMut(&Transaction) -> PgResult<()> + 'static
     {
-        Migration::mk(version, Box::new(up), Box::new(down))
+        Migration::mk(version,
+                      Box::new(move |a| up(a.t)),
+                      Box::new(move |a| down(a.t)))
     }
 
     pub fn run<T: Str>(version: i64, up: T, down: T) -> Migration {
@@ -57,7 +63,8 @@ impl Migration {
 }
 
 fn run(sql: String) -> Step {
-    Box::new(move |&: tx: &Transaction| {
+    Box::new(move |a: A| {
+        let tx = a.t;
         tx.execute(sql.as_slice(), &[]).map(|_| ()).map_err(|e| {
             println!("failed to run `{}`", sql);
             e
@@ -93,7 +100,7 @@ impl<'a> Manager<'a> {
     pub fn apply(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.insert(migration.version) { return Ok(()) }
         println!("applying {}", migration.version);
-        try!((migration.up)(&self.tx));
+        try!((migration.up)(A { t: &self.tx }));
         let stmt = try!(self.tx.prepare("INSERT into schema_migrations
                                          (version) VALUES ($1)"));
         try!(stmt.execute(&[&migration.version]));
@@ -103,7 +110,7 @@ impl<'a> Manager<'a> {
     pub fn rollback(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.remove(&migration.version) { return Ok(()) }
         println!("rollback {}", migration.version);
-        try!((migration.down)(&self.tx));
+        try!((migration.down)(A { t: &self.tx }));
         let stmt = try!(self.tx.prepare("DELETE FROM schema_migrations
                                          WHERE version = $1"));
         try!(stmt.execute(&[&migration.version]));

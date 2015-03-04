@@ -99,7 +99,7 @@ fn my_packages() {
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
-    req.with_query(&format!("user_id={}", u.id)[]);
+    req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[derive(RustcDecodable)]

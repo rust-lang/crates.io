@@ -6,7 +6,7 @@
 //      cargo run --bin delete-crate crate-name
 
 #![deny(warnings)]
-#![feature(io, core, env, os)]
+#![feature(core, old_io)]
 
 #[macro_use]
 extern crate "cargo-registry" as cargo_registry;
@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match env::var_string(s).ok() {
+    match env::var(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }
@@ -39,7 +39,7 @@ fn env(s: &str) -> String {
 fn delete(tx: &postgres::Transaction) {
     let name = match env::args().nth(1) {
         None => { println!("needs a crate-name argument"); return }
-        Some(s) => s.into_string().unwrap(),
+        Some(s) => s,
     };
 
     let krate = Crate::find_by_name(tx, name.as_slice()).unwrap();

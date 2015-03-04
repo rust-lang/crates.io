@@ -1,30 +1,34 @@
 use std::collections::{HashMap, HashSet};
-use std::old_io::fs::PathExtensions;
-use std::old_io::net::tcp::{TcpListener, TcpAcceptor, TcpStream};
-use std::old_io::{ChanReader, ChanWriter, util, stdio};
-use std::old_io::{Listener, Acceptor, File, BufferedReader, BufferedStream};
 use std::env;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::{BufReader, BufStream};
+use std::net::{TcpListener, TcpStream};
+use std::old_io::{ChanReader, ChanWriter, stdio};
+use std::path::PathBuf;
 use std::str;
-use std::sync::mpsc::{channel, Receiver};
-use std::thread::Thread;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
 
 use curl::http;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
 pub struct Bomb {
-    accept: TcpAcceptor,
+    accept: TcpListener,
+    quit: Sender<()>,
     rx: Receiver<()>,
     iorx: ChanReader,
 }
 
 impl Drop for Bomb {
     fn drop(&mut self) {
-        self.accept.close_accept().unwrap();
+        t!(self.quit.send(()));
+        drop(TcpStream::connect(&t!(self.accept.socket_addr())));
         let res = self.rx.recv();
-        let stderr = self.iorx.read_to_string().unwrap();
+        let stderr = t!(self.iorx.read_to_string());
         match res {
-            Err(..) if !Thread::panicking() => {
+            Err(..) if !thread::panicking() => {
                 panic!("server subtask failed: {}", stderr)
             }
             _ => {
@@ -37,36 +41,38 @@ impl Drop for Bomb {
 }
 
 pub fn proxy() -> (String, Bomb) {
-    let me = Thread::current().name().unwrap().to_string();
-    let record = env::var("RECORD").is_some();
+    let me = thread::current().name().unwrap().to_string();
+    let record = env::var("RECORD").is_ok();
 
-    let mut l = TcpListener::bind("127.0.0.1:0").unwrap();
-    let ret = format!("http://{}", l.socket_name().unwrap());
-    let mut a = l.listen().unwrap();
+    let a = t!(TcpListener::bind("127.0.0.1:0"));
+    let ret = format!("http://{}", t!(a.socket_addr()));
     let (tx, rx) = channel();
 
-    let data = Path::new(file!()).dir_path().join("http-data")
-                                 .join(me.as_slice().replace("::", "_"));
+    let data = PathBuf::new(file!()).parent().unwrap().join("http-data")
+                                    .join(&me.replace("::", "_"));
     let record = record && !data.exists();
-    let a2 = a.clone();
+    let a2 = t!(a.try_clone());
 
     let (iotx, iorx) = channel();
     let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
 
-    Thread::spawn(move|| {
+    let (quittx, quitrx) = channel();
+
+    thread::spawn(move|| {
         stdio::set_stderr(Box::new(iotx.clone()));
         stdio::set_stdout(Box::new(iotx));
         let mut file = None;
         for socket in a.incoming() {
-            let socket = match socket { Ok(s) => s, Err(..) => break };
+            if quitrx.try_recv().is_ok() { break }
+            let socket = t!(socket);
 
             if file.is_none() {
-                let io = if record {
+                let io = t!(if record {
                     File::create(&data)
                 } else {
                     File::open(&data)
-                };
-                file = Some(BufferedStream::new(io.unwrap()));
+                });
+                file = Some(BufStream::new(io));
             }
 
             if record {
@@ -76,48 +82,46 @@ pub fn proxy() -> (String, Bomb) {
             }
         }
         match file {
-            Some(ref mut f) => assert!(f.read_line().is_err()),
+            Some(ref mut f) => {
+                let mut s = String::new();
+                t!(f.read_line(&mut s));
+                assert_eq!(s, "");
+            }
             None => {}
         }
         tx.send(()).unwrap();
     });
 
-    (ret, Bomb { accept: a2, rx: rx, iorx: iorx })
+    (ret, Bomb { accept: a2, rx: rx, iorx: iorx, quit: quittx })
 }
 
-fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
-    let (tx, rx) = channel();
-    let (tx, mut rx) = (ChanWriter::new(tx), ChanReader::new(rx));
-    let http_response = send(util::TeeReader::new(&mut socket as &mut Reader, tx));
-    let request = rx.read_to_end().unwrap();
+fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
+    let mut request = Vec::new();
+    let http_response = send((&mut socket).tee(&mut request));
 
-    let (tx, rx) = channel();
-    let (tx, mut rx) = (ChanWriter::new(tx), ChanReader::new(rx));
-    let socket = Box::new(socket) as Box<Writer + 'static>;
-    let tx = Box::new(tx) as Box<Writer + 'static>;
-    respond(http_response, util::MultiWriter::new(vec![socket, tx]));
-    let response = rx.read_to_end().unwrap();
+    let mut response = Vec::new();
+    respond(http_response, socket.broadcast(&mut response));
 
-    (write!(data, "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
-            request.len(),
-            str::from_utf8(request.as_slice()).unwrap(),
-            response.len(),
-            str::from_utf8(response.as_slice()).unwrap())).unwrap();
+    t!(write!(data, "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
+              request.len(),
+              str::from_utf8(&request).unwrap(),
+              response.len(),
+              str::from_utf8(&response).unwrap()));
 
-    fn send<R: Reader>(rdr: R) -> http::Response {
-        let mut socket = BufferedReader::new(rdr);
+    fn send<R: Read>(rdr: R) -> http::Response {
+        let mut socket = BufReader::new(rdr);
         let method;
         let url;
         let mut headers = HashMap::new();
         {
-            let mut lines = socket.lines();
-            let line = lines.next().unwrap().unwrap();
+            let mut lines = (&mut socket).lines();
+            let line = t!(lines.next().unwrap());
             let mut parts = line.as_slice().split(' ');
             method = parts.next().unwrap().to_string();
             url = parts.next().unwrap().replace("http://", "https://");
 
             for line in lines {
-                let line = line.unwrap();
+                let line = t!(line);
                 if line.len() < 3 { break }
                 let mut parts = line.as_slice().splitn(1, ':');
                 headers.insert(parts.next().unwrap().to_string(),
@@ -142,40 +146,41 @@ fn record_http(mut socket: TcpStream, data: &mut BufferedStream<File>) {
                 k => req = req.header(k, v),
             }
         }
-        req.exec().unwrap()
+        t!(req.exec())
     }
 
-    fn respond<W: Writer>(response: http::Response, mut socket: W) {
-        socket.write_str(format!("HTTP/1.1 {}\r\n",
-                                 response.get_code()).as_slice())
-              .unwrap();
+    fn respond<W: Write>(response: http::Response, mut socket: W) {
+        t!(socket.write_all(format!("HTTP/1.1 {}\r\n",
+                                    response.get_code()).as_bytes()));
         for (k, v) in response.get_headers().iter() {
             if k.as_slice() == "transfer-encoding" { continue }
             for v in v.iter() {
-                socket.write_all(k.as_bytes()).unwrap();
-                socket.write_all(b": ").unwrap();
-                socket.write_all(v.as_bytes()).unwrap();
-                socket.write_all(b"\r\n").unwrap();
+                t!(socket.write_all(k.as_bytes()));
+                t!(socket.write_all(b": "));
+                t!(socket.write_all(v.as_bytes()));
+                t!(socket.write_all(b"\r\n"));
             }
         }
-        socket.write_all(b"\r\n").unwrap();
-        socket.write_all(response.get_body()).unwrap();
+        t!(socket.write_all(b"\r\n"));
+        t!(socket.write_all(response.get_body()));
     }
 }
 
-fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
-    let mut writer = socket.clone();
-    let mut socket = BufferedReader::new(socket);
+fn replay_http(socket: TcpStream, data: &mut BufStream<File>) {
+    let mut writer = socket.try_clone().unwrap();
+    let socket = BufReader::new(socket);
 
-    let request = data.read_line().unwrap();
-    let mut request = request.as_slice().split(' ');
-    assert_eq!(request.next().unwrap().as_slice(), "===REQUEST");
-    let request_size: usize = request.next().unwrap().trim().parse().unwrap();
+    let mut request = String::new();
+    t!(data.read_line(&mut request));
+    let mut request = request.split(' ');
+    assert_eq!(request.next().unwrap(), "===REQUEST");
+    let request_size = request.next().unwrap().trim().parse().unwrap();
 
-    let expected = data.read_exact(request_size).unwrap();
-    let mut expected_lines = expected.as_slice().split(|b| *b == b'\n')
+    let mut expected = Vec::new();
+    t!(data.take(request_size).read_to_end(&mut expected));
+    let mut expected_lines = SliceExt::split(&expected[..], |b| *b == b'\n')
                                      .map(|s| str::from_utf8(s).unwrap())
-                                     .map(|s| format!("{}\n", s));
+                                     .map(|s| format!("{}", s));
     let mut actual_lines = socket.lines().map(|s| s.unwrap());
 
     // validate the headers
@@ -188,30 +193,32 @@ fn replay_http(socket: TcpStream, data: &mut BufferedStream<File>) {
         println!("received: {}", line.as_slice().trim());
         if !found.insert(line.clone()) { continue }
         if expected.remove(&line) { continue }
-        if line.as_slice().starts_with("Date:") { continue }
-        if line.as_slice().starts_with("Authorization:") { continue }
+        if line.starts_with("Date:") { continue }
+        if line.starts_with("Authorization:") { continue }
         panic!("unexpected header: {}", line);
     }
     for line in expected.iter() {
-        if line.as_slice().starts_with("Date:") { continue }
-        if line.as_slice().starts_with("Authorization:") { continue }
+        if line.starts_with("Date:") { continue }
+        if line.starts_with("Authorization:") { continue }
         panic!("didn't receive header: {}", line);
     }
 
     // TODO: validate the body
 
-    data.read_line().unwrap();
-    let response = data.read_line().unwrap();
-    let mut response = response.as_slice().split(' ');
-    assert_eq!(response.next().unwrap().as_slice(), "===RESPONSE");
-    let response_size: usize = response.next().unwrap().trim().parse().unwrap();
-    let response = data.read_exact(response_size).unwrap();
-    let lines = response.split(|b| *b == b'\n')
+    data.read_line(&mut String::new()).unwrap();
+    let mut response = String::new();
+    data.read_line(&mut response).unwrap();
+    let mut response = response.split(' ');
+    assert_eq!(response.next().unwrap(), "===RESPONSE");
+    let response_size = response.next().unwrap().trim().parse().unwrap();
+    let mut response = Vec::new();
+    data.take(response_size).read_to_end(&mut response).unwrap();
+    let lines = SliceExt::split(&response[..], |b| *b == b'\n')
                         .map(|s| str::from_utf8(s).unwrap());
     for line in lines {
         if line.starts_with("Date:") { continue }
-        writer.write_str(line).unwrap();
+        writer.write_all(line.as_bytes()).unwrap();
         writer.write_all(b"\r\n").unwrap();
     }
-    data.read_line().unwrap();
+    data.read_line(&mut String::new()).unwrap();
 }

@@ -1,5 +1,5 @@
-#![deny(warnings)]
-#![feature(io, core, env, path, std_misc)]
+// #![deny(warnings)]
+#![feature(io, core, fs, path, net, old_io)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -14,8 +14,7 @@ extern crate semver;
 
 use std::collections::HashMap;
 use std::error::Error as StdError;
-use std::old_io::Command;
-use std::old_io::process::InheritFd;
+use std::process::Command;
 use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};
 use rustc_serialize::json::{self, Json};
@@ -72,10 +71,10 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     let (proxy, bomb) = record::proxy();
     let config = cargo_registry::Config {
-        s3_bucket: env::var_string("S3_BUCKET").unwrap_or(String::new()),
-        s3_access_key: env::var_string("S3_ACCESS_KEY").unwrap_or(String::new()),
-        s3_secret_key: env::var_string("S3_SECRET_KEY").unwrap_or(String::new()),
-        s3_region: env::var_string("S3_REGION").ok(),
+        s3_bucket: env::var("S3_BUCKET").unwrap_or(String::new()),
+        s3_access_key: env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+        s3_secret_key: env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+        s3_region: env::var("S3_REGION").ok(),
         s3_proxy: Some(proxy),
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
@@ -93,18 +92,16 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     return (bomb, app, middleware);
 
     fn env(s: &str) -> String {
-        match env::var_string(s).ok() {
+        match env::var(s).ok() {
             Some(s) => s,
             None => panic!("must have `{}` defined", s),
         }
     }
 
     fn db_setup(db: &str) {
-        let migrate = env::current_exe().unwrap().join("../migrate");
-        assert!(Command::new(migrate).env("DATABASE_URL", db)
-                        .stdout(InheritFd(1))
-                        .stderr(InheritFd(2))
-                        .status().unwrap().success());
+        let migrate = t!(env::current_exe()).parent().unwrap().join("migrate");
+        assert!(t!(Command::new(&migrate).env("DATABASE_URL", db)
+                           .status()).success());
     }
 
     impl conduit_middleware::Middleware for NoCommit {
@@ -136,7 +133,8 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
 }
 
 fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
-    let data = r.body.read_to_end().unwrap();
+    let mut data = Vec::new();
+    r.body.read_to_end(&mut data).unwrap();
     let s = std::str::from_utf8(data.as_slice()).unwrap();
     let j = match Json::from_str(s) {
         Ok(t) => t,

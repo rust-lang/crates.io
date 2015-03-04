@@ -1,4 +1,5 @@
-use std::old_io;
+use std::io::Read;
+use std::net::IpAddr;
 
 use conduit;
 use conduit::Request;
@@ -31,14 +32,14 @@ impl<'a> Request for RequestProxy<'a> {
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()
     }
-    fn remote_ip(&self) -> old_io::net::ip::IpAddr { self.other.remote_ip() }
+    fn remote_ip(&self) -> IpAddr { self.other.remote_ip() }
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
     fn headers(&self) -> &conduit::Headers {
         self.other.headers()
     }
-    fn body(&mut self) -> &mut Reader { self.other.body() }
+    fn body(&mut self) -> &mut Read { self.other.body() }
     fn extensions(&self) -> &conduit::Extensions {
         self.other.extensions()
     }

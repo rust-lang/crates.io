@@ -6,7 +6,7 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg;
-use pg::types::ToSql;
+use pg::types::{ToSql, Slice};
 use semver;
 use url;
 
@@ -18,7 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use upload;
 use user::RequestUser;
-use util::{RequestUtils, CargoResult, ChainError, internal, human, CommaSep};
+use util::{RequestUtils, CargoResult, ChainError, internal, human};
 
 #[derive(Clone)]
 pub struct Version {
@@ -68,7 +68,7 @@ impl Version {
         let num = num.to_string();
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1 AND num = $2"));
-        let mut rows = try!(stmt.query(&[&crate_id, &num]));
+        let mut rows = try!(stmt.query(&[&crate_id, &num])).into_iter();
         Ok(rows.next().map(|r| Model::from_row(&r)))
     }
 
@@ -85,8 +85,8 @@ impl Version {
                                       VALUES ($1, $2, $3, $3, 0, $4) \
                                       RETURNING *"));
         let now = ::now();
-        let mut rows = try!(stmt.query(&[&crate_id, &num, &now, &features]));
-        let ret: Version = Model::from_row(&try!(rows.next().chain_error(|| {
+        let rows = try!(stmt.query(&[&crate_id, &num, &now, &features]));
+        let ret: Version = Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no version returned")
         })));
         for author in authors.iter() {
@@ -133,7 +133,7 @@ impl Version {
             human(format!("no known crate named `{}`", name))
         }));
         let features: Vec<String> = dep.features.iter().map(|s| {
-            s[].to_string()
+            s[..].to_string()
         }).collect();
         let dep = try!(Dependency::insert(conn, self.id, krate.id,
                                           &*dep.version_req,
@@ -154,7 +154,7 @@ impl Version {
                                       LEFT JOIN crates
                                         ON crates.id = dependencies.crate_id
                                       WHERE dependencies.version_id = $1"));
-        Ok(try!(stmt.query(&[&self.id])).map(|r| {
+        Ok(try!(stmt.query(&[&self.id])).into_iter().map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
         }).collect())
     }
@@ -163,7 +163,7 @@ impl Version {
         let stmt = try!(conn.prepare("SELECT * FROM version_authors
                                        WHERE version_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
-        rows.map(|row| {
+        rows.into_iter().map(|row| {
             let user_id: Option<i32> = row.get("user_id");
             let name: String = row.get("name");
             Ok(match user_id {
@@ -216,7 +216,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let query = url::form_urlencoded::parse(req.query_string().unwrap_or("")
                                                .as_bytes());
     let ids = query.iter().filter_map(|&(ref a, ref b)| {
-        if a.as_slice() == "ids[]" {
+        if *a == "ids[]" {
             b.parse().ok()
         } else {
             None
@@ -228,15 +228,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // TODO: can rust-postgres do this for us?
     let mut versions = Vec::new();
     if ids.len() > 0 {
-        let sql = format!("SELECT versions.*, crates.name AS crate_name
-                             FROM versions
-                           LEFT JOIN crates ON crates.id = versions.crate_id
-                           WHERE versions.id IN({})", CommaSep(&ids[]));
-        let stmt = try!(conn.prepare(sql.as_slice()));
-        for row in try!(stmt.query(&[])) {
+        let stmt = try!(conn.prepare("\
+            SELECT versions.*, crates.name AS crate_name
+              FROM versions
+            LEFT JOIN crates ON crates.id = versions.crate_id
+            WHERE versions.id = ANY($1)
+        "));
+        for row in try!(stmt.query(&[&Slice(&ids)])) {
             let v: Version = Model::from_row(&row);
             let crate_name: String = row.get("crate_name");
-            versions.push(v.encodable(crate_name.as_slice()));
+            versions.push(v.encodable(&crate_name));
         }
     }
 

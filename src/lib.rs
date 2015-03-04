@@ -1,11 +1,8 @@
-#![feature(collections, core, std_misc, io, env, path, hash, unicode)]
-#![allow(missing_copy_implementations)]
+#![feature(collections, core, std_misc, io, path, unicode, net, fs)]
 
-extern crate "rustc-serialize" as rustc_serialize;
-extern crate time;
 #[macro_use] extern crate log;
-
 extern crate "postgres" as pg;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate curl;
 extern crate flate2;
 extern crate git2;
@@ -16,16 +13,18 @@ extern crate r2d2_postgres;
 extern crate rand;
 extern crate s3;
 extern crate semver;
+extern crate time;
 extern crate url;
 
-extern crate "conduit-router" as conduit_router;
-extern crate conduit;
-extern crate "conduit-cookie" as conduit_cookie;
-extern crate "conduit-middleware" as conduit_middleware;
 extern crate "conduit-conditional-get" as conduit_conditional_get;
-extern crate "conduit-log-requests" as conduit_log_requests;
-extern crate "conduit-static" as conduit_static;
+extern crate "conduit-cookie" as conduit_cookie;
+extern crate "conduit-git-http-backend" as conduit_git_http_backend;
 extern crate "conduit-json-parser" as conduit_json_parser;
+extern crate "conduit-log-requests" as conduit_log_requests;
+extern crate "conduit-middleware" as conduit_middleware;
+extern crate "conduit-router" as conduit_router;
+extern crate "conduit-static" as conduit_static;
+extern crate conduit;
 
 pub use app::App;
 pub use config::Config;
@@ -116,8 +115,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     let env = app.config.env;
     if env == Env::Development {
-        router.get("/git/index/*path", C(git::serve_index));
-        router.post("/git/index/*path", C(git::serve_index));
+        let s1 = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
+        let s2 = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
+        router.get("/git/index/*path", s1);
+        router.post("/git/index/*path", s2);
     }
 
     let mut m = MiddlewareBuilder::new(R404(router));

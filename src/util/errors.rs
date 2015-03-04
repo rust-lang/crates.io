@@ -11,7 +11,7 @@ use util::json_response;
 // =============================================================================
 // CargoError trait
 
-pub trait CargoError: Send + fmt::Display {
+pub trait CargoError: Send + fmt::Display + 'static {
     fn description(&self) -> &str;
     fn cause<'a>(&'a self) -> Option<&'a (CargoError)> { None }
 
@@ -106,11 +106,11 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Error + Send> CargoError for E {
+impl<E: Error + Send + 'static> CargoError for E {
     fn description(&self) -> &str { Error::description(self) }
 }
 
-impl<E: Error + Send> FromError<E> for Box<CargoError> {
+impl<E: Error + Send + 'static> FromError<E> for Box<CargoError> {
     fn from_error(err: E) -> Box<CargoError> {
         Box::new(err) as Box<CargoError>
     }

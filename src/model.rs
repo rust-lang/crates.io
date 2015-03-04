@@ -11,8 +11,8 @@ pub trait Model: Sized {
         let sql = format!("SELECT * FROM {} WHERE id = $1",
                           Model::table_name(None::<Self>));
         let stmt = try!(conn.prepare(sql.as_slice()));
-        let mut rows = try!(stmt.query(&[&id]));
-        let row = try!(rows.next().chain_error(|| NotFound));
+        let rows = try!(stmt.query(&[&id]));
+        let row = try!(rows.into_iter().next().chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
 }

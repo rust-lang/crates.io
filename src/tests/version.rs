@@ -34,7 +34,7 @@ fn index() {
         let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, &[]).unwrap();
         (v1, v2)
     };
-    req.with_query(&format!("ids[]={}&ids[]={}", v1.id, v2.id)[]);
+    req.with_query(&format!("ids[]={}&ids[]={}", v1.id, v2.id));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);
@@ -64,8 +64,9 @@ fn authors() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
-    let s = response.body.read_to_string().unwrap();
-    let json = Json::from_str(s.as_slice()).unwrap();
+    let mut s = String::new();
+    response.body.read_to_string(&mut s).unwrap();
+    let json = Json::from_str(&s).unwrap();
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
 }

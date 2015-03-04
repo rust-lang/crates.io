@@ -1,18 +1,22 @@
 use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
+use std::io::prelude::*;
+use std::io;
+use std::iter::repeat;
+use std::mem;
 use std::sync::Arc;
 use std::time::Duration;
-use rustc_serialize::hex::ToHex;
-use rustc_serialize::json;
-use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::http;
+use pg::types::{ToSql, Slice};
 use pg;
-use pg::types::ToSql;
+use rustc_serialize::hex::ToHex;
+use rustc_serialize::json;
 use semver;
+use time::Timespec;
 use url::{self, Url};
 
 use {Model, User, Keyword, Version};
@@ -25,7 +29,7 @@ use keyword::EncodableKeyword;
 use upload;
 use user::{RequestUser, EncodableUser};
 use util::errors::{NotFound, CargoError};
-use util::{LimitErrorReader, HashingReader, CommaSep};
+use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 
@@ -81,7 +85,7 @@ impl Crate {
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE lower(name) = lower($1) LIMIT 1"));
-        let row = try!(stmt.query(&[&name as &ToSql])).next();
+        let row = try!(stmt.query(&[&name as &ToSql])).into_iter().next();
         let row = try!(row.chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
@@ -134,11 +138,11 @@ impl Crate {
                                              repository = $7
                                        WHERE lower(name) = lower($8)
                                    RETURNING *"));
-        let mut rows = try!(stmt.query(&[&documentation, &homepage,
-                                         &description, &readme, &keywords,
-                                         &license, &repository,
-                                         &name as &ToSql]));
-        match rows.next() {
+        let rows = try!(stmt.query(&[&documentation, &homepage,
+                                     &description, &readme, &keywords,
+                                     &license, &repository,
+                                     &name as &ToSql]));
+        match rows.iter().next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
         }
@@ -159,11 +163,11 @@ impl Crate {
                                               $4, $5, $6, $7, $8, $9, $10)
                                       RETURNING *"));
         let now = ::now();
-        let mut rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
-                                         &description, &homepage,
-                                         &documentation, &readme, &keywords,
-                                         &repository, &license]));
-        let ret: Crate = Model::from_row(&try!(rows.next().chain_error(|| {
+        let rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
+                                     &description, &homepage,
+                                     &documentation, &readme, &keywords,
+                                     &repository, &license]));
+        let ret: Crate = Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no crate returned")
         })));
 
@@ -274,7 +278,9 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
-        let mut ret = rows.map(|r| Model::from_row(&r)).collect::<Vec<Version>>();
+        let mut ret = rows.iter().map(|r| {
+            Model::from_row(&r)
+        }).collect::<Vec<Version>>();
         ret.sort_by(|a, b| b.num.cmp(&a.num));
         Ok(ret)
     }
@@ -286,7 +292,7 @@ impl Crate {
                                       WHERE crate_owners.crate_id = $1
                                         AND crate_owners.deleted = FALSE"));
         let rows = try!(stmt.query(&[&self.id]));
-        Ok(rows.map(|r| Model::from_row(&r)).collect())
+        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
 
     pub fn owner_add(&self, conn: &Connection, who: i32,
@@ -347,7 +353,7 @@ impl Crate {
                                       ON keywords.id = crates_keywords.keyword_id
                                       WHERE crates_keywords.crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
-        Ok(rows.map(|r| Model::from_row(&r)).collect())
+        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
 
     /// Returns (dependency, dependent crate name)
@@ -369,14 +375,16 @@ impl Crate {
                                ORDER BY crate_name ASC
                                  OFFSET $2
                                   LIMIT $3", select_sql);
-        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
+        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}",
+                                select_sql);
 
-        let stmt = try!(conn.prepare(fetch_sql.as_slice()));
-        let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit])).map(|r| {
+        let stmt = try!(conn.prepare(&fetch_sql));
+        let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit]))
+                                   .iter().map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
         }).collect();
-        let stmt = try!(conn.prepare(count_sql.as_slice()));
-        let cnt: i64 = try!(stmt.query(&[&self.id])).next().unwrap().get(0);
+        let stmt = try!(conn.prepare(&count_sql));
+        let cnt: i64 = try!(stmt.query(&[&self.id])).iter().next().unwrap().get(0);
 
         Ok((vec, cnt))
     }
@@ -510,7 +518,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Query for the total count of crates
     let stmt = try!(conn.prepare(cnt.as_slice()));
     let args = if args.len() > 2 {&args[..1]} else {&args[..0]};
-    let row = try!(stmt.query(args)).next().unwrap();
+    let row = try!(stmt.query(args)).into_iter().next().unwrap();
     let total = row.get(0);
 
     #[derive(RustcEncodable)]
@@ -528,18 +536,18 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let num_crates = {
         let stmt = try!(tx.prepare("SELECT COUNT(*) FROM crates"));
-        let mut rows = try!(stmt.query(&[]));
-        rows.next().unwrap().get("count")
+        let rows = try!(stmt.query(&[]));
+        rows.iter().next().unwrap().get("count")
     };
     let num_downloads = {
         let stmt = try!(tx.prepare("SELECT total_downloads FROM metadata"));
-        let mut rows = try!(stmt.query(&[]));
-        rows.next().unwrap().get("total_downloads")
+        let rows = try!(stmt.query(&[]));
+        rows.iter().next().unwrap().get("total_downloads")
     };
 
-    let to_crates = |&: stmt: pg::Statement| -> CargoResult<Vec<EncodableCrate>> {
+    let to_crates = |stmt: pg::Statement| -> CargoResult<Vec<EncodableCrate>> {
         let rows = try!(stmt.query(&[]));
-        Ok(rows.map(|r| {
+        Ok(rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);
             krate.encodable(None)
         }).collect::<Vec<EncodableCrate>>())
@@ -600,11 +608,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let name = new_crate.name.as_slice();
     let vers = &*new_crate.vers;
     let features = new_crate.features.iter().map(|(k, v)| {
-        (k[].to_string(), v.iter().map(|v| v[].to_string()).collect())
+        (k[..].to_string(), v.iter().map(|v| v[..].to_string()).collect())
     }).collect::<HashMap<String, Vec<String>>>();
     let keywords = new_crate.keywords.as_ref().map(|s| s.as_slice())
                                      .unwrap_or(&[]);
-    let keywords = keywords.iter().map(|k| k[].to_string()).collect::<Vec<_>>();
+    let keywords = keywords.iter().map(|k| k[..].to_string()).collect::<Vec<_>>();
 
     // Persist the new crate, if it doesn't already exist
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
@@ -639,21 +647,21 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Update all keywords for this crate
-    try!(Keyword::update_crate(try!(req.tx()), &krate, keywords.as_slice()));
+    try!(Keyword::update_crate(try!(req.tx()), &krate, &keywords));
 
     // Upload the crate to S3
     let handle = http::handle();
     let mut handle = match req.app().s3_proxy {
-        Some(ref proxy) => handle.proxy(proxy.as_slice()),
+        Some(ref proxy) => handle.proxy(&proxy[..]),
         None => handle,
     };
-    let path = krate.s3_path(vers.to_string().as_slice());
+    let path = krate.s3_path(&vers.to_string());
     let (resp, cksum) = {
-        let length = try!(req.body().read_le_u32());
+        let length = try!(read_le_u32(req.body()));
         let body = LimitErrorReader::new(req.body(), app.config.max_upload_size);
         let mut body = HashingReader::new(body);
         let resp = {
-            let s3req = app.bucket.put(&mut handle, path.as_slice(), &mut body,
+            let s3req = app.bucket.put(&mut handle, &path, &mut body,
                                        "application/x-tar")
                                   .content_length(length as usize)
                                   .header("Content-Encoding", "gzip");
@@ -717,13 +725,14 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     }
 
     // Read the json upload request
-    let amt = try!(req.body().read_le_u32()) as usize;
+    let amt = try!(read_le_u32(req.body())) as u64;
     if amt > max { return Err(human(format!("max upload size is: {}", max))) }
-    let json = try!(req.body().read_exact(amt));
+    let mut json = repeat(0).take(amt as usize).collect::<Vec<_>>();
+    try!(read_fill(req.body(), &mut json));
     let json = try!(String::from_utf8(json).map_err(|_| {
         human("json body was not valid utf-8")
     }));
-    let new: upload::NewCrate = try!(json::decode(json.as_slice()).map_err(|e| {
+    let new: upload::NewCrate = try!(json::decode(&json).map_err(|e| {
         human(format!("invalid upload request: {:?}", e))
     }));
 
@@ -750,6 +759,28 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     Ok((new, user.clone()))
 }
 
+fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
+    let mut b = [0; 4];
+    try!(read_fill(r, &mut b));
+    Ok(((b[0] as u32) <<  0) |
+       ((b[1] as u32) <<  8) |
+       ((b[2] as u32) << 16) |
+       ((b[3] as u32) << 24))
+}
+
+fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
+                               -> io::Result<()> {
+    while slice.len() > 0 {
+        let n = try!(r.read(slice));
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::Other,
+                                      "end of file reached", None))
+        }
+        slice = &mut mem::replace(&mut slice, &mut [])[n..];
+    }
+    Ok(())
+}
+
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = req.params()["crate_id"].as_slice();
     let version = req.params()["version"].as_slice();
@@ -761,8 +792,10 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                 WHERE lower(crates.name) = lower($1)
                                   AND versions.num = $2
                                 LIMIT 1"));
-    let mut rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));
-    let row = try!(rows.next().chain_error(|| human("crate or version not found")));
+    let rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));
+    let row = try!(rows.iter().next().chain_error(|| {
+        human("crate or version not found")
+    }));
     let version_id: i32 = row.get("version_id");
     let now = ::now();
 
@@ -814,18 +847,17 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let ids = to_show.iter().map(|i| i.id).collect::<Vec<_>>();
 
     let cutoff_date = ::now() + Duration::days(-90);
-    let stmt = try!(tx.prepare(format!("SELECT * FROM version_downloads
-                                         WHERE date > $1
-                                           AND version_id IN({})
-                                         ORDER BY date ASC",
-                                       CommaSep(&ids[])).as_slice()));
+    let stmt = try!(tx.prepare("SELECT * FROM version_downloads
+                                 WHERE date > $1
+                                   AND version_id = ANY($2)
+                                 ORDER BY date ASC"));
     let mut downloads = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date])) {
+    for row in try!(stmt.query(&[&cutoff_date, &Slice(&ids)])) {
         let download: VersionDownload = Model::from_row(&row);
         downloads.push(download.encodable());
     }
 
-    let stmt = try!(tx.prepare(&format!("\
+    let stmt = try!(tx.prepare("\
           SELECT COALESCE(to_char(DATE(version_downloads.date), 'YYYY-MM-DD'), '') AS date,
                  SUM(version_downloads.downloads) AS downloads
             FROM version_downloads
@@ -833,12 +865,11 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                  version_id = versions.id
            WHERE version_downloads.date > $1
              AND versions.crate_id = $2
-             AND versions.id NOT IN({})
+             AND NOT (versions.id = ANY($3))
         GROUP BY DATE(version_downloads.date)
-        ORDER BY DATE(version_downloads.date) ASC",
-                                 CommaSep(&ids))));
+        ORDER BY DATE(version_downloads.date) ASC"));
     let mut extra = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &krate.id])) {
+    for row in try!(stmt.query(&[&cutoff_date, &krate.id, &Slice(&ids)])) {
         extra.push(ExtraDownload {
             downloads: row.get("downloads"),
             date: row.get("date")
@@ -868,8 +899,8 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT 1 FROM follows
                                 WHERE user_id = $1 AND crate_id = $2"));
-    let mut rows = try!(stmt.query(&[&user.id, &krate.id]));
-    if !rows.next().is_some() {
+    let rows = try!(stmt.query(&[&user.id, &krate.id]));
+    if !rows.iter().next().is_some() {
         try!(tx.execute("INSERT INTO follows (user_id, crate_id)
                          VALUES ($1, $2)", &[&user.id, &krate.id]));
     }
@@ -894,7 +925,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT 1 FROM follows
                                 WHERE user_id = $1 AND crate_id = $2"));
-    let mut rows = try!(stmt.query(&[&user.id, &krate.id]));
+    let mut rows = try!(stmt.query(&[&user.id, &krate.id])).into_iter();
     #[derive(RustcEncodable)]
     struct R { following: bool }
     Ok(req.json(&R { following: rows.next().is_some() }))
@@ -934,7 +965,8 @@ pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
 }
 
 fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
-    let body = try!(req.body().read_to_string());
+    let mut body = String::new();
+    try!(req.body().read_to_string(&mut body));
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
@@ -943,7 +975,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     }
 
     #[derive(RustcDecodable)] struct Request { users: Vec<String> }
-    let request: Request = try!(json::decode(body.as_slice()).map_err(|_| {
+    let request: Request = try!(json::decode(&body).map_err(|_| {
         human("invalid json request")
     }));
 

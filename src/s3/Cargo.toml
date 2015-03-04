@@ -10,7 +10,7 @@ name = "s3"
 path = "lib.rs"
 
 [dependencies]
-openssl = "0.3.0"
+openssl = "0.5"
 time = "0.1.0"
-curl = "0.1.0"
-rustc-serialize = "0.2"
+curl = "0.2"
+rustc-serialize = "0.3"

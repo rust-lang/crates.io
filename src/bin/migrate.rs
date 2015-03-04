@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(os, core, env)]
+#![feature(core)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate migrate;
@@ -18,14 +18,14 @@ fn main() {
     let migrations = migrations();
 
     let arg = env::args().nth(1);
-    if arg.as_ref().map(|s| s.to_str().unwrap()) == Some("rollback") {
+    if arg.as_ref().map(|s| &s[..]) == Some("rollback") {
         rollback(conn.transaction().unwrap(), migrations).unwrap();
     } else {
         apply(conn.transaction().unwrap(), migrations).unwrap();
     }
 
     fn env(s: &str) -> String {
-        match env::var_string(s).ok() {
+        match env::var(s).ok() {
             Some(s) => s,
             None => panic!("must have `{}` defined", s),
         }
@@ -455,7 +455,7 @@ fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()
                                       FROM crate_owners
                                      GROUP BY user_id, crate_id
                                     HAVING COUNT(*) > 1"));
-        try!(stmt.query(&[])).map(|row| {
+        try!(stmt.query(&[])).iter().map(|row| {
             (row.get("user_id"), row.get("crate_id"))
         }).collect()
     };

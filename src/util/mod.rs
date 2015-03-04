@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fmt;
-use std::old_io::MemReader;
-use std::old_io::process::{ProcessOutput, Command};
-use std::str;
+use std::io::{self, Cursor};
 use std::sync::Arc;
 
 use rustc_serialize::{json, Encodable};
@@ -19,14 +16,14 @@ pub use self::errors::{CargoError, CargoResult, internal, human, internal_error}
 pub use self::errors::{ChainError, std_error};
 pub use self::hasher::{HashingReader};
 pub use self::head::Head;
-pub use self::io::LimitErrorReader;
+pub use self::io_util::LimitErrorReader;
 pub use self::lazy_cell::LazyCell;
 pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
 mod hasher;
 mod head;
-mod io;
+mod io_util;
 mod lazy_cell;
 mod request_proxy;
 
@@ -49,7 +46,7 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
     return Response {
         status: (200, "OK"),
         headers: headers,
-        body: Box::new(MemReader::new(json.into_bytes())),
+        body: Box::new(Cursor::new(json.into_bytes())),
     };
 
     fn fixup(json: Json) -> Json {
@@ -90,7 +87,7 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
         Response {
             status: (302, "Found"),
             headers: headers,
-            body: Box::new(MemReader::new(Vec::new())),
+            body: Box::new(io::empty()),
         }
     }
 
@@ -156,37 +153,4 @@ impl Handler for R404 {
             Err(..) => Ok(NotFound.response().unwrap()),
         }
     }
-}
-
-pub fn exec(cmd: &Command) -> CargoResult<ProcessOutput> {
-    let output = try!(cmd.output().chain_error(|| {
-        internal(format!("failed to run command `{:?}`", cmd))
-    }));
-    if !output.status.success() {
-        let mut desc = String::new();
-        if output.output.len() != 0 {
-            desc.push_str("--- stdout\n");
-            desc.push_str(str::from_utf8(output.output.as_slice()).unwrap());
-        }
-        if output.error.len() != 0 {
-            desc.push_str("--- stderr\n");
-            desc.push_str(str::from_utf8(output.error.as_slice()).unwrap());
-        }
-        Err(internal_error(format!("failed to run command `{:?}`", cmd), desc))
-    } else {
-        Ok(output)
-    }
-}
-
-pub struct CommaSep<'a, T: 'a>(pub &'a [T]);
-
-impl<'a, T: fmt::Display> fmt::Display for CommaSep<'a, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for (i, t) in self.0.iter().enumerate() {
-            if i != 0 { try!(write!(f, ", ")); }
-            try!(write!(f, "{}", t));
-        }
-        Ok(())
-    }
-
 }

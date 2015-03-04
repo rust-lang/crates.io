@@ -53,10 +53,10 @@ impl Dependency {
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&version_id, &crate_id, &req,
-                                         &optional, &default_features,
-                                         &features, target, &(kind as i32)]));
-        Ok(Model::from_row(&rows.next().unwrap()))
+        let rows = try!(stmt.query(&[&version_id, &crate_id, &req,
+                                      &optional, &default_features,
+                                      &features, target, &(kind as i32)]));
+        Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
     pub fn git_encode(&self, crate_name: &str) -> git::Dependency {

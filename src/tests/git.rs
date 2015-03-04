@@ -1,20 +1,21 @@
-use std::old_io::fs;
+use std::fs;
 use std::env;
-use std::thread::Thread;
+use std::thread;
+use std::path::PathBuf;
 
 use git2;
 use url::Url;
 
-fn root() -> Path {
-    env::current_dir().unwrap().join("tmp").join(Thread::current().name().unwrap())
+fn root() -> PathBuf {
+    env::current_dir().unwrap().join("tmp").join(thread::current().name().unwrap())
 }
 
-pub fn checkout() -> Path { root().join("checkout") }
-pub fn bare() -> Path { root().join("bare") }
+pub fn checkout() -> PathBuf { root().join("checkout") }
+pub fn bare() -> PathBuf { root().join("bare") }
 
 pub fn init() {
-    let _ = fs::rmdir_recursive(&checkout());
-    let _ = fs::rmdir_recursive(&bare());
+    let _ = fs::remove_dir_all(&checkout());
+    let _ = fs::remove_dir_all(&bare());
     // Prepare a bare remote repo
     {
         let bare = git2::Repository::init_bare(&bare()).unwrap();
@@ -25,7 +26,7 @@ pub fn init() {
 
     // Initialize a fresh checkout
     let checkout = git2::Repository::init(&checkout()).unwrap();
-    let url = Url::from_file_path(&bare()).ok().unwrap().to_string();
+    let url = Url::from_file_path(&*bare()).ok().unwrap().to_string();
 
     // Setup the `origin` remote
     let mut origin = checkout.remote("origin", url.as_slice()).unwrap();

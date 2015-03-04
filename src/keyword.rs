@@ -5,11 +5,11 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg;
-use pg::types::ToSql;
+use pg::types::{ToSql, Slice};
 
 use {Model, Crate};
 use db::{Connection, RequestTransaction};
-use util::{RequestUtils, CargoResult, ChainError, internal, CommaSep};
+use util::{RequestUtils, CargoResult, ChainError, internal};
 use util::errors::NotFound;
 
 #[derive(Clone)]
@@ -37,8 +37,8 @@ impl Keyword {
                            -> CargoResult<Option<Keyword>> {
         let stmt = try!(conn.prepare("SELECT * FROM keywords \
                                       WHERE keyword = $1"));
-        let mut rows = try!(stmt.query(&[&name as &ToSql]));
-        Ok(rows.next().map(|r| Model::from_row(&r)))
+        let rows = try!(stmt.query(&[&name as &ToSql]));
+        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
     pub fn find_or_insert(conn: &Connection, name: &str)
@@ -55,8 +55,8 @@ impl Keyword {
                                       VALUES ($1, $2, 0) \
                                       RETURNING *"));
         let now = ::now();
-        let mut rows = try!(stmt.query(&[&name as &ToSql, &now]));
-        Ok(Model::from_row(&try!(rows.next().chain_error(|| {
+        let rows = try!(stmt.query(&[&name as &ToSql, &now]));
+        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no version returned")
         }))))
     }
@@ -97,24 +97,21 @@ impl Keyword {
         }).map(|(_, v)| v.id).collect::<Vec<_>>();
 
         if to_rm.len() > 0 {
-            try!(conn.execute(format!("UPDATE keywords
-                                          SET crates_cnt = crates_cnt - 1
-                                        WHERE id IN ({})",
-                                      CommaSep(&to_rm[])).as_slice(),
-                              &[]));
-            try!(conn.execute(format!("DELETE FROM crates_keywords
-                                        WHERE keyword_id IN ({})
-                                          AND crate_id = $1",
-                                      CommaSep(&to_rm[])).as_slice(),
-                              &[&krate.id]));
+            try!(conn.execute("UPDATE keywords
+                                  SET crates_cnt = crates_cnt - 1
+                                WHERE id = ANY($1)",
+                              &[&Slice(&to_rm)]));
+            try!(conn.execute("DELETE FROM crates_keywords
+                                WHERE keyword_id = ANY($1)
+                                  AND crate_id = $2",
+                              &[&Slice(&to_rm), &krate.id]));
         }
 
         if to_add.len() > 0 {
-            try!(conn.execute(format!("UPDATE keywords
-                                          SET crates_cnt = crates_cnt + 1
-                                        WHERE id IN ({})",
-                                      CommaSep(&to_add[])).as_slice(),
-                              &[]));
+            try!(conn.execute("UPDATE keywords
+                                  SET crates_cnt = crates_cnt + 1
+                                WHERE id = ANY($1)",
+                              &[&Slice(&to_add)]));
             let insert = to_add.iter().map(|id| {
                 let crate_id: i32 = krate.id;
                 let id: i32 = *id;
@@ -164,7 +161,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     // Query for the total count of keywords
     let stmt = try!(conn.prepare("SELECT COUNT(*) FROM keywords"));
-    let row = try!(stmt.query(&[])).next().unwrap();
+    let row = try!(stmt.query(&[])).into_iter().next().unwrap();
     let total = row.get(0);
 
     #[derive(RustcEncodable)]

@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(std_misc, core, os, io, env)]
+#![feature(std_misc, core, old_io)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -16,9 +16,9 @@ static LIMIT: i64 = 10000;
 
 #[allow(dead_code)] // dead in tests
 fn main() {
-    let daemon = env::args().nth(1).as_ref().map(|s| s.to_str().unwrap())
+    let daemon = env::args().nth(1).as_ref().map(|s| &s[..])
                     == Some("daemon");
-    let sleep = env::args().nth(2).map(|s| s.to_str().unwrap().parse::<i64>().unwrap());
+    let sleep = env::args().nth(2).map(|s| s.parse::<i64>().unwrap());
     loop {
         let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
                                                  &postgres::SslMode::None).unwrap();
@@ -38,7 +38,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match env::var_string(s).ok() {
+    match env::var(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }
@@ -74,7 +74,7 @@ fn collect(tx: &postgres::Transaction,
     let cutoff = cutoff + Duration::days(-1);
 
     let mut map = HashMap::new();
-    for row in rows.by_ref() {
+    for row in rows.iter() {
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download).is_none());
     }
@@ -150,7 +150,7 @@ mod test {
     fn crate_downloads(tx: &postgres::Transaction, id: i32, expected: usize) {
         let stmt = tx.prepare("SELECT * FROM crate_downloads
                                WHERE crate_id = $1").unwrap();
-        let dl: i32 = stmt.query(&[&id]).unwrap()
+        let dl: i32 = stmt.query(&[&id]).unwrap().iter()
                           .next().unwrap().get("downloads");
         assert_eq!(dl, expected as i32);
     }

@@ -1,4 +1,4 @@
-use std::old_io;
+use std::io;
 use std::error::Error;
 
 use conduit::{Request, Response, Handler, Method};
@@ -32,7 +32,7 @@ impl Handler for Head {
             };
             self.handler.as_ref().unwrap().call(&mut req).map(|r| {
                 Response {
-                    body: Box::new(old_io::util::NullReader),
+                    body: Box::new(io::empty()),
                     ..r
                 }
             })

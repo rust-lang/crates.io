@@ -6,6 +6,8 @@ extern crate curl;
 extern crate "rustc-serialize" as serialize;
 extern crate openssl;
 
+use std::io::prelude::*;
+
 use curl::http;
 use curl::http::body::ToBody;
 use openssl::crypto::{hmac, hash};

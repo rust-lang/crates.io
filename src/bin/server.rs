@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(io, core, path, env)]
+#![feature(core, path, fs)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
@@ -7,22 +7,23 @@ extern crate civet;
 extern crate git2;
 extern crate env_logger;
 
-use std::old_io::{self, fs, File};
+use civet::Server;
 use std::env;
+use std::fs::{self, File};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
-use civet::Server;
 
 fn main() {
     env_logger::init().unwrap();
     let url = env("GIT_REPO_URL");
-    let checkout = Path::new(env("GIT_REPO_CHECKOUT"));
+    let checkout = PathBuf::new(&env("GIT_REPO_CHECKOUT"));
 
     let repo = match git2::Repository::open(&checkout) {
         Ok(r) => r,
         Err(..) => {
-            let _ = fs::rmdir_recursive(&checkout);
-            fs::mkdir_recursive(&checkout, old_io::USER_DIR).unwrap();
+            let _ = fs::remove_dir_all(&checkout);
+            fs::create_dir_all(&checkout).unwrap();
             let mut cb = git2::RemoteCallbacks::new();
             cb.credentials(cargo_registry::git::credentials);
             git2::build::RepoBuilder::new()
@@ -34,7 +35,7 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
-    let heroku = env::var("HEROKU").is_some();
+    let heroku = env::var("HEROKU").is_ok();
     let cargo_env = if heroku {
         cargo_registry::Env::Production
     } else {
@@ -44,7 +45,7 @@ fn main() {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
         s3_secret_key: env("S3_SECRET_KEY"),
-        s3_region: env::var_string("S3_REGION").ok(),
+        s3_region: env::var("S3_REGION").ok(),
         s3_proxy: None,
         session_key: env("SESSION_KEY"),
         git_repo_checkout: checkout,
@@ -60,13 +61,13 @@ fn main() {
     let port = if heroku {
         8888
     } else {
-        env::var_string("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
+        env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
     let threads = if cargo_env == cargo_registry::Env::Development {1} else {8};
     let _a = Server::start(civet::Config { port: port, threads: threads }, app);
     println!("listening on port {}", port);
     if heroku {
-        File::create(&Path::new("/tmp/app-initialized")).unwrap();
+        File::create("/tmp/app-initialized").unwrap();
     }
 
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
@@ -75,7 +76,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match env::var_string(s).ok() {
+    match env::var(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }

@@ -8,4 +8,4 @@ name = "migrate"
 path = "lib.rs"
 
 [dependencies]
-postgres = "0.5"
+postgres = "0.7"

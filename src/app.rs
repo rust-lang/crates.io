@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::default::Default;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use conduit::Request;
@@ -18,7 +18,7 @@ pub struct App {
     pub s3_proxy: Option<String>,
     pub session_key: String,
     pub git_repo: Mutex<git2::Repository>,
-    pub git_repo_checkout: Path,
+    pub git_repo_checkout: PathBuf,
     pub config: Config,
 }
 
@@ -35,11 +35,10 @@ impl App {
             "https://github.com/login/oauth/access_token",
         );
 
-        let db_config = r2d2::Config {
-            pool_size: if config.env == ::Env::Production {10} else {1},
-            helper_threads: if config.env == ::Env::Production {3} else {1},
-            .. Default::default()
-        };
+        let db_config = r2d2::Config::builder()
+            .pool_size(if config.env == ::Env::Production {10} else {1})
+            .helper_threads(if config.env == ::Env::Production {3} else {1})
+            .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
         return App {

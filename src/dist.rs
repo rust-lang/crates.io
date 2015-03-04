@@ -15,7 +15,7 @@ impl Middleware {
     pub fn new() -> Middleware {
         Middleware {
             handler: None,
-            dist: Static::new(Path::new("dist")),
+            dist: Static::new("dist"),
         }
     }
 }

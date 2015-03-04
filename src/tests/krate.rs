@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::old_io::fs::PathExtensions;
-use std::old_io::{self, fs, File, MemWriter};
+use std::io::prelude::*;
+use std::fs::{self, File};
 use std::iter::repeat;
 use std::sync::Arc;
 
@@ -177,11 +177,16 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
 
 fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
     let json = json::encode(&new_crate).unwrap();
-    let mut body = MemWriter::new();
-    body.write_le_u32(json.len() as u32).unwrap();
-    body.write_str(json.as_slice()).unwrap();
-    body.write_le_u32(0).unwrap();
-    body.into_inner()
+    let mut body = Vec::new();
+    body.extend([
+        (json.len() >>  0) as u8,
+        (json.len() >>  8) as u8,
+        (json.len() >> 16) as u8,
+        (json.len() >> 24) as u8,
+    ].iter().cloned());
+    body.extend(json.as_bytes().iter().cloned());
+    body.extend([0, 0, 0, 0].iter().cloned());
+    body
 }
 
 #[test]
@@ -352,7 +357,7 @@ fn new_crate_owner() {
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)
-                                               .with_body(&body[])));
+                                               .with_body(&body)));
     ::json::<GoodCrate>(&mut response);
 }
 
@@ -406,12 +411,13 @@ fn new_krate_git_upload() {
 
     let path = ::git::checkout().join("3/f/foo");
     assert!(path.exists());
-    let contents = File::open(&path).read_to_string().unwrap();
-    let p: GitCrate = json::decode(contents.as_slice()).unwrap();
-    assert_eq!(p.name.as_slice(), "foo");
-    assert_eq!(p.vers.as_slice(), "1.0.0");
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    let p: GitCrate = json::decode(&contents).unwrap();
+    assert_eq!(p.name, "foo");
+    assert_eq!(p.vers, "1.0.0");
     assert!(p.deps.is_empty());
-    assert_eq!(p.cksum.as_slice(),
+    assert_eq!(p.cksum,
                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 }
 
@@ -419,27 +425,27 @@ fn new_krate_git_upload() {
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/foo");
-    fs::mkdir_recursive(&path.dir_path(), old_io::USER_RWX).unwrap();
-    File::create(&path).write_str(
-        r#"{"name":"FOO","vers":"0.0.1","deps":[],"cksum":"3j3"}
-"#
-    ).unwrap();
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    File::create(&path).unwrap().write_all(
+        br#"{"name":"FOO","vers":"0.0.1","deps":[],"cksum":"3j3"}
+"#).unwrap();
 
     let mut req = new_req(app, "FOO", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let contents = File::open(&path).read_to_string().unwrap();
-    let mut lines = contents.as_slice().lines();
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    let mut lines = contents.lines();
     let p1: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
     let p2: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
     assert!(lines.next().is_none());
-    assert_eq!(p1.name.as_slice(), "FOO");
-    assert_eq!(p1.vers.as_slice(), "0.0.1");
+    assert_eq!(p1.name, "FOO");
+    assert_eq!(p1.vers, "0.0.1");
     assert!(p1.deps.is_empty());
-    assert_eq!(p2.name.as_slice(), "FOO");
-    assert_eq!(p2.vers.as_slice(), "1.0.0");
+    assert_eq!(p2.name, "FOO");
+    assert_eq!(p2.vers, "1.0.0");
     assert!(p2.deps.is_empty());
 }
 
@@ -652,8 +658,9 @@ fn yank() {
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
-    assert!(File::open(&path).read_to_string().unwrap().as_slice()
-                             .contains("\"yanked\":false"));
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    assert!(contents.contains("\"yanked\":false"));
 
     // make sure it's not yanked
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
@@ -664,8 +671,9 @@ fn yank() {
     let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
                                         .with_path("/api/v1/crates/foo/1.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
-    assert!(File::open(&path).read_to_string().unwrap().as_slice()
-                             .contains("\"yanked\":true"));
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    assert!(contents.contains("\"yanked\":true"));
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
                                         .with_path("/api/v1/crates/foo/1.0.0")));
     assert!(::json::<V>(&mut r).version.yanked);
@@ -674,8 +682,9 @@ fn yank() {
     let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
                                         .with_path("/api/v1/crates/foo/1.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
-    assert!(File::open(&path).read_to_string().unwrap().as_slice()
-                             .contains("\"yanked\":false"));
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    assert!(contents.contains("\"yanked\":false"));
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
                                         .with_path("/api/v1/crates/foo/1.0.0")));
     assert!(!::json::<V>(&mut r).version.yanked);
@@ -781,7 +790,7 @@ fn author_license_and_description_required() {
         license_file: None,
         repository: None,
     };
-    req.with_body(&new_crate_to_body(&new_crate)[]);
+    req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&
@@ -790,7 +799,7 @@ fn author_license_and_description_required() {
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
-    req.with_body(&new_crate_to_body(&new_crate)[]);
+    req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&
@@ -800,7 +809,7 @@ fn author_license_and_description_required() {
     new_crate.license = None;
     new_crate.license_file = Some("foo".to_string());
     new_crate.authors.push("foo".to_string());
-    req.with_body(&new_crate_to_body(&new_crate)[]);
+    req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(!json.errors[0].detail.as_slice().contains("author") &&
             json.errors[0].detail.as_slice().contains("description") &&

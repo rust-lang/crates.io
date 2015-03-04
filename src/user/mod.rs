@@ -5,7 +5,7 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg::types::ToSql;
+use pg::types::{ToSql, Slice};
 use pg;
 use rand::{thread_rng, Rng};
 use rustc_serialize::json;
@@ -15,7 +15,7 @@ use app::RequestApp;
 use db::{Connection, RequestTransaction};
 use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, internal, ChainError, human, CommaSep};
+use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 
 pub use self::middleware::{Middleware, RequestUser};
@@ -50,8 +50,8 @@ impl User {
     pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       WHERE gh_login = $1"));
-        let mut rows = try!(stmt.query(&[&login as &ToSql]));
-        let row = try!(rows.next().chain_error(|| {
+        let rows = try!(stmt.query(&[&login as &ToSql]));
+        let row = try!(rows.iter().next().chain_error(|| {
             NotFound
         }));
         Ok(Model::from_row(&row))
@@ -60,7 +60,7 @@ impl User {
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
-        return try!(stmt.query(&[&token as &ToSql])).next()
+        return try!(stmt.query(&[&token as &ToSql])).iter().next()
                         .map(|r| Model::from_row(&r)).chain_error(|| {
             NotFound
         })
@@ -84,10 +84,10 @@ impl User {
                                           gh_avatar = $4
                                       WHERE gh_login = $5
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&access_token as &ToSql,
-                                         &email, &name, &avatar,
-                                         &login as &ToSql]));
-        match rows.next() {
+        let rows = try!(stmt.query(&[&access_token as &ToSql,
+                                     &email, &name, &avatar,
+                                     &login as &ToSql]));
+        match rows.iter().next() {
             Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
         }
@@ -96,12 +96,12 @@ impl User {
                                        gh_login, name, gh_avatar)
                                       VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *"));
-        let mut rows = try!(stmt.query(&[&email as &ToSql,
-                                         &access_token as &ToSql,
-                                         &api_token as &ToSql,
-                                         &login as &ToSql,
-                                         &name, &avatar]));
-        Ok(Model::from_row(&try!(rows.next().chain_error(|| {
+        let rows = try!(stmt.query(&[&email as &ToSql,
+                                     &access_token as &ToSql,
+                                     &api_token as &ToSql,
+                                     &login as &ToSql,
+                                     &name, &avatar]));
+        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
         }))))
     }
@@ -264,10 +264,8 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let mut map = HashMap::new();
     let mut crates = Vec::new();
     if crate_ids.len() > 0 {
-        let sql = format!("SELECT * FROM crates WHERE id IN ({})",
-                          CommaSep(&crate_ids[]));
-        let stmt = try!(tx.prepare(sql.as_slice()));
-        for row in try!(stmt.query(&[])) {
+        let stmt = try!(tx.prepare("SELECT * FROM crates WHERE id = ANY($1)"));
+        for row in try!(stmt.query(&[&Slice(&crate_ids)])) {
             let krate: Crate = Model::from_row(&row);
             map.insert(krate.id, krate.name.clone());
             crates.push(krate);
@@ -285,7 +283,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
     let stmt = try!(tx.prepare(sql.as_slice()));
     let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
-                  .next().is_some();
+                  .iter().next().is_some();
 
     #[derive(RustcEncodable)]
     struct R {

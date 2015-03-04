@@ -6,7 +6,7 @@
 //      cargo run --bin delete-version crate-name version-number
 
 #![deny(warnings)]
-#![feature(io, core, os, env)]
+#![feature(core, old_io)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn env(s: &str) -> String {
-    match env::var_string(s).ok() {
+    match env::var(s).ok() {
         Some(s) => s,
         None => panic!("must have `{}` defined", s),
     }
@@ -39,13 +39,13 @@ fn env(s: &str) -> String {
 fn delete(tx: &postgres::Transaction) {
     let name = match env::args().nth(1) {
         None => { println!("needs a crate-name argument"); return }
-        Some(s) => s.into_string().unwrap(),
+        Some(s) => s,
     };
     let version = match env::args().nth(2) {
         None => { println!("needs a version argument"); return }
-        Some(s) => s.into_string().unwrap(),
+        Some(s) => s,
     };
-    let version = semver::Version::parse(&version[]).unwrap();
+    let version = semver::Version::parse(&version).unwrap();
 
     let krate = Crate::find_by_name(tx, name.as_slice()).unwrap();
     let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
