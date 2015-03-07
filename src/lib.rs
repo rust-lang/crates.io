@@ -1,10 +1,10 @@
-#![feature(io, path, core, fs)]
+#![feature(io, path, core, fs_time)]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, feature(old_io, old_path))]
 
 extern crate conduit;
 extern crate "conduit-mime-types" as mime;
 extern crate time;
+#[cfg(test)] extern crate tempdir;
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -13,8 +13,6 @@ use std::io::prelude::*;
 use std::path::{PathBuf, AsPath};
 use std::fs::File;
 use conduit::{Request, Response, Handler};
-
-#[cfg(test)] mod tempdir;
 
 pub struct Static {
     path: PathBuf,
