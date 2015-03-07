@@ -55,7 +55,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
         // Add the crate to its relevant file
         try!(fs::create_dir_all(dst.parent().unwrap()));
         let mut prev = String::new();
-        if dst.exists() {
+        if fs::metadata(&dst).is_ok() {
             try!(File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev)));
         }
         let s = json::encode(krate).unwrap();

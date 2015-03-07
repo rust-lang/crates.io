@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(core, path, fs)]
+#![feature(core, path)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate "conduit-middleware" as conduit_middleware;
