@@ -446,7 +446,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }).or_else(|| {
         query.get("letter").map(|letter| {
             pattern = format!("{}%", letter.as_slice().char_at(0)
-                                           .to_lowercase());
+                                           .to_lowercase().collect::<String>());
             needs_pattern = true;
             (format!("SELECT * FROM crates WHERE lower(name) LIKE $1 {}
                       LIMIT $2 OFFSET $3", sort_sql),

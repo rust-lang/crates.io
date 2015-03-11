@@ -34,7 +34,7 @@ pub struct Dependency {
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {
-    let name = name.chars().map(|c| c.to_lowercase()).collect::<String>();
+    let name = name.to_lowercase();
     match name.len() {
         1 => base.join("1").join(&name),
         2 => base.join("2").join(&name),
