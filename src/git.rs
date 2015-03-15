@@ -48,7 +48,7 @@ fn index_file(base: &Path, name: &str) -> PathBuf {
 pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;
-    let repo_path = repo.workdir().unwrap().parent().unwrap();
+    let repo_path = repo.workdir().unwrap();
     let dst = index_file(&repo_path, krate.name.as_slice());
 
     commit_and_push(repo, || {
@@ -105,7 +105,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
 fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
     where F: FnMut() -> CargoResult<(String, PathBuf)>
 {
-    let repo_path = repo.workdir().unwrap().parent().unwrap();
+    let repo_path = repo.workdir().unwrap();
 
     // Attempt to commit in a loop. It's possible that we're going to need to
     // rebase our repository, and after that it's possible that we're going to
@@ -116,8 +116,10 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
         // git add $file
         let mut index = try!(repo.index());
-        println!("{:?} {:?}", dst, repo_path);
-        try!(index.add_path(dst.relative_from(&repo_path).unwrap()));
+        let mut repo_path = repo_path.iter();
+        let dst = dst.iter().skip_while(|s| Some(*s) == repo_path.next())
+                     .collect::<PathBuf>();
+        try!(index.add_path(&dst));
         try!(index.write());
         let tree_id = try!(index.write_tree());
         let tree = try!(repo.find_tree(tree_id));

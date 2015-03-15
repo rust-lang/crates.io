@@ -2,12 +2,12 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{BufReader, BufStream};
+use std::io::{self, BufReader, BufStream};
 use std::net::{TcpListener, TcpStream};
-use std::old_io::{ChanReader, ChanWriter, stdio};
 use std::path::PathBuf;
 use std::str;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 use curl::http;
@@ -18,7 +18,16 @@ pub struct Bomb {
     accept: TcpListener,
     quit: Sender<()>,
     rx: Receiver<()>,
-    iorx: ChanReader,
+    iorx: Sink,
+}
+
+struct Sink(Arc<Mutex<Vec<u8>>>);
+
+impl Write for Sink {
+    fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        Write::write(&mut *self.0.lock().unwrap(), data)
+    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
 impl Drop for Bomb {
@@ -26,7 +35,8 @@ impl Drop for Bomb {
         t!(self.quit.send(()));
         drop(TcpStream::connect(&t!(self.accept.socket_addr())));
         let res = self.rx.recv();
-        let stderr = t!(self.iorx.read_to_string());
+        let stderr = str::from_utf8(&self.iorx.0.lock().unwrap()).unwrap()
+                         .to_string();
         match res {
             Err(..) if !thread::panicking() => {
                 panic!("server subtask failed: {}", stderr)
@@ -50,17 +60,16 @@ pub fn proxy() -> (String, Bomb) {
 
     let data = PathBuf::new(file!()).parent().unwrap().join("http-data")
                                     .join(&me.replace("::", "_"));
+    println!("{:?}", data);
     let record = record && !data.exists();
     let a2 = t!(a.try_clone());
 
-    let (iotx, iorx) = channel();
-    let (iotx, iorx) = (ChanWriter::new(iotx), ChanReader::new(iorx));
+    let sink = Arc::new(Mutex::new(Vec::new()));
+    let mut sink2 = Sink(sink.clone());
 
     let (quittx, quitrx) = channel();
 
     thread::spawn(move|| {
-        stdio::set_stderr(Box::new(iotx.clone()));
-        stdio::set_stdout(Box::new(iotx));
         let mut file = None;
         for socket in a.incoming() {
             if quitrx.try_recv().is_ok() { break }
@@ -78,7 +87,7 @@ pub fn proxy() -> (String, Bomb) {
             if record {
                 record_http(socket, file.as_mut().unwrap());
             } else {
-                replay_http(socket, file.as_mut().unwrap());
+                replay_http(socket, file.as_mut().unwrap(), &mut sink2);
             }
         }
         match file {
@@ -92,7 +101,7 @@ pub fn proxy() -> (String, Bomb) {
         tx.send(()).unwrap();
     });
 
-    (ret, Bomb { accept: a2, rx: rx, iorx: iorx, quit: quittx })
+    (ret, Bomb { accept: a2, rx: rx, iorx: Sink(sink), quit: quittx })
 }
 
 fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
@@ -166,7 +175,8 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
     }
 }
 
-fn replay_http(socket: TcpStream, data: &mut BufStream<File>) {
+fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
+               stdout: &mut Write) {
     let mut writer = socket.try_clone().unwrap();
     let socket = BufReader::new(socket);
 
@@ -188,9 +198,9 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>) {
                                                       .take_while(|l| l.len() > 2)
                                                       .collect();
     let mut found = HashSet::new();
-    println!("expecting: {:?}", expected);
+    t!(write!(stdout, "expecting: {:?}", expected));
     for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
-        println!("received: {}", line.as_slice().trim());
+        t!(write!(stdout, "received: {}", line.as_slice().trim()));
         if !found.insert(line.clone()) { continue }
         if expected.remove(&line) { continue }
         if line.starts_with("Date:") { continue }

@@ -1,4 +1,4 @@
-#![feature(collections, core, std_misc, io, path, unicode, net)]
+#![feature(collections, core, std_misc, io, net)]
 
 #[macro_use] extern crate log;
 extern crate "postgres" as pg;

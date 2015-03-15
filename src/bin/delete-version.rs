@@ -6,7 +6,7 @@
 //      cargo run --bin delete-version crate-name version-number
 
 #![deny(warnings)]
-#![feature(core, old_io)]
+#![feature(core)]
 
 extern crate "cargo-registry" as cargo_registry;
 extern crate postgres;
@@ -14,7 +14,7 @@ extern crate time;
 extern crate semver;
 
 use std::env;
-use std::old_io;
+use std::io;
 
 use cargo_registry::{Crate, Version};
 
@@ -51,7 +51,8 @@ fn delete(tx: &postgres::Transaction) {
     let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
     print!("Are you sure you want to delete {}#{} ({}) [y/N]: ", name, version,
            v.id);
-    let line = old_io::stdin().read_line().unwrap();
+    let mut line = String::new();
+    io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { return }
 
     println!("deleting version {} ({})", v.num, v.id);
@@ -68,7 +69,8 @@ fn delete(tx: &postgres::Transaction) {
                &[&v.id]).unwrap();
 
     print!("commit? [y/N]: ");
-    let line = old_io::stdin().read_line().unwrap();
+    let mut line = String::new();
+    io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { panic!("aborting transaction"); }
 }
 

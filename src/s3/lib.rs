@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(core, io)]
+#![feature(core)]
 
 extern crate time;
 extern crate curl;

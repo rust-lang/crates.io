@@ -30,7 +30,11 @@ fn main() {
         }
         drop(conn);
         if daemon {
-            std::old_io::timer::sleep(Duration::seconds(sleep.unwrap()));
+            #[allow(deprecated)]
+            fn do_sleep(sleep: Option<i64>) {
+                std::old_io::timer::sleep(Duration::seconds(sleep.unwrap()));
+            }
+            do_sleep(sleep);
         } else {
             break
         }
