@@ -1,11 +1,11 @@
-#![feature(core, io, alloc, net)]
+#![feature(core, alloc)]
 
 extern crate semver;
 
 use std::io::prelude::*;
 use std::collections::HashMap;
 use std::error::Error;
-use std::net::IpAddr;
+use std::net::SocketAddr;
 
 pub use self::typemap::TypeMap;
 mod typemap;
@@ -19,7 +19,7 @@ pub enum Scheme {
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Host<'a> {
     Name(&'a str),
-    Ip(IpAddr)
+    Socket(SocketAddr)
 }
 
 #[derive(PartialEq, Hash, Eq, Debug, Clone, Copy)]
@@ -73,7 +73,7 @@ pub trait Request {
 
     /// The remote IP address of the client or the last proxy that
     /// sent the request.
-    fn remote_ip(&self) -> IpAddr;
+    fn remote_addr(&self) -> SocketAddr;
 
     /// The byte-size of the body, if any
     fn content_length(&self) -> Option<u64>;
