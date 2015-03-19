@@ -1,5 +1,5 @@
 #![feature(core)]
-#![cfg_attr(test, feature(io, net))]
+#![cfg_attr(test, feature(io))]
 
 extern crate conduit;
 
@@ -94,7 +94,7 @@ mod tests {
     use std::error::Error;
     use std::io::{self, Cursor};
     use std::io::prelude::*;
-    use std::net::IpAddr;
+    use std::net::SocketAddr;
 
     use conduit;
     use conduit::{Request, Response, Host, Headers, Method, Scheme, Extensions};
@@ -127,7 +127,7 @@ mod tests {
             self.path.as_slice()
         }
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn remote_ip(&self) -> IpAddr { unimplemented!() }
+        fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
         fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
         fn body<'a>(&'a mut self) -> &'a mut Read { unimplemented!() }
