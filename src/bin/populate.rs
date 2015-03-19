@@ -43,7 +43,7 @@ fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
         let mut rng = StdRng::new().unwrap();
         let mut dls = rng.gen_range(5000i32, 10000);
 
-        for day in range(0, 90) {
+        for day in 0..90 {
             let moment = now + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
             try!(tx.execute("INSERT INTO version_downloads \

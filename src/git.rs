@@ -111,7 +111,7 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
     // rebase our repository, and after that it's possible that we're going to
     // race to commit the changes. For now we just cap out the maximum number of
     // retries at a fixed number.
-    for _ in range(0, 20) {
+    for _ in 0..20 {
         let (msg, dst) = try!(f());
 
         // git add $file
@@ -154,10 +154,10 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
         // Ok, we need to update, so fetch and reset --hard
         try!(origin.add_fetch("refs/heads/*:refs/heads/*"));
-        try!(origin.fetch(&[], None, None));
+        try!(origin.fetch(&[], None));
         let head = try!(repo.head()).target().unwrap();
         let obj = try!(repo.find_object(head, None));
-        try!(repo.reset(&obj, git2::ResetType::Hard, None, None, None));
+        try!(repo.reset(&obj, git2::ResetType::Hard, None));
     }
 
     Err(internal("Too many rebase failures"))

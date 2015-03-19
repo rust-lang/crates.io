@@ -33,7 +33,7 @@ impl Write for Sink {
 impl Drop for Bomb {
     fn drop(&mut self) {
         t!(self.quit.send(()));
-        drop(TcpStream::connect(&t!(self.accept.socket_addr())));
+        drop(TcpStream::connect(&t!(self.accept.local_addr())));
         let res = self.rx.recv();
         let stderr = str::from_utf8(&self.iorx.0.lock().unwrap()).unwrap()
                          .to_string();
@@ -55,7 +55,7 @@ pub fn proxy() -> (String, Bomb) {
     let record = env::var("RECORD").is_ok();
 
     let a = t!(TcpListener::bind("127.0.0.1:0"));
-    let ret = format!("http://{}", t!(a.socket_addr()));
+    let ret = format!("http://{}", t!(a.local_addr()));
     let (tx, rx) = channel();
 
     let data = PathBuf::new(file!()).parent().unwrap().join("http-data")
@@ -188,7 +188,7 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
 
     let mut expected = Vec::new();
     t!(data.take(request_size).read_to_end(&mut expected));
-    let mut expected_lines = SliceExt::split(&expected[..], |b| *b == b'\n')
+    let mut expected_lines = <[_]>::split(&expected[..], |b| *b == b'\n')
                                      .map(|s| str::from_utf8(s).unwrap())
                                      .map(|s| format!("{}", s));
     let mut actual_lines = socket.lines().map(|s| s.unwrap());
@@ -223,7 +223,7 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
     let response_size = response.next().unwrap().trim().parse().unwrap();
     let mut response = Vec::new();
     data.take(response_size).read_to_end(&mut response).unwrap();
-    let lines = SliceExt::split(&response[..], |b| *b == b'\n')
+    let lines = <[_]>::split(&response[..], |b| *b == b'\n')
                         .map(|s| str::from_utf8(s).unwrap());
     for line in lines {
         if line.starts_with("Date:") { continue }

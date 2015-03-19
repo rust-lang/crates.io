@@ -1,5 +1,5 @@
 use std::io::Read;
-use std::net::IpAddr;
+use std::net::SocketAddr;
 
 use conduit;
 use conduit::Request;
@@ -32,7 +32,7 @@ impl<'a> Request for RequestProxy<'a> {
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()
     }
-    fn remote_ip(&self) -> IpAddr { self.other.remote_ip() }
+    fn remote_addr(&self) -> SocketAddr { self.other.remote_addr() }
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
