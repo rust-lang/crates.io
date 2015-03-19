@@ -1,5 +1,4 @@
 #![feature(core, std_misc)]
-#![cfg_attr(test, feature(io, net))]
 
 extern crate "route-recognizer" as router;
 extern crate conduit;
@@ -125,7 +124,7 @@ mod tests {
     extern crate semver;
     use std::collections::HashMap;
     use std::io;
-    use std::net::IpAddr;
+    use std::net::SocketAddr;
 
     use {RouteBuilder, RequestParams};
 
@@ -159,7 +158,7 @@ mod tests {
             self.path.as_slice()
         }
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn remote_ip(&self) -> IpAddr { unimplemented!() }
+        fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
         fn headers<'a>(&'a self) -> &'a Headers { unimplemented!() }
         fn body<'a>(&'a mut self) -> &'a mut io::Read { unimplemented!() }
