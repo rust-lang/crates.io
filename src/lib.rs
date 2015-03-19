@@ -1,4 +1,4 @@
-#![feature(io, core, net)]
+#![feature(core)]
 
 extern crate semver;
 extern crate conduit;
@@ -6,7 +6,7 @@ extern crate conduit;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::Cursor;
-use std::net::IpAddr;
+use std::net::{SocketAddr, Ipv4Addr, SocketAddrV4};
 
 use semver::Version;
 use conduit::{Method, Scheme, Host, Extensions, Headers, TypeMap};
@@ -109,8 +109,8 @@ impl conduit::Request for MockRequest {
         self.query_string.as_ref().map(|s| s.as_slice())
     }
 
-    fn remote_ip(&self) -> IpAddr {
-        IpAddr::new_v4(127, 0, 0, 1)
+    fn remote_addr(&self) -> SocketAddr {
+        SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80))
     }
 
     fn content_length(&self) -> Option<u64> {
@@ -142,7 +142,7 @@ mod tests {
     use super::MockRequest;
     use semver::Version;
 
-    use std::old_io::net::ip::Ipv4Addr;
+    use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
 
     use conduit::{Request, Method, Host, Scheme};
 
@@ -158,11 +158,14 @@ mod tests {
         assert_eq!(req.virtual_root(), None);
         assert_eq!(req.path(), "/");
         assert_eq!(req.query_string(), None);
-        assert_eq!(req.remote_ip(), Ipv4Addr(127, 0, 0, 1));
+        assert_eq!(req.remote_addr(),
+                   SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1),
+                                                    80)));
         assert_eq!(req.content_length(), None);
         assert_eq!(req.headers().all().len(), 0);
-        assert_eq!(req.body().read_to_string().ok().expect("No body"),
-                   "".to_string());
+        let mut s = String::new();
+        req.body().read_to_string(&mut s).ok().expect("No body");
+        assert_eq!(s, "".to_string());
     }
 
     #[test]
@@ -172,8 +175,9 @@ mod tests {
 
         assert_eq!(req.method(), Method::Post);
         assert_eq!(req.path(), "/articles");
-        assert_eq!(req.body().read_to_string().ok().expect("No body"),
-                   "Hello world".to_string());
+        let mut s = String::new();
+        req.body().read_to_string(&mut s).ok().expect("No body");
+        assert_eq!(s, "Hello world".to_string());
         assert_eq!(req.content_length(), Some(11));
     }
 
