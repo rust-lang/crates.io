@@ -402,6 +402,28 @@ fn new_crate_similar_name() {
 }
 
 #[test]
+fn new_crate_similar_name_hyphen() {
+    {
+        let (_b, app, middle) = ::app();
+        let mut req = new_req(app, "foo-bar", "1.1.0");
+        ::mock_user(&mut req, ::user("foo"));
+        ::mock_crate(&mut req, ::krate("foo_bar"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.as_slice().contains("previously named"),
+                "{:?}", json.errors);
+    }
+    {
+        let (_b, app, middle) = ::app();
+        let mut req = new_req(app, "foo_bar", "1.1.0");
+        ::mock_user(&mut req, ::user("foo"));
+        ::mock_crate(&mut req, ::krate("foo-bar"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.as_slice().contains("previously named"),
+                "{:?}", json.errors);
+    }
+}
+
+#[test]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "1.0.0");

@@ -84,7 +84,8 @@ impl Crate {
 
     pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
-                                      WHERE lower(name) = lower($1) LIMIT 1"));
+                                      WHERE canon_crate_name(name) =
+                                            canon_crate_name($1) LIMIT 1"));
         let row = try!(stmt.query(&[&name as &ToSql])).into_iter().next();
         let row = try!(row.chain_error(|| NotFound));
         Ok(Model::from_row(&row))
@@ -136,7 +137,8 @@ impl Crate {
                                              keywords = $5,
                                              license = $6,
                                              repository = $7
-                                       WHERE lower(name) = lower($8)
+                                       WHERE canon_crate_name(name) =
+                                             canon_crate_name($8)
                                    RETURNING *"));
         let rows = try!(stmt.query(&[&documentation, &homepage,
                                      &description, &readme, &keywords,
@@ -448,9 +450,10 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             pattern = format!("{}%", letter.as_slice().char_at(0)
                                            .to_lowercase().collect::<String>());
             needs_pattern = true;
-            (format!("SELECT * FROM crates WHERE lower(name) LIKE $1 {}
-                      LIMIT $2 OFFSET $3", sort_sql),
-             "SELECT COUNT(*) FROM crates WHERE lower(name) LIKE $1".to_string())
+            (format!("SELECT * FROM crates WHERE canon_crate_name(name) \
+                      LIKE $1 {} LIMIT $2 OFFSET $3", sort_sql),
+             "SELECT COUNT(*) FROM crates WHERE canon_crate_name(name) \
+              LIKE $1".to_string())
         })
     }).or_else(|| {
         query.get("keyword").map(|kw| {
@@ -789,7 +792,8 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                 FROM crates
                                 INNER JOIN versions ON
                                     crates.id = versions.crate_id
-                                WHERE lower(crates.name) = lower($1)
+                                WHERE canon_crate_name(crates.name) =
+                                      canon_crate_name($1)
                                   AND versions.num = $2
                                 LIMIT 1"));
     let rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));

@@ -418,6 +418,28 @@ fn migrations() -> Vec<Migration> {
                              crate_owners_unique_user_per_crate", &[]));
             Ok(())
         }),
+        Migration::new(20150319224700, |tx| {
+            try!(tx.execute("
+                CREATE FUNCTION canon_crate_name(text) RETURNS text AS $$
+                    SELECT replace(lower($1), '-', '_')
+                $$ LANGUAGE SQL
+            ", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP FUNCTION canon_crate_name(text)", &[]));
+            Ok(())
+        }),
+        Migration::new(20150319224701, |tx| {
+            try!(tx.execute("DROP INDEX index_crates_name", &[]));
+            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (canon_crate_name(name))", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP INDEX index_crates_name", &[]));
+            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (lower(name))", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
