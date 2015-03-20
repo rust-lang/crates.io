@@ -3,8 +3,8 @@ name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.1.0"
 
-[profile.dev]
-debug = false
+[profile.release]
+opt-level = 2
 
 [lib]
 name = "cargo-registry"
