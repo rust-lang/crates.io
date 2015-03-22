@@ -463,7 +463,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                 ON crates.id = crates_keywords.crate_id
                         INNER JOIN keywords
                                 ON crates_keywords.keyword_id = keywords.id
-                        WHERE keywords.keyword = $1";
+                        WHERE lower(keywords.keyword) = lower($1)";
             (format!("SELECT crates.* {} {} LIMIT $2 OFFSET $3", base, sort_sql),
              format!("SELECT COUNT(crates.*) {}", base))
         })
