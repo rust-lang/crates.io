@@ -440,6 +440,14 @@ fn migrations() -> Vec<Migration> {
                              ON crates (lower(name))", &[]));
             Ok(())
         }),
+        Migration::new(20150320174400, |tx| {
+            try!(tx.execute("CREATE INDEX index_keywords_lower_keyword ON keywords (lower(keyword))",
+                            &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP INDEX index_keywords_lower_keyword", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
