@@ -2,6 +2,7 @@ use std::fs;
 use std::env;
 use std::thread;
 use std::path::PathBuf;
+use std::sync::{Once, ONCE_INIT};
 
 use git2;
 use url::Url;
@@ -14,8 +15,14 @@ pub fn checkout() -> PathBuf { root().join("checkout") }
 pub fn bare() -> PathBuf { root().join("bare") }
 
 pub fn init() {
+    static INIT: Once = ONCE_INIT;
     let _ = fs::remove_dir_all(&checkout());
     let _ = fs::remove_dir_all(&bare());
+
+    INIT.call_once(|| {
+        fs::create_dir_all(root().parent().unwrap()).unwrap();
+    });
+
     // Prepare a bare remote repo
     {
         let bare = git2::Repository::init_bare(&bare()).unwrap();
