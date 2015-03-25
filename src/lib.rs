@@ -1,4 +1,3 @@
-#![feature(core)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate time;
@@ -55,27 +54,27 @@ fn is_fresh(req: &Request, res: &conduit::Response) -> bool {
     let mut success = true;
 
     modified_since.and_then(|modified_since| {
-        parse_http_date(modified_since).map_err(|_| { success = false; }).ok()
+        parse_http_date(&modified_since).map_err(|_| { success = false; }).ok()
     }).map(|parsed| {
         success = success && is_modified_since(parsed, res);
     });
 
     none_match.map(|none_match| {
-        success = success && etag_matches(none_match, res);
+        success = success && etag_matches(&none_match, res);
     });
 
     success
 }
 
-fn etag_matches<S: Str>(none_match: S, res: &conduit::Response) -> bool {
+fn etag_matches(none_match: &str, res: &conduit::Response) -> bool {
     res.headers.get("ETag").map(|etag| {
-        res_header_val(etag).as_slice() == none_match.as_slice()
+        res_header_val(etag) == none_match
     }).unwrap_or(false)
 }
 
 fn is_modified_since(modified_since: Tm, res: &conduit::Response) -> bool {
     res.headers.get("Last-Modified").and_then(|last_modified| {
-        parse_http_date(res_header_val(last_modified).as_slice()).ok()
+        parse_http_date(&res_header_val(last_modified)).ok()
     }).map(|last_modified| {
         modified_since.to_timespec() >= last_modified.to_timespec()
     }).unwrap_or(false)
@@ -91,15 +90,13 @@ fn header_val<'a>(header: Vec<&'a str>) -> Cow<'a, str> {
 
 fn res_header_val<'a>(header: &'a Vec<String>) -> Cow<'a, str> {
     if header.len() == 1 {
-        Cow::Borrowed(header[0].as_slice())
+        Cow::Borrowed(&header[0])
     } else {
         Cow::Owned(header.concat())
     }
 }
 
-fn parse_http_date<S: Str>(string: S) -> Result<Tm, ()> {
-    let string = string.as_slice();
-
+fn parse_http_date(string: &str) -> Result<Tm, ()> {
     parse_rfc1123(string)
         .or_else(|_| parse_rfc850(string))
         .or_else(|_| parse_asctime(string))
@@ -150,7 +147,7 @@ mod tests {
     macro_rules! request {
         ($($header:expr => $value:expr),+) => ({
             let mut req = test::MockRequest::new(Method::Get, "/");
-            $(req.header($header, $value.to_string().as_slice());)+
+            $(req.header($header, &$value.to_string());)+
             req
         })
     }
@@ -247,7 +244,7 @@ mod tests {
         response.body.read_to_string(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, (304, "Not Modified"));
-        assert_eq!(body.as_slice(), "");
+        assert_eq!(body, "");
     }
 
     fn expect_200(response: Result<Response, Box<Error+Send>>) {
@@ -260,7 +257,7 @@ mod tests {
         response.body.read_to_string(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, status);
-        assert_eq!(body.as_slice(), "hello");
+        assert_eq!(body, "hello");
     }
 
     struct SimpleHandler {
