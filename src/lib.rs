@@ -1,8 +1,8 @@
-#![feature(core, fs_time, std_misc)]
+#![feature(fs_time, convert)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate conduit;
-extern crate "conduit-mime-types" as mime;
+extern crate conduit_mime_types as mime;
 extern crate time;
 #[cfg(test)] extern crate tempdir;
 
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::io;
 use std::io::prelude::*;
-use std::path::{PathBuf, AsPath};
+use std::path::{PathBuf, Path};
 use std::fs::File;
 use conduit::{Request, Response, Handler};
 
@@ -20,9 +20,9 @@ pub struct Static {
 }
 
 impl Static {
-    pub fn new<P: AsPath + ?Sized>(path: &P) -> Static {
+    pub fn new<P: AsRef<Path>>(path: P) -> Static {
         Static {
-            path: path.as_path().to_path_buf(),
+            path: path.as_ref().to_path_buf(),
             types: mime::Types::new()
                 .ok().expect("Couldn't load mime-types")
         }
@@ -76,7 +76,7 @@ fn not_found() -> Response {
 
 #[cfg(test)]
 mod tests {
-    extern crate "conduit-test" as test;
+    extern crate conduit_test as test;
 
     use std::fs::{self, File};
     use std::io::prelude::*;

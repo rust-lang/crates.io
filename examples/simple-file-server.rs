@@ -1,6 +1,6 @@
 extern crate civet;
 extern crate conduit;
-extern crate "conduit-static" as conduit_static;
+extern crate conduit_static;
 
 use std::env;
 use std::sync::mpsc::channel;
