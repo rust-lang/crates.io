@@ -1,6 +1,4 @@
-#![feature(core, std_misc)]
-
-extern crate "route-recognizer" as router;
+extern crate route_recognizer as router;
 extern crate conduit;
 
 use std::collections::hash_map::{HashMap, Entry};
@@ -18,6 +16,7 @@ pub struct RouteBuilder {
 unsafe impl Sync for RouteBuilder {}
 unsafe impl Send for RouteBuilder {}
 
+#[derive(Debug)]
 pub struct RouterError(String);
 
 impl RouteBuilder {
@@ -95,7 +94,7 @@ impl conduit::Handler for RouteBuilder {
 }
 
 impl Error for RouterError {
-    fn description(&self) -> &str { self.0.as_slice() }
+    fn description(&self) -> &str { &self.0 }
 }
 
 impl fmt::Display for RouterError {
@@ -154,9 +153,7 @@ mod tests {
         fn scheme(&self) -> Scheme { unimplemented!() }
         fn host<'a>(&'a self) -> Host<'a> { unimplemented!() }
         fn virtual_root<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn path<'a>(&'a self) -> &'a str {
-            self.path.as_slice()
-        }
+        fn path<'a>(&'a self) -> &'a str { &self.path }
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
         fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
