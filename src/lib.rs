@@ -2,7 +2,7 @@
 
 extern crate time;
 extern crate conduit;
-extern crate "conduit-middleware" as middleware;
+extern crate conduit_middleware as middleware;
 
 use conduit::{Request, Method};
 use middleware::Middleware;
@@ -117,14 +117,13 @@ fn parse_asctime(string: &str) -> Result<Tm, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    extern crate "conduit-test" as test;
+    extern crate conduit_test as test;
 
     use std::collections::HashMap;
     use std::error::Error;
     use std::io::Cursor;
     use time;
     use time::Tm;
-    use conduit;
     use conduit::{Request, Response, Handler, Method};
     use middleware::MiddlewareBuilder;
 
@@ -157,7 +156,7 @@ mod tests {
         let handler = returning!("Last-Modified" => httpdate(time::now()));
         expect_304(handler.call(&mut request!(
             "If-Modified-Since" => httpdate(time::now())
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -165,7 +164,7 @@ mod tests {
         let handler = returning!("Last-Modified" => before_now());
         expect_304(handler.call(&mut request!(
             "If-Modified-Since" => httpdate(time::now())
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -173,7 +172,7 @@ mod tests {
         let handler = returning!("ETag" => "1234");
         expect_304(handler.call(&mut request!(
             "If-None-Match" => "1234"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -182,7 +181,7 @@ mod tests {
         expect_200(handler.call(&mut request!(
             "If-Modified-Since" => now(),
             "If-None-Match" => "4321"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -191,7 +190,7 @@ mod tests {
         expect_200(handler.call(&mut request!(
             "If-Modified-Since" => before_now(),
             "If-None-Match" => "1234"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -199,7 +198,7 @@ mod tests {
         let handler = returning!("ETag" => "1234");
         expect_200(handler.call(&mut request!(
             "If-None-Match" => "4321"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -207,7 +206,7 @@ mod tests {
         let handler = returning!("Last-Modified" => now());
         expect_200(handler.call(&mut request!(
             "If-Modified-Since" => before_now()
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -216,7 +215,7 @@ mod tests {
         expect_304(handler.call(&mut request!(
             "If-Modified-Since" => now(),
             "If-None-Match" => "1234"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -226,7 +225,7 @@ mod tests {
         expect(code, handler.call(&mut request!(
             "If-Modified-Since" => now(),
             "If-None-Match" => "1234"
-        ) as &mut conduit::Request));
+        )));
     }
 
     #[test]
@@ -235,7 +234,7 @@ mod tests {
         let handler = returning!("Last-Modified" => before_now());
         expect_200(handler.call(&mut request!(
             "If-Modified-Since" => bad_stamp
-        ) as &mut conduit::Request));
+        )));
     }
 
     fn expect_304(response: Result<Response, Box<Error+Send>>) {
