@@ -1,3 +1,4 @@
+#![allow(trivial_casts)]
 #![feature(fs_time, convert)]
 #![cfg_attr(test, deny(warnings))]
 
