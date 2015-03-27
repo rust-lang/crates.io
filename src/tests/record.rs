@@ -58,7 +58,7 @@ pub fn proxy() -> (String, Bomb) {
     let ret = format!("http://{}", t!(a.local_addr()));
     let (tx, rx) = channel();
 
-    let data = PathBuf::new(file!()).parent().unwrap().join("http-data")
+    let data = PathBuf::from(file!()).parent().unwrap().join("http-data")
                                     .join(&me.replace("::", "_"));
     println!("{:?}", data);
     let record = record && !data.exists();
@@ -125,21 +125,21 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
         {
             let mut lines = (&mut socket).lines();
             let line = t!(lines.next().unwrap());
-            let mut parts = line.as_slice().split(' ');
+            let mut parts = line.split(' ');
             method = parts.next().unwrap().to_string();
             url = parts.next().unwrap().replace("http://", "https://");
 
             for line in lines {
                 let line = t!(line);
                 if line.len() < 3 { break }
-                let mut parts = line.as_slice().splitn(1, ':');
+                let mut parts = line.splitn(1, ':');
                 headers.insert(parts.next().unwrap().to_string(),
                                parts.next().unwrap()[1..].to_string());
             }
         }
 
         let mut handle = http::handle();
-        let mut req = match method.as_slice() {
+        let mut req = match &method[..] {
             "PUT" => handle.put(url, &mut socket),
             "POST" => handle.post(url, &mut socket),
             "DELETE" => handle.delete(url),
@@ -147,8 +147,8 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
             _ => panic!("unknown method: {}", method),
         };
         for (k, v) in headers.iter() {
-            let v = v.as_slice().trim();
-            match k.as_slice() {
+            let v = v.trim();
+            match &k[..] {
                 "Content-Length" => req = req.content_length(v.parse().unwrap()),
                 "Content-Type" => req = req.content_type(v),
                 "Transfer-Encoding" => {}
@@ -162,7 +162,7 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
         t!(socket.write_all(format!("HTTP/1.1 {}\r\n",
                                     response.get_code()).as_bytes()));
         for (k, v) in response.get_headers().iter() {
-            if k.as_slice() == "transfer-encoding" { continue }
+            if *k == "transfer-encoding" { continue }
             for v in v.iter() {
                 t!(socket.write_all(k.as_bytes()));
                 t!(socket.write_all(b": "));
@@ -200,7 +200,7 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
     let mut found = HashSet::new();
     t!(write!(stdout, "expecting: {:?}", expected));
     for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
-        t!(write!(stdout, "received: {}", line.as_slice().trim()));
+        t!(write!(stdout, "received: {}", line.trim()));
         if !found.insert(line.clone()) { continue }
         if expected.remove(&line) { continue }
         if line.starts_with("Date:") { continue }

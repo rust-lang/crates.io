@@ -29,8 +29,8 @@ pub struct AppMiddleware {
 impl App {
     pub fn new(config: &Config) -> App {
         let github = oauth2::Config::new(
-            config.gh_client_id.as_slice(),
-            config.gh_client_secret.as_slice(),
+            &config.gh_client_id,
+            &config.gh_client_secret,
             "https://github.com/login/oauth/authorize",
             "https://github.com/login/oauth/access_token",
         );
@@ -42,7 +42,7 @@ impl App {
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
         return App {
-            database: db::pool(config.db_url.as_slice(), db_config),
+            database: db::pool(&config.db_url, db_config),
             github: github,
             bucket: s3::Bucket::new(config.s3_bucket.clone(),
                                     config.s3_region.clone(),
@@ -71,12 +71,12 @@ impl Middleware for AppMiddleware {
     }
 }
 
-pub trait RequestApp<'a> {
-    fn app(self) -> &'a Arc<App>;
+pub trait RequestApp {
+    fn app(&self) -> &Arc<App>;
 }
 
-impl<'a> RequestApp<'a> for &'a (Request + 'a) {
-    fn app(self) -> &'a Arc<App> {
+impl<'a> RequestApp for Request + 'a {
+    fn app(&self) -> &Arc<App> {
         self.extensions().find::<Arc<App>>()
             .expect("Missing app")
     }

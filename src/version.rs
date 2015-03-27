@@ -6,7 +6,7 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg;
-use pg::types::{ToSql, Slice};
+use pg::types::Slice;
 use semver;
 use url;
 
@@ -90,7 +90,7 @@ impl Version {
             internal("no version returned")
         })));
         for author in authors.iter() {
-            try!(ret.add_author(conn, author.as_slice()));
+            try!(ret.add_author(conn, &author));
         }
         Ok(ret)
     }
@@ -128,9 +128,9 @@ impl Version {
     pub fn add_dependency(&mut self, conn: &Connection,
                           dep: &upload::CrateDependency)
                           -> CargoResult<(Dependency, Crate)> {
-        let name = dep.name.as_slice();
+        let name = &dep.name;
         let krate = try!(Crate::find_by_name(conn, name).map_err(|_| {
-            human(format!("no known crate named `{}`", name))
+            human(format!("no known crate named `{}`", &**name))
         }));
         let features: Vec<String> = dep.features.iter().map(|s| {
             s[..].to_string()
@@ -140,7 +140,7 @@ impl Version {
                                           dep.kind.unwrap_or(Kind::Normal),
                                           dep.optional,
                                           dep.default_features,
-                                          features.as_slice(),
+                                          &features,
                                           &dep.target));
         Ok((dep, krate))
     }
@@ -177,7 +177,7 @@ impl Version {
         println!("add author: {}", name);
         // TODO: at least try to link `name` to a pre-existing user
         try!(conn.execute("INSERT INTO version_authors (version_id, name)
-                           VALUES ($1, $2)", &[&self.id, &name as &ToSql]));
+                           VALUES ($1, $2)", &[&self.id, &name]));
         Ok(())
     }
 
@@ -193,12 +193,12 @@ impl Model for Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {
-            json::decode(s.as_slice()).unwrap()
+            json::decode(&s).unwrap()
         }).unwrap_or_else(|| HashMap::new());
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
-            num: semver::Version::parse(num.as_slice()).unwrap(),
+            num: semver::Version::parse(&num).unwrap(),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
@@ -261,12 +261,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(RustcEncodable)]
     struct R { version: EncodableVersion }
-    Ok(req.json(&R { version: version.encodable(krate.name.as_slice()) }))
+    Ok(req.json(&R { version: version.encodable(&krate.name) }))
 }
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
-    let crate_name = req.params()["crate_id"].as_slice();
-    let semver = req.params()["version"].as_slice();
+    let crate_name = &req.params()["crate_id"];
+    let semver = &req.params()["version"];
     let semver = try!(semver::Version::parse(semver).map_err(|_| {
         human(format!("invalid semver: {}", semver))
     }));
@@ -285,7 +285,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let deps = try!(version.dependencies(tx));
     let deps = deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(crate_name.as_slice())
+        dep.encodable(&crate_name)
     }).collect();
 
     #[derive(RustcEncodable)]
@@ -349,7 +349,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
 
     if version.yanked != yanked {
         try!(version.yank(tx, yanked));
-        try!(git::yank(&**req.app(), krate.name.as_slice(), &version.num, yanked));
+        try!(git::yank(&**req.app(), &krate.name, &version.num, yanked));
     }
 
     #[derive(RustcEncodable)]

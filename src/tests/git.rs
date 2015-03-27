@@ -36,8 +36,8 @@ pub fn init() {
     let url = Url::from_file_path(&*bare()).ok().unwrap().to_string();
 
     // Setup the `origin` remote
-    let mut origin = checkout.remote("origin", url.as_slice()).unwrap();
-    origin.set_pushurl(Some(url.as_slice())).unwrap();
+    let mut origin = checkout.remote("origin", &url).unwrap();
+    origin.set_pushurl(Some(&url)).unwrap();
     origin.add_push("refs/heads/master").unwrap();
     origin.save().unwrap();
 

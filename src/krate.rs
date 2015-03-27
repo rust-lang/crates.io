@@ -86,7 +86,7 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE canon_crate_name(name) =
                                             canon_crate_name($1) LIMIT 1"));
-        let row = try!(stmt.query(&[&name as &ToSql])).into_iter().next();
+        let row = try!(stmt.query(&[&name])).into_iter().next();
         let row = try!(row.chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
@@ -101,13 +101,13 @@ impl Crate {
                           repository: &Option<String>,
                           license: &Option<String>,
                           license_file: &Option<String>) -> CargoResult<Crate> {
-        let description = description.as_ref().map(|s| s.as_slice());
-        let homepage = homepage.as_ref().map(|s| s.as_slice());
-        let documentation = documentation.as_ref().map(|s| s.as_slice());
-        let readme = readme.as_ref().map(|s| s.as_slice());
-        let repository = repository.as_ref().map(|s| s.as_slice());
-        let mut license = license.as_ref().map(|s| s.as_slice());
-        let license_file = license_file.as_ref().map(|s| s.as_slice());
+        let description = description.as_ref().map(|s| &s[..]);
+        let homepage = homepage.as_ref().map(|s| &s[..]);
+        let documentation = documentation.as_ref().map(|s| &s[..]);
+        let readme = readme.as_ref().map(|s| &s[..]);
+        let repository = repository.as_ref().map(|s| &s[..]);
+        let mut license = license.as_ref().map(|s| &s[..]);
+        let license_file = license_file.as_ref().map(|s| &s[..]);
         let keywords = keywords.connect(",");
         try!(validate_url(homepage));
         try!(validate_url(documentation));
@@ -143,7 +143,7 @@ impl Crate {
         let rows = try!(stmt.query(&[&documentation, &homepage,
                                      &description, &readme, &keywords,
                                      &license, &repository,
-                                     &name as &ToSql]));
+                                     &name]));
         match rows.iter().next() {
             Some(row) => return Ok(Model::from_row(&row)),
             None => {}
@@ -165,7 +165,7 @@ impl Crate {
                                               $4, $5, $6, $7, $8, $9, $10)
                                       RETURNING *"));
         let now = ::now();
-        let rows = try!(stmt.query(&[&name as &ToSql, &user_id, &now,
+        let rows = try!(stmt.query(&[&name, &user_id, &now,
                                      &description, &homepage,
                                      &documentation, &readme, &keywords,
                                      &repository, &license]));
@@ -188,7 +188,7 @@ impl Crate {
                 Ok(url) => url,
                 Err(..) => return Err(human(format!("not a valid url: {}", url)))
             };
-            match url.scheme.as_slice() {
+            match &url.scheme[..] {
                 "http" | "https" => {}
                 _ => return Err(human(format!("not a valid url scheme: {}", url)))
             }
@@ -407,8 +407,8 @@ impl Model for Crate {
             documentation: row.get("documentation"),
             homepage: row.get("homepage"),
             readme: row.get("readme"),
-            max_version: semver::Version::parse(max.as_slice()).unwrap(),
-            keywords: kws.unwrap_or(String::new()).as_slice().split(',')
+            max_version: semver::Version::parse(&max).unwrap(),
+            keywords: kws.unwrap_or(String::new()).split(',')
                          .filter(|s| !s.is_empty())
                          .map(|s| s.to_string()).collect(),
             license: row.get("license"),
@@ -418,11 +418,12 @@ impl Model for Crate {
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
 }
 
+#[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
-    let sort = query.get("sort").map(|s| s.as_slice()).unwrap_or("alpha");
+    let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
     let sort_sql = match sort {
         "downloads" => "ORDER BY crates.downloads DESC",
         _ => "ORDER BY crates.name ASC",
@@ -434,9 +435,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut pattern = String::new();
     let mut id = -1;
     let (mut needs_id, mut needs_pattern) = (false, false);
-    let mut args = vec![&limit as &ToSql, &offset as &ToSql];
+    let mut args = vec![&limit as &ToSql, &offset];
     let (q, cnt) = query.get("q").map(|query| {
-        args.insert(0, query as &ToSql);
+        args.insert(0, query);
         ("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
                                ts_rank_cd(textsearchable_index_col, q) rank
@@ -447,7 +448,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
           WHERE q @@ textsearchable_index_col".to_string())
     }).or_else(|| {
         query.get("letter").map(|letter| {
-            pattern = format!("{}%", letter.as_slice().char_at(0)
+            pattern = format!("{}%", letter.char_at(0)
                                            .to_lowercase().collect::<String>());
             needs_pattern = true;
             (format!("SELECT * FROM crates WHERE canon_crate_name(name) \
@@ -457,7 +458,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         })
     }).or_else(|| {
         query.get("keyword").map(|kw| {
-            args.insert(0, kw as &ToSql);
+            args.insert(0, kw);
             let base = "FROM crates
                         INNER JOIN crates_keywords
                                 ON crates.id = crates_keywords.crate_id
@@ -505,21 +506,21 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         if id == -1 {
             id = try!(req.user()).id;
         }
-        args.insert(0, &id as &ToSql);
+        args.insert(0, &id);
     } else if needs_pattern {
-        args.insert(0, &pattern as &ToSql);
+        args.insert(0, &pattern);
     }
 
     // Collect all the crates
-    let stmt = try!(conn.prepare(q.as_slice()));
+    let stmt = try!(conn.prepare(&q));
     let mut crates = Vec::new();
-    for row in try!(stmt.query(args.as_slice())) {
+    for row in try!(stmt.query(&args)) {
         let krate: Crate = Model::from_row(&row);
         crates.push(krate.encodable(None));
     }
 
     // Query for the total count of crates
-    let stmt = try!(conn.prepare(cnt.as_slice()));
+    let stmt = try!(conn.prepare(&cnt));
     let args = if args.len() > 2 {&args[..1]} else {&args[..0]};
     let row = try!(stmt.query(args)).into_iter().next().unwrap();
     let total = row.get(0);
@@ -584,7 +585,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());
-    let krate = try!(Crate::find_by_name(conn, name.as_slice()));
+    let krate = try!(Crate::find_by_name(conn, &name));
     let versions = try!(krate.versions(conn));
     let ids = versions.iter().map(|v| v.id).collect();
     let kws = try!(krate.keywords(conn));
@@ -598,7 +599,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R {
         krate: krate.clone().encodable(Some(ids)),
         versions: versions.into_iter().map(|v| {
-            v.encodable(krate.name.as_slice())
+            v.encodable(&krate.name)
         }).collect(),
         keywords: kws.into_iter().map(|k| k.encodable()).collect(),
     }))
@@ -608,12 +609,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
 
     let (new_crate, user) = try!(parse_new_headers(req));
-    let name = new_crate.name.as_slice();
+    let name = &*new_crate.name;
     let vers = &*new_crate.vers;
     let features = new_crate.features.iter().map(|(k, v)| {
         (k[..].to_string(), v.iter().map(|v| v[..].to_string()).collect())
     }).collect::<HashMap<String, Vec<String>>>();
-    let keywords = new_crate.keywords.as_ref().map(|s| s.as_slice())
+    let keywords = new_crate.keywords.as_ref().map(|s| &s[..])
                                      .unwrap_or(&[]);
     let keywords = keywords.iter().map(|k| k[..].to_string()).collect::<Vec<_>>();
 
@@ -623,7 +624,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.homepage,
                                                &new_crate.documentation,
                                                &new_crate.readme,
-                                               keywords.as_slice(),
+                                               &keywords,
                                                &new_crate.repository,
                                                &new_crate.license,
                                                &new_crate.license_file));
@@ -640,13 +641,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     // Persist the new version of this crate
     let mut version = try!(krate.add_version(try!(req.tx()), vers, &features,
-                                             new_crate.authors.as_slice()));
+                                             &new_crate.authors));
 
     // Link this new version to all dependencies
     let mut deps = Vec::new();
     for dep in new_crate.deps.iter() {
         let (dep, krate) = try!(version.add_dependency(try!(req.tx()), dep));
-        deps.push(dep.git_encode(krate.name.as_slice()));
+        deps.push(dep.git_encode(&krate.name));
     }
 
     // Update all keywords for this crate
@@ -686,8 +687,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         fn drop(&mut self) {
             match self.path {
                 Some(ref path) => {
-                    let _ = self.app.bucket.delete(&mut self.handle,
-                                                   path.as_slice())
+                    let _ = self.app.bucket.delete(&mut self.handle, &path)
                                 .exec();
                 }
                 None => {}
@@ -700,7 +700,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let git_crate = git::Crate {
         name: name.to_string(),
         vers: vers.to_string(),
-        cksum: cksum.as_slice().to_hex(),
+        cksum: cksum.to_hex(),
         features: features,
         deps: deps,
         yanked: Some(false),
@@ -723,7 +723,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
         human("missing header: Content-Length")
     }));
     let max = req.app().config.max_upload_size;
-    if length > max as u64 {
+    if length > max {
         return Err(human(format!("max upload size is: {}", max)))
     }
 
@@ -785,8 +785,8 @@ fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
 }
 
 pub fn download(req: &mut Request) -> CargoResult<Response> {
-    let crate_name = req.params()["crate_id"].as_slice();
-    let version = req.params()["version"].as_slice();
+    let crate_name = &req.params()["crate_id"];
+    let version = &req.params()["version"];
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT versions.id as version_id
                                 FROM crates
@@ -796,7 +796,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                       canon_crate_name($1)
                                   AND versions.num = $2
                                 LIMIT 1"));
-    let rows = try!(stmt.query(&[&crate_name as &ToSql, &version as &ToSql]));
+    let rows = try!(stmt.query(&[crate_name, version]));
     let row = try!(rows.iter().next().chain_error(|| {
         human("crate or version not found")
     }));
@@ -840,7 +840,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    let crate_name = req.params()["crate_id"].as_slice();
+    let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     let mut versions = try!(krate.versions(tx));
@@ -892,7 +892,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
 fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
     let user = try!(req.user());
-    let crate_name = req.params()["crate_id"].as_slice();
+    let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     Ok((user.clone(), krate))
@@ -936,7 +936,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn versions(req: &mut Request) -> CargoResult<Response> {
-    let crate_name = req.params()["crate_id"].as_slice();
+    let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     let versions = try!(krate.versions(tx));
@@ -949,7 +949,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
 }
 
 pub fn owners(req: &mut Request) -> CargoResult<Response> {
-    let crate_name = req.params()["crate_id"].as_slice();
+    let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     let owners = try!(krate.owners(tx));
@@ -988,12 +988,12 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.iter().any(|u| u.gh_login == *login) {
                 return Err(human(format!("user `{}` is already an owner", login)))
             }
-            try!(krate.owner_add(tx, user.id, login.as_slice()));
+            try!(krate.owner_add(tx, user.id, &login));
         } else {
-            if login.as_slice() == user.gh_login.as_slice() {
+            if *login == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            try!(krate.owner_remove(tx, user.id, login.as_slice()));
+            try!(krate.owner_remove(tx, user.id, &login));
         }
     }
 
@@ -1005,12 +1005,12 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());
-    let krate = try!(Crate::find_by_name(conn, name.as_slice()));
+    let krate = try!(Crate::find_by_name(conn, &name));
     let tx = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
     let (rev_deps, total) = try!(krate.reverse_dependencies(tx, offset, limit));
     let rev_deps = rev_deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(crate_name.as_slice())
+        dep.encodable(&crate_name)
     }).collect();
 
     #[derive(RustcEncodable)]

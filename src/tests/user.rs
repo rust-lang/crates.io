@@ -20,7 +20,7 @@ fn auth_gives_a_token() {
     let mut req = MockRequest::new(Method::Get, "/authorize_url");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: AuthResponse = ::json(&mut response);
-    assert!(json.url.as_slice().contains(json.state.as_slice()));
+    assert!(json.url.contains(&json.state));
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn access_token_needs_data() {
     let mut req = MockRequest::new(Method::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: ::Bad = ::json(&mut response);
-    assert!(json.errors[0].detail.as_slice().contains("invalid state"));
+    assert!(json.errors[0].detail.contains("invalid state"));
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn user_insert() {
     let user2 = t!(User::find_or_insert(&tx, "foo", None, None, None,
                                         "baz", "api"));
     assert!(user != user2);
-    assert_eq!(user2.gh_access_token.as_slice(), "baz");
+    assert_eq!(user2.gh_access_token, "baz");
 }
 
 #[test]

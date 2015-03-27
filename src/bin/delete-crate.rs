@@ -6,10 +6,9 @@
 //      cargo run --bin delete-crate crate-name
 
 #![deny(warnings)]
-#![feature(core)]
 
 #[macro_use]
-extern crate "cargo-registry" as cargo_registry;
+extern crate cargo_registry;
 extern crate postgres;
 extern crate time;
 
@@ -19,7 +18,7 @@ use std::io;
 use cargo_registry::Crate;
 
 fn main() {
-    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
@@ -42,7 +41,7 @@ fn delete(tx: &postgres::Transaction) {
         Some(s) => s,
     };
 
-    let krate = Crate::find_by_name(tx, name.as_slice()).unwrap();
+    let krate = Crate::find_by_name(tx, &name).unwrap();
     print!("Are you sure you want to delete {} ({}) [y/N]: ", name, krate.id);
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();

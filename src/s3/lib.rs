@@ -1,9 +1,8 @@
 #![deny(warnings)]
-#![feature(core)]
 
 extern crate time;
 extern crate curl;
-extern crate "rustc-serialize" as serialize;
+extern crate rustc_serialize;
 extern crate openssl;
 
 use std::io::prelude::*;
@@ -11,7 +10,7 @@ use std::io::prelude::*;
 use curl::http;
 use curl::http::body::ToBody;
 use openssl::crypto::{hmac, hash};
-use serialize::base64::{ToBase64, STANDARD};
+use rustc_serialize::base64::{ToBase64, STANDARD};
 
 pub struct Bucket {
     name: String,
@@ -43,12 +42,12 @@ impl Bucket {
         let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
-        let auth = self.auth("PUT", date.as_slice(), path, "", content_type);
+        let auth = self.auth("PUT", &date, path, "", content_type);
         let url = format!("{}://{}/{}", self.proto, host, path);
-        handle.put(url.as_slice(), content)
-              .header("Host", host.as_slice())
-              .header("Date", date.as_slice())
-              .header("Authorization", auth.as_slice())
+        handle.put(&url[..], content)
+              .header("Host", &host)
+              .header("Date", &date)
+              .header("Authorization", &auth)
               .content_type(content_type)
     }
 
@@ -57,12 +56,12 @@ impl Bucket {
         let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
-        let auth = self.auth("DELETE", date.as_slice(), path, "", "");
+        let auth = self.auth("DELETE", &date, path, "", "");
         let url = format!("{}://{}/{}", self.proto, host, path);
-        handle.delete(url.as_slice())
-              .header("Host", host.as_slice())
-              .header("Date", date.as_slice())
-              .header("Authorization", auth.as_slice())
+        handle.delete(&url[..])
+              .header("Host", &host)
+              .header("Date", &date)
+              .header("Authorization", &auth)
     }
 
     pub fn host(&self) -> String {
@@ -85,7 +84,7 @@ impl Bucket {
         let signature = {
             let mut hmac = hmac::HMAC::new(hash::Type::SHA1, self.secret_key.as_bytes());
             let _ = hmac.write_all(string.as_bytes());
-            hmac.finish().as_slice().to_base64(STANDARD)
+            hmac.finish().to_base64(STANDARD)
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

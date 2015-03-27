@@ -50,7 +50,7 @@ fn update_crate() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/keywords/foo");
     let cnt = |req: &mut MockRequest, kw: &str| {
-        req.with_path(format!("/api/v1/keywords/{}", kw).as_slice());
+        req.with_path(&format!("/api/v1/keywords/{}", kw));
         let mut response = ok_resp!(middle.call(req));
         ::json::<GoodKeyword>(&mut response).keyword.crates_cnt as usize
     };

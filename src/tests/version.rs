@@ -27,7 +27,7 @@ fn index() {
     let (v1, v2) = {
         ::mock_user(&mut req, ::user("foo"));
         let (c, _) = ::mock_crate(&mut req, ::krate("foo"));
-        let req = &mut req as &mut Request;
+        let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         let m = HashMap::new();
         let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, &[]).unwrap();
@@ -47,11 +47,11 @@ fn show() {
     let v = {
         ::mock_user(&mut req, ::user("foo"));
         let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
-        let req = &mut req as &mut Request;
+        let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), &[]).unwrap()
     };
-    req.with_path(format!("/api/v1/versions/{}", v.id).as_slice());
+    req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionResponse = ::json(&mut response);
     assert_eq!(json.version.id, v.id);

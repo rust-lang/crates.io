@@ -1,7 +1,7 @@
 #![deny(warnings)]
 #![feature(core)]
 
-extern crate "cargo-registry" as cargo_registry;
+extern crate cargo_registry;
 extern crate migrate;
 extern crate postgres;
 
@@ -13,7 +13,7 @@ use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
 
 fn main() {
-    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
     let migrations = migrations();
 
@@ -74,10 +74,10 @@ fn migrations() -> Vec<Migration> {
             num             VARCHAR NOT NULL
         "),
         Migration::run(20140924115329,
-                       format!("ALTER TABLE versions ADD CONSTRAINT \
-                                unique_num UNIQUE (package_id, num)"),
-                       format!("ALTER TABLE versions DROP CONSTRAINT \
-                                unique_num")),
+                       &format!("ALTER TABLE versions ADD CONSTRAINT \
+                                 unique_num UNIQUE (package_id, num)"),
+                       &format!("ALTER TABLE versions DROP CONSTRAINT \
+                                 unique_num")),
         Migration::add_table(20140924120803, "version_dependencies", "
             version_id      INTEGER NOT NULL,
             depends_on_id   INTEGER NOT NULL
@@ -466,7 +466,7 @@ fn migrations() -> Vec<Migration> {
                           table = table, col = column, reference = references);
         let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
                           table = table, col = column);
-        Migration::run(id, add.as_slice(), rm.as_slice())
+        Migration::run(id, &add, &rm)
     }
 
     fn index(id: i64, table: &str, column: &str) -> Migration {
@@ -475,7 +475,7 @@ fn migrations() -> Vec<Migration> {
                           table = table, column = column);
         let rm = format!("DROP INDEX index_{table}_{column}",
                          table = table, column = column);
-        Migration::run(id, add.as_slice(), rm.as_slice())
+        Migration::run(id, &add, &rm)
     }
 }
 

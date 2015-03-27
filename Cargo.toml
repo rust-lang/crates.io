@@ -7,7 +7,7 @@ version = "0.1.0"
 opt-level = 2
 
 [lib]
-name = "cargo-registry"
+name = "cargo_registry"
 test = false
 doctest = false
 
@@ -41,7 +41,7 @@ path = "src/tests/all.rs"
 [dependencies]
 s3 = { path = "src/s3" }
 migrate = { path = "src/migrate" }
-rand = "0.2"
+rand = "0.3"
 time = "0.1"
 git2 = "0.2"
 flate2 = "0.2"
@@ -53,8 +53,8 @@ r2d2_postgres = "0.8"
 openssl = "0.5"
 curl = "0.2"
 oauth2 = "0.1"
-log = "0.2"
-env_logger = "0.2"
+log = "0.3"
+env_logger = "0.3"
 rustc-serialize = "0.3"
 
 conduit = "0.7"

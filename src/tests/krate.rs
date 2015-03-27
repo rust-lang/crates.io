@@ -118,7 +118,7 @@ fn show() {
     middle.add(::middleware::MockUser(::user("foo")));
     middle.add(::middleware::MockCrate(krate.clone()));
     let mut req = MockRequest::new(Method::Get,
-                                   format!("/api/v1/crates/{}", krate.name).as_slice());
+                                   &format!("/api/v1/crates/{}", krate.name));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);
     assert_eq!(json.krate.name, krate.name);
@@ -133,7 +133,7 @@ fn show() {
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
     let suffix = "/api/v1/crates/foo/1.0.0/download";
-    assert!(json.versions[0].dl_path.as_slice().ends_with(suffix),
+    assert!(json.versions[0].dl_path.ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
 }
 
@@ -155,7 +155,7 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
                 deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(new_req_body(krate, version, deps).as_slice());
+    req.with_body(&new_req_body(krate, version, deps));
     return req;
 }
 
@@ -221,7 +221,7 @@ fn new_bad_names() {
         ::mock_user(&mut req, ::user("foo"));
         ::logout(&mut req);
         let json = bad_resp!(middle.call(&mut req));
-        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+        assert!(json.errors[0].detail.contains("invalid crate name"),
                 "{:?}", json.errors);
     }
 
@@ -235,11 +235,11 @@ fn new_krate() {
     let mut req = new_req(app, "foo", "1.0.0");
     let user = ::mock_user(&mut req, ::user("foo"));
     ::logout(&mut req);
-    req.header("Authorization", user.api_token.as_slice());
+    req.header("Authorization", &user.api_token);
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name.as_slice(), "foo");
-    assert_eq!(json.krate.max_version.as_slice(), "1.0.0");
+    assert_eq!(json.krate.name, "foo");
+    assert_eq!(json.krate.max_version, "1.0.0");
 }
 
 #[test]
@@ -248,11 +248,11 @@ fn new_krate_weird_version() {
     let mut req = new_req(app, "foo", "0.0.0-pre");
     let user = ::mock_user(&mut req, ::user("foo"));
     ::logout(&mut req);
-    req.header("Authorization", user.api_token.as_slice());
+    req.header("Authorization", &user.api_token);
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name.as_slice(), "foo");
-    assert_eq!(json.krate.max_version.as_slice(), "0.0.0-pre");
+    assert_eq!(json.krate.name, "foo");
+    assert_eq!(json.krate.max_version, "0.0.0-pre");
 }
 
 #[test]
@@ -302,7 +302,7 @@ fn new_krate_wrong_user() {
     ::mock_user(&mut req, ::user("bar"));
 
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("another user"),
+    assert!(json.errors[0].detail.contains("another user"),
             "{:?}", json.errors);
 }
 
@@ -314,14 +314,14 @@ fn new_krate_bad_name() {
         let mut req = new_req(app.clone(), "snow☃", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
-        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+        assert!(json.errors[0].detail.contains("invalid crate name"),
                 "{:?}", json.errors);
     }
     {
         let mut req = new_req(app, "áccênts", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
-        assert!(json.errors[0].detail.as_slice().contains("invalid crate name"),
+        assert!(json.errors[0].detail.contains("invalid crate name"),
                 "{:?}", json.errors);
     }
 }
@@ -390,7 +390,7 @@ fn new_krate_duplicate_version() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("already uploaded"),
+    assert!(json.errors[0].detail.contains("already uploaded"),
             "{:?}", json.errors);
 }
 
@@ -401,7 +401,7 @@ fn new_crate_similar_name() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("Foo"));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("previously named"),
+    assert!(json.errors[0].detail.contains("previously named"),
             "{:?}", json.errors);
 }
 
@@ -413,7 +413,7 @@ fn new_crate_similar_name_hyphen() {
         ::mock_user(&mut req, ::user("foo"));
         ::mock_crate(&mut req, ::krate("foo_bar"));
         let json = bad_resp!(middle.call(&mut req));
-        assert!(json.errors[0].detail.as_slice().contains("previously named"),
+        assert!(json.errors[0].detail.contains("previously named"),
                 "{:?}", json.errors);
     }
     {
@@ -422,7 +422,7 @@ fn new_crate_similar_name_hyphen() {
         ::mock_user(&mut req, ::user("foo"));
         ::mock_crate(&mut req, ::krate("foo-bar"));
         let json = bad_resp!(middle.call(&mut req));
-        assert!(json.errors[0].detail.as_slice().contains("previously named"),
+        assert!(json.errors[0].detail.contains("previously named"),
                 "{:?}", json.errors);
     }
 }
@@ -511,7 +511,7 @@ fn new_krate_dependency_missing() {
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let json = ::json::<::Bad>(&mut response);
-    assert!(json.errors[0].detail.as_slice()
+    assert!(json.errors[0].detail
                 .contains("no known crate named `bar`"));
 }
 
@@ -554,7 +554,7 @@ fn download_bad() {
     middle.add(::middleware::MockUser(user.clone()));
     middle.add(::middleware::MockCrate(krate.clone()));
     let rel = format!("/api/v1/crates/{}/0.1.0/download", krate.name);
-    let mut req = MockRequest::new(Method::Get, rel.as_slice());
+    let mut req = MockRequest::new(Method::Get, &rel);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }
@@ -818,18 +818,18 @@ fn author_license_and_description_required() {
     };
     req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("author") &&
-            json.errors[0].detail.as_slice().contains("description") &&
-            json.errors[0].detail.as_slice().contains("license"),
+    assert!(json.errors[0].detail.contains("author") &&
+            json.errors[0].detail.contains("description") &&
+            json.errors[0].detail.contains("license"),
             "{:?}", json.errors);
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
     req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.as_slice().contains("author") &&
-            json.errors[0].detail.as_slice().contains("description") &&
-            !json.errors[0].detail.as_slice().contains("license"),
+    assert!(json.errors[0].detail.contains("author") &&
+            json.errors[0].detail.contains("description") &&
+            !json.errors[0].detail.contains("license"),
             "{:?}", json.errors);
 
     new_crate.license = None;
@@ -837,8 +837,8 @@ fn author_license_and_description_required() {
     new_crate.authors.push("foo".to_string());
     req.with_body(&new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(!json.errors[0].detail.as_slice().contains("author") &&
-            json.errors[0].detail.as_slice().contains("description") &&
-            !json.errors[0].detail.as_slice().contains("license"),
+    assert!(!json.errors[0].detail.contains("author") &&
+            json.errors[0].detail.contains("description") &&
+            !json.errors[0].detail.contains("license"),
             "{:?}", json.errors);
 }

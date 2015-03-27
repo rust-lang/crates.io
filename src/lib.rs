@@ -1,8 +1,8 @@
 #![feature(collections, core, std_misc, io, str_char)]
 
 #[macro_use] extern crate log;
-extern crate "postgres" as pg;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate postgres as pg;
+extern crate rustc_serialize;
 extern crate curl;
 extern crate flate2;
 extern crate git2;
@@ -16,15 +16,15 @@ extern crate semver;
 extern crate time;
 extern crate url;
 
-extern crate "conduit-conditional-get" as conduit_conditional_get;
-extern crate "conduit-cookie" as conduit_cookie;
-extern crate "conduit-git-http-backend" as conduit_git_http_backend;
-extern crate "conduit-json-parser" as conduit_json_parser;
-extern crate "conduit-log-requests" as conduit_log_requests;
-extern crate "conduit-middleware" as conduit_middleware;
-extern crate "conduit-router" as conduit_router;
-extern crate "conduit-static" as conduit_static;
 extern crate conduit;
+extern crate conduit_conditional_get;
+extern crate conduit_cookie;
+extern crate conduit_git_http_backend;
+extern crate conduit_json_parser;
+extern crate conduit_log_requests;
+extern crate conduit_middleware;
+extern crate conduit_router;
+extern crate conduit_static;
 
 pub use app::App;
 pub use config::Config;

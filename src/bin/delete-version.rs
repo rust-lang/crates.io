@@ -6,9 +6,8 @@
 //      cargo run --bin delete-version crate-name version-number
 
 #![deny(warnings)]
-#![feature(core)]
 
-extern crate "cargo-registry" as cargo_registry;
+extern crate cargo_registry;
 extern crate postgres;
 extern crate time;
 extern crate semver;
@@ -19,7 +18,7 @@ use std::io;
 use cargo_registry::{Crate, Version};
 
 fn main() {
-    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
@@ -47,7 +46,7 @@ fn delete(tx: &postgres::Transaction) {
     };
     let version = semver::Version::parse(&version).unwrap();
 
-    let krate = Crate::find_by_name(tx, name.as_slice()).unwrap();
+    let krate = Crate::find_by_name(tx, &name).unwrap();
     let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
     print!("Are you sure you want to delete {}#{} ({}) [y/N]: ", name, version,
            v.id);

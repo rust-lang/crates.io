@@ -28,12 +28,12 @@ mod lazy_cell;
 mod request_proxy;
 
 pub trait RequestUtils {
-    fn redirect(self, url: String) -> Response;
+    fn redirect(&self, url: String) -> Response;
 
-    fn json<T: Encodable>(self, t: &T) -> Response;
-    fn query(self) -> HashMap<String, String>;
-    fn wants_json(self) -> bool;
-    fn pagination(self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
+    fn json<T: Encodable>(&self, t: &T) -> Response;
+    fn query(&self) -> HashMap<String, String>;
+    fn wants_json(&self) -> bool;
+    fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
 }
 
 pub fn json_response<T: Encodable>(t: &T) -> Response {
@@ -53,7 +53,7 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
         match json {
             Json::Object(object) => {
                 Json::Object(object.into_iter().map(|(k, v)| {
-                    let k = if k.as_slice() == "krate" {
+                    let k = if k == "krate" {
                         "crate".to_string()
                     } else {
                         k
@@ -70,18 +70,18 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
 }
 
 
-impl<'a> RequestUtils for &'a (Request + 'a) {
-    fn json<T: Encodable>(self, t: &T) -> Response {
+impl<'a> RequestUtils for Request + 'a {
+    fn json<T: Encodable>(&self, t: &T) -> Response {
         json_response(t)
     }
 
-    fn query(self) -> HashMap<String, String> {
+    fn query(&self) -> HashMap<String, String> {
         url::form_urlencoded::parse(self.query_string().unwrap_or("")
                                         .as_bytes())
             .into_iter().collect()
     }
 
-    fn redirect(self, url: String) -> Response {
+    fn redirect(&self, url: String) -> Response {
         let mut headers = HashMap::new();
         headers.insert("Location".to_string(), vec![url.to_string()]);
         Response {
@@ -91,12 +91,12 @@ impl<'a> RequestUtils for &'a (Request + 'a) {
         }
     }
 
-    fn wants_json(self) -> bool {
+    fn wants_json(&self) -> bool {
         let content = self.headers().find("Accept").unwrap_or(Vec::new());
         content.iter().any(|s| s.contains("json"))
     }
 
-    fn pagination(self, default: usize, max: usize) -> CargoResult<(i64, i64)> {
+    fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)> {
         let query = self.query();
         let page = query.get("page").and_then(|s| s.parse::<usize>().ok())
                         .unwrap_or(1);
@@ -134,7 +134,7 @@ impl<H: Handler> Handler for R<H> {
         let R(ref sub_router) = *self;
         sub_router.call(&mut RequestProxy {
             other: req,
-            path: Some(path.as_slice()),
+            path: Some(&path),
             method: None,
         })
     }

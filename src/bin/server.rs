@@ -1,8 +1,8 @@
 #![deny(warnings)]
-#![feature(core)]
+#![feature(convert)]
 
-extern crate "cargo-registry" as cargo_registry;
-extern crate "conduit-middleware" as conduit_middleware;
+extern crate cargo_registry;
+extern crate conduit_middleware;
 extern crate civet;
 extern crate git2;
 extern crate env_logger;
@@ -17,7 +17,7 @@ use std::sync::mpsc::channel;
 fn main() {
     env_logger::init().unwrap();
     let url = env("GIT_REPO_URL");
-    let checkout = PathBuf::new(&env("GIT_REPO_CHECKOUT"));
+    let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
 
     let repo = match git2::Repository::open(&checkout) {
         Ok(r) => r,
@@ -28,7 +28,7 @@ fn main() {
             cb.credentials(cargo_registry::git::credentials);
             git2::build::RepoBuilder::new()
                                      .remote_callbacks(cb)
-                                     .clone(url.as_slice(), &checkout).unwrap()
+                                     .clone(&url, &checkout).unwrap()
         }
     };
     let mut cfg = repo.config().unwrap();

@@ -49,7 +49,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;
     let repo_path = repo.workdir().unwrap();
-    let dst = index_file(&repo_path, krate.name.as_slice());
+    let dst = index_file(&repo_path, &krate.name);
 
     commit_and_push(repo, || {
         // Add the crate to its relevant file
@@ -128,8 +128,7 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
         let head = try!(repo.head());
         let parent = try!(repo.find_commit(head.target().unwrap()));
         let sig = try!(repo.signature());
-        try!(repo.commit(Some("HEAD"), &sig, &sig, msg.as_slice(),
-                         &tree, &[&parent]));
+        try!(repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent]));
 
         // git push
         let mut callbacks = git2::RemoteCallbacks::new();
@@ -168,7 +167,7 @@ pub fn credentials(_user: &str, _user_from_url: Option<&str>,
                    -> Result<git2::Cred, git2::Error> {
     match (env::var("GIT_HTTP_USER"), env::var("GIT_HTTP_PWD")) {
         (Ok(u), Ok(p)) => {
-            git2::Cred::userpass_plaintext(u.as_slice(), p.as_slice())
+            git2::Cred::userpass_plaintext(&u, &p)
         }
         _ => Err(git2::Error::from_str("no authentication set"))
     }

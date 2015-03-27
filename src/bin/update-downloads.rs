@@ -1,7 +1,7 @@
 #![deny(warnings)]
-#![feature(std_misc, core, old_io)]
+#![feature(std_misc, thread_sleep)]
 
-extern crate "cargo-registry" as cargo_registry;
+extern crate cargo_registry;
 extern crate postgres;
 extern crate semver;
 extern crate time;
@@ -20,7 +20,7 @@ fn main() {
                     == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse::<i64>().unwrap());
     loop {
-        let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+        let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                                  &postgres::SslMode::None).unwrap();
         {
             let tx = conn.transaction().unwrap();
@@ -32,7 +32,7 @@ fn main() {
         if daemon {
             #[allow(deprecated)]
             fn do_sleep(sleep: Option<i64>) {
-                std::old_io::timer::sleep(Duration::seconds(sleep.unwrap()));
+                std::thread::sleep(Duration::seconds(sleep.unwrap()));
             }
             do_sleep(sleep);
         } else {
@@ -142,7 +142,7 @@ mod test {
     use cargo_registry::{Version, Crate, User};
 
     fn conn() -> postgres::Connection {
-        postgres::Connection::connect(::env("TEST_DATABASE_URL").as_slice(),
+        postgres::Connection::connect(&::env("TEST_DATABASE_URL")[..],
                                       &postgres::SslMode::None).unwrap()
     }
 

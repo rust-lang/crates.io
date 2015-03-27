@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![feature(core)]
 
 extern crate postgres;
 
@@ -39,10 +38,10 @@ impl Migration {
                       Box::new(move |a| down(a.t)))
     }
 
-    pub fn run<T: Str>(version: i64, up: T, down: T) -> Migration {
+    pub fn run(version: i64, up: &str, down: &str) -> Migration {
         Migration::mk(version,
-                      run(up.as_slice().to_string()),
-                      run(down.as_slice().to_string()))
+                      run(up.to_string()),
+                      run(down.to_string()))
     }
 
     pub fn add_table(version: i64, table: &str, rest: &str) -> Migration {
@@ -65,7 +64,7 @@ impl Migration {
 fn run(sql: String) -> Step {
     Box::new(move |a: A| {
         let tx = a.t;
-        tx.execute(sql.as_slice(), &[]).map(|_| ()).map_err(|e| {
+        tx.execute(&sql, &[]).map(|_| ()).map_err(|e| {
             println!("failed to run `{}`", sql);
             e
         })
@@ -130,7 +129,7 @@ mod tests {
 
     fn conn() -> PostgresConnection {
         let url = os::getenv("MIGRATE_TEST_DATABASE_URL").unwrap();
-        PostgresConnection::connect(url.as_slice(), &NoSsl).unwrap()
+        PostgresConnection::connect(&url, &NoSsl).unwrap()
     }
 
     #[test]

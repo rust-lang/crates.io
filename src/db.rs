@@ -88,7 +88,7 @@ impl Transaction {
         }
         let tx = self.tx.borrow();
         let tx: &'a pg::Transaction<'static> = tx.unwrap();
-        Ok(tx as &Connection)
+        Ok(tx)
     }
 
     pub fn rollback(&self) { self.commit.set(false); }
@@ -120,44 +120,44 @@ impl Middleware for TransactionMiddleware {
     }
 }
 
-pub trait RequestTransaction<'a> {
+pub trait RequestTransaction {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
-    fn db_conn(self) -> CargoResult<&'a pg::Connection>;
+    fn db_conn(&self) -> CargoResult<&pg::Connection>;
 
     /// Return the lazily initialized postgres transaction for this request.
     ///
     /// The transaction will live for the duration of the request, and it will
     /// only be set to commit() if a successful response code of 200 is seen.
-    fn tx(self) -> CargoResult<&'a (Connection + 'a)>;
+    fn tx(&self) -> CargoResult<&Connection>;
 
     /// Flag the transaction to not be committed
-    fn rollback(self);
+    fn rollback(&self);
     /// Flag this transaction to be committed
-    fn commit(self);
+    fn commit(&self);
 }
 
-impl<'a> RequestTransaction<'a> for &'a (Request + 'a) {
-    fn db_conn(self) -> CargoResult<&'a pg::Connection> {
+impl<'a> RequestTransaction for Request + 'a {
+    fn db_conn(&self) -> CargoResult<&pg::Connection> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .conn()
     }
 
-    fn tx(self) -> CargoResult<&'a (Connection + 'a)> {
+    fn tx(&self) -> CargoResult<&Connection> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .tx()
     }
 
-    fn rollback(self) {
+    fn rollback(&self) {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .rollback()
     }
 
-    fn commit(self) {
+    fn commit(&self) {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .commit()

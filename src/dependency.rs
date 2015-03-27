@@ -84,7 +84,7 @@ impl Dependency {
             req: req.to_string(),
             optional: optional,
             default_features: default_features,
-            features: features.as_slice().connect(","),
+            features: features.connect(","),
             target: target,
             kind: kind,
         }
@@ -100,10 +100,10 @@ impl Model for Dependency {
             id: row.get("id"),
             version_id: row.get("version_id"),
             crate_id: row.get("crate_id"),
-            req: semver::VersionReq::parse(req.as_slice()).unwrap(),
+            req: semver::VersionReq::parse(&req).unwrap(),
             optional: row.get("optional"),
             default_features: row.get("default_features"),
-            features: features.as_slice().split(',').map(|s| s.to_string())
+            features: features.split(',').map(|s| s.to_string())
                               .collect(),
             target: row.get("target"),
             kind: FromPrimitive::from_i32(kind.unwrap_or(0)).unwrap(),

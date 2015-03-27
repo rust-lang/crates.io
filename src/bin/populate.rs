@@ -5,9 +5,9 @@
 //      cargo run --bin populate version_id1 version_id2 ...
 
 #![deny(warnings)]
-#![feature(core, std_misc)]
+#![feature(std_misc)]
 
-extern crate "cargo-registry" as cargo_registry;
+extern crate cargo_registry;
 extern crate postgres;
 extern crate time;
 extern crate rand;
@@ -17,7 +17,7 @@ use std::time::Duration;
 use rand::{StdRng, Rng};
 
 fn main() {
-    let conn = postgres::Connection::connect(env("DATABASE_URL").as_slice(),
+    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();

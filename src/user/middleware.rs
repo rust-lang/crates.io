@@ -12,7 +12,8 @@ pub struct Middleware;
 
 impl conduit_middleware::Middleware for Middleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
-        let user = match req.session().get("user_id").and_then(|s| s.parse().ok()) {
+        let id = { req.session().get("user_id").and_then(|s| s.parse().ok()) };
+        let user = match id {
             Some(id) => {
                 match User::find(try!(req.tx().map_err(std_error)), id) {
                     Ok(user) => user,
@@ -23,7 +24,7 @@ impl conduit_middleware::Middleware for Middleware {
                 let tx = try!(req.tx().map_err(std_error));
                 match req.headers().find("Authorization") {
                     Some(headers) => {
-                        match User::find_by_api_token(tx, headers[0].as_slice()) {
+                        match User::find_by_api_token(tx, &headers[0]) {
                             Ok(user) => user,
                             Err(..) => return Ok(())
                         }
@@ -38,12 +39,12 @@ impl conduit_middleware::Middleware for Middleware {
     }
 }
 
-pub trait RequestUser<'a> {
-    fn user(self) -> CargoResult<&'a User>;
+pub trait RequestUser {
+    fn user(&self) -> CargoResult<&User>;
 }
 
-impl<'a> RequestUser<'a> for &'a (Request + 'a) {
-    fn user(self) -> CargoResult<&'a User> {
+impl<'a> RequestUser for Request + 'a {
+    fn user(&self) -> CargoResult<&User> {
         self.extensions().find::<User>().chain_error(|| Unauthorized)
     }
 }

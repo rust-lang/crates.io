@@ -5,7 +5,7 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
-use pg::types::{ToSql, Slice};
+use pg::types::Slice;
 use pg;
 use rand::{thread_rng, Rng};
 use rustc_serialize::json;
@@ -50,7 +50,7 @@ impl User {
     pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       WHERE gh_login = $1"));
-        let rows = try!(stmt.query(&[&login as &ToSql]));
+        let rows = try!(stmt.query(&[&login]));
         let row = try!(rows.iter().next().chain_error(|| {
             NotFound
         }));
@@ -60,7 +60,7 @@ impl User {
     pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
-        return try!(stmt.query(&[&token as &ToSql])).iter().next()
+        return try!(stmt.query(&[&token])).iter().next()
                         .map(|r| Model::from_row(&r)).chain_error(|| {
             NotFound
         })
@@ -84,9 +84,9 @@ impl User {
                                           gh_avatar = $4
                                       WHERE gh_login = $5
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&access_token as &ToSql,
+        let rows = try!(stmt.query(&[&access_token,
                                      &email, &name, &avatar,
-                                     &login as &ToSql]));
+                                     &login]));
         match rows.iter().next() {
             Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
@@ -96,10 +96,10 @@ impl User {
                                        gh_login, name, gh_avatar)
                                       VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&email as &ToSql,
-                                     &access_token as &ToSql,
-                                     &api_token as &ToSql,
-                                     &login as &ToSql,
+        let rows = try!(stmt.query(&[&email,
+                                     &access_token,
+                                     &api_token,
+                                     &login,
                                      &name, &avatar]));
         Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
@@ -160,8 +160,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // should have issued earlier.
     {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
-        let session_state = session_state.as_ref().map(|a| a.as_slice());
-        if Some(state.as_slice()) != session_state {
+        let session_state = session_state.as_ref().map(|a| &a[..]);
+        if Some(&state[..]) != session_state {
             return Err(human("invalid state parameter"))
         }
     }
@@ -199,15 +199,15 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Into the database!
     let api_token = User::new_api_token();
     let user = try!(User::find_or_insert(try!(req.tx()),
-                                         ghuser.login.as_slice(),
+                                         &ghuser.login,
                                          ghuser.email.as_ref()
-                                               .map(|s| s.as_slice()),
+                                               .map(|s| &s[..]),
                                          ghuser.name.as_ref()
-                                               .map(|s| s.as_slice()),
+                                               .map(|s| &s[..]),
                                          ghuser.avatar_url.as_ref()
-                                               .map(|s| s.as_slice()),
-                                         token.access_token.as_slice(),
-                                         api_token.as_slice()));
+                                               .map(|s| &s[..]),
+                                         &token.access_token,
+                                         &api_token));
     req.session().insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     me(req)
@@ -276,12 +276,12 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let crates = crates.into_iter().map(|c| c.encodable(None)).collect();
     let versions = versions.into_iter().map(|v| {
         let id = v.crate_id;
-        v.encodable(map[id].as_slice())
+        v.encodable(&map[&id])
     }).collect();
 
     // Check if we have another
     let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
-    let stmt = try!(tx.prepare(sql.as_slice()));
+    let stmt = try!(tx.prepare(&sql));
     let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
                   .iter().next().is_some();
 

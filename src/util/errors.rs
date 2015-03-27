@@ -69,6 +69,7 @@ impl<T, F> ChainError<T> for F where F: FnOnce() -> CargoResult<T> {
 }
 
 impl<T, E: CargoError> ChainError<T> for Result<T, E> {
+    #[allow(trivial_casts)]
     fn chain_error<E2, C>(self, callback: C) -> CargoResult<T>
                          where E2: CargoError, C: FnOnce() -> E2 {
         self.map_err(move |err| {
@@ -85,7 +86,7 @@ impl<T> ChainError<T> for Option<T> {
                          where E: CargoError, C: FnOnce() -> E {
         match self {
             Some(t) => Ok(t),
-            None => Err(Box::new(callback()) as Box<CargoError>),
+            None => Err(Box::new(callback())),
         }
     }
 }
@@ -112,7 +113,7 @@ impl<E: Error + Send + 'static> CargoError for E {
 
 impl<E: Error + Send + 'static> FromError<E> for Box<CargoError> {
     fn from_error(err: E) -> Box<CargoError> {
-        Box::new(err) as Box<CargoError>
+        Box::new(err)
     }
 }
 
@@ -138,7 +139,7 @@ impl fmt::Display for ConcreteCargoError {
 }
 
 impl CargoError for ConcreteCargoError {
-    fn description(&self) -> &str { self.description.as_slice() }
+    fn description(&self) -> &str { &self.description }
     fn cause(&self) -> Option<&CargoError> { self.cause.as_ref().map(|c| &**c) }
     fn human(&self) -> bool { self.human }
 }
@@ -185,14 +186,13 @@ impl fmt::Display for Unauthorized {
     }
 }
 
-pub fn internal_error<S1: Str, S2: Str>(error: S1,
-                                        detail: S2) -> Box<CargoError> {
+pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
     Box::new(ConcreteCargoError {
-        description: error.as_slice().to_string(),
-        detail: Some(detail.as_slice().to_string()),
+        description: error.to_string(),
+        detail: Some(detail.to_string()),
         cause: None,
         human: false,
-    }) as Box<CargoError>
+    })
 }
 
 pub fn internal<S: fmt::Display>(error: S) -> Box<CargoError> {
@@ -201,7 +201,7 @@ pub fn internal<S: fmt::Display>(error: S) -> Box<CargoError> {
         detail: None,
         cause: None,
         human: false,
-    }) as Box<CargoError>
+    })
 }
 
 pub fn human<S: fmt::Display>(error: S) -> Box<CargoError> {
@@ -210,10 +210,11 @@ pub fn human<S: fmt::Display>(error: S) -> Box<CargoError> {
         detail: None,
         cause: None,
         human: true,
-    }) as Box<CargoError>
+    })
 }
 
 pub fn std_error(e: Box<CargoError>) -> Box<Error+Send> {
+    #[derive(Debug)]
     struct E(Box<CargoError>);
     impl Error for E {
         fn description(&self) -> &str { self.0.description() }

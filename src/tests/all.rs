@@ -1,10 +1,10 @@
 #![deny(warnings)]
-#![feature(io, core, path_ext)]
+#![feature(io, path_ext, convert)]
 
-extern crate "cargo-registry" as cargo_registry;
-extern crate "conduit-middleware" as conduit_middleware;
-extern crate "conduit-test" as conduit_test;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate cargo_registry;
+extern crate conduit_middleware;
+extern crate conduit_test;
+extern crate rustc_serialize;
 extern crate conduit;
 extern crate curl;
 extern crate git2;
@@ -84,7 +84,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
     };
-    INIT.call_once(|| db_setup(config.db_url.as_slice()));
+    INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);
     let app = Arc::new(app);
     let mut middleware = cargo_registry::middleware(app.clone());
@@ -135,14 +135,14 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
 fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     let mut data = Vec::new();
     r.body.read_to_end(&mut data).unwrap();
-    let s = std::str::from_utf8(data.as_slice()).unwrap();
+    let s = std::str::from_utf8(&data).unwrap();
     let j = match Json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
     let j = fixup(j);
     let s = j.to_string();
-    return match json::decode(s.as_slice()) {
+    return match json::decode(&s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
@@ -152,7 +152,7 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
         match json {
             Json::Object(object) => {
                 Json::Object(object.into_iter().map(|(k, v)| {
-                    let k = if k.as_slice() == "crate" {
+                    let k = if k == "crate" {
                         "krate".to_string()
                     } else {
                         k
@@ -201,12 +201,12 @@ fn krate(name: &str) -> Crate {
 
 fn mock_user(req: &mut Request, u: User) -> User {
     let u = User::find_or_insert(req.tx().unwrap(),
-                                 u.gh_login.as_slice(),
-                                 u.email.as_ref().map(|s| s.as_slice()),
-                                 u.name.as_ref().map(|s| s.as_slice()),
-                                 u.avatar.as_ref().map(|s| s.as_slice()),
-                                 u.gh_access_token.as_slice(),
-                                 u.api_token.as_slice()).unwrap();
+                                 &u.gh_login,
+                                 u.email.as_ref().map(|s| &s[..]),
+                                 u.name.as_ref().map(|s| &s[..]),
+                                 u.avatar.as_ref().map(|s| &s[..]),
+                                 &u.gh_access_token,
+                                 &u.api_token).unwrap();
     req.mut_extensions().insert(u.clone());
     return u;
 }
@@ -217,17 +217,17 @@ fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
 fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                    -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
-    let mut krate = Crate::find_or_insert(req.tx().unwrap(), krate.name.as_slice(),
+    let mut krate = Crate::find_or_insert(req.tx().unwrap(), &krate.name,
                                       user.id, &krate.description,
                                       &krate.homepage,
                                       &krate.documentation,
                                       &krate.readme,
-                                      krate.keywords.as_slice(),
+                                      &krate.keywords,
                                       &krate.repository,
                                       &krate.license,
                                       &None).unwrap();
     Keyword::update_crate(req.tx().unwrap(), &krate,
-                          krate.keywords.as_slice()).unwrap();
+                          &krate.keywords).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
 }
