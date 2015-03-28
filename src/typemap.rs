@@ -3,7 +3,7 @@ use std::boxed::BoxAny;
 use std::collections::HashMap;
 
 pub struct TypeMap {
-    data: HashMap<TypeId, Box<Any + 'static>>
+    data: HashMap<TypeId, Box<Any>>
 }
 
 impl TypeMap {
@@ -11,27 +11,27 @@ impl TypeMap {
         TypeMap { data: HashMap::new() }
     }
 
-    pub fn find<T: 'static>(&self) -> Option<&T> {
+    pub fn find<T: Any>(&self) -> Option<&T> {
         self.data.get(&TypeId::of::<T>()).and_then(|a| a.downcast_ref())
     }
 
-    pub fn find_mut<T: 'static>(&mut self) -> Option<&mut T> {
+    pub fn find_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.data.get_mut(&TypeId::of::<T>()).and_then(|a| a.downcast_mut())
     }
 
-    pub fn insert<T: 'static>(&mut self, val: T) -> bool {
+    pub fn insert<T: Any>(&mut self, val: T) -> bool {
         self.data.insert(TypeId::of::<T>(), Box::new(val) as Box<Any>).is_none()
     }
 
-    pub fn remove<T: 'static>(&mut self) -> bool {
+    pub fn remove<T: Any>(&mut self) -> bool {
         self.data.remove(&TypeId::of::<T>()).is_some()
     }
 
-    pub fn contains<T: 'static>(&self) -> bool {
+    pub fn contains<T: Any>(&self) -> bool {
         self.data.contains_key(&TypeId::of::<T>())
     }
 
-    pub fn pop<T: 'static>(&mut self) -> Option<T> {
+    pub fn pop<T: Any>(&mut self) -> Option<T> {
         let data = match self.data.remove(&TypeId::of::<T>()) {
             Some(data) => data,
             None => return None,
