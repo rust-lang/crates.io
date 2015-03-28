@@ -1,4 +1,3 @@
-#![feature(core)]
 #![cfg_attr(test, feature(io))]
 
 extern crate conduit;
@@ -68,7 +67,7 @@ impl Handler for MiddlewareBuilder {
             },
             None => {
                 let res = { self.handler.as_ref().unwrap().call(req) };
-                let middlewares = self.middlewares.as_slice();
+                let middlewares = &self.middlewares;
 
                 run_afters(middlewares, req, res)
             }
@@ -90,6 +89,7 @@ mod tests {
 
     use {MiddlewareBuilder, Middleware, AroundMiddleware};
 
+    use std::any::Any;
     use std::collections::HashMap;
     use std::error::Error;
     use std::io::{self, Cursor};
@@ -123,9 +123,7 @@ mod tests {
         fn scheme(&self) -> Scheme { unimplemented!() }
         fn host<'a>(&'a self) -> Host<'a> { unimplemented!() }
         fn virtual_root<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
-        fn path<'a>(&'a self) -> &'a str {
-            self.path.as_slice()
-        }
+        fn path<'a>(&'a self) -> &'a str { &self.path }
         fn query_string<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
         fn remote_addr(&self) -> SocketAddr { unimplemented!() }
         fn content_length(&self) -> Option<u64> { unimplemented!() }
@@ -212,7 +210,7 @@ mod tests {
         }
     }
 
-    fn get_extension<'a, T: 'static>(req: &'a Request) -> &'a T {
+    fn get_extension<'a, T: Any>(req: &'a Request) -> &'a T {
         req.extensions().find::<T>().unwrap()
     }
 
