@@ -82,14 +82,17 @@ fn collect(tx: &postgres::Transaction,
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download).is_none());
     }
-    println!("updating {} versions", map.len());
+    println!("updating {} versions (cutoff {})", map.len(),
+             time::at(cutoff).rfc822());
     if map.len() == 0 { return Ok(None) }
 
     let mut max = 0;
     let mut total = 0;
     for (id, download) in map.iter() {
         if *id > max { max = *id; }
-        if download.counted == download.downloads { continue }
+        if download.date > cutoff && download.counted == download.downloads {
+            continue
+        }
         let amt = download.downloads - download.counted;
 
         let crate_id = Version::find(tx, download.version_id).unwrap().crate_id;
@@ -184,6 +187,29 @@ mod test {
         crate_downloads(&tx, krate.id, 1);
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
+    }
+
+    #[test]
+    fn set_processed_true() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
+                                          &None, &None, &None, &[], &None,
+                                          &None, &None).unwrap();
+        let version = Version::insert(&tx, krate.id,
+                                      &semver::Version::parse("1.0.0").unwrap(),
+                                      &HashMap::new(), &[]).unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 2, 2, current_date - interval '2 days', false)",
+                   &[&version.id]).unwrap();
+        ::update(&tx).unwrap();
+        let stmt = tx.prepare("SELECT processed FROM version_downloads
+                               WHERE version_id = $1").unwrap();
+        let processed: bool = stmt.query(&[&version.id]).unwrap().iter()
+                                  .next().unwrap().get("processed");
+        assert!(processed);
     }
 
     #[test]
