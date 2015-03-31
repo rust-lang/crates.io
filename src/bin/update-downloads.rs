@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use cargo_registry::{VersionDownload, Version, Model};
 
-static LIMIT: i64 = 10000;
+static LIMIT: i64 = 1000;
 
 #[allow(dead_code)] // dead in tests
 fn main() {
