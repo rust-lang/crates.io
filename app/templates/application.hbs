@@ -11,12 +11,12 @@
         <h1>CARGO</h2>
     {{/link-to}}
 
-    <div class='search'>
-        {{input type="text" class="search"
+    <form class='search' action='/search' {{ action "" on="submit" }} >
+        {{input type="text" class="search" name="q"
                 placeholder="Search"
                 value=search
                 action="search"}}
-    </div>
+    </form>
 
     <div class='nav'>
         {{#link-to "crates" (query-params letter="null" page=1)}}
