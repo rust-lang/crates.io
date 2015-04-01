@@ -1,0 +1,9 @@
+[package]
+name = "example"
+version = "0.0.1"
+authors = ["Example User <mail@example.com>"]
+
+[dependencies]
+civet = "0.7"
+conduit = "0.7"
+conduit-router = "0.7"
