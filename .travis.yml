@@ -2,6 +2,7 @@ language: rust
 script:
 - cargo build --verbose
 - cargo test --verbose
+- cargo build --manifest-path=example/Cargo.toml
 - cargo doc
 after_success: ! '[ $TRAVIS_BRANCH = master ] && [ $TRAVIS_PULL_REQUEST = false ]
   && echo ''<meta http-equiv=refresh content=0;url=conduit/index.html>'' > target/doc/index.html
