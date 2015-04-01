@@ -1,5 +1,3 @@
-#![feature(core)]
-
 extern crate semver;
 extern crate conduit;
 
@@ -74,7 +72,7 @@ pub struct MockHeaders {
 
 impl Headers for MockHeaders {
     fn find(&self, key: &str) -> Option<Vec<&str>> {
-        self.headers.get(key).map(|v| vec!(v.as_slice()))
+        self.headers.get(key).map(|v| vec![&v[..]])
     }
 
     fn has(&self, key: &str) -> bool {
@@ -82,7 +80,7 @@ impl Headers for MockHeaders {
     }
 
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        self.headers.iter().map(|(k,v)| (k.as_slice(), vec![v.as_slice()]))
+        self.headers.iter().map(|(k,v)| (&k[..], vec![&v[..]]))
                     .collect()
     }
 }
@@ -102,11 +100,11 @@ impl conduit::Request for MockRequest {
     fn virtual_root(&self) -> Option<&str> { None }
 
     fn path(&self) -> &str {
-        self.path.as_slice()
+        &self.path
     }
 
     fn query_string(&self) -> Option<&str> {
-        self.query_string.as_ref().map(|s| s.as_slice())
+        self.query_string.as_ref().map(|s| &s[..])
     }
 
     fn remote_addr(&self) -> SocketAddr {
