@@ -121,9 +121,9 @@ fn collect(tx: &postgres::Transaction,
         // Flag this row as having been processed if we're passed the cutoff,
         // and unconditionally increment the number of counted downloads.
         try!(tx.execute("UPDATE version_downloads
-                         SET processed = $2, counted = downloads
+                         SET processed = $2, counted = counted + $3
                          WHERE id = $1",
-                        &[id, &(download.date < cutoff)]));
+                        &[id, &(download.date < cutoff), &amt]));
         total += amt as i64;
     }
 
