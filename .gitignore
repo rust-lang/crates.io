@@ -1,4 +1,2 @@
-/target
-/example/target
-/Cargo.lock
-/example/Cargo.lock
+target
+Cargo.lock

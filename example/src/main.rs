@@ -10,20 +10,15 @@ use civet::{Config, response, Server};
 use conduit::{Request, Response};
 use conduit_router::{RouteBuilder, RequestParams};
 
-
 fn name(req: &mut Request) -> io::Result<Response> {
     let name = req.params().find("name").unwrap();
     let bytes = format!("Hello {}!", name).into_bytes();
-
     Ok(response(200, HashMap::new(), Cursor::new(bytes)))
 }
 
-
 fn hello(_req: &mut Request) -> io::Result<Response> {
-    let hello = "Hello world!".to_string().into_bytes();
-    Ok(response(200, HashMap::new(), Cursor::new(hello)))
+    Ok(response(200, HashMap::new(), "Hello world!".as_bytes()))
 }
-
 
 fn main() {
     let mut router = RouteBuilder::new();
