@@ -22,19 +22,10 @@ fn main() {
     loop {
         let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                                  &postgres::SslMode::None).unwrap();
-        {
-            let tx = conn.transaction().unwrap();
-            update(&tx).unwrap();
-            tx.set_commit();
-            tx.finish().unwrap();
-        }
+        update(&conn).unwrap();
         drop(conn);
         if daemon {
-            #[allow(deprecated)]
-            fn do_sleep(sleep: Option<i64>) {
-                std::thread::sleep(Duration::seconds(sleep.unwrap()));
-            }
-            do_sleep(sleep);
+            std::thread::sleep(Duration::seconds(sleep.unwrap()));
         } else {
             break
         }
@@ -48,10 +39,10 @@ fn env(s: &str) -> String {
     }
 }
 
-fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
+fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     let mut max = 0;
     loop {
-        let tx = try!(tx.transaction());
+        let tx = try!(conn.transaction());
         {
             let stmt = try!(tx.prepare("SELECT * FROM version_downloads \
                                         WHERE processed = FALSE AND id > $1
