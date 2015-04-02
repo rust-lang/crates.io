@@ -1,5 +1,3 @@
-#![cfg_attr(test, feature(io))]
-
 extern crate conduit;
 
 use std::error::Error;
@@ -167,7 +165,7 @@ mod tests {
 
     impl Middleware for ProducesError {
         fn before(&self, _: &mut Request) -> Result<(), Box<Error+Send>> {
-            Err(Box::new(io::Error::new(io::ErrorKind::Other, "", None)))
+            Err(Box::new(io::Error::new(io::ErrorKind::Other, "")))
         }
     }
 
@@ -228,7 +226,7 @@ mod tests {
     }
 
     fn error_handler(_: &mut Request) -> io::Result<Response> {
-        Err(io::Error::new(io::ErrorKind::Other, "Error in handler", None))
+        Err(io::Error::new(io::ErrorKind::Other, "Error in handler"))
     }
 
     fn middle_handler(req: &mut Request) -> io::Result<Response> {
