@@ -1,5 +1,4 @@
 use std::any::{Any, TypeId};
-use std::boxed::BoxAny;
 use std::collections::HashMap;
 
 pub struct TypeMap {

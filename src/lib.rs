@@ -1,5 +1,3 @@
-#![feature(core, alloc)]
-
 extern crate semver;
 
 use std::io::prelude::*;
