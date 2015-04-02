@@ -1019,3 +1019,12 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     struct Meta { total: i64 }
     Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }
+
+pub fn shield(req: &mut Request) -> CargoResult<Response> {
+    let name = &req.params()["crate_id"];
+    let conn = try!(req.tx());
+    let krate = try!(Crate::find_by_name(conn, &name));
+    Ok(req.redirect(format!(
+                "https://img.shields.io/badge/crates.io-{}-green.svg",
+                krate.max_version)))
+}
