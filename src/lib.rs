@@ -1,5 +1,5 @@
 #![allow(trivial_casts)]
-#![feature(fs_time, convert)]
+#![feature(fs_time)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate conduit;
