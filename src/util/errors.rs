@@ -1,4 +1,4 @@
-use std::error::{FromError, Error};
+use std::error::Error;
 use std::fmt;
 
 use conduit::Response;
@@ -107,12 +107,8 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Error + Send + 'static> CargoError for E {
-    fn description(&self) -> &str { Error::description(self) }
-}
-
-impl<E: Error + Send + 'static> FromError<E> for Box<CargoError> {
-    fn from_error(err: E) -> Box<CargoError> {
+impl<E: Error + Send + 'static> From<E> for Box<CargoError> {
+    fn from(err: E) -> Box<CargoError> {
         Box::new(err)
     }
 }
