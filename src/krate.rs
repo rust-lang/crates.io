@@ -108,9 +108,9 @@ impl Crate {
         let mut license = license.as_ref().map(|s| &s[..]);
         let license_file = license_file.as_ref().map(|s| &s[..]);
         let keywords = keywords.connect(",");
-        try!(validate_url(homepage));
-        try!(validate_url(documentation));
-        try!(validate_url(repository));
+        try!(validate_url(homepage, "homepage"));
+        try!(validate_url(documentation, "documentation"));
+        try!(validate_url(repository, "repository"));
 
         match license {
             // If a license is given, validate it to make sure it's actually a
@@ -178,23 +178,24 @@ impl Crate {
                           &[&ret.id, &user_id, &now]));
         return Ok(ret);
 
-        fn validate_url(url: Option<&str>) -> CargoResult<()> {
+        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
                 None => return Ok(())
             };
-            let url = match Url::parse(url) {
-                Ok(url) => url,
-                Err(..) => return Err(human(format!("not a valid url: {}", url)))
-            };
+            let url = try!(Url::parse(url).map_err(|_| {
+                human(format!("`{}` is not a valid url: `{}`", field, url))
+            }));
             match &url.scheme[..] {
                 "http" | "https" => {}
-                _ => return Err(human(format!("not a valid url scheme: {}", url)))
+                s => return Err(human(format!("`{}` has an invalid url \
+                                               scheme: `{}`", field, s)))
             }
             match url.scheme_data {
                 url::SchemeData::Relative(..) => {}
                 url::SchemeData::NonRelative(..) => {
-                    return Err(human(format!("not a valid url scheme: {}", url)))
+                    return Err(human(format!("`{}` must have relative scheme \
+                                              data: {}", field, url)))
                 }
             }
             Ok(())
