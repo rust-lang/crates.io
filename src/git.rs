@@ -10,7 +10,7 @@ use rustc_serialize::json;
 
 use app::App;
 use dependency::Kind;
-use util::{CargoResult, internal, ChainError};
+use util::{CargoResult, internal};
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Crate {
@@ -34,7 +34,7 @@ pub struct Dependency {
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {
-    let name = name.to_lowercase();
+    let name = name.chars().flat_map(|c| c.to_lowercase()).collect::<String>();
     match name.len() {
         1 => base.join("1").join(&name),
         2 => base.join("2").join(&name),
@@ -141,9 +141,6 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
             match push.finish() {
                 Ok(()) => {
-                    try!(push.statuses().chain_error(|| {
-                        internal("failed to update some remote refspecs")
-                    }));
                     try!(push.update_tips(None, None));
                     return Ok(())
                 }

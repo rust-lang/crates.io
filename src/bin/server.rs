@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![feature(convert)]
 
 extern crate cargo_registry;
 extern crate conduit_middleware;

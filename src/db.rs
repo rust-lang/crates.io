@@ -18,7 +18,7 @@ type PooledConnnection<'a> =
         r2d2::PooledConnection<'a, PostgresConnectionManager>;
 
 pub fn pool(url: &str, config: r2d2::Config) -> Pool {
-    let mgr = PostgresConnectionManager::new(url, pg::SslMode::None);
+    let mgr = PostgresConnectionManager::new(url, pg::SslMode::None).unwrap();
     r2d2::Pool::new(config, mgr, Box::new(LoggingErrorHandler)).unwrap()
 }
 

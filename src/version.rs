@@ -1,13 +1,13 @@
 use std::collections::HashMap;
-use std::time::Duration;
 use rustc_serialize::json;
 use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use pg;
 use pg::types::Slice;
+use pg;
 use semver;
+use time::Duration;
 use url;
 
 use {Model, Crate, User};

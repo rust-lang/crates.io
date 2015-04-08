@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![feature(std_misc, thread_sleep)]
 
 extern crate cargo_registry;
 extern crate postgres;
@@ -8,7 +7,7 @@ extern crate time;
 
 use std::env;
 use std::collections::HashMap;
-use std::time::Duration;
+use time::Duration;
 
 use cargo_registry::{VersionDownload, Version, Model};
 
@@ -18,14 +17,14 @@ static LIMIT: i64 = 1000;
 fn main() {
     let daemon = env::args().nth(1).as_ref().map(|s| &s[..])
                     == Some("daemon");
-    let sleep = env::args().nth(2).map(|s| s.parse::<i64>().unwrap());
+    let sleep = env::args().nth(2).map(|s| s.parse::<u32>().unwrap());
     loop {
         let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                                  &postgres::SslMode::None).unwrap();
         update(&conn).unwrap();
         drop(conn);
         if daemon {
-            std::thread::sleep(Duration::seconds(sleep.unwrap()));
+            std::thread::sleep_ms(sleep.unwrap() * 1000);
         } else {
             break
         }

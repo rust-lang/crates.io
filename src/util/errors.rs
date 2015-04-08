@@ -109,8 +109,24 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 
 impl<E: Error + Send + 'static> From<E> for Box<CargoError> {
     fn from(err: E) -> Box<CargoError> {
-        Box::new(err)
+        struct Shim<E>(E);
+        impl<E: Error + Send + 'static> CargoError for Shim<E> {
+            fn description(&self) -> &str { Error::description(&self.0) }
+        }
+        impl<E: fmt::Display> fmt::Display for Shim<E> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                self.0.fmt(f)
+            }
+        }
+        Box::new(Shim(err))
     }
+}
+
+impl CargoError for ::curl::ErrCode {
+    fn description(&self) -> &str { Error::description(self) }
+}
+impl CargoError for ::rustc_serialize::json::DecoderError {
+    fn description(&self) -> &str { Error::description(self) }
 }
 
 // =============================================================================

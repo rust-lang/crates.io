@@ -16,7 +16,7 @@ impl<R: Read> Read for LimitErrorReader<R> {
         match self.inner.read(buf) {
             Ok(0) if self.inner.limit() == 0 => {
                 Err(io::Error::new(io::ErrorKind::Other,
-                                   "maximum limit reached when reading", None))
+                                   "maximum limit reached when reading"))
             }
             e => e,
         }

@@ -1,5 +1,3 @@
-#![feature(collections, core, std_misc, io, str_char)]
-
 #[macro_use] extern crate log;
 extern crate postgres as pg;
 extern crate rustc_serialize;

@@ -6,7 +6,6 @@ use std::io;
 use std::iter::repeat;
 use std::mem;
 use std::sync::Arc;
-use std::time::Duration;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -16,7 +15,7 @@ use pg;
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 use semver;
-use time::Timespec;
+use time::{Timespec, Duration};
 use url::{self, Url};
 
 use {Model, User, Keyword, Version};
@@ -224,7 +223,7 @@ impl Crate {
 
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
-        name.char_at(0).is_alphabetic() &&
+        name.chars().next().unwrap().is_alphabetic() &&
             name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
             name.chars().all(|c| c.is_ascii())
     }
@@ -448,7 +447,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
           WHERE q @@ textsearchable_index_col".to_string())
     }).or_else(|| {
         query.get("letter").map(|letter| {
-            pattern = format!("{}%", letter.char_at(0)
+            pattern = format!("{}%", letter.chars().next().unwrap()
                                            .to_lowercase().collect::<String>());
             needs_pattern = true;
             (format!("SELECT * FROM crates WHERE canon_crate_name(name) \
@@ -777,7 +776,7 @@ fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
         let n = try!(r.read(slice));
         if n == 0 {
             return Err(io::Error::new(io::ErrorKind::Other,
-                                      "end of file reached", None))
+                                      "end of file reached"))
         }
         slice = &mut mem::replace(&mut slice, &mut [])[n..];
     }

@@ -5,7 +5,6 @@
 //      cargo run --bin populate version_id1 version_id2 ...
 
 #![deny(warnings)]
-#![feature(std_misc)]
 
 extern crate cargo_registry;
 extern crate postgres;
@@ -13,7 +12,7 @@ extern crate time;
 extern crate rand;
 
 use std::env;
-use std::time::Duration;
+use time::Duration;
 use rand::{StdRng, Rng};
 
 fn main() {

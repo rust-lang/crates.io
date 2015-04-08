@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(io, path_ext, convert)]
+#![feature(io, path_ext)]
 
 extern crate cargo_registry;
 extern crate conduit_middleware;

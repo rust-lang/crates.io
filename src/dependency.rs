@@ -1,5 +1,3 @@
-use std::num::FromPrimitive;
-
 use semver;
 
 use pg;
@@ -33,11 +31,15 @@ pub struct EncodableDependency {
     pub kind: Kind,
 }
 
-#[derive(FromPrimitive, Copy, Clone)]
+#[derive(Copy, Clone)]
+// NB: this order is important, it must be retained! The database stores an
+// integer corresponding to each variant.
 pub enum Kind {
     Normal,
     Build,
     Dev,
+
+    // if you add a kind here, be sure to update `from_row` below.
 }
 
 impl Dependency {
@@ -106,7 +108,12 @@ impl Model for Dependency {
             features: features.split(',').map(|s| s.to_string())
                               .collect(),
             target: row.get("target"),
-            kind: FromPrimitive::from_i32(kind.unwrap_or(0)).unwrap(),
+            kind: match kind.unwrap_or(0) {
+                0 => Kind::Normal,
+                1 => Kind::Build,
+                2 => Kind::Dev,
+                n => panic!("unknown kind: {}", n),
+            }
         }
     }
 
