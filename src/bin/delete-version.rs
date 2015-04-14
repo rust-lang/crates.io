@@ -14,6 +14,7 @@ extern crate semver;
 
 use std::env;
 use std::io;
+use std::io::prelude::*;
 
 use cargo_registry::{Crate, Version};
 
@@ -50,6 +51,7 @@ fn delete(tx: &postgres::Transaction) {
     let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
     print!("Are you sure you want to delete {}#{} ({}) [y/N]: ", name, version,
            v.id);
+    io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { return }
@@ -68,6 +70,7 @@ fn delete(tx: &postgres::Transaction) {
                &[&v.id]).unwrap();
 
     print!("commit? [y/N]: ");
+    io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { panic!("aborting transaction"); }

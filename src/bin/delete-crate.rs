@@ -14,6 +14,7 @@ extern crate time;
 
 use std::env;
 use std::io;
+use std::io::prelude::*;
 
 use cargo_registry::Crate;
 
@@ -43,6 +44,7 @@ fn delete(tx: &postgres::Transaction) {
 
     let krate = Crate::find_by_name(tx, &name).unwrap();
     print!("Are you sure you want to delete {} ({}) [y/N]: ", name, krate.id);
+    io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { return }
@@ -90,6 +92,7 @@ fn delete(tx: &postgres::Transaction) {
     println!("  {} deleted", n);
 
     print!("commit? [y/N]: ");
+    io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { panic!("aborting transaction"); }
