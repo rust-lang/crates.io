@@ -113,6 +113,9 @@ body {
 
     #current-user-links {
         display: none;
+        left: auto;
+        right: 0;
+        min-width: 200px;
 
         &.open { display: block; }
     }
