@@ -19,19 +19,19 @@
 </div>
 
 <div id='crates' class='white-rows'>
-    {{#each}}
-        {{render "crate-row" this}}
+    {{#each this as |crate|}}
+        {{crate-row crate=crate}}
     {{/each}}
 </div>
 
 <div class='pagination'>
-    {{#link-to 'search' (query-params page=prevPage) class="prev"}}
+    {{#link-to 'search' (query-params page=prevPage) class='prev'}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'search' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'search' (query-params page=this)}}{{ page }}{{/link-to}}
     {{/each}}
-    {{#link-to 'search' (query-params page=nextPage) class="next"}}
+    {{#link-to 'search' (query-params page=nextPage) class='next'}}
         <img src="/assets/right-pag.png"/>
     {{/link-to}}
 </div>

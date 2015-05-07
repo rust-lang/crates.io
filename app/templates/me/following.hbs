@@ -40,8 +40,8 @@
 </div>
 
 <div id='crates' class='white-rows'>
-    {{#each}}
-        {{render "crate-row" this}}
+    {{#each this as |crate|}}
+        {{crate-row crate=crate}}
     {{/each}}
 </div>
 
