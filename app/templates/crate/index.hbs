@@ -217,10 +217,12 @@
                 <li class='all'>
                     {{#link-to 'crate.index' this}}All Versions{{/link-to}}
                 </li>
-                {{#each smallSortedVersions}}
-                    <li>{{#link-to 'crate.index' this}}
-                        {{ num }}
-                    {{/link-to}}</li>
+                {{#each smallSortedVersions as |version|}}
+                    <li>
+                        {{#link-to 'crate.index' version}}
+                            {{ version.num }}
+                        {{/link-to}}
+                    </li>
                 {{/each}}
             </ul>
         </div>
