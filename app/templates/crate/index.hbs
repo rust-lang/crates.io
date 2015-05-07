@@ -1,7 +1,7 @@
 <div id='crates-heading'>
     <div class='info'>
         <img class='logo' src="/assets/crate.png"/>
-        <h1>{{ name }}</h1>
+        <h1>{{ model.name }}</h1>
         <h2>{{ currentVersion.num }}</h2>
     </div>
 
@@ -49,7 +49,7 @@
         {{/if}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
-            <code>{{ name }} = "{{ currentVersion.num }}"</code>
+            <code>{{ model.name }} = "{{ currentVersion.num }}"</code>
         </div>
     </div>
     <div class='authorship'>
@@ -63,7 +63,7 @@
                 <h3>Authors</h3>
                 <ul>
                     {{#each displayedAuthors as |author|}}
-                        <li>{{ format-email name }}</li>
+                        <li>{{ format-email author.name }}</li>
                     {{/each}}
                 </ul>
             </div>
@@ -93,10 +93,10 @@
             <div>
                 <h3>Owners</h3>
                 <ul class='owners'>
-                    {{#each owners as |owner|}}
+                    {{#each model.owners as |owner|}}
                         <li>
                           {{#user-link user=owner}}
-                            {{user-avatar user=this size='medium-small'}}
+                            {{user-avatar user=owner size='medium-small'}}
                           {{/user-link}}
                         </li>
                     {{/each}}
@@ -112,19 +112,19 @@
     <h3>Links</h3>
     <ul>
       {{#if homepage}}
-      <li><a {{bind-attr href=homepage}}>Homepage</a></li>
+          <li><a {{bind-attr href=homepage}}>Homepage</a></li>
       {{/if}}
       {{#if wiki}}
-      <li><a {{bind-attr href=wiki}}>Wiki</a></li>
+          <li><a {{bind-attr href=wiki}}>Wiki</a></li>
       {{/if}}
       {{#if mailing_list}}
-      <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
+          <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
       {{/if}}
       {{#if documentation}}
-      <li><a {{bind-attr href=documentation}}>Documentation</a></li>
+          <li><a {{bind-attr href=documentation}}>Documentation</a></li>
       {{/if}}
       {{#if repository}}
-      <li><a {{bind-attr href=repository}}>Repository</a></li>
+          <li><a {{bind-attr href=repository}}>Repository</a></li>
       {{/if}}
     </ul>
   </div>
@@ -133,14 +133,14 @@
   <div class='section' id='crate-dependencies'>
     <h3>Dependencies</h3>
     <ul>
-      {{#each currentDependencies}}
+      {{#each currentDependencies as |dep|}}
       <li>
-        {{#link-to 'crate' crate_id}}
-            {{ crate_id }} {{ format-req req }}
+        {{#link-to 'crate' dep.crate_id}}
+            {{ dep.crate_id }} {{ format-req dep.req }}
         {{/link-to}}
       </li>
       {{else}}
-      <li>None</li>
+          <li>None</li>
       {{/each}}
     </ul>
   </div>
@@ -149,10 +149,10 @@
     <div class='section' id='crate-dev-dependencies'>
       <h3>Dev-Dependencies</h3>
       <ul>
-        {{#each currentDevDependencies}}
+        {{#each currentDevDependencies as |dep|}}
         <li>
-          {{#link-to 'crate' crate_id}}
-              {{ crate_id}} {{ req }}
+          {{#link-to 'crate' dep.crate_id}}
+              {{ dep.crate_id}} {{ dep.req }}
           {{/link-to}}
         </li>
         {{/each}}
@@ -163,12 +163,14 @@
   <div class='section' id='crate-versions'>
     <h3>Versions</h3>
     <ul>
-      {{#each smallSortedVersions}}
+      {{#each smallSortedVersions as |version|}}
       <li>
-        {{#link-to 'crate' this}}{{ num }}{{/link-to}}
-        <span class='date'>{{ date-small created_at }}</span>
+        {{#link-to 'crate' version}}
+            {{ version.num }}
+        {{/link-to}}
+        <span class='date'>{{ date-small version.created_at }}</span>
         {{#if yanked}}
-        <span class='yanked'>yanked</span>
+            <span class='yanked'>yanked</span>
         {{/if}}
       </li>
       {{/each}}
@@ -176,7 +178,7 @@
     <span class='small'>
       {{#if hasMoreVersions}}
       {{#link-to 'crate.versions' this}}
-      show all {{ versions.length }} versions
+          show all {{ versions.length }} versions
       {{/link-to}}
       {{/if}}
     </span>
