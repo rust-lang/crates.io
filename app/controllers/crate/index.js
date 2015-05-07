@@ -28,19 +28,11 @@ export default Ember.ObjectController.extend({
 
     hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed('homepage',
-                       'wiki',
-                       'mailing_list',
-                       'documentation',
-                       'repository', function() {
-      return this.get('homepage') ||
-             this.get('wiki') ||
-             this.get('mailing_list') ||
-             this.get('documentation') ||
-             this.get('repository');
-    }),
-
-    versionsCount: computed.readOnly('versions.length'),
+    anyLinks: computed.or('model.homepage',
+                          'model.wiki',
+                          'model.mailing_list',
+                          'model.documentation',
+                          'model.repository'),
 
     displayedAuthors: computed('currentVersion.authors.@each', function() {
         if (!this.get('currentVersion')) {

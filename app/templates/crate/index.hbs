@@ -107,28 +107,28 @@
 </div>
 
 <div id='crate-links'>
-  {{#if anyLinks}}
-  <div class='section'>
-    <h3>Links</h3>
-    <ul>
-      {{#if homepage}}
-          <li><a {{bind-attr href=homepage}}>Homepage</a></li>
-      {{/if}}
-      {{#if wiki}}
-          <li><a {{bind-attr href=wiki}}>Wiki</a></li>
-      {{/if}}
-      {{#if mailing_list}}
-          <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
-      {{/if}}
-      {{#if documentation}}
-          <li><a {{bind-attr href=documentation}}>Documentation</a></li>
-      {{/if}}
-      {{#if repository}}
-          <li><a {{bind-attr href=repository}}>Repository</a></li>
-      {{/if}}
-    </ul>
-  </div>
-  {{/if}}
+    {{#if anyLinks}}
+        <div class='section'>
+          <h3>Links</h3>
+          <ul>
+            {{#if model.homepage}}
+                <li><a href="{{model.homepage}}">Homepage</a></li>
+            {{/if}}
+            {{#if model.wiki}}
+                <li><a href="{{model.wiki}}">Wiki</a></li>
+            {{/if}}
+            {{#if model.mailing_list}}
+                <li><a href="{{model.mailing_list}}">Mailing list</a></li>
+            {{/if}}
+            {{#if model.documentation}}
+                <li><a href="{{model.documentation}}">Documentation</a></li>
+            {{/if}}
+            {{#if model.repository}}
+                <li><a href="{{model.repository}}">Repository</a></li>
+            {{/if}}
+          </ul>
+        </div>
+    {{/if}}
 
   <div class='section' id='crate-dependencies'>
     <h3>Dependencies</h3>
@@ -169,7 +169,7 @@
             {{ version.num }}
         {{/link-to}}
         <span class='date'>{{ date-small version.created_at }}</span>
-        {{#if yanked}}
+        {{#if model.yanked}}
             <span class='yanked'>yanked</span>
         {{/if}}
       </li>
@@ -178,7 +178,7 @@
     <span class='small'>
       {{#if hasMoreVersions}}
       {{#link-to 'crate.versions' this}}
-          show all {{ versions.length }} versions
+          show all {{ model.versions.length }} versions
       {{/link-to}}
       {{/if}}
     </span>
@@ -194,7 +194,7 @@
                 {{#if requestedVersion}}
                     {{ format-num currentVersion.downloads }}
                 {{else}}
-                    {{ format-num downloads }}
+                    {{ format-num model.downloads }}
                 {{/if}}
             </span>
             <span class='desc small'>Downloads all time</span>
@@ -202,7 +202,7 @@
         <div class='stat'>
             <span {{bind-attr class="crate.versions.isPending:loading :num"}}>
                 <img src="/assets/package.png"/>
-                {{ versionsCount }}
+                {{ model.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
         </div>
