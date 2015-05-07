@@ -7,42 +7,27 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    {{BASE_TAG}}
+    {{content-for 'head'}}
+    {{content-for 'test-head'}}
 
     <link rel="stylesheet" href="assets/vendor.css">
     <link rel="stylesheet" href="assets/cargo.css">
     <link rel="stylesheet" href="assets/test-support.css">
-    <style>
-      #ember-testing-container {
-        position: absolute;
-        background: white;
-        bottom: 0;
-        right: 0;
-        width: 640px;
-        height: 384px;
-        overflow: auto;
-        z-index: 9999;
-        border: 1px solid #ccc;
-      }
-      #ember-testing {
-        zoom: 50%;
-      }
-    </style>
+
+    {{content-for 'head-footer'}}
+    {{content-for 'test-head-footer'}}
   </head>
   <body>
-    <div id="qunit"></div>
-    <div id="qunit-fixture"></div>
 
-    <script>
-      window.EmberENV = {{EMBER_ENV}};
-    </script>
+    {{content-for 'body'}}
+    {{content-for 'test-body'}}
     <script src="assets/vendor.js"></script>
     <script src="assets/test-support.js"></script>
     <script src="assets/cargo.js"></script>
     <script src="testem.js"></script>
-    <script>
-      require('cargo/tests/test-helper');
-    </script>
     <script src="assets/test-loader.js"></script>
+
+    {{content-for 'body-footer'}}
+    {{content-for 'test-body-footer'}}
   </body>
 </html>

@@ -1,6 +1,8 @@
 import {
   formatEmail
 } from 'cargo/helpers/format-email';
+import { module } from 'qunit';
+import { test } from 'ember-qunit';
 
 module('FormatEmailHelper');
 

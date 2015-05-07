@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 import ajax from 'ic-ajax';
+import moment from 'moment';
 
 var NUM_VERSIONS = 5;
 
@@ -194,9 +195,9 @@ export default Ember.ObjectController.extend({
                 } else {
                     Ember.$('.graph').show();
                 }
-                var myData = google.visualization.arrayToDataTable(data);
+                var myData = window.google.visualization.arrayToDataTable(data);
 
-                var fmt = new google.visualization.DateFormat({
+                var fmt = new window.google.visualization.DateFormat({
                     pattern: 'LLL d, yyyy',
                 });
                 fmt.format(myData, 0);
@@ -204,7 +205,7 @@ export default Ember.ObjectController.extend({
                 if (!el) {
                     return;
                 }
-                var chart = new google.visualization.AreaChart(el);
+                var chart = new window.google.visualization.AreaChart(el);
                 chart.draw(myData, {
                     chartArea: {'width': '80%', 'height': '80%'},
                     hAxis: {

@@ -1,6 +1,8 @@
 import {
   formatNum
 } from 'cargo/helpers/format-num';
+import { module } from "qunit";
+import { test } from "ember-qunit";
 
 module('FormatNumHelper');
 

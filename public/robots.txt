@@ -1,3 +1,2 @@
-# robotstxt.org/
-
+# http://www.robotstxt.org
 User-agent: *
