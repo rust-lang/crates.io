@@ -3,8 +3,8 @@ import Ember from 'ember';
 export var initialize = function() {
     Ember.$.getScript('https://www.google.com/jsapi', function() {
         window.google.load('visualization', '1.0', {
-            'packages': ['corechart'],
-            'callback': function() {
+            packages: ['corechart'],
+            callback() {
                 window.googleChartsLoaded = true;
                 Ember.$(document).trigger('googleChartsLoaded');
             }

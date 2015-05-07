@@ -16,9 +16,9 @@ export default DS.Model.extend({
     repository: DS.attr('string'),
     license: DS.attr('string'),
 
-    versions: DS.hasMany('versions', {async: true}),
-    owners: DS.hasMany('users', {async: true}),
-    version_downloads: DS.hasMany('version-download', {async: true}),
-    keywords: DS.hasMany('keywords', {async: true}),
-    reverse_dependencies: DS.hasMany('dependency', {async: true}),
+    versions: DS.hasMany('versions', { async: true }),
+    owners: DS.hasMany('users', { async: true }),
+    version_downloads: DS.hasMany('version-download', { async: true }),
+    keywords: DS.hasMany('keywords', { async: true }),
+    reverse_dependencies: DS.hasMany('dependency', { async: true }),
 });

@@ -12,6 +12,8 @@ var App = Ember.Application.extend({
 });
 
 loadInitializers(App, config.modulePrefix);
-Ember.$.ajaxSetup({cache: false});
+Ember.$.ajaxSetup({
+  cache: false
+});
 
 export default App;

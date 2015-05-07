@@ -1,9 +1,9 @@
 import ApplicationAdapter from './application';
 
 export default ApplicationAdapter.extend({
-    findQuery: function(store, type, query) {
+    findQuery(store, type, query) {
         if (!query.reverse) {
-            return this._super(store, type, query);
+            return this._super(...arguments);
         }
         delete query.reverse;
         var crate = query.crate;

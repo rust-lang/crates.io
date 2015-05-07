@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import PaginationMixin from 'cargo/mixins/pagination';
 import { module } from 'qunit';
-import { test } from 'emer-qunit';
+import { test } from 'ember-qunit';
 
 module('PaginationMixin');
 

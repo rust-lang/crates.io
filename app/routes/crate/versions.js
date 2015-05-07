@@ -2,7 +2,7 @@ import Ember from 'ember';
 import Crate from 'cargo/models/crate';
 
 export default Ember.Route.extend({
-    afterModel: function(data) {
+    afterModel(data) {
         if (data instanceof Crate) {
             return data.get('versions');
         } else {
@@ -10,10 +10,10 @@ export default Ember.Route.extend({
         }
     },
 
-    setupController: function(controller, data) {
+    setupController(controller, data) {
         if (data instanceof Crate) {
             data = {crate: data, version: null};
         }
         this._super(controller, data.crate);
-    },
+    }
 });

@@ -1,45 +1,50 @@
 import Ember from 'ember';
 import ajax from 'ic-ajax';
 
-var TO_SHOW = 5;
+const TO_SHOW = 5;
+const { computed } = Ember;
 
 export default Ember.ObjectController.extend({
-    fetchingFeed: true,
-    loadingMore: false,
-    hasMore: false,
-    myCrates: [],
-    myFollowing: [],
-    myFeed: [],
+    init() {
+      this._super(...arguments);
 
-    visibleCrates: function() {
+      this.fetchingFeed = true;
+      this.loadingMore = false;
+      this.hasMore = false;
+      this.myCrates = [];
+      this.myFollowing = [];
+      this.myFeed = [];
+    },
+
+    visibleCrates: computed('myCreates', function() {
         return this.get('myCrates').slice(0, TO_SHOW);
-    }.property('myCrates'),
+    }),
 
-    visibleFollowing: function() {
+    visibleFollowing: computed('myFollowing', function() {
         return this.get('myFollowing').slice(0, TO_SHOW);
-    }.property('myFollowing'),
+    }),
 
-    hasMoreCrates: function() {
+    hasMoreCrates: computed('myCreates', function() {
         return this.get('myCrates.length') > TO_SHOW;
-    }.property('myCrates'),
+    }),
 
-    hasMoreFollowing: function() {
+    hasMoreFollowing: computed('myFollowing', function() {
         return this.get('myFollowing.length') > TO_SHOW;
-    }.property('myFollowing'),
+    }),
 
     actions: {
-        loadMore: function() {
-            var self = this;
+        loadMore() {
             this.set('loadingMore', true);
             var page = (this.get('myFeed').length / 10) + 1;
-            ajax('/me/updates?page=' + page).then(function(data) {
-                self.store.pushMany('crate', data.crates);
-                var versions = self.store.pushMany('version', data.versions);
-                self.get('myFeed').pushObjects(versions);
-                self.set('hasMore', data.meta.more);
-            }).finally(function() {
-                self.set('loadingMore', false);
+
+            ajax('/me/updates?page=' + page).then((data) => {
+                this.store.pushMany('crate', data.crates);
+                var versions = this.store.pushMany('version', data.versions);
+                this.get('myFeed').pushObjects(versions);
+                this.set('hasMore', data.meta.more);
+            }).finally(() => {
+                this.set('loadingMore', false);
             });
-        },
-    },
+        }
+    }
 });

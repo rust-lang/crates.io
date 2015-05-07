@@ -1,17 +1,16 @@
 import Ember from 'ember';
 
+const { computed } = Ember;
+
 export default Ember.Component.extend({
   user: null,
   attributeBindings: ['title', 'href'],
   tagName: 'a',
 
-  title: function() {
-      return this.get('user.login');
-  }.property('user'),
-
-  'href': function() {
+  title: computed.readOnly('user.login'),
+  href: computed('user', function() {
       // TODO replace this with a link to a native crates.io profile
       // page when they exist.
-      return 'https://github.com/' + this.get('user.login');
-  }.property('user'),
+      return `https://github.com/${this.get('user.login')}`;
+  })
 });

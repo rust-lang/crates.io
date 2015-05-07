@@ -7,10 +7,10 @@ export default Ember.Route.extend({
         sort: { refreshModel: true },
     },
 
-    model: function(params) {
+    model(params) {
         // The backend throws an error if the letter param is
         // empty or null.
-        if(!params.letter) {
+        if (!params.letter) {
             delete params.letter;
         }
 

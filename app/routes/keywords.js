@@ -6,7 +6,7 @@ export default Ember.Route.extend({
         sort: { refreshModel: true },
     },
 
-    model: function(params) {
+    model(params) {
         return this.store.find('keyword', params);
     },
 });

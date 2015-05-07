@@ -10,36 +10,35 @@ export default Ember.Route.extend({
     reverse_dependencies: null,
     params: null,
 
-    model: function(params, transition) {
+    model(params, transition) {
         this.set('params', params);
         return this._super(params, transition);
     },
 
-    afterModel: function(data) {
+    afterModel(data) {
         var crate;
         if (data instanceof Crate) {
             crate = data;
         } else {
             crate = data.crate;
         }
-        var self = this;
 
         var params = this.get('params');
         params.reverse = true;
         params.crate = crate;
 
-        return this.store.find('dependency', params).then(function(deps) {
-            var controller = self.controllerFor('crate/reverse_dependencies');
+        return this.store.find('dependency', params).then((deps) => {
+            var controller = this.controllerFor('crate/reverse_dependencies');
             if (controller) {
                 controller.set('model', deps);
             }
-            self.set('reverse_dependencies', deps);
-            self.set('crate', crate);
+            this.set('reverse_dependencies', deps);
+            this.set('crate', crate);
         });
     },
 
-    setupController: function(controller) {
+    setupController(controller) {
         this._super(controller, this.get('reverse_dependencies'));
         controller.set('crate', this.get('crate'));
-    },
+    }
 });

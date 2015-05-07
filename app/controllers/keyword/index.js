@@ -1,6 +1,8 @@
 import Ember from 'ember';
 import PaginationMixin from 'cargo/mixins/pagination';
 
+const { computed } = Ember;
+
 export default Ember.ArrayController.extend(PaginationMixin, {
     needs: ['application'],
     queryParams: ['page', 'per_page', 'sort'],
@@ -9,20 +11,20 @@ export default Ember.ArrayController.extend(PaginationMixin, {
     sort: 'alpha',
     showSortBy: false,
 
-    totalItems: function() {
+    totalItems: computed('model', function() {
         return this.store.metadataFor('crate').total;
-    }.property('model'),
+    }),
 
-    currentSortBy: function() {
+    currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'downloads') {
             return 'Downloads';
         } else {
             return 'Alphabetical';
         }
-    }.property('sort'),
+    }),
 
     actions: {
-        toggleShowSortBy: function() {
+        toggleShowSortBy() {
             var opt = 'showSortBy';
             this.get('controllers.application').resetDropdownOption(this, opt);
         },

@@ -5,26 +5,28 @@ export default Ember.ObjectController.extend({
     isResetting: false,
 
     actions: {
-        resetToken: function() {
+        resetToken() {
             this.set('isResetting', true);
-            var self = this;
+
             ajax({
                 dataType: "json",
                 url: '/me/reset_token',
                 method: 'put',
-            }).then(function(d) {
-                self.get('model').set('api_token', d.api_token);
-            }).catch(function(reason) {
+            }).then((d) => {
+                this.get('model').set('api_token', d.api_token);
+            }).catch((reason) => {
                 var msg;
                 if (reason.status === 403) {
                     msg = "A login is required to perform this action";
                 } else {
                     msg = "An unknown error occurred";
                 }
-                self.controllerFor('application').set('nextFlashError', msg);
-                self.transitionToRoute('index');
-            }).finally(function() {
-                self.set('isResetting', false);
+                this.controllerFor('application').set('nextFlashError', msg);
+                // TODO: this should be an action, the route state machine
+                // should recieve signals not external transitions
+                this.transitionToRoute('index');
+            }).finally(() => {
+                this.set('isResetting', false);
             });
         }
     }

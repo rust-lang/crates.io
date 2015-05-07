@@ -1,12 +1,14 @@
 import Ember from 'ember';
 
+const { computed } = Ember;
+
 export default Ember.Component.extend({
     size: 'small',
     user: null,
     attributeBindings: ['src', 'width', 'height'],
     tagName: 'img',
 
-    width: function() {
+    width: computed('size', function() {
         if (this.get('size') === 'small') {
             return 22;
         } else if (this.get('size') === 'medium-small') {
@@ -14,13 +16,11 @@ export default Ember.Component.extend({
         } else {
             return 85; // medium
         }
-    }.property('size'),
+    }),
 
-    height: function() {
-        return this.get('width');
-    }.property('width'),
+    height: computed.readOnly('width'),
 
-    src: function() {
+    src: computed('size', 'user', function() {
         return this.get('user.avatar') + '&s=' + this.get('width');
-    }.property('size', 'user'),
+    })
 });
