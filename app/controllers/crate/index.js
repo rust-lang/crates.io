@@ -173,8 +173,8 @@ export default Ember.ObjectController.extend({
             }
             if (extra.length > 0) {
                 versions.push({
-                  id: null,
-                  num: 'Other'
+                    id: null,
+                    num: 'Other'
                 });
             }
 
