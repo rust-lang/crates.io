@@ -192,7 +192,7 @@
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
-            <span {{bind-attr class="crate.versions.isPending:loading :num"}}>
+            <span class="{{if crate.versions.isPending 'loading'}} num">
                 <img src="/assets/package.png"/>
                 {{ model.versions.length }}
             </span>
@@ -204,7 +204,7 @@
         <span class='small'>Showing stats for</span>
         <div class='button-holder'>
             <button {{action 'toggleVersions'}}
-                     {{bind-attr class="showAllVersions:active :tan-button :dropdown"}}>
+                    class="{{if showAllVersions 'active'}} dropdown">
                 {{#if requestedVersion}}
                     {{ requestedVersion }}
                 {{else}}
@@ -213,7 +213,7 @@
                 <span class='arrow'></span>
             </button>
 
-            <ul id='all-versions' {{bind-attr class="showAllVersions:open :dropdown"}}>
+            <ul id='all-versions' class="{{if showAllVersions 'open'}} dropdown">
                 <li class='all'>
                     {{#link-to 'crate.index' this}}All Versions{{/link-to}}
                 </li>
