@@ -29,7 +29,6 @@ export default Ember.ArrayController.extend(PaginationMixin, {
         toggleShowSortBy() {
             var opt = 'showSortBy';
             this.get('controllers.application').resetDropdownOption(this, opt);
-
         },
     },
 });
