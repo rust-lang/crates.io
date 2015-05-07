@@ -38,14 +38,14 @@
 <div id='home-crates' class='crate-lists'>
     <div id='new-crates'>
         <h2>New Crates</h2>
-        {{render "crate-list" new_crates}}
+        {{crate-list crates=new_crates}}
     </div>
     <div id='most-downloaded'>
         <h2>Most Downloaded</h2>
-        {{render "crate-list" most_downloaded}}
+        {{crate-list crates=most_downloaded}}
     </div>
     <div id='just-updated'>
         <h2>Just Updated</h2>
-        {{render "crate-list" just_updated}}
+        {{crate-list crates=just_updated}}
     </div>
 </div>
