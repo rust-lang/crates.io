@@ -41,10 +41,10 @@
 {{else}}
 <div class='crate-info'>
     <div class='docs'>
-        {{#if description}}
+        {{#if model.description}}
             <div class='about'>
                 <h3>About This Package</h3>
-                <p>{{ description }}</p>
+                <p>{{ model.description }}</p>
             </div>
         {{/if}}
         <div class='install'>
@@ -56,7 +56,7 @@
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{ from-now updated_at }}</div>
+                <div class='date'>{{ from-now model.updated_at }}</div>
             </div>
 
             <div class="authors">
@@ -70,14 +70,14 @@
         </div>
 
         <div class='bottom'>
-            {{#if license}}
+            {{#if model.license}}
                 <div>
                     <h3>License</h3>
-                    <p>{{ license }}</p>
+                    <p>{{ model.license }}</p>
                 </div>
             {{/if}}
 
-            {{#unless crate.keywords.isPending}}
+            {{#unless model.crate.keywords.isPending}}
                 {{#if anyKeywords}}
                     <div>
                         <h3>Keywords</h3>
