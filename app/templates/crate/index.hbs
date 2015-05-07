@@ -134,11 +134,7 @@
     <h3>Dependencies</h3>
     <ul>
       {{#each currentDependencies as |dep|}}
-      <li>
-        {{#link-to 'crate' dep.crate_id}}
-            {{ dep.crate_id }} {{ format-req dep.req }}
-        {{/link-to}}
-      </li>
+        {{link-to-dep dep=dep}}
       {{else}}
           <li>None</li>
       {{/each}}
@@ -150,11 +146,7 @@
       <h3>Dev-Dependencies</h3>
       <ul>
         {{#each currentDevDependencies as |dep|}}
-        <li>
-          {{#link-to 'crate' dep.crate_id}}
-              {{ dep.crate_id}} {{ dep.req }}
-          {{/link-to}}
-        </li>
+            {{link-to-dep dep=dep}}
         {{/each}}
       </ul>
     </div>
