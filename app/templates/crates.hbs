@@ -9,12 +9,12 @@
 </div>
 
 <div id='selection'>
-    {{#each alphabet}}
-        {{#link-to 'crates' (query-params letter=this page=1)}}
-            {{ this }}
+    {{#each alphabet as |letter|}}
+        {{#link-to 'crates' (query-params letter=letter page=1)}}
+            {{ letter }}
         {{/link-to}}
     {{/each}}
-    {{view Ember.Select content=alphabet value=letter prompt="Filter by the letter..."}}
+    {{view 'select' content=alphabet value=letter prompt="Filter by the letter..."}}
 </div>
 
 <div id='results'>
@@ -52,8 +52,8 @@
 </div>
 
 <div id='crates' class='white-rows'>
-    {{#each}}
-        {{render "crate-row" this}}
+    {{#each this as |row|}}
+        {{render "crate-row" row}}
     {{/each}}
 </div>
 
@@ -61,8 +61,10 @@
     {{#link-to 'crates' (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'crates' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'crates' (query-params page=page)}}
+            {{ page }}
+        {{/link-to}}
     {{/each}}
     {{#link-to 'crates' (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>

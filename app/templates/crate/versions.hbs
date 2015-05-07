@@ -11,16 +11,16 @@
 </div>
 
 <div id='crate-all-versions' class='white-rows'>
-    {{#each model.versions}}
+    {{#each model.versions as |version|}}
         <div class='row'>
             <div>
-                {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+                {{#link-to 'crate' version}}{{ num }}{{/link-to}}
                 <span class='small'>{{ date-long created_at }}</span>
                 {{#if yanked}}
                     <span class='yanked'>yanked</span>
                 {{/if}}
             </div>
-            {{#link-to 'crate' this class='arrow'}}
+            {{#link-to 'crate' version class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>
             {{/link-to}}
         </div>

@@ -14,11 +14,11 @@
 </div>
 
 <div id='crate-all-reverse-dependencies' class='white-rows'>
-    {{#each}}
+    {{#each this as |crate|}}
         <div class='row'>
           <div>
             {{#link-to 'crate' crate_id}}{{crate_id}}{{/link-to}} requires {{req}}
-                {{#link-to 'crate' this}}{{ num }}{{/link-to}}
+                {{#link-to 'crate' crate}}{{ num }}{{/link-to}}
             </div>
             {{#link-to 'crate' crate_id class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>
@@ -28,13 +28,15 @@
 </div>
 
 <div class='pagination'>
-    {{#link-to 'crate.reverse_dependencies' crate (query-params page=prevPage) class="prev"}}
+    {{#link-to 'crate.reverse_dependencies' crate (query-params page=prevPage) class='prev'}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'crate.reverse_dependencies' crate (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'crate.reverse_dependencies' crate (query-params page=page)}}
+            {{ page }}
+        {{/link-to}}
     {{/each}}
-    {{#link-to 'crate.reverse_dependencies' crate (query-params page=nextPage) class="next"}}
+    {{#link-to 'crate.reverse_dependencies' crate (query-params page=nextPage) class='next'}}
         <img src="/assets/right-pag.png"/>
     {{/link-to}}
 </div>

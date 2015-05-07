@@ -62,7 +62,7 @@
             <div class="authors">
                 <h3>Authors</h3>
                 <ul>
-                    {{#each displayedAuthors}}
+                    {{#each displayedAuthors as |author|}}
                         <li>{{ format-email name }}</li>
                     {{/each}}
                 </ul>
@@ -82,8 +82,8 @@
                     <div>
                         <h3>Keywords</h3>
                         <ul class='keywords'>
-                            {{#each keywords}}
-                                <li>{{link-to keyword 'keyword' this}}</li>
+                            {{#each keywords as |keyword|}}
+                                <li>{{link-to keyword 'keyword' keyword}}</li>
                             {{/each}}
                         </ul>
                     </div>
@@ -93,9 +93,9 @@
             <div>
                 <h3>Owners</h3>
                 <ul class='owners'>
-                    {{#each owners}}
+                    {{#each owners as |owner|}}
                         <li>
-                          {{#user-link user=this}}
+                          {{#user-link user=owner}}
                             {{user-avatar user=this size='medium-small'}}
                           {{/user-link}}
                         </li>
@@ -136,7 +136,7 @@
       {{#each currentDependencies}}
       <li>
         {{#link-to 'crate' crate_id}}
-        {{ crate_id }} {{ format-req req }}
+            {{ crate_id }} {{ format-req req }}
         {{/link-to}}
       </li>
       {{else}}
@@ -152,7 +152,7 @@
         {{#each currentDevDependencies}}
         <li>
           {{#link-to 'crate' crate_id}}
-          {{ crate_id}} {{ req }}
+              {{ crate_id}} {{ req }}
           {{/link-to}}
         </li>
         {{/each}}
