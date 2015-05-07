@@ -128,8 +128,8 @@ export default Ember.ObjectController.extend({
             }
 
             ajax({
-              method,
-              url
+                method,
+                url
             }).finally(() => this.set('fetchingFollowing', false));
         },
 

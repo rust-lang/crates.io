@@ -25,8 +25,8 @@ export default Ember.Route.extend({
             var url = '/api/v1/crates/' + data.crate.get('name') + '/following';
 
             ajax(url)
-              .then((d) => controller.set('following', d.following))
-              .finally(() => controller.set('fetchingFollowing', false));
+                .then((d) => controller.set('following', d.following))
+                .finally(() => controller.set('fetchingFollowing', false));
         }
 
         // Try to find the requested version in the versions we fetch
