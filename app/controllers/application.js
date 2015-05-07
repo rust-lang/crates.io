@@ -56,7 +56,7 @@ export default Ember.Controller.extend({
 
         toggleUserOptions() {
             this.resetDropdownOption(this, 'showUserOptions');
-        }
-    }
+        },
+    },
 });
 
