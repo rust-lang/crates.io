@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{self, BufReader, BufStream};
+use std::io::{self, BufReader};
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::str;
@@ -10,6 +10,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+use bufstream::BufStream;
 use curl::http;
 
 // A "bomb" so when the test task exists we know when to shut down

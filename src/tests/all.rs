@@ -11,6 +11,7 @@ extern crate git2;
 extern crate time;
 extern crate url;
 extern crate semver;
+extern crate bufstream;
 
 use std::collections::HashMap;
 use std::error::Error as StdError;
