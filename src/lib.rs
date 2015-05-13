@@ -31,6 +31,7 @@ impl Static {
 }
 
 impl Handler for Static {
+    #[allow(deprecated)]
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
         let request_path = &request.path()[1..];
         if request_path.contains("..") { return Ok(not_found()) }
