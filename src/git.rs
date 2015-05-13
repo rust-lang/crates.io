@@ -132,8 +132,10 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
         // git push
         let mut callbacks = git2::RemoteCallbacks::new();
+        callbacks.credentials(credentials);
         let mut origin = try!(repo.find_remote("origin"));
-        origin.set_callbacks(callbacks.credentials(credentials));
+
+        origin.set_callbacks(callbacks);
 
         {
             let mut push = try!(origin.push());

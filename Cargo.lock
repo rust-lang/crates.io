@@ -17,10 +17,10 @@ dependencies = [
  "curl 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "git2 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git2 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "migrate 0.1.0",
- "oauth2 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "oauth2 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.8.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.5.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -243,12 +243,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "git2"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "libgit2-sys 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libgit2-sys 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.2.31 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -264,7 +264,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libgit2-sys"
-version = "0.2.12"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "oauth2"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "curl 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
