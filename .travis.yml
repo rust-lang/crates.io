@@ -1,4 +1,9 @@
 language: rust
+rust:
+  - 1.0.0
+  - beta
+  - nightly
+sudo: false
 notifications:
   email:
     on_success: never
