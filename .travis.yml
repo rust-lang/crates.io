@@ -6,7 +6,7 @@ rust:
 sudo: false
 script:
   - cargo build --verbose
-  - cargo test --verbose
+  - [ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose
   - cargo doc
 after_success: |
   [ $TRAVIS_BRANCH = master ] &&
