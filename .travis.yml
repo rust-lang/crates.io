@@ -7,7 +7,8 @@ sudo: false
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - cargo build --manifest-path=example/Cargo.toml
+  - |
+    [ $TRAVIS_RUST_VERSION != nightly ] || cargo build --manifest-path=example/Cargo.toml
   - cargo doc
 after_success: |
   [ $TRAVIS_BRANCH = master ] &&
