@@ -7,6 +7,10 @@ export default Ember.ArrayController.extend(PaginationMixin, {
     page: '1',
     per_page: 10,
 
+    name: function() {
+      return this.get("q") + " - Cargo search";
+    }.property('model'),
+
     totalItems: function() {
         return this.store.metadataFor('crate').total;
     }.property('model'),
