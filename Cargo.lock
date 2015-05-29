@@ -2,7 +2,7 @@
 name = "cargo-registry"
 version = "0.1.0"
 dependencies = [
- "bufstream 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bufstream 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "civet 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -40,7 +40,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bufstream"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -412,7 +412,7 @@ name = "postgres"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bufstream 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bufstream 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "debug-builders 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
