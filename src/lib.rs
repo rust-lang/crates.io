@@ -1,10 +1,10 @@
 #![allow(trivial_casts)]
-#![feature(fs_time)]
 #![cfg_attr(test, deny(warnings))]
 
 extern crate conduit;
 extern crate conduit_mime_types as mime;
 extern crate time;
+extern crate filetime;
 #[cfg(test)] extern crate tempdir;
 
 use std::collections::HashMap;
@@ -14,6 +14,7 @@ use std::io::prelude::*;
 use std::path::{PathBuf, Path};
 use std::fs::File;
 use conduit::{Request, Response, Handler};
+use filetime::FileTime;
 
 pub struct Static {
     path: PathBuf,
@@ -46,9 +47,10 @@ impl Handler for Static {
         if data.is_dir() {
             return Ok(not_found())
         }
+        let mtime = FileTime::from_last_modification_time(&data);
         let ts = time::Timespec {
-            sec: (data.modified() as i64) / 1000,
-            nsec: (((data.modified() as u32) % 1000) as i32) * 1000000
+            sec: (mtime.seconds_relative_to_1970() as i64) / 1000,
+            nsec: (((mtime.nanoseconds() as u32) % 1000) as i32) * 1000000
         };
         let tm = time::at(ts).to_utc();
 
