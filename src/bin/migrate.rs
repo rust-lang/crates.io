@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(core)]
+#![feature(iter_cmp)]
 
 extern crate cargo_registry;
 extern crate migrate;
