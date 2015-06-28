@@ -100,7 +100,7 @@ impl<E: CargoError> CargoError for ChainedError<E> {
 
 impl<E: CargoError> fmt::Display for ChainedError<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.error.fmt(f)
+        write!(f, "{} caused by {}", self.error, self.cause)
     }
 }
 

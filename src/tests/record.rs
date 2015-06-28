@@ -61,7 +61,6 @@ pub fn proxy() -> (String, Bomb) {
 
     let data = PathBuf::from(file!()).parent().unwrap().join("http-data")
                                     .join(&me.replace("::", "_"));
-    println!("{:?}", data);
     let record = record && !data.exists();
     let a2 = t!(a.try_clone());
 
@@ -91,13 +90,12 @@ pub fn proxy() -> (String, Bomb) {
                 replay_http(socket, file.as_mut().unwrap(), &mut sink2);
             }
         }
-        match file {
-            Some(ref mut f) => {
+        if !record {
+            if let Some(mut f) = file {
                 let mut s = String::new();
                 t!(f.read_line(&mut s));
                 assert_eq!(s, "");
             }
-            None => {}
         }
         tx.send(()).unwrap();
     });
@@ -133,7 +131,7 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
             for line in lines {
                 let line = t!(line);
                 if line.len() < 3 { break }
-                let mut parts = line.splitn(1, ':');
+                let mut parts = line.splitn(2, ':');
                 headers.insert(parts.next().unwrap().to_string(),
                                parts.next().unwrap()[1..].to_string());
             }

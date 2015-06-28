@@ -667,8 +667,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let resp = {
             let s3req = app.bucket.put(&mut handle, &path, &mut body,
                                        "application/x-tar")
-                                  .content_length(length as usize)
-                                  .header("Content-Encoding", "gzip");
+                                  .content_length(length as usize);
             try!(s3req.exec().chain_error(|| {
                 internal(format!("failed to upload to S3: `{}`", path))
             }))

@@ -1,22 +1,21 @@
-===REQUEST 355
+===REQUEST 331
 PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
-Content-Type: application/x-tar
-Authorization: AWS AKIAI5VLFRDTR3IEY4NQ:ZxJ9vRtU0NUbUxYb+W3XXR2YEEk=
+Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=
 Content-Length: 0
-Date: Mon, 10 Nov 2014 15:29:42 -0800
 Host: alexcrichton-test.s3.amazonaws.com
-Content-Encoding: gzip
+Content-Type: application/x-tar
+Date: Sun, 28 Jun 2015 14:07:17 -0700
 
 
-===RESPONSE 246
+===RESPONSE 258
 HTTP/1.1 200
-x-amz-id-2: rt01ucfTzulP2ewBqrNXvJDEkk+UuznUbOV0YWkKktcNwBnZwfOchNO3z7y6EuO7
+x-amz-request-id: CB0E925D8E3AB3E8
+x-amz-id-2: SiaMwszM1p2TzXlLauvZ6kRKcUCg7HoyBW29vts42w9ArrLwkJWl8vuvPuGFkpM6XGH+YXN852g=
+date: Sun, 28 Jun 2015 21:07:51 GMT
+etag: "d41d8cd98f00b204e9800998ecf8427e"
 content-length: 0
 server: AmazonS3
-date: Mon, 10 Nov 2014 23:29:47 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-x-amz-request-id: C68E453428CFBE5E
 
 
