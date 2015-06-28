@@ -12,10 +12,6 @@ pub struct RouteBuilder {
     routers: HashMap<Method, Router<Box<Handler>>>,
 }
 
-// FIXME(#22655) these should not be necessary
-unsafe impl Sync for RouteBuilder {}
-unsafe impl Send for RouteBuilder {}
-
 #[derive(Debug)]
 pub struct RouterError(String);
 
