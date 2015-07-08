@@ -17,7 +17,7 @@ dependencies = [
  "curl 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "git2 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git2 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "migrate 0.1.0",
  "oauth2 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -257,12 +257,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "git2"
-version = "0.2.10"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "libgit2-sys 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libgit2-sys 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.2.31 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -278,11 +278,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libgit2-sys"
-version = "0.2.13"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "libssh2-sys 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libssh2-sys 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "libz-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl-sys 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "libssh2-sys"
-version = "0.1.18"
+version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
