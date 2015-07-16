@@ -54,6 +54,7 @@ pub mod krate;
 pub mod model;
 pub mod upload;
 pub mod user;
+pub mod owner;
 pub mod util;
 pub mod version;
 mod licenses;

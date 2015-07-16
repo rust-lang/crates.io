@@ -27,7 +27,8 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::EncodableKeyword;
 use upload;
-use user::{RequestUser, EncodableUser};
+use user::RequestUser;
+use owner::{EncodableOwner, Owner, Rights, rights};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
@@ -174,7 +175,7 @@ impl Crate {
         })));
 
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, user_id, created_at, updated_at, deleted)
+                           (crate_id, owner_id, created_at, updated_at, deleted)
                            VALUES ($1, $2, $3, $3, FALSE)",
                           &[&ret.id, &user_id, &now]));
         return Ok(ret);
@@ -288,38 +289,53 @@ impl Crate {
         Ok(ret)
     }
 
-    pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<User>> {
+    pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<Owner>> {
+        // Users and Teams are differentiated by the owner_kind field:
+        // User = 0, Team = 1
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       INNER JOIN crate_owners
-                                         ON crate_owners.user_id = users.id
+                                         ON crate_owners.owner_id = users.id
                                       WHERE crate_owners.crate_id = $1
-                                        AND crate_owners.deleted = FALSE"));
-        let rows = try!(stmt.query(&[&self.id]));
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+                                        AND crate_owners.deleted = FALSE
+                                        AND crate_owners.owner_kind = 0"));
+        let user_rows = try!(stmt.query(&[&self.id]));
+
+        let stmt = try!(conn.prepare("SELECT * FROM teams
+                                      INNER JOIN crate_owners
+                                         ON crate_owners.owner_id = teams.id
+                                      WHERE crate_owners.crate_id = $1
+                                        AND crate_owners.deleted = FALSE
+                                        AND crate_owners.owner_kind = 1"));
+        let team_rows = try!(stmt.query(&[&self.id]));
+
+        let mut owners = vec![];
+        owners.extend(user_rows.iter().map(|r| Owner::User(Model::from_row(&r))));
+        owners.extend(team_rows.iter().map(|r| Owner::Team(Model::from_row(&r))));
+        Ok(owners)
     }
 
-    pub fn owner_add(&self, conn: &Connection, who: i32,
+    pub fn owner_add(&self, conn: &Connection, req_user: &User,
                      name: &str) -> CargoResult<()> {
-        let user = try!(User::find_by_login(conn, name).map_err(|_| {
-            human(format!("could not find user with login `{}`", name))
-        }));
+
+        let owner = try!(Owner::find_by_name_for_add(conn, name, req_user));
+
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, user_id, created_at, updated_at,
-                            created_by, deleted)
-                           VALUES ($1, $2, $3, $3, $4, FALSE)",
-                          &[&self.id, &user.id, &::now(), &who]));
+                           (crate_id, owner_id, created_at, updated_at,
+                            created_by, owner_kind, deleted)
+                           VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
+                          &[&self.id, &owner.id(), &::now(), &req_user.id, &owner.kind()]));
         Ok(())
     }
 
-    pub fn owner_remove(&self, conn: &Connection, _who: i32,
+    pub fn owner_remove(&self, conn: &Connection, _req_user: &User,
                         name: &str) -> CargoResult<()> {
-        let user = try!(User::find_by_login(conn, name).map_err(|_| {
+        let owner = try!(Owner::find_by_name(conn, name).map_err(|_| {
             human(format!("could not find user with login `{}`", name))
         }));
         try!(conn.execute("UPDATE crate_owners
                               SET deleted = TRUE, updated_at = $1
-                            WHERE crate_id = $2 AND user_id = $3",
-                          &[&::now(), &self.id, &user.id]));
+                            WHERE crate_id = $2 AND owner_id = $3",
+                          &[&::now(), &self.id, &owner.id()]));
         Ok(())
     }
 
@@ -631,7 +647,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.license_file));
     if krate.user_id != user.id {
         let owners = try!(krate.owners(try!(req.tx())));
-        if !owners.iter().any(|o| o.id == user.id) {
+        if try!(rights(&owners, &user)) >= Rights::Publish {
             return Err(human("crate name has already been claimed by \
                               another user"))
         }
@@ -953,10 +969,10 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let krate = try!(Crate::find_by_name(tx, crate_name));
     let owners = try!(krate.owners(tx));
-    let owners = owners.into_iter().map(|u| u.encodable()).collect();
+    let owners = owners.into_iter().map(|o| o.encodable()).collect();
 
     #[derive(RustcEncodable)]
-    struct R { users: Vec<EncodableUser> }
+    struct R { users: Vec<EncodableOwner> }
     Ok(req.json(&R{ users: owners }))
 }
 
@@ -974,26 +990,35 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
-    if !owners.iter().any(|u| u.id == user.id) {
-        return Err(human("must already be an owner to modify owners"))
+
+    match try!(rights(&owners, &user)) {
+        Rights::Full => {} // Yes!
+        Rights::Publish => {
+            return Err(human("team members don't have permission to modify owners"));
+        }
+        Rights::None => {
+            return Err(human("only owners have permission to modify owners"));
+        }
     }
 
-    #[derive(RustcDecodable)] struct Request { users: Vec<String> }
+    #[derive(RustcDecodable)] struct Request { owners: Vec<String> }
     let request: Request = try!(json::decode(&body).map_err(|_| {
         human("invalid json request")
     }));
 
-    for login in request.users.iter() {
+    for name in &request.owners {
         if add {
-            if owners.iter().any(|u| u.gh_login == *login) {
-                return Err(human(format!("user `{}` is already an owner", login)))
+            if owners.iter().any(|owner| owner.name() == *name) {
+                return Err(human(format!("`{}` is already an owner", name)))
             }
-            try!(krate.owner_add(tx, user.id, &login));
+            try!(krate.owner_add(tx, &user, &name));
         } else {
-            if *login == user.gh_login {
+            // Removing the team the gives you rights is prevented because
+            // team members only have Rights::Publish
+            if *name == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            try!(krate.owner_remove(tx, user.id, &login));
+            try!(krate.owner_remove(tx, &user, &name));
         }
     }
 

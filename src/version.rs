@@ -18,6 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use upload;
 use user::RequestUser;
+use owner::{rights, Rights};
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
 
 #[derive(Clone)]
@@ -343,7 +344,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let user = try!(req.user());
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
-    if !owners.iter().any(|u| u.id == user.id) {
+    if try!(rights(&owners, &user)) < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"))
     }
 

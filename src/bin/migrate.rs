@@ -448,6 +448,21 @@ fn migrations() -> Vec<Migration> {
             try!(tx.execute("DROP INDEX index_keywords_lower_keyword", &[]));
             Ok(())
         }),
+        Migration::add_column(20150715170350, "crate_owners", "owner_kind",
+                              "INTEGER NOT NULL DEFAULT 0"),
+        Migration::run(20150804170127,
+            "ALTER TABLE crate_owners ALTER owner_kind DROP DEFAULT",
+            "ALTER TABLE crate_owners ALTER owner_kind SET DEFAULT 0",
+        ),
+        Migration::add_table(20150804170128, "teams", "
+            id            SERIAL PRIMARY KEY
+            name          VARCHAR NOT NULL UNIQUE
+            github_id     INTEGER NOT NULL UNIQUE
+        "),
+        Migration::run(20150804170129,
+            "ALTER TABLE crate_owners RENAME user_id TO owner_id",
+            "ALTER TABLE crate_owners RENAME owner_id TO user_id",
+        ),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -479,6 +494,7 @@ fn migrations() -> Vec<Migration> {
     }
 }
 
+// DO NOT UPDATE OR USE FOR NEW MIGRATIONS
 fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()> {
     let v: Vec<(i32, i32)> = {
         let stmt = try!(tx.prepare("SELECT user_id, crate_id
