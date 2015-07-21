@@ -105,7 +105,8 @@ impl Model for Dependency {
             req: semver::VersionReq::parse(&req).unwrap(),
             optional: row.get("optional"),
             default_features: row.get("default_features"),
-            features: features.split(',').map(|s| s.to_string())
+            features: features.split(',').filter(|s| !s.is_empty())
+                              .map(|s| s.to_string())
                               .collect(),
             target: row.get("target"),
             kind: match kind.unwrap_or(0) {
