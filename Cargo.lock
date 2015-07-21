@@ -7,7 +7,7 @@ dependencies = [
  "conduit 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-cookie 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-git-http-backend 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-git-http-backend 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-json-parser 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-log-requests 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-middleware 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "conduit-git-http-backend"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "conduit 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
