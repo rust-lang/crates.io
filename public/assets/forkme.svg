@@ -5,12 +5,36 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    enable-background="new"
    version="1.1"
    id="svg2"
    viewBox="0 0 149 149"
    height="149"
-   width="149">
+   width="149"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="forkme.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="709"
+     id="namedview4168"
+     showgrid="false"
+     inkscape:zoom="3.5704698"
+     inkscape:cx="74.5"
+     inkscape:cy="83.646973"
+     inkscape:window-x="-4"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
   <defs
      id="defs4">
     <filter
@@ -112,7 +136,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -165,14 +189,16 @@
     </g>
   </g>
   <g
-     id="layer4">
+     id="layer4"
+     transform="matrix(0.79401875,0,0,0.79401875,16.859679,9.8388664)">
     <text
        transform="matrix(0.70710678,0.70710678,-0.70710678,0.70710678,0,0)"
        id="text4486"
        y="-21.246748"
        x="33.130314"
        style="font-style:normal;font-weight:normal;font-size:54.73657227px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       xml:space="preserve"><tspan
+       xml:space="preserve"
+       sodipodi:linespacing="125%"><tspan
          style="font-size:15.39466095px;fill:#ffffff"
          y="-21.246748"
          x="33.130314"
