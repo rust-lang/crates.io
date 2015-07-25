@@ -194,14 +194,14 @@
     <text
        transform="matrix(0.70710678,0.70710678,-0.70710678,0.70710678,0,0)"
        id="text4486"
-       y="-21.246748"
-       x="33.130314"
-       style="font-style:normal;font-weight:normal;font-size:54.73657227px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       y="-19.654696"
+       x="35.917938"
+       style="font-style:normal;font-weight:normal;font-size:77.02822876px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:0.97000002;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"
        sodipodi:linespacing="125%"><tspan
-         style="font-size:15.39466095px;fill:#ffffff"
-         y="-21.246748"
-         x="33.130314"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.66419029px;font-family:Collegiate;-inkscape-font-specification:Collegiate;fill:#ffffff"
+         y="-19.654696"
+         x="35.917938"
          id="tspan4488">Fork me on GitHub</tspan></text>
   </g>
 </svg>
