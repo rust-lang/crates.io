@@ -109,6 +109,7 @@
         @include display-flex;
         @include justify-content(space-between);
         @include align-items(center);
+        @include border-radius(16px 16px 6px 6px / 4px 4px 4px 4px);
 
         img { vertical-align: middle; }
     }
