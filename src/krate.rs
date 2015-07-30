@@ -10,6 +10,7 @@ use std::sync::Arc;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::http;
+use pg::rows::Row;
 use pg::types::{ToSql, Slice};
 use pg;
 use rustc_serialize::hex::ToHex;
@@ -107,7 +108,7 @@ impl Crate {
         let repository = repository.as_ref().map(|s| &s[..]);
         let mut license = license.as_ref().map(|s| &s[..]);
         let license_file = license_file.as_ref().map(|s| &s[..]);
-        let keywords = keywords.connect(",");
+        let keywords = keywords.join(",");
         try!(validate_url(homepage, "homepage"));
         try!(validate_url(documentation, "documentation"));
         try!(validate_url(repository, "repository"));
@@ -393,7 +394,7 @@ impl Crate {
 }
 
 impl Model for Crate {
-    fn from_row(row: &pg::Row) -> Crate {
+    fn from_row(row: &Row) -> Crate {
         let max: String = row.get("max_version");
         let kws: Option<String> = row.get("keywords");
         Crate {
@@ -754,7 +755,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     if missing.len() > 0 {
         return Err(human(format!("missing or empty metadata fields: {}. Please \
             see http://doc.crates.io/manifest.html#package-metadata for \
-            how to upload metadata", missing.connect(", "))));
+            how to upload metadata", missing.join(", "))));
     }
 
     let user = try!(req.user());

@@ -4,7 +4,7 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use pg;
+use pg::rows::Row;
 use pg::types::Slice;
 
 use {Model, Crate};
@@ -116,7 +116,7 @@ impl Keyword {
                 let crate_id: i32 = krate.id;
                 let id: i32 = *id;
                 format!("({}, {})", crate_id,  id)
-            }).collect::<Vec<_>>().connect(", ");
+            }).collect::<Vec<_>>().join(", ");
             try!(conn.execute(&format!("INSERT INTO crates_keywords
                                         (crate_id, keyword_id) VALUES {}",
                                        insert),
@@ -128,7 +128,7 @@ impl Keyword {
 }
 
 impl Model for Keyword {
-    fn from_row(row: &pg::Row) -> Keyword {
+    fn from_row(row: &Row) -> Keyword {
         Keyword {
             id: row.get("id"),
             created_at: row.get("created_at"),

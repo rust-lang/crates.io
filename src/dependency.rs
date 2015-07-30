@@ -1,6 +1,6 @@
 use semver;
 
-use pg;
+use pg::rows::Row;
 use Model;
 use git;
 use db::Connection;
@@ -49,7 +49,7 @@ impl Dependency {
                   features: &[String], target: &Option<String>)
                   -> CargoResult<Dependency> {
         let req = req.to_string();
-        let features = features.connect(",");
+        let features = features.join(",");
         let stmt = try!(conn.prepare("INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
@@ -86,7 +86,7 @@ impl Dependency {
             req: req.to_string(),
             optional: optional,
             default_features: default_features,
-            features: features.connect(","),
+            features: features.join(","),
             target: target,
             kind: kind,
         }
@@ -94,7 +94,7 @@ impl Dependency {
 }
 
 impl Model for Dependency {
-    fn from_row(row: &pg::Row) -> Dependency {
+    fn from_row(row: &Row) -> Dependency {
         let features: String = row.get("features");
         let req: String = row.get("req");
         let kind: Option<i32> = row.get("kind");

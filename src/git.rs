@@ -90,7 +90,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
             git_crate.yanked = Some(yanked);
             Ok(json::encode(&git_crate).unwrap())
         }).collect::<CargoResult<Vec<String>>>();
-        let new = try!(new).connect("\n");
+        let new = try!(new).join("\n");
         let mut f = try!(File::create(&dst));
         try!(f.write_all(new.as_bytes()));
         try!(f.write_all(b"\n"));

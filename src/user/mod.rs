@@ -5,8 +5,8 @@ use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use curl::http;
 use oauth2::Authorization;
+use pg::rows::Row;
 use pg::types::Slice;
-use pg;
 use rand::{thread_rng, Rng};
 use rustc_serialize::json;
 
@@ -124,7 +124,7 @@ impl User {
 }
 
 impl Model for User {
-    fn from_row(row: &pg::Row) -> User {
+    fn from_row(row: &Row) -> User {
         User {
             id: row.get("id"),
             email: row.get("email"),

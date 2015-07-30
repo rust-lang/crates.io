@@ -4,8 +4,8 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use pg::rows::Row;
 use pg::types::Slice;
-use pg;
 use semver;
 use time::Duration;
 use url;
@@ -189,7 +189,7 @@ impl Version {
 }
 
 impl Model for Version {
-    fn from_row(row: &pg::Row) -> Version {
+    fn from_row(row: &Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {

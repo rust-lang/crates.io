@@ -60,7 +60,7 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
 }
 
 fn collect(tx: &postgres::Transaction,
-           rows: &mut postgres::Rows) -> postgres::Result<Option<i32>> {
+           rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
