@@ -41,7 +41,9 @@ fn env(s: &str) -> String {
 fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     let mut max = 0;
     loop {
-        let tx = try!(conn.transaction());
+        // FIXME(rust-lang/rust#27401): weird declaration to make sure this
+        // variable gets dropped.
+        let tx; tx = try!(conn.transaction());
         {
             let stmt = try!(tx.prepare("SELECT * FROM version_downloads \
                                         WHERE processed = FALSE AND id > $1
