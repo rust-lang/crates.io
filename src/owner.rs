@@ -2,7 +2,7 @@ use {Model, User};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use db::Connection;
 use curl::http;
-use pg;
+use pg::rows::Row;
 use rustc_serialize::json;
 use util::errors::NotFound;
 use std::str;
@@ -203,7 +203,7 @@ impl Team {
 }
 
 impl Model for Team {
-    fn from_row(row: &pg::Row) -> Self {
+    fn from_row(row: &Row) -> Self {
         Team {
             cargo_id: row.get("id"),
             name: row.get("name"),

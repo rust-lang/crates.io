@@ -175,8 +175,9 @@ impl Crate {
         })));
 
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, owner_id, created_at, updated_at, deleted)
-                           VALUES ($1, $2, $3, $3, FALSE)",
+                           (crate_id, owner_id, created_by, created_at,
+                             updated_at, deleted, owner_kind)
+                           VALUES ($1, $2, $2, $3, $3, FALSE, 0)",
                           &[&ret.id, &user_id, &now]));
         return Ok(ret);
 
@@ -334,8 +335,8 @@ impl Crate {
         }));
         try!(conn.execute("UPDATE crate_owners
                               SET deleted = TRUE, updated_at = $1
-                            WHERE crate_id = $2 AND owner_id = $3",
-                          &[&::now(), &self.id, &owner.id()]));
+                            WHERE crate_id = $2 AND owner_id = $3 AND owner_kind = $4",
+                          &[&::now(), &self.id, &owner.id(), &owner.kind()]));
         Ok(())
     }
 
@@ -492,13 +493,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             (format!("SELECT crates.* FROM crates
                        INNER JOIN crate_owners
                           ON crate_owners.crate_id = crates.id
-                       WHERE crate_owners.user_id = $1 {} \
+                       WHERE crate_owners.owner_id = $1
+                       AND crate_owners.owner_kind = 0 {}
                       LIMIT $2 OFFSET $3",
                      sort_sql),
              "SELECT COUNT(crates.*) FROM crates
                INNER JOIN crate_owners
                   ON crate_owners.crate_id = crates.id
-               WHERE crate_owners.user_id = $1".to_string())
+               WHERE crate_owners.owner_id = $1 \
+                 AND crate_owners.owner_kind = 0".to_string())
         })
     }).or_else(|| {
         query.get("following").map(|_| {
@@ -647,7 +650,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.license_file));
 
     let owners = try!(krate.owners(try!(req.tx())));
-    if try!(rights(&owners, &user)) >= Rights::Publish {
+    if try!(rights(&owners, &user)) < Rights::Publish {
         return Err(human("crate name has already been claimed by \
                           another user"))
     }
@@ -1001,12 +1004,12 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
-    #[derive(RustcDecodable)] struct Request { owners: Vec<String> }
+    #[derive(RustcDecodable)] struct Request { users: Vec<String> }
     let request: Request = try!(json::decode(&body).map_err(|_| {
         human("invalid json request")
     }));
 
-    for name in &request.owners {
+    for name in &request.users {
         if add {
             if owners.iter().any(|owner| owner.name() == *name) {
                 return Err(human(format!("`{}` is already an owner", name)))

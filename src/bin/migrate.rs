@@ -455,8 +455,8 @@ fn migrations() -> Vec<Migration> {
             "ALTER TABLE crate_owners ALTER owner_kind SET DEFAULT 0",
         ),
         Migration::add_table(20150804170128, "teams", "
-            id            SERIAL PRIMARY KEY
-            name          VARCHAR NOT NULL UNIQUE
+            id            SERIAL PRIMARY KEY,
+            name          VARCHAR NOT NULL UNIQUE,
             github_id     INTEGER NOT NULL UNIQUE
         "),
         Migration::run(20150804170129,
