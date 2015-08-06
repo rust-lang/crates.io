@@ -645,13 +645,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.repository,
                                                &new_crate.license,
                                                &new_crate.license_file));
-    if krate.user_id != user.id {
-        let owners = try!(krate.owners(try!(req.tx())));
-        if try!(rights(&owners, &user)) >= Rights::Publish {
-            return Err(human("crate name has already been claimed by \
-                              another user"))
-        }
+
+    let owners = try!(krate.owners(try!(req.tx())));
+    if try!(rights(&owners, &user)) >= Rights::Publish {
+        return Err(human("crate name has already been claimed by \
+                          another user"))
     }
+
     if krate.name != name {
         return Err(human(format!("crate was previously named `{}`", krate.name)))
     }
