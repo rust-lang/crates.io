@@ -28,12 +28,14 @@ pub struct AppMiddleware {
 
 impl App {
     pub fn new(config: &Config) -> App {
-        let github = oauth2::Config::new(
+        let mut github = oauth2::Config::new(
             &config.gh_client_id,
             &config.gh_client_secret,
             "https://github.com/login/oauth/authorize",
             "https://github.com/login/oauth/access_token",
         );
+
+        github.scopes.push(String::from("read:org"));
 
         let db_config = r2d2::Config::builder()
             .pool_size(if config.env == ::Env::Production {10} else {1})

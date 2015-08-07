@@ -109,12 +109,23 @@ impl Team {
                          .get(format!("https://api.github.com/orgs/{}/teams", org_name))
                          .header("Accept", "application/vnd.github.v3+json")
                          .header("User-Agent", "hello!")
-                         .header("Authentication", &format!("token {}", &req_user.gh_access_token))
+                         .header("Authorization", &format!("token {}", &req_user.gh_access_token))
                          .exec());
 
-        if resp.get_code() != 200 {
-            return Err(internal(format!("didn't get a 200 result from github: {}",
-                                        resp)))
+        match resp.get_code() {
+            200 => {} // Ok!
+            403 => {
+                return Err(human("It looks like you don't have permission \
+                                  to query one of these organizations. \
+                                  You may need to re-authenticate on \
+                                  crates.io to grant permission to read \
+                                  github org memberships. Just go to \
+                                  https://crates.io/login"));
+            }
+            _ => {
+                return Err(internal(format!("didn't get a 200 result from github: {}",
+                                            resp)));
+            }
         }
 
         #[derive(RustcDecodable)]
@@ -172,17 +183,27 @@ impl Team {
                                    self.github_id, &user.gh_login))
                          .header("Accept", "application/vnd.github.v3+json")
                          .header("User-Agent", "hello!")
-                         .header("Authentication", &format!("token {}", &user.gh_access_token))
+                         .header("Authorization", &format!("token {}", &user.gh_access_token))
                          .exec());
 
-        let code = resp.get_code();
-
-        if code == 404 {
-            // Yes, this is actually how "no membership" is signaled
-            return Ok(false);
-        } else if code != 200 {
-            return Err(internal(format!("didn't get a 200 result from github: {}",
+        match resp.get_code() {
+            200 => {} // Ok!
+            404 => {
+                // Yes, this is actually how "no membership" is signaled
+                return Ok(false);
+            }
+            403 => {
+                return Err(human("It looks like you don't have permission \
+                                  to query an organization that owns this \
+                                  crate. You may need to re-authenticate on \
+                                  crates.io to grant permission to read \
+                                  github org memberships. Just go to \
+                                  https://crates.io/login"));
+            }
+            _ => {
+                return Err(internal(format!("didn't get a 200 result from github: {}",
                                         resp)))
+            }
         }
 
         #[derive(RustcDecodable)]
