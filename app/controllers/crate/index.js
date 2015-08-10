@@ -206,7 +206,7 @@ export default Ember.ObjectController.extend({
                 }
                 var chart = new google.visualization.AreaChart(el);
                 chart.draw(myData, {
-                    chartArea: {'width': '78%', 'height': '80%'},
+                    chartArea: {'width': '80%', 'height': '80%'},
                     hAxis: {
                         minorGridlines: { count: 8 },
                     },
