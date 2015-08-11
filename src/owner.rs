@@ -1,39 +1,50 @@
 use {Model, User};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use db::Connection;
-use curl::http;
+use curl;
 use pg::rows::Row;
 use rustc_serialize::json;
 use util::errors::NotFound;
 use std::str;
 
+pub fn json_http(url: &str, auth_token: &str)
+    -> Result<curl::http::Response, curl::ErrCode> {
+    curl::http::handle()
+     .get(url)
+     .header("Accept", "application/vnd.github.v3+json")
+     .header("User-Agent", "hello!")
+     .header("Authorization", &format!("token {}", auth_token))
+     .exec()
+}
+
+#[repr(u32)]
+pub enum OwnerKind {
+    User = 0,
+    Team = 1,
+}
 
 /// Unifies the notion of a User or a Team.
 pub enum Owner {
     User(User),
-    Team(Team)
+    Team(Team),
 }
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
 pub struct Team {
-    /// Github annoyingly has some APIs talk about teams by name,
-    /// and others by some opaque id. I couldn't find any docs
-    /// suggesting these ids are stable, so let's just always
-    /// ask github for it. *shrug*
-    github_id: i32,
+    /// We're assuming these are stable
+    pub github_id: i32,
     /// Unique table id
-    cargo_id: i32,
+    pub id: i32,
     /// "github:org:team"
     /// An opaque unique ID, that was at one point parsed out to query Github.
     /// We only query membership with github using the github_id, though.
-    name: String,
+    pub name: String,
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct EncodableOwner {
     pub id: i32,
-    // Login is deprecated in favour of name, but needs to be printed for back-compat
     pub login: String,
     pub kind: String,
     pub email: Option<String>,
@@ -70,9 +81,7 @@ impl Team {
             // github:rust-lang:owners
             "github" => {
                 // Ok to unwrap since we know one ":" is contained
-                let org = try!(chunks.next().ok_or_else(||
-                    human("missing github org argument; format is github:org:team")
-                ));
+                let org = chunks.next().unwrap();
                 let team = try!(chunks.next().ok_or_else(||
                     human("missing github team argument; format is github:org:team")
                 ));
@@ -105,12 +114,8 @@ impl Team {
                                    c)));
         }
 
-        let resp = try!(http::handle()
-                         .get(format!("https://api.github.com/orgs/{}/teams", org_name))
-                         .header("Accept", "application/vnd.github.v3+json")
-                         .header("User-Agent", "hello!")
-                         .header("Authorization", &format!("token {}", &req_user.gh_access_token))
-                         .exec());
+        let resp = try!(json_http(&format!("https://api.github.com/orgs/{}/teams", org_name),
+                                  &req_user.gh_access_token));
 
         match resp.get_code() {
             200 => {} // Ok!
@@ -154,20 +159,25 @@ impl Team {
             human(format!("could not find the github team {}/{}", org_name, team_name))
         }));
 
-        // mock Team (only need ID to check team status)
-        let team = Team { github_id: github_id, cargo_id: 0, name: String::new() };
+        // mock Team (only need github_id to check team status)
+        let team = Team { github_id: github_id, id: 0, name: String::new() };
         if !try!(team.contains_user(req_user)) {
             return Err(human("only members of a team can add it as an owner"));
         }
 
-        // insert into DB for reals
-        try!(conn.execute("INSERT INTO teams
-                           (name, github_id)
-                           VALUES ($1, $2)",
-                          &[&name, &github_id]));
+        Team::insert(conn, name, github_id)
+    }
 
-        // read it right back out:
-        Team::find_by_name(conn, name)
+    pub fn insert(conn: &Connection, name: &str, github_id: i32) -> CargoResult<Self> {
+        // insert into DB for reals
+        let stmt = try!(conn.prepare("INSERT INTO teams
+                                   (name, github_id)
+                                   VALUES ($1, $2)
+                                   RETURNING *"));
+
+        let rows = try!(stmt.query(&[&name, &github_id]));
+        let row = rows.iter().next().unwrap();
+        Ok(Model::from_row(&row))
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.
@@ -178,13 +188,9 @@ impl Team {
         // GET teams/:team_id/memberships/:user_name
         // check that "state": "active"
 
-        let resp = try!(http::handle()
-                         .get(format!("https://api.github.com/teams/{}/memberships/{}",
-                                   self.github_id, &user.gh_login))
-                         .header("Accept", "application/vnd.github.v3+json")
-                         .header("User-Agent", "hello!")
-                         .header("Authorization", &format!("token {}", &user.gh_access_token))
-                         .exec());
+        let resp = try!(json_http(&format!("https://api.github.com/teams/{}/memberships/{}",
+                                            self.github_id, &user.gh_login),
+                                  &user.gh_access_token));
 
         match resp.get_code() {
             200 => {} // Ok!
@@ -226,7 +232,7 @@ impl Team {
 impl Model for Team {
     fn from_row(row: &Row) -> Self {
         Team {
-            cargo_id: row.get("id"),
+            id: row.get("id"),
             name: row.get("name"),
             github_id: row.get("github_id"),
         }
@@ -302,7 +308,7 @@ impl Owner {
     pub fn id(&self) -> i32 {
         match *self {
             Owner::User(ref user) => user.id,
-            Owner::Team(ref team) => team.cargo_id,
+            Owner::Team(ref team) => team.id,
         }
     }
 
@@ -318,14 +324,14 @@ impl Owner {
                     kind: String::from("user"),
                 }
             }
-            Owner::Team(Team { cargo_id, name, .. }) => {
+            Owner::Team(Team { id, name, .. }) => {
                 EncodableOwner {
-                    id: cargo_id,
+                    id: id,
                     login: name,
                     email: None,
                     avatar: None,
                     name: None,
-                    kind: String::from("owner"),
+                    kind: String::from("team"),
                 }
             }
         }

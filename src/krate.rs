@@ -28,7 +28,7 @@ use git;
 use keyword::EncodableKeyword;
 use upload;
 use user::RequestUser;
-use owner::{EncodableOwner, Owner, Rights, rights};
+use owner::{EncodableOwner, Owner, Rights, OwnerKind, rights};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
@@ -177,8 +177,8 @@ impl Crate {
         try!(conn.execute("INSERT INTO crate_owners
                            (crate_id, owner_id, created_by, created_at,
                              updated_at, deleted, owner_kind)
-                           VALUES ($1, $2, $2, $3, $3, FALSE, 0)",
-                          &[&ret.id, &user_id, &now]));
+                           VALUES ($1, $2, $2, $3, $3, FALSE, $4)",
+                          &[&ret.id, &user_id, &now, &(OwnerKind::User as u32)]));
         return Ok(ret);
 
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
@@ -298,16 +298,16 @@ impl Crate {
                                          ON crate_owners.owner_id = users.id
                                       WHERE crate_owners.crate_id = $1
                                         AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = 0"));
-        let user_rows = try!(stmt.query(&[&self.id]));
+                                        AND crate_owners.owner_kind = $2"));
+        let user_rows = try!(stmt.query(&[&self.id, &(OwnerKind::User as u32)]));
 
         let stmt = try!(conn.prepare("SELECT * FROM teams
                                       INNER JOIN crate_owners
                                          ON crate_owners.owner_id = teams.id
                                       WHERE crate_owners.crate_id = $1
                                         AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = 1"));
-        let team_rows = try!(stmt.query(&[&self.id]));
+                                        AND crate_owners.owner_kind = $2"));
+        let team_rows = try!(stmt.query(&[&self.id, &(OwnerKind::Team as u32)]));
 
         let mut owners = vec![];
         owners.extend(user_rows.iter().map(|r| Owner::User(Model::from_row(&r))));
@@ -1004,19 +1004,29 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
-    #[derive(RustcDecodable)] struct Request { users: Vec<String> }
+    #[derive(RustcDecodable)]
+    struct Request {
+        // identical, for back-compat (owners preferred)
+        users: Option<Vec<String>>,
+        owners: Option<Vec<String>>,
+    }
+
     let request: Request = try!(json::decode(&body).map_err(|_| {
         human("invalid json request")
     }));
 
-    for name in &request.users {
+    let names = try!(request.owners.or(request.users).ok_or_else(|| {
+        human("invalid json request")
+    }));
+
+    for name in &names {
         if add {
             if owners.iter().any(|owner| owner.name() == *name) {
                 return Err(human(format!("`{}` is already an owner", name)))
             }
             try!(krate.owner_add(tx, &user, &name));
         } else {
-            // Removing the team the gives you rights is prevented because
+            // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
             if *name == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
