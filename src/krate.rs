@@ -178,7 +178,7 @@ impl Crate {
                            (crate_id, owner_id, created_by, created_at,
                              updated_at, deleted, owner_kind)
                            VALUES ($1, $2, $2, $3, $3, FALSE, $4)",
-                          &[&ret.id, &user_id, &now, &(OwnerKind::User as u32)]));
+                          &[&ret.id, &user_id, &now, &(OwnerKind::User as i32)]));
         return Ok(ret);
 
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
@@ -299,7 +299,7 @@ impl Crate {
                                       WHERE crate_owners.crate_id = $1
                                         AND crate_owners.deleted = FALSE
                                         AND crate_owners.owner_kind = $2"));
-        let user_rows = try!(stmt.query(&[&self.id, &(OwnerKind::User as u32)]));
+        let user_rows = try!(stmt.query(&[&self.id, &(OwnerKind::User as i32)]));
 
         let stmt = try!(conn.prepare("SELECT * FROM teams
                                       INNER JOIN crate_owners
@@ -307,7 +307,7 @@ impl Crate {
                                       WHERE crate_owners.crate_id = $1
                                         AND crate_owners.deleted = FALSE
                                         AND crate_owners.owner_kind = $2"));
-        let team_rows = try!(stmt.query(&[&self.id, &(OwnerKind::Team as u32)]));
+        let team_rows = try!(stmt.query(&[&self.id, &(OwnerKind::Team as i32)]));
 
         let mut owners = vec![];
         owners.extend(user_rows.iter().map(|r| Owner::User(Model::from_row(&r))));

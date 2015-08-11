@@ -57,6 +57,7 @@ pub mod user;
 pub mod owner;
 pub mod util;
 pub mod version;
+pub mod http;
 mod licenses;
 
 #[derive(PartialEq, Eq, Clone, Copy)]

@@ -463,6 +463,7 @@ fn migrations() -> Vec<Migration> {
             "ALTER TABLE crate_owners RENAME user_id TO owner_id",
             "ALTER TABLE crate_owners RENAME owner_id TO user_id",
         ),
+        undo_foreign_key(20150804170130, "crate_owners", "user_id", "users (id)"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -482,6 +483,16 @@ fn migrations() -> Vec<Migration> {
         let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
                           table = table, col = column);
         Migration::run(id, &add, &rm)
+    }
+
+    fn undo_foreign_key(id: i64, table: &str, column: &str,
+                   references: &str) -> Migration {
+        let add = format!("ALTER TABLE {table} ADD CONSTRAINT fk_{table}_{col}
+                                 FOREIGN KEY ({col}) REFERENCES {reference}",
+                          table = table, col = column, reference = references);
+        let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
+                          table = table, col = column);
+        Migration::run(id, &rm, &add)
     }
 
     fn index(id: i64, table: &str, column: &str) -> Migration {

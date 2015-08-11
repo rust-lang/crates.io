@@ -3,8 +3,6 @@ use std::str;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
-use curl::http;
-use oauth2::Authorization;
 use pg::rows::Row;
 use pg::types::Slice;
 use rand::{thread_rng, Rng};
@@ -17,6 +15,7 @@ use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
+use http;
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -172,11 +171,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         Err(s) => return Err(human(s)),
     };
 
-    let resp = try!(http::handle().get("https://api.github.com/user")
-                         .header("Accept", "application/vnd.github.v3+json")
-                         .header("User-Agent", "hello!")
-                         .auth_with(&token)
-                         .exec());
+    let resp = try!(http::github("https://api.github.com/user", &token));
     if resp.get_code() != 200 {
         return Err(internal(format!("didn't get a 200 result from github: {}",
                                     resp)))

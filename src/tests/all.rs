@@ -64,6 +64,7 @@ mod user;
 mod record;
 mod git;
 mod version;
+mod team;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     struct NoCommit;

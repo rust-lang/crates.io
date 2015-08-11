@@ -1,21 +1,11 @@
 use {Model, User};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use db::Connection;
-use curl;
 use pg::rows::Row;
 use rustc_serialize::json;
 use util::errors::NotFound;
 use std::str;
-
-pub fn json_http(url: &str, auth_token: &str)
-    -> Result<curl::http::Response, curl::ErrCode> {
-    curl::http::handle()
-     .get(url)
-     .header("Accept", "application/vnd.github.v3+json")
-     .header("User-Agent", "hello!")
-     .header("Authorization", &format!("token {}", auth_token))
-     .exec()
-}
+use http;
 
 #[repr(u32)]
 pub enum OwnerKind {
@@ -45,6 +35,7 @@ pub struct Team {
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct EncodableOwner {
     pub id: i32,
+    // TODO: duplicate this field with better name
     pub login: String,
     pub kind: String,
     pub email: Option<String>,
@@ -114,8 +105,9 @@ impl Team {
                                    c)));
         }
 
-        let resp = try!(json_http(&format!("https://api.github.com/orgs/{}/teams", org_name),
-                                  &req_user.gh_access_token));
+        let resp = try!(http::github(
+            &format!("https://api.github.com/orgs/{}/teams", org_name),
+            &http::token(req_user.gh_access_token.clone())));
 
         match resp.get_code() {
             200 => {} // Ok!
@@ -159,9 +151,7 @@ impl Team {
             human(format!("could not find the github team {}/{}", org_name, team_name))
         }));
 
-        // mock Team (only need github_id to check team status)
-        let team = Team { github_id: github_id, id: 0, name: String::new() };
-        if !try!(team.contains_user(req_user)) {
+        if !try!(team_with_gh_id_contains_user(github_id, req_user)) {
             return Err(human("only members of a team can add it as an owner"));
         }
 
@@ -185,48 +175,52 @@ impl Team {
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
     pub fn contains_user(&self, user: &User) -> CargoResult<bool> {
-        // GET teams/:team_id/memberships/:user_name
-        // check that "state": "active"
-
-        let resp = try!(json_http(&format!("https://api.github.com/teams/{}/memberships/{}",
-                                            self.github_id, &user.gh_login),
-                                  &user.gh_access_token));
-
-        match resp.get_code() {
-            200 => {} // Ok!
-            404 => {
-                // Yes, this is actually how "no membership" is signaled
-                return Ok(false);
-            }
-            403 => {
-                return Err(human("It looks like you don't have permission \
-                                  to query an organization that owns this \
-                                  crate. You may need to re-authenticate on \
-                                  crates.io to grant permission to read \
-                                  github org memberships. Just go to \
-                                  https://crates.io/login"));
-            }
-            _ => {
-                return Err(internal(format!("didn't get a 200 result from github: {}",
-                                        resp)))
-            }
-        }
-
-        #[derive(RustcDecodable)]
-        struct Membership {
-            state: String,
-        }
-        let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
-            internal("github didn't send a utf8-response")
-        }));
-        let membership: Membership = try!(json::decode(json).chain_error(|| {
-            internal("github didn't send a valid json response")
-        }));
-
-        // There is also `state: pending` for which we could possibly give
-        // some feedback, but it's not obvious how that should work.
-        Ok(membership.state == "active")
+        team_with_gh_id_contains_user(self.github_id, user)
     }
+}
+
+fn team_with_gh_id_contains_user(github_id: i32, user: &User) -> CargoResult<bool> {
+    // GET teams/:team_id/memberships/:user_name
+    // check that "state": "active"
+
+    let resp = try!(http::github(
+        &format!("https://api.github.com/teams/{}/memberships/{}", &github_id, &user.gh_login),
+        &http::token(user.gh_access_token.clone())));
+
+    match resp.get_code() {
+        200 => {} // Ok!
+        404 => {
+            // Yes, this is actually how "no membership" is signaled
+            return Ok(false);
+        }
+        403 => {
+            return Err(human("It looks like you don't have permission \
+                              to query an organization that owns this \
+                              crate. You may need to re-authenticate on \
+                              crates.io to grant permission to read \
+                              github org memberships. Just go to \
+                              https://crates.io/login"));
+        }
+        _ => {
+            return Err(internal(format!("didn't get a 200 result from github: {}",
+                                    resp)))
+        }
+    }
+
+    #[derive(RustcDecodable)]
+    struct Membership {
+        state: String,
+    }
+    let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
+        internal("github didn't send a utf8-response")
+    }));
+    let membership: Membership = try!(json::decode(json).chain_error(|| {
+        internal("github didn't send a valid json response")
+    }));
+
+    // There is also `state: pending` for which we could possibly give
+    // some feedback, but it's not obvious how that should work.
+    Ok(membership.state == "active")
 }
 
 impl Model for Team {
@@ -293,8 +287,8 @@ impl Owner {
 
     pub fn kind(&self) -> i32 {
         match *self {
-            Owner::User(_) => 0,
-            Owner::Team(_) => 1,
+            Owner::User(_) => OwnerKind::User as i32,
+            Owner::Team(_) => OwnerKind::Team as i32,
         }
     }
 
