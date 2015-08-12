@@ -28,7 +28,7 @@ use git;
 use keyword::EncodableKeyword;
 use upload;
 use user::RequestUser;
-use owner::{EncodableOwner, Owner, Rights, OwnerKind, rights};
+use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights};
 use util::errors::{NotFound, CargoError};
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
@@ -318,7 +318,19 @@ impl Crate {
     pub fn owner_add(&self, app: &App, conn: &Connection, req_user: &User,
                      name: &str) -> CargoResult<()> {
 
-        let owner = try!(Owner::find_by_name_for_add(app, conn, name, req_user));
+        let owner = match Owner::find_by_name(conn, name) {
+            Ok(owner@Owner::User(_)) => { owner }
+            Ok(Owner::Team(team)) => if try!(team.contains_user(app, req_user)) {
+                Owner::Team(team)
+            } else {
+                return Err(human(format!("only members of {} can add it as an owner", name)));
+            },
+            Err(err) => if name.contains(":") {
+                Owner::Team(try!(Team::create(app, conn, name, req_user)))
+            } else {
+                return Err(err);
+            },
+        };
 
         try!(conn.execute("INSERT INTO crate_owners
                            (crate_id, owner_id, created_at, updated_at,

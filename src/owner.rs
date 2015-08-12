@@ -253,39 +253,6 @@ impl Owner {
         Ok(owner)
     }
 
-    /// Find the owner by name, with the intent of adding it as an owner.
-    ///
-    /// This differs from find_by_name in that in the case of a Team,
-    /// it will verify the req_user is on the team first.
-    ///
-    /// If the req_user is on the Team, it will create the team in the DB
-    /// if it is not already present. When this occurs, this will set the
-    /// One True Name of the team. All future references to the team must
-    /// use the exact casing provided here. If a different casing is provided
-    /// to this method, we may still succeed if Github returns us the same ID
-    /// as the One True Name. However in this case, the One True Name will
-    /// still be selected.
-    pub fn find_by_name_for_add(app: &App, conn: &Connection, name: &str, req_user: &User)
-        -> CargoResult<Owner> {
-        if !name.contains(":") {
-            return Ok(Owner::User(try!(User::find_by_login(conn, name).map_err(|_|
-                human(format!("could not find user with login `{}`", name))
-            ))));
-        }
-
-        // We're working with a Team, try to just get it out of the DB.
-        if let Ok(team) = Team::find_by_name(conn, name) {
-            return if try!(team.contains_user(app, req_user)) {
-                Ok(Owner::Team(team))
-            } else {
-                Err(human(format!("only members of {} can add it as an owner", name)))
-            };
-        }
-
-        // Failed to retrieve from the DB, must be a new Team, try to add it.
-        Ok(Owner::Team(try!(Team::create(app, conn, name, req_user))))
-    }
-
     pub fn kind(&self) -> i32 {
         match *self {
             Owner::User(_) => OwnerKind::User as i32,
