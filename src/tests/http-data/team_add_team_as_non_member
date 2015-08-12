@@ -1,0 +1,73 @@
+===REQUEST 234
+GET http://api.github.com/orgs/rust-lang/teams HTTP/1.1
+Host: api.github.com
+Proxy-Connection: Keep-Alive
+Authorization: token 9d86670273ea0f7f51b9ed708d144267e0700b51
+Accept: application/vnd.github.v3+json
+User-Agent: hello!
+
+
+===RESPONSE 3305
+HTTP/1.1 200
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+x-served-by: 8dd185e423974a7e13abbbe6e060031e
+x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
+content-length: 2161
+date: Wed, 12 Aug 2015 00:29:10 GMT
+x-ratelimit-reset: 1439340318
+server: GitHub.com
+x-ratelimit-limit: 5000
+access-control-allow-origin: *
+x-ratelimit-remaining: 4944
+etag: "1f82a9ef30913be70c82a78bdced6382"
+vary: Accept, Authorization, Cookie, X-GitHub-OTP
+vary: Accept-Encoding
+status: 200 OK
+x-xss-protection: 1; mode=block
+x-content-type-options: nosniff
+access-control-allow-credentials: true
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+x-frame-options: deny
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+content-type: application/json; charset=utf-8
+x-github-request-id: 3FF5DB35:7715:2EB5946:55CA9356
+cache-control: private, max-age=60, s-maxage=60
+x-oauth-scopes: read:org
+x-github-media-type: github.v3; format=json
+content-security-policy: default-src 'none'
+
+[{"name":"Rust-Push","id":874643,"slug":"rust-push","description":"Those who can push to the Rust try branch","permission":"push","url":"https://api.github.com/teams/874643","members_url":"https://api.github.com/teams/874643/members{/member}","repositories_url":"https://api.github.com/teams/874643/repos","privacy":"secret"},{"name":"rfc-pushers","id":999746,"slug":"rfc-pushers","description":"","permission":"push","url":"https://api.github.com/teams/999746","members_url":"https://api.github.com/teams/999746/members{/member}","repositories_url":"https://api.github.com/teams/999746/repos","privacy":"secret"},{"name":"Lang","id":1508058,"slug":"lang","description":"Subteam for Language Design","permission":"pull","url":"https://api.github.com/teams/1508058","members_url":"https://api.github.com/teams/1508058/members{/member}","repositories_url":"https://api.github.com/teams/1508058/repos","privacy":"closed"},{"name":"Libs","id":1508060,"slug":"libs","description":"Subteam for Libraries","permission":"pull","url":"https://api.github.com/teams/1508060","members_url":"https://api.github.com/teams/1508060/members{/member}","repositories_url":"https://api.github.com/teams/1508060/repos","privacy":"closed"},{"name":"compiler","id":1508062,"slug":"compiler","description":"Subteam for Compiler design","permission":"pull","url":"https://api.github.com/teams/1508062","members_url":"https://api.github.com/teams/1508062/members{/member}","repositories_url":"https://api.github.com/teams/1508062/repos","privacy":"closed"},{"name":"tools","id":1508064,"slug":"tools","description":"Subteam for Tooling and Infrastructure","permission":"pull","url":"https://api.github.com/teams/1508064","members_url":"https://api.github.com/teams/1508064/members{/member}","repositories_url":"https://api.github.com/teams/1508064/repos","privacy":"closed"},{"name":"moderation","id":1508066,"slug":"moderation","description":"Subteam for Moderation","permission":"pull","url":"https://api.github.com/teams/1508066","members_url":"https://api.github.com/teams/1508066/members{/member}","repositories_url":"https://api.github.com/teams/1508066/repos","privacy":"closed"}]
+===REQUEST 246
+GET http://api.github.com/teams/1508058/memberships/Gankro HTTP/1.1
+Host: api.github.com
+Proxy-Connection: Keep-Alive
+User-Agent: hello!
+Accept: application/vnd.github.v3+json
+Authorization: token 9d86670273ea0f7f51b9ed708d144267e0700b51
+
+
+===RESPONSE 1008
+HTTP/1.1 404
+x-github-media-type: github.v3; format=json
+x-frame-options: deny
+content-type: application/json; charset=utf-8
+server: GitHub.com
+x-content-type-options: nosniff
+content-security-policy: default-src 'none'
+content-length: 77
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
+x-ratelimit-limit: 5000
+x-xss-protection: 1; mode=block
+x-oauth-scopes: read:org
+x-ratelimit-remaining: 4943
+access-control-allow-origin: *
+x-ratelimit-reset: 1439340318
+status: 404 Not Found
+access-control-allow-credentials: true
+date: Wed, 12 Aug 2015 00:29:10 GMT
+x-github-request-id: 3FF5DB35:7715:2EB59EC:55CA9356
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+
+{"message":"Not Found","documentation_url":"https://developer.github.com/v3"}

@@ -1,9 +1,11 @@
 use curl;
 use oauth2::*;
+use app::App;
 
-pub fn github(url: &str, auth: &Token)
+pub fn github(app: &App, url: &str, auth: &Token)
     -> Result<curl::http::Response, curl::ErrCode> {
-    curl::http::handle()
+    println!("HTTP: {}", url);
+    app.handle()
      .get(url)
      .header("Accept", "application/vnd.github.v3+json")
      .header("User-Agent", "hello!")

@@ -6,6 +6,7 @@ use rustc_serialize::json;
 use util::errors::NotFound;
 use std::str;
 use http;
+use app::App;
 
 #[repr(u32)]
 pub enum OwnerKind {
@@ -65,7 +66,7 @@ impl Team {
     }
 
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(conn: &Connection, name: &str, req_user: &User) -> CargoResult<Self> {
+    pub fn create(app: &App, conn: &Connection, name: &str, req_user: &User) -> CargoResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = name.split(":");
         match chunks.next().unwrap() {
@@ -76,7 +77,7 @@ impl Team {
                 let team = try!(chunks.next().ok_or_else(||
                     human("missing github team argument; format is github:org:team")
                 ));
-                Team::create_github_team(conn, name, org, team, req_user)
+                Team::create_github_team(app, conn, name, org, team, req_user)
             }
             _ => {
                 Err(human("unknown organization handler, only 'github:org:team' is supported"))
@@ -87,8 +88,8 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a convenience
     /// to avoid rebuilding it.
-    pub fn create_github_team(conn: &Connection, name: &str, org_name: &str, team_name: &str,
-                              req_user: &User) -> CargoResult<Self> {
+    pub fn create_github_team(app: &App, conn: &Connection, name: &str, org_name: &str,
+                                team_name: &str, req_user: &User) -> CargoResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its `id`
 
@@ -105,8 +106,8 @@ impl Team {
                                    c)));
         }
 
-        let resp = try!(http::github(
-            &format!("https://api.github.com/orgs/{}/teams", org_name),
+        let resp = try!(http::github(app,
+            &format!("http://api.github.com/orgs/{}/teams", org_name),
             &http::token(req_user.gh_access_token.clone())));
 
         match resp.get_code() {
@@ -151,7 +152,7 @@ impl Team {
             human(format!("could not find the github team {}/{}", org_name, team_name))
         }));
 
-        if !try!(team_with_gh_id_contains_user(github_id, req_user)) {
+        if !try!(team_with_gh_id_contains_user(app, github_id, req_user)) {
             return Err(human("only members of a team can add it as an owner"));
         }
 
@@ -174,17 +175,17 @@ impl Team {
     /// Note that we're assuming that the given user is the one interested in
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
-    pub fn contains_user(&self, user: &User) -> CargoResult<bool> {
-        team_with_gh_id_contains_user(self.github_id, user)
+    pub fn contains_user(&self, app: &App, user: &User) -> CargoResult<bool> {
+        team_with_gh_id_contains_user(app, self.github_id, user)
     }
 }
 
-fn team_with_gh_id_contains_user(github_id: i32, user: &User) -> CargoResult<bool> {
+fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> CargoResult<bool> {
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 
-    let resp = try!(http::github(
-        &format!("https://api.github.com/teams/{}/memberships/{}", &github_id, &user.gh_login),
+    let resp = try!(http::github(app,
+        &format!("http://api.github.com/teams/{}/memberships/{}", &github_id, &user.gh_login),
         &http::token(user.gh_access_token.clone())));
 
     match resp.get_code() {
@@ -264,7 +265,7 @@ impl Owner {
     /// to this method, we may still succeed if Github returns us the same ID
     /// as the One True Name. However in this case, the One True Name will
     /// still be selected.
-    pub fn find_by_name_for_add(conn: &Connection, name: &str, req_user: &User)
+    pub fn find_by_name_for_add(app: &App, conn: &Connection, name: &str, req_user: &User)
         -> CargoResult<Owner> {
         if !name.contains(":") {
             return Ok(Owner::User(try!(User::find_by_login(conn, name).map_err(|_|
@@ -274,7 +275,7 @@ impl Owner {
 
         // We're working with a Team, try to just get it out of the DB.
         if let Ok(team) = Team::find_by_name(conn, name) {
-            return if try!(team.contains_user(req_user)) {
+            return if try!(team.contains_user(app, req_user)) {
                 Ok(Owner::Team(team))
             } else {
                 Err(human(format!("only members of {} can add it as an owner", name)))
@@ -282,7 +283,7 @@ impl Owner {
         }
 
         // Failed to retrieve from the DB, must be a new Team, try to add it.
-        Ok(Owner::Team(try!(Team::create(conn, name, req_user))))
+        Ok(Owner::Team(try!(Team::create(app, conn, name, req_user))))
     }
 
     pub fn kind(&self) -> i32 {
@@ -340,14 +341,14 @@ impl Owner {
 /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
 /// Sweet free optimization if teams are proving burdensome to check.
 /// More than one team isn't really expected, though.
-pub fn rights(owners: &[Owner], user: &User) -> CargoResult<Rights> {
+pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
     let mut best = Rights::None;
     for owner in owners {
         match *owner {
             Owner::User(ref other_user) => if other_user.id == user.id {
                 return Ok(Rights::Full);
             },
-            Owner::Team(ref team) => if try!(team.contains_user(user)) {
+            Owner::Team(ref team) => if try!(team.contains_user(app, user)) {
                 best = Rights::Publish;
             },
         }

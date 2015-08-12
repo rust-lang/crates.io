@@ -344,7 +344,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let user = try!(req.user());
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
-    if try!(rights(&owners, &user)) < Rights::Publish {
+    if try!(rights(req.app(), &owners, &user)) < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"))
     }
 

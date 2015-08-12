@@ -1,0 +1,78 @@
+===REQUEST 235
+GET http://api.github.com/orgs/contain-rs/teams HTTP/1.1
+Host: api.github.com
+Proxy-Connection: Keep-Alive
+Accept: application/vnd.github.v3+json
+User-Agent: hello!
+Authorization: token 9d86670273ea0f7f51b9ed708d144267e0700b51
+
+
+===RESPONSE 1730
+HTTP/1.1 200
+access-control-allow-credentials: true
+date: Wed, 12 Aug 2015 00:29:09 GMT
+content-type: application/json; charset=utf-8
+x-github-media-type: github.v3; format=json
+access-control-allow-origin: *
+etag: "2a9de7a0de7cb45e3915c7ce43140a2f"
+x-content-type-options: nosniff
+server: GitHub.com
+x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
+x-oauth-scopes: read:org
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+cache-control: private, max-age=60, s-maxage=60
+x-github-request-id: 3FF5DB35:7713:2BDD963:55CA9355
+x-ratelimit-remaining: 4946
+vary: Accept, Authorization, Cookie, X-GitHub-OTP
+vary: Accept-Encoding
+content-security-policy: default-src 'none'
+x-ratelimit-limit: 5000
+content-length: 587
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+x-served-by: 8a5c38021a5cd7cef7b8f49a296fee40
+x-frame-options: deny
+x-xss-protection: 1; mode=block
+status: 200 OK
+x-ratelimit-reset: 1439340318
+
+[{"name":"Owners","id":1346282,"slug":"owners","description":null,"permission":"admin","url":"https://api.github.com/teams/1346282","members_url":"https://api.github.com/teams/1346282/members{/member}","repositories_url":"https://api.github.com/teams/1346282/repos"},{"name":" ~~~ Cargo! Test // \\ Team 漢字","id":1681541,"slug":"cargo-test-team","description":"Test for Cargo Teams","permission":"pull","url":"https://api.github.com/teams/1681541","members_url":"https://api.github.com/teams/1681541/members{/member}","repositories_url":"https://api.github.com/teams/1681541/repos"}]
+===REQUEST 246
+GET http://api.github.com/teams/1346282/memberships/Gankro HTTP/1.1
+Host: api.github.com
+Proxy-Connection: Keep-Alive
+Authorization: token 9d86670273ea0f7f51b9ed708d144267e0700b51
+User-Agent: hello!
+Accept: application/vnd.github.v3+json
+
+
+===RESPONSE 1218
+HTTP/1.1 200
+x-frame-options: deny
+server: GitHub.com
+x-github-request-id: 3FF5DB35:7710:1C4F700:55CA9355
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+x-oauth-scopes: read:org
+vary: Accept, Authorization, Cookie, X-GitHub-OTP
+vary: Accept-Encoding
+x-ratelimit-reset: 1439340318
+x-ratelimit-limit: 5000
+x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
+access-control-allow-credentials: true
+x-xss-protection: 1; mode=block
+content-type: application/json; charset=utf-8
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+cache-control: private, max-age=60, s-maxage=60
+content-security-policy: default-src 'none'
+content-length: 82
+status: 200 OK
+x-ratelimit-remaining: 4945
+access-control-allow-origin: *
+etag: "d2bb5218b23ab2a485564f2434b84bda"
+x-github-media-type: github.v3; format=json
+x-content-type-options: nosniff
+x-served-by: 07ff1c8a09e44b62e277fae50a1b1dc4
+date: Wed, 12 Aug 2015 00:29:09 GMT
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+
+{"state":"active","url":"https://api.github.com/teams/1346282/memberships/Gankro"}

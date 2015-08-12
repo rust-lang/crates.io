@@ -315,10 +315,10 @@ impl Crate {
         Ok(owners)
     }
 
-    pub fn owner_add(&self, conn: &Connection, req_user: &User,
+    pub fn owner_add(&self, app: &App, conn: &Connection, req_user: &User,
                      name: &str) -> CargoResult<()> {
 
-        let owner = try!(Owner::find_by_name_for_add(conn, name, req_user));
+        let owner = try!(Owner::find_by_name_for_add(app, conn, name, req_user));
 
         try!(conn.execute("INSERT INTO crate_owners
                            (crate_id, owner_id, created_at, updated_at,
@@ -650,7 +650,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.license_file));
 
     let owners = try!(krate.owners(try!(req.tx())));
-    if try!(rights(&owners, &user)) < Rights::Publish {
+    if try!(rights(req.app(), &owners, &user)) < Rights::Publish {
         return Err(human("crate name has already been claimed by \
                           another user"))
     }
@@ -674,11 +674,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     try!(Keyword::update_crate(try!(req.tx()), &krate, &keywords));
 
     // Upload the crate to S3
-    let handle = http::handle();
-    let mut handle = match req.app().s3_proxy {
-        Some(ref proxy) => handle.proxy(&proxy[..]),
-        None => handle,
-    };
+    let mut handle = req.app().handle();
     let path = krate.s3_path(&vers.to_string());
     let (resp, cksum) = {
         let length = try!(read_le_u32(req.body()));
@@ -994,7 +990,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
 
-    match try!(rights(&owners, &user)) {
+    match try!(rights(req.app(), &owners, &user)) {
         Rights::Full => {} // Yes!
         Rights::Publish => {
             return Err(human("team members don't have permission to modify owners"));
@@ -1024,7 +1020,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.iter().any(|owner| owner.name() == *name) {
                 return Err(human(format!("`{}` is already an owner", name)))
             }
-            try!(krate.owner_add(tx, &user, &name));
+            try!(krate.owner_add(req.app(), tx, &user, &name));
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish

@@ -171,7 +171,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         Err(s) => return Err(human(s)),
     };
 
-    let resp = try!(http::github("https://api.github.com/user", &token));
+    let resp = try!(http::github(req.app(), "http://api.github.com/user", &token));
     if resp.get_code() != 200 {
         return Err(internal(format!("didn't get a 200 result from github: {}",
                                     resp)))

@@ -8,6 +8,7 @@ use git2;
 use oauth2;
 use r2d2;
 use s3;
+use curl::http;
 
 use {db, Config};
 
@@ -57,6 +58,14 @@ impl App {
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
         };
+    }
+
+    pub fn handle(&self) -> http::Handle {
+        let handle = http::handle();
+        match self.s3_proxy {
+            Some(ref proxy) => handle.proxy(&proxy[..]),
+            None => handle,
+        }
     }
 }
 
