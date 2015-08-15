@@ -10,6 +10,7 @@ use std::sync::Arc;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::http;
+use license_exprs;
 use pg::rows::Row;
 use pg::types::{ToSql, Slice};
 use pg;
@@ -203,24 +204,13 @@ impl Crate {
         }
 
         fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            use licenses::KNOWN_LICENSES;
-            match license {
-                Some(license) => {
-                    let ok = license.split('/').all(|l| {
-                        KNOWN_LICENSES.binary_search(&l.trim()).is_ok()
-                    });
-                    if ok {
-                        Ok(())
-                    } else {
-                        Err(human(format!("unknown license `{}`, \
-                                           see http://opensource.org/licenses \
-                                           for options, and http://spdx.org/licenses/ \
-                                           for their identifiers", license)))
-                    }
-                }
-                None => Ok(()),
-            }
+            license.map(license_exprs::validate_license_expr)
+                   .unwrap_or(Ok(()))
+                   .map_err(|e| human(format!("{}; see http://opensource.org/licenses \
+                                                  for options, and http://spdx.org/licenses/ \
+                                                  for their identifiers", e)))
         }
+
     }
 
     pub fn valid_name(name: &str) -> bool {

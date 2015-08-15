@@ -4,6 +4,7 @@ extern crate rustc_serialize;
 extern crate curl;
 extern crate flate2;
 extern crate git2;
+extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
@@ -56,7 +57,6 @@ pub mod upload;
 pub mod user;
 pub mod util;
 pub mod version;
-mod licenses;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Env {
