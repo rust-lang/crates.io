@@ -66,7 +66,8 @@ impl Team {
     }
 
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(app: &App, conn: &Connection, name: &str, req_user: &User) -> CargoResult<Self> {
+    pub fn create(app: &App, conn: &Connection, name: &str, req_user: &User)
+                                                    -> CargoResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = name.split(":");
         match chunks.next().unwrap() {
@@ -106,9 +107,9 @@ impl Team {
                                    c)));
         }
 
-        let resp = try!(http::github(app,
-            &format!("http://api.github.com/orgs/{}/teams", org_name),
-            &http::token(req_user.gh_access_token.clone())));
+        let url = format!("http://api.github.com/orgs/{}/teams", org_name);
+        let token = http::token(req_user.gh_access_token.clone());
+        let resp = try!(http::github(app, &url, &token));
 
         match resp.get_code() {
             200 => {} // Ok!
@@ -180,13 +181,15 @@ impl Team {
     }
 }
 
-fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> CargoResult<bool> {
+fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
+                                                -> CargoResult<bool> {
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 
-    let resp = try!(http::github(app,
-        &format!("http://api.github.com/teams/{}/memberships/{}", &github_id, &user.gh_login),
-        &http::token(user.gh_access_token.clone())));
+    let url = format!("http://api.github.com/teams/{}/memberships/{}",
+                        &github_id, &user.gh_login);
+    let token = http::token(user.gh_access_token.clone());
+    let resp = try!(http::github(app, &url, &token));
 
     match resp.get_code() {
         200 => {} // Ok!

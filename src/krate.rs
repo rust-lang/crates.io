@@ -291,8 +291,6 @@ impl Crate {
     }
 
     pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<Owner>> {
-        // Users and Teams are differentiated by the owner_kind field:
-        // User = 0, Team = 1
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       INNER JOIN crate_owners
                                          ON crate_owners.owner_id = users.id
@@ -506,14 +504,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                        INNER JOIN crate_owners
                           ON crate_owners.crate_id = crates.id
                        WHERE crate_owners.owner_id = $1
-                       AND crate_owners.owner_kind = 0 {}
+                       AND crate_owners.owner_kind = {} {}
                       LIMIT $2 OFFSET $3",
-                     sort_sql),
-             "SELECT COUNT(crates.*) FROM crates
+                     OwnerKind::User as i32, sort_sql),
+             format!("SELECT COUNT(crates.*) FROM crates
                INNER JOIN crate_owners
                   ON crate_owners.crate_id = crates.id
                WHERE crate_owners.owner_id = $1 \
-                 AND crate_owners.owner_kind = 0".to_string())
+                 AND crate_owners.owner_kind = {}",
+                 OwnerKind::User as i32))
         })
     }).or_else(|| {
         query.get("following").map(|_| {
