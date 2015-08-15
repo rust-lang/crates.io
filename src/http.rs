@@ -5,7 +5,7 @@ use app::App;
 /// Does all the nonsense for sending a GET to Github
 pub fn github(app: &App, url: &str, auth: &Token)
     -> Result<curl::http::Response, curl::ErrCode> {
-    println!("HTTP: {}", url);
+    info!("HTTP: {}", url);
     app.handle()
      .get(url)
      .header("Accept", "application/vnd.github.v3+json")
