@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::fs::{self, File};
 use std::iter::repeat;
-use std::sync::Arc;
 
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
@@ -10,7 +9,6 @@ use git2;
 use rustc_serialize::{json, Decoder};
 use semver;
 
-use cargo_registry::App;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::krate::{Crate, EncodableCrate};
@@ -148,64 +146,19 @@ fn versions() {
     assert_eq!(json.versions.len(), 1);
 }
 
-fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
-    new_req_full(app, ::krate(krate), version, Vec::new())
-}
-
-fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
-                deps: Vec<u::CrateDependency>) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, deps));
-    return req;
-}
-
-fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
-                -> Vec<u8> {
-    let kws = krate.keywords.into_iter().map(u::Keyword).collect();
-    new_crate_to_body(&u::NewCrate {
-        name: u::CrateName(krate.name),
-        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
-        features: HashMap::new(),
-        deps: deps,
-        authors: vec!["foo".to_string()],
-        description: Some("description".to_string()),
-        homepage: krate.homepage,
-        documentation: krate.documentation,
-        readme: krate.readme,
-        keywords: Some(u::KeywordList(kws)),
-        license: Some("MIT".to_string()),
-        license_file: None,
-        repository: krate.repository,
-    })
-}
-
-fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
-    let json = json::encode(&new_crate).unwrap();
-    let mut body = Vec::new();
-    body.extend([
-        (json.len() >>  0) as u8,
-        (json.len() >>  8) as u8,
-        (json.len() >> 16) as u8,
-        (json.len() >> 24) as u8,
-    ].iter().cloned());
-    body.extend(json.as_bytes().iter().cloned());
-    body.extend([0, 0, 0, 0].iter().cloned());
-    body
-}
-
 #[test]
 fn new_wrong_token() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
     bad_resp!(middle.call(&mut req));
     drop(req);
 
-    let mut req = new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
     drop(req);
 
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     ::logout(&mut req);
     req.header("Authorization", "bad");
@@ -217,7 +170,7 @@ fn new_bad_names() {
     fn bad_name(name: &str) {
         println!("testing: `{}`", name);
         let (_b, app, middle) = ::app();
-        let mut req = new_req(app, name, "1.0.0");
+        let mut req = ::new_req(app, name, "1.0.0");
         ::mock_user(&mut req, ::user("foo"));
         ::logout(&mut req);
         let json = bad_resp!(middle.call(&mut req));
@@ -232,7 +185,7 @@ fn new_bad_names() {
 #[test]
 fn new_krate() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     let user = ::mock_user(&mut req, ::user("foo"));
     ::logout(&mut req);
     req.header("Authorization", &user.api_token);
@@ -245,7 +198,7 @@ fn new_krate() {
 #[test]
 fn new_krate_weird_version() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "0.0.0-pre");
+    let mut req = ::new_req(app, "foo", "0.0.0-pre");
     let user = ::mock_user(&mut req, ::user("foo"));
     ::logout(&mut req);
     req.header("Authorization", &user.api_token);
@@ -267,7 +220,7 @@ fn new_krate_with_dependency() {
         target: None,
         kind: None,
     };
-    let mut req = new_req_full(app, ::krate("new"), "1.0.0", vec![dep]);
+    let mut req = ::new_req_full(app, ::krate("new"), "1.0.0", vec![dep]);
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -279,7 +232,7 @@ fn new_krate_twice() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo");
     krate.description = Some("description".to_string());
-    let mut req = new_req_full(app, krate.clone(), "2.0.0", Vec::new());
+    let mut req = ::new_req_full(app, krate.clone(), "2.0.0", Vec::new());
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -292,7 +245,7 @@ fn new_krate_twice() {
 fn new_krate_wrong_user() {
     let (_b, app, middle) = ::app();
 
-    let mut req = new_req(app, "foo", "2.0.0");
+    let mut req = ::new_req(app, "foo", "2.0.0");
 
     // Create the 'foo' crate with one user
     ::mock_user(&mut req, ::user("foo"));
@@ -311,14 +264,14 @@ fn new_krate_bad_name() {
     let (_b, app, middle) = ::app();
 
     {
-        let mut req = new_req(app.clone(), "snow☃", "2.0.0");
+        let mut req = ::new_req(app.clone(), "snow☃", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
                 "{:?}", json.errors);
     }
     {
-        let mut req = new_req(app, "áccênts", "2.0.0");
+        let mut req = ::new_req(app, "áccênts", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
@@ -333,7 +286,7 @@ fn new_crate_owner() {
     let (_b, app, middle) = ::app();
 
     // Create a crate under one user
-    let mut req = new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
     let u2 = ::mock_user(&mut req, ::user("bar"));
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -357,7 +310,7 @@ fn new_crate_owner() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
-    let body = new_req_body(::krate("foo"), "2.0.0", Vec::new());
+    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new());
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)
@@ -377,7 +330,7 @@ fn valid_feature_names() {
 #[test]
 fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     req.with_body(repeat("a").take(1000 * 1000).collect::<String>().as_bytes());
     bad_resp!(middle.call(&mut req));
@@ -386,7 +339,7 @@ fn new_krate_too_big() {
 #[test]
 fn new_krate_duplicate_version() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo"));
     let json = bad_resp!(middle.call(&mut req));
@@ -397,7 +350,7 @@ fn new_krate_duplicate_version() {
 #[test]
 fn new_crate_similar_name() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.1.0");
+    let mut req = ::new_req(app, "foo", "1.1.0");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("Foo"));
     let json = bad_resp!(middle.call(&mut req));
@@ -409,7 +362,7 @@ fn new_crate_similar_name() {
 fn new_crate_similar_name_hyphen() {
     {
         let (_b, app, middle) = ::app();
-        let mut req = new_req(app, "foo-bar", "1.1.0");
+        let mut req = ::new_req(app, "foo-bar", "1.1.0");
         ::mock_user(&mut req, ::user("foo"));
         ::mock_crate(&mut req, ::krate("foo_bar"));
         let json = bad_resp!(middle.call(&mut req));
@@ -418,7 +371,7 @@ fn new_crate_similar_name_hyphen() {
     }
     {
         let (_b, app, middle) = ::app();
-        let mut req = new_req(app, "foo_bar", "1.1.0");
+        let mut req = ::new_req(app, "foo_bar", "1.1.0");
         ::mock_user(&mut req, ::user("foo"));
         ::mock_crate(&mut req, ::krate("foo-bar"));
         let json = bad_resp!(middle.call(&mut req));
@@ -430,7 +383,7 @@ fn new_crate_similar_name_hyphen() {
 #[test]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -456,7 +409,7 @@ fn new_krate_git_upload_appends() {
         br#"{"name":"FOO","vers":"0.0.1","deps":[],"cksum":"3j3"}
 "#).unwrap();
 
-    let mut req = new_req(app, "FOO", "1.0.0");
+    let mut req = ::new_req(app, "FOO", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -489,7 +442,7 @@ fn new_krate_git_upload_with_conflicts() {
                     &[&parent]).unwrap();
     }
 
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -507,7 +460,7 @@ fn new_krate_dependency_missing() {
         target: None,
         kind: None,
     };
-    let mut req = new_req_full(app, ::krate("foo"), "1.0.0", vec![dep]);
+    let mut req = ::new_req_full(app, ::krate("foo"), "1.0.0", vec![dep]);
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let json = ::json::<::Bad>(&mut response);
@@ -680,7 +633,7 @@ fn yank() {
     let path = ::git::checkout().join("3/f/foo");
 
     // Upload a new crate, putting it in the git index
-    let mut req = new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -733,7 +686,7 @@ fn bad_keywords() {
     {
         let mut krate = ::krate("foo");
         krate.keywords.push("super-long-keyword-name-oh-no".to_string());
-        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
@@ -741,7 +694,7 @@ fn bad_keywords() {
     {
         let mut krate = ::krate("foo");
         krate.keywords.push("?@?%".to_string());
-        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
@@ -749,7 +702,7 @@ fn bad_keywords() {
     {
         let mut krate = ::krate("foo");
         krate.keywords.push("?@?%".to_string());
-        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
@@ -757,7 +710,7 @@ fn bad_keywords() {
     {
         let mut krate = ::krate("foo");
         krate.keywords.push("áccênts".to_string());
-        let mut req = new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
@@ -816,7 +769,7 @@ fn author_license_and_description_required() {
         license_file: None,
         repository: None,
     };
-    req.with_body(&new_crate_to_body(&new_crate));
+    req.with_body(&::new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
@@ -825,7 +778,7 @@ fn author_license_and_description_required() {
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
-    req.with_body(&new_crate_to_body(&new_crate));
+    req.with_body(&::new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
@@ -835,7 +788,7 @@ fn author_license_and_description_required() {
     new_crate.license = None;
     new_crate.license_file = Some("foo".to_string());
     new_crate.authors.push("foo".to_string());
-    req.with_body(&new_crate_to_body(&new_crate));
+    req.with_body(&::new_crate_to_body(&new_crate));
     let json = bad_resp!(middle.call(&mut req));
     assert!(!json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&

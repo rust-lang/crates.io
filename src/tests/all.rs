@@ -20,12 +20,13 @@ use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};
 use rustc_serialize::json::{self, Json};
 
-use conduit::Request;
+use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use cargo_registry::app::App;
 use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::Kind;
 use cargo_registry::{User, Crate, Version, Keyword, Dependency};
+use cargo_registry::upload as u;
 
 macro_rules! t{ ($e:expr) => (
     match $e {
@@ -251,4 +252,50 @@ fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
 
 fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
+}
+
+
+fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
+    new_req_full(app, ::krate(krate), version, Vec::new())
+}
+
+fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
+                deps: Vec<u::CrateDependency>) -> MockRequest {
+    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    req.with_body(&new_req_body(krate, version, deps));
+    return req;
+}
+
+fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
+                -> Vec<u8> {
+    let kws = krate.keywords.into_iter().map(u::Keyword).collect();
+    new_crate_to_body(&u::NewCrate {
+        name: u::CrateName(krate.name),
+        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+        features: HashMap::new(),
+        deps: deps,
+        authors: vec!["foo".to_string()],
+        description: Some("description".to_string()),
+        homepage: krate.homepage,
+        documentation: krate.documentation,
+        readme: krate.readme,
+        keywords: Some(u::KeywordList(kws)),
+        license: Some("MIT".to_string()),
+        license_file: None,
+        repository: krate.repository,
+    })
+}
+
+fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
+    let json = json::encode(&new_crate).unwrap();
+    let mut body = Vec::new();
+    body.extend([
+        (json.len() >>  0) as u8,
+        (json.len() >>  8) as u8,
+        (json.len() >> 16) as u8,
+        (json.len() >> 24) as u8,
+    ].iter().cloned());
+    body.extend(json.as_bytes().iter().cloned());
+    body.extend([0, 0, 0, 0].iter().cloned());
+    body
 }
