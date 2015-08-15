@@ -27,15 +27,15 @@ struct AuthResponse { url: String, state: String }
 #[derive(RustcDecodable)]
 struct MeResponse { user: EncodableUser, api_token: String }
 
-// Users: `ganksy` and `kitty`
-// Teams: `rust-lang:libs`, `contain-rs:owners`
-// ganksy is on both
-// kitty is only on contain-rs
+// Users: `crates-tester-1` and `crates-tester-2`
+// Passwords: crates.io4lyfe
+// Teams: `crates-test-org:owners`, `crates-test-org:just-for-crates-2`
+// tester-1 is on owners only, tester-2 is on both
 
-fn mock_ganksy() -> User {
+fn mock_user_on_both() -> User {
     User {
         id: 10000,
-        gh_login: "Gankro".to_string(),
+        gh_login: "crates-tester-2".to_string(),
         email: None,
         name: None,
         avatar: None,
@@ -44,16 +44,24 @@ fn mock_ganksy() -> User {
     }
 }
 
-fn mock_kitty() -> User {
+fn mock_user_on_one() -> User {
     User {
         id: 10000,
-        gh_login: "FlashCat".to_string(),
+        gh_login: "crates-tester-1".to_string(),
         email: None,
         name: None,
         avatar: None,
         gh_access_token: "882faef00425a6b0e8f6750b7b7f7e295d5e42d3".to_string(),
         api_token: User::new_api_token(),
     }
+}
+
+fn body_for_add_solo_team() -> &str {
+    r#"{"users":["github:crates-test-org:just-for-crates-2"]}"#
+}
+
+fn body_for_add_shared_team() -> &str {
+    r#"{"users":["github:crates-test-org:owners"]}"#
 }
 
 fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
@@ -111,7 +119,7 @@ fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
 fn not_github() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "2.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
     let body = r#"{"users":["dropbox:foo:foo"]}"#;
@@ -127,7 +135,7 @@ fn not_github() {
 fn one_colon() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "2.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
     let body = r#"{"users":["github:foo"]}"#;
@@ -143,10 +151,10 @@ fn one_colon() {
 fn add_team_as_member() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "2.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = r#"{"users":["github:contain-rs:owners"]}"#;
+    let body = body_for_add_shared_team();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -157,10 +165,10 @@ fn add_team_as_member() {
 fn add_team_as_non_member() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app, "foo", "2.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_one());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = r#"{"owners":["github:rust-lang:lang"]}"#;
+    let body = body_for_add_solo_team();
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -175,15 +183,15 @@ fn publish_not_owned() {
     let (_b, app, middle) = ::app();
 
     let mut req = new_req(app.clone(), "foo", "1.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = r#"{"users":["github:rust-lang:libs"]}"#;
+    let body = body_for_add_solo_team();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
 
-    ::mock_user(&mut req, mock_kitty());
+    ::mock_user(&mut req, mock_user_on_one());
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
                            .with_body(&new_req_body(::krate("foo"), "2.0.0", vec![]))
                            .with_method(Method::Put)));
@@ -196,15 +204,15 @@ fn publish_not_owned() {
 fn publish_owned() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app.clone(), "foo", "1.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = r#"{"users":["github:contain-rs:owners"]}"#;
+    let body = body_for_add_shared_team();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
 
-    ::mock_user(&mut req, mock_kitty());
+    ::mock_user(&mut req, mock_user_on_one());
     ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                            .with_body(&new_req_body(::krate("foo"), "2.0.0", vec![]))
                            .with_method(Method::Put)));
@@ -215,16 +223,16 @@ fn publish_owned() {
 fn change_owners() {
     let (_b, app, middle) = ::app();
     let mut req = new_req(app.clone(), "foo", "1.0.0");
-    ::mock_user(&mut req, mock_ganksy());
+    ::mock_user(&mut req, mock_user_on_both());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = r#"{"users":["github:contain-rs:owners"]}"#;
+    let body = body_for_add_shared_team();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
 
-    ::mock_user(&mut req, mock_kitty());
-    let body = r#"{"users":["FlashCat"]}"#;
+    ::mock_user(&mut req, mock_user_on_one());
+    let body = r#"{"users":["FlashCat"]}"#;     // User doesn't matter
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                                        .with_method(Method::Put)
                                        .with_body(body.as_bytes())));
