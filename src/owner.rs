@@ -76,21 +76,24 @@ impl Team {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
                 let team = try!(chunks.next().ok_or_else(||
-                    human("missing github team argument; format is github:org:team")
+                    human("missing github team argument; \
+                            format is github:org:team")
                 ));
                 Team::create_github_team(app, conn, name, org, team, req_user)
             }
             _ => {
-                Err(human("unknown organization handler, only 'github:org:team' is supported"))
+                Err(human("unknown organization handler, \
+                            only 'github:org:team' is supported"))
             }
         }
     }
 
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
-    /// correctly parsed out of the full `name`. `name` is passed as a convenience
-    /// to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &Connection, name: &str, org_name: &str,
-                                team_name: &str, req_user: &User) -> CargoResult<Self> {
+    /// correctly parsed out of the full `name`. `name` is passed as a
+    /// convenience to avoid rebuilding it.
+    pub fn create_github_team(app: &App, conn: &Connection, name: &str,
+                              org_name: &str, team_name: &str, req_user: &User)
+                              -> CargoResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its `id`
 
@@ -103,8 +106,8 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(whitelist) {
-            return Err(human(format!("organization cannot contain special characters like {}",
-                                   c)));
+            return Err(human(format!("organization cannot contain special \
+                                        characters like {}", c)));
         }
 
         let url = format!("http://api.github.com/orgs/{}/teams", org_name);
@@ -122,8 +125,8 @@ impl Team {
                                   https://crates.io/login"));
             }
             _ => {
-                return Err(internal(format!("didn't get a 200 result from github: {}",
-                                            resp)));
+                return Err(internal(format!("didn't get a 200 result from
+                                            github: {}", resp)));
             }
         }
 
@@ -150,7 +153,8 @@ impl Team {
         }
 
         let github_id = try!(github_id.ok_or_else(|| {
-            human(format!("could not find the github team {}/{}", org_name, team_name))
+            human(format!("could not find the github team {}/{}",
+                            org_name, team_name))
         }));
 
         if !try!(team_with_gh_id_contains_user(app, github_id, req_user)) {
@@ -160,7 +164,8 @@ impl Team {
         Team::insert(conn, name, github_id)
     }
 
-    pub fn insert(conn: &Connection, name: &str, github_id: i32) -> CargoResult<Self> {
+    pub fn insert(conn: &Connection, name: &str, github_id: i32)
+                  -> CargoResult<Self> {
         // insert into DB for reals
         let stmt = try!(conn.prepare("INSERT INTO teams
                                    (name, github_id)
@@ -206,8 +211,8 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
                               https://crates.io/login"));
         }
         _ => {
-            return Err(internal(format!("didn't get a 200 result from github: {}",
-                                    resp)))
+            return Err(internal(format!("didn't get a 200 result from
+                                        github: {}", resp)))
         }
     }
 
