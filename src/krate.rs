@@ -204,8 +204,10 @@ impl Crate {
         }
 
         fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            license.map(license_exprs::validate_license_expr)
-                   .unwrap_or(Ok(()))
+            license.iter().flat_map(|s| s.split("/"))
+                   .map(license_exprs::validate_license_expr)
+                   .collect::<Result<Vec<_>, _>>()
+                   .map(|_| ())
                    .map_err(|e| human(format!("{}; see http://opensource.org/licenses \
                                                   for options, and http://spdx.org/licenses/ \
                                                   for their identifiers", e)))
