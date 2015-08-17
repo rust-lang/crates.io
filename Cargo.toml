@@ -72,3 +72,6 @@ civet = "0.7"
 [dev-dependencies]
 conduit-test = "0.7"
 bufstream = "0.1"
+
+[features]
+unstable = []

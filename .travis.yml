@@ -3,6 +3,7 @@ rust: nightly
 sudo: false
 
 before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - psql -c 'create database cargo_registry_test;' -U postgres
   - npm install -g phantomjs ember-cli
   - npm install
@@ -12,8 +13,16 @@ script:
   - cargo test
   - ember test
 
+after_success:
+  - travis-cargo coveralls --no-sudo
+
 addons:
   postgresql: "9.3"
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
 
 env:
   global:
