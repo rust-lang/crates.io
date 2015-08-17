@@ -314,17 +314,17 @@ impl Crate {
     }
 
     pub fn owner_add(&self, app: &App, conn: &Connection, req_user: &User,
-                     name: &str) -> CargoResult<()> {
+                     login: &str) -> CargoResult<()> {
 
-        let owner = match Owner::find_by_name(conn, name) {
+        let owner = match Owner::find_by_login(conn, login) {
             Ok(owner@Owner::User(_)) => { owner }
             Ok(Owner::Team(team)) => if try!(team.contains_user(app, req_user)) {
                 Owner::Team(team)
             } else {
-                return Err(human(format!("only members of {} can add it as an owner", name)));
+                return Err(human(format!("only members of {} can add it as an owner", login)));
             },
-            Err(err) => if name.contains(":") {
-                Owner::Team(try!(Team::create(app, conn, name, req_user)))
+            Err(err) => if login.contains(":") {
+                Owner::Team(try!(Team::create(app, conn, login, req_user)))
             } else {
                 return Err(err);
             },
@@ -339,9 +339,9 @@ impl Crate {
     }
 
     pub fn owner_remove(&self, conn: &Connection, _req_user: &User,
-                        name: &str) -> CargoResult<()> {
-        let owner = try!(Owner::find_by_name(conn, name).map_err(|_| {
-            human(format!("could not find user with login `{}`", name))
+                        login: &str) -> CargoResult<()> {
+        let owner = try!(Owner::find_by_login(conn, login).map_err(|_| {
+            human(format!("could not find owner with login `{}`", login))
         }));
         try!(conn.execute("UPDATE crate_owners
                               SET deleted = TRUE, updated_at = $1
@@ -1022,23 +1022,23 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         human("invalid json request")
     }));
 
-    let names = try!(request.owners.or(request.users).ok_or_else(|| {
+    let logins = try!(request.owners.or(request.users).ok_or_else(|| {
         human("invalid json request")
     }));
 
-    for name in &names {
+    for login in &logins {
         if add {
-            if owners.iter().any(|owner| owner.name() == *name) {
-                return Err(human(format!("`{}` is already an owner", name)))
+            if owners.iter().any(|owner| owner.login() == *login) {
+                return Err(human(format!("`{}` is already an owner", login)))
             }
-            try!(krate.owner_add(req.app(), tx, &user, &name));
+            try!(krate.owner_add(req.app(), tx, &user, &login));
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
-            if *name == user.gh_login {
+            if *login == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            try!(krate.owner_remove(tx, &user, &name));
+            try!(krate.owner_remove(tx, &user, &login));
         }
     }
 

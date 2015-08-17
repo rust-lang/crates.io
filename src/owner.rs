@@ -1,10 +1,8 @@
 use {Model, User};
-use util::{RequestUtils, CargoResult, internal, ChainError, human};
+use util::{RequestUtils, CargoResult, ChainError, human};
 use db::Connection;
 use pg::rows::Row;
-use rustc_serialize::json;
 use util::errors::NotFound;
-use std::str;
 use http;
 use app::App;
 
@@ -30,16 +28,21 @@ pub struct Team {
     /// "github:org:team"
     /// An opaque unique ID, that was at one point parsed out to query Github.
     /// We only query membership with github using the github_id, though.
-    pub name: String,
+    pub login: String,
+    /// Sugary goodness
+    pub name: Option<String>,
+    pub url: Option<String>,
+    pub avatar: Option<String>,
+
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcEncodable)]
 pub struct EncodableOwner {
     pub id: i32,
-    // TODO: duplicate this field with better name
     pub login: String,
     pub kind: String,
     pub email: Option<String>,
+    pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
 }
@@ -55,10 +58,10 @@ pub enum Rights {
 
 impl Team {
     /// Just gets the Team from the database by name.
-    pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Self> {
+    pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<Self> {
         let stmt = try!(conn.prepare("SELECT * FROM teams
-                                      WHERE name = $1"));
-        let rows = try!(stmt.query(&[&name]));
+                                      WHERE login = $1"));
+        let rows = try!(stmt.query(&[&login]));
         let row = try!(rows.iter().next().chain_error(|| {
             NotFound
         }));
@@ -66,10 +69,10 @@ impl Team {
     }
 
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(app: &App, conn: &Connection, name: &str, req_user: &User)
+    pub fn create(app: &App, conn: &Connection, login: &str, req_user: &User)
                                                     -> CargoResult<Self> {
         // must look like system:xxxxxxx
-        let mut chunks = name.split(":");
+        let mut chunks = login.split(":");
         match chunks.next().unwrap() {
             // github:rust-lang:owners
             "github" => {
@@ -79,7 +82,7 @@ impl Team {
                     human("missing github team argument; \
                             format is github:org:team")
                 ));
-                Team::create_github_team(app, conn, name, org, team, req_user)
+                Team::create_github_team(app, conn, login, org, team, req_user)
             }
             _ => {
                 Err(human("unknown organization handler, \
@@ -91,11 +94,11 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &Connection, name: &str,
+    pub fn create_github_team(app: &App, conn: &Connection, login: &str,
                               org_name: &str, team_name: &str, req_user: &User)
                               -> CargoResult<Self> {
         // GET orgs/:org/teams
-        // check that `team` is the `slug` in results, and grab its `id`
+        // check that `team` is the `slug` in results, and grab its data
 
         // "sanitization"
         fn whitelist(c: &char) -> bool {
@@ -110,69 +113,59 @@ impl Team {
                                         characters like {}", c)));
         }
 
-        let url = format!("http://api.github.com/orgs/{}/teams", org_name);
-        let token = http::token(req_user.gh_access_token.clone());
-        let resp = try!(http::github(app, &url, &token));
-
-        match resp.get_code() {
-            200 => {} // Ok!
-            403 => {
-                return Err(human("It looks like you don't have permission \
-                                  to query one of these organizations. \
-                                  You may need to re-authenticate on \
-                                  crates.io to grant permission to read \
-                                  github org memberships. Just go to \
-                                  https://crates.io/login"));
-            }
-            _ => {
-                return Err(internal(format!("didn't get a 200 result from
-                                            github: {}", resp)));
-            }
-        }
-
         #[derive(RustcDecodable)]
         struct GithubTeam {
-            slug: String,
-            id: i32,
+            slug: String,   // the name we want to find
+            id: i32,        // unique GH id (needed for membership queries)
+            name: Option<String>,   // Pretty name
+            url: Option<String>,    // URL to team info
         }
 
-        let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
-            internal("github didn't send a utf8-response")
-        }));
-        let teams: Vec<GithubTeam> = try!(json::decode(json).chain_error(|| {
-            internal("github didn't send a valid json response")
-        }));
+        // FIXME: we just set per_page=100 and don't bother chasing pagination
+        // links. A hundred teams should be enough for any org, right?
+        let url = format!("http://api.github.com/orgs/{}/teams?per_page=100",
+                            org_name);
+        let token = http::token(req_user.gh_access_token.clone());
+        let resp = try!(http::github(app, &url, &token));
+        let teams: Vec<GithubTeam> = try!(http::parse_github_response(resp));
 
-        let mut github_id = None;
-
-        for team in teams {
-            if team.slug == team_name {
-                github_id = Some(team.id);
-                break;
-            }
-        }
-
-        let github_id = try!(github_id.ok_or_else(|| {
-            human(format!("could not find the github team {}/{}",
+        let team = try!(teams.into_iter().find(|team| team.slug == team_name)
+            .ok_or_else(||{
+                human(format!("could not find the github team {}/{}",
                             org_name, team_name))
-        }));
+            })
+        );
 
-        if !try!(team_with_gh_id_contains_user(app, github_id, req_user)) {
+        if !try!(team_with_gh_id_contains_user(app, team.id, req_user)) {
             return Err(human("only members of a team can add it as an owner"));
         }
 
-        Team::insert(conn, name, github_id)
+        #[derive(RustcDecodable)]
+        struct Org {
+            avatar_url: Option<String>,
+        }
+
+        let url = format!("http://api.github.com/orgs/{}", org_name);
+        let resp = try!(http::github(app, &url, &token));
+        let org: Org = try!(http::parse_github_response(resp));
+
+        Team::insert(conn, login, team.id, team.name, team.url, org.avatar_url)
     }
 
-    pub fn insert(conn: &Connection, name: &str, github_id: i32)
+    pub fn insert(conn: &Connection,
+                  login: &str,
+                  github_id: i32,
+                  name: Option<String>,
+                  url: Option<String>,
+                  avatar: Option<String>)
                   -> CargoResult<Self> {
-        // insert into DB for reals
+
         let stmt = try!(conn.prepare("INSERT INTO teams
-                                   (name, github_id)
-                                   VALUES ($1, $2)
+                                   (login, github_id, name, url, avatar)
+                                   VALUES ($1, $2, $3, $4, $5)
                                    RETURNING *"));
 
-        let rows = try!(stmt.query(&[&name, &github_id]));
+        let rows = try!(stmt.query(&[&login, &github_id, &name, &url, &avatar]));
         let row = rows.iter().next().unwrap();
         Ok(Model::from_row(&row))
     }
@@ -191,41 +184,20 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 
+    #[derive(RustcDecodable)]
+    struct Membership {
+        state: String,
+    }
+
     let url = format!("http://api.github.com/teams/{}/memberships/{}",
                         &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
     let resp = try!(http::github(app, &url, &token));
 
-    match resp.get_code() {
-        200 => {} // Ok!
-        404 => {
-            // Yes, this is actually how "no membership" is signaled
-            return Ok(false);
-        }
-        403 => {
-            return Err(human("It looks like you don't have permission \
-                              to query an organization that owns this \
-                              crate. You may need to re-authenticate on \
-                              crates.io to grant permission to read \
-                              github org memberships. Just go to \
-                              https://crates.io/login"));
-        }
-        _ => {
-            return Err(internal(format!("didn't get a 200 result from
-                                        github: {}", resp)))
-        }
-    }
+    // Officially how `false` is returned
+    if resp.get_code() == 404 { return Ok(false) }
 
-    #[derive(RustcDecodable)]
-    struct Membership {
-        state: String,
-    }
-    let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
-        internal("github didn't send a utf8-response")
-    }));
-    let membership: Membership = try!(json::decode(json).chain_error(|| {
-        internal("github didn't send a valid json response")
-    }));
+    let membership: Membership = try!(http::parse_github_response(resp));
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
@@ -238,6 +210,9 @@ impl Model for Team {
             id: row.get("id"),
             name: row.get("name"),
             github_id: row.get("github_id"),
+            login: row.get("login"),
+            avatar: row.get("avatar"),
+            url: row.get("url"),
         }
     }
 
@@ -248,9 +223,9 @@ impl Owner {
     /// Finds the owner by name, failing out if it doesn't exist.
     /// May be a user's GH login, or a full team name. This is case
     /// sensitive.
-    pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Owner> {
+    pub fn find_by_login(conn: &Connection, name: &str) -> CargoResult<Owner> {
         let owner = if name.contains(":") {
-            Owner::Team(try!(Team::find_by_name(conn, name).map_err(|_|
+            Owner::Team(try!(Team::find_by_login(conn, name).map_err(|_|
                 human(format!("could not find team with name {}", name))
             )))
         } else {
@@ -268,10 +243,10 @@ impl Owner {
         }
     }
 
-    pub fn name(&self) -> &str {
+    pub fn login(&self) -> &str {
         match *self {
             Owner::User(ref user) => &user.gh_login,
-            Owner::Team(ref team) => &team.name,
+            Owner::Team(ref team) => &team.login,
         }
     }
 
@@ -285,22 +260,25 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User { id, email, name, gh_login, avatar, .. }) => {
+                let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
                     login: gh_login,
                     email: email,
                     avatar: avatar,
+                    url: Some(url),
                     name: name,
                     kind: String::from("user"),
                 }
             }
-            Owner::Team(Team { id, name, .. }) => {
+            Owner::Team(Team { id, url, name, login, avatar, .. }) => {
                 EncodableOwner {
                     id: id,
-                    login: name,
+                    login: login,
                     email: None,
-                    avatar: None,
-                    name: None,
+                    url: url,
+                    avatar: avatar,
+                    name: name,
                     kind: String::from("team"),
                 }
             }
