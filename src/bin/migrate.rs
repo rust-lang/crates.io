@@ -465,7 +465,23 @@ fn migrations() -> Vec<Migration> {
             "ALTER TABLE crate_owners RENAME user_id TO owner_id",
             "ALTER TABLE crate_owners RENAME owner_id TO user_id",
         ),
-        undo_foreign_key(20150804170130, "crate_owners", "user_id", "users (id)"),
+        undo_foreign_key(20150804170130, "crate_owners", "user_id",
+                         "owner_id", "users (id)"),
+        Migration::new(20150818112907, |tx| {
+            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_user_per_crate", &[]));
+            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+                             crate_owners_unique_owner_per_crate \
+                             UNIQUE (owner_id, crate_id, owner_kind)", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_owner_per_crate", &[]));
+            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+                             crate_owners_unique_user_per_crate \
+                             UNIQUE (owner_id, crate_id)", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -487,13 +503,16 @@ fn migrations() -> Vec<Migration> {
         Migration::run(id, &add, &rm)
     }
 
-    fn undo_foreign_key(id: i64, table: &str, column: &str,
-                   references: &str) -> Migration {
+    fn undo_foreign_key(id: i64, table: &str,
+                        column: &str,
+                        real_column: &str,
+                        references: &str) -> Migration {
         let add = format!("ALTER TABLE {table} ADD CONSTRAINT fk_{table}_{col}
-                                 FOREIGN KEY ({col}) REFERENCES {reference}",
-                          table = table, col = column, reference = references);
+                           FOREIGN KEY ({real_col}) REFERENCES {reference}",
+                          table = table, col = column, reference = references,
+                          real_col = real_column);
         let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
-                          table = table, col = column);
+                         table = table, col = column);
         Migration::run(id, &rm, &add)
     }
 
