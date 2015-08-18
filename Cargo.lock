@@ -18,6 +18,7 @@ dependencies = [
  "env_logger 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "git2 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "license-exprs 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "migrate 0.1.0",
  "oauth2 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -323,6 +324,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "license-exprs"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "log"
