@@ -20,6 +20,6 @@ impl Config {
     pub fn api_protocol(&self) -> &'static str {
         // When testing we route all API traffic over HTTP so we can
         // sniff/record it, but everywhere else we use https
-        if config.env == ::Env::Test {"http"} else {"https"}
+        if self.env == ::Env::Test {"http"} else {"https"}
     }
 }

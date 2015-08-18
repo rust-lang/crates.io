@@ -7,11 +7,14 @@ use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::str;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Once};
 use std::thread;
+use std::fs;
 
 use bufstream::BufStream;
+use cargo_registry::User;
 use curl::http;
+use rustc_serialize::json;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -20,6 +23,11 @@ pub struct Bomb {
     quit: Sender<()>,
     rx: Receiver<()>,
     iorx: Sink,
+}
+
+pub struct GhUser {
+    pub login: &'static str,
+    pub init: Once,
 }
 
 struct Sink(Arc<Mutex<Vec<u8>>>);
@@ -51,6 +59,10 @@ impl Drop for Bomb {
     }
 }
 
+fn cache_file(name: &str) -> PathBuf {
+    PathBuf::from(file!()).parent().unwrap().join("http-data").join(name)
+}
+
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
     let record = env::var("RECORD").is_ok();
@@ -59,8 +71,7 @@ pub fn proxy() -> (String, Bomb) {
     let ret = format!("http://{}", t!(a.local_addr()));
     let (tx, rx) = channel();
 
-    let data = PathBuf::from(file!()).parent().unwrap().join("http-data")
-                                    .join(&me.replace("::", "_"));
+    let data = cache_file(&me.replace("::", "_"));
     let record = record && !data.exists();
     let a2 = t!(a.try_clone());
 
@@ -230,4 +241,57 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
         writer.write_all(b"\r\n").unwrap();
     }
     data.read_line(&mut String::new()).unwrap();
+}
+
+impl GhUser {
+    pub fn user(&'static self) -> User {
+        self.init.call_once(|| self.init());
+        let mut u = ::user(self.login);
+        u.gh_access_token = self.token();
+        return u
+    }
+
+    fn filename(&self) -> PathBuf { cache_file(&format!("gh-{}", self.login)) }
+
+    fn token(&self) -> String {
+        let mut token = String::new();
+        File::open(&self.filename()).unwrap().read_to_string(&mut token).unwrap();
+        return token
+    }
+
+    fn init(&self) {
+        if fs::metadata(&self.filename()).is_ok() { return }
+
+        let password = ::env(&format!("GH_PASS_{}",
+                                      self.login.replace("-", "_")));
+        #[derive(RustcEncodable)]
+        struct Authorization {
+            scopes: Vec<String>,
+            note: String,
+            client_id: String,
+            client_secret: String,
+        }
+        let mut handle = http::handle();
+        let url = format!("https://{}:{}@api.github.com/authorizations",
+                          self.login, password);
+        let body = json::encode(&Authorization {
+            scopes: vec!["read:org".to_string()],
+            note: "crates.io test".to_string(),
+            client_id: ::env("GH_CLIENT_ID"),
+            client_secret: ::env("GH_CLIENT_SECRET"),
+        }).unwrap();
+        let resp = handle.post(&url[..], &body[..])
+                         .header("User-Agent", "hello!")
+                         .exec().unwrap();
+        if resp.get_code() < 200 || resp.get_code() >= 300 {
+            panic!("failed to get a 200 {}", resp);
+        }
+
+        #[derive(RustcDecodable)]
+        struct Response { token: String }
+        let resp: Response = json::decode(str::from_utf8(resp.get_body())
+                                              .unwrap()).unwrap();
+        File::create(&self.filename()).unwrap()
+             .write_all(&resp.token.as_bytes()).unwrap();
+    }
 }

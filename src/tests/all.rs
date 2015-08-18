@@ -18,6 +18,7 @@ use std::error::Error as StdError;
 use std::process::Command;
 use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use rustc_serialize::json::{self, Json};
 
 use conduit::{Request, Method};
@@ -85,8 +86,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         s3_proxy: Some(proxy),
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
-        gh_client_id: "".to_string(),
-        gh_client_secret: "".to_string(),
+        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or(String::new()),
+        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or(String::new()),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
@@ -97,13 +98,6 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     let mut middleware = cargo_registry::middleware(app.clone());
     middleware.add(NoCommit);
     return (bomb, app, middleware);
-
-    fn env(s: &str) -> String {
-        match env::var(s).ok() {
-            Some(s) => s,
-            None => panic!("must have `{}` defined", s),
-        }
-    }
 
     fn db_setup(db: &str) {
         let migrate = t!(env::current_exe()).parent().unwrap().join("migrate");
@@ -120,6 +114,13 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
                .rollback();
             return res;
         }
+    }
+}
+
+fn env(s: &str) -> String {
+    match env::var(s).ok() {
+        Some(s) => s,
+        None => panic!("must have `{}` defined", s),
     }
 }
 
@@ -175,9 +176,11 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     }
 }
 
+static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
 fn user(login: &str) -> User {
     User {
-        id: 10000,
+        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login.to_string(),
         email: None,
         name: None,
@@ -189,7 +192,7 @@ fn user(login: &str) -> User {
 
 fn krate(name: &str) -> Crate {
     cargo_registry::krate::Crate {
-        id: 10000,
+        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         user_id: 100,
         updated_at: time::now().to_timespec(),
@@ -221,6 +224,7 @@ fn mock_user(req: &mut Request, u: User) -> User {
 fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
     mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap())
 }
+
 fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                    -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
