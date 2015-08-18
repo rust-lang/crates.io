@@ -70,6 +70,21 @@ fn one_colon() {
             "{:?}", json.errors);
 }
 
+#[test]
+fn nonexistent_team() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app, "foo", "2.0.0");
+    ::mock_user(&mut req, mock_user_on_x_and_y());
+    ::mock_crate(&mut req, ::krate("foo"));
+
+    let body = r#"{"users":["github:crates-test-org:this-does-not-exist"]}"#;
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                                        .with_method(Method::Put)
+                                        .with_body(body.as_bytes())));
+    assert!(json.errors[0].detail.contains("could not find the github team"),
+            "{:?}", json.errors);
+}
+
 // Test adding team as owner when on it
 #[test]
 fn add_team_as_member() {
