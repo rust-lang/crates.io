@@ -271,7 +271,7 @@ impl Owner {
                 let url = {
                     let mut parts = login.split(":");
                     parts.next(); // discard github
-                    format!("https://github.com/{}/teams/{}",
+                    format!("https://github.com/orgs/{}/teams/{}",
                             parts.next().unwrap(), parts.next().unwrap())
                 };
                 EncodableOwner {
