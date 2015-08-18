@@ -1,39 +1,39 @@
-===REQUEST 240
-GET http://api.github.com/orgs/crates-test-org/teams HTTP/1.1
+===REQUEST 253
+GET http://api.github.com/orgs/crates-test-org/teams?per_page=100 HTTP/1.1
 Host: api.github.com
 Proxy-Connection: Keep-Alive
+Authorization: token aa4e8e9caaaff1f7af211c2bc7d96b4202992e13
 User-Agent: hello!
-Authorization: token 9e15ed2c4e8de11cb42bcff45fb824c23e9ba79b
 Accept: application/vnd.github.v3+json
 
 
 ===RESPONSE 1995
 HTTP/1.1 200
-cache-control: private, max-age=60, s-maxage=60
-server: GitHub.com
-content-length: 852
-content-security-policy: default-src 'none'
+status: 200 OK
+x-frame-options: deny
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
 x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
-x-ratelimit-remaining: 4970
-etag: "b0ab11ae16bfcf4a6309b8558f8da6bf"
+date: Tue, 18 Aug 2015 06:14:35 GMT
+etag: "a71c1349420e9499a99a7647155bd223"
+x-content-type-options: nosniff
+content-security-policy: default-src 'none'
+x-ratelimit-remaining: 4976
+x-xss-protection: 1; mode=block
+x-served-by: 07ff1c8a09e44b62e277fae50a1b1dc4
+x-oauth-scopes: read:org
+server: GitHub.com
+x-oauth-client-id: 37714973a49504aeac68
+x-github-request-id: 3FF5DB35:3D4C:A4CAE66:55D2CD4B
 vary: Accept, Authorization, Cookie, X-GitHub-OTP
 vary: Accept-Encoding
-x-github-request-id: 3FF5DB35:7C77:28E2399:55D2A6C2
-x-served-by: a6882e5cd2513376cb9481dbcd83f3a2
-x-oauth-scopes: read:org
-x-ratelimit-reset: 1439870872
-x-oauth-client-id: 37714973a49504aeac68
-status: 200 OK
-strict-transport-security: max-age=31536000; includeSubdomains; preload
-x-github-media-type: github.v3; format=json
-access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
-access-control-allow-credentials: true
-x-frame-options: deny
 x-ratelimit-limit: 5000
-x-xss-protection: 1; mode=block
-date: Tue, 18 Aug 2015 03:30:10 GMT
-content-type: application/json; charset=utf-8
+x-github-media-type: github.v3; format=json
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-ratelimit-reset: 1439881924
+cache-control: private, max-age=60, s-maxage=60
 access-control-allow-origin: *
-x-content-type-options: nosniff
+content-type: application/json; charset=utf-8
+content-length: 852
+access-control-allow-credentials: true
 
 [{"name":"Owners","id":1699377,"slug":"owners","description":null,"permission":"admin","url":"https://api.github.com/teams/1699377","members_url":"https://api.github.com/teams/1699377/members{/member}","repositories_url":"https://api.github.com/teams/1699377/repos"},{"name":"just-for-crates-2","id":1699379,"slug":"just-for-crates-2","description":"Just for Crates 2","permission":"pull","url":"https://api.github.com/teams/1699379","members_url":"https://api.github.com/teams/1699379/members{/member}","repositories_url":"https://api.github.com/teams/1699379/repos"},{"name":"just-for-crates1","id":1699378,"slug":"just-for-crates1","description":"","permission":"pull","url":"https://api.github.com/teams/1699378","members_url":"https://api.github.com/teams/1699378/members{/member}","repositories_url":"https://api.github.com/teams/1699378/repos"}]

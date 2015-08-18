@@ -208,9 +208,9 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
                                                       .take_while(|l| l.len() > 2)
                                                       .collect();
     let mut found = HashSet::new();
-    t!(write!(stdout, "expecting: {:?}", expected));
+    t!(writeln!(stdout, "expecting: {:?}", expected));
     for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
-        t!(write!(stdout, "received: {}", line.trim()));
+        t!(writeln!(stdout, "received: {}", line.trim()));
         if !found.insert(line.clone()) { continue }
         if expected.remove(&line) { continue }
         if line.starts_with("Date:") { continue }
