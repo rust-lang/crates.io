@@ -177,7 +177,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         Err(s) => return Err(human(s)),
     };
 
-    let resp = try!(http::github(req.app(), "http://api.github.com/user", &token));
+    let resp = try!(http::github(req.app(), "/user", &token));
     let ghuser: GithubUser = try!(http::parse_github_response(resp));
 
     // Into the database!

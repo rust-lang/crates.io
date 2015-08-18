@@ -12,6 +12,6 @@ export default Ember.Component.extend({
   'href': function() {
       // TODO replace this with a link to a native crates.io profile
       // page when they exist.
-      return 'https://github.com/' + this.get('user.login');
+      return this.get('user.url');
   }.property('user'),
 });

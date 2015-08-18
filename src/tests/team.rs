@@ -3,7 +3,7 @@ use conduit::{Handler, Method};
 use cargo_registry::User;
 
 // Users: `crates-tester-1` and `crates-tester-2`
-// Passwords: crates.io4lyfe
+// Passwords: ask acrichto or gankro
 // Teams: `crates-test-org:owners`, `crates-test-org:just-for-crates-2`
 // tester-1 is on owners only, tester-2 is on both
 
@@ -14,19 +14,19 @@ fn mock_user_on_x_and_y() -> User {
         email: None,
         name: None,
         avatar: None,
-        gh_access_token: "9d86670273ea0f7f51b9ed708d144267e0700b51".to_string(),
+        gh_access_token: "NAR".to_string(),
         api_token: User::new_api_token(),
     }
 }
 
 fn mock_user_on_only_x() -> User {
     User {
-        id: 10000,
+        id: 10001,
         gh_login: "crates-tester-1".to_string(),
         email: None,
         name: None,
         avatar: None,
-        gh_access_token: "882faef00425a6b0e8f6750b7b7f7e295d5e42d3".to_string(),
+        gh_access_token: "NAR".to_string(),
         api_token: User::new_api_token(),
     }
 }

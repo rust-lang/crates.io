@@ -11,7 +11,14 @@ use std::str;
 /// parse_github_response to handle the "common" processing of responses.
 pub fn github(app: &App, url: &str, auth: &Token)
     -> Result<curl::http::Response, curl::ErrCode> {
-    info!("HTTP: {}", url);
+    info!("GITHUB HTTP: {}", url);
+
+    let url = if app.config.env == ::Env::Test {
+        format!("http://api.github.com{}", url)
+    } else {
+        format!("https://api.github.com{}", url)
+    };
+
     app.handle()
      .get(url)
      .header("Accept", "application/vnd.github.v3+json")

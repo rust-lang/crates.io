@@ -28,10 +28,10 @@ pub struct Team {
     /// "github:org:team"
     /// An opaque unique ID, that was at one point parsed out to query Github.
     /// We only query membership with github using the github_id, though.
+    /// This is the only name we should ever talk to Cargo about.
     pub login: String,
     /// Sugary goodness
     pub name: Option<String>,
-    pub url: Option<String>,
     pub avatar: Option<String>,
 
 }
@@ -118,13 +118,11 @@ impl Team {
             slug: String,   // the name we want to find
             id: i32,        // unique GH id (needed for membership queries)
             name: Option<String>,   // Pretty name
-            url: Option<String>,    // URL to team info
         }
 
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
-        let url = format!("http://api.github.com/orgs/{}/teams?per_page=100",
-                            org_name);
+        let url = format!("/orgs/{}/teams", org_name);
         let token = http::token(req_user.gh_access_token.clone());
         let resp = try!(http::github(app, &url, &token));
         let teams: Vec<GithubTeam> = try!(http::parse_github_response(resp));
@@ -145,27 +143,26 @@ impl Team {
             avatar_url: Option<String>,
         }
 
-        let url = format!("http://api.github.com/orgs/{}", org_name);
+        let url = format!("/orgs/{}", org_name);
         let resp = try!(http::github(app, &url, &token));
         let org: Org = try!(http::parse_github_response(resp));
 
-        Team::insert(conn, login, team.id, team.name, team.url, org.avatar_url)
+        Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
 
     pub fn insert(conn: &Connection,
                   login: &str,
                   github_id: i32,
                   name: Option<String>,
-                  url: Option<String>,
                   avatar: Option<String>)
                   -> CargoResult<Self> {
 
         let stmt = try!(conn.prepare("INSERT INTO teams
-                                   (login, github_id, name, url, avatar)
-                                   VALUES ($1, $2, $3, $4, $5)
+                                   (login, github_id, name, avatar)
+                                   VALUES ($1, $2, $3, $5)
                                    RETURNING *"));
 
-        let rows = try!(stmt.query(&[&login, &github_id, &name, &url, &avatar]));
+        let rows = try!(stmt.query(&[&login, &github_id, &name, &avatar]));
         let row = rows.iter().next().unwrap();
         Ok(Model::from_row(&row))
     }
@@ -189,7 +186,7 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
         state: String,
     }
 
-    let url = format!("http://api.github.com/teams/{}/memberships/{}",
+    let url = format!("/teams/{}/memberships/{}",
                         &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
     let resp = try!(http::github(app, &url, &token));
@@ -212,7 +209,6 @@ impl Model for Team {
             github_id: row.get("github_id"),
             login: row.get("login"),
             avatar: row.get("avatar"),
-            url: row.get("url"),
         }
     }
 
@@ -271,12 +267,18 @@ impl Owner {
                     kind: String::from("user"),
                 }
             }
-            Owner::Team(Team { id, url, name, login, avatar, .. }) => {
+            Owner::Team(Team { id, name, login, avatar, .. }) => {
+                let url = {
+                    let mut parts = login.split(":");
+                    parts.next(); // discard github
+                    format!("https://github.com/{}/teams/{}",
+                            parts.next().unwrap(), parts.next().unwrap())
+                };
                 EncodableOwner {
                     id: id,
                     login: login,
                     email: None,
-                    url: url,
+                    url: Some(url),
                     avatar: avatar,
                     name: name,
                     kind: String::from("team"),
