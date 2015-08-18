@@ -317,11 +317,12 @@ impl Crate {
                      login: &str) -> CargoResult<()> {
 
         let owner = match Owner::find_by_login(conn, login) {
-            Ok(owner@Owner::User(_)) => { owner }
+            Ok(owner @ Owner::User(_)) => { owner }
             Ok(Owner::Team(team)) => if try!(team.contains_user(app, req_user)) {
                 Owner::Team(team)
             } else {
-                return Err(human(format!("only members of {} can add it as an owner", login)));
+                return Err(human(format!("only members of {} can add it as \
+                                          an owner", login)));
             },
             Err(err) => if login.contains(":") {
                 Owner::Team(try!(Team::create(app, conn, login, req_user)))
@@ -334,7 +335,8 @@ impl Crate {
                            (crate_id, owner_id, created_at, updated_at,
                             created_by, owner_kind, deleted)
                            VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
-                          &[&self.id, &owner.id(), &::now(), &req_user.id, &owner.kind()]));
+                          &[&self.id, &owner.id(), &::now(), &req_user.id,
+                            &owner.kind()]));
         Ok(())
     }
 
@@ -345,7 +347,8 @@ impl Crate {
         }));
         try!(conn.execute("UPDATE crate_owners
                               SET deleted = TRUE, updated_at = $1
-                            WHERE crate_id = $2 AND owner_id = $3 AND owner_kind = $4",
+                            WHERE crate_id = $2 AND owner_id = $3
+                              AND owner_kind = $4",
                           &[&::now(), &self.id, &owner.id(), &owner.kind()]));
         Ok(())
     }

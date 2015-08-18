@@ -10,21 +10,17 @@ use std::str;
 /// because custom error-code handling may be desirable. Use
 /// parse_github_response to handle the "common" processing of responses.
 pub fn github(app: &App, url: &str, auth: &Token)
-    -> Result<curl::http::Response, curl::ErrCode> {
+              -> Result<curl::http::Response, curl::ErrCode>
+{
+    let url = format!("{}://api.github.com{}", app.config.api_protocol(), url);
     info!("GITHUB HTTP: {}", url);
 
-    let url = if app.config.env == ::Env::Test {
-        format!("http://api.github.com{}", url)
-    } else {
-        format!("https://api.github.com{}", url)
-    };
-
     app.handle()
-     .get(url)
-     .header("Accept", "application/vnd.github.v3+json")
-     .header("User-Agent", "hello!")
-     .auth_with(auth)
-     .exec()
+       .get(url)
+       .header("Accept", "application/vnd.github.v3+json")
+       .header("User-Agent", "hello!")
+       .auth_with(auth)
+       .exec()
 }
 
 /// Checks for normal responses

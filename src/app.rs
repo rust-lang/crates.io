@@ -51,7 +51,7 @@ impl App {
                                     config.s3_region.clone(),
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
-                                    if config.env == ::Env::Test {"http"} else {"https"}),
+                                    config.api_protocol()),
             s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),

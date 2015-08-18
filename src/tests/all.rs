@@ -28,30 +28,34 @@ use cargo_registry::dependency::Kind;
 use cargo_registry::{User, Crate, Version, Keyword, Dependency};
 use cargo_registry::upload as u;
 
-macro_rules! t{ ($e:expr) => (
-    match $e {
-        Ok(e) => e,
-        Err(m) => panic!("{} failed with: {}", stringify!($e), m),
-    }
-) }
+macro_rules! t {
+    ($e:expr) => (
+        match $e {
+            Ok(e) => e,
+            Err(m) => panic!("{} failed with: {}", stringify!($e), m),
+        }
+    )
+}
 
-macro_rules! t_resp{ ($e:expr) => ({
-    t!($e)
-}) }
+macro_rules! t_resp { ($e:expr) => (t!($e)) }
 
-macro_rules! ok_resp{ ($e:expr) => ({
-    let resp = t_resp!($e);
-    if !::ok_resp(&resp) { panic!("bad response: {:?}", resp.status); }
-    resp
-}) }
+macro_rules! ok_resp {
+    ($e:expr) => ({
+        let resp = t_resp!($e);
+        if !::ok_resp(&resp) { panic!("bad response: {:?}", resp.status); }
+        resp
+    })
+}
 
-macro_rules! bad_resp{ ($e:expr) => ({
-    let mut resp = t_resp!($e);
-    match ::bad_resp(&mut resp) {
-        None => panic!("ok response: {:?}", resp.status),
-        Some(b) => b,
-    }
-}) }
+macro_rules! bad_resp {
+    ($e:expr) => ({
+        let mut resp = t_resp!($e);
+        match ::bad_resp(&mut resp) {
+            None => panic!("ok response: {:?}", resp.status),
+            Some(b) => b,
+        }
+    })
+}
 
 #[derive(RustcDecodable, Debug)]
 struct Error { detail: String }
