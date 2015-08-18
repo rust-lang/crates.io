@@ -39,6 +39,21 @@ fn not_github() {
             "{:?}", json.errors);
 }
 
+#[test]
+fn weird_name() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app, "foo", "2.0.0");
+    ::mock_user(&mut req, mock_user_on_x_and_y());
+    ::mock_crate(&mut req, ::krate("foo"));
+
+    let body = r#"{"users":["github:foo/../bar:wut"]}"#;
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                                        .with_method(Method::Put)
+                                        .with_body(body.as_bytes())));
+    assert!(json.errors[0].detail.contains("organization cannot contain"),
+            "{:?}", json.errors);
+}
+
 // Test adding team without second `:`
 #[test]
 fn one_colon() {
