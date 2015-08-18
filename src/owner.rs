@@ -122,7 +122,7 @@ impl Team {
 
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
-        let url = format!("/orgs/{}/teams", org_name);
+        let url = format!("/orgs/{}/teams?per_page=100", org_name);
         let token = http::token(req_user.gh_access_token.clone());
         let resp = try!(http::github(app, &url, &token));
         let teams: Vec<GithubTeam> = try!(http::parse_github_response(resp));
