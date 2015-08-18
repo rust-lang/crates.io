@@ -2,177 +2,177 @@
 GET http://api.github.com/orgs/crates-test-org/teams HTTP/1.1
 Host: api.github.com
 Proxy-Connection: Keep-Alive
-Authorization: token c26185f31a0c14681a82764124bd031e9e9bccb0
 Accept: application/vnd.github.v3+json
+Authorization: token e6d126e00feb3960bd52506092497e1a59d15263
 User-Agent: hello!
 
 
-===RESPONSE 1978
+===RESPONSE 1995
 HTTP/1.1 200
+cache-control: private, max-age=60, s-maxage=60
+server: GitHub.com
+x-ratelimit-reset: 1439860497
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+x-oauth-scopes: read:org
+content-length: 852
+date: Tue, 18 Aug 2015 00:18:49 GMT
 vary: Accept, Authorization, Cookie, X-GitHub-OTP
 vary: Accept-Encoding
-access-control-allow-credentials: true
-x-github-media-type: github.v3; format=json
-x-xss-protection: 1; mode=block
-server: GitHub.com
-x-frame-options: deny
-x-github-request-id: 3FF5DB35:5BAA:CE2353B:55D26E96
 access-control-allow-origin: *
-content-type: application/json; charset=utf-8
-x-oauth-scopes: read:org
-strict-transport-security: max-age=31536000; includeSubdomains; preload
-etag: "a2d2e8a3bf29134386bfe28cd588d1fd"
-x-oauth-client-id: 89b6afdeaa6c6c7506ec
-access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
-date: Mon, 17 Aug 2015 23:30:31 GMT
-x-content-type-options: nosniff
-x-ratelimit-remaining: 4966
-x-served-by: 173530fed4bbeb1e264b2ed22e8b5c20
-content-security-policy: default-src 'none'
+x-xss-protection: 1; mode=block
+x-ratelimit-limit: 5000
+x-github-request-id: 3FF5DB35:3D4C:9D6B8E6:55D279E9
 x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
 status: 200 OK
-x-ratelimit-reset: 1439854867
-cache-control: private, max-age=60, s-maxage=60
-content-length: 835
-x-ratelimit-limit: 5000
+x-served-by: 474556b853193c38f1b14328ce2d1b7d
+x-github-media-type: github.v3; format=json
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+x-ratelimit-remaining: 4950
+x-content-type-options: nosniff
+content-type: application/json; charset=utf-8
+x-frame-options: deny
+access-control-allow-credentials: true
+etag: "c5a75e367565d032956a3cedfe950504"
+content-security-policy: default-src 'none'
+strict-transport-security: max-age=31536000; includeSubdomains; preload
 
-[{"name":"Owners","id":1699377,"slug":"owners","description":null,"permission":"admin","url":"https://api.github.com/teams/1699377","members_url":"https://api.github.com/teams/1699377/members{/member}","repositories_url":"https://api.github.com/teams/1699377/repos"},{"name":"just-for-crates-2","id":1699379,"slug":"just-for-crates-2","description":"","permission":"pull","url":"https://api.github.com/teams/1699379","members_url":"https://api.github.com/teams/1699379/members{/member}","repositories_url":"https://api.github.com/teams/1699379/repos"},{"name":"just-for-crates1","id":1699378,"slug":"just-for-crates1","description":"","permission":"pull","url":"https://api.github.com/teams/1699378","members_url":"https://api.github.com/teams/1699378/members{/member}","repositories_url":"https://api.github.com/teams/1699378/repos"}]
+[{"name":"Owners","id":1699377,"slug":"owners","description":null,"permission":"admin","url":"https://api.github.com/teams/1699377","members_url":"https://api.github.com/teams/1699377/members{/member}","repositories_url":"https://api.github.com/teams/1699377/repos"},{"name":"just-for-crates-2","id":1699379,"slug":"just-for-crates-2","description":"Just for Crates 2","permission":"pull","url":"https://api.github.com/teams/1699379","members_url":"https://api.github.com/teams/1699379/members{/member}","repositories_url":"https://api.github.com/teams/1699379/repos"},{"name":"just-for-crates1","id":1699378,"slug":"just-for-crates1","description":"","permission":"pull","url":"https://api.github.com/teams/1699378","members_url":"https://api.github.com/teams/1699378/members{/member}","repositories_url":"https://api.github.com/teams/1699378/repos"}]
 ===REQUEST 255
 GET http://api.github.com/teams/1699377/memberships/crates-tester-2 HTTP/1.1
 Host: api.github.com
 Proxy-Connection: Keep-Alive
-Authorization: token c26185f31a0c14681a82764124bd031e9e9bccb0
-Accept: application/vnd.github.v3+json
+Authorization: token e6d126e00feb3960bd52506092497e1a59d15263
 User-Agent: hello!
+Accept: application/vnd.github.v3+json
 
 
 ===RESPONSE 1227
 HTTP/1.1 200
-content-type: application/json; charset=utf-8
-strict-transport-security: max-age=31536000; includeSubdomains; preload
-x-ratelimit-remaining: 4965
-x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
-access-control-allow-credentials: true
-x-ratelimit-limit: 5000
 access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
-access-control-allow-origin: *
-x-served-by: a241e1a8264a6ace03db946c85b92db3
-x-github-request-id: 3FF5DB35:5BA8:BD4A775:55D26E97
-cache-control: private, max-age=60, s-maxage=60
-server: GitHub.com
-content-length: 91
+x-served-by: 474556b853193c38f1b14328ce2d1b7d
+x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
 x-content-type-options: nosniff
-date: Mon, 17 Aug 2015 23:30:31 GMT
-x-oauth-client-id: 89b6afdeaa6c6c7506ec
-x-github-media-type: github.v3; format=json
-x-xss-protection: 1; mode=block
 x-oauth-scopes: read:org
-x-ratelimit-reset: 1439854867
-x-frame-options: deny
-etag: "509aaf932a83319c5fc88ecce550f115"
-content-security-policy: default-src 'none'
+server: GitHub.com
+date: Tue, 18 Aug 2015 00:18:49 GMT
 vary: Accept, Authorization, Cookie, X-GitHub-OTP
 vary: Accept-Encoding
+content-type: application/json; charset=utf-8
+x-ratelimit-remaining: 4949
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
+x-ratelimit-reset: 1439860497
 status: 200 OK
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-github-media-type: github.v3; format=json
+cache-control: private, max-age=60, s-maxage=60
+x-frame-options: deny
+x-xss-protection: 1; mode=block
+access-control-allow-credentials: true
+access-control-allow-origin: *
+x-github-request-id: 3FF5DB35:3D4A:CF5BB36:55D279E9
+etag: "c43e7230d4c92c2a6369014be0d352d3"
+content-security-policy: default-src 'none'
+content-length: 91
+x-ratelimit-limit: 5000
 
 {"state":"active","url":"https://api.github.com/teams/1699377/memberships/crates-tester-2"}
 ===REQUEST 234
 GET http://api.github.com/orgs/crates-test-org HTTP/1.1
 Host: api.github.com
 Proxy-Connection: Keep-Alive
-User-Agent: hello!
 Accept: application/vnd.github.v3+json
-Authorization: token c26185f31a0c14681a82764124bd031e9e9bccb0
+User-Agent: hello!
+Authorization: token e6d126e00feb3960bd52506092497e1a59d15263
 
 
 ===RESPONSE 2079
 HTTP/1.1 200
-x-ratelimit-remaining: 4964
 access-control-allow-origin: *
-x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
-status: 200 OK
-x-ratelimit-limit: 5000
-x-oauth-scopes: read:org
-etag: "f2fb21ecd1395923a51ab6ff4c85e0d1"
-x-ratelimit-reset: 1439854867
-x-github-request-id: 3FF5DB35:5BA6:8B14DAC:55D26E97
+server: GitHub.com
 content-type: application/json; charset=utf-8
-x-oauth-client-id: 89b6afdeaa6c6c7506ec
+x-served-by: dc1ce2bfb41810a06c705e83b388572d
+x-github-request-id: 3FF5DB35:3D48:A9A50E5:55D279E9
+content-security-policy: default-src 'none'
+x-oauth-scopes: read:org
+content-length: 890
 last-modified: Mon, 17 Aug 2015 23:27:29 GMT
-access-control-allow-credentials: true
-x-content-type-options: nosniff
-cache-control: private, max-age=60, s-maxage=60
-x-xss-protection: 1; mode=block
+x-frame-options: deny
+x-ratelimit-limit: 5000
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
 vary: Accept, Authorization, Cookie, X-GitHub-OTP
 vary: Accept-Encoding
-date: Mon, 17 Aug 2015 23:30:31 GMT
+etag: "fed47c4a794f484872c57aaeaff7feac"
 x-github-media-type: github.v3; format=json
-strict-transport-security: max-age=31536000; includeSubdomains; preload
 access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
-server: GitHub.com
-content-security-policy: default-src 'none'
-x-served-by: 4c8b2d4732c413f4b9aefe394bd65569
-content-length: 890
-x-frame-options: deny
+cache-control: private, max-age=60, s-maxage=60
+status: 200 OK
+date: Tue, 18 Aug 2015 00:18:50 GMT
+x-ratelimit-reset: 1439860497
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-ratelimit-remaining: 4948
+x-content-type-options: nosniff
+x-accepted-oauth-scopes: admin:org, read:org, repo, user, write:org
+access-control-allow-credentials: true
+x-xss-protection: 1; mode=block
 
 {"login":"crates-test-org","id":13804222,"url":"https://api.github.com/orgs/crates-test-org","repos_url":"https://api.github.com/orgs/crates-test-org/repos","events_url":"https://api.github.com/orgs/crates-test-org/events","members_url":"https://api.github.com/orgs/crates-test-org/members{/member}","public_members_url":"https://api.github.com/orgs/crates-test-org/public_members{/member}","avatar_url":"https://avatars.githubusercontent.com/u/13804222?v=3","description":null,"public_repos":0,"public_gists":0,"followers":0,"following":0,"html_url":"https://github.com/crates-test-org","created_at":"2015-08-15T00:07:30Z","updated_at":"2015-08-17T23:27:29Z","type":"Organization","total_private_repos":0,"owned_private_repos":0,"private_gists":0,"disk_usage":0,"collaborators":0,"billing_email":"a.beingessner+crates2@gmail.com","plan":{"name":"free","space":976562499,"private_repos":0}}
 ===REQUEST 255
 GET http://api.github.com/teams/1699377/memberships/crates-tester-1 HTTP/1.1
 Host: api.github.com
 Proxy-Connection: Keep-Alive
-Authorization: token 182fffe47c4c81843df6cac370bace828beab3bd
 User-Agent: hello!
+Authorization: token e5452e00fd329a8acddce59aabc4bf95abf276a0
 Accept: application/vnd.github.v3+json
 
 
 ===RESPONSE 1227
 HTTP/1.1 200
-x-served-by: b0ef53392caa42315c6206737946d931
+strict-transport-security: max-age=31536000; includeSubdomains; preload
 server: GitHub.com
-x-github-request-id: 3FF5DB35:5BAB:9BBCADB:55D26E98
-access-control-allow-credentials: true
-x-oauth-client-id: 89b6afdeaa6c6c7506ec
-x-oauth-scopes: read:org
-x-content-type-options: nosniff
-x-github-media-type: github.v3; format=json
-x-xss-protection: 1; mode=block
+content-length: 91
+x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
+access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+content-type: application/json; charset=utf-8
 vary: Accept, Authorization, Cookie, X-GitHub-OTP
 vary: Accept-Encoding
-strict-transport-security: max-age=31536000; includeSubdomains; preload
-date: Mon, 17 Aug 2015 23:30:32 GMT
-status: 200 OK
-x-frame-options: deny
-x-ratelimit-reset: 1439854847
-content-length: 91
-etag: "9b80735a87afe3085f2354327aabd309"
-x-ratelimit-remaining: 4988
-cache-control: private, max-age=60, s-maxage=60
+x-oauth-scopes: read:org
+access-control-allow-credentials: true
 x-ratelimit-limit: 5000
-access-control-expose-headers: ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
-x-accepted-oauth-scopes: admin:org, read:org, repo, write:org
-access-control-allow-origin: *
-content-type: application/json; charset=utf-8
+x-github-request-id: 3FF5DB35:3D48:A9A5182:55D279EA
+x-xss-protection: 1; mode=block
+x-oauth-client-id: 89b6afdeaa6c6c7506ec
 content-security-policy: default-src 'none'
+x-served-by: dc1ce2bfb41810a06c705e83b388572d
+date: Tue, 18 Aug 2015 00:18:50 GMT
+x-ratelimit-reset: 1439860516
+cache-control: private, max-age=60, s-maxage=60
+x-github-media-type: github.v3; format=json
+x-frame-options: deny
+status: 200 OK
+access-control-allow-origin: *
+x-content-type-options: nosniff
+etag: "f6ec304b608781ecc639b246dea422ef"
+x-ratelimit-remaining: 4985
 
 {"state":"active","url":"https://api.github.com/teams/1699377/memberships/crates-tester-1"}
 ===REQUEST 331
 PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-2.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
+Host: alexcrichton-test.s3.amazonaws.com
+Date: Mon, 17 Aug 2015 17:18:50 -0700
+Authorization: AWS AKIAJF3GEK7N44BACDZA:IESAcFsCMRHuwl5DaFdEcQDrlZQ=
 Content-Length: 0
 Content-Type: application/x-tar
-Authorization: AWS AKIAJF3GEK7N44BACDZA:qGz9wPGPRhEcKnkjxOQTeU8eI/w=
-Date: Mon, 17 Aug 2015 16:30:32 -0700
-Host: alexcrichton-test.s3.amazonaws.com
 
 
 ===RESPONSE 258
 HTTP/1.1 200
-x-amz-id-2: D4SehLLGinOnAzXSk2ipKreb0dM9Ta/B+kcIv49fvptmZo/BpI6jim5H/wha5SD3I/J5+fVaynA=
 server: AmazonS3
-date: Mon, 17 Aug 2015 23:30:33 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
+x-amz-id-2: 4uE7gp4rdv1H3gUhh0jV9HVxaGDi4bqEkuxeGPTTUFLD8WYjpnXF833Mr12rNRxpZ/B9wlgcXlU=
+date: Tue, 18 Aug 2015 00:18:52 GMT
+x-amz-request-id: C574F412BCFA076D
 content-length: 0
-x-amz-request-id: C76E6F7BAF25E7F7
+etag: "d41d8cd98f00b204e9800998ecf8427e"
 
 

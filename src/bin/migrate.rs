@@ -459,7 +459,6 @@ fn migrations() -> Vec<Migration> {
             login         VARCHAR NOT NULL UNIQUE,
             github_id     INTEGER NOT NULL UNIQUE,
             name          VARCHAR,
-            url           VARCHAR,
             avatar        VARCHAR
         "),
         Migration::run(20150804170129,

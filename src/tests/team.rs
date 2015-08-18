@@ -14,7 +14,7 @@ fn mock_user_on_x_and_y() -> User {
         email: None,
         name: None,
         avatar: None,
-        gh_access_token: "NAR".to_string(),
+        gh_access_token: "e6d126e00feb3960bd52506092497e1a59d15263".to_string(),
         api_token: User::new_api_token(),
     }
 }
@@ -26,16 +26,16 @@ fn mock_user_on_only_x() -> User {
         email: None,
         name: None,
         avatar: None,
-        gh_access_token: "NAR".to_string(),
+        gh_access_token: "e5452e00fd329a8acddce59aabc4bf95abf276a0".to_string(),
         api_token: User::new_api_token(),
     }
 }
 
-fn body_for_add_team_y() -> &'static str {
+fn body_for_team_y() -> &'static str {
     r#"{"users":["github:crates-test-org:just-for-crates-2"]}"#
 }
 
-fn body_for_add_team_x() -> &'static str {
+fn body_for_team_x() -> &'static str {
     r#"{"users":["github:crates-test-org:owners"]}"#
 }
 
@@ -80,7 +80,7 @@ fn add_team_as_member() {
     ::mock_user(&mut req, mock_user_on_x_and_y());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = body_for_add_team_x();
+    let body = body_for_team_x();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -94,7 +94,7 @@ fn add_team_as_non_member() {
     ::mock_user(&mut req, mock_user_on_only_x());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = body_for_add_team_y();
+    let body = body_for_team_y();
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -102,6 +102,60 @@ fn add_team_as_non_member() {
             "{:?}", json.errors);
 }
 
+// Test removing team as named owner
+#[test]
+fn remove_team_as_named_owner() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app, "foo", "1.0.0");
+    ::mock_user(&mut req, mock_user_on_x_and_y());
+    ::mock_crate(&mut req, ::krate("foo"));
+
+    let body = body_for_team_x();
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                           .with_method(Method::Put)
+                           .with_body(body.as_bytes())));
+
+    let body = body_for_team_x();
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                           .with_method(Method::Delete)
+                           .with_body(body.as_bytes())));
+
+    ::mock_user(&mut req, mock_user_on_only_x());
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
+                           .with_body(&::new_req_body(::krate("foo"),
+                                        "2.0.0", vec![]))
+                           .with_method(Method::Put)));
+    assert!(json.errors[0].detail.contains("another user"),
+            "{:?}", json.errors);
+}
+
+// Test removing team as team owner
+#[test]
+fn remove_team_as_team_owner() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app, "foo", "1.0.0");
+    ::mock_user(&mut req, mock_user_on_x_and_y());
+    ::mock_crate(&mut req, ::krate("foo"));
+
+    let body = body_for_team_x();
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                           .with_method(Method::Put)
+                           .with_body(body.as_bytes())));
+
+    ::mock_user(&mut req, mock_user_on_only_x());
+    let body = body_for_team_x();
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+                           .with_method(Method::Delete)
+                           .with_body(body.as_bytes())));
+
+    assert!(json.errors[0].detail.contains("don't have permission"),
+            "{:?}", json.errors);
+
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
+                           .with_body(&::new_req_body(::krate("foo"),
+                                        "2.0.0", vec![]))
+                           .with_method(Method::Put)));
+}
 
 // Test trying to publish a krate we don't own
 #[test]
@@ -112,7 +166,7 @@ fn publish_not_owned() {
     ::mock_user(&mut req, mock_user_on_x_and_y());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = body_for_add_team_y();
+    let body = body_for_team_y();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -134,7 +188,7 @@ fn publish_owned() {
     ::mock_user(&mut req, mock_user_on_x_and_y());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = body_for_add_team_x();
+    let body = body_for_team_x();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));
@@ -148,13 +202,13 @@ fn publish_owned() {
 
 // Test trying to change owners (when only on an owning team)
 #[test]
-fn change_owners() {
+fn add_owners_as_team_owner() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
     ::mock_crate(&mut req, ::krate("foo"));
 
-    let body = body_for_add_team_x();
+    let body = body_for_team_x();
     ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
                            .with_method(Method::Put)
                            .with_body(body.as_bytes())));

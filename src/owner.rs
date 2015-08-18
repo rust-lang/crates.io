@@ -159,7 +159,7 @@ impl Team {
 
         let stmt = try!(conn.prepare("INSERT INTO teams
                                    (login, github_id, name, avatar)
-                                   VALUES ($1, $2, $3, $5)
+                                   VALUES ($1, $2, $3, $4)
                                    RETURNING *"));
 
         let rows = try!(stmt.query(&[&login, &github_id, &name, &avatar]));
