@@ -30,7 +30,7 @@ pub fn parse_github_response<T: Decodable>(resp: curl::http::Response)
         200 => {} // Ok!
         403 => {
             return Err(human("It looks like you don't have permission \
-                              to query a necessary property from Github
+                              to query a necessary property from Github \
                               to complete this request. \
                               You may need to re-authenticate on \
                               crates.io to grant permission to read \
