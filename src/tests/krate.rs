@@ -623,6 +623,11 @@ fn owners() {
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete)
                                                .with_body(body.as_bytes())));
     ::json::<::Bad>(&mut response);
+
+    let body = r#"{"users":["foobar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Put)
+                                               .with_body(body.as_bytes())));
+    assert!(::json::<O>(&mut response).ok);
 }
 
 #[test]

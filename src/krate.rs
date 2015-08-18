@@ -307,7 +307,6 @@ impl Crate {
 
     pub fn owner_add(&self, app: &App, conn: &Connection, req_user: &User,
                      login: &str) -> CargoResult<()> {
-
         let owner = match Owner::find_by_login(conn, login) {
             Ok(owner @ Owner::User(_)) => { owner }
             Ok(Owner::Team(team)) => if try!(team.contains_user(app, req_user)) {
@@ -323,12 +322,24 @@ impl Crate {
             },
         };
 
-        try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, owner_id, created_at, updated_at,
-                            created_by, owner_kind, deleted)
-                           VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
-                          &[&self.id, &owner.id(), &::now(), &req_user.id,
-                            &owner.kind()]));
+        // First try to un-delete if they've been soft deleted previously, then
+        // do an insert if that didn't actually affect anything.
+        let amt = try!(conn.execute("UPDATE crate_owners
+                                        SET deleted = FALSE, updated_at = $1
+                                      WHERE crate_id = $2 AND owner_id = $3
+                                        AND owner_kind = $4",
+                                    &[&::now(), &self.id, &owner.id(),
+                                      &owner.kind()]));
+        assert!(amt <= 1);
+        if amt == 0 {
+            try!(conn.execute("INSERT INTO crate_owners
+                               (crate_id, owner_id, created_at, updated_at,
+                                created_by, owner_kind, deleted)
+                               VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
+                              &[&self.id, &owner.id(), &::now(), &req_user.id,
+                                &owner.kind()]));
+        }
+
         Ok(())
     }
 
