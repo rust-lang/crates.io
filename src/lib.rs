@@ -153,6 +153,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             println!("  host: {:?}", req.host());
             println!("  path: {}", req.path());
             println!("  query_string: {:?}", req.query_string());
+            println!("  remote_addr: {:?}", req.remote_addr());
             for &(k, ref v) in req.headers().all().iter() {
                 println!("  hdr: {}={:?}", k, v);
             }
