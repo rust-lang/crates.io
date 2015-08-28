@@ -155,4 +155,6 @@ fn following() {
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
+
+    bad_resp!(middle.call(req.with_query("page=0")));
 }
