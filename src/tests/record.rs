@@ -196,11 +196,9 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
     assert_eq!(request.next().unwrap(), "===REQUEST");
     let request_size = request.next().unwrap().trim().parse().unwrap();
 
-    let mut expected = Vec::new();
-    t!(data.take(request_size).read_to_end(&mut expected));
-    let mut expected_lines = <[_]>::split(&expected[..], |b| *b == b'\n')
-                                     .map(|s| str::from_utf8(s).unwrap())
-                                     .map(|s| format!("{}", s));
+    let mut expected = String::new();
+    t!(data.take(request_size).read_to_string(&mut expected));
+    let mut expected_lines = expected.lines().map(|s| s.to_string());
     let mut actual_lines = socket.lines().map(|s| s.unwrap());
 
     // validate the headers
