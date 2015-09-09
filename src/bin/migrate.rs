@@ -482,6 +482,12 @@ fn migrations() -> Vec<Migration> {
                              UNIQUE (owner_id, crate_id)", &[]));
             Ok(())
         }),
+        Migration::add_table(20150908213737, "rust_versions", "
+            id              SERIAL PRIMARY KEY,
+            crate_id        INTEGER NOT NULL,
+            name            VARCHAR NOT NULL UNIQUE
+        "),
+        foreign_key(20150908214925, "rust_versions", "crate_id", "crates (id)"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
