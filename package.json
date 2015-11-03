@@ -38,8 +38,6 @@
     "ember-disable-proxy-controllers": "^1.0.0",
     "ember-document-title": "~0.1.2",
     "ember-export-application-global": "^1.0.3",
-    "ember-moment": "1.1.1",
-    "express": "^4.8.5",
-    "glob": "^4.0.5"
+    "ember-moment": "1.1.1"
   }
 }
