@@ -1,11 +1,7 @@
 import Ember from 'ember';
 
-const { computed } = Ember;
-
-function link(name) {
-  return computed(function() {
-    this.link(name);
-  }).readOnly();
+function link(target) {
+  return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${target}.tar.gz`;
 }
 
 export default Ember.Controller.extend({
@@ -15,8 +11,4 @@ export default Ember.Controller.extend({
     mac32: link('i686-apple-darwin'),
     win64: link('x86_64-pc-windows-gnu'),
     win32: link('i686-pc-windows-gnu'),
-
-    link(target) {
-        return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${target}.tar.gz`;
-    },
 });
