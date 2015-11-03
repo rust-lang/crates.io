@@ -37,5 +37,5 @@ cargo login {{ api_token }}
     </button>
 
     <img src="/assets/ajax-loader.gif"
-         {{bind-attr class="isResetting::hidden"}}/>
+         class={{if isResetting "" "hidden"}} />
 </div>

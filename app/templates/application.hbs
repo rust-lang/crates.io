@@ -27,13 +27,13 @@
         {{#if session.currentUser}}
             <div class='dropdown-container'>
                 <button {{action 'toggleUserOptions'}}
-                        {{bind-attr class='showUserOptions:active :dropdown'}}>
+                        class='{{if showUserOptions "active"}} dropdown'>
                     {{user-avatar user=session.currentUser size='small'}}
                     {{ session.currentUser.name }}
                     <span class='arrow'></span>
                 </button>
                 <ul id='current-user-links'
-                    {{bind-attr class='showUserOptions:open :dropdown'}}>
+                    class='{{if showUserOptions "open"}} dropdown'>
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
@@ -50,12 +50,12 @@
     <div class='menu'>
         <div class='dropdown-container'>
             <button {{action 'toggleUserOptions'}}
-                    {{bind-attr class='showUserOptions:active :dropdown'}}>
+                    class='{{if showUserOptions "active"}} dropdown'>
                 Menu
                 <span class='arrow'></span>
             </button>
             <ul id='current-user-links'
-                {{bind-attr class='showUserOptions:open :dropdown'}}>
+                class='{{if showUserOptions "open"}} dropdown'>
                 <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
                 {{#if session.currentUser}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
@@ -79,7 +79,7 @@
 </div>
 
 <div id="main" class='inner-content'>
-    <p id='flash' {{bind-attr class="flashError:shown"}}>{{flashError}}</p>
+    <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
 
     {{outlet}}
 </div>
