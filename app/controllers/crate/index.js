@@ -34,7 +34,7 @@ export default Ember.ObjectController.extend({
                           'model.documentation',
                           'model.repository'),
 
-    displayedAuthors: computed('currentVersion.authors.@each', function() {
+    displayedAuthors: computed('currentVersion.authors.[]', function() {
         if (!this.get('currentVersion')) {
             return [];
         }
@@ -225,4 +225,3 @@ export default Ember.ObjectController.extend({
         },
     },
 });
-
