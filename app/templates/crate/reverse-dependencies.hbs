@@ -14,13 +14,12 @@
 </div>
 
 <div id='crate-all-reverse-dependencies' class='white-rows'>
-    {{#each this as |crate|}}
+    {{#each this as |dependency|}}
         <div class='row'>
-          <div>
-            {{#link-to 'crate' crate_id}}{{crate_id}}{{/link-to}} requires {{req}}
-                {{#link-to 'crate' crate}}{{ num }}{{/link-to}}
+            <div>
+            {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
             </div>
-            {{#link-to 'crate' crate_id class='arrow'}}
+            {{#link-to 'crate' dependency.crate_id class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>
             {{/link-to}}
         </div>
