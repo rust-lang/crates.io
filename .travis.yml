@@ -8,10 +8,11 @@ cache:
 
 before_install:
   - nvm install 0.12
+  - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
 
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - npm install -g phantomjs bower
+  - npm install -g bower
   - npm install
   - bower install
 
