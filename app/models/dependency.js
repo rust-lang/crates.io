@@ -6,7 +6,9 @@ Ember.Inflector.inflector.irregular('dependency', 'dependencies');
 const { computed } = Ember;
 
 export default DS.Model.extend({
-    version: DS.belongsTo('version'),
+    version: DS.belongsTo('version', {
+      async: false
+    }),
     crate_id: DS.attr('string'),
     req: DS.attr('string'),
     optional: DS.attr('boolean'),
