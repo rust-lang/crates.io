@@ -3,7 +3,7 @@ import PaginationMixin from 'cargo/mixins/pagination';
 
 const { computed } = Ember;
 
-export default Ember.ArrayController.extend(PaginationMixin, {
+export default Ember.Controller.extend(PaginationMixin, {
     applicationController: Ember.inject.controller('application'),
     queryParams: ['letter', 'page', 'per_page', 'sort'],
     letter: null,
@@ -32,4 +32,3 @@ export default Ember.ArrayController.extend(PaginationMixin, {
         },
     },
 });
-

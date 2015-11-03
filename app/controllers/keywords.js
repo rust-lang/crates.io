@@ -3,7 +3,7 @@ import PaginationMixin from 'cargo/mixins/pagination';
 
 const { computed } = Ember;
 
-export default Ember.ArrayController.extend(PaginationMixin, {
+export default Ember.Controller.extend(PaginationMixin, {
     applicationController: Ember.inject.controller('application'),
     queryParams: ['page', 'per_page', 'sort'],
     page: '1',
@@ -27,7 +27,6 @@ export default Ember.ArrayController.extend(PaginationMixin, {
         toggleShowSortBy() {
             var opt = 'showSortBy';
             this.get('applicationController').resetDropdownOption(this, opt);
-
         },
     },
 });

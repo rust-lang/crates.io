@@ -14,7 +14,7 @@
 </div>
 
 <div id='crate-all-reverse-dependencies' class='white-rows'>
-    {{#each this as |dependency|}}
+    {{#each model as |dependency|}}
         <div class='row'>
             <div>
             {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
