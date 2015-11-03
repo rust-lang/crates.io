@@ -10,14 +10,14 @@ before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - psql -c 'create database cargo_registry_test;' -U postgres
   - nvm install 0.12
-  - npm install -g phantomjs ember-cli bower
+  - npm install -g phantomjs bower
   - npm install
   - bower install
 
 script:
   - cargo build
   - cargo test
-  - ember test
+  - npm test
 
 after_success:
   - travis-cargo coveralls --no-sudo
