@@ -3,12 +3,12 @@ import Ember from 'ember';
 const { observer } = Ember;
 
 export default Ember.Controller.extend({
-    needs: ['search'],
+    searchController: Ember.inject.controller('search'),
 
     flashError: null,
     nextFlashError: null,
     showUserOptions: false,
-    search: Ember.computed.oneWay('controllers.search.q'),
+    search: Ember.computed.oneWay('searchController.q'),
 
     stepFlash() {
         this.set('flashError', this.get('nextFlashError'));

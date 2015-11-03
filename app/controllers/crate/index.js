@@ -7,7 +7,7 @@ const NUM_VERSIONS = 5;
 const { computed } = Ember;
 
 export default Ember.ObjectController.extend({
-    needs: ['application'],
+    applicationController: Ember.inject.controller('application'),
     isDownloading: false,
 
     fetchingDownloads: true,
@@ -104,7 +104,7 @@ export default Ember.ObjectController.extend({
         },
 
         toggleVersions() {
-            this.get('controllers.application')
+            this.get('applicationController')
                 .resetDropdownOption(this, 'showAllVersions');
         },
 
