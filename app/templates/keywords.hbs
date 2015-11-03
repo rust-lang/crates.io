@@ -38,12 +38,12 @@
 </div>
 
 <div class='white-rows'>
-    {{#each}}
+    {{#each this as |keyword|}}
         <div class='row'>
             <div class='info'>
-                {{link-to keyword.id "keyword" this}}
+                {{link-to keyword.id "keyword" keyword}}
                 <span class='vers small'>
-                    {{ format-num crates_cnt }}
+                    {{ format-num keyword.crates_cnt }}
                     crates
                 </span>
             </div>
@@ -55,8 +55,8 @@
     {{#link-to 'keywords' (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'keywords' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'keywords' (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'keywords' (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>

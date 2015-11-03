@@ -49,8 +49,8 @@
     {{#link-to 'me.crates' (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'me.crates' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'me.crates' (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'me.crates' (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>

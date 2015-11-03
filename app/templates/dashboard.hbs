@@ -44,13 +44,13 @@
         </h2>
 
         <div class='white-rows'>
-            {{#each myFeed}}
+            {{#each myFeed as |crate|}}
                 <div class='row'>
                     <div class='info'>
-                        {{link-to crate.name 'crate' this}}
-                        <span class='small'>{{ num }}</span>
+                        {{link-to crate.name 'crate' crate}}
+                        <span class='small'>{{ crate.num }}</span>
                         <span class='date small'>
-                            {{from-now created_at}}
+                            {{from-now crate.created_at}}
                         </span>
                     </div>
                 </div>

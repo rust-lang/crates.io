@@ -48,8 +48,8 @@
     {{#link-to 'keyword' keyword (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'keyword' keyword (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'keyword' keyword (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'keyword' keyword (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>
