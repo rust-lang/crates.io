@@ -169,7 +169,7 @@
     </ul>
     <span class='small'>
       {{#if hasMoreVersions}}
-      {{#link-to 'crate.versions' this}}
+      {{#link-to 'crate.versions' model}}
           show all {{ model.versions.length }} versions
       {{/link-to}}
       {{/if}}
@@ -215,7 +215,7 @@
 
             <ul id='all-versions' class="{{if showAllVersions 'open'}} dropdown">
                 <li class='all'>
-                    {{#link-to 'crate.index' this}}All Versions{{/link-to}}
+                    {{#link-to 'crate.index' model}}All Versions{{/link-to}}
                 </li>
                 {{#each smallSortedVersions as |version|}}
                     <li>
