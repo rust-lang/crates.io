@@ -14,9 +14,9 @@
     {{#each model.versions as |version|}}
         <div class='row'>
             <div>
-                {{#link-to 'crate' version}}{{ num }}{{/link-to}}
+                {{#link-to 'crate' version}}{{ version.num }}{{/link-to}}
 
-                <span class='small'>{{ date-long created_at }}</span>
+                <span class='small'>{{ date-long version.created_at }}</span>
                 {{#if yanked}}
                     <span class='yanked'>yanked</span>
                 {{/if}}
