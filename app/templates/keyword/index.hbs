@@ -17,12 +17,12 @@
         <span class='small'>Sort by</span>
         <div class='dropdown-container'>
             <a {{action 'toggleShowSortBy'}}
-               class="{{if currentSortBy 'active'}} dropdown">
+               class="{{if showSortBy 'active'}} dropdown">
                 <img src="/assets/sort.png"/>
                 {{ currentSortBy }}
                 <span class='arrow'></span>
             </a>
-            <ul class="{{if currentSortBy 'open'}} dropdown">
+            <ul class="{{if showSortBy 'open'}} dropdown">
                 <li>
                     {{#link-to 'keyword' keyword (query-params sort="alpha")}}
                         Alphabetical
