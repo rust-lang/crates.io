@@ -2,6 +2,10 @@ language: rust
 rust: nightly
 sudo: false
 
+cache:
+  directories:
+    - node_modules
+
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - psql -c 'create database cargo_registry_test;' -U postgres
