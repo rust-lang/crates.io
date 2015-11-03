@@ -1,12 +1,7 @@
 import Ember from 'ember';
 import moment from 'moment';
 
-function fromNow(value) {
+export default Ember.Helper.helper(function(params) {
+    let value = params[0];
     return moment(value).fromNow();
-}
-
-export {
-    fromNow
-};
-
-export default Ember.Handlebars.makeBoundHelper(fromNow);
+});

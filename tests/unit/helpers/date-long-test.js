@@ -1,11 +1,7 @@
-import {
-  dateLong
-} from 'cargo/helpers/date-long';
+import { dateLong } from '../../../helpers/date-long';
+import { module, test } from 'qunit';
 
-import { module } from 'qunit';
-import { test } from 'ember-qunit';
-
-module('DateLongHelper');
+module('Unit | Helper | date-long');
 
 // Replace this with your real tests.
 test('it works', function(assert) {

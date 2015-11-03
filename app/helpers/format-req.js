@@ -1,7 +1,6 @@
 import Ember from "ember";
 
-function formatReq(req) {
+export default Ember.Helper.helper(function(params) {
+  let req = params[0];
   return req === "*" ? "" : req;
-}
-
-export default Ember.Handlebars.makeBoundHelper(formatReq);
+});

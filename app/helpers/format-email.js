@@ -2,7 +2,7 @@ import Ember from "ember";
 
 var escape = Ember.Handlebars.Utils.escapeExpression;
 
-function formatEmail(email) {
+export function formatEmail(email) {
   var formatted = email.match(/^(.*?)\s*(?:<(.*)>)?$/);
   var ret = "";
 
@@ -15,9 +15,4 @@ function formatEmail(email) {
   return ret.htmlSafe();
 }
 
-
-export {
-    formatEmail
-};
-
-export default Ember.Handlebars.makeBoundHelper(formatEmail);
+export default Ember.Helper.helper(params => formatEmail(params[0]));

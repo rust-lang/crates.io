@@ -1,8 +1,7 @@
-import { dateSmall } from 'cargo/helpers/date-small';
-import { module } from 'qunit';
-import { test } from 'ember-qunit';
+import { dateSmall } from '../../../helpers/date-small';
+import { module, test } from 'qunit';
 
-module('DateSmallHelper');
+module('Unit | Helper | date-small');
 
 // Replace this with your real tests.
 test('it works', function(assert) {
