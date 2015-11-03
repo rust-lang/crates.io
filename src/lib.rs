@@ -4,6 +4,7 @@ extern crate rustc_serialize;
 extern crate curl;
 extern crate flate2;
 extern crate git2;
+extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
@@ -54,9 +55,10 @@ pub mod krate;
 pub mod model;
 pub mod upload;
 pub mod user;
+pub mod owner;
 pub mod util;
 pub mod version;
-mod licenses;
+pub mod http;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Env {
@@ -113,10 +115,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     let env = app.config.env;
     if env == Env::Development {
-        let s1 = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
-        let s2 = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
-        router.get("/git/index/*path", s1);
-        router.post("/git/index/*path", s2);
+        let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
+        let s = Arc::new(s);
+        router.get("/git/index/*path", R(s.clone()));
+        router.post("/git/index/*path", R(s));
     }
 
     let mut m = MiddlewareBuilder::new(R404(router));
@@ -151,6 +153,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             println!("  host: {:?}", req.host());
             println!("  path: {}", req.path());
             println!("  query_string: {:?}", req.query_string());
+            println!("  remote_addr: {:?}", req.remote_addr());
             for &(k, ref v) in req.headers().all().iter() {
                 println!("  hdr: {}={:?}", k, v);
             }

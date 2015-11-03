@@ -41,7 +41,9 @@ fn env(s: &str) -> String {
 fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     let mut max = 0;
     loop {
-        let tx = try!(conn.transaction());
+        // FIXME(rust-lang/rust#27401): weird declaration to make sure this
+        // variable gets dropped.
+        let tx; tx = try!(conn.transaction());
         {
             let stmt = try!(tx.prepare("SELECT * FROM version_downloads \
                                         WHERE processed = FALSE AND id > $1
@@ -60,7 +62,7 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
 }
 
 fn collect(tx: &postgres::Transaction,
-           rows: &mut postgres::Rows) -> postgres::Result<Option<i32>> {
+           rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.

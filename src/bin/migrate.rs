@@ -1,5 +1,5 @@
 #![deny(warnings)]
-#![feature(core)]
+#![feature(iter_cmp)]
 
 extern crate cargo_registry;
 extern crate migrate;
@@ -448,6 +448,40 @@ fn migrations() -> Vec<Migration> {
             try!(tx.execute("DROP INDEX index_keywords_lower_keyword", &[]));
             Ok(())
         }),
+        Migration::add_column(20150715170350, "crate_owners", "owner_kind",
+                              "INTEGER NOT NULL DEFAULT 0"),
+        Migration::run(20150804170127,
+            "ALTER TABLE crate_owners ALTER owner_kind DROP DEFAULT",
+            "ALTER TABLE crate_owners ALTER owner_kind SET DEFAULT 0",
+        ),
+        Migration::add_table(20150804170128, "teams", "
+            id            SERIAL PRIMARY KEY,
+            login         VARCHAR NOT NULL UNIQUE,
+            github_id     INTEGER NOT NULL UNIQUE,
+            name          VARCHAR,
+            avatar        VARCHAR
+        "),
+        Migration::run(20150804170129,
+            "ALTER TABLE crate_owners RENAME user_id TO owner_id",
+            "ALTER TABLE crate_owners RENAME owner_id TO user_id",
+        ),
+        undo_foreign_key(20150804170130, "crate_owners", "user_id",
+                         "owner_id", "users (id)"),
+        Migration::new(20150818112907, |tx| {
+            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_user_per_crate", &[]));
+            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+                             crate_owners_unique_owner_per_crate \
+                             UNIQUE (owner_id, crate_id, owner_kind)", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_owner_per_crate", &[]));
+            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+                             crate_owners_unique_user_per_crate \
+                             UNIQUE (owner_id, crate_id)", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
@@ -469,6 +503,19 @@ fn migrations() -> Vec<Migration> {
         Migration::run(id, &add, &rm)
     }
 
+    fn undo_foreign_key(id: i64, table: &str,
+                        column: &str,
+                        real_column: &str,
+                        references: &str) -> Migration {
+        let add = format!("ALTER TABLE {table} ADD CONSTRAINT fk_{table}_{col}
+                           FOREIGN KEY ({real_col}) REFERENCES {reference}",
+                          table = table, col = column, reference = references,
+                          real_col = real_column);
+        let rm = format!("ALTER TABLE {table} DROP CONSTRAINT fk_{table}_{col}",
+                         table = table, col = column);
+        Migration::run(id, &rm, &add)
+    }
+
     fn index(id: i64, table: &str, column: &str) -> Migration {
         let add = format!("CREATE INDEX index_{table}_{column}
                            ON {table} ({column})",
@@ -479,6 +526,7 @@ fn migrations() -> Vec<Migration> {
     }
 }
 
+// DO NOT UPDATE OR USE FOR NEW MIGRATIONS
 fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()> {
     let v: Vec<(i32, i32)> = {
         let stmt = try!(tx.prepare("SELECT user_id, crate_id

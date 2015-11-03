@@ -13,7 +13,7 @@ export default Ember.Route.extend({
         var crate = this.store.find('crate', crate_id).catch((e) => {
           if (e.status === 404) {
             this.controllerFor('application').set('nextFlashError', 'No crate named: ' + params.crate_id);
-            return this.transitionTo('index');
+            return this.replaceWith('index');
           }
         });
 

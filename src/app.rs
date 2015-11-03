@@ -8,6 +8,7 @@ use git2;
 use oauth2;
 use r2d2;
 use s3;
+use curl::http;
 
 use {db, Config};
 
@@ -28,12 +29,14 @@ pub struct AppMiddleware {
 
 impl App {
     pub fn new(config: &Config) -> App {
-        let github = oauth2::Config::new(
+        let mut github = oauth2::Config::new(
             &config.gh_client_id,
             &config.gh_client_secret,
             "https://github.com/login/oauth/authorize",
             "https://github.com/login/oauth/access_token",
         );
+
+        github.scopes.push(String::from("read:org"));
 
         let db_config = r2d2::Config::builder()
             .pool_size(if config.env == ::Env::Production {10} else {1})
@@ -48,13 +51,21 @@ impl App {
                                     config.s3_region.clone(),
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
-                                    if config.env == ::Env::Test {"http"} else {"https"}),
+                                    config.api_protocol()),
             s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
         };
+    }
+
+    pub fn handle(&self) -> http::Handle {
+        let handle = http::handle();
+        match self.s3_proxy {
+            Some(ref proxy) => handle.proxy(&proxy[..]),
+            None => handle,
+        }
     }
 }
 

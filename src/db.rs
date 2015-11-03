@@ -5,21 +5,22 @@ use std::sync::Arc;
 
 use pg;
 use pg::types::ToSql;
-use r2d2::{self, LoggingErrorHandler};
-use r2d2_postgres::PostgresConnectionManager;
+use r2d2;
+use r2d2_postgres;
+use r2d2_postgres::PostgresConnectionManager as PCM;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
 
-pub type Pool = r2d2::Pool<PostgresConnectionManager>;
-type PooledConnnection<'a> =
-        r2d2::PooledConnection<'a, PostgresConnectionManager>;
+pub type Pool = r2d2::Pool<PCM>;
+pub type Config = r2d2::Config<pg::Connection, r2d2_postgres::Error>;
+type PooledConnnection = r2d2::PooledConnection<PCM>;
 
-pub fn pool(url: &str, config: r2d2::Config) -> Pool {
-    let mgr = PostgresConnectionManager::new(url, pg::SslMode::None).unwrap();
-    r2d2::Pool::new(config, mgr, Box::new(LoggingErrorHandler)).unwrap()
+pub fn pool(url: &str, config: r2d2::Config<pg::Connection, r2d2_postgres::Error>) -> Pool {
+    let mgr = PCM::new(url, pg::SslMode::None).unwrap();
+    r2d2::Pool::new(config, mgr).unwrap()
 }
 
 pub struct TransactionMiddleware;
@@ -28,7 +29,7 @@ pub struct Transaction {
     // fields are destructed top-to-bottom so ensure we destroy them in the
     // right order.
     tx: LazyCell<pg::Transaction<'static>>,
-    slot: LazyCell<PooledConnnection<'static>>,
+    slot: LazyCell<PooledConnnection>,
     commit: Cell<bool>,
 
     // Keep a handle to the app which keeps a handle to the database to ensure
@@ -48,27 +49,12 @@ impl Transaction {
     }
 
     pub fn conn(&self) -> CargoResult<&pg::Connection> {
-        // Here we want to tie the lifetime of a single connection the lifetime
-        // of this request. Currently the lifetime of a connection is tied to
-        // the lifetime of the pool from which it came from, which is the
-        // mismatch.
-        //
-        // The unsafety here is frobbing lifetimes to ensure that they work out.
-        // Additionally, any extension in a Request needs to live for the static
-        // lifetime (yay!).
-        //
-        // To solve these problems, the private `Transaction` extension stores a
-        // reference both to the pool (to keep it alive) as well as a connection
-        // transmuted to the 'static lifetime. This allows us to allocate a
-        // connection up front and then repeatedly hand it out.
-        unsafe {
-            if !self.slot.filled() {
-                let conn = try!(self.app.database.get().map_err(|e| {
-                    internal(format!("failed to get a database connection: {}", e))
-                }));
-                let conn: PooledConnnection = conn;
-                self.slot.fill(mem::transmute::<_, PooledConnnection<'static>>(conn));
-            }
+        if !self.slot.filled() {
+            let conn = try!(self.app.database.get().map_err(|e| {
+                internal(format!("failed to get a database connection: {}", e))
+            }));
+            let conn: PooledConnnection = conn;
+            self.slot.fill(conn);
         }
         Ok(&**self.slot.borrow().unwrap())
     }

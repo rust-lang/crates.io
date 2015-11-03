@@ -4,8 +4,8 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use pg::rows::Row;
 use pg::types::Slice;
-use pg;
 use semver;
 use time::Duration;
 use url;
@@ -18,6 +18,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use upload;
 use user::RequestUser;
+use owner::{rights, Rights};
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
 
 #[derive(Clone)]
@@ -189,7 +190,7 @@ impl Version {
 }
 
 impl Model for Version {
-    fn from_row(row: &pg::Row) -> Version {
+    fn from_row(row: &Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {
@@ -343,7 +344,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let user = try!(req.user());
     let tx = try!(req.tx());
     let owners = try!(krate.owners(tx));
-    if !owners.iter().any(|u| u.id == user.id) {
+    if try!(rights(req.app(), &owners, &user)) < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"))
     }
 

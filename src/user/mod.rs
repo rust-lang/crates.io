@@ -1,14 +1,10 @@
 use std::collections::HashMap;
-use std::str;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
-use curl::http;
-use oauth2::Authorization;
+use pg::rows::Row;
 use pg::types::Slice;
-use pg;
 use rand::{thread_rng, Rng};
-use rustc_serialize::json;
 
 use {Model, Version};
 use app::RequestApp;
@@ -17,6 +13,7 @@ use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
+use http;
 
 pub use self::middleware::{Middleware, RequestUser};
 
@@ -124,7 +121,7 @@ impl User {
 }
 
 impl Model for User {
-    fn from_row(row: &pg::Row) -> User {
+    fn from_row(row: &Row) -> User {
         User {
             id: row.get("id"),
             email: row.get("email"),
@@ -166,22 +163,6 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    // Fetch the access token from github using the code we just got
-    let token = match req.app().github.exchange(code.clone()) {
-        Ok(token) => token,
-        Err(s) => return Err(human(s)),
-    };
-
-    let resp = try!(http::handle().get("https://api.github.com/user")
-                         .header("Accept", "application/vnd.github.v3+json")
-                         .header("User-Agent", "hello!")
-                         .auth_with(&token)
-                         .exec());
-    if resp.get_code() != 200 {
-        return Err(internal(format!("didn't get a 200 result from github: {}",
-                                    resp)))
-    }
-
     #[derive(RustcDecodable)]
     struct GithubUser {
         email: Option<String>,
@@ -189,12 +170,15 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         login: String,
         avatar_url: Option<String>,
     }
-    let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
-        internal("github didn't send a utf8-response")
-    }));
-    let ghuser: GithubUser = try!(json::decode(json).chain_error(|| {
-        internal("github didn't send a valid json response")
-    }));
+
+    // Fetch the access token from github using the code we just got
+    let token = match req.app().github.exchange(code.clone()) {
+        Ok(token) => token,
+        Err(s) => return Err(human(s)),
+    };
+
+    let resp = try!(http::github(req.app(), "/user", &token));
+    let ghuser: GithubUser = try!(http::parse_github_response(resp));
 
     // Into the database!
     let api_token = User::new_api_token();
