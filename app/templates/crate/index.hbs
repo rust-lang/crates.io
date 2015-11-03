@@ -192,7 +192,7 @@
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
-            <span class="{{if crate.versions.isPending 'loading'}} num">
+            <span class="{{if model.crate.versions.isPending 'loading'}} num">
                 <img src="/assets/package.png"/>
                 {{ model.versions.length }}
             </span>
