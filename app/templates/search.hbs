@@ -29,7 +29,7 @@
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
     {{#each pages as |page|}}
-        {{#link-to 'search' (query-params page=this)}}{{ page }}{{/link-to}}
+        {{#link-to 'search' (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'search' (query-params page=nextPage) class='next'}}
         <img src="/assets/right-pag.png"/>
