@@ -34,7 +34,7 @@ export default Ember.Route.extend({
                 return;
             }
 
-            var user = this.store.push('user', data.user);
+            var user = this.store.push(this.store.normalize('user', data.user));
             user.set('api_token', data.api_token);
             var transition = this.session.get('savedTransition');
             this.session.loginUser(user);
@@ -46,4 +46,3 @@ export default Ember.Route.extend({
         transition.abort();
     }
 });
-

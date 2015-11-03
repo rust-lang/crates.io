@@ -5,7 +5,7 @@ export default Ember.Route.extend({
   model() {
     function addCrates(store, crates) {
         for (var i = 0; i < crates.length; i++) {
-            crates[i] = store.push('crate', crates[i]);
+            crates[i] = store.push(store.normalize('crate', crates[i]));
         }
     }
 
@@ -18,4 +18,3 @@ export default Ember.Route.extend({
     });
   }
 });
-
