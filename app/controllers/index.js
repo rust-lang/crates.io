@@ -1,7 +1,7 @@
 import Ember from 'ember';
 const { computed } = Ember;
 
-export default Ember.ObjectController.extend({
+export default Ember.Controller.extend({
     currentPlatform: computed(function() {
         var os = null;
 

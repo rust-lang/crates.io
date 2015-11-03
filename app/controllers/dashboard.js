@@ -4,7 +4,7 @@ import ajax from 'ic-ajax';
 const TO_SHOW = 5;
 const { computed } = Ember;
 
-export default Ember.ObjectController.extend({
+export default Ember.Controller.extend({
     init() {
       this._super(...arguments);
 

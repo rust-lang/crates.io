@@ -7,15 +7,15 @@
     <h2>Profile Information</h2>
 
     <div class='info'>
-        {{#user-link user=this }} {{user-avatar user=this size='medium'}} {{/user-link}}
+        {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
 
         <dl>
             <dt>Name</dt>
-            <dd>{{ name }}</dd>
+            <dd>{{ model.name }}</dd>
             <dt>GitHub Account</dt>
-            <dd>{{ login }}</dd>
+            <dd>{{ model.login }}</dd>
             <dt>Email</dt>
-            <dd>{{ email }}</dd>
+            <dd>{{ model.email }}</dd>
         </dl>
     </div>
 </div>
@@ -23,13 +23,13 @@
 <div id='me-api'>
     <h2>API Access</h2>
 
-    <p class='api'>Your API key is <strong>{{ api_token }}</strong></p>
+    <p class='api'>Your API key is <strong>{{ model.api_token }}</strong></p>
     <p>
         If you want to use package commands from the command line, you'll need a
         <code>~/.cargo/config</code> which can be generated with:
     </p>
     <pre>
-cargo login {{ api_token }}
+cargo login {{ model.api_token }}
 </pre>
 
     <button {{action "resetToken"}} class='yellow-button'>
