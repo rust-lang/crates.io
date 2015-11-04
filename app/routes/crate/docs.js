@@ -20,7 +20,7 @@ export default Ember.Route.extend({
             } else {
                 // Redirect to the crate's main page if no documentation
                 // URL is found.
-                this.transitionTo('crate', crate);
+                self.transitionTo('crate', crate);
             }
         }, 2500);
 
