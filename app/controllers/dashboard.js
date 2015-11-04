@@ -38,8 +38,12 @@ export default Ember.Controller.extend({
             var page = (this.get('myFeed').length / 10) + 1;
 
             ajax('/me/updates?page=' + page).then((data) => {
-                this.store.pushMany('crate', data.crates);
-                var versions = this.store.pushMany('version', data.versions);
+                data.crates.forEach(crate =>
+                    this.store.push(this.store.normalize('crate', crate)));
+
+                var versions = data.versions.map(version =>
+                    this.store.push(this.store.normalize('version', version)));
+
                 this.get('myFeed').pushObjects(versions);
                 this.set('hasMore', data.meta.more);
             }).finally(() => {
