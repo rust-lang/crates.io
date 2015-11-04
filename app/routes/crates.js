@@ -14,6 +14,6 @@ export default Ember.Route.extend({
             delete params.letter;
         }
 
-        return this.store.find('crate', params);
+        return this.store.query('crate', params);
     },
 });

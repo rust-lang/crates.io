@@ -1,7 +1,7 @@
 import ApplicationAdapter from './application';
 
 export default ApplicationAdapter.extend({
-    findQuery(store, type, query) {
+    query(store, type, query) {
         if (!query.reverse) {
             return this._super(...arguments);
         }

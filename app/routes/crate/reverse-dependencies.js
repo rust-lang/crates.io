@@ -27,7 +27,7 @@ export default Ember.Route.extend({
         params.reverse = true;
         params.crate = crate;
 
-        return this.store.find('dependency', params).then((deps) => {
+        return this.store.query('dependency', params).then((deps) => {
             var controller = this.controllerFor('crate/reverse_dependencies');
             if (controller) {
                 controller.set('model', deps);
