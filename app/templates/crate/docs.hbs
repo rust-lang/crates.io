@@ -1,0 +1,12 @@
+<div id="crates-heading">
+    <img class="logo" src="/assets/circle-with-i.png"/>
+    <h1>Documentation for <em>{{name}}</em></h1>
+</div>
+
+<p>
+    {{#if documentation}}
+        Redirecting you to <code>{{documentation}}</code>&#8230;
+    {{else}}
+        <strong>{{name}}</strong> is missing a documentation URL, returning to the crate main page&#8230;
+    {{/if}}
+</p>
