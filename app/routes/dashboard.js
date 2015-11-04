@@ -22,11 +22,11 @@ export default Ember.Route.extend(AuthenticatedRoute, {
     },
 
     afterModel(user) {
-      let myCrates = this.store.find('crate', {
+      let myCrates = this.store.query('crate', {
         user_id: user.get('id')
       });
 
-      let myFollowing = this.store.find('crate', {
+      let myFollowing = this.store.query('crate', {
         following: 1
       });
 
