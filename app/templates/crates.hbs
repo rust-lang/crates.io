@@ -14,7 +14,13 @@
             {{ letter }}
         {{/link-to}}
     {{/each}}
-    {{view 'select' content=alphabet value=letter prompt="Filter by the letter..."}}
+
+    {{#x-select value=letter}}
+        <option>Filter by the letter...</option>
+        {{#each alphabet as |letter|}}
+            {{#x-option value=letter}}{{ letter }}{{/x-option}}
+        {{/each}}
+    {{/x-select}}
 </div>
 
 <div id='results'>

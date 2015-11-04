@@ -37,6 +37,7 @@
     "ember-disable-proxy-controllers": "^1.0.0",
     "ember-document-title": "~0.1.2",
     "ember-export-application-global": "^1.0.3",
-    "ember-moment": "1.1.1"
+    "ember-moment": "1.1.1",
+    "emberx-select": "2.0.2"
   }
 }
