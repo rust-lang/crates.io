@@ -18,7 +18,7 @@
                     </span>
                 {{/if}}
             </div>
-            {{render "my-crate-list" visibleCrates}}
+            {{crate-downloads-list crates=visibleCrates}}
         </div>
         <div id='my-following'>
             <div class='header'>
@@ -33,7 +33,7 @@
                     </span>
                 {{/if}}
             </div>
-            {{render "my-crate-list" visibleFollowing}}
+            {{crate-downloads-list crates=visibleFollowing}}
         </div>
     </div>
 

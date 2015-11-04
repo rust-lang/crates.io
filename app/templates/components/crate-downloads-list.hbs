@@ -1,5 +1,5 @@
 <ul>
-    {{#each this as |crate|}}
+    {{#each crates as |crate|}}
         <li>
             {{#link-to 'crate' crate class='name'}}
                 {{ crate.name }} ({{ crate.max_version }})
