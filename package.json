@@ -28,16 +28,17 @@
     "ember-cli-htmlbars-inline-precompile": "^0.2.0",
     "ember-cli-ic-ajax": "0.2.1",
     "ember-cli-inject-live-reload": "^1.3.1",
+    "ember-cli-moment-shim": "0.6.2",
     "ember-cli-qunit": "^1.0.0",
     "ember-cli-release": "0.2.3",
     "ember-cli-sass": "5.0.1",
     "ember-cli-sri": "^1.0.3",
     "ember-cli-uglify": "^1.2.0",
-    "ember-data": "1.13.8",
+    "ember-data": "1.13.14",
     "ember-disable-proxy-controllers": "^1.0.0",
     "ember-document-title": "~0.1.2",
     "ember-export-application-global": "^1.0.3",
-    "ember-moment": "1.1.1",
+    "ember-moment": "4.1.0",
     "emberx-select": "2.0.2"
   }
 }
