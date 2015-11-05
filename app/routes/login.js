@@ -1,5 +1,12 @@
 import Ember from 'ember';
 
+/**
+ * This route will open a popup window directed at the `/github_login` route.
+ * After the window has opened it will wait for the window to close and
+ * then evaluate whether the OAuth flow was successful.
+ *
+ * @see `/github_authorize` route
+ */
 export default Ember.Route.extend({
     beforeModel: function(transition) {
         try { localStorage.removeItem('github_response'); } catch (e) {}
@@ -45,4 +52,3 @@ export default Ember.Route.extend({
         transition.abort();
     }
 });
-
