@@ -137,6 +137,20 @@ impl Model for User {
 }
 
 /// Handles the `GET /authorize_url` route.
+///
+/// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
+/// `client_id` and a randomly generated `state` secret.
+///
+/// see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
+///
+/// ## Response Body Example
+///
+/// ```json
+/// {
+///     "state": "b84a63c4ea3fcb4ac84",
+///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
+/// }
+/// ```
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
