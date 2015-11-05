@@ -210,6 +210,7 @@ impl Model for Version {
     fn table_name(_: Option<Version>) -> &'static str { "versions" }
 }
 
+/// Handles the `GET /versions` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
 
@@ -247,6 +248,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { versions: versions }))
 }
 
+/// Handles the `GET /versions/:version_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let (version, krate) = match req.params().find("crate_id") {
         Some(..) => try!(version_and_crate(req)),
@@ -281,6 +283,7 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     Ok((version, krate))
 }
 
+/// Handles the `GET /crates/:crate_id/:version/dependencies` route.
 pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = try!(version_and_crate(req));
     let tx = try!(req.tx());
@@ -294,6 +297,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ dependencies: deps }))
 }
 
+/// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = try!(version_and_crate(req));
 
@@ -313,6 +317,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ version_downloads: downloads }))
 }
 
+/// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = try!(version_and_crate(req));
     let tx = try!(req.tx());
@@ -331,10 +336,12 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
 }
 
+/// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 pub fn yank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, true)
 }
 
+/// Handles the `PUT /crates/:crate_id/:version/unyank` route.
 pub fn unyank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, false)
 }

@@ -136,7 +136,9 @@ impl Model for User {
     fn table_name(_: Option<User>) -> &'static str { "users" }
 }
 
+/// Handles the `GET /authorize_url` route.
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
+    // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
@@ -147,6 +149,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { url: url.to_string(), state: state }))
 }
 
+/// Handles the `GET /authorize` route.
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Parse the url query
     let mut query = req.query();
@@ -197,11 +200,13 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     me(req)
 }
 
+/// Handles the `GET /logout` route.
 pub fn logout(req: &mut Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
 
+/// Handles the `GET /me/reset_token` route.
 pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
@@ -215,6 +220,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { api_token: token }))
 }
 
+/// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
@@ -224,6 +230,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
 }
 
+/// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
     let (offset, limit) = try!(req.pagination(10, 100));

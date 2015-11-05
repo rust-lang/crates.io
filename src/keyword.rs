@@ -139,6 +139,7 @@ impl Model for Keyword {
     fn table_name(_: Option<Keyword>) -> &'static str { "keywords" }
 }
 
+/// Handles the `GET /keywords` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
@@ -175,6 +176,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
+/// Handles the `GET /keywords/:keyword_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
     let conn = try!(req.tx());
@@ -185,4 +187,3 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R { keyword: EncodableKeyword }
     Ok(req.json(&R { keyword: kw.encodable() }))
 }
-
