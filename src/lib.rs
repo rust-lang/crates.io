@@ -1,3 +1,9 @@
+//! This crate implements the backend server for https://crates.io/
+//!
+//! All implemented routes are defined in the [middleware](fn.middleware.html) function and
+//! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
+//! [user](user/index.html) and [version](version/index.html) modules.
+
 #[macro_use] extern crate log;
 extern crate postgres as pg;
 extern crate rustc_serialize;

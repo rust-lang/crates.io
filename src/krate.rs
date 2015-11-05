@@ -452,6 +452,7 @@ impl Model for Crate {
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
 }
 
+/// Handles the `GET /crates` route.
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = try!(req.tx());
@@ -574,6 +575,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
+/// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let num_crates = {
@@ -620,6 +622,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
+/// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());
@@ -643,6 +646,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
+/// Handles the `PUT /crates/new` route.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
 
@@ -817,6 +821,7 @@ fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
     Ok(())
 }
 
+/// Handles the `GET /crates/:crate_id/:version/download` route.
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
@@ -872,6 +877,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
+/// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
@@ -931,6 +937,7 @@ fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
     Ok((user.clone(), krate))
 }
 
+/// Handles the `PUT /crates/:crate_id/follow` route.
 pub fn follow(req: &mut Request) -> CargoResult<Response> {
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
@@ -946,6 +953,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
+/// Handles the `DELETE /crates/:crate_id/follow` route.
 pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
@@ -957,6 +965,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
+/// Handles the `GET /crates/:crate_id/following` route.
 pub fn following(req: &mut Request) -> CargoResult<Response> {
     let (user, krate) = try!(user_and_crate(req));
     let tx = try!(req.tx());
@@ -968,6 +977,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { following: rows.next().is_some() }))
 }
 
+/// Handles the `GET /crates/:crate_id/versions` route.
 pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
@@ -981,6 +991,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ versions: versions }))
 }
 
+/// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let tx = try!(req.tx());
@@ -993,10 +1004,12 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ users: owners }))
 }
 
+/// Handles the `PUT /crates/:crate_id/owners` route.
 pub fn add_owners(req: &mut Request) -> CargoResult<Response> {
     modify_owners(req, true)
 }
 
+/// Handles the `DELETE /crates/:crate_id/owners` route.
 pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
     modify_owners(req, false)
 }
@@ -1054,6 +1067,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     Ok(req.json(&R{ ok: true }))
 }
 
+/// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());

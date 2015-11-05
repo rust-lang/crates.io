@@ -136,7 +136,23 @@ impl Model for User {
     fn table_name(_: Option<User>) -> &'static str { "users" }
 }
 
+/// Handles the `GET /authorize_url` route.
+///
+/// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
+/// `client_id` and a randomly generated `state` secret.
+///
+/// see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
+///
+/// ## Response Body Example
+///
+/// ```json
+/// {
+///     "state": "b84a63c4ea3fcb4ac84",
+///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
+/// }
+/// ```
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
+    // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
     req.session().insert("github_oauth_state".to_string(), state.clone());
 
@@ -147,6 +163,34 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { url: url.to_string(), state: state }))
 }
 
+/// Handles the `GET /authorize` route.
+///
+/// This route is called from the GitHub API OAuth flow after the user accepted or rejected
+/// the data access permissions. It will check the `state` parameter and then call the GitHub API
+/// to exchange the temporary `code` for an API token. The API token is returned together with
+/// the corresponding user information.
+///
+/// see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
+///
+/// ## Query Parameters
+///
+/// - `code` – temporary code received from the GitHub API  **(Required)**
+/// - `state` – state parameter received from the GitHub API  **(Required)**
+///
+/// ## Response Body Example
+///
+/// ```json
+/// {
+///     "api_token": "b84a63c4ea3fcb4ac84",
+///     "user": {
+///         "email": "foo@bar.org",
+///         "name": "Foo Bar",
+///         "login": "foobar",
+///         "avatar": "https://avatars.githubusercontent.com/u/1234",
+///         "url": null
+///     }
+/// }
+/// ```
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Parse the url query
     let mut query = req.query();
@@ -197,11 +241,13 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     me(req)
 }
 
+/// Handles the `GET /logout` route.
 pub fn logout(req: &mut Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
 
+/// Handles the `GET /me/reset_token` route.
 pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
@@ -215,6 +261,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { api_token: token }))
 }
 
+/// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
@@ -224,6 +271,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
 }
 
+/// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
     let (offset, limit) = try!(req.pagination(10, 100));
