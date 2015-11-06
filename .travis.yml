@@ -14,6 +14,7 @@ script:
   - ember test
 
 after_success:
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "$TRAVIS_BRANCH" == "master" ]; then .travis/deploy.sh; fi
   - travis-cargo coveralls --no-sudo
 
 addons:
