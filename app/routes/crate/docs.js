@@ -11,18 +11,17 @@ export default Ember.Route.extend({
             crate = data.crate;
         }
 
-        var documentation = crate.get('documentation'),
-            self          = this;
+        var documentation = crate.get('documentation');
 
-        setTimeout(function() {
-            if (documentation) {
-                window.location = documentation;
-            } else {
-                // Redirect to the crate's main page if no documentation
-                // URL is found.
-                self.transitionTo('crate', crate);
-            }
-        }, 2500);
+        if (documentation) {
+            window.location = documentation;
+        } else {
+            // Redirect to the crate's main page and show a flash error if
+            // no documentation is found
+            var message = 'Crate does not supply a documentation URL';
+            this.controllerFor('application').set('nextFlashError', message);
+            this.replaceWith('crate', crate);
+        }
 
         this._super(controller, crate);
     },
