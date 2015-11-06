@@ -13,6 +13,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 
+#[allow(dead_code)]
 fn main() {
     env_logger::init().unwrap();
     let url = env("GIT_REPO_URL");

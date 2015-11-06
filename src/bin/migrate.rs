@@ -12,6 +12,7 @@ use migrate::Migration;
 use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
 
+#[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();

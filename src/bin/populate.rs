@@ -15,6 +15,7 @@ use std::env;
 use time::Duration;
 use rand::{StdRng, Rng};
 
+#[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
