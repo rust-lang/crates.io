@@ -16,6 +16,9 @@ Router.map(function() {
     this.route('download');
     this.route('versions');
     this.route('reverse_dependencies');
+
+    // Well-known routes
+    this.route('docs');
   });
   this.route('me', function() {
     this.route('crates');
