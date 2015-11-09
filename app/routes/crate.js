@@ -2,32 +2,38 @@ import Ember from 'ember';
 import Version from 'cargo/models/version';
 
 export default Ember.Route.extend({
-    model: function(params) {
+    model(params) {
         var parts = params.crate_id.split('/');
         var crate_id = parts[0];
         var version = null;
         if (parts.length > 1 && parts[1].length > 0) {
             version = parts[1];
         }
-        var self = this;
+
+        var crate = this.store.find('crate', crate_id).catch((e) => {
+          if (e.status === 404) {
+            this.controllerFor('application').set('nextFlashError', 'No crate named: ' + params.crate_id);
+            return this.replaceWith('index');
+          }
+        });
+
         return Ember.RSVP.hash({
-            crate: this.store.find('crate', crate_id).catch(function(e) {
-                if (e.status === 404) {
-                    self.controllerFor('application').set('nextFlashError',
-                            'No crate named: ' + params.crate_id);
-                    return self.replaceWith('index');
-                }
-            }),
-            version: version,
+          crate,
+          version
         });
     },
 
-    serialize: function(model) {
+    serialize(model) {
         if (model instanceof Version) {
             var crate = model.get('crate').get('name');
-            return { crate_id: crate + '/' + model.get('num') };
+
+            return {
+              crate_id: crate + '/' + model.get('num')
+            };
         } else {
-            return { crate_id: model.get('id') };
+            return {
+              crate_id: model.get('id')
+            };
         }
     },
 });

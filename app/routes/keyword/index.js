@@ -7,20 +7,19 @@ export default Ember.Route.extend({
     },
     loadedCrates: [],
 
-    afterModel: function(keyword, transition) {
+    afterModel(keyword, transition) {
         var params = transition.queryParams;
         params.keyword = keyword.get('keyword');
-        var self = this;
-        return this.store.find('crate', params).then(function(array) {
-            if (self.controllerFor('keyword/index')) {
-                self.controllerFor('keyword/index').set('model', array);
+        return this.store.find('crate', params).then((array) => {
+            if (this.controllerFor('keyword/index')) {
+                this.controllerFor('keyword/index').set('model', array);
             }
-            self.set('loadedCrates', array);
+            this.set('loadedCrates', array);
         });
     },
 
-    setupController: function(controller, keyword) {
+    setupController(controller, keyword) {
         this._super(controller, this.get('loadedCrates'));
         controller.set('keyword', keyword);
-    },
+    }
 });

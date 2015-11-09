@@ -1,6 +1,6 @@
 import Ember from 'ember';
 
-function formatNum(value) {
+export function formatNum(value) {
     if (value === 0) { return "0"; }
 
     var ret = "";
@@ -17,8 +17,4 @@ function formatNum(value) {
     return ret;
 }
 
-export {
-    formatNum
-};
-
-export default Ember.Handlebars.makeBoundHelper(formatNum);
+export default Ember.Helper.helper(params => formatNum(params[0]));

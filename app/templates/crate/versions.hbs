@@ -1,5 +1,5 @@
 <div class='all-versions-back'>
-    {{#link-to 'crate' this}}&#11013; Back to Main Page{{/link-to}}
+    {{#link-to 'crate' model}}&#11013; Back to Main Page{{/link-to}}
 </div>
 
 <div class='info'>
@@ -11,16 +11,17 @@
 </div>
 
 <div id='crate-all-versions' class='white-rows'>
-    {{#each model.versions}}
+    {{#each model.versions as |version|}}
         <div class='row'>
             <div>
-                {{#link-to 'crate' this}}{{ num }}{{/link-to}}
-                <span class='small'>{{ date-long created_at }}</span>
+                {{#link-to 'crate' version}}{{ version.num }}{{/link-to}}
+
+                <span class='small'>{{ date-long version.created_at }}</span>
                 {{#if yanked}}
                     <span class='yanked'>yanked</span>
                 {{/if}}
             </div>
-            {{#link-to 'crate' this class='arrow'}}
+            {{#link-to 'crate' version class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>
             {{/link-to}}
         </div>

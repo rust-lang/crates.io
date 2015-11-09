@@ -17,7 +17,7 @@ which enables tweaking the UI of the site without actually having the server
 running locally. To get up and running with just the UI, run:
 
 ```
-npm run startui
+npm run start:ui
 ```
 
 This will give you a local server to browse while using the staging backend

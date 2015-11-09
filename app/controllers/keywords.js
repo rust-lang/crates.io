@@ -1,31 +1,32 @@
 import Ember from 'ember';
 import PaginationMixin from 'cargo/mixins/pagination';
 
-export default Ember.ArrayController.extend(PaginationMixin, {
-    needs: ['application'],
+const { computed } = Ember;
+
+export default Ember.Controller.extend(PaginationMixin, {
+    applicationController: Ember.inject.controller('application'),
     queryParams: ['page', 'per_page', 'sort'],
     page: '1',
     per_page: 10,
     sort: 'crates',
     showSortBy: false,
 
-    totalItems: function() {
+    totalItems: computed('model', function() {
         return this.store.metadataFor('keyword').total;
-    }.property('model'),
+    }),
 
-    currentSortBy: function() {
+    currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'crates') {
             return '# Crates';
         } else {
             return 'Alphabetical';
         }
-    }.property('sort'),
+    }),
 
     actions: {
-        toggleShowSortBy: function() {
+        toggleShowSortBy() {
             var opt = 'showSortBy';
-            this.get('controllers.application').resetDropdownOption(this, opt);
-
+            this.get('applicationController').resetDropdownOption(this, opt);
         },
     },
 });

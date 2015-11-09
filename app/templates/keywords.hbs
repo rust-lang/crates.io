@@ -16,12 +16,12 @@
         <span class='small'>Sort by</span>
         <div class='dropdown-container'>
             <a {{action 'toggleShowSortBy'}}
-               {{bind-attr class='showSortBy:active :dropdown'}}>
+               class='{{if showSortBy "active"}} dropdown'>
                 <img src="/assets/sort.png"/>
                 {{ currentSortBy }}
                 <span class='arrow'></span>
             </a>
-            <ul {{bind-attr class='showSortBy:open :dropdown'}}>
+            <ul class='{{if showSortBy "open"}} dropdown'>
                 <li>
                     {{#link-to 'keywords' (query-params sort="alpha")}}
                         Alphabetical
@@ -38,12 +38,12 @@
 </div>
 
 <div class='white-rows'>
-    {{#each}}
+    {{#each model as |keyword|}}
         <div class='row'>
             <div class='info'>
-                {{link-to keyword "keyword" this}}
+                {{link-to keyword.id "keyword" keyword}}
                 <span class='vers small'>
-                    {{ format-num crates_cnt }}
+                    {{ format-num keyword.crates_cnt }}
                     crates
                 </span>
             </div>
@@ -55,8 +55,8 @@
     {{#link-to 'keywords' (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'keywords' (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'keywords' (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'keywords' (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>

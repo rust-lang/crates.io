@@ -8,8 +8,10 @@ export default DS.Model.extend({
     downloads: DS.attr('number'),
     yanked: DS.attr('boolean'),
 
-    crate: DS.belongsTo('crate'),
-    authors: DS.hasMany('users', {async: true}),
-    dependencies: DS.hasMany('dependency', {async: true}),
-    version_downloads: DS.hasMany('version-download', {async: true}),
+    crate: DS.belongsTo('crate', {
+      async: false
+    }),
+    authors: DS.hasMany('users', { async: true }),
+    dependencies: DS.hasMany('dependency', { async: true }),
+    version_downloads: DS.hasMany('version-download', { async: true }),
 });

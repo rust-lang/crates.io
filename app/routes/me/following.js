@@ -7,7 +7,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
         sort: { refreshModel: true },
     },
 
-    model: function(params) {
+    model(params) {
         params.following = 1;
         return this.store.find('crate', params);
     },

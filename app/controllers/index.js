@@ -1,7 +1,8 @@
 import Ember from 'ember';
+const { computed } = Ember;
 
-export default Ember.ObjectController.extend({
-    currentPlatform: function() {
+export default Ember.Controller.extend({
+    currentPlatform: computed(function() {
         var os = null;
 
         if (navigator.platform === "Linux x86_64") {
@@ -22,12 +23,11 @@ export default Ember.ObjectController.extend({
         }
 
         return os;
-    }.property(),
+    }),
 
-    downloadUrl: function() {
+    downloadUrl: computed('currentPlatform', function() {
         var plat = this.get('currentPlatform');
         if (plat == null) { return null; }
-        return "https://static.rust-lang.org/cargo-dist/cargo-nightly-" +
-                    plat + ".tar.gz";
-    }.property('currentPlatform'),
+        return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${plat}.tar.gz`;
+    })
 });

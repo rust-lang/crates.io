@@ -7,7 +7,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
         sort: { refreshModel: true },
     },
 
-    model: function(params) {
+    model(params) {
         params.user_id = this.session.get('currentUser.id');
         return this.store.find('crate', params);
     },

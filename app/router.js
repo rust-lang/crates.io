@@ -7,12 +7,12 @@ var Router = Ember.Router.extend(googlePageview, {
 });
 
 Router.map(function() {
-  this.resource('logout');
-  this.resource('login');
-  this.resource('github_login');
-  this.resource('github_authorize', { path: '/authorize/github' });
-  this.resource('crates');
-  this.resource('crate', { path: '/crates/*crate_id' }, function() {
+  this.route('logout', { resetNamespace: true });
+  this.route('login', { resetNamespace: true });
+  this.route('github_login', { resetNamespace: true });
+  this.route('github_authorize', { path: '/authorize/github', resetNamespace: true });
+  this.route('crates', { resetNamespace: true });
+  this.route('crate', { path: '/crates/*crate_id', resetNamespace: true }, function() {
     this.route('download');
     this.route('versions');
     this.route('reverse_dependencies');
@@ -24,8 +24,8 @@ Router.map(function() {
   this.route('install');
   this.route('search');
   this.route('dashboard');
-  this.resource('keywords');
-  this.resource('keyword', { path: '/keywords/*keyword_id' }, function() {
+  this.route('keywords', { resetNamespace: true });
+  this.route('keyword', { path: '/keywords/*keyword_id', resetNamespace: true }, function() {
   });
   this.route('catchAll', { path: '*path' });
 });

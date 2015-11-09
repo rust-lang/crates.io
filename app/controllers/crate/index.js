@@ -1,11 +1,13 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 import ajax from 'ic-ajax';
+import moment from 'moment';
 
-var NUM_VERSIONS = 5;
+const NUM_VERSIONS = 5;
+const { computed } = Ember;
 
-export default Ember.ObjectController.extend({
-    needs: ['application'],
+export default Ember.Controller.extend({
+    applicationController: Ember.inject.controller('application'),
     isDownloading: false,
 
     fetchingDownloads: true,
@@ -16,111 +18,97 @@ export default Ember.ObjectController.extend({
     requestedVersion: null,
     keywords: [],
 
-    sortedVersions: function() {
+    sortedVersions: computed('model.versions.[]', function() {
         return this.get("model.versions");
-    }.property('model.versions.[]'),
+    }),
 
-    smallSortedVersions: function() {
+    smallSortedVersions: computed('sortedVersions', function() {
         return this.get('sortedVersions').slice(0, NUM_VERSIONS);
-    }.property('sortedVersions'),
+    }),
 
-    hasMoreVersions: function() {
-        return this.get("sortedVersions.length") > NUM_VERSIONS;
-    }.property('sortedVersions'),
+    hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: function() {
-      return this.get('homepage') ||
-             this.get('wiki') ||
-             this.get('mailing_list') ||
-             this.get('documentation') ||
-             this.get('repository');
-    }.property('homepage', 'wiki', 'mailing_list', 'documentation', 'repository'),
+    anyLinks: computed.or('model.homepage',
+                          'model.wiki',
+                          'model.mailing_list',
+                          'model.documentation',
+                          'model.repository'),
 
-    versionsCount: function() {
-      return this.get('versions.length');
-    }.property('versions.@each'),
-
-    displayedAuthors: function() {
-        var self = this;
+    displayedAuthors: computed('currentVersion.authors.[]', function() {
         if (!this.get('currentVersion')) {
             return [];
         }
+
         return DS.PromiseArray.create({
-            promise: this.get('currentVersion.authors').then(function(authors) {
-                var ret = [];
-                authors.forEach(function(author) {
-                    ret.push(author);
-                });
-                var others = self.store.metadataFor('user');
+            promise: this.get('currentVersion.authors').then((authors) => {
+                var ret = authors.slice();
+                var others = this.store.metadataFor('user');
                 for (var i = 0; i < others.names.length; i++) {
                     ret.push({name: others.names[i]});
                 }
                 return ret;
-            }),
+            })
         });
-    }.property('currentVersion.authors.@each'),
+    }),
 
-    anyKeywords: function() {
-        return this.get('keywords.length') > 0;
-    }.property('keywords'),
+    anyKeywords: computed.gt('keywords.length', 0),
 
-    currentDependencies: function() {
+    currentDependencies: computed('currentVersion.dependencies', function() {
         var deps = this.get('currentVersion.dependencies');
+
         if (deps === null) { return []; }
+
         return DS.PromiseArray.create({
-            promise: deps.then(function(deps) {
-                var non_dev = deps.filter(function(dep) {
-                    return dep.get('kind') !== 'dev';
-                });
+            promise: deps.then((deps) => {
+                var non_dev = deps.filter((dep) => dep.get('kind') !== 'dev' );
                 var map = {};
                 var ret = [];
-                non_dev.forEach(function(dep) {
+
+                non_dev.forEach((dep) => {
                     if (!(dep.get('crate_id') in map)) {
                         map[dep.get('crate_id')] = 1;
                         ret.push(dep);
                     }
                 });
-                return ret;
-            }),
-        });
-    }.property('currentVersion.dependencies'),
 
-    currentDevDependencies: function() {
+                return ret;
+            })
+        });
+    }),
+
+    currentDevDependencies: computed('currentVersion.dependencies', function() {
         var deps = this.get('currentVersion.dependencies');
         if (deps === null) { return []; }
         return DS.PromiseArray.create({
-            promise: deps.then(function(deps) {
-                return deps.filter(function(dep) {
-                    return dep.get('kind') === 'dev';
-                });
+            promise: deps.then((deps) => {
+                return deps.filterBy('kind', 'dev');
             }),
         });
-    }.property('currentVersion.dependencies'),
+    }),
 
     actions: {
-        download: function(version) {
+        download(version) {
             this.set('isDownloading', true);
-            var self = this;
+
             var crate_downloads = this.get('model').get('downloads');
             var ver_downloads = version.get('downloads');
+
             return ajax({
                 url: version.get('dl_path'),
                 dataType: 'json',
-            }).then(function(data) {
-                self.get('model').set('downloads', crate_downloads + 1);
+            }).then((data) => {
+                this.get('model').set('downloads', crate_downloads + 1);
                 version.set('downloads', ver_downloads + 1);
                 Ember.$('#download-frame').attr('src', data.url);
-            }).finally(function() {
-                self.set('isDownloading', false);
-            });
+            }).finally(() => this.set('isDownloading', false) );
         },
 
-        toggleVersions: function() {
-            this.get('controllers.application')
+        toggleVersions() {
+            this.get('applicationController')
                 .resetDropdownOption(this, 'showAllVersions');
         },
 
-        toggleFollow: function() {
+        toggleFollow() {
             this.set('fetchingFollowing', true);
             this.set('following', !this.get('following'));
             var url = '/api/v1/crates/' + this.get('model.name') + '/follow';
@@ -130,20 +118,22 @@ export default Ember.ObjectController.extend({
             } else {
                 method = 'delete';
             }
-            var self = this;
-            ajax({ method: method, url: url }).finally(function() {
-                self.set('fetchingFollowing', false);
-            });
+
+            ajax({
+                method,
+                url
+            }).finally(() => this.set('fetchingFollowing', false));
         },
 
-        renderChart: function(downloads, extra) {
+        renderChart(downloads, extra) {
             var dates = {};
             var versions = [];
             for (var i = 0; i < 90; i++) {
                 var now = moment().subtract(i, 'days');
                 dates[now.format('MMM D')] = {date: now, cnt: {}};
             }
-            downloads.forEach(function(d) {
+
+            downloads.forEach((d) => {
                 var version_id = d.get('version.id');
                 var key = moment(d.get('date')).utc().format('MMM D');
                 if (dates[key]) {
@@ -151,7 +141,8 @@ export default Ember.ObjectController.extend({
                     dates[key].cnt[version_id] = prev + d.get('downloads');
                 }
             });
-            extra.forEach(function(d) {
+
+            extra.forEach((d) => {
                 var key = moment(d.date).utc().format('MMM D');
                 if (dates[key]) {
                     var prev = dates[key].cnt[null] || 0;
@@ -166,15 +157,21 @@ export default Ember.ObjectController.extend({
             } else {
                 var tmp = this.get('smallSortedVersions');
                 for (i = 0; i < tmp.length; i++) {
-                    versions.push({id: tmp[i].get('id'), num: tmp[i].get('num')});
+                    versions.push({
+                      id: tmp[i].get('id'),
+                      num: tmp[i].get('num')
+                    });
                 }
             }
             if (extra.length > 0) {
-                versions.push({ id: null, num: 'Other' });
+                versions.push({
+                    id: null,
+                    num: 'Other'
+                });
             }
 
             var headers = ['Date'];
-            versions.sort(function(b) { return b.num; }).reverse();
+            versions.sort((b) => b.num).reverse();
             for (i = 0; i < versions.length; i++) {
                 headers.push(versions[i].num);
             }
@@ -187,16 +184,17 @@ export default Ember.ObjectController.extend({
                 data.push(row);
             }
 
-            var drawChart = function() {
+            // TODO: move this to a component
+            function drawChart() {
                 if (!window.google || !window.googleChartsLoaded) {
                     Ember.$('.graph').hide();
                     return;
                 } else {
                     Ember.$('.graph').show();
                 }
-                var myData = google.visualization.arrayToDataTable(data);
+                var myData = window.google.visualization.arrayToDataTable(data);
 
-                var fmt = new google.visualization.DateFormat({
+                var fmt = new window.google.visualization.DateFormat({
                     pattern: 'LLL d, yyyy',
                 });
                 fmt.format(myData, 0);
@@ -204,7 +202,7 @@ export default Ember.ObjectController.extend({
                 if (!el) {
                     return;
                 }
-                var chart = new google.visualization.AreaChart(el);
+                var chart = new window.google.visualization.AreaChart(el);
                 chart.draw(myData, {
                     chartArea: {'left': 85, 'width': '77%', 'height': '80%'},
                     hAxis: {
@@ -217,7 +215,7 @@ export default Ember.ObjectController.extend({
                     isStacked: true,
                     focusTarget: 'category',
                 });
-            };
+            }
 
             Ember.run.scheduleOnce('afterRender', this, drawChart);
             Ember.$(window).off('resize.chart');
@@ -227,4 +225,3 @@ export default Ember.ObjectController.extend({
         },
     },
 });
-

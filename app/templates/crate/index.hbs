@@ -1,7 +1,7 @@
 <div id='crates-heading'>
     <div class='info'>
         <img class='logo' src="/assets/crate.png"/>
-        <h1>{{ name }}</h1>
+        <h1>{{ model.name }}</h1>
         <h2>{{ currentVersion.num }}</h2>
     </div>
 
@@ -22,7 +22,7 @@
         {{!--
             <a class='yellow-button' download
                {{action 'download' currentVersion}}
-               {{bind-attr href=currentVersion.dl_path}}>
+               href='{{currentVersion.dl_path}}'>
                 <img src="/assets/button-download.png"/>
                 Download
             </a>
@@ -41,49 +41,49 @@
 {{else}}
 <div class='crate-info'>
     <div class='docs'>
-        {{#if description}}
+        {{#if model.description}}
             <div class='about'>
                 <h3>About This Package</h3>
-                <p>{{ description }}</p>
+                <p>{{ model.description }}</p>
             </div>
         {{/if}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
-            <code>{{ name }} = "{{ currentVersion.num }}"</code>
+            <code>{{ model.name }} = "{{ currentVersion.num }}"</code>
         </div>
     </div>
     <div class='authorship'>
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{ from-now updated_at }}</div>
+                <div class='date'>{{ from-now model.updated_at }}</div>
             </div>
 
             <div class="authors">
                 <h3>Authors</h3>
                 <ul>
-                    {{#each displayedAuthors}}
-                        <li>{{ format-email name }}</li>
+                    {{#each displayedAuthors as |author|}}
+                        <li>{{ format-email author.name }}</li>
                     {{/each}}
                 </ul>
             </div>
         </div>
 
         <div class='bottom'>
-            {{#if license}}
+            {{#if model.license}}
                 <div>
                     <h3>License</h3>
-                    <p>{{ license }}</p>
+                    <p>{{ model.license }}</p>
                 </div>
             {{/if}}
 
-            {{#unless crate.keywords.isPending}}
+            {{#unless model.crate.keywords.isPending}}
                 {{#if anyKeywords}}
                     <div>
                         <h3>Keywords</h3>
                         <ul class='keywords'>
-                            {{#each keywords}}
-                                <li>{{link-to keyword 'keyword' this}}</li>
+                            {{#each keywords as |keyword|}}
+                                <li>{{link-to keyword.id 'keyword' keyword}}</li>
                             {{/each}}
                         </ul>
                     </div>
@@ -93,10 +93,10 @@
             <div>
                 <h3>Owners</h3>
                 <ul class='owners'>
-                    {{#each owners}}
+                    {{#each model.owners as |owner|}}
                         <li>
-                          {{#user-link user=this}}
-                            {{user-avatar user=this size='medium-small'}}
+                          {{#user-link user=owner}}
+                            {{user-avatar user=owner size='medium-small'}}
                           {{/user-link}}
                         </li>
                     {{/each}}
@@ -107,40 +107,36 @@
 </div>
 
 <div id='crate-links'>
-  {{#if anyLinks}}
-  <div class='section'>
-    <h3>Links</h3>
-    <ul>
-      {{#if homepage}}
-      <li><a {{bind-attr href=homepage}}>Homepage</a></li>
-      {{/if}}
-      {{#if wiki}}
-      <li><a {{bind-attr href=wiki}}>Wiki</a></li>
-      {{/if}}
-      {{#if mailing_list}}
-      <li><a {{bind-attr href=mailing_list}}>Mailing List</a></li>
-      {{/if}}
-      {{#if documentation}}
-      <li><a {{bind-attr href=documentation}}>Documentation</a></li>
-      {{/if}}
-      {{#if repository}}
-      <li><a {{bind-attr href=repository}}>Repository</a></li>
-      {{/if}}
-    </ul>
-  </div>
-  {{/if}}
+    {{#if anyLinks}}
+        <div class='section'>
+          <h3>Links</h3>
+          <ul>
+            {{#if model.homepage}}
+                <li><a href="{{model.homepage}}">Homepage</a></li>
+            {{/if}}
+            {{#if model.wiki}}
+                <li><a href="{{model.wiki}}">Wiki</a></li>
+            {{/if}}
+            {{#if model.mailing_list}}
+                <li><a href="{{model.mailing_list}}">Mailing list</a></li>
+            {{/if}}
+            {{#if model.documentation}}
+                <li><a href="{{model.documentation}}">Documentation</a></li>
+            {{/if}}
+            {{#if model.repository}}
+                <li><a href="{{model.repository}}">Repository</a></li>
+            {{/if}}
+          </ul>
+        </div>
+    {{/if}}
 
   <div class='section' id='crate-dependencies'>
     <h3>Dependencies</h3>
     <ul>
-      {{#each currentDependencies}}
-      <li>
-        {{#link-to 'crate' crate_id}}
-        {{ crate_id }} {{ format-req req }}
-        {{/link-to}}
-      </li>
+      {{#each currentDependencies as |dep|}}
+        {{link-to-dep dep=dep}}
       {{else}}
-      <li>None</li>
+          <li>None</li>
       {{/each}}
     </ul>
   </div>
@@ -149,12 +145,8 @@
     <div class='section' id='crate-dev-dependencies'>
       <h3>Dev-Dependencies</h3>
       <ul>
-        {{#each currentDevDependencies}}
-        <li>
-          {{#link-to 'crate' crate_id}}
-          {{ crate_id}} {{ req }}
-          {{/link-to}}
-        </li>
+        {{#each currentDevDependencies as |dep|}}
+            {{link-to-dep dep=dep}}
         {{/each}}
       </ul>
     </div>
@@ -163,20 +155,22 @@
   <div class='section' id='crate-versions'>
     <h3>Versions</h3>
     <ul>
-      {{#each smallSortedVersions}}
+      {{#each smallSortedVersions as |version|}}
       <li>
-        {{#link-to 'crate' this}}{{ num }}{{/link-to}}
-        <span class='date'>{{ date-small created_at }}</span>
-        {{#if yanked}}
-        <span class='yanked'>yanked</span>
+        {{#link-to 'crate' version}}
+            {{ version.num }}
+        {{/link-to}}
+        <span class='date'>{{ date-small version.created_at }}</span>
+        {{#if model.yanked}}
+            <span class='yanked'>yanked</span>
         {{/if}}
       </li>
       {{/each}}
     </ul>
     <span class='small'>
       {{#if hasMoreVersions}}
-      {{#link-to 'crate.versions' this}}
-      show all {{ versions.length }} versions
+      {{#link-to 'crate.versions' model}}
+          show all {{ model.versions.length }} versions
       {{/link-to}}
       {{/if}}
     </span>
@@ -192,15 +186,15 @@
                 {{#if requestedVersion}}
                     {{ format-num currentVersion.downloads }}
                 {{else}}
-                    {{ format-num downloads }}
+                    {{ format-num model.downloads }}
                 {{/if}}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
-            <span {{bind-attr class="crate.versions.isPending:loading :num"}}>
+            <span class="{{if model.crate.versions.isPending 'loading'}} num">
                 <img src="/assets/package.png"/>
-                {{ versionsCount }}
+                {{ model.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
         </div>
@@ -210,7 +204,7 @@
         <span class='small'>Showing stats for</span>
         <div class='button-holder'>
             <button {{action 'toggleVersions'}}
-                     {{bind-attr class="showAllVersions:active :tan-button :dropdown"}}>
+                    class="tan-button {{if showAllVersions 'active'}} dropdown">
                 {{#if requestedVersion}}
                     {{ requestedVersion }}
                 {{else}}
@@ -219,14 +213,16 @@
                 <span class='arrow'></span>
             </button>
 
-            <ul id='all-versions' {{bind-attr class="showAllVersions:open :dropdown"}}>
+            <ul id='all-versions' class="{{if showAllVersions 'open'}} dropdown">
                 <li class='all'>
-                    {{#link-to 'crate.index' this}}All Versions{{/link-to}}
+                    {{#link-to 'crate.index' model}}All Versions{{/link-to}}
                 </li>
-                {{#each smallSortedVersions}}
-                    <li>{{#link-to 'crate.index' this}}
-                        {{ num }}
-                    {{/link-to}}</li>
+                {{#each smallSortedVersions as |version|}}
+                    <li>
+                        {{#link-to 'crate.index' version}}
+                            {{ version.num }}
+                        {{/link-to}}
+                    </li>
                 {{/each}}
             </ul>
         </div>

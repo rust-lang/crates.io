@@ -7,5 +7,5 @@ DocumentTitle.reopen({
 
 export default {
   name: "document-title-config",
-  initialize: function () {}
+  initialize() {}
 };

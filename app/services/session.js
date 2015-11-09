@@ -1,11 +1,12 @@
 import Ember from 'ember';
 
-export default Ember.Object.extend({
+export default Ember.Service.extend({
     savedTransition: null,
     isLoggedIn: false,
     currentUser: null,
 
-    init: function() {
+    init() {
+        this._super(...arguments);
         var isLoggedIn;
         try {
             isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
@@ -16,7 +17,7 @@ export default Ember.Object.extend({
         this.set('currentUser', null);
     },
 
-    loginUser: function(user) {
+    loginUser(user) {
         this.set('isLoggedIn', true);
         this.set('currentUser', user);
         try {
@@ -24,12 +25,13 @@ export default Ember.Object.extend({
         } catch (e) {}
     },
 
-    logoutUser: function() {
+    logoutUser() {
         this.set('savedTransition', null);
         this.set('isLoggedIn', null);
         this.set('currentUser', null);
+
         try {
             localStorage.removeItem('isLoggedIn');
         } catch (e) {}
-    },
+    }
 });

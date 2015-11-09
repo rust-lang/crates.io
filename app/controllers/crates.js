@@ -1,8 +1,10 @@
 import Ember from 'ember';
 import PaginationMixin from 'cargo/mixins/pagination';
 
-export default Ember.ArrayController.extend(PaginationMixin, {
-    needs: ['application'],
+const { computed } = Ember;
+
+export default Ember.Controller.extend(PaginationMixin, {
+    applicationController: Ember.inject.controller('application'),
     queryParams: ['letter', 'page', 'per_page', 'sort'],
     letter: null,
     page: '1',
@@ -11,24 +13,22 @@ export default Ember.ArrayController.extend(PaginationMixin, {
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
     showSortBy: false,
 
-    totalItems: function() {
+    totalItems: computed('model', function() {
         return this.store.metadataFor('crate').total;
-    }.property('model'),
+    }),
 
-    currentSortBy: function() {
+    currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'downloads') {
             return 'Downloads';
         } else {
             return 'Alphabetical';
         }
-    }.property('sort'),
+    }),
 
     actions: {
-        toggleShowSortBy: function() {
+        toggleShowSortBy() {
             var opt = 'showSortBy';
-            this.get('controllers.application').resetDropdownOption(this, opt);
-
+            this.get('applicationController').resetDropdownOption(this, opt);
         },
     },
 });
-

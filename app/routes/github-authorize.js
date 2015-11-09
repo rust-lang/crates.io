@@ -15,18 +15,18 @@ import ajax from 'ic-ajax';
  * @see `/login` route
  */
 export default Ember.Route.extend({
-    beforeModel: function(transition) {
-        return ajax('/authorize', {data: transition.queryParams}).then(function(d) {
+    beforeModel(transition) {
+        return ajax('/authorize', {data: transition.queryParams}).then((d) => {
             var item = JSON.stringify({ ok: true, data: d });
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        }).catch(function(d) {
+        }).catch((d) => {
             var item = JSON.stringify({ ok: false, data: d });
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        }).finally(function() {
+        }).finally(() => {
             window.close();
         });
     },

@@ -1,8 +1,7 @@
-import {
-  formatEmail
-} from 'cargo/helpers/format-email';
+import { formatEmail } from '../../../helpers/format-email';
+import { module, test } from 'qunit';
 
-module('FormatEmailHelper');
+module('Unit | Helper | format-email');
 
 // Replace this with your real tests.
 test('it works', function(assert) {
@@ -14,4 +13,3 @@ test('it works', function(assert) {
     assert.equal(formatEmail('').toString(), '');
     assert.equal(formatEmail('test <foo').toString(), 'test &lt;foo');
 });
-

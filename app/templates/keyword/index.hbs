@@ -17,12 +17,12 @@
         <span class='small'>Sort by</span>
         <div class='dropdown-container'>
             <a {{action 'toggleShowSortBy'}}
-               {{bind-attr class='showSortBy:active :dropdown'}}>
+               class="{{if showSortBy 'active'}} dropdown">
                 <img src="/assets/sort.png"/>
                 {{ currentSortBy }}
                 <span class='arrow'></span>
             </a>
-            <ul {{bind-attr class='showSortBy:open :dropdown'}}>
+            <ul class="{{if showSortBy 'open'}} dropdown">
                 <li>
                     {{#link-to 'keyword' keyword (query-params sort="alpha")}}
                         Alphabetical
@@ -39,8 +39,8 @@
 </div>
 
 <div id='crates' class='white-rows'>
-    {{#each}}
-        {{render "crate-row" this}}
+    {{#each model as |crate|}}
+        {{crate-row crate=crate}}
     {{/each}}
 </div>
 
@@ -48,8 +48,8 @@
     {{#link-to 'keyword' keyword (query-params page=prevPage) class="prev"}}
         <img src="/assets/left-pag.png"/>
     {{/link-to}}
-    {{#each pages}}
-        {{#link-to 'keyword' keyword (query-params page=this)}}{{ this }}{{/link-to}}
+    {{#each pages as |page|}}
+        {{#link-to 'keyword' keyword (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to 'keyword' keyword (query-params page=nextPage) class="next"}}
         <img src="/assets/right-pag.png"/>

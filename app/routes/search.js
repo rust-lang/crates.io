@@ -8,7 +8,7 @@ export default Ember.Route.extend({
         page: { refreshModel: true },
     },
 
-    model: function(params) {
+    model(params) {
         return this.store.find('crate', params);
     },
 });
