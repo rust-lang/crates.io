@@ -36,10 +36,9 @@ pub fn init() {
     let url = Url::from_file_path(&*bare()).ok().unwrap().to_string();
 
     // Setup the `origin` remote
-    let mut origin = checkout.remote("origin", &url).unwrap();
-    origin.set_pushurl(Some(&url)).unwrap();
-    origin.add_push("refs/heads/master").unwrap();
-    origin.save().unwrap();
+    checkout.remote_set_url("origin", &url).unwrap();
+    checkout.remote_set_pushurl("origin", Some(&url)).unwrap();
+    checkout.remote_add_push("origin", "refs/heads/master").unwrap();
 
     // Create an empty initial commit
     let mut config = checkout.config().unwrap();
@@ -55,15 +54,5 @@ pub fn init() {
 
     // Push the commit to the remote repo
     let mut origin = checkout.find_remote("origin").unwrap();
-    let mut push = origin.push().unwrap();
-    push.add_refspec("refs/heads/master").unwrap();
-    push.finish().unwrap();
-    assert!(!push.statuses().unwrap().iter().any(|s| s.message.is_some()));
-    push.update_tips(None, None).unwrap();
-
-    // Set up master to track origin/master
-    let branch = checkout.find_reference("refs/heads/master");
-    let mut branch = git2::Branch::wrap(branch.unwrap());
-    branch.set_upstream(Some("origin/master")).unwrap();
-
+    origin.push(&["refs/heads/master"], None).unwrap();
 }

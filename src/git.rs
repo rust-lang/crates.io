@@ -134,25 +134,21 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(credentials);
         let mut origin = try!(repo.find_remote("origin"));
-
-        origin.set_callbacks(callbacks);
-
-        {
-            let mut push = try!(origin.push());
-            try!(push.add_refspec("refs/heads/master"));
-
-            match push.finish() {
-                Ok(()) => {
-                    try!(push.update_tips(None, None));
-                    return Ok(())
-                }
-                Err(..) => {}
-            }
+        let mut opts = git2::PushOptions::new();
+        opts.remote_callbacks(callbacks);
+        match origin.push(&["refs/heads/master"], Some(&mut opts)) {
+            Ok(()) => return Ok(()),
+            Err(..) => {}
         }
 
+        let mut callbacks = git2::RemoteCallbacks::new();
+        callbacks.credentials(credentials);
+        try!(origin.update_tips(Some(&mut callbacks), true,
+                                git2::AutotagOption::Unspecified,
+                                None));
+
         // Ok, we need to update, so fetch and reset --hard
-        try!(origin.add_fetch("refs/heads/*:refs/heads/*"));
-        try!(origin.fetch(&[], None));
+        try!(origin.fetch(&["refs/heads/*:refs/heads/*"], None, None));
         let head = try!(repo.head()).target().unwrap();
         let obj = try!(repo.find_object(head, None));
         try!(repo.reset(&obj, git2::ResetType::Hard, None));

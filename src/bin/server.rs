@@ -25,8 +25,10 @@ fn main() {
             fs::create_dir_all(&checkout).unwrap();
             let mut cb = git2::RemoteCallbacks::new();
             cb.credentials(cargo_registry::git::credentials);
+            let mut opts = git2::FetchOptions::new();
+            opts.remote_callbacks(cb);
             git2::build::RepoBuilder::new()
-                                     .remote_callbacks(cb)
+                                     .fetch_options(opts)
                                      .clone(&url, &checkout).unwrap()
         }
     };
