@@ -1,17 +1,18 @@
 #![deny(warnings)]
 #![feature(io)]
 
+extern crate bufstream;
 extern crate cargo_registry;
+extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
-extern crate rustc_serialize;
-extern crate conduit;
 extern crate curl;
 extern crate git2;
+extern crate postgres;
+extern crate rustc_serialize;
+extern crate semver;
 extern crate time;
 extern crate url;
-extern crate semver;
-extern crate bufstream;
 
 use std::collections::HashMap;
 use std::error::Error as StdError;

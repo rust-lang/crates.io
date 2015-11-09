@@ -2,13 +2,14 @@ use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
+use pg::GenericConnection;
 use pg::rows::Row;
 use pg::types::Slice;
 use rand::{thread_rng, Rng};
 
 use {Model, Version};
 use app::RequestApp;
-use db::{Connection, RequestTransaction};
+use db::RequestTransaction;
 use krate::{Crate, EncodableCrate};
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
@@ -40,11 +41,12 @@ pub struct EncodableUser {
 }
 
 impl User {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<User> {
+    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<User> {
         Model::find(conn, id)
     }
 
-    pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<User> {
+    pub fn find_by_login(conn: &GenericConnection,
+                         login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       WHERE gh_login = $1"));
         let rows = try!(stmt.query(&[&login]));
@@ -54,7 +56,8 @@ impl User {
         Ok(Model::from_row(&row))
     }
 
-    pub fn find_by_api_token(conn: &Connection, token: &str) -> CargoResult<User> {
+    pub fn find_by_api_token(conn: &GenericConnection,
+                             token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
         return try!(stmt.query(&[&token])).iter().next()
@@ -63,7 +66,7 @@ impl User {
         })
     }
 
-    pub fn find_or_insert(conn: &Connection,
+    pub fn find_or_insert(conn: &GenericConnection,
                           login: &str,
                           email: Option<&str>,
                           name: Option<&str>,

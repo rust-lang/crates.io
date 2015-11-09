@@ -11,6 +11,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::http;
 use license_exprs;
+use pg::GenericConnection;
 use pg::rows::Row;
 use pg::types::{ToSql, Slice};
 use pg;
@@ -22,7 +23,7 @@ use url::{self, Url};
 
 use {Model, User, Keyword, Version};
 use app::{App, RequestApp};
-use db::{Connection, RequestTransaction};
+use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
@@ -80,11 +81,12 @@ pub struct CrateLinks {
 }
 
 impl Crate {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<Crate> {
+    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Crate> {
         Model::find(conn, id)
     }
 
-    pub fn find_by_name(conn: &Connection, name: &str) -> CargoResult<Crate> {
+    pub fn find_by_name(conn: &GenericConnection,
+                        name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE canon_crate_name(name) =
                                             canon_crate_name($1) LIMIT 1"));
@@ -93,7 +95,8 @@ impl Crate {
         Ok(Model::from_row(&row))
     }
 
-    pub fn find_or_insert(conn: &Connection, name: &str,
+    pub fn find_or_insert(conn: &GenericConnection,
+                          name: &str,
                           user_id: i32,
                           description: &Option<String>,
                           homepage: &Option<String>,
@@ -271,7 +274,7 @@ impl Crate {
         }
     }
 
-    pub fn versions(&self, conn: &Connection) -> CargoResult<Vec<Version>> {
+    pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
@@ -282,7 +285,7 @@ impl Crate {
         Ok(ret)
     }
 
-    pub fn owners(&self, conn: &Connection) -> CargoResult<Vec<Owner>> {
+    pub fn owners(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       INNER JOIN crate_owners
                                          ON crate_owners.owner_id = users.id
@@ -305,7 +308,7 @@ impl Crate {
         Ok(owners)
     }
 
-    pub fn owner_add(&self, app: &App, conn: &Connection, req_user: &User,
+    pub fn owner_add(&self, app: &App, conn: &GenericConnection, req_user: &User,
                      login: &str) -> CargoResult<()> {
         let owner = match Owner::find_by_login(conn, login) {
             Ok(owner @ Owner::User(_)) => { owner }
@@ -343,7 +346,9 @@ impl Crate {
         Ok(())
     }
 
-    pub fn owner_remove(&self, conn: &Connection, _req_user: &User,
+    pub fn owner_remove(&self,
+                        conn: &GenericConnection,
+                        _req_user: &User,
                         login: &str) -> CargoResult<()> {
         let owner = try!(Owner::find_by_login(conn, login).map_err(|_| {
             human(format!("could not find owner with login `{}`", login))
@@ -360,7 +365,9 @@ impl Crate {
         format!("/crates/{}/{}-{}.crate", self.name, self.name, version)
     }
 
-    pub fn add_version(&mut self, conn: &Connection, ver: &semver::Version,
+    pub fn add_version(&mut self,
+                       conn: &GenericConnection,
+                       ver: &semver::Version,
                        features: &HashMap<String, Vec<String>>,
                        authors: &[String])
                        -> CargoResult<Version> {
@@ -383,7 +390,7 @@ impl Crate {
         Version::insert(conn, self.id, ver, features, authors)
     }
 
-    pub fn keywords(&self, conn: &Connection) -> CargoResult<Vec<Keyword>> {
+    pub fn keywords(&self, conn: &GenericConnection) -> CargoResult<Vec<Keyword>> {
         let stmt = try!(conn.prepare("SELECT keywords.* FROM keywords
                                       LEFT JOIN crates_keywords
                                       ON keywords.id = crates_keywords.keyword_id
@@ -393,7 +400,10 @@ impl Crate {
     }
 
     /// Returns (dependency, dependent crate name)
-    pub fn reverse_dependencies(&self, conn: &Connection, offset: i64, limit: i64)
+    pub fn reverse_dependencies(&self,
+                                conn: &GenericConnection,
+                                offset: i64,
+                                limit: i64)
                                 -> CargoResult<(Vec<(Dependency, String)>, i64)> {
         let select_sql = "
               FROM dependencies
@@ -589,7 +599,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         rows.iter().next().unwrap().get("total_downloads")
     };
 
-    let to_crates = |stmt: pg::Statement| -> CargoResult<Vec<EncodableCrate>> {
+    let to_crates = |stmt: pg::stmt::Statement| -> CargoResult<Vec<_>> {
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);

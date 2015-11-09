@@ -4,11 +4,12 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use pg::GenericConnection;
 use pg::rows::Row;
 use pg::types::Slice;
 
 use {Model, Crate};
-use db::{Connection, RequestTransaction};
+use db::RequestTransaction;
 use util::{RequestUtils, CargoResult, ChainError, internal};
 use util::errors::NotFound;
 
@@ -29,11 +30,11 @@ pub struct EncodableKeyword {
 }
 
 impl Keyword {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<Keyword> {
+    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Keyword> {
         Model::find(conn, id)
     }
 
-    pub fn find_by_keyword(conn: &Connection, name: &str)
+    pub fn find_by_keyword(conn: &GenericConnection, name: &str)
                            -> CargoResult<Option<Keyword>> {
         let stmt = try!(conn.prepare("SELECT * FROM keywords \
                                       WHERE keyword = $1"));
@@ -41,7 +42,7 @@ impl Keyword {
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
-    pub fn find_or_insert(conn: &Connection, name: &str)
+    pub fn find_or_insert(conn: &GenericConnection, name: &str)
                           -> CargoResult<Keyword> {
         // TODO: racy (the select then insert is not atomic)
         let stmt = try!(conn.prepare("SELECT * FROM keywords
@@ -78,7 +79,8 @@ impl Keyword {
         }
     }
 
-    pub fn update_crate(conn: &Connection, krate: &Crate,
+    pub fn update_crate(conn: &GenericConnection,
+                        krate: &Crate,
                         keywords: &[String]) -> CargoResult<()> {
         let old_kws = try!(krate.keywords(conn));
         let old_kws = old_kws.iter().map(|kw| {

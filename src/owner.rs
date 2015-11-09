@@ -1,7 +1,8 @@
+use pg::GenericConnection;
+use pg::rows::Row;
+
 use {Model, User};
 use util::{RequestUtils, CargoResult, ChainError, human};
-use db::Connection;
-use pg::rows::Row;
 use util::errors::NotFound;
 use http;
 use app::App;
@@ -58,7 +59,8 @@ pub enum Rights {
 
 impl Team {
     /// Just gets the Team from the database by name.
-    pub fn find_by_login(conn: &Connection, login: &str) -> CargoResult<Self> {
+    pub fn find_by_login(conn: &GenericConnection,
+                         login: &str) -> CargoResult<Self> {
         let stmt = try!(conn.prepare("SELECT * FROM teams
                                       WHERE login = $1"));
         let rows = try!(stmt.query(&[&login]));
@@ -69,8 +71,11 @@ impl Team {
     }
 
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(app: &App, conn: &Connection, login: &str, req_user: &User)
-                                                    -> CargoResult<Self> {
+    pub fn create(app: &App,
+                  conn: &GenericConnection,
+                  login: &str,
+                  req_user: &User)
+                  -> CargoResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = login.split(":");
         match chunks.next().unwrap() {
@@ -94,7 +99,7 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &Connection, login: &str,
+    pub fn create_github_team(app: &App, conn: &GenericConnection, login: &str,
                               org_name: &str, team_name: &str, req_user: &User)
                               -> CargoResult<Self> {
         // GET orgs/:org/teams
@@ -150,7 +155,7 @@ impl Team {
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
 
-    pub fn insert(conn: &Connection,
+    pub fn insert(conn: &GenericConnection,
                   login: &str,
                   github_id: i32,
                   name: Option<String>,
@@ -219,7 +224,8 @@ impl Owner {
     /// Finds the owner by name, failing out if it doesn't exist.
     /// May be a user's GH login, or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &Connection, name: &str) -> CargoResult<Owner> {
+    pub fn find_by_login(conn: &GenericConnection,
+                         name: &str) -> CargoResult<Owner> {
         let owner = if name.contains(":") {
             Owner::Team(try!(Team::find_by_login(conn, name).map_err(|_|
                 human(format!("could not find team with name {}", name))

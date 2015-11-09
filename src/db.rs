@@ -4,7 +4,7 @@ use std::mem;
 use std::sync::Arc;
 
 use pg;
-use pg::types::ToSql;
+use pg::GenericConnection;
 use r2d2;
 use r2d2_postgres;
 use r2d2_postgres::PostgresConnectionManager as PCM;
@@ -59,7 +59,7 @@ impl Transaction {
         Ok(&**self.slot.borrow().unwrap())
     }
 
-    fn tx<'a>(&'a self) -> CargoResult<&'a (Connection + 'a)> {
+    fn tx<'a>(&'a self) -> CargoResult<&'a (GenericConnection + 'a)> {
         // Similar to above, the transaction for this request is actually tied
         // to the connection in the request itself, not 'static. We transmute it
         // to static as its paired with the inner connection to achieve the
@@ -116,7 +116,7 @@ pub trait RequestTransaction {
     ///
     /// The transaction will live for the duration of the request, and it will
     /// only be set to commit() if a successful response code of 200 is seen.
-    fn tx(&self) -> CargoResult<&Connection>;
+    fn tx(&self) -> CargoResult<&GenericConnection>;
 
     /// Flag the transaction to not be committed
     fn rollback(&self);
@@ -131,7 +131,7 @@ impl<'a> RequestTransaction for Request + 'a {
             .conn()
     }
 
-    fn tx(&self) -> CargoResult<&Connection> {
+    fn tx(&self) -> CargoResult<&GenericConnection> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .tx()
@@ -147,30 +147,5 @@ impl<'a> RequestTransaction for Request + 'a {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .commit()
-    }
-}
-
-pub trait Connection {
-    fn prepare(&self, query: &str) -> pg::Result<pg::Statement>;
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64>;
-}
-
-impl Connection for pg::Connection {
-    fn prepare(&self, query: &str) -> pg::Result<pg::Statement> {
-        self.prepare(query)
-    }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64> {
-        self.execute(query, params)
-    }
-}
-
-impl<'a> Connection for pg::Transaction<'a> {
-    fn prepare(&self, query: &str) -> pg::Result<pg::Statement> {
-        trace!("prepare: {}", query);
-        self.prepare(query)
-    }
-    fn execute(&self, query: &str, params: &[&ToSql]) -> pg::Result<u64> {
-        trace!("execute: {}", query);
-        self.execute(query, params)
     }
 }

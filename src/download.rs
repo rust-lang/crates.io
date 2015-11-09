@@ -1,8 +1,8 @@
+use pg::GenericConnection;
+use pg::rows::Row;
 use time::Timespec;
 
-use pg::rows::Row;
 use Model;
-use db::Connection;
 use util::CargoResult;
 
 pub struct VersionDownload {
@@ -22,7 +22,8 @@ pub struct EncodableVersionDownload {
 }
 
 impl VersionDownload {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<VersionDownload> {
+    pub fn find(conn: &GenericConnection,
+                id: i32) -> CargoResult<VersionDownload> {
         Model::find(conn, id)
     }
 
@@ -60,7 +61,7 @@ pub struct CrateDownload {
 }
 
 impl CrateDownload {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<CrateDownload> {
+    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<CrateDownload> {
         Model::find(conn, id)
     }
 }

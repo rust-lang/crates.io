@@ -1,9 +1,9 @@
+use pg::GenericConnection;
+use pg::rows::Row;
 use semver;
 
-use pg::rows::Row;
 use Model;
 use git;
-use db::Connection;
 use util::{CargoResult};
 
 pub struct Dependency {
@@ -43,7 +43,7 @@ pub enum Kind {
 }
 
 impl Dependency {
-    pub fn insert(conn: &Connection, version_id: i32, crate_id: i32,
+    pub fn insert(conn: &GenericConnection, version_id: i32, crate_id: i32,
                   req: &semver::VersionReq, kind: Kind,
                   optional: bool, default_features: bool,
                   features: &[String], target: &Option<String>)

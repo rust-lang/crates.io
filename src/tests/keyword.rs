@@ -1,9 +1,10 @@
 use rustc_serialize::Decoder;
 
+use postgres::GenericConnection;
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
 
-use cargo_registry::db::{RequestTransaction, Connection};
+use cargo_registry::db::RequestTransaction;
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 
 #[derive(RustcDecodable)]
@@ -43,7 +44,7 @@ fn show() {
     assert_eq!(json.keyword.keyword, "foo".to_string());
 }
 
-fn tx(req: &Request) -> &Connection { req.tx().unwrap() }
+fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
 
 #[test]
 fn update_crate() {

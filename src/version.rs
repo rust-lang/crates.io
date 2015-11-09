@@ -1,18 +1,19 @@
 use std::collections::HashMap;
-use rustc_serialize::json;
-use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use pg::GenericConnection;
 use pg::rows::Row;
 use pg::types::Slice;
+use rustc_serialize::json;
 use semver;
 use time::Duration;
+use time::Timespec;
 use url;
 
 use {Model, Crate, User};
 use app::RequestApp;
-use db::{Connection, RequestTransaction};
+use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency, Kind};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
@@ -60,11 +61,13 @@ pub struct VersionLinks {
 }
 
 impl Version {
-    pub fn find(conn: &Connection, id: i32) -> CargoResult<Version> {
+    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Version> {
         Model::find(conn, id)
     }
 
-    pub fn find_by_num(conn: &Connection, crate_id: i32, num: &semver::Version)
+    pub fn find_by_num(conn: &GenericConnection,
+                       crate_id: i32,
+                       num: &semver::Version)
                        -> CargoResult<Option<Version>> {
         let num = num.to_string();
         let stmt = try!(conn.prepare("SELECT * FROM versions \
@@ -73,7 +76,8 @@ impl Version {
         Ok(rows.next().map(|r| Model::from_row(&r)))
     }
 
-    pub fn insert(conn: &Connection, crate_id: i32,
+    pub fn insert(conn: &GenericConnection,
+                  crate_id: i32,
                   num: &semver::Version,
                   features: &HashMap<String, Vec<String>>,
                   authors: &[String])
@@ -126,7 +130,8 @@ impl Version {
 
     /// Add a dependency to this version, returning both the dependency and the
     /// crate that the dependency points to
-    pub fn add_dependency(&mut self, conn: &Connection,
+    pub fn add_dependency(&mut self,
+                          conn: &GenericConnection,
                           dep: &upload::CrateDependency)
                           -> CargoResult<(Dependency, Crate)> {
         let name = &dep.name;
@@ -147,7 +152,7 @@ impl Version {
     }
 
     /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &Connection)
+    pub fn dependencies(&self, conn: &GenericConnection)
                         -> CargoResult<Vec<(Dependency, String)>> {
         let stmt = try!(conn.prepare("SELECT dependencies.*,
                                              crates.name AS crate_name
@@ -160,7 +165,7 @@ impl Version {
         }).collect())
     }
 
-    pub fn authors(&self, conn: &Connection) -> CargoResult<Vec<Author>> {
+    pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
         let stmt = try!(conn.prepare("SELECT * FROM version_authors
                                        WHERE version_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
@@ -174,7 +179,9 @@ impl Version {
         }).collect()
     }
 
-    pub fn add_author(&self, conn: &Connection, name: &str) -> CargoResult<()> {
+    pub fn add_author(&self,
+                      conn: &GenericConnection,
+                      name: &str) -> CargoResult<()> {
         println!("add author: {}", name);
         // TODO: at least try to link `name` to a pre-existing user
         try!(conn.execute("INSERT INTO version_authors (version_id, name)
@@ -182,7 +189,7 @@ impl Version {
         Ok(())
     }
 
-    pub fn yank(&self, conn: &Connection, yanked: bool) -> CargoResult<()> {
+    pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
         try!(conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
                           &[&yanked, &self.id]));
         Ok(())
