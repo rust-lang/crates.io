@@ -32,7 +32,10 @@ after_success:
 addons:
   postgresql: "9.3"
   apt:
+    sources:
+      - kalakris-cmake
     packages:
+      - cmake
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
