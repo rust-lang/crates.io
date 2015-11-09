@@ -41,10 +41,6 @@ pub struct EncodableUser {
 }
 
 impl User {
-    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<User> {
-        Model::find(conn, id)
-    }
-
     pub fn find_by_login(conn: &GenericConnection,
                          login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users

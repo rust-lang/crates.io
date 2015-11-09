@@ -4,6 +4,7 @@ use conduit_middleware;
 use conduit::Request;
 use conduit_cookie::RequestSession;
 
+use Model;
 use db::RequestTransaction;
 use super::User;
 use util::errors::{CargoResult, Unauthorized, ChainError, std_error};

@@ -4,6 +4,7 @@ use conduit::{Handler, Request, Response, Method};
 use conduit_middleware::Middleware;
 use conduit_test::MockRequest;
 
+use cargo_registry::Model;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, EncodableUser};
 use cargo_registry::db::RequestTransaction;

@@ -30,10 +30,6 @@ pub struct EncodableKeyword {
 }
 
 impl Keyword {
-    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Keyword> {
-        Model::find(conn, id)
-    }
-
     pub fn find_by_keyword(conn: &GenericConnection, name: &str)
                            -> CargoResult<Option<Keyword>> {
         let stmt = try!(conn.prepare("SELECT * FROM keywords \

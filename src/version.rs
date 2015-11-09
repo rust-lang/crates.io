@@ -61,10 +61,6 @@ pub struct VersionLinks {
 }
 
 impl Version {
-    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Version> {
-        Model::find(conn, id)
-    }
-
     pub fn find_by_num(conn: &GenericConnection,
                        crate_id: i32,
                        num: &semver::Version)

@@ -135,7 +135,7 @@ mod test {
     use postgres;
     use semver;
 
-    use cargo_registry::{Version, Crate, User};
+    use cargo_registry::{Version, Crate, User, Model};
 
     fn conn() -> postgres::Connection {
         postgres::Connection::connect(&::env("TEST_DATABASE_URL")[..],

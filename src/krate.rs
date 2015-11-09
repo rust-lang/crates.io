@@ -81,10 +81,6 @@ pub struct CrateLinks {
 }
 
 impl Crate {
-    pub fn find(conn: &GenericConnection, id: i32) -> CargoResult<Crate> {
-        Model::find(conn, id)
-    }
-
     pub fn find_by_name(conn: &GenericConnection,
                         name: &str) -> CargoResult<Crate> {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
