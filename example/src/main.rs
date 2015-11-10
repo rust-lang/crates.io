@@ -26,7 +26,9 @@ fn main() {
     router.get("/", hello);
     router.get("/:name", name);
 
-    let _server = Server::start(Config { port: 8888, threads: 1 }, router);
+    let mut cfg = Config::new();
+    cfg.port(8888).threads(1);
+    let _server = Server::start(cfg, router);
 
     // Preventing process exit.
     let (_tx, rx) = channel::<()>();
