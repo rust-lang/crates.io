@@ -15,6 +15,6 @@ time = "0.1"
 filetime = "0.1"
 
 [dev-dependencies]
-civet = "0.7"
+civet = "0.8"
 conduit-test = "0.7"
 tempdir = "0.3"
