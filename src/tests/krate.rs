@@ -228,6 +228,25 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+fn new_krate_with_wildcard_dependency() {
+    let (_b, app, middle) = ::app();
+    let dep = u::CrateDependency {
+        name: u::CrateName("foo".to_string()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse("*").unwrap()),
+        target: None,
+        kind: None,
+    };
+    let mut req = ::new_req_full(app, ::krate("new"), "1.0.0", vec![dep]);
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, ::krate("foo"));
+    let json = bad_resp!(middle.call(&mut req));
+    assert!(json.errors[0].detail.contains("dependency constraints"), "{:?}", json.errors);
+}
+
+#[test]
 fn new_krate_twice() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo");
