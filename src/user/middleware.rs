@@ -32,11 +32,11 @@ impl conduit_middleware::Middleware for Middleware {
             None => {
 
                 // Look for an `Authorization` header on the request
-                let tx = try!(req.tx().map_err(std_error));
                 match req.headers().find("Authorization") {
                     Some(headers) => {
 
                         // Look for a user in the database with a matching API token
+                        let tx = try!(req.tx().map_err(std_error));
                         match User::find_by_api_token(tx, &headers[0]) {
                             Ok(user) => user,
                             Err(..) => return Ok(())
