@@ -588,11 +588,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
-    let num_crates = {
-        let stmt = try!(tx.prepare("SELECT COUNT(*) FROM crates"));
-        let rows = try!(stmt.query(&[]));
-        rows.iter().next().unwrap().get("count")
-    };
+    let num_crates = try!(Crate::count(tx));
     let num_downloads = {
         let stmt = try!(tx.prepare("SELECT total_downloads FROM metadata"));
         let rows = try!(stmt.query(&[]));
