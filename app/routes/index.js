@@ -5,7 +5,12 @@ export default Ember.Route.extend({
   model() {
     function addCrates(store, crates) {
         for (var i = 0; i < crates.length; i++) {
-            crates[i] = store.push(store.normalize('crate', crates[i]));
+            const crate = crates[i];
+            if (crate.versions == null) {
+              // passing `null` will return an empty versions array
+              delete crate.versions;
+            }
+            crates[i] = store.push(store.normalize('crate', crate));
         }
     }
 
