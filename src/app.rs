@@ -12,17 +12,25 @@ use curl::http;
 
 use {db, Config};
 
+/// The `App` struct holds the main components of the application like
+/// the database connection pool and configurations
 pub struct App {
+    /// The database connection pool
     pub database: db::Pool,
+
+    /// The GitHub OAuth2 configuration
     pub github: oauth2::Config,
     pub bucket: s3::Bucket,
     pub s3_proxy: Option<String>,
     pub session_key: String,
     pub git_repo: Mutex<git2::Repository>,
     pub git_repo_checkout: PathBuf,
+
+    /// The server configuration
     pub config: Config,
 }
 
+/// The `AppMiddleware` injects an `App` instance into the `Request` extensions
 pub struct AppMiddleware {
     app: Arc<App>
 }
@@ -82,6 +90,7 @@ impl Middleware for AppMiddleware {
     }
 }
 
+/// Adds an `app()` method to the `Request` type returning the global `App` instance
 pub trait RequestApp {
     fn app(&self) -> &Arc<App>;
 }

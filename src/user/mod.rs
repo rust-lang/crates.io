@@ -20,6 +20,7 @@ pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
+/// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct User {
     pub id: i32,
@@ -31,6 +32,7 @@ pub struct User {
     pub api_token: String,
 }
 
+/// The serialization format for the `User` model.
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct EncodableUser {
     pub id: i32,
@@ -41,6 +43,7 @@ pub struct EncodableUser {
 }
 
 impl User {
+    /// Queries the database for a user with a certain `gh_login` value.
     pub fn find_by_login(conn: &GenericConnection,
                          login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users
@@ -52,6 +55,7 @@ impl User {
         Ok(Model::from_row(&row))
     }
 
+    /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &GenericConnection,
                              token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
@@ -62,6 +66,7 @@ impl User {
         })
     }
 
+    /// Updates a user or inserts a new user into the database.
     pub fn find_or_insert(conn: &GenericConnection,
                           login: &str,
                           email: Option<&str>,
@@ -102,10 +107,12 @@ impl User {
         }))))
     }
 
+    /// Generates a new crates.io API token.
     pub fn new_api_token() -> String {
         thread_rng().gen_ascii_chars().take(32).collect()
     }
 
+    /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
         let User { id, email, api_token: _, gh_access_token: _,
                    name, gh_login, avatar } = self;

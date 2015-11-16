@@ -18,6 +18,7 @@ use std::io::prelude::*;
 
 use cargo_registry::{Crate, Version};
 
+#[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
                                              &postgres::SslMode::None).unwrap();
@@ -75,4 +76,3 @@ fn delete(tx: &postgres::Transaction) {
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with("y") { panic!("aborting transaction"); }
 }
-
