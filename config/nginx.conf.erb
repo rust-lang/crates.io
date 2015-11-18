@@ -25,9 +25,8 @@ http {
 	default_type application/octet-stream;
 	sendfile on;
 
-	#Must read the body in 5 seconds.
-	client_body_timeout 5;
-        client_max_body_size 10m;
+	client_body_timeout 30;
+        client_max_body_size 50m;
 
 	upstream app_server {
 		server localhost:8888 fail_timeout=0;

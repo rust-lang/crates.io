@@ -3,7 +3,6 @@ use std::cmp;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io;
-use std::iter::repeat;
 use std::mem;
 use std::sync::Arc;
 
@@ -52,6 +51,7 @@ pub struct Crate {
     pub keywords: Vec<String>,
     pub license: Option<String>,
     pub repository: Option<String>,
+    pub max_upload_size: Option<i32>,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -101,7 +101,9 @@ impl Crate {
                           keywords: &[String],
                           repository: &Option<String>,
                           license: &Option<String>,
-                          license_file: &Option<String>) -> CargoResult<Crate> {
+                          license_file: &Option<String>,
+                          max_upload_size: Option<i32>)
+                          -> CargoResult<Crate> {
         let description = description.as_ref().map(|s| &s[..]);
         let homepage = homepage.as_ref().map(|s| &s[..]);
         let documentation = documentation.as_ref().map(|s| &s[..]);
@@ -161,15 +163,16 @@ impl Crate {
                                       (name, user_id, created_at,
                                        updated_at, downloads, max_version,
                                        description, homepage, documentation,
-                                       readme, keywords, repository, license)
+                                       readme, keywords, repository, license,
+                                       max_upload_size)
                                       VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, $7, $8, $9, $10)
+                                              $4, $5, $6, $7, $8, $9, $10, $11)
                                       RETURNING *"));
         let now = ::now();
         let rows = try!(stmt.query(&[&name, &user_id, &now,
                                      &description, &homepage,
                                      &documentation, &readme, &keywords,
-                                     &repository, &license]));
+                                     &repository, &license, &max_upload_size]));
         let ret: Crate = Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no crate returned")
         })));
@@ -241,7 +244,7 @@ impl Crate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, keywords, license, repository,
-            readme: _, id: _, user_id: _,
+            readme: _, id: _, user_id: _, max_upload_size: _,
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -453,6 +456,7 @@ impl Model for Crate {
                          .map(|s| s.to_string()).collect(),
             license: row.get("license"),
             repository: row.get("repository"),
+            max_upload_size: row.get("max_upload_size"),
         }
     }
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
@@ -675,7 +679,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &keywords,
                                                &new_crate.repository,
                                                &new_crate.license,
-                                               &new_crate.license_file));
+                                               &new_crate.license_file,
+                                               None));
 
     let owners = try!(krate.owners(try!(req.tx())));
     if try!(rights(req.app(), &owners, &user)) < Rights::Publish {
@@ -685,6 +690,15 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     if krate.name != name {
         return Err(human(format!("crate was previously named `{}`", krate.name)))
+    }
+
+    let length = try!(req.content_length().chain_error(|| {
+        human("missing header: Content-Length")
+    }));
+    let max = krate.max_upload_size.map(|m| m as u64)
+                   .unwrap_or(app.config.max_upload_size);
+    if length > max {
+        return Err(human(format!("max upload size is: {}", max)))
     }
 
     // Persist the new version of this crate
@@ -706,7 +720,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let path = krate.s3_path(&vers.to_string());
     let (resp, cksum) = {
         let length = try!(read_le_u32(req.body()));
-        let body = LimitErrorReader::new(req.body(), app.config.max_upload_size);
+        let body = LimitErrorReader::new(req.body(), max);
         let mut body = HashingReader::new(body);
         let resp = {
             let s3req = app.bucket.put(&mut handle, &path, &mut body,
@@ -761,19 +775,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
-    // Make sure the tarball being uploaded looks sane
-    let length = try!(req.content_length().chain_error(|| {
-        human("missing header: Content-Length")
-    }));
-    let max = req.app().config.max_upload_size;
-    if length > max {
-        return Err(human(format!("max upload size is: {}", max)))
-    }
-
     // Read the json upload request
     let amt = try!(read_le_u32(req.body())) as u64;
-    if amt > max { return Err(human(format!("max upload size is: {}", max))) }
-    let mut json = repeat(0).take(amt as usize).collect::<Vec<_>>();
+    let max = req.app().config.max_upload_size;
+    if amt > max {
+        return Err(human(format!("max upload size is: {}", max)))
+    }
+    let mut json = vec![0; amt as usize];
     try!(read_fill(req.body(), &mut json));
     let json = try!(String::from_utf8(json).map_err(|_| {
         human("json body was not valid utf-8")

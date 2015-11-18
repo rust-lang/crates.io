@@ -207,6 +207,7 @@ fn krate(name: &str) -> Crate {
         keywords: Vec::new(),
         license: None,
         repository: None,
+        max_upload_size: None,
     }
 }
 
@@ -230,14 +231,15 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                    -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
     let mut krate = Crate::find_or_insert(req.tx().unwrap(), &krate.name,
-                                      user.id, &krate.description,
-                                      &krate.homepage,
-                                      &krate.documentation,
-                                      &krate.readme,
-                                      &krate.keywords,
-                                      &krate.repository,
-                                      &krate.license,
-                                      &None).unwrap();
+                                          user.id, &krate.description,
+                                          &krate.homepage,
+                                          &krate.documentation,
+                                          &krate.readme,
+                                          &krate.keywords,
+                                          &krate.repository,
+                                          &krate.license,
+                                          &None,
+                                          krate.max_upload_size).unwrap();
     Keyword::update_crate(req.tx().unwrap(), &krate,
                           &krate.keywords).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
@@ -292,10 +294,10 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
         license: Some("MIT".to_string()),
         license_file: None,
         repository: krate.repository,
-    })
+    }, &[])
 }
 
-fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
+fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
     let json = json::encode(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend([
@@ -305,6 +307,12 @@ fn new_crate_to_body(new_crate: &u::NewCrate) -> Vec<u8> {
         (json.len() >> 24) as u8,
     ].iter().cloned());
     body.extend(json.as_bytes().iter().cloned());
-    body.extend([0, 0, 0, 0].iter().cloned());
+    body.extend(&[
+        (krate.len() >>  0) as u8,
+        (krate.len() >>  8) as u8,
+        (krate.len() >> 16) as u8,
+        (krate.len() >> 24) as u8,
+    ]);
+    body.extend(krate);
     body
 }

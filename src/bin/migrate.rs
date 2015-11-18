@@ -483,6 +483,8 @@ fn migrations() -> Vec<Migration> {
                              UNIQUE (owner_id, crate_id)", &[]));
             Ok(())
         }),
+        Migration::add_column(20151118135514, "crates", "max_upload_size",
+                              "INTEGER"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

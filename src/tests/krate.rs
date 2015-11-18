@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::fs::{self, File};
-use std::iter::repeat;
 
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
@@ -34,6 +33,24 @@ struct Deps { dependencies: Vec<EncodableDependency> }
 struct RevDeps { dependencies: Vec<EncodableDependency>, meta: CrateMeta }
 #[derive(RustcDecodable)]
 struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
+
+fn new_crate(name: &str) -> u::NewCrate {
+    u::NewCrate {
+        name: u::CrateName(name.to_string()),
+        vers: u::CrateVersion(semver::Version::parse("1.1.0").unwrap()),
+        features: HashMap::new(),
+        deps: Vec::new(),
+        authors: vec!["foo".to_string()],
+        description: Some("desc".to_string()),
+        homepage: None,
+        documentation: None,
+        readme: None,
+        keywords: None,
+        license: Some("MIT".to_string()),
+        license_file: None,
+        repository: None,
+    }
+}
 
 #[test]
 fn index() {
@@ -332,8 +349,21 @@ fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
-    req.with_body(repeat("a").take(1000 * 1000).collect::<String>().as_bytes());
-    bad_resp!(middle.call(&mut req));
+    let body = ::new_crate_to_body(&new_crate("foo"), &[b'a'; 2000]);
+    bad_resp!(middle.call(req.with_body(&body)));
+}
+
+#[test]
+fn new_krate_too_big_but_whitelisted() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app, "foo", "1.1.0");
+    ::mock_user(&mut req, ::user("foo"));
+    let mut krate = ::krate("foo");
+    krate.max_upload_size = Some(2 * 1000 * 1000);
+    ::mock_crate(&mut req, krate);
+    let body = ::new_crate_to_body(&new_crate("foo"), &[b'a'; 2000]);
+    let mut response = ok_resp!(middle.call(req.with_body(&body)));
+    ::json::<GoodCrate>(&mut response);
 }
 
 #[test]
@@ -759,22 +789,11 @@ fn author_license_and_description_required() {
     ::user("foo");
 
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    let mut new_crate = u::NewCrate {
-        name: u::CrateName("foo".to_string()),
-        vers: u::CrateVersion(semver::Version::parse("1.0.0").unwrap()),
-        features: HashMap::new(),
-        deps: Vec::new(),
-        authors: Vec::new(),
-        description: None,
-        homepage: None,
-        documentation: None,
-        readme: None,
-        keywords: None,
-        license: None,
-        license_file: None,
-        repository: None,
-    };
-    req.with_body(&::new_crate_to_body(&new_crate));
+    let mut new_crate = new_crate("foo");
+    new_crate.license = None;
+    new_crate.description = None;
+    new_crate.authors = Vec::new();
+    req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
@@ -783,7 +802,7 @@ fn author_license_and_description_required() {
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
-    req.with_body(&::new_crate_to_body(&new_crate));
+    req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
@@ -793,7 +812,7 @@ fn author_license_and_description_required() {
     new_crate.license = None;
     new_crate.license_file = Some("foo".to_string());
     new_crate.authors.push("foo".to_string());
-    req.with_body(&::new_crate_to_body(&new_crate));
+    req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(!json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
