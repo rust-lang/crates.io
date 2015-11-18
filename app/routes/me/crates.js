@@ -9,7 +9,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
 
     model(params) {
         params.user_id = this.session.get('currentUser.id');
-        return this.store.find('crate', params);
+        return this.store.query('crate', params);
     },
 });
 

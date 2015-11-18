@@ -9,7 +9,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
 
     model(params) {
         params.following = 1;
-        return this.store.find('crate', params);
+        return this.store.query('crate', params);
     },
 });
 
