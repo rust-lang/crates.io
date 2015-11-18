@@ -9,6 +9,6 @@ export default Ember.Controller.extend(PaginationMixin, {
     per_page: 10,
 
     totalItems: computed('model', function() {
-        return this.store.metadataFor('dependency').total;
+        return this.get('model.meta').total;
     })
 });

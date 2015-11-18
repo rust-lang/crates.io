@@ -14,6 +14,6 @@ export default Ember.Controller.extend(PaginationMixin, {
     }),
 
     totalItems: computed('model', function() {
-        return this.store.metadataFor('crate').total;
+        return this.get('model.meta').total;
     })
 });

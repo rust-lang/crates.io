@@ -12,7 +12,7 @@ export default Ember.Controller.extend(PaginationMixin, {
     showSortBy: false,
 
     totalItems: computed('model', function() {
-        return this.store.metadataFor('keyword').total;
+        return this.get('model.meta').total;
     }),
 
     currentSortBy: computed('sort', function() {

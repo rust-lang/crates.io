@@ -42,7 +42,7 @@ export default Ember.Controller.extend({
         return DS.PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
                 var ret = authors.slice();
-                var others = this.store.metadataFor('user');
+                var others = authors.get('meta');
                 for (var i = 0; i < others.names.length; i++) {
                     ret.push({name: others.names[i]});
                 }
