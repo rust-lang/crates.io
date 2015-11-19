@@ -50,7 +50,7 @@ url = "0.2.0"
 postgres = { version = "0.10", features = ["time"] }
 r2d2 = "0.6.0"
 r2d2_postgres = "0.9"
-openssl = "0.6"
+openssl = "0.7"
 curl = "0.2"
 oauth2 = "0.1"
 log = "0.3"
