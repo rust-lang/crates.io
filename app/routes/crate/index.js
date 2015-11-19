@@ -58,7 +58,7 @@ export default Ember.Route.extend({
                 return controller.get('model.version_downloads');
             }
         }).then((downloads) => {
-            var meta = controller.store.metadataFor('version_download');
+            var meta = downloads.get('meta');
             controller.set('fetchingDownloads', false);
             controller.send('renderChart', downloads, meta.extra_downloads);
         });

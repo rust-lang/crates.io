@@ -10,7 +10,7 @@ export default Ember.Route.extend({
     afterModel(keyword, transition) {
         var params = transition.queryParams;
         params.keyword = keyword.get('keyword');
-        return this.store.find('crate', params).then((array) => {
+        return this.store.query('crate', params).then((array) => {
             if (this.controllerFor('keyword/index')) {
                 this.controllerFor('keyword/index').set('model', array);
             }

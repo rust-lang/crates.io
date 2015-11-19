@@ -7,6 +7,6 @@ export default Ember.Route.extend({
     },
 
     model(params) {
-        return this.store.find('keyword', params);
+        return this.store.query('keyword', params);
     },
 });
