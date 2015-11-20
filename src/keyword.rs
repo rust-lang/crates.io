@@ -159,9 +159,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Query for the total count of keywords
-    let stmt = try!(conn.prepare("SELECT COUNT(*) FROM keywords"));
-    let row = try!(stmt.query(&[])).into_iter().next().unwrap();
-    let total = row.get(0);
+    let total = try!(Keyword::count(conn));
 
     #[derive(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
