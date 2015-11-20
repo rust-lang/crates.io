@@ -52,11 +52,7 @@ export default Ember.Route.extend({
             });
 
         }).then(() => {
-            if (controller.get('requestedVersion')) {
-                return controller.get('currentVersion.version_downloads');
-            } else {
-                return controller.get('model.version_downloads');
-            }
+            return controller.get('model.version_downloads');
         }).then((downloads) => {
             var meta = downloads.get('meta');
             controller.set('fetchingDownloads', false);
