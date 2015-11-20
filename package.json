@@ -36,9 +36,9 @@
     "ember-cli-uglify": "^1.2.0",
     "ember-data": "1.13.15",
     "ember-disable-proxy-controllers": "^1.0.1",
-    "ember-document-title": "~0.1.2",
     "ember-export-application-global": "^1.0.4",
     "ember-moment": "4.1.0",
+    "ember-page-title": "2.0.7",
     "emberx-select": "2.0.2"
   }
 }
