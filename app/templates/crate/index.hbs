@@ -1,3 +1,5 @@
+{{title model.name}}
+
 <div id='crates-heading'>
     <div class='info'>
         <img class='logo' src="/assets/crate.png"/>
@@ -56,7 +58,7 @@
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{ from-now model.updated_at }}</div>
+                <div class='date'>{{moment-from-now model.updated_at}}</div>
             </div>
 
             <div class="authors">
@@ -160,7 +162,7 @@
         {{#link-to 'crate' version}}
             {{ version.num }}
         {{/link-to}}
-        <span class='date'>{{ date-small version.created_at }}</span>
+        <span class='date'>{{moment-format version.created_at 'll'}}</span>
         {{#if model.yanked}}
             <span class='yanked'>yanked</span>
         {{/if}}

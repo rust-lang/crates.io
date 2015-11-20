@@ -4,8 +4,6 @@ import Version from 'cargo/models/version';
 import Crate from 'cargo/models/crate';
 
 export default Ember.Route.extend({
-    title: Ember.computed.reads('controller.model.name'),
-
     setupController(controller, data) {
         if (data instanceof Crate) {
             data = {crate: data, version: null};

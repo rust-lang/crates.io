@@ -2,8 +2,6 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
-    title: 'Cargo',
-
     beforeModel() {
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null)
