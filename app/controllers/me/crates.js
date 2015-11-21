@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import PaginationMixin from 'cargo/mixins/pagination';
+import PaginationMixin from '../../mixins/pagination';
 
 const { computed } = Ember;
 // TODO: reduce duplicatoin with controllers/crates

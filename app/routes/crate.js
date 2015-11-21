@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import Version from 'cargo/models/version';
+import Version from '../models/version';
 
 export default Ember.Route.extend({
     model(params) {

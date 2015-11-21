@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import Crate from 'cargo/models/crate';
+import Crate from '../../models/crate';
 
 export default Ember.Route.extend({
     setupController: function(controller, data) {

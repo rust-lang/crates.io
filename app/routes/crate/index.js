@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import ajax from 'ic-ajax';
-import Version from 'cargo/models/version';
-import Crate from 'cargo/models/crate';
+import Version from '../../models/version';
+import Crate from '../../models/crate';
 
 export default Ember.Route.extend({
     setupController(controller, data) {
