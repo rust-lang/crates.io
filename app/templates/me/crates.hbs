@@ -16,14 +16,14 @@
 
     <div class='sort'>
         <span class='small'>Sort by</span>
-        <div class='dropdown-container'>
-            <a {{action 'toggleShowSortBy'}}
-               class='{{if showSortBy "active"}} dropdown'>
+        {{#rl-dropdown-container class="dropdown-container"}}
+            {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
                 <img src="/assets/sort.png"/>
                 {{ currentSortBy }}
                 <span class='arrow'></span>
-            </a>
-            <ul class='{{if showSortBy "open"}} dropdown'>
+            {{/rl-dropdown-toggle}}
+
+            {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                 <li>
                     {{#link-to 'me.crates' (query-params sort="alpha")}}
                         Alphabetical
@@ -34,8 +34,8 @@
                         Downloads
                     {{/link-to}}
                 </li>
-            </ul>
-        </div>
+            {{/rl-dropdown}}
+        {{/rl-dropdown-container}}
     </div>
 </div>
 

@@ -7,13 +7,11 @@ const NUM_VERSIONS = 5;
 const { computed } = Ember;
 
 export default Ember.Controller.extend({
-    applicationController: Ember.inject.controller('application'),
     isDownloading: false,
 
     fetchingDownloads: true,
     fetchingFollowing: true,
     following: false,
-    showAllVersions: false,
     currentVersion: null,
     requestedVersion: null,
     keywords: [],
@@ -101,11 +99,6 @@ export default Ember.Controller.extend({
                 version.set('downloads', ver_downloads + 1);
                 Ember.$('#download-frame').attr('src', data.url);
             }).finally(() => this.set('isDownloading', false) );
-        },
-
-        toggleVersions() {
-            this.get('applicationController')
-                .resetDropdownOption(this, 'showAllVersions');
         },
 
         toggleFollow() {

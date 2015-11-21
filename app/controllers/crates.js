@@ -4,14 +4,12 @@ import PaginationMixin from 'cargo/mixins/pagination';
 const { computed } = Ember;
 
 export default Ember.Controller.extend(PaginationMixin, {
-    applicationController: Ember.inject.controller('application'),
     queryParams: ['letter', 'page', 'per_page', 'sort'],
     letter: null,
     page: '1',
     per_page: 10,
     sort: 'alpha',
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
-    showSortBy: false,
 
     totalItems: computed('model', function() {
         return this.get('model.meta').total;
@@ -24,11 +22,4 @@ export default Ember.Controller.extend(PaginationMixin, {
             return 'Alphabetical';
         }
     }),
-
-    actions: {
-        toggleShowSortBy() {
-            var opt = 'showSortBy';
-            this.get('applicationController').resetDropdownOption(this, opt);
-        },
-    },
 });

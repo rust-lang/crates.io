@@ -204,18 +204,18 @@
 
     <div class='versions'>
         <span class='small'>Showing stats for</span>
-        <div class='button-holder'>
-            <button {{action 'toggleVersions'}}
-                    class="tan-button {{if showAllVersions 'active'}} dropdown">
+
+        {{#rl-dropdown-container class="button-holder"}}
+            {{#rl-dropdown-toggle class="tan-button dropdown"}}
                 {{#if requestedVersion}}
                     {{ requestedVersion }}
                 {{else}}
                     All Versions
                 {{/if}}
                 <span class='arrow'></span>
-            </button>
+            {{/rl-dropdown-toggle}}
 
-            <ul id='all-versions' class="{{if showAllVersions 'open'}} dropdown">
+            {{#rl-dropdown id="all-versions" tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                 <li class='all'>
                     {{#link-to 'crate.index' model}}All Versions{{/link-to}}
                 </li>
@@ -226,8 +226,8 @@
                         {{/link-to}}
                     </li>
                 {{/each}}
-            </ul>
-        </div>
+            {{/rl-dropdown}}
+        {{/rl-dropdown-container}}
     </div>
     <div class='graph'>
         <h4>Downloads over the last 90 days</h4>
