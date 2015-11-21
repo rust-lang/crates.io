@@ -23,12 +23,12 @@
 
             {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                 <li>
-                    {{#link-to 'keywords' (query-params sort="alpha")}}
+                    {{#link-to (query-params sort="alpha")}}
                         Alphabetical
                     {{/link-to}}
                 </li>
                 <li>
-                    {{#link-to 'keywords' (query-params sort="crates")}}
+                    {{#link-to (query-params sort="crates")}}
                         # Crates
                     {{/link-to}}
                 </li>

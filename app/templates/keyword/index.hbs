@@ -24,12 +24,12 @@
 
             {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                 <li>
-                    {{#link-to 'keyword' keyword (query-params sort="alpha")}}
+                    {{#link-to (query-params sort="alpha")}}
                         Alphabetical
                     {{/link-to}}
                 </li>
                 <li>
-                    {{#link-to 'keyword' keyword (query-params sort="downloads")}}
+                    {{#link-to (query-params sort="downloads")}}
                         Downloads
                     {{/link-to}}
                 </li>
