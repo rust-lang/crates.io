@@ -8,7 +8,5 @@ export default Ember.Controller.extend(PaginationMixin, {
     page: '1',
     per_page: 10,
 
-    totalItems: computed('model', function() {
-        return this.get('model.meta').total;
-    })
+    totalItems: computed.readOnly('model.meta.total'),
 });

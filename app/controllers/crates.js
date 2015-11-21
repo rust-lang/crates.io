@@ -11,9 +11,7 @@ export default Ember.Controller.extend(PaginationMixin, {
     sort: 'alpha',
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
 
-    totalItems: computed('model', function() {
-        return this.get('model.meta').total;
-    }),
+    totalItems: computed.readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'downloads') {

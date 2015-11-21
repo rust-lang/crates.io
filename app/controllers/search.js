@@ -13,7 +13,5 @@ export default Ember.Controller.extend(PaginationMixin, {
       return this.get("q") + " - Cargo search";
     }),
 
-    totalItems: computed('model', function() {
-        return this.get('model.meta').total;
-    })
+    totalItems: computed.readOnly('model.meta.total'),
 });
