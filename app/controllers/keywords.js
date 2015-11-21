@@ -12,10 +12,6 @@ export default Ember.Controller.extend(PaginationMixin, {
     totalItems: computed.readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort') === 'crates') {
-            return '# Crates';
-        } else {
-            return 'Alphabetical';
-        }
+        return (this.get('sort') === 'crates') ? '# Crates' : 'Alphabetical';
     }),
 });
