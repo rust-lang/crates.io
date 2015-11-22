@@ -13,7 +13,6 @@ export default Ember.Route.extend({
 
         this._super(controller, data.crate);
 
-        controller.set('showAllVersions', false);
         controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
 
