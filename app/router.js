@@ -15,6 +15,7 @@ Router.map(function() {
   this.route('crate', { path: '/crates/:crate_id' }, function() {
     this.route('download');
     this.route('versions');
+    this.route('version', { path: '/:version_num' });
     this.route('reverse_dependencies');
 
     // Well-known routes

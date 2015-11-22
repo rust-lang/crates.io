@@ -12,13 +12,11 @@ export default Ember.Controller.extend({
     fetchingDownloads: true,
     fetchingFollowing: true,
     following: false,
-    currentVersion: null,
+    currentVersion: computed.alias('model'),
     requestedVersion: null,
     keywords: [],
 
-    sortedVersions: computed('model.versions.[]', function() {
-        return this.get("model.versions");
-    }),
+    sortedVersions: computed.readOnly('crate.versions'),
 
     smallSortedVersions: computed('sortedVersions', function() {
         return this.get('sortedVersions').slice(0, NUM_VERSIONS);
@@ -26,17 +24,13 @@ export default Ember.Controller.extend({
 
     hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed.or('model.homepage',
-                          'model.wiki',
-                          'model.mailing_list',
-                          'model.documentation',
-                          'model.repository'),
+    anyLinks: computed.or('crate.homepage',
+                          'crate.wiki',
+                          'crate.mailing_list',
+                          'crate.documentation',
+                          'crate.repository'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
-        if (!this.get('currentVersion')) {
-            return [];
-        }
-
         return DS.PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
                 var ret = authors.slice();
@@ -88,15 +82,12 @@ export default Ember.Controller.extend({
         download(version) {
             this.set('isDownloading', true);
 
-            var crate_downloads = this.get('model').get('downloads');
-            var ver_downloads = version.get('downloads');
-
             return ajax({
                 url: version.get('dl_path'),
                 dataType: 'json',
             }).then((data) => {
-                this.get('model').set('downloads', crate_downloads + 1);
-                version.set('downloads', ver_downloads + 1);
+                this.incrementProperty('crate.downloads');
+                this.incrementProperty('currentVersion.downloads');
                 Ember.$('#download-frame').attr('src', data.url);
             }).finally(() => this.set('isDownloading', false) );
         },
@@ -104,7 +95,7 @@ export default Ember.Controller.extend({
         toggleFollow() {
             this.set('fetchingFollowing', true);
             this.set('following', !this.get('following'));
-            var url = '/api/v1/crates/' + this.get('model.name') + '/follow';
+            var url = '/api/v1/crates/' + this.get('crate.name') + '/follow';
             var method;
             if (this.get('following')) {
                 method = 'put';
@@ -118,7 +109,7 @@ export default Ember.Controller.extend({
             }).finally(() => this.set('fetchingFollowing', false));
         },
 
-        renderChart(downloads, extra) {
+        renderChart(model, downloads, extra) {
             var dates = {};
             var versions = [];
             for (var i = 0; i < 90; i++) {
@@ -144,8 +135,8 @@ export default Ember.Controller.extend({
             });
             if (this.get('requestedVersion')) {
                 versions.push({
-                    id: this.get('currentVersion.id'),
-                    num: this.get('currentVersion.num'),
+                    id: model.get('id'),
+                    num: model.get('num'),
                 });
             } else {
                 var tmp = this.get('smallSortedVersions');

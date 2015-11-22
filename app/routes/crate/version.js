@@ -1,0 +1,59 @@
+import Ember from 'ember';
+import ajax from 'ic-ajax';
+
+export default Ember.Route.extend({
+
+    model(params) {
+        const requestedVersion = params.version_num;
+
+        const crate = this.modelFor('crate');
+        const controller = this.controllerFor('crate.version');
+
+        // Fall back to the crate's `max_version` property
+        if (!requestedVersion) {
+            params.version_num = crate.get('max_version');
+        }
+
+        controller.set('crate', crate);
+        controller.set('requestedVersion', requestedVersion);
+        controller.set('fetchingDownloads', true);
+        controller.set('fetchingFollowing', true);
+
+        crate.get('keywords')
+            .then((keywords) => controller.set('keywords', keywords));
+
+        if (this.session.get('currentUser')) {
+            ajax('/api/v1/crates/' + crate.get('name') + '/following')
+                .then((d) => controller.set('following', d.following))
+                .finally(() => controller.set('fetchingFollowing', false));
+        }
+
+        // Find version model
+        return crate.get('versions')
+            .then(versions => versions.find(version => version.get('num') === params.version_num));
+    },
+
+    // can't do this in setupController because it won't be called
+    // when going from "All Versions" to the current version
+    afterModel(model) {
+        this._super(...arguments);
+
+        const controller = this.controllerFor('crate.version');
+        const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
+
+        context.get('version_downloads').then(downloads => {
+            controller.set('fetchingDownloads', false);
+
+            // make sure to pass the new `model` here because the controller's model won't have been updated yet
+            controller.send('renderChart', model, downloads, downloads.get('meta.extra_downloads') || []);
+        });
+    },
+
+    serialize(model) {
+        if (!model) {
+            return {version_num: ''};
+        } else {
+            return {version_num: model.get('num')};
+        }
+    },
+});

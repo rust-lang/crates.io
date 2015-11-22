@@ -7,13 +7,13 @@ export default Ember.Route.extend({
 
     model(params) {
         params.reverse = true;
-        params.crate = this.modelFor('crate').crate;
+        params.crate = this.modelFor('crate');
 
         return this.store.query('dependency', params);
     },
 
     setupController(controller, model) {
-        controller.set('crate', this.modelFor('crate').crate);
+        controller.set('crate', this.modelFor('crate'));
         this._super(controller, model);
     },
 });

@@ -2,7 +2,7 @@ import Ember from 'ember';
 
 export default Ember.Route.extend({
     setupController: function(controller) {
-        var crate = this.modelFor('crate').crate;
+        var crate = this.modelFor('crate');
 
         var documentation = crate.get('documentation');
         if (documentation) {
