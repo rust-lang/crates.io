@@ -9,9 +9,5 @@ export default Ember.Controller.extend(PaginationMixin, {
     page: '1',
     per_page: 10,
 
-    name: computed('model', function() {
-      return this.get("q") + " - Cargo search";
-    }),
-
     totalItems: computed.readOnly('model.meta.total'),
 });
