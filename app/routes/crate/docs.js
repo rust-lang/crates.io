@@ -1,18 +1,10 @@
 import Ember from 'ember';
-import Crate from '../../models/crate';
 
 export default Ember.Route.extend({
-    setupController: function(controller, data) {
-        var crate;
-
-        if (data instanceof Crate) {
-            crate = data;
-        } else {
-            crate = data.crate;
-        }
+    setupController: function(controller) {
+        var crate = this.modelFor('crate').crate;
 
         var documentation = crate.get('documentation');
-
         if (documentation) {
             window.location = documentation;
         } else {
