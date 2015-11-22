@@ -7,9 +7,11 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "ember server",
-    "start:ui": "ember server --proxy https://staging-crates-io.herokuapp.com",
     "build": "ember build",
+    "start": "ember server",
+    "start:local": "ember server --proxy http://127.0.0.1:8888",
+    "start:staging": "ember server --proxy https://staging-crates-io.herokuapp.com",
+    "start:live": "ember server --proxy https://crates.io",
     "test": "ember test"
   },
   "repository": "",

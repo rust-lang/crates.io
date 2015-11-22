@@ -17,7 +17,7 @@ which enables tweaking the UI of the site without actually having the server
 running locally. To get up and running with just the UI, run:
 
 ```
-npm run start:ui
+npm run start:staging
 ```
 
 This will give you a local server to browse while using the staging backend
@@ -27,6 +27,12 @@ If you'd like to run the server with a specific different backend, you can speci
 
 ```
 npm start -- --proxy https://crates.io
+```
+
+The same is also available as:
+
+```
+npm run start:live
 ```
 
 This requires NPM 2.0.
@@ -91,7 +97,7 @@ little more complicated.
     ./target/server
 
     # In another window run the ember-cli server
-    ember server --proxy http://localhost:8888/
+    npm run start:local
     ```
 
 ## Running Tests
