@@ -12,7 +12,7 @@ Router.map(function() {
   this.route('github_login');
   this.route('github_authorize', { path: '/authorize/github' });
   this.route('crates');
-  this.route('crate', { path: '/crates/*crate_id' }, function() {
+  this.route('crate', { path: '/crates/:crate_id' }, function() {
     this.route('download');
     this.route('versions');
     this.route('reverse_dependencies');
