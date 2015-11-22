@@ -13,11 +13,10 @@
         <h1>CARGO</h1>
     {{/link-to}}
 
-    <form class='search' action='/search' {{ action "" on="submit" }} >
+    <form class='search' action='/search' {{ action "search" on="submit" }} >
         {{input type="text" class="search" name="q"
                 placeholder="Search"
                 value=search
-                enter="search"
                 tabindex="1"}}
     </form>
 

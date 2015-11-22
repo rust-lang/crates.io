@@ -24,10 +24,10 @@ export default Ember.Controller.extend({
     }),
 
     actions: {
-        search(q) {
+        search() {
             this.transitionToRoute('search', {
               queryParams: {
-                q,
+                q: this.get('search'),
                 page: 1
               }
             });
