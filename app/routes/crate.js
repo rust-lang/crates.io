@@ -25,15 +25,9 @@ export default Ember.Route.extend({
 
     serialize(model) {
         if (model instanceof Version) {
-            var crate = model.get('crate').get('name');
-
-            return {
-              crate_id: crate + '/' + model.get('num')
-            };
+            return { crate_id: model.get('crate.id') + '/' + model.get('num') };
         } else {
-            return {
-              crate_id: model.get('id')
-            };
+            return { crate_id: model.get('id') };
         }
     },
 });
