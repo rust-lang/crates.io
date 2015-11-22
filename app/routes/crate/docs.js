@@ -1,7 +1,7 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-    setupController: function(controller) {
+    redirect() {
         var crate = this.modelFor('crate');
 
         var documentation = crate.get('documentation');
@@ -14,7 +14,5 @@ export default Ember.Route.extend({
             this.controllerFor('application').set('nextFlashError', message);
             this.replaceWith('crate', crate);
         }
-
-        this._super(controller, crate);
     },
 });
