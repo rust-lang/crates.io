@@ -8,10 +8,11 @@ export default Ember.Route.extend({
 
         const crate = this.modelFor('crate');
         const controller = this.controllerFor('crate.version');
+        const maxVersion = crate.get('max_version');
 
         // Fall back to the crate's `max_version` property
         if (!requestedVersion) {
-            params.version_num = crate.get('max_version');
+            params.version_num = maxVersion;
         }
 
         controller.set('crate', crate);
@@ -30,7 +31,17 @@ export default Ember.Route.extend({
 
         // Find version model
         return crate.get('versions')
-            .then(versions => versions.find(version => version.get('num') === params.version_num));
+            .then(versions => {
+                const version = versions.find(version => version.get('num') === params.version_num);
+                if (!version) {
+                    this.controllerFor('application').set('nextFlashError',
+                        `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+                }
+
+                return version ||
+                    versions.find(version => version.get('num') === maxVersion) ||
+                    versions.objectAt(0);
+            });
     },
 
     // can't do this in setupController because it won't be called
