@@ -173,12 +173,10 @@ impl Crate {
             internal("no crate returned")
         })));
 
-        let now = ::now();
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, owner_id, created_by, created_at,
-                             updated_at, deleted, owner_kind)
-                           VALUES ($1, $2, $2, $3, $3, FALSE, $4)",
-                          &[&ret.id, &user_id, &now, &(OwnerKind::User as i32)]));
+                           (crate_id, owner_id, created_by, owner_kind)
+                           VALUES ($1, $2, $2, $3)",
+                          &[&ret.id, &user_id, &(OwnerKind::User as i32)]));
         return Ok(ret);
 
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
@@ -332,10 +330,9 @@ impl Crate {
         assert!(amt <= 1);
         if amt == 0 {
             try!(conn.execute("INSERT INTO crate_owners
-                               (crate_id, owner_id, created_at, updated_at,
-                                created_by, owner_kind, deleted)
-                               VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
-                              &[&self.id, &owner.id(), &::now(), &req_user.id,
+                               (crate_id, owner_id, created_by, owner_kind)
+                               VALUES ($1, $2, $3, $4)",
+                              &[&self.id, &owner.id(), &req_user.id,
                                 &owner.kind()]));
         }
 
