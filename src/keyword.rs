@@ -92,10 +92,6 @@ impl Keyword {
         }).map(|(_, v)| v.id).collect::<Vec<_>>();
 
         if to_rm.len() > 0 {
-            try!(conn.execute("UPDATE keywords
-                                  SET crates_cnt = crates_cnt - 1
-                                WHERE id = ANY($1)",
-                              &[&Slice(&to_rm)]));
             try!(conn.execute("DELETE FROM crates_keywords
                                 WHERE keyword_id = ANY($1)
                                   AND crate_id = $2",
@@ -103,10 +99,6 @@ impl Keyword {
         }
 
         if to_add.len() > 0 {
-            try!(conn.execute("UPDATE keywords
-                                  SET crates_cnt = crates_cnt + 1
-                                WHERE id = ANY($1)",
-                              &[&Slice(&to_add)]));
             let insert = to_add.iter().map(|id| {
                 let crate_id: i32 = krate.id;
                 let id: i32 = *id;

@@ -494,6 +494,22 @@ fn migrations() -> Vec<Migration> {
 
             ALTER TABLE keywords ALTER created_at SET DEFAULT current_timestamp;
             ALTER TABLE keywords ALTER crates_cnt SET DEFAULT 0;
+
+            CREATE FUNCTION update_keywords_crates_cnt() RETURNS trigger AS $$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+                    UPDATE keywords SET crates_cnt = crates_cnt + 1 WHERE id = NEW.keyword_id;
+                    return NEW;
+                ELSIF (TG_OP = 'DELETE') THEN
+                    UPDATE keywords SET crates_cnt = crates_cnt - 1 WHERE id = OLD.keyword_id;
+                    return OLD;
+                END IF;
+            END
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trigger_update_keywords_crates_cnt BEFORE INSERT OR DELETE
+            ON crates_keywords
+            FOR EACH ROW EXECUTE PROCEDURE update_keywords_crates_cnt();
             "));
             Ok(())
 
@@ -506,6 +522,9 @@ fn migrations() -> Vec<Migration> {
 
             ALTER TABLE keywords ALTER created_at DROP DEFAULT;
             ALTER TABLE keywords ALTER crates_cnt DROP DEFAULT;
+
+            DROP TRIGGER trigger_update_keywords_crates_cnt ON crates_keywords;
+            DROP FUNCTION update_keywords_crates_cnt();
             "));
             Ok(())
         }),
