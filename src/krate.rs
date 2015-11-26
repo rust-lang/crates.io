@@ -160,16 +160,12 @@ impl Crate {
         }
 
         let stmt = try!(conn.prepare("INSERT INTO crates
-                                      (name, user_id, created_at,
-                                       updated_at, downloads, max_version,
-                                       description, homepage, documentation,
-                                       readme, keywords, repository, license,
-                                       max_upload_size)
-                                      VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, $7, $8, $9, $10, $11)
+                                      (name, user_id, description, homepage,
+                                       documentation, readme, keywords,
+                                       repository, license, max_upload_size)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                                       RETURNING *"));
-        let now = ::now();
-        let rows = try!(stmt.query(&[&name, &user_id, &now,
+        let rows = try!(stmt.query(&[&name, &user_id,
                                      &description, &homepage,
                                      &documentation, &readme, &keywords,
                                      &repository, &license, &max_upload_size]));
@@ -177,6 +173,7 @@ impl Crate {
             internal("no crate returned")
         })));
 
+        let now = ::now();
         try!(conn.execute("INSERT INTO crate_owners
                            (crate_id, owner_id, created_by, created_at,
                              updated_at, deleted, owner_kind)
