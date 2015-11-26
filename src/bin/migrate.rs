@@ -536,6 +536,10 @@ fn migrations() -> Vec<Migration> {
             CREATE TRIGGER trigger_crate_owners_set_updated_at BEFORE UPDATE
             ON crate_owners
             FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
+
+            CREATE TRIGGER trigger_crates_set_updated_at BEFORE UPDATE
+            ON crates
+            FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
             "));
             Ok(())
 
@@ -566,6 +570,7 @@ fn migrations() -> Vec<Migration> {
             DROP FUNCTION update_keywords_crates_cnt();
 
             DROP TRIGGER trigger_crate_owners_set_updated_at ON crate_owners;
+            DROP TRIGGER trigger_crates_set_updated_at ON crates;
 
             DROP FUNCTION set_updated_at();
             "));

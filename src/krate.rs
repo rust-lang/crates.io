@@ -374,11 +374,10 @@ impl Crate {
         if *ver > self.max_version || self.max_version == zero {
             self.max_version = ver.clone();
         }
-        self.updated_at = ::now();
-        try!(conn.execute("UPDATE crates SET updated_at = $1, max_version = $2
-                           WHERE id = $3",
-                          &[&self.updated_at, &self.max_version.to_string(),
-                            &self.id]));
+        let stmt = try!(conn.prepare("UPDATE crates SET max_version = $1
+                           WHERE id = $2 RETURNING updated_at"));
+        let rows = try!(stmt.query(&[&self.max_version.to_string(), &self.id]));
+        self.updated_at = rows.get(0).get("updated_at");
         Version::insert(conn, self.id, ver, features, authors)
     }
 
