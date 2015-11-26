@@ -504,6 +504,10 @@ fn migrations() -> Vec<Migration> {
             ALTER TABLE crate_owners ALTER updated_at SET DEFAULT current_timestamp;
             ALTER TABLE crate_owners ALTER deleted SET DEFAULT 'f';
 
+            ALTER TABLE versions ALTER created_at SET DEFAULT current_timestamp;
+            ALTER TABLE versions ALTER updated_at SET DEFAULT current_timestamp;
+            ALTER TABLE versions ALTER downloads SET DEFAULT 0;
+
             CREATE FUNCTION update_keywords_crates_cnt() RETURNS trigger AS $$
             BEGIN
                 IF (TG_OP = 'INSERT') THEN
@@ -540,6 +544,10 @@ fn migrations() -> Vec<Migration> {
             ALTER TABLE crate_owners ALTER created_at DROP DEFAULT;
             ALTER TABLE crate_owners ALTER updated_at DROP DEFAULT;
             ALTER TABLE crate_owners ALTER deleted DROP DEFAULT;
+
+            ALTER TABLE versions ALTER created_at DROP DEFAULT;
+            ALTER TABLE versions ALTER updated_at DROP DEFAULT;
+            ALTER TABLE versions ALTER downloads DROP DEFAULT;
 
             DROP TRIGGER trigger_update_keywords_crates_cnt ON crates_keywords;
             DROP FUNCTION update_keywords_crates_cnt();

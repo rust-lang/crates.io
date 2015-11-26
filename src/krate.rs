@@ -910,7 +910,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                  version_id = versions.id
            WHERE version_downloads.date > $1
              AND versions.crate_id = $2
-             AND NOT (versions.id = ANY($3))
+             AND versions.id != ALL($3)
         GROUP BY DATE(version_downloads.date)
         ORDER BY DATE(version_downloads.date) ASC"));
     let mut extra = Vec::new();
