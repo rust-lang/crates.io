@@ -322,11 +322,10 @@ impl Crate {
         // First try to un-delete if they've been soft deleted previously, then
         // do an insert if that didn't actually affect anything.
         let amt = try!(conn.execute("UPDATE crate_owners
-                                        SET deleted = FALSE, updated_at = $1
-                                      WHERE crate_id = $2 AND owner_id = $3
-                                        AND owner_kind = $4",
-                                    &[&::now(), &self.id, &owner.id(),
-                                      &owner.kind()]));
+                                        SET deleted = FALSE
+                                      WHERE crate_id = $1 AND owner_id = $2
+                                        AND owner_kind = $3",
+                                    &[&self.id, &owner.id(), &owner.kind()]));
         assert!(amt <= 1);
         if amt == 0 {
             try!(conn.execute("INSERT INTO crate_owners
@@ -347,10 +346,10 @@ impl Crate {
             human(format!("could not find owner with login `{}`", login))
         }));
         try!(conn.execute("UPDATE crate_owners
-                              SET deleted = TRUE, updated_at = $1
-                            WHERE crate_id = $2 AND owner_id = $3
-                              AND owner_kind = $4",
-                          &[&::now(), &self.id, &owner.id(), &owner.kind()]));
+                              SET deleted = TRUE
+                            WHERE crate_id = $1 AND owner_id = $2
+                              AND owner_kind = $3",
+                          &[&self.id, &owner.id(), &owner.kind()]));
         Ok(())
     }
 

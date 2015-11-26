@@ -508,6 +508,15 @@ fn migrations() -> Vec<Migration> {
             ALTER TABLE versions ALTER updated_at SET DEFAULT current_timestamp;
             ALTER TABLE versions ALTER downloads SET DEFAULT 0;
 
+            CREATE FUNCTION set_updated_at() RETURNS trigger AS $$
+            BEGIN
+                IF (NEW.updated_at IS NOT DISTINCT FROM OLD.updated_at) THEN
+                    NEW.updated_at := current_timestamp;
+                END IF;
+                RETURN NEW;
+            END
+            $$ LANGUAGE plpgsql;
+
             CREATE FUNCTION update_keywords_crates_cnt() RETURNS trigger AS $$
             BEGIN
                 IF (TG_OP = 'INSERT') THEN
@@ -523,6 +532,10 @@ fn migrations() -> Vec<Migration> {
             CREATE TRIGGER trigger_update_keywords_crates_cnt BEFORE INSERT OR DELETE
             ON crates_keywords
             FOR EACH ROW EXECUTE PROCEDURE update_keywords_crates_cnt();
+
+            CREATE TRIGGER trigger_crate_owners_set_updated_at BEFORE UPDATE
+            ON crate_owners
+            FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
             "));
             Ok(())
 
@@ -551,6 +564,10 @@ fn migrations() -> Vec<Migration> {
 
             DROP TRIGGER trigger_update_keywords_crates_cnt ON crates_keywords;
             DROP FUNCTION update_keywords_crates_cnt();
+
+            DROP TRIGGER trigger_crate_owners_set_updated_at ON crate_owners;
+
+            DROP FUNCTION set_updated_at();
             "));
             Ok(())
         }),
