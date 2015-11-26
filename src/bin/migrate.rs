@@ -492,7 +492,8 @@ fn migrations() -> Vec<Migration> {
             ALTER TABLE version_downloads ALTER date SET DEFAULT current_date;
             ALTER TABLE version_downloads ALTER processed SET DEFAULT 'f';
 
-
+            ALTER TABLE keywords ALTER created_at SET DEFAULT current_timestamp;
+            ALTER TABLE keywords ALTER crates_cnt SET DEFAULT 0;
             "));
             Ok(())
 
@@ -503,7 +504,8 @@ fn migrations() -> Vec<Migration> {
             ALTER TABLE version_downloads ALTER date DROP DEFAULT;
             ALTER TABLE version_downloads ALTER processed DROP DEFAULT;
 
-
+            ALTER TABLE keywords ALTER created_at DROP DEFAULT;
+            ALTER TABLE keywords ALTER crates_cnt DROP DEFAULT;
             "));
             Ok(())
         }),

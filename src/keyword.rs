@@ -47,12 +47,9 @@ impl Keyword {
             return Ok(Model::from_row(&row))
         }
 
-        let stmt = try!(conn.prepare("INSERT INTO keywords \
-                                      (keyword, created_at, crates_cnt)
-                                      VALUES ($1, $2, 0) \
+        let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES ($1)
                                       RETURNING *"));
-        let now = ::now();
-        let rows = try!(stmt.query(&[&name, &now]));
+        let rows = try!(stmt.query(&[&name]));
         Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no version returned")
         }))))
