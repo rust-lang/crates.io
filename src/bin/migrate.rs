@@ -485,6 +485,28 @@ fn migrations() -> Vec<Migration> {
         }),
         Migration::add_column(20151118135514, "crates", "max_upload_size",
                               "INTEGER"),
+        Migration::new(20151126095136, |tx| {
+            try!(tx.batch_execute("
+            ALTER TABLE version_downloads ALTER downloads SET DEFAULT 1;
+            ALTER TABLE version_downloads ALTER counted SET DEFAULT 0;
+            ALTER TABLE version_downloads ALTER date SET DEFAULT current_date;
+            ALTER TABLE version_downloads ALTER processed SET DEFAULT 'f';
+
+
+            "));
+            Ok(())
+
+        }, |tx| {
+            try!(tx.batch_execute("
+            ALTER TABLE version_downloads ALTER downloads DROP DEFAULT;
+            ALTER TABLE version_downloads ALTER counted DROP DEFAULT;
+            ALTER TABLE version_downloads ALTER date DROP DEFAULT;
+            ALTER TABLE version_downloads ALTER processed DROP DEFAULT;
+
+
+            "));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

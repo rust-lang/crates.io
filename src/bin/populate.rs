@@ -47,8 +47,8 @@ fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
             let moment = now + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
             try!(tx.execute("INSERT INTO version_downloads \
-                              (version_id, downloads, counted, date, processed) \
-                              VALUES ($1, $2, 0, $3, false)",
+                              (version_id, downloads, date) \
+                              VALUES ($1, $2, $3)",
                             &[&id, &dls, &moment]));
         }
     }

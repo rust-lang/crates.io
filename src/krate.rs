@@ -868,9 +868,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                               &[&version_id, &now]));
     if amt == 0 {
         try!(tx.execute("INSERT INTO version_downloads
-                         (version_id, downloads, counted, date, processed)
-                         VALUES ($1, 1, 0, date($2), false)",
-                        &[&version_id, &now]));
+                         (version_id) VALUES ($1)", &[&version_id]));
     }
 
     // Now that we've done our business, redirect to the actual data.
