@@ -1,27 +1,27 @@
 <div class='all-versions-back'>
-    {{#link-to 'crate' model}}&#11013; Back to Main Page{{/link-to}}
+    {{#link-to 'crate' crate}}&#11013; Back to Main Page{{/link-to}}
 </div>
 
 <div class='info'>
     <span class='small'>
-        All <span class='num'>{{ versions.length }}</span>
-        versions of <span class='num'>{{ name }}</span> since
-        {{moment-format created_at 'LL'}}
+        All <span class='num'>{{ model.length }}</span>
+        versions of <span class='num'>{{ crate.name }}</span> since
+        {{moment-format crate.created_at 'LL'}}
     </span>
 </div>
 
 <div id='crate-all-versions' class='white-rows'>
-    {{#each model.versions as |version|}}
+    {{#each model as |version|}}
         <div class='row'>
             <div>
-                {{#link-to 'crate' version}}{{ version.num }}{{/link-to}}
+                {{#link-to 'crate.version' version.num}}{{ version.num }}{{/link-to}}
 
                 <span class='small'>{{moment-format version.created_at 'LL'}}</span>
                 {{#if yanked}}
                     <span class='yanked'>yanked</span>
                 {{/if}}
             </div>
-            {{#link-to 'crate' version class='arrow'}}
+            {{#link-to 'crate.version' version.num class='arrow'}}
                 <img src="/assets/right-arrow-all-versions.png"/>
             {{/link-to}}
         </div>

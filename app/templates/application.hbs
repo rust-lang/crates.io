@@ -13,11 +13,10 @@
         <h1>CARGO</h1>
     {{/link-to}}
 
-    <form class='search' action='/search' {{ action "" on="submit" }} >
+    <form class='search' action='/search' {{ action "search" on="submit" }} >
         {{input type="text" class="search" name="q"
                 placeholder="Search"
                 value=search
-                enter="search"
                 tabindex="1"}}
     </form>
 
@@ -27,20 +26,19 @@
         {{/link-to}}
         <span class="sep">|</span>
         {{#if session.currentUser}}
-            <div class='dropdown-container'>
-                <button {{action 'toggleUserOptions'}}
-                        class='{{if showUserOptions "active"}} dropdown'>
+            {{#rl-dropdown-container class="dropdown-container"}}
+                {{#rl-dropdown-toggle class="dropdown"}}
                     {{user-avatar user=session.currentUser size='small'}}
                     {{ session.currentUser.name }}
                     <span class='arrow'></span>
-                </button>
-                <ul id='current-user-links'
-                    class='{{if showUserOptions "open"}} dropdown'>
+                {{/rl-dropdown-toggle}}
+
+                {{#rl-dropdown tagName="ul" id="current-user-links" class="dropdown" closeOnChildClick="a:link"}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
-                </ul>
-            </div>
+                {{/rl-dropdown}}
+            {{/rl-dropdown-container}}
         {{else}}
             {{#link-to "login"}}
                 <img src="/assets/lock.png"/>

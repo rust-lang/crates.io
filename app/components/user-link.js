@@ -8,9 +8,8 @@ export default Ember.Component.extend({
   tagName: 'a',
 
   title: computed.readOnly('user.login'),
-  href: computed('user', function() {
-      // TODO replace this with a link to a native crates.io profile
-      // page when they exist.
-      return this.get('user.url');
-  })
+
+  // TODO replace this with a link to a native crates.io profile
+  // page when they exist.
+  href: computed.readOnly('user.url'),
 });

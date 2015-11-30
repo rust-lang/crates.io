@@ -1,34 +1,19 @@
 import Ember from 'ember';
-import PaginationMixin from 'cargo/mixins/pagination';
+import PaginationMixin from '../mixins/pagination';
 
 const { computed } = Ember;
 
 export default Ember.Controller.extend(PaginationMixin, {
-    applicationController: Ember.inject.controller('application'),
     queryParams: ['letter', 'page', 'per_page', 'sort'],
     letter: null,
     page: '1',
     per_page: 10,
     sort: 'alpha',
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
-    showSortBy: false,
 
-    totalItems: computed('model', function() {
-        return this.get('model.meta').total;
-    }),
+    totalItems: computed.readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort') === 'downloads') {
-            return 'Downloads';
-        } else {
-            return 'Alphabetical';
-        }
+        return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
     }),
-
-    actions: {
-        toggleShowSortBy() {
-            var opt = 'showSortBy';
-            this.get('applicationController').resetDropdownOption(this, opt);
-        },
-    },
 });

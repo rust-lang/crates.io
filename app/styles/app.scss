@@ -217,13 +217,10 @@ button.dropdown, a.dropdown {
 }
 
 ul.dropdown {
-    display: none;
-    visibility: none;
     position: absolute;
     top: 100%;
     left: 0;
     width: 100%;
-    opacity: 0;
     margin: 0;
     text-align: left;
     padding: 0;

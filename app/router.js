@@ -1,20 +1,21 @@
 import Ember from 'ember';
 import config from './config/environment';
-import googlePageview from 'cargo/mixins/google-pageview';
+import googlePageview from './mixins/google-pageview';
 
 const Router = Ember.Router.extend(googlePageview, {
   location: config.locationType
 });
 
 Router.map(function() {
-  this.route('logout', { resetNamespace: true });
-  this.route('login', { resetNamespace: true });
-  this.route('github_login', { resetNamespace: true });
-  this.route('github_authorize', { path: '/authorize/github', resetNamespace: true });
-  this.route('crates', { resetNamespace: true });
-  this.route('crate', { path: '/crates/*crate_id', resetNamespace: true }, function() {
+  this.route('logout');
+  this.route('login');
+  this.route('github_login');
+  this.route('github_authorize', { path: '/authorize/github' });
+  this.route('crates');
+  this.route('crate', { path: '/crates/:crate_id' }, function() {
     this.route('download');
     this.route('versions');
+    this.route('version', { path: '/:version_num' });
     this.route('reverse_dependencies');
 
     // Well-known routes
@@ -27,8 +28,9 @@ Router.map(function() {
   this.route('install');
   this.route('search');
   this.route('dashboard');
-  this.route('keywords', { resetNamespace: true });
-  this.route('keyword', { path: '/keywords/*keyword_id', resetNamespace: true }, function() {
+  this.route('keywords');
+  this.route('keyword', { path: '/keywords/:keyword_id' }, function() {
+      this.route('index', { path: '/' });
   });
   this.route('catchAll', { path: '*path' });
 });

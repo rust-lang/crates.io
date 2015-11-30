@@ -7,9 +7,11 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "ember server",
-    "start:ui": "ember server --proxy https://staging-crates-io.herokuapp.com",
     "build": "ember build",
+    "start": "ember server",
+    "start:local": "ember server --proxy http://127.0.0.1:8888",
+    "start:staging": "ember server --proxy https://staging-crates-io.herokuapp.com",
+    "start:live": "ember server --proxy https://crates.io",
     "test": "ember test"
   },
   "repository": "",
@@ -20,7 +22,7 @@
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.2.0",
-    "ember-cli": "1.13.12",
+    "ember-cli": "1.13.13",
     "ember-cli-app-version": "^1.0.0",
     "ember-cli-babel": "^5.1.5",
     "ember-cli-dependency-checker": "^1.1.0",
@@ -32,13 +34,14 @@
     "ember-cli-qunit": "^1.0.4",
     "ember-cli-release": "0.2.8",
     "ember-cli-sass": "5.0.1",
-    "ember-cli-sri": "^1.1.0",
+    "ember-cli-sri": "^1.2.0",
     "ember-cli-uglify": "^1.2.0",
     "ember-data": "1.13.15",
     "ember-disable-proxy-controllers": "^1.0.1",
     "ember-export-application-global": "^1.0.4",
     "ember-moment": "4.1.0",
     "ember-page-title": "2.0.7",
+    "ember-rl-dropdown": "0.7.0",
     "emberx-select": "2.0.2"
   }
 }

@@ -47,7 +47,7 @@
             {{#each myFeed as |version|}}
                 <div class='row'>
                     <div class='info'>
-                        {{link-to version.crate.name 'crate' version}}
+                        {{link-to version.crate.name 'crate.version' version.num}}
                         <span class='small'>{{ version.num }}</span>
                         <span class='date small'>
                             {{from-now version.created_at}}
