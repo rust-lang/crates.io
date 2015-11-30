@@ -160,16 +160,12 @@ impl Crate {
         }
 
         let stmt = try!(conn.prepare("INSERT INTO crates
-                                      (name, user_id, created_at,
-                                       updated_at, downloads, max_version,
-                                       description, homepage, documentation,
-                                       readme, keywords, repository, license,
-                                       max_upload_size)
-                                      VALUES ($1, $2, $3, $3, 0, '0.0.0',
-                                              $4, $5, $6, $7, $8, $9, $10, $11)
+                                      (name, user_id, description, homepage,
+                                       documentation, readme, keywords,
+                                       repository, license, max_upload_size)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                                       RETURNING *"));
-        let now = ::now();
-        let rows = try!(stmt.query(&[&name, &user_id, &now,
+        let rows = try!(stmt.query(&[&name, &user_id,
                                      &description, &homepage,
                                      &documentation, &readme, &keywords,
                                      &repository, &license, &max_upload_size]));
@@ -178,10 +174,9 @@ impl Crate {
         })));
 
         try!(conn.execute("INSERT INTO crate_owners
-                           (crate_id, owner_id, created_by, created_at,
-                             updated_at, deleted, owner_kind)
-                           VALUES ($1, $2, $2, $3, $3, FALSE, $4)",
-                          &[&ret.id, &user_id, &now, &(OwnerKind::User as i32)]));
+                           (crate_id, owner_id, created_by, owner_kind)
+                           VALUES ($1, $2, $2, $3)",
+                          &[&ret.id, &user_id, &(OwnerKind::User as i32)]));
         return Ok(ret);
 
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
@@ -327,18 +322,16 @@ impl Crate {
         // First try to un-delete if they've been soft deleted previously, then
         // do an insert if that didn't actually affect anything.
         let amt = try!(conn.execute("UPDATE crate_owners
-                                        SET deleted = FALSE, updated_at = $1
-                                      WHERE crate_id = $2 AND owner_id = $3
-                                        AND owner_kind = $4",
-                                    &[&::now(), &self.id, &owner.id(),
-                                      &owner.kind()]));
+                                        SET deleted = FALSE
+                                      WHERE crate_id = $1 AND owner_id = $2
+                                        AND owner_kind = $3",
+                                    &[&self.id, &owner.id(), &owner.kind()]));
         assert!(amt <= 1);
         if amt == 0 {
             try!(conn.execute("INSERT INTO crate_owners
-                               (crate_id, owner_id, created_at, updated_at,
-                                created_by, owner_kind, deleted)
-                               VALUES ($1, $2, $3, $3, $4, $5, FALSE)",
-                              &[&self.id, &owner.id(), &::now(), &req_user.id,
+                               (crate_id, owner_id, created_by, owner_kind)
+                               VALUES ($1, $2, $3, $4)",
+                              &[&self.id, &owner.id(), &req_user.id,
                                 &owner.kind()]));
         }
 
@@ -353,10 +346,10 @@ impl Crate {
             human(format!("could not find owner with login `{}`", login))
         }));
         try!(conn.execute("UPDATE crate_owners
-                              SET deleted = TRUE, updated_at = $1
-                            WHERE crate_id = $2 AND owner_id = $3
-                              AND owner_kind = $4",
-                          &[&::now(), &self.id, &owner.id(), &owner.kind()]));
+                              SET deleted = TRUE
+                            WHERE crate_id = $1 AND owner_id = $2
+                              AND owner_kind = $3",
+                          &[&self.id, &owner.id(), &owner.kind()]));
         Ok(())
     }
 
@@ -381,11 +374,10 @@ impl Crate {
         if *ver > self.max_version || self.max_version == zero {
             self.max_version = ver.clone();
         }
-        self.updated_at = ::now();
-        try!(conn.execute("UPDATE crates SET updated_at = $1, max_version = $2
-                           WHERE id = $3",
-                          &[&self.updated_at, &self.max_version.to_string(),
-                            &self.id]));
+        let stmt = try!(conn.prepare("UPDATE crates SET max_version = $1
+                           WHERE id = $2 RETURNING updated_at"));
+        let rows = try!(stmt.query(&[&self.max_version.to_string(), &self.id]));
+        self.updated_at = rows.get(0).get("updated_at");
         Version::insert(conn, self.id, ver, features, authors)
     }
 
@@ -868,9 +860,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                               &[&version_id, &now]));
     if amt == 0 {
         try!(tx.execute("INSERT INTO version_downloads
-                         (version_id, downloads, counted, date, processed)
-                         VALUES ($1, 1, 0, date($2), false)",
-                        &[&version_id, &now]));
+                         (version_id) VALUES ($1)", &[&version_id]));
     }
 
     // Now that we've done our business, redirect to the actual data.
@@ -918,7 +908,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                  version_id = versions.id
            WHERE version_downloads.date > $1
              AND versions.crate_id = $2
-             AND NOT (versions.id = ANY($3))
+             AND versions.id != ALL($3)
         GROUP BY DATE(version_downloads.date)
         ORDER BY DATE(version_downloads.date) ASC"));
     let mut extra = Vec::new();

@@ -167,12 +167,12 @@ mod test {
                                       &semver::Version::parse("1.0.0").unwrap(),
                                       &HashMap::new(), &[]).unwrap();
         tx.execute("INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 1, 0, current_date, false)",
+                    (version_id)
+                    VALUES ($1)",
                    &[&version.id]).unwrap();
         tx.execute("INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 1, 0, current_date, true)",
+                    (version_id, processed)
+                    VALUES ($1, true)",
                    &[&version.id]).unwrap();
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
@@ -221,8 +221,8 @@ mod test {
                     VALUES ($1, 2, 1, current_date, false)",
                    &[&version.id]).unwrap();
         tx.execute("INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 1, 0, current_date, false)",
+                    (version_id)
+                    VALUES ($1)",
                    &[&version.id]).unwrap();
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);

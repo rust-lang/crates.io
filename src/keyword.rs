@@ -47,12 +47,9 @@ impl Keyword {
             return Ok(Model::from_row(&row))
         }
 
-        let stmt = try!(conn.prepare("INSERT INTO keywords \
-                                      (keyword, created_at, crates_cnt)
-                                      VALUES ($1, $2, 0) \
+        let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES ($1)
                                       RETURNING *"));
-        let now = ::now();
-        let rows = try!(stmt.query(&[&name, &now]));
+        let rows = try!(stmt.query(&[&name]));
         Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no version returned")
         }))))
@@ -95,10 +92,6 @@ impl Keyword {
         }).map(|(_, v)| v.id).collect::<Vec<_>>();
 
         if to_rm.len() > 0 {
-            try!(conn.execute("UPDATE keywords
-                                  SET crates_cnt = crates_cnt - 1
-                                WHERE id = ANY($1)",
-                              &[&Slice(&to_rm)]));
             try!(conn.execute("DELETE FROM crates_keywords
                                 WHERE keyword_id = ANY($1)
                                   AND crate_id = $2",
@@ -106,10 +99,6 @@ impl Keyword {
         }
 
         if to_add.len() > 0 {
-            try!(conn.execute("UPDATE keywords
-                                  SET crates_cnt = crates_cnt + 1
-                                WHERE id = ANY($1)",
-                              &[&Slice(&to_add)]));
             let insert = to_add.iter().map(|id| {
                 let crate_id: i32 = krate.id;
                 let id: i32 = *id;

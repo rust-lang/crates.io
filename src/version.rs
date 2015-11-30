@@ -81,12 +81,10 @@ impl Version {
         let num = num.to_string();
         let features = json::encode(features).unwrap();
         let stmt = try!(conn.prepare("INSERT INTO versions \
-                                      (crate_id, num, updated_at, \
-                                       created_at, downloads, features) \
-                                      VALUES ($1, $2, $3, $3, 0, $4) \
+                                      (crate_id, num, features) \
+                                      VALUES ($1, $2, $3) \
                                       RETURNING *"));
-        let now = ::now();
-        let rows = try!(stmt.query(&[&crate_id, &num, &now, &features]));
+        let rows = try!(stmt.query(&[&crate_id, &num, &features]));
         let ret: Version = Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no version returned")
         })));
