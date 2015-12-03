@@ -142,8 +142,8 @@ export default Ember.Controller.extend({
                 var tmp = this.get('smallSortedVersions');
                 for (i = 0; i < tmp.length; i++) {
                     versions.push({
-                      id: tmp[i].get('id'),
-                      num: tmp[i].get('num')
+                        id: tmp[i].get('id'),
+                        num: tmp[i].get('num')
                     });
                 }
             }

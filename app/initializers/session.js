@@ -1,8 +1,8 @@
 export default {
-  name: 'app.session',
+    name: 'app.session',
 
-  initialize(container, application) {
-    application.inject('controller', 'session', 'service:session');
-    application.inject('route', 'session', 'service:session');
-  }
+    initialize(container, application) {
+        application.inject('controller', 'session', 'service:session');
+        application.inject('route', 'session', 'service:session');
+    }
 };

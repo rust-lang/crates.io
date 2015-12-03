@@ -9,7 +9,7 @@ export default DS.Model.extend({
     yanked: DS.attr('boolean'),
 
     crate: DS.belongsTo('crate', {
-      async: false
+        async: false
     }),
     authors: DS.hasMany('users', { async: true }),
     dependencies: DS.hasMany('dependency', { async: true }),

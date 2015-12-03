@@ -6,14 +6,14 @@ const { computed } = Ember;
 
 export default Ember.Controller.extend({
     init() {
-      this._super(...arguments);
+        this._super(...arguments);
 
-      this.fetchingFeed = true;
-      this.loadingMore = false;
-      this.hasMore = false;
-      this.myCrates = [];
-      this.myFollowing = [];
-      this.myFeed = [];
+        this.fetchingFeed = true;
+        this.loadingMore = false;
+        this.hasMore = false;
+        this.myCrates = [];
+        this.myFollowing = [];
+        this.myFeed = [];
     },
 
     visibleCrates: computed('myCreates', function() {

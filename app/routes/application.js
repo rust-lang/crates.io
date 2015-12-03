@@ -12,9 +12,9 @@ export default Ember.Route.extend({
                 this.session.set('currentUser', user);
             }).catch(() => this.session.logoutUser()).
               finally(() => {
-                window.currentUserDetected = true;
-                Ember.$(window).trigger('currentUserDetected');
-            });
+                  window.currentUserDetected = true;
+                  Ember.$(window).trigger('currentUserDetected');
+              });
         } else {
             window.currentUserDetected = true;
         }
