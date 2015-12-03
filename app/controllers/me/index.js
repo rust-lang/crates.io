@@ -9,7 +9,7 @@ export default Ember.Controller.extend({
             this.set('isResetting', true);
 
             ajax({
-                dataType: "json",
+                dataType: 'json',
                 url: '/me/reset_token',
                 method: 'put',
             }).then((d) => {
@@ -17,9 +17,9 @@ export default Ember.Controller.extend({
             }).catch((reason) => {
                 var msg;
                 if (reason.status === 403) {
-                    msg = "A login is required to perform this action";
+                    msg = 'A login is required to perform this action';
                 } else {
-                    msg = "An unknown error occurred";
+                    msg = 'An unknown error occurred';
                 }
                 this.controllerFor('application').set('nextFlashError', msg);
                 // TODO: this should be an action, the route state machine

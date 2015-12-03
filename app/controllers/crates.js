@@ -9,7 +9,7 @@ export default Ember.Controller.extend(PaginationMixin, {
     page: '1',
     per_page: 10,
     sort: 'alpha',
-    alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(""),
+    alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
 
     totalItems: computed.readOnly('model.meta.total'),
 

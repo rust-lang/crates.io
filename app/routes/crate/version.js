@@ -24,7 +24,7 @@ export default Ember.Route.extend({
             .then((keywords) => controller.set('keywords', keywords));
 
         if (this.session.get('currentUser')) {
-            ajax('/api/v1/crates/' + crate.get('name') + '/following')
+            ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
@@ -62,9 +62,9 @@ export default Ember.Route.extend({
 
     serialize(model) {
         if (!model) {
-            return {version_num: ''};
+            return { version_num: '' };
         } else {
-            return {version_num: model.get('num')};
+            return { version_num: model.get('num') };
         }
     },
 });

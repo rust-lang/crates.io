@@ -19,17 +19,17 @@ export default Ember.Controller.extend({
     },
 
     // TODO: remove observer & DOM mutation in controller..
-    currentPathChanged: observer('currentPath', function () {
-      Ember.run.scheduleOnce('afterRender', this, this._scrollToTop);
+    currentPathChanged: observer('currentPath', function() {
+        Ember.run.scheduleOnce('afterRender', this, this._scrollToTop);
     }),
 
     actions: {
         search() {
             this.transitionToRoute('search', {
-              queryParams: {
-                q: this.get('search'),
-                page: 1
-              }
+                queryParams: {
+                    q: this.get('search'),
+                    page: 1
+                }
             });
         },
     },

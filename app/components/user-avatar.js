@@ -21,6 +21,6 @@ export default Ember.Component.extend({
     height: computed.readOnly('width'),
 
     src: computed('size', 'user', function() {
-        return this.get('user.avatar') + '&s=' + this.get('width');
+        return `${this.get('user.avatar')}&s=${this.get('width')}`;
     })
 });

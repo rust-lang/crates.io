@@ -22,17 +22,17 @@ export default Ember.Route.extend(AuthenticatedRoute, {
     },
 
     afterModel(user) {
-      let myCrates = this.store.query('crate', {
-        user_id: user.get('id')
-      });
+        let myCrates = this.store.query('crate', {
+            user_id: user.get('id')
+        });
 
-      let myFollowing = this.store.query('crate', {
-        following: 1
-      });
+        let myFollowing = this.store.query('crate', {
+            following: 1
+        });
 
-      return Ember.RSVP.hash({
-        myCrates,
-        myFollowing
-      }).then((hash) => this.set('data', hash) );
+        return Ember.RSVP.hash({
+            myCrates,
+            myFollowing
+        }).then((hash) => this.set('data', hash));
     }
 });

@@ -42,6 +42,7 @@
     "ember-moment": "4.1.0",
     "ember-page-title": "2.0.7",
     "ember-rl-dropdown": "0.7.0",
+    "ember-suave": "1.2.3",
     "emberx-select": "2.0.2"
   }
 }

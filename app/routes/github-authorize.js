@@ -16,7 +16,7 @@ import ajax from 'ic-ajax';
  */
 export default Ember.Route.extend({
     beforeModel(transition) {
-        return ajax('/authorize', {data: transition.queryParams}).then((d) => {
+        return ajax('/authorize', { data: transition.queryParams }).then((d) => {
             var item = JSON.stringify({ ok: true, data: d });
             if (window.opener) {
                 window.opener.github_response = item;

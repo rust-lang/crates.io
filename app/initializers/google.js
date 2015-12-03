@@ -14,6 +14,5 @@ export var initialize = function() {
 
 export default {
     name: 'google',
-
-    initialize: initialize
+    initialize
 };

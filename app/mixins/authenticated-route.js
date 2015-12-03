@@ -3,7 +3,9 @@ import Ember from 'ember';
 export default Ember.Mixin.create({
     beforeModel(transition) {
         var user = this.session.get('currentUser');
-        if (user !== null) { return; }
+        if (user !== null) {
+            return;
+        }
 
         // The current user is loaded asynchronously, so if we haven't actually
         // loaded the current user yet then we need to wait for it to be loaded.

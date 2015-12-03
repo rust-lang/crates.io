@@ -39,7 +39,9 @@ export default Ember.Mixin.create({
                                'itemsPerPage',
                                'totalItems',
                                function() {
-        if (this.get('totalItems') === 0) { return 0; }
+        if (this.get('totalItems') === 0) {
+            return 0;
+        }
         return (this.get('currentPage') - 1) * this.get('itemsPerPage') + 1;
     }),
 

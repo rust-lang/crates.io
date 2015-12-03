@@ -15,9 +15,9 @@ import ajax from 'ic-ajax';
  * @see `/github_authorize` route
  */
 export default Ember.Route.extend({
-  beforeModel() {
-    return ajax('/authorize_url').then((url) => {
-      window.location = url.url;
-    });
-  },
+    beforeModel() {
+        return ajax('/authorize_url').then((url) => {
+            window.location = url.url;
+        });
+    },
 });

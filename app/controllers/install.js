@@ -1,7 +1,7 @@
 import Ember from 'ember';
 
 function link(target) {
-  return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${target}.tar.gz`;
+    return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${target}.tar.gz`;
 }
 
 export default Ember.Controller.extend({
