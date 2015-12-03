@@ -36,7 +36,7 @@ export default Ember.Controller.extend({
                 var ret = authors.slice();
                 var others = authors.get('meta');
                 for (var i = 0; i < others.names.length; i++) {
-                    ret.push({name: others.names[i]});
+                    ret.push({ name: others.names[i] });
                 }
                 return ret;
             })
@@ -48,11 +48,13 @@ export default Ember.Controller.extend({
     currentDependencies: computed('currentVersion.dependencies', function() {
         var deps = this.get('currentVersion.dependencies');
 
-        if (deps === null) { return []; }
+        if (deps === null) {
+            return [];
+        }
 
         return DS.PromiseArray.create({
             promise: deps.then((deps) => {
-                var non_dev = deps.filter((dep) => dep.get('kind') !== 'dev' );
+                var non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
                 var map = {};
                 var ret = [];
 
@@ -70,7 +72,9 @@ export default Ember.Controller.extend({
 
     currentDevDependencies: computed('currentVersion.dependencies', function() {
         var deps = this.get('currentVersion.dependencies');
-        if (deps === null) { return []; }
+        if (deps === null) {
+            return [];
+        }
         return DS.PromiseArray.create({
             promise: deps.then((deps) => {
                 return deps.filterBy('kind', 'dev');
@@ -89,13 +93,13 @@ export default Ember.Controller.extend({
                 this.incrementProperty('crate.downloads');
                 this.incrementProperty('currentVersion.downloads');
                 Ember.$('#download-frame').attr('src', data.url);
-            }).finally(() => this.set('isDownloading', false) );
+            }).finally(() => this.set('isDownloading', false));
         },
 
         toggleFollow() {
             this.set('fetchingFollowing', true);
             this.set('following', !this.get('following'));
-            var url = '/api/v1/crates/' + this.get('crate.name') + '/follow';
+            var url = `/api/v1/crates/${this.get('crate.name')}/follow`;
             var method;
             if (this.get('following')) {
                 method = 'put';
@@ -114,7 +118,7 @@ export default Ember.Controller.extend({
             var versions = [];
             for (var i = 0; i < 90; i++) {
                 var now = moment().subtract(i, 'days');
-                dates[now.format('MMM D')] = {date: now, cnt: {}};
+                dates[now.format('MMM D')] = { date: now, cnt: {} };
             }
 
             downloads.forEach((d) => {
@@ -188,7 +192,7 @@ export default Ember.Controller.extend({
                 }
                 var chart = new window.google.visualization.AreaChart(el);
                 chart.draw(myData, {
-                    chartArea: {'left': 85, 'width': '77%', 'height': '80%'},
+                    chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
                     hAxis: {
                         minorGridlines: { count: 8 },
                     },

@@ -37,7 +37,7 @@ export default Ember.Controller.extend({
             this.set('loadingMore', true);
             var page = (this.get('myFeed').length / 10) + 1;
 
-            ajax('/me/updates?page=' + page).then((data) => {
+            ajax(`/me/updates?page=${page}`).then((data) => {
                 data.crates.forEach(crate =>
                     this.store.push(this.store.normalize('crate', crate)));
 

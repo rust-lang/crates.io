@@ -33,6 +33,6 @@ export default Ember.Route.extend(AuthenticatedRoute, {
         return Ember.RSVP.hash({
             myCrates,
             myFollowing
-        }).then((hash) => this.set('data', hash) );
+        }).then((hash) => this.set('data', hash));
     }
 });

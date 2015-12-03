@@ -19,7 +19,7 @@ export default Ember.Controller.extend({
     },
 
     // TODO: remove observer & DOM mutation in controller..
-    currentPathChanged: observer('currentPath', function () {
+    currentPathChanged: observer('currentPath', function() {
         Ember.run.scheduleOnce('afterRender', this, this._scrollToTop);
     }),
 
