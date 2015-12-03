@@ -1,4 +1,9 @@
 {
     "preset": "ember-suave",
+    "disallowTrailingComma": null,
+    "disallowVar": null,
+    "requireCamelCaseOrUpperCaseIdentifiers": null,
+    "requireCommentsToIncludeAccess": null,
+    "requireParenthesesAroundArrowParam": null,
     "validateIndentation": 4
 }
