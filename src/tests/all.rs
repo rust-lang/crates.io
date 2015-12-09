@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![feature(io)]
 
 extern crate bufstream;
 extern crate cargo_registry;

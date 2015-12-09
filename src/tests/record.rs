@@ -116,10 +116,12 @@ pub fn proxy() -> (String, Bomb) {
 
 fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
     let mut request = Vec::new();
-    let http_response = send((&mut socket).tee(&mut request));
+    t!(socket.read_to_end(&mut request));
+    let http_response = send(&request[..]);
 
     let mut response = Vec::new();
-    respond(http_response, socket.broadcast(&mut response));
+    respond(http_response, &mut response);
+    t!(socket.write_all(&response));
 
     t!(write!(data, "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
               request.len(),

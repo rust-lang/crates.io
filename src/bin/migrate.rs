@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![feature(iter_cmp)]
 
 extern crate cargo_registry;
 extern crate migrate;
@@ -144,7 +143,7 @@ fn migrations() -> Vec<Migration> {
             for row in try!(stmt.query(&[])) {
                 let pkg: Crate = Model::from_row(&row);
                 let versions = pkg.versions(tx).unwrap();
-                let v = versions.iter().max_by(|v| &v.num).unwrap();
+                let v = versions.iter().max_by_key(|v| &v.num).unwrap();
                 let max = v.num.to_string();
                 try!(tx.execute("UPDATE packages SET max_version = $1 \
                                  WHERE id = $2",
