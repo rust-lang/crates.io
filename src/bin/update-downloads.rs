@@ -68,7 +68,7 @@ fn collect(tx: &postgres::Transaction,
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
     let cutoff = time::now_utc().to_timespec();
-    let cutoff = cutoff + Duration::days(1);
+    let cutoff = cutoff - Duration::days(1);
 
     let mut map = HashMap::new();
     for row in rows.iter() {
