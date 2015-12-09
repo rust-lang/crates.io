@@ -206,6 +206,29 @@ mod test {
     }
 
     #[test]
+    fn dont_process_recent_row() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
+                                          &None, &None, &None, &[], &None,
+                                          &None, &None, None).unwrap();
+        let version = Version::insert(&tx, krate.id,
+                                      &semver::Version::parse("1.0.0").unwrap(),
+                                      &HashMap::new(), &[]).unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 2, 2, current_date - interval '2 hours', false)",
+                   &[&version.id]).unwrap();
+        ::update(&tx).unwrap();
+        let stmt = tx.prepare("SELECT processed FROM version_downloads
+                               WHERE version_id = $1").unwrap();
+        let processed: bool = stmt.query(&[&version.id]).unwrap().iter()
+                                  .next().unwrap().get("processed");
+        assert!(!processed);
+    }
+
+    #[test]
     fn increment_a_little() {
         let conn = conn();
         let tx = conn.transaction().unwrap();
