@@ -239,6 +239,12 @@ mod test {
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
                                       &HashMap::new(), &[]).unwrap();
+        tx.execute("UPDATE versions
+                       SET updated_at = current_date - interval '2 hours'",
+                   &[]).unwrap();
+        tx.execute("UPDATE crates
+                       SET updated_at = current_date - interval '2 hours'",
+                   &[]).unwrap();
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 1, current_date, false)",
@@ -247,9 +253,16 @@ mod test {
                     (version_id)
                     VALUES ($1)",
                    &[&version.id]).unwrap();
+
+        let version_before = Version::find(&tx, version.id).unwrap();
+        let krate_before = Crate::find(&tx, krate.id).unwrap();
         ::update(&tx).unwrap();
-        assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
-        assert_eq!(Crate::find(&tx, krate.id).unwrap().downloads, 2);
+        let version2 = Version::find(&tx, version.id).unwrap();
+        assert_eq!(version2.downloads, 2);
+        assert_eq!(version2.updated_at, version_before.updated_at);
+        let krate2 = Crate::find(&tx, krate.id).unwrap();
+        assert_eq!(krate2.downloads, 2);
+        assert_eq!(krate2.updated_at, krate_before.updated_at);
         crate_downloads(&tx, krate.id, 2);
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
