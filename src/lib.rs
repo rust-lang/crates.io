@@ -10,7 +10,6 @@ extern crate filetime;
 use std::collections::HashMap;
 use std::error::Error;
 use std::io;
-use std::io::prelude::*;
 use std::path::{PathBuf, Path};
 use std::fs::File;
 use conduit::{Request, Response, Handler};
