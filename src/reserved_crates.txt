@@ -1,5 +1,6 @@
 alloc
 arena
+ast
 collections
 compiletest
 core
@@ -10,6 +11,8 @@ flate
 fmt_macros
 grammar
 graphviz
+macro
+macros
 rbml
 rust-installer
 rustbook
