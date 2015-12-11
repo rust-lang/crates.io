@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import Application from '../../app';
 import config from '../../config/environment';
+import './has-text';
 
 export default function startApp(attrs) {
     let application;
