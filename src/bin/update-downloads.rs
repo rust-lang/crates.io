@@ -88,6 +88,18 @@ fn collect(tx: &postgres::Transaction,
         }
         let amt = download.downloads - download.counted;
 
+        // Flag this row as having been processed if we're passed the cutoff,
+        // and unconditionally increment the number of counted downloads.
+        try!(tx.execute("UPDATE version_downloads
+                         SET processed = $2, counted = counted + $3
+                         WHERE id = $1",
+                        &[id, &(download.date < cutoff), &amt]));
+        total += amt as i64;
+
+        if amt == 0 {
+            continue
+        }
+
         let crate_id = Version::find(tx, download.version_id).unwrap().crate_id;
 
         // Update the total number of version downloads
@@ -110,14 +122,6 @@ fn collect(tx: &postgres::Transaction,
                              VALUES ($1, $2, $3)",
                             &[&crate_id, &amt, &download.date]));
         }
-
-        // Flag this row as having been processed if we're passed the cutoff,
-        // and unconditionally increment the number of counted downloads.
-        try!(tx.execute("UPDATE version_downloads
-                         SET processed = $2, counted = counted + $3
-                         WHERE id = $1",
-                        &[id, &(download.date < cutoff), &amt]));
-        total += amt as i64;
     }
 
     // After everything else is done, update the global counter of total
@@ -266,5 +270,36 @@ mod test {
         crate_downloads(&tx, krate.id, 2);
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
+    }
+
+    #[test]
+    fn set_processed_no_set_updated_at() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
+                                          &None, &None, &None, &[], &None,
+                                          &None, &None, None).unwrap();
+        let version = Version::insert(&tx, krate.id,
+                                      &semver::Version::parse("1.0.0").unwrap(),
+                                      &HashMap::new(), &[]).unwrap();
+        tx.execute("UPDATE versions
+                       SET updated_at = current_date - interval '2 days'",
+                   &[]).unwrap();
+        tx.execute("UPDATE crates
+                       SET updated_at = current_date - interval '2 days'",
+                   &[]).unwrap();
+        tx.execute("INSERT INTO version_downloads \
+                    (version_id, downloads, counted, date, processed)
+                    VALUES ($1, 2, 2, current_date - interval '2 days', false)",
+                   &[&version.id]).unwrap();
+
+        let version_before = Version::find(&tx, version.id).unwrap();
+        let krate_before = Crate::find(&tx, krate.id).unwrap();
+        ::update(&tx).unwrap();
+        let version2 = Version::find(&tx, version.id).unwrap();
+        assert_eq!(version2.updated_at, version_before.updated_at);
+        let krate2 = Crate::find(&tx, krate.id).unwrap();
+        assert_eq!(krate2.updated_at, krate_before.updated_at);
     }
 }
