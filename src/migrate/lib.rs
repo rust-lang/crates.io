@@ -11,7 +11,7 @@ struct A<'a, 'b: 'a> {
     t: &'a Transaction<'b>,
 }
 
-pub type Step = Box<FnMut(A) -> PgResult<()> + 'static>;
+type Step = Box<FnMut(A) -> PgResult<()> + 'static>;
 
 pub struct Migration {
     version: i64,
