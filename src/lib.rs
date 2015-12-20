@@ -9,9 +9,9 @@ use middleware::Middleware;
 use std::borrow::Cow;
 use std::error::Error;
 use std::io;
-use time::{Tm, strptime, ParseError};
+use time::{Tm, ParseError};
 
-type Response = Result<conduit::Response, Box<Error+Send>>;
+pub type Response = Result<conduit::Response, Box<Error+Send>>;
 
 #[allow(missing_copy_implementations)]
 pub struct ConditionalGet;
