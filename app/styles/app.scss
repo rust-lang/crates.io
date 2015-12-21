@@ -228,6 +228,7 @@ ul.dropdown {
     border: 1px solid $gray-border;
     list-style: none;
     z-index: 10;
+    overflow: hidden;
     @include border-radius(5px);
 
     li a {
