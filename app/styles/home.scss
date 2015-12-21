@@ -23,6 +23,7 @@
 
 .yellow-button {
     @include button(#fede9e, #fdc452);
+    vertical-align: middle;
 }
 
 .tan-button {
