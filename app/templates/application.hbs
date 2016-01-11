@@ -48,14 +48,12 @@
     </div>
 
     <div class='menu'>
-        <div class='dropdown-container'>
-            <button {{action 'toggleUserOptions'}}
-                    class='{{if showUserOptions "active"}} dropdown'>
+        {{#rl-dropdown-container class='dropdown-container'}}
+            {{#rl-dropdown-toggle class='dropdown'}}
                 Menu
                 <span class='arrow'></span>
-            </button>
-            <ul id='current-user-links'
-                class='{{if showUserOptions "open"}} dropdown'>
+            {{/rl-dropdown-toggle}}
+            {{#rl-dropdown tagName='ul' id='current-user-links' class='dropdown' closeOnChildClick='a:link'}}
                 <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
                 {{#if session.currentUser}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
@@ -64,19 +62,20 @@
                 {{else}}
                     <li>{{#link-to "login"}}Log in with GitHub{{/link-to}}</li>
                 {{/if}}
-                <li class='search'>
-                    {{input type="text" class="search"
-                            placeholder="Search"
-                            value=search
-                            enter="search"}}
-                </li>
-            </ul>
-        </div>
+            {{/rl-dropdown}}
+        {{/rl-dropdown-container}}
     </div>
 
     <div class='links'>
     </div>
 </div>
+
+<form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
+    {{input type="text" class="search" name="q"
+            placeholder="Search"
+            value=search
+            tabindex="1"}}
+</form>
 
 <div id="main" class='inner-content'>
     <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>

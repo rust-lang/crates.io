@@ -72,27 +72,6 @@ body {
         right: 0;
         left: auto;
         min-width: 200px;
-
-        li.search {
-            padding: 5px;
-            input.search {
-                margin: 0;
-                border: 1px solid black;
-            }
-        }
-    }
-
-    input.search {
-        font-size: 90%;
-        border: none;
-        color: black;
-        outline: 0;
-        margin-left: 30px;
-        padding: 5px 5px 5px 25px;
-        background-image: url('/assets/search.png');
-        background-repeat: no-repeat;
-        background-position: 6px 6px;
-        @include border-radius(15px);
     }
 
     button {
@@ -123,6 +102,31 @@ body {
         .menu { display: block; }
         .nav { display: none; }
         form.search { display: none; }
+    }
+}
+
+#header input.search, #mobile-search input.search {
+    font-size: 90%;
+    border: none;
+    color: black;
+    outline: 0;
+    margin-left: 30px;
+    padding: 5px 5px 5px 25px;
+    background-image: url('/assets/search.png');
+    background-repeat: no-repeat;
+    background-position: 6px 6px;
+    @include border-radius(15px);
+}
+
+#mobile-search {
+    display: none;
+    margin-bottom: 10px;
+    input.search {
+        width: 100%;
+        margin: 0;
+    }
+    @media only screen and (max-width: 820px) {
+        display: block;
     }
 }
 
