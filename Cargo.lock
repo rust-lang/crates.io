@@ -24,7 +24,7 @@ dependencies = [
  "oauth2 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2_postgres 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -536,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "r2d2"
-version = "0.6.1"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -549,7 +549,7 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "postgres 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
