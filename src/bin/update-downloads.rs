@@ -77,12 +77,16 @@ fn collect(tx: &postgres::Transaction,
     }
     println!("updating {} versions (cutoff {})", map.len(),
              time::at(cutoff).rfc822());
-    if map.len() == 0 { return Ok(None) }
+    if map.len() == 0 {
+        return Ok(None)
+    }
 
     let mut max = 0;
     let mut total = 0;
     for (id, download) in map.iter() {
-        if *id > max { max = *id; }
+        if *id > max {
+            max = *id;
+        }
         if download.date > cutoff && download.counted == download.downloads {
             continue
         }
@@ -94,6 +98,8 @@ fn collect(tx: &postgres::Transaction,
                          SET processed = $2, counted = counted + $3
                          WHERE id = $1",
                         &[id, &(download.date < cutoff), &amt]));
+        println!("{}\n{}", time::at(download.date).rfc822(),
+                 time::at(cutoff).rfc822());
         total += amt as i64;
 
         if amt == 0 {
@@ -135,6 +141,9 @@ fn collect(tx: &postgres::Transaction,
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
+
+    use time;
+    use time::Duration;
 
     use postgres;
     use semver;
@@ -220,10 +229,11 @@ mod test {
         let version = Version::insert(&tx, krate.id,
                                       &semver::Version::parse("1.0.0").unwrap(),
                                       &HashMap::new(), &[]).unwrap();
+        let time = time::now_utc().to_timespec() - Duration::hours(2);
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, current_date - interval '2 hours', false)",
-                   &[&version.id]).unwrap();
+                    VALUES ($1, 2, 2, $2, false)",
+                   &[&version.id, &time]).unwrap();
         ::update(&tx).unwrap();
         let stmt = tx.prepare("SELECT processed FROM version_downloads
                                WHERE version_id = $1").unwrap();
