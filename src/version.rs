@@ -132,6 +132,12 @@ impl Version {
         let krate = try!(Crate::find_by_name(conn, name).map_err(|_| {
             human(format!("no known crate named `{}`", &**name))
         }));
+        if dep.version_req.0 == semver::VersionReq::parse("*").unwrap() {
+            return Err(human(format!("wildcard (`*`) dependency constraints are not allowed \
+                                      on crates.io. See http://doc.crates.io/faq.html#can-\
+                                      libraries-use--as-a-version-for-their-dependencies for more \
+                                      information")));
+        }
         let features: Vec<String> = dep.features.iter().map(|s| {
             s[..].to_string()
         }).collect();
