@@ -29,8 +29,14 @@ pub struct TransactionMiddleware;
 pub struct Transaction {
     // fields are destructed top-to-bottom so ensure we destroy them in the
     // right order.
+    //
+    // Note that `slot` and `PooledConnnection` are intentionally behind a `Box`
+    // for safety reasons. The `tx` field will actually be containing a borrow
+    // into `PooledConnnection`, but this `Transaction` can be moved around in
+    // memory, so we need the borrow to be from a stable address. The `Box` will
+    // provide this stable address.
     tx: LazyCell<pg::Transaction<'static>>,
-    slot: LazyCell<PooledConnnection>,
+    slot: LazyCell<Box<PooledConnnection>>,
     commit: Cell<bool>,
 
     // Keep a handle to the app which keeps a handle to the database to ensure
@@ -54,10 +60,9 @@ impl Transaction {
             let conn = try!(self.app.database.get().map_err(|e| {
                 internal(format!("failed to get a database connection: {}", e))
             }));
-            let conn: PooledConnnection = conn;
-            self.slot.fill(conn);
+            self.slot.fill(Box::new(conn));
         }
-        Ok(&**self.slot.borrow().unwrap())
+        Ok(&***self.slot.borrow().unwrap())
     }
 
     fn tx<'a>(&'a self) -> CargoResult<&'a (GenericConnection + 'a)> {
