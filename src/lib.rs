@@ -140,7 +140,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session",
                                                  env == Env::Production));
     m.add(app::AppMiddleware::new(app));
-    m.add(db::TransactionMiddleware);
+    if env != Env::Test {
+        m.add(db::TransactionMiddleware);
+    }
     m.add(user::Middleware);
     if env != Env::Test {
         m.around(dist::Middleware::new());

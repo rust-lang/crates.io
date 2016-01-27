@@ -37,7 +37,7 @@ pub struct Transaction {
     // provide this stable address.
     tx: LazyCell<pg::Transaction<'static>>,
     slot: LazyCell<Box<PooledConnnection>>,
-    commit: Cell<bool>,
+    commit: Cell<Option<bool>>,
 
     // Keep a handle to the app which keeps a handle to the database to ensure
     // that this `'static` is indeed at least a little more accurate (in that
@@ -51,7 +51,7 @@ impl Transaction {
             app: app,
             slot: LazyCell::new(),
             tx: LazyCell::new(),
-            commit: Cell::new(false),
+            commit: Cell::new(None),
         }
     }
 
@@ -83,32 +83,37 @@ impl Transaction {
         Ok(tx)
     }
 
-    pub fn rollback(&self) { self.commit.set(false); }
-    pub fn commit(&self) { self.commit.set(true); }
+    pub fn rollback(&self) {
+        self.commit.set(Some(false));
+    }
+
+    pub fn commit(&self) {
+        if self.commit.get().is_none() {
+            self.commit.set(Some(true));
+        }
+    }
 }
 
 impl Middleware for TransactionMiddleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
-        if !req.extensions().contains::<Transaction>() {
-            let app = req.app().clone();
-            req.mut_extensions().insert(Transaction::new(app));
-        }
+        let app = req.app().clone();
+        req.mut_extensions().insert(Transaction::new(app));
         Ok(())
     }
 
     fn after(&self, req: &mut Request, res: Result<Response, Box<Error+Send>>)
              -> Result<Response, Box<Error+Send>> {
-        if res.is_ok() {
-            let tx = req.extensions().find::<Transaction>()
-                        .expect("Transaction not present in request");
-            match tx.tx.borrow() {
-                Some(transaction) if tx.commit.get() => {
-                    transaction.set_commit();
-                }
-                _ => {}
+        let tx = req.mut_extensions().pop::<Transaction>()
+                    .expect("Transaction not present in request");
+        if let Some(transaction) = tx.tx.into_inner() {
+            if res.is_ok() && tx.commit.get() == Some(true) {
+                transaction.set_commit();
             }
+            try!(transaction.finish().map_err(|e| {
+                Box::new(e) as Box<Error+Send>
+            }));
         }
-        return res;
+        return res
     }
 }
 

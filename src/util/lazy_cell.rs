@@ -46,4 +46,9 @@ impl<T> LazyCell<T> {
             None => None
         }
     }
+
+    /// Consumes this `LazyCell`, returning the underlying value.
+    pub fn into_inner(self) -> Option<T> {
+        self.inner.into_inner()
+    }
 }

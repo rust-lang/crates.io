@@ -73,7 +73,6 @@ mod version;
 mod team;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    struct NoCommit;
     static INIT: Once = ONCE_INIT;
     git::init();
 
@@ -95,25 +94,13 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);
     let app = Arc::new(app);
-    let mut middleware = cargo_registry::middleware(app.clone());
-    middleware.add(NoCommit);
+    let middleware = cargo_registry::middleware(app.clone());
     return (bomb, app, middleware);
 
     fn db_setup(db: &str) {
         let migrate = t!(env::current_exe()).parent().unwrap().join("migrate");
         assert!(t!(Command::new(&migrate).env("DATABASE_URL", db)
                            .status()).success());
-    }
-
-    impl conduit_middleware::Middleware for NoCommit {
-        fn after(&self, req: &mut Request,
-                 res: Result<conduit::Response, Box<StdError+Send>>)
-                 -> Result<conduit::Response, Box<StdError+Send>> {
-            req.extensions().find::<db::Transaction>()
-               .expect("Transaction not present in request")
-               .rollback();
-            return res;
-        }
     }
 }
 
