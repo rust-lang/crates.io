@@ -8,6 +8,7 @@ use pg::GenericConnection;
 use r2d2;
 use r2d2_postgres;
 use r2d2_postgres::PostgresConnectionManager as PCM;
+use r2d2_postgres::SslMode;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
@@ -19,7 +20,7 @@ pub type Config = r2d2::Config<pg::Connection, r2d2_postgres::Error>;
 type PooledConnnection = r2d2::PooledConnection<PCM>;
 
 pub fn pool(url: &str, config: r2d2::Config<pg::Connection, r2d2_postgres::Error>) -> Pool {
-    let mgr = PCM::new(url, pg::SslMode::None).unwrap();
+    let mgr = PCM::new(url, SslMode::None).unwrap();
     r2d2::Pool::new(config, mgr).unwrap()
 }
 

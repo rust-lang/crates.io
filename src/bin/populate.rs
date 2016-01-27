@@ -18,7 +18,7 @@ use rand::{StdRng, Rng};
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             &postgres::SslMode::None).unwrap();
+                                             postgres::SslMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();

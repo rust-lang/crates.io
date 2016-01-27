@@ -43,7 +43,7 @@ impl Keyword {
         // TODO: racy (the select then insert is not atomic)
         let stmt = try!(conn.prepare("SELECT * FROM keywords
                                       WHERE keyword = $1"));
-        for row in try!(stmt.query(&[&name])) {
+        for row in try!(stmt.query(&[&name])).iter() {
             return Ok(Model::from_row(&row))
         }
 
@@ -142,7 +142,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                            LIMIT $1 OFFSET $2",
                                           sort_sql)));
     let mut keywords = Vec::new();
-    for row in try!(stmt.query(&[&limit, &offset])) {
+    for row in try!(stmt.query(&[&limit, &offset])).iter() {
         let keyword: Keyword = Model::from_row(&row);
         keywords.push(keyword.encodable());
     }

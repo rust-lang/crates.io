@@ -86,7 +86,8 @@ impl Crate {
         let stmt = try!(conn.prepare("SELECT * FROM crates \
                                       WHERE canon_crate_name(name) =
                                             canon_crate_name($1) LIMIT 1"));
-        let row = try!(stmt.query(&[&name])).into_iter().next();
+        let rows = try!(stmt.query(&[&name]));
+        let row = rows.iter().next();
         let row = try!(row.chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
@@ -555,7 +556,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Collect all the crates
     let stmt = try!(conn.prepare(&q));
     let mut crates = Vec::new();
-    for row in try!(stmt.query(&args)) {
+    for row in try!(stmt.query(&args)).iter() {
         let krate: Crate = Model::from_row(&row);
         crates.push(krate.encodable(None));
     }
@@ -563,7 +564,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Query for the total count of crates
     let stmt = try!(conn.prepare(&cnt));
     let args = if args.len() > 2 {&args[..1]} else {&args[..0]};
-    let row = try!(stmt.query(args)).into_iter().next().unwrap();
+    let rows = try!(stmt.query(args));
+    let row = rows.iter().next().unwrap();
     let total = row.get(0);
 
     #[derive(RustcEncodable)]
@@ -895,7 +897,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                                    AND version_id = ANY($2)
                                  ORDER BY date ASC"));
     let mut downloads = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &Slice(&ids)])) {
+    for row in try!(stmt.query(&[&cutoff_date, &Slice(&ids)])).iter() {
         let download: VersionDownload = Model::from_row(&row);
         downloads.push(download.encodable());
     }
@@ -912,7 +914,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         GROUP BY DATE(version_downloads.date)
         ORDER BY DATE(version_downloads.date) ASC"));
     let mut extra = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &krate.id, &Slice(&ids)])) {
+    for row in try!(stmt.query(&[&cutoff_date, &krate.id, &Slice(&ids)])).iter() {
         extra.push(ExtraDownload {
             downloads: row.get("downloads"),
             date: row.get("date")
@@ -971,10 +973,10 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT 1 FROM follows
                                 WHERE user_id = $1 AND crate_id = $2"));
-    let mut rows = try!(stmt.query(&[&user.id, &krate.id])).into_iter();
+    let rows = try!(stmt.query(&[&user.id, &krate.id]));
     #[derive(RustcEncodable)]
     struct R { following: bool }
-    Ok(req.json(&R { following: rows.next().is_some() }))
+    Ok(req.json(&R { following: rows.iter().next().is_some() }))
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.

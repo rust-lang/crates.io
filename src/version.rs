@@ -68,8 +68,8 @@ impl Version {
         let num = num.to_string();
         let stmt = try!(conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1 AND num = $2"));
-        let mut rows = try!(stmt.query(&[&crate_id, &num])).into_iter();
-        Ok(rows.next().map(|r| Model::from_row(&r)))
+        let rows = try!(stmt.query(&[&crate_id, &num]));
+        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
     pub fn insert(conn: &GenericConnection,
@@ -160,7 +160,8 @@ impl Version {
                                       LEFT JOIN crates
                                         ON crates.id = dependencies.crate_id
                                       WHERE dependencies.version_id = $1"));
-        Ok(try!(stmt.query(&[&self.id])).into_iter().map(|r| {
+        let rows = try!(stmt.query(&[&self.id]));
+        Ok(rows.iter().map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
         }).collect())
     }
@@ -243,7 +244,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             LEFT JOIN crates ON crates.id = versions.crate_id
             WHERE versions.id = ANY($1)
         "));
-        for row in try!(stmt.query(&[&Slice(&ids)])) {
+        for row in try!(stmt.query(&[&Slice(&ids)])).iter() {
             let v: Version = Model::from_row(&row);
             let crate_name: String = row.get("crate_name");
             versions.push(v.encodable(&crate_name));
@@ -314,7 +315,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                                 WHERE date > $1 AND version_id = $2
                                 ORDER BY date ASC"));
     let mut downloads = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &version.id])) {
+    for row in try!(stmt.query(&[&cutoff_date, &version.id])).iter() {
         let download: VersionDownload = Model::from_row(&row);
         downloads.push(download.encodable());
     }

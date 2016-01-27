@@ -20,7 +20,7 @@ fn main() {
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
         let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                                 &postgres::SslMode::None).unwrap();
+                                                 postgres::SslMode::None).unwrap();
         update(&conn).unwrap();
         drop(conn);
         if daemon {
@@ -152,7 +152,7 @@ mod test {
 
     fn conn() -> postgres::Connection {
         postgres::Connection::connect(&::env("TEST_DATABASE_URL")[..],
-                                      &postgres::SslMode::None).unwrap()
+                                      postgres::SslMode::None).unwrap()
     }
 
     fn user(conn: &postgres::Transaction) -> User{

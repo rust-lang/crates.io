@@ -86,7 +86,7 @@ impl<'a> Manager<'a> {
 
         let stmt = try!(self.tx.prepare("SELECT version FROM \
                                          schema_migrations"));
-        for row in try!(stmt.query(&[])) {
+        for row in try!(stmt.query(&[])).iter() {
             assert!(self.versions.insert(row.get("version")));
         }
         Ok(())

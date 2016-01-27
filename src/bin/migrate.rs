@@ -14,7 +14,7 @@ use cargo_registry::model::Model;
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             &postgres::SslMode::None).unwrap();
+                                             postgres::SslMode::None).unwrap();
     let migrations = migrations();
 
     let arg = env::args().nth(1);
@@ -140,7 +140,8 @@ fn migrations() -> Vec<Migration> {
                               "VARCHAR"),
         Migration::new(20140926130045, |tx| {
             let stmt = try!(tx.prepare("SELECT * FROM packages"));
-            for row in try!(stmt.query(&[])) {
+            let rows = try!(stmt.query(&[]));
+            for row in rows.iter() {
                 let pkg: Crate = Model::from_row(&row);
                 let versions = pkg.versions(tx).unwrap();
                 let v = versions.iter().max_by_key(|v| &v.num).unwrap();
@@ -669,7 +670,8 @@ fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()
                                       FROM crate_owners
                                      GROUP BY user_id, crate_id
                                     HAVING COUNT(*) > 1"));
-        try!(stmt.query(&[])).iter().map(|row| {
+        let rows = try!(stmt.query(&[]));
+        rows.iter().map(|row| {
             (row.get("user_id"), row.get("crate_id"))
         }).collect()
     };
@@ -678,7 +680,8 @@ fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()
                                     WHERE user_id = $1 AND crate_id = $2
                                     ORDER BY created_at ASC
                                     OFFSET 1"));
-        for row in try!(stmt.query(&[&user_id, &crate_id])) {
+        let rows = try!(stmt.query(&[&user_id, &crate_id]));
+        for row in rows.iter() {
             let id: i32 = row.get("id");
             try!(tx.execute("DELETE FROM crate_owners WHERE id = $1", &[&id]));
         }

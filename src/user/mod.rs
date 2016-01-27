@@ -60,8 +60,8 @@ impl User {
                              token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
-        return try!(stmt.query(&[&token])).iter().next()
-                        .map(|r| Model::from_row(&r)).chain_error(|| {
+        let rows = try!(stmt.query(&[&token]));
+        rows.iter().next().map(|r| Model::from_row(&r)).chain_error(|| {
             NotFound
         })
     }
@@ -292,7 +292,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let stmt = try!(tx.prepare(sql));
     let mut versions = Vec::new();
     let mut crate_ids = Vec::new();
-    for row in try!(stmt.query(&[&user.id, &offset, &limit])) {
+    for row in try!(stmt.query(&[&user.id, &offset, &limit])).iter() {
         let version: Version = Model::from_row(&row);
         crate_ids.push(version.crate_id);
         versions.push(version);
@@ -303,7 +303,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     if crate_ids.len() > 0 {
         let stmt = try!(tx.prepare("SELECT * FROM crates WHERE id = ANY($1)"));
-        for row in try!(stmt.query(&[&Slice(&crate_ids)])) {
+        for row in try!(stmt.query(&[&Slice(&crate_ids)])).iter() {
             let krate: Crate = Model::from_row(&row);
             map.insert(krate.id, krate.name.clone());
             crates.push(krate);
