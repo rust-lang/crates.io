@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use conduit_middleware;
-use conduit::Request;
+use conduit::{Request, Response};
 use conduit_cookie::RequestSession;
 
 use Model;
@@ -50,6 +50,12 @@ impl conduit_middleware::Middleware for Middleware {
         // Attach the `User` model from the database to the request
         req.mut_extensions().insert(user);
         Ok(())
+    }
+
+    fn after(&self, req: &mut Request, res: Result<Response, Box<Error+Send>>)
+             -> Result<Response, Box<Error+Send>> {
+        req.mut_extensions().remove::<User>();
+        res
     }
 }
 
