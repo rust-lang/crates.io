@@ -118,7 +118,10 @@ impl Handler for C {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
         let C(f) = *self;
         match f(req) {
-            Ok(resp) => { req.commit(); Ok(resp) }
+            Ok(resp) => {
+                req.commit();
+                Ok(resp)
+            }
             Err(e) => {
                 match e.response() {
                     Some(response) => Ok(response),
