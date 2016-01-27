@@ -1,8 +1,6 @@
 use std::error::Error;
 
-use conduit::{Handler, Request, Response, Method};
-use conduit_middleware::Middleware;
-use conduit_test::MockRequest;
+use conduit::{Handler, Request, Method};
 
 use cargo_registry::Model;
 use cargo_registry::krate::EncodableCrate;
@@ -17,8 +15,8 @@ struct MeResponse { user: EncodableUser, api_token: String }
 
 #[test]
 fn auth_gives_a_token() {
-    let (_b, _app, middle) = ::app();
-    let mut req = MockRequest::new(Method::Get, "/authorize_url");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/authorize_url");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: AuthResponse = ::json(&mut response);
     assert!(json.url.contains(&json.state));
@@ -26,8 +24,8 @@ fn auth_gives_a_token() {
 
 #[test]
 fn access_token_needs_data() {
-    let (_b, _app, middle) = ::app();
-    let mut req = MockRequest::new(Method::Get, "/authorize");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: ::Bad = ::json(&mut response);
     assert!(json.errors[0].detail.contains("invalid state"));
@@ -53,13 +51,13 @@ fn user_insert() {
 
 #[test]
 fn me() {
-    let (_b, _app, mut middle) = ::app();
-    let mut req = MockRequest::new(Method::Get, "/me");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
     let user = ::user("foo");
-    middle.add(::middleware::MockUser(user.clone()));
+    ::mock_user(&mut req, user.clone());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: MeResponse = ::json(&mut response);
     assert_eq!(json.user.email, user.email);
@@ -68,30 +66,19 @@ fn me() {
 
 #[test]
 fn reset_token() {
-    struct ResetTokenTest;
-
-    let (_b, _app, mut middle) = ::app();
-    middle.add(ResetTokenTest);
-    let mut req = MockRequest::new(Method::Put, "/me/reset_token");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Put, "/me/reset_token");
+    let user = {
+        let tx = RequestTransaction::tx(&mut req as &mut Request);
+        User::find_or_insert(tx.unwrap(), "foo", None,
+                             None, None, "bar", "baz").unwrap()
+    };
+    ::mock_user(&mut req, user.clone());
     ok_resp!(middle.call(&mut req));
 
-    impl Middleware for ResetTokenTest {
-        fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
-            let user = User::find_or_insert(req.tx().unwrap(), "foo", None,
-                                            None, None, "bar", "baz").unwrap();
-            req.mut_extensions().insert(user);
-            Ok(())
-        }
-
-        fn after(&self, req: &mut Request,
-                 response: Result<Response, Box<Error+Send>>)
-                 -> Result<Response, Box<Error+Send>> {
-            let user = req.extensions().find::<User>().unwrap();
-            let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
-            assert!(u2.api_token != user.api_token);
-            response
-        }
-    }
+    let tx = RequestTransaction::tx(&mut req as &mut Request);
+    let u2 = User::find(tx.unwrap(), user.id).unwrap();
+    assert!(u2.api_token != user.api_token);
 }
 
 #[test]

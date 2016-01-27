@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::fs::{self, File};
 
 use conduit::{Handler, Request, Method};
-use conduit_test::MockRequest;
 use git2;
 use rustc_serialize::{json, Decoder};
 use semver;
@@ -54,16 +53,16 @@ fn new_crate(name: &str) -> u::NewCrate {
 
 #[test]
 fn index() {
-    let (_b, _app, mut middle) = ::app();
-    let mut req = MockRequest::new(Method::Get, "/api/v1/crates");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
     let krate = ::krate("foo");
-    middle.add(::middleware::MockUser(::user("foo")));
-    middle.add(::middleware::MockCrate(krate.clone()));
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, krate.clone());
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.crates.len(), 1);
@@ -125,15 +124,15 @@ fn index_queries() {
 
 #[test]
 fn show() {
-    let (_b, _app, mut middle) = ::app();
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo");
+    ::mock_user(&mut req, ::user("foo"));
     let mut krate = ::krate("foo");
     krate.description = Some(format!("description"));
     krate.documentation = Some(format!("https://example.com"));
     krate.homepage = Some(format!("http://example.com"));
-    middle.add(::middleware::MockUser(::user("foo")));
-    middle.add(::middleware::MockCrate(krate.clone()));
-    let mut req = MockRequest::new(Method::Get,
-                                   &format!("/api/v1/crates/{}", krate.name));
+    ::mock_crate(&mut req, krate.clone());
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);
     assert_eq!(json.krate.name, krate.name);
@@ -519,8 +518,8 @@ fn new_krate_dependency_missing() {
 
 #[test]
 fn summary_doesnt_die() {
-    let (_b, _app, middle) = ::app();
-    let mut req = MockRequest::new(Method::Get, "/summary");
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/summary");
     ok_resp!(middle.call(&mut req));
 }
 
@@ -550,13 +549,10 @@ fn download() {
 
 #[test]
 fn download_bad() {
-    let (_b, _app, mut middle) = ::app();
-    let user = ::user("foo");
-    let krate = ::krate("foo");
-    middle.add(::middleware::MockUser(user.clone()));
-    middle.add(::middleware::MockCrate(krate.clone()));
-    let rel = format!("/api/v1/crates/{}/0.1.0/download", krate.name);
-    let mut req = MockRequest::new(Method::Get, &rel);
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/0.1.0/download");
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, ::krate("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }

@@ -63,7 +63,6 @@ struct Error { detail: String }
 #[derive(RustcDecodable)]
 struct Bad { errors: Vec<Error> }
 
-mod middleware;
 mod keyword;
 mod krate;
 mod user;
