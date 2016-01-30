@@ -33,7 +33,7 @@ impl Keyword {
     pub fn find_by_keyword(conn: &GenericConnection, name: &str)
                            -> CargoResult<Option<Keyword>> {
         let stmt = try!(conn.prepare("SELECT * FROM keywords \
-                                      WHERE keyword = $1"));
+                                      WHERE LOWER(keyword) = $1"));
         let rows = try!(stmt.query(&[&name]));
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
@@ -164,8 +164,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /keywords/:keyword_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
+    let lower_name = name.to_lowercase();
     let conn = try!(req.tx());
-    let kw = try!(Keyword::find_by_keyword(&*conn, &name));
+    let kw = try!(Keyword::find_by_keyword(&*conn, &lower_name[..]));
     let kw = try!(kw.chain_error(|| NotFound));
 
     #[derive(RustcEncodable)]
