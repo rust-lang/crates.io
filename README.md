@@ -9,6 +9,7 @@ Source code for the default registry for Cargo users. Can be found online at
 
 * `git clone` this repository
 * `npm install`
+* `npm install -g bower && bower install`
 
 ## Making UI tweaks or changes
 
