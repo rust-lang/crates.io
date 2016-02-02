@@ -68,32 +68,32 @@ fn update_crate() {
     };
     ::mock_user(&mut req, ::user("foo"));
     let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
-    ::mock_keyword(&mut req, "kw1");
+    ::mock_keyword(&mut req, "kw3");
     ::mock_keyword(&mut req, "kw2");
 
     Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 0);
+    assert_eq!(cnt(&mut req, "kw3"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string()]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 1);
+    Keyword::update_crate(tx(&req), &krate, &["kw3".to_string()]).unwrap();
+    assert_eq!(cnt(&mut req, "kw3"), 1);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
     Keyword::update_crate(tx(&req), &krate, &["kw2".to_string()]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 0);
+    assert_eq!(cnt(&mut req, "kw3"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 1);
 
     Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 0);
+    assert_eq!(cnt(&mut req, "kw3"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string(),
+    Keyword::update_crate(tx(&req), &krate, &["kw3".to_string(),
                                               "kw2".to_string()]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 1);
+    assert_eq!(cnt(&mut req, "kw3"), 1);
     assert_eq!(cnt(&mut req, "kw2"), 1);
 
     Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
-    assert_eq!(cnt(&mut req, "kw1"), 0);
+    assert_eq!(cnt(&mut req, "kw3"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
 }
