@@ -42,12 +42,12 @@ impl Keyword {
                           -> CargoResult<Keyword> {
         // TODO: racy (the select then insert is not atomic)
         let stmt = try!(conn.prepare("SELECT * FROM keywords
-                                      WHERE keyword = $1"));
+                                      WHERE LOWER(keyword) = $1"));
         for row in try!(stmt.query(&[&name])).iter() {
             return Ok(Model::from_row(&row))
         }
 
-        let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES ($1)
+        let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
                                       RETURNING *"));
         let rows = try!(stmt.query(&[&name]));
         Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
