@@ -78,7 +78,7 @@ fn index_queries() {
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     let mut krate = ::krate("foo");
-    krate.keywords.push("kw1".to_string());
+    krate.keywords.push("kw0".to_string());
     krate.readme = Some("readme".to_string());
     krate.description = Some("description".to_string());
     ::mock_crate(&mut req, krate);
