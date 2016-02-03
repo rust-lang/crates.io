@@ -619,6 +619,9 @@ fn migrations() -> Vec<Migration> {
             "));
             Ok(())
         }),
+        Migration::run(20160202210722,
+                       "UPDATE keywords SET keyword = LOWER(keyword)",
+                       "UPDATE keywords SET keyword = keyword"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
