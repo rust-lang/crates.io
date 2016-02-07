@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use conduit::{Handler, Request, Method};
 
 use cargo_registry::Model;
