@@ -19,9 +19,6 @@ export default Ember.Route.extend({
         controller.set('requestedVersion', requestedVersion);
         controller.set('fetchingFollowing', true);
 
-        crate.get('keywords')
-            .then((keywords) => controller.set('keywords', keywords));
-
         if (this.session.get('currentUser')) {
             ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))

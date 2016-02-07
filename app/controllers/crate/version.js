@@ -16,7 +16,7 @@ export default Ember.Controller.extend({
     following: false,
     currentVersion: computed.alias('model'),
     requestedVersion: null,
-    keywords: [],
+    keywords: computed.alias('crate.keywords'),
 
     sortedVersions: computed.readOnly('crate.versions'),
 
