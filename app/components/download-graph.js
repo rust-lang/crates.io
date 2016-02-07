@@ -1,6 +1,7 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    classNames: 'graph-data',
 
     didInsertElement() {
         this._super(...arguments);
@@ -28,10 +29,10 @@ export default Ember.Component.extend({
         let data = this.get('data');
 
         if (!data || !window.google || !window.googleChartsLoaded) {
-            Ember.$('.graph').hide();
+            this.$().hide();
             return;
         } else {
-            Ember.$('.graph').show();
+            this.$().show();
         }
 
         var myData = window.google.visualization.arrayToDataTable(data);
@@ -40,11 +41,8 @@ export default Ember.Component.extend({
             pattern: 'LLL d, yyyy',
         });
         fmt.format(myData, 0);
-        var el = document.getElementById('graph-data');
-        if (!el) {
-            return;
-        }
-        var chart = new window.google.visualization.AreaChart(el);
+
+        var chart = new window.google.visualization.AreaChart(this.get('element'));
         chart.draw(myData, {
             chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
             hAxis: {
