@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-import ajax from 'ic-ajax';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -89,13 +88,10 @@ export default Ember.Controller.extend({
         download(version) {
             this.set('isDownloading', true);
 
-            return ajax({
-                url: version.get('dl_path'),
-                dataType: 'json',
-            }).then((data) => {
+            version.getDownloadUrl().then(url => {
                 this.incrementProperty('crate.downloads');
                 this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', data.url);
+                Ember.$('#download-frame').attr('src', url);
             }).finally(() => this.set('isDownloading', false));
         },
 
