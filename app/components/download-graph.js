@@ -6,10 +6,8 @@ export default Ember.Component.extend({
     didInsertElement() {
         this._super(...arguments);
 
-        this.scheduleDraw();
-
-        Ember.$(window).on('resize.chart', () => this.scheduleDraw());
-        Ember.$(document).on('googleChartsLoaded', () => this.scheduleDraw());
+        Ember.$(window).on('resize.chart', () => this.rerender());
+        Ember.$(document).on('googleChartsLoaded', () => this.rerender());
     },
 
     willDestroyElement() {
@@ -17,15 +15,9 @@ export default Ember.Component.extend({
         Ember.$(document).off('googleChartsLoaded');
     },
 
-    onDataUpdate: Ember.observer('data', function() {
-        this.scheduleDraw();
-    }),
+    didRender() {
+        this._super(...arguments);
 
-    scheduleDraw() {
-        Ember.run.scheduleOnce('render', this, this.draw);
-    },
-
-    draw() {
         let data = this.get('data');
 
         if (!data || !window.google || !window.googleChartsLoaded) {
