@@ -7,7 +7,7 @@ export default Ember.Route.extend({
         const requestedVersion = params.version_num;
 
         const crate = this.modelFor('crate');
-        const controller = this.controllerFor('crate.version');
+        const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
 
         // Fall back to the crate's `max_version` property
@@ -49,7 +49,7 @@ export default Ember.Route.extend({
     afterModel(model) {
         this._super(...arguments);
 
-        const controller = this.controllerFor('crate.version');
+        const controller = this.controllerFor(this.routeName);
         const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
 
         context.get('version_downloads').then(downloads => {
