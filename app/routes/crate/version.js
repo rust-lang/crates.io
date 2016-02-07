@@ -17,7 +17,6 @@ export default Ember.Route.extend({
 
         controller.set('crate', crate);
         controller.set('requestedVersion', requestedVersion);
-        controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
 
         crate.get('keywords')
@@ -53,7 +52,6 @@ export default Ember.Route.extend({
         const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
 
         context.get('version_downloads').then(downloads => {
-            controller.set('fetchingDownloads', false);
             controller.set('downloads', downloads);
         });
     },

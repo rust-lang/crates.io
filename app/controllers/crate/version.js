@@ -9,7 +9,6 @@ const { computed } = Ember;
 export default Ember.Controller.extend({
     isDownloading: false,
 
-    fetchingDownloads: true,
     extraDownloads: Ember.computed('downloads.meta.extra_downloads', function() {
         return this.get('downloads.meta.extra_downloads') || [];
     }),
