@@ -55,7 +55,6 @@ export default Ember.Route.extend({
         context.get('version_downloads').then(downloads => {
             controller.set('fetchingDownloads', false);
             controller.set('downloads', downloads);
-            controller.set('extraDownloads', downloads.get('meta.extra_downloads') || []);
         });
     },
 
