@@ -57,10 +57,7 @@ export default Ember.Route.extend({
     },
 
     serialize(model) {
-        if (!model) {
-            return { version_num: '' };
-        } else {
-            return { version_num: model.get('num') };
-        }
+        let version_num = model ? model.get('num') : '';
+        return { version_num };
     },
 });
