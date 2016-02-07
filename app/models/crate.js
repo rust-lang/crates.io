@@ -21,4 +21,12 @@ export default DS.Model.extend({
     version_downloads: DS.hasMany('version-download', { async: true }),
     keywords: DS.hasMany('keywords', { async: true }),
     reverse_dependencies: DS.hasMany('dependency', { async: true }),
+
+    follow() {
+        return this.store.adapterFor('crate').follow(this.get('id'));
+    },
+
+    unfollow() {
+        return this.store.adapterFor('crate').unfollow(this.get('id'));
+    },
 });
