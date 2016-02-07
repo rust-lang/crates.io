@@ -138,18 +138,11 @@ export default Ember.Controller.extend({
                 }
             });
             if (this.get('requestedVersion')) {
-                versions.push({
-                    id: model.get('id'),
-                    num: model.get('num'),
-                });
+                versions.push(model.getProperties('id', 'num'));
             } else {
-                var tmp = this.get('smallSortedVersions');
-                for (i = 0; i < tmp.length; i++) {
-                    versions.push({
-                        id: tmp[i].get('id'),
-                        num: tmp[i].get('num')
-                    });
-                }
+                this.get('smallSortedVersions').forEach(version => {
+                    versions.push(version.getProperties('id', 'num'));
+                });
             }
             if (extra.length > 0) {
                 versions.push({
