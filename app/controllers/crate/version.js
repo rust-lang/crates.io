@@ -101,7 +101,7 @@ export default Ember.Controller.extend({
 
         toggleFollow() {
             this.set('fetchingFollowing', true);
-            this.set('following', !this.get('following'));
+            this.toggleProperty('following');
             var url = `/api/v1/crates/${this.get('crate.name')}/follow`;
             var method;
             if (this.get('following')) {
