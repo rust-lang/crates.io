@@ -1,7 +1,11 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-    redirect() {
-        this.replaceWith('crate.version', '');
+    redirect(model, transition) {
+        if (transition.intent.url) {
+            this.replaceWith('crate.version', '');
+        } else {
+            this.transitionTo('crate.version', '');
+        }
     }
 });
