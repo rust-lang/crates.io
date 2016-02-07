@@ -17,7 +17,6 @@ export default Ember.Route.extend({
 
         controller.set('crate', crate);
         controller.set('requestedVersion', requestedVersion);
-        controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
 
         crate.get('keywords')
@@ -53,10 +52,7 @@ export default Ember.Route.extend({
         const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
 
         context.get('version_downloads').then(downloads => {
-            controller.set('fetchingDownloads', false);
-
-            // make sure to pass the new `model` here because the controller's model won't have been updated yet
-            controller.send('renderChart', model, downloads, downloads.get('meta.extra_downloads') || []);
+            controller.set('downloads', downloads);
         });
     },
 
