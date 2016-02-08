@@ -185,11 +185,7 @@
         <div class='stat'>
             <span class='num'>
                 <img src="/assets/download.png"/>
-                {{#if requestedVersion}}
-                    {{ format-num currentVersion.downloads }}
-                {{else}}
-                    {{ format-num crate.downloads }}
-                {{/if}}
+                {{ format-num downloadsContext.downloads }}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>

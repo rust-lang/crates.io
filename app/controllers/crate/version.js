@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-import ajax from 'ic-ajax';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -9,15 +8,17 @@ const { computed } = Ember;
 export default Ember.Controller.extend({
     isDownloading: false,
 
-    extraDownloads: Ember.computed('downloads.meta.extra_downloads', function() {
-        return this.get('downloads.meta.extra_downloads') || [];
+    downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
+        return this.get('requestedVersion') ? this.get('model') : this.get('crate');
     }),
+    downloads: computed.alias('downloadsContext.version_downloads'),
+    extraDownloads: computed.alias('downloads.content.meta.extra_downloads'),
 
     fetchingFollowing: true,
     following: false,
     currentVersion: computed.alias('model'),
     requestedVersion: null,
-    keywords: [],
+    keywords: computed.alias('crate.keywords'),
 
     sortedVersions: computed.readOnly('crate.versions'),
 
@@ -89,39 +90,31 @@ export default Ember.Controller.extend({
         download(version) {
             this.set('isDownloading', true);
 
-            return ajax({
-                url: version.get('dl_path'),
-                dataType: 'json',
-            }).then((data) => {
+            version.getDownloadUrl().then(url => {
                 this.incrementProperty('crate.downloads');
                 this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', data.url);
+                Ember.$('#download-frame').attr('src', url);
             }).finally(() => this.set('isDownloading', false));
         },
 
         toggleFollow() {
             this.set('fetchingFollowing', true);
-            this.set('following', !this.get('following'));
-            var url = `/api/v1/crates/${this.get('crate.name')}/follow`;
-            var method;
-            if (this.get('following')) {
-                method = 'put';
-            } else {
-                method = 'delete';
-            }
 
-            ajax({
-                method,
-                url
-            }).finally(() => this.set('fetchingFollowing', false));
+            let crate = this.get('crate');
+            let op = this.toggleProperty('following') ?
+                crate.follow() : crate.unfollow();
+
+            return op.finally(() => this.set('fetchingFollowing', false));
         },
     },
 
-    downloadData: Ember.computed('downloads', 'extraDownloads', function() {
-        let { downloads, extraDownloads: extra } = this.getProperties('downloads', 'extraDownloads');
-        if (!downloads || !extra) {
+    downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
+        let downloads = this.get('downloads');
+        if (!downloads) {
             return;
         }
+
+        let extra = this.get('extraDownloads') || [];
 
         var dates = {};
         var versions = [];
