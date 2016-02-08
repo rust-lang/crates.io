@@ -8,6 +8,9 @@ const { computed } = Ember;
 export default Ember.Controller.extend({
     isDownloading: false,
 
+    downloadsContext: Ember.computed('requestedVersion', 'model', 'crate', function() {
+        return this.get('requestedVersion') ? this.get('model') : this.get('crate');
+    }),
     extraDownloads: Ember.computed('downloads.meta.extra_downloads', function() {
         return this.get('downloads.meta.extra_downloads') || [];
     }),
