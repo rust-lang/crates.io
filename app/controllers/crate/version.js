@@ -12,9 +12,7 @@ export default Ember.Controller.extend({
         return this.get('requestedVersion') ? this.get('model') : this.get('crate');
     }),
     downloads: computed.alias('downloadsContext.version_downloads'),
-    extraDownloads: computed('downloads.content.meta.extra_downloads', function() {
-        return this.get('downloads.content.meta.extra_downloads') || [];
-    }),
+    extraDownloads: computed.alias('downloads.content.meta.extra_downloads'),
 
     fetchingFollowing: true,
     following: false,
@@ -111,10 +109,12 @@ export default Ember.Controller.extend({
     },
 
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
-        let { downloads, extraDownloads: extra } = this.getProperties('downloads', 'extraDownloads');
-        if (!downloads || !extra) {
+        let downloads = this.get('downloads');
+        if (!downloads) {
             return;
         }
+
+        let extra = this.get('extraDownloads') || [];
 
         var dates = {};
         var versions = [];
