@@ -11,8 +11,9 @@ export default Ember.Controller.extend({
     downloadsContext: Ember.computed('requestedVersion', 'model', 'crate', function() {
         return this.get('requestedVersion') ? this.get('model') : this.get('crate');
     }),
-    extraDownloads: Ember.computed('downloads.meta.extra_downloads', function() {
-        return this.get('downloads.meta.extra_downloads') || [];
+    downloads: computed.alias('downloadsContext.version_downloads'),
+    extraDownloads: Ember.computed('downloads.content.meta.extra_downloads', function() {
+        return this.get('downloads.content.meta.extra_downloads') || [];
     }),
 
     fetchingFollowing: true,

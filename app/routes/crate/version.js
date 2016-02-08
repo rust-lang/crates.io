@@ -40,19 +40,6 @@ export default Ember.Route.extend({
             });
     },
 
-    // can't do this in setupController because it won't be called
-    // when going from "All Versions" to the current version
-    afterModel(model) {
-        this._super(...arguments);
-
-        const controller = this.controllerFor(this.routeName);
-        const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
-
-        context.get('version_downloads').then(downloads => {
-            controller.set('downloads', downloads);
-        });
-    },
-
     serialize(model) {
         let version_num = model ? model.get('num') : '';
         return { version_num };
