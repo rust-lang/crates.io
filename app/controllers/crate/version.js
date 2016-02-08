@@ -8,11 +8,11 @@ const { computed } = Ember;
 export default Ember.Controller.extend({
     isDownloading: false,
 
-    downloadsContext: Ember.computed('requestedVersion', 'model', 'crate', function() {
+    downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
         return this.get('requestedVersion') ? this.get('model') : this.get('crate');
     }),
     downloads: computed.alias('downloadsContext.version_downloads'),
-    extraDownloads: Ember.computed('downloads.content.meta.extra_downloads', function() {
+    extraDownloads: computed('downloads.content.meta.extra_downloads', function() {
         return this.get('downloads.content.meta.extra_downloads') || [];
     }),
 
@@ -110,7 +110,7 @@ export default Ember.Controller.extend({
         },
     },
 
-    downloadData: Ember.computed('downloads', 'extraDownloads', 'requestedVersion', function() {
+    downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let { downloads, extraDownloads: extra } = this.getProperties('downloads', 'extraDownloads');
         if (!downloads || !extra) {
             return;
