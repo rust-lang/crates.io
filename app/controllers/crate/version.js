@@ -109,7 +109,7 @@ export default Ember.Controller.extend({
         },
     },
 
-    downloadData: Ember.computed('downloads', 'extraDownloads', function() {
+    downloadData: Ember.computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let { downloads, extraDownloads: extra } = this.getProperties('downloads', 'extraDownloads');
         if (!downloads || !extra) {
             return;
