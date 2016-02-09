@@ -78,7 +78,7 @@ fn index_queries() {
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     let mut krate = ::krate("foo");
-    krate.keywords.push("kw0".to_string());
+    krate.keywords.push("kw1".to_string());
     krate.readme = Some("readme".to_string());
     krate.description = Some("description".to_string());
     ::mock_crate(&mut req, krate);
@@ -93,7 +93,7 @@ fn index_queries() {
     let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
     let mut response = ok_resp!(middle.call(req.with_query("q=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
+    assert_eq!(::json::<CrateList>(&mut response).meta.total, 2);
     let mut response = ok_resp!(middle.call(req.with_query("q=readme")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
     let mut response = ok_resp!(middle.call(req.with_query("q=description")));
@@ -115,9 +115,9 @@ fn index_queries() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
     let mut response = ok_resp!(middle.call(req.with_query("keyword=KW1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw2")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 }
