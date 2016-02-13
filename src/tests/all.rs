@@ -6,6 +6,7 @@ extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
+extern crate dotenv;
 extern crate git2;
 extern crate postgres;
 extern crate rustc_serialize;
@@ -72,6 +73,7 @@ mod version;
 mod team;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    dotenv::dotenv().ok();
     static INIT: Once = ONCE_INIT;
     git::init();
 

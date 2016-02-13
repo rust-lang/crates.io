@@ -15,6 +15,8 @@ use std::env;
 use time::Duration;
 use rand::{StdRng, Rng};
 
+use cargo_registry::env;
+
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
@@ -24,13 +26,6 @@ fn main() {
         update(&tx).unwrap();
         tx.set_commit();
         tx.finish().unwrap();
-    }
-}
-
-fn env(s: &str) -> String {
-    match env::var(s).ok() {
-        Some(s) => s,
-        None => panic!("must have `{}` defined", s),
     }
 }
 

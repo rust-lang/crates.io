@@ -16,7 +16,7 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, Version};
+use cargo_registry::{Crate, Version, env};
 
 #[allow(dead_code)]
 fn main() {
@@ -27,13 +27,6 @@ fn main() {
         delete(&tx);
         tx.set_commit();
         tx.finish().unwrap();
-    }
-}
-
-fn env(s: &str) -> String {
-    match env::var(s).ok() {
-        Some(s) => s,
-        None => panic!("must have `{}` defined", s),
     }
 }
 

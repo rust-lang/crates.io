@@ -8,6 +8,7 @@ use std::env;
 use std::collections::HashSet;
 use migrate::Migration;
 
+use cargo_registry::env;
 use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
 
@@ -22,13 +23,6 @@ fn main() {
         rollback(conn.transaction().unwrap(), migrations).unwrap();
     } else {
         apply(conn.transaction().unwrap(), migrations).unwrap();
-    }
-
-    fn env(s: &str) -> String {
-        match env::var(s).ok() {
-            Some(s) => s,
-            None => panic!("must have `{}` defined", s),
-        }
     }
 }
 
