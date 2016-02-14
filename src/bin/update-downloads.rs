@@ -9,7 +9,7 @@ use std::env;
 use std::collections::HashMap;
 use std::time::Duration;
 
-use cargo_registry::{VersionDownload, Version, Model};
+use cargo_registry::{VersionDownload, Version, Model, env};
 
 static LIMIT: i64 = 1000;
 
@@ -28,13 +28,6 @@ fn main() {
         } else {
             break
         }
-    }
-}
-
-fn env(s: &str) -> String {
-    match env::var(s).ok() {
-        Some(s) => s,
-        None => panic!("must have `{}` defined", s),
     }
 }
 
@@ -148,10 +141,10 @@ mod test {
     use postgres;
     use semver;
 
-    use cargo_registry::{Version, Crate, User, Model};
+    use cargo_registry::{Version, Crate, User, Model, env};
 
     fn conn() -> postgres::Connection {
-        postgres::Connection::connect(&::env("TEST_DATABASE_URL")[..],
+        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..],
                                       postgres::SslMode::None).unwrap()
     }
 

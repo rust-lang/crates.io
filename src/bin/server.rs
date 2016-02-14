@@ -6,6 +6,7 @@ extern crate civet;
 extern crate git2;
 extern crate env_logger;
 
+use cargo_registry::env;
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
@@ -77,11 +78,4 @@ fn main() {
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
     let (_tx, rx) = channel::<()>();
     rx.recv().unwrap();
-}
-
-fn env(s: &str) -> String {
-    match env::var(s).ok() {
-        Some(s) => s,
-        None => panic!("must have `{}` defined", s),
-    }
 }
