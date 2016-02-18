@@ -1,10 +1,9 @@
 {
   "name": "cargo",
   "dependencies": {
-    "ember": "2.1.0",
-    "ember-cli-shims": "0.0.6",
+    "ember": "2.3.0",
+    "ember-cli-shims": "0.1.0",
     "ember-cli-test-loader": "0.2.1",
-    "ember-data": "2.1.0",
     "ember-load-initializers": "0.1.7",
     "ember-qunit": "0.4.16",
     "ember-qunit-notifications": "0.1.0",
