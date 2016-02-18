@@ -9,6 +9,7 @@ Source code for the default registry for Cargo users. Can be found online at
 
 * `git clone` this repository
 * `npm install`
+* `npm install -g ember-cli`
 * `npm install -g bower && bower install`
 
 ## Making UI tweaks or changes
@@ -88,14 +89,14 @@ little more complicated.
 4. Run the migrations
 
     ```
-    ./target/migrate
+    ./target/debug/migrate
     ```
 
 5. Run the servers
 
     ```
     # In one window, run the api server
-    ./target/server
+    ./target/debug/server
 
     # In another window run the ember-cli server
     npm run start:local
