@@ -602,7 +602,7 @@ fn migrations() -> Vec<Migration> {
             try!(tx.batch_execute("
                 DROP TRIGGER trigger_crates_set_updated_at ON crates;
                 DROP TRIGGER trigger_versions_set_updated_at ON versions;
-                DROP FUNCTION set_updated_at_ignore_downloads;
+                DROP FUNCTION set_updated_at_ignore_downloads();
                 CREATE TRIGGER trigger_crates_set_updated_at BEFORE UPDATE
                 ON crates
                 FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
@@ -612,6 +612,75 @@ fn migrations() -> Vec<Migration> {
                 FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
             "));
             Ok(())
+        }),
+        Migration::new(20160219125609, |tx| {
+            tx.batch_execute("
+                ALTER TABLE crates DROP COLUMN keywords;
+                CREATE OR REPLACE FUNCTION trigger_crates_name_search() RETURNS trigger AS $$
+                DECLARE kws TEXT;
+                begin
+                  SELECT array_to_string(array_agg(keyword), ',') INTO kws
+                    FROM keywords INNER JOIN crates_keywords
+                    ON keywords.id = crates_keywords.keyword_id
+                    WHERE crates_keywords.crate_id = new.id;
+                  new.textsearchable_index_col :=
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.name, '')), 'A') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(kws, '')), 'B') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.description, '')), 'C') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.readme, '')), 'D');
+                  return new;
+                end
+                $$ LANGUAGE plpgsql;
+                CREATE OR REPLACE FUNCTION touch_crate() RETURNS trigger AS $$
+                BEGIN
+                    IF TG_OP = 'DELETE' THEN
+                        UPDATE crates SET updated_at = CURRENT_TIMESTAMP WHERE
+                            id = OLD.crate_id;
+                        RETURN OLD;
+                    ELSE
+                        UPDATE crates SET updated_at = CURRENT_TIMESTAMP WHERE
+                            id = NEW.crate_id;
+                        RETURN NEW;
+                    END IF;
+                END
+                $$ LANGUAGE plpgsql;
+                CREATE TRIGGER touch_crate_on_modify_keywords
+                    AFTER INSERT OR DELETE ON crates_keywords
+                    FOR EACH ROW
+                    EXECUTE PROCEDURE touch_crate();
+            ")
+        }, |tx| {
+            tx.batch_execute("
+                ALTER TABLE crates ADD COLUMN keywords VARCHAR;
+                CREATE OR REPLACE FUNCTION trigger_crates_name_search() RETURNS trigger AS $$
+                begin
+                  new.textsearchable_index_col :=
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.name, '')), 'A') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.keywords, '')), 'B') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.description, '')), 'C') ||
+                     setweight(to_tsvector('pg_catalog.english',
+                                           coalesce(new.readme, '')), 'D');
+                  return new;
+                end
+                $$ LANGUAGE plpgsql;
+
+                UPDATE crates SET keywords = (
+                  SELECT array_to_string(array_agg(keyword), ',')
+                    FROM keywords INNER JOIN crates_keywords
+                    ON keywords.id = crates_keywords.keyword_id
+                    WHERE crates_keywords.crate_id = crates.id
+                );
+
+                DROP TRIGGER touch_crate_on_modify_keywords ON crates_keywords;
+                DROP FUNCTION touch_crate();
+            ")
         }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`

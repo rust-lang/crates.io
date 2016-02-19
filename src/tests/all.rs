@@ -191,7 +191,6 @@ fn krate(name: &str) -> Crate {
         homepage: None,
         description: None,
         readme: None,
-        keywords: Vec::new(),
         license: None,
         repository: None,
         max_upload_size: None,
@@ -222,13 +221,10 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                                           &krate.homepage,
                                           &krate.documentation,
                                           &krate.readme,
-                                          &krate.keywords,
                                           &krate.repository,
                                           &krate.license,
                                           &None,
                                           krate.max_upload_size).unwrap();
-    Keyword::update_crate(req.tx().unwrap(), &krate,
-                          &krate.keywords).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
 }
@@ -260,13 +256,20 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
                 deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, deps));
+    req.with_body(&new_req_body(krate, version, deps, Vec::new()));
     return req;
 }
 
-fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>)
-                -> Vec<u8> {
-    let kws = krate.keywords.into_iter().map(u::Keyword).collect();
+fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str,
+                         kws: Vec<String>) -> MockRequest {
+    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    req.with_body(&new_req_body(krate, version, Vec::new(), kws));
+    return req;
+}
+
+fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
+                kws: Vec<String>) -> Vec<u8> {
+    let kws = kws.into_iter().map(u::Keyword).collect();
     new_crate_to_body(&u::NewCrate {
         name: u::CrateName(krate.name),
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
