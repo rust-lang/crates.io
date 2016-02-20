@@ -48,7 +48,6 @@ pub struct Crate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
-    pub keywords: Vec<String>,
     pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
@@ -66,7 +65,6 @@ pub struct EncodableCrate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
-    pub keywords: Vec<String>,
     pub license: Option<String>,
     pub repository: Option<String>,
     pub links: CrateLinks,
@@ -99,7 +97,6 @@ impl Crate {
                           homepage: &Option<String>,
                           documentation: &Option<String>,
                           readme: &Option<String>,
-                          keywords: &[String],
                           repository: &Option<String>,
                           license: &Option<String>,
                           license_file: &Option<String>,
@@ -112,7 +109,6 @@ impl Crate {
         let repository = repository.as_ref().map(|s| &s[..]);
         let mut license = license.as_ref().map(|s| &s[..]);
         let license_file = license_file.as_ref().map(|s| &s[..]);
-        let keywords = keywords.join(",");
         try!(validate_url(homepage, "homepage"));
         try!(validate_url(documentation, "documentation"));
         try!(validate_url(repository, "repository"));
@@ -138,14 +134,13 @@ impl Crate {
                                              homepage = $2,
                                              description = $3,
                                              readme = $4,
-                                             keywords = $5,
-                                             license = $6,
-                                             repository = $7
+                                             license = $5,
+                                             repository = $6
                                        WHERE canon_crate_name(name) =
-                                             canon_crate_name($8)
+                                             canon_crate_name($7)
                                    RETURNING *"));
         let rows = try!(stmt.query(&[&documentation, &homepage,
-                                     &description, &readme, &keywords,
+                                     &description, &readme,
                                      &license, &repository,
                                      &name]));
         match rows.iter().next() {
@@ -162,13 +157,13 @@ impl Crate {
 
         let stmt = try!(conn.prepare("INSERT INTO crates
                                       (name, user_id, description, homepage,
-                                       documentation, readme, keywords,
+                                       documentation, readme,
                                        repository, license, max_upload_size)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                                       RETURNING *"));
         let rows = try!(stmt.query(&[&name, &user_id,
                                      &description, &homepage,
-                                     &documentation, &readme, &keywords,
+                                     &documentation, &readme,
                                      &repository, &license, &max_upload_size]));
         let ret: Crate = Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no crate returned")
@@ -239,7 +234,7 @@ impl Crate {
     pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
-            homepage, documentation, keywords, license, repository,
+            homepage, documentation, license, repository,
             readme: _, id: _, user_id: _, max_upload_size: _,
         } = self;
         let versions_link = match versions {
@@ -257,7 +252,6 @@ impl Crate {
             documentation: documentation,
             homepage: homepage,
             description: description,
-            keywords: keywords,
             license: license,
             repository: repository,
             links: CrateLinks {
@@ -431,7 +425,6 @@ impl Crate {
 impl Model for Crate {
     fn from_row(row: &Row) -> Crate {
         let max: String = row.get("max_version");
-        let kws: Option<String> = row.get("keywords");
         Crate {
             id: row.get("id"),
             name: row.get("name"),
@@ -444,9 +437,6 @@ impl Model for Crate {
             homepage: row.get("homepage"),
             readme: row.get("readme"),
             max_version: semver::Version::parse(&max).unwrap(),
-            keywords: kws.unwrap_or(String::new()).split(',')
-                         .filter(|s| !s.is_empty())
-                         .map(|s| s.to_string()).collect(),
             license: row.get("license"),
             repository: row.get("repository"),
             max_upload_size: row.get("max_upload_size"),
@@ -666,7 +656,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                                &new_crate.homepage,
                                                &new_crate.documentation,
                                                &new_crate.readme,
-                                               &keywords,
                                                &new_crate.repository,
                                                &new_crate.license,
                                                &new_crate.license_file,

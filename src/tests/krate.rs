@@ -4,11 +4,14 @@ use std::fs::{self, File};
 
 use conduit::{Handler, Request, Method};
 use git2;
+use postgres::GenericConnection;
 use rustc_serialize::{json, Decoder};
 use semver;
 
+use cargo_registry::db::RequestTransaction;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
+use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::{Crate, EncodableCrate};
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
@@ -71,6 +74,8 @@ fn index() {
     assert_eq!(json.crates[0].id, krate.name);
 }
 
+fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
+
 #[test]
 fn index_queries() {
     let (_b, app, middle) = ::app();
@@ -78,13 +83,13 @@ fn index_queries() {
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
     let mut krate = ::krate("foo");
-    krate.keywords.push("kw1".to_string());
     krate.readme = Some("readme".to_string());
     krate.description = Some("description".to_string());
-    ::mock_crate(&mut req, krate);
-    let mut krate2 = ::krate("BAR");
-    krate2.keywords.push("KW1".to_string());
-    ::mock_crate(&mut req, krate2);
+    let (krate, _) = ::mock_crate(&mut req, krate.clone());
+    let krate2 = ::krate("BAR");
+    let (krate2, _) = ::mock_crate(&mut req, krate2.clone());
+    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
+    Keyword::update_crate(tx(&req), &krate2, &["KW1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
@@ -345,7 +350,7 @@ fn new_crate_owner() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new());
+    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)
@@ -734,33 +739,33 @@ fn yank_not_owner() {
 fn bad_keywords() {
     let (_b, app, middle) = ::app();
     {
-        let mut krate = ::krate("foo");
-        krate.keywords.push("super-long-keyword-name-oh-no".to_string());
-        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let krate = ::krate("foo");
+        let kws = vec!["super-long-keyword-name-oh-no".into()];
+        let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
     {
-        let mut krate = ::krate("foo");
-        krate.keywords.push("?@?%".to_string());
-        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let krate = ::krate("foo");
+        let kws = vec!["?@?%".into()];
+        let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
     {
-        let mut krate = ::krate("foo");
-        krate.keywords.push("?@?%".to_string());
-        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let krate = ::krate("foo");
+        let kws = vec!["?@?%".into()];
+        let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
     {
-        let mut krate = ::krate("foo");
-        krate.keywords.push("áccênts".to_string());
-        let mut req = ::new_req_full(app.clone(), krate, "1.0.0", Vec::new());
+        let krate = ::krate("foo");
+        let kws = vec!["áccênts".into()];
+        let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
         ::mock_user(&mut req, ::user("foo"));
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
