@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-import ajax from 'ic-ajax';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -9,12 +8,17 @@ const { computed } = Ember;
 export default Ember.Controller.extend({
     isDownloading: false,
 
-    fetchingDownloads: true,
+    downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
+        return this.get('requestedVersion') ? this.get('model') : this.get('crate');
+    }),
+    downloads: computed.alias('downloadsContext.version_downloads'),
+    extraDownloads: computed.alias('downloads.content.meta.extra_downloads'),
+
     fetchingFollowing: true,
     following: false,
     currentVersion: computed.alias('model'),
     requestedVersion: null,
-    keywords: [],
+    keywords: computed.alias('crate.keywords'),
 
     sortedVersions: computed.readOnly('crate.versions'),
 
@@ -86,130 +90,83 @@ export default Ember.Controller.extend({
         download(version) {
             this.set('isDownloading', true);
 
-            return ajax({
-                url: version.get('dl_path'),
-                dataType: 'json',
-            }).then((data) => {
+            version.getDownloadUrl().then(url => {
                 this.incrementProperty('crate.downloads');
                 this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', data.url);
+                Ember.$('#download-frame').attr('src', url);
             }).finally(() => this.set('isDownloading', false));
         },
 
         toggleFollow() {
             this.set('fetchingFollowing', true);
-            this.set('following', !this.get('following'));
-            var url = `/api/v1/crates/${this.get('crate.name')}/follow`;
-            var method;
-            if (this.get('following')) {
-                method = 'put';
-            } else {
-                method = 'delete';
-            }
 
-            ajax({
-                method,
-                url
-            }).finally(() => this.set('fetchingFollowing', false));
-        },
+            let crate = this.get('crate');
+            let op = this.toggleProperty('following') ?
+                crate.follow() : crate.unfollow();
 
-        renderChart(model, downloads, extra) {
-            var dates = {};
-            var versions = [];
-            for (var i = 0; i < 90; i++) {
-                var now = moment().subtract(i, 'days');
-                dates[now.format('MMM D')] = { date: now, cnt: {} };
-            }
-
-            downloads.forEach((d) => {
-                var version_id = d.get('version.id');
-                var key = moment(d.get('date')).utc().format('MMM D');
-                if (dates[key]) {
-                    var prev = dates[key].cnt[version_id] || 0;
-                    dates[key].cnt[version_id] = prev + d.get('downloads');
-                }
-            });
-
-            extra.forEach((d) => {
-                var key = moment(d.date).utc().format('MMM D');
-                if (dates[key]) {
-                    var prev = dates[key].cnt[null] || 0;
-                    dates[key].cnt[null] = prev + d.downloads;
-                }
-            });
-            if (this.get('requestedVersion')) {
-                versions.push({
-                    id: model.get('id'),
-                    num: model.get('num'),
-                });
-            } else {
-                var tmp = this.get('smallSortedVersions');
-                for (i = 0; i < tmp.length; i++) {
-                    versions.push({
-                        id: tmp[i].get('id'),
-                        num: tmp[i].get('num')
-                    });
-                }
-            }
-            if (extra.length > 0) {
-                versions.push({
-                    id: null,
-                    num: 'Other'
-                });
-            }
-
-            var headers = ['Date'];
-            versions.sort((b) => b.num).reverse();
-            for (i = 0; i < versions.length; i++) {
-                headers.push(versions[i].num);
-            }
-            var data = [headers];
-            for (var date in dates) {
-                var row = [dates[date].date.toDate()];
-                for (i = 0; i < versions.length; i++) {
-                    row.push(dates[date].cnt[versions[i].id] || 0);
-                }
-                data.push(row);
-            }
-
-            // TODO: move this to a component
-            function drawChart() {
-                if (!window.google || !window.googleChartsLoaded) {
-                    Ember.$('.graph').hide();
-                    return;
-                } else {
-                    Ember.$('.graph').show();
-                }
-                var myData = window.google.visualization.arrayToDataTable(data);
-
-                var fmt = new window.google.visualization.DateFormat({
-                    pattern: 'LLL d, yyyy',
-                });
-                fmt.format(myData, 0);
-                var el = document.getElementById('graph-data');
-                if (!el) {
-                    return;
-                }
-                var chart = new window.google.visualization.AreaChart(el);
-                chart.draw(myData, {
-                    chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
-                    hAxis: {
-                        minorGridlines: { count: 8 },
-                    },
-                    vAxis: {
-                        minorGridlines: { count: 5 },
-                        viewWindow: { min: 0, },
-                    },
-                    isStacked: true,
-                    focusTarget: 'category',
-                });
-            }
-
-            Ember.run.scheduleOnce('afterRender', this, drawChart);
-            Ember.$(window).off('resize.chart');
-            Ember.$(window).on('resize.chart', drawChart);
-            Ember.$(document).off('googleChartsLoaded');
-            Ember.$(document).on('googleChartsLoaded', drawChart);
+            return op.finally(() => this.set('fetchingFollowing', false));
         },
     },
+
+    downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
+        let downloads = this.get('downloads');
+        if (!downloads) {
+            return;
+        }
+
+        let extra = this.get('extraDownloads') || [];
+
+        var dates = {};
+        var versions = [];
+        for (var i = 0; i < 90; i++) {
+            var now = moment().subtract(i, 'days');
+            dates[now.format('MMM D')] = { date: now, cnt: {} };
+        }
+
+        downloads.forEach((d) => {
+            var version_id = d.get('version.id');
+            var key = moment(d.get('date')).utc().format('MMM D');
+            if (dates[key]) {
+                var prev = dates[key].cnt[version_id] || 0;
+                dates[key].cnt[version_id] = prev + d.get('downloads');
+            }
+        });
+
+        extra.forEach((d) => {
+            var key = moment(d.date).utc().format('MMM D');
+            if (dates[key]) {
+                var prev = dates[key].cnt[null] || 0;
+                dates[key].cnt[null] = prev + d.downloads;
+            }
+        });
+        if (this.get('requestedVersion')) {
+            versions.push(this.get('model').getProperties('id', 'num'));
+        } else {
+            this.get('smallSortedVersions').forEach(version => {
+                versions.push(version.getProperties('id', 'num'));
+            });
+        }
+        if (extra.length > 0) {
+            versions.push({
+                id: null,
+                num: 'Other'
+            });
+        }
+
+        var headers = ['Date'];
+        versions.sort((b) => b.num).reverse();
+        for (i = 0; i < versions.length; i++) {
+            headers.push(versions[i].num);
+        }
+        var data = [headers];
+        for (var date in dates) {
+            var row = [dates[date].date.toDate()];
+            for (i = 0; i < versions.length; i++) {
+                row.push(dates[date].cnt[versions[i].id] || 0);
+            }
+            data.push(row);
+        }
+
+        return data;
+    }),
 });

@@ -8,6 +8,7 @@
 extern crate postgres as pg;
 extern crate rustc_serialize;
 extern crate curl;
+extern crate dotenv;
 extern crate flate2;
 extern crate git2;
 extern crate license_exprs;
@@ -187,4 +188,12 @@ pub fn now() -> time::Timespec {
 
 pub fn encode_time(ts: time::Timespec) -> String {
     time::at_utc(ts).rfc3339().to_string()
+}
+
+pub fn env(s: &str) -> String {
+    dotenv::dotenv().ok();
+    match ::std::env::var(s) {
+        Ok(s) => s,
+        Err(_) => panic!("must have `{}` defined", s),
+    }
 }

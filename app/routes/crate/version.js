@@ -7,7 +7,7 @@ export default Ember.Route.extend({
         const requestedVersion = params.version_num;
 
         const crate = this.modelFor('crate');
-        const controller = this.controllerFor('crate.version');
+        const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
 
         // Fall back to the crate's `max_version` property
@@ -17,11 +17,7 @@ export default Ember.Route.extend({
 
         controller.set('crate', crate);
         controller.set('requestedVersion', requestedVersion);
-        controller.set('fetchingDownloads', true);
         controller.set('fetchingFollowing', true);
-
-        crate.get('keywords')
-            .then((keywords) => controller.set('keywords', keywords));
 
         if (this.session.get('currentUser')) {
             ajax(`/api/v1/crates/${crate.get('name')}/following`)
@@ -44,27 +40,8 @@ export default Ember.Route.extend({
             });
     },
 
-    // can't do this in setupController because it won't be called
-    // when going from "All Versions" to the current version
-    afterModel(model) {
-        this._super(...arguments);
-
-        const controller = this.controllerFor('crate.version');
-        const context = controller.get('requestedVersion') ? model : this.modelFor('crate');
-
-        context.get('version_downloads').then(downloads => {
-            controller.set('fetchingDownloads', false);
-
-            // make sure to pass the new `model` here because the controller's model won't have been updated yet
-            controller.send('renderChart', model, downloads, downloads.get('meta.extra_downloads') || []);
-        });
-    },
-
     serialize(model) {
-        if (!model) {
-            return { version_num: '' };
-        } else {
-            return { version_num: model.get('num') };
-        }
+        let version_num = model ? model.get('num') : '';
+        return { version_num };
     },
 });
