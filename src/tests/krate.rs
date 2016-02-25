@@ -11,7 +11,7 @@ use semver;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
-use cargo_registry::keyword::Keyword;
+use cargo_registry::keyword::{Keyword, EncodableKeyword};
 use cargo_registry::krate::{Crate, EncodableCrate};
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
@@ -28,7 +28,7 @@ struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
 struct GoodCrate { krate: EncodableCrate }
 #[derive(RustcDecodable)]
-struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion> }
+struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion>, keywords: Vec<EncodableKeyword> }
 #[derive(RustcDecodable)]
 struct Deps { dependencies: Vec<EncodableDependency> }
 #[derive(RustcDecodable)]
@@ -136,7 +136,8 @@ fn show() {
     krate.description = Some(format!("description"));
     krate.documentation = Some(format!("https://example.com"));
     krate.homepage = Some(format!("http://example.com"));
-    ::mock_crate(&mut req, krate.clone());
+    let (krate, _) = ::mock_crate(&mut req, krate.clone());
+    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);
@@ -145,6 +146,7 @@ fn show() {
     assert_eq!(json.krate.description, krate.description);
     assert_eq!(json.krate.homepage, krate.homepage);
     assert_eq!(json.krate.documentation, krate.documentation);
+    assert_eq!(json.krate.keywords, Some(vec!["kw1".into()]));
     let versions = json.krate.versions.as_ref().unwrap();
     assert_eq!(versions.len(), 1);
     assert_eq!(json.versions.len(), 1);
@@ -154,6 +156,8 @@ fn show() {
     let suffix = "/api/v1/crates/foo/1.0.0/download";
     assert!(json.versions[0].dl_path.ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
+    assert_eq!(1, json.keywords.len());
+    assert_eq!("kw1".to_string(), json.keywords[0].id);
 }
 
 #[test]

@@ -59,6 +59,7 @@ pub struct EncodableCrate {
     pub name: String,
     pub updated_at: String,
     pub versions: Option<Vec<i32>>,
+    pub keywords: Option<Vec<String>>,
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
@@ -231,7 +232,11 @@ impl Crate {
         parts.next().is_none()
     }
 
-    pub fn encodable(self, versions: Option<Vec<i32>>) -> EncodableCrate {
+    pub fn encodable(
+        self,
+        versions: Option<Vec<i32>>,
+        keywords: Option<&[Keyword]>,
+    ) -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, license, repository,
@@ -241,6 +246,7 @@ impl Crate {
             Some(..) => None,
             None => Some(format!("/api/v1/crates/{}/versions", name)),
         };
+        let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -248,6 +254,7 @@ impl Crate {
             created_at: ::encode_time(created_at),
             downloads: downloads,
             versions: versions,
+            keywords: keyword_ids,
             max_version: max_version.to_string(),
             documentation: documentation,
             homepage: homepage,
@@ -548,7 +555,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     for row in try!(stmt.query(&args)).iter() {
         let krate: Crate = Model::from_row(&row);
-        crates.push(krate.encodable(None));
+        crates.push(krate.encodable(None, None));
     }
 
     // Query for the total count of crates
@@ -583,7 +590,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);
-            krate.encodable(None)
+            krate.encodable(None, None)
         }).collect::<Vec<EncodableCrate>>())
     };
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
@@ -628,7 +635,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         keywords: Vec<EncodableKeyword>,
     }
     Ok(req.json(&R {
-        krate: krate.clone().encodable(Some(ids)),
+        krate: krate.clone().encodable(Some(ids), Some(&kws)),
         versions: versions.into_iter().map(|v| {
             v.encodable(&krate.name)
         }).collect(),
@@ -750,7 +757,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(RustcEncodable)]
     struct R { krate: EncodableCrate }
-    Ok(req.json(&R { krate: krate.encodable(None) }))
+    Ok(req.json(&R { krate: krate.encodable(None, None) }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
