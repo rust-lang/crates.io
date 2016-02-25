@@ -232,11 +232,10 @@ impl Crate {
         parts.next().is_none()
     }
 
-    pub fn encodable(
-        self,
-        versions: Option<Vec<i32>>,
-        keywords: Option<&[Keyword]>,
-    ) -> EncodableCrate {
+    pub fn encodable(self,
+                     versions: Option<Vec<i32>>,
+                     keywords: Option<&[Keyword]>)
+                     -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, license, repository,
