@@ -78,7 +78,7 @@ body {
         background: none;
         outline: 0;
         border: 0;
-        padding: 10px;
+        padding: 10px 0;
 
         &.active {
             background: rgb(42, 79, 39);
@@ -95,6 +95,13 @@ body {
         left: auto;
         right: 0;
         min-width: 200px;
+
+        &.open { display: block; }
+    }
+    #doc-links {
+        display: none;
+        left: auto;
+        min-width: 150px;
 
         &.open { display: block; }
     }

@@ -22,8 +22,27 @@
 
     <div class='nav'>
         {{#link-to "crates" (query-params letter="null" page=1)}}
-            Browse All Crates
+            <button type="button">Browse All Crates</button>
         {{/link-to}}
+        <span class="sep">|</span>
+        {{#rl-dropdown-container class="dropdown-container"}}
+            {{#rl-dropdown-toggle class="dropdown"}}
+                Docs
+                <span class='arrow'></span>
+            {{/rl-dropdown-toggle}}
+
+            {{#rl-dropdown tagName="ul" id="doc-links" class="dropdown" closeOnChildClick="a:link"}}
+                <li><a href='http://doc.crates.io/index.html'>Getting Started</a></li>
+                <li><a href='http://doc.crates.io/guide.html'>Guide</a></li>
+                <li><a href='http://doc.crates.io/crates-io.html'>Using crates.io</a></li>
+                <li><a href='http://doc.crates.io/faq.html'>FAQ</a></li>
+                <li><a href='http://doc.crates.io/manifest.html'>Manifest Format</a></li>
+                <li><a href='http://doc.crates.io/build-script.html'>Build Scripts</a></li>
+                <li><a href='http://doc.crates.io/config.html'>Configuration</a></li>
+                <li><a href='http://doc.crates.io/pkgid-spec.html'>Package ID specs</a></li>
+                <li><a href='http://doc.crates.io/environment-variables.html'>Environment Variables</a></li>
+            {{/rl-dropdown}}
+        {{/rl-dropdown-container}}
         <span class="sep">|</span>
         {{#if session.currentUser}}
             {{#rl-dropdown-container class="dropdown-container"}}
@@ -41,8 +60,10 @@
             {{/rl-dropdown-container}}
         {{else}}
             {{#link-to "login"}}
-                <img src="/assets/lock.png"/>
-                Log in with GitHub
+                <button type="button">
+                    <img src="/assets/lock.png"/>
+                    Log in with GitHub
+                </button>
             {{/link-to}}
         {{/if}}
     </div>
