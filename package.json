@@ -45,7 +45,7 @@
     "ember-rl-dropdown": "0.7.0",
     "ember-route-alias": "^0.1.3",
     "ember-suave": "1.2.3",
-    "emberx-select": "2.0.2",
+    "emberx-select": "2.1.0",
     "loader.js": "4.0.1"
   },
   "dependencies": {
