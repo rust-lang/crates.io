@@ -137,6 +137,9 @@
     <ul>
       {{#each currentDependencies as |dep|}}
         {{link-to-dep dep=dep}}
+        {{#if dep.optional}}
+            <span class='optional'>optional</span>
+        {{/if}}
       {{else}}
           <li>None</li>
       {{/each}}
