@@ -34,6 +34,10 @@ test = false
 name = "populate"
 test = false
 
+[[bin]]
+name = "transfer-crates"
+test = false
+
 [[test]]
 name = "all"
 path = "src/tests/all.rs"
