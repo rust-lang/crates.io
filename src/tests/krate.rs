@@ -128,6 +128,47 @@ fn index_queries() {
 }
 
 #[test]
+fn exact_match_first_on_queries() {
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let _ = ::mock_user(&mut req, ::user("foo"));
+    let mut krate = ::krate("foo");
+    krate.description = Some("bar baz".to_string());
+    let (_, _) = ::mock_crate(&mut req, krate.clone());
+    let mut krate2 = ::krate("bar");
+    krate2.description = Some("foo baz foo baz".to_string());
+    let (_, _) = ::mock_crate(&mut req, krate2.clone());
+    let mut krate3 = ::krate("baz");
+    krate3.description = Some("foo bar foo bar foo bar".to_string());
+    let (_, _) = ::mock_crate(&mut req, krate3.clone());
+    let mut krate4 = ::krate("other");
+    krate4.description = Some("other".to_string());
+    let (_, _) = ::mock_crate(&mut req, krate4.clone());
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "foo");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "bar");
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "foo");
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "baz");
+    assert_eq!(json.crates[1].name, "bar");
+    assert_eq!(json.crates[2].name, "foo");
+}
+
+#[test]
 fn show() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo");

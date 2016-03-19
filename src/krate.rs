@@ -476,7 +476,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                plainto_tsquery($1) q,
                                ts_rank_cd(textsearchable_index_col, q) rank
           WHERE q @@ textsearchable_index_col
-          ORDER BY rank DESC, crates.name ASC
+          ORDER BY name = $1 DESC, rank DESC, crates.name ASC
           LIMIT $2 OFFSET $3".to_string(),
          "SELECT COUNT(crates.*) FROM crates,
                                       plainto_tsquery($1) q
