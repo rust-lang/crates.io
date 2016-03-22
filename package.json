@@ -38,7 +38,7 @@
     "ember-cli-sass": "5.0.1",
     "ember-cli-sri": "^1.2.0",
     "ember-cli-uglify": "^1.2.0",
-    "ember-data": "2.4.2",
+    "ember-data": "2.4.3",
     "ember-export-application-global": "^1.0.4",
     "ember-moment": "6.1.0",
     "ember-page-title": "2.0.7",
