@@ -32,7 +32,8 @@ export default Ember.Controller.extend({
                           'crate.wiki',
                           'crate.mailing_list',
                           'crate.documentation',
-                          'crate.repository'),
+                          'crate.repository',
+                          'crate.reverse_dependencies'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return DS.PromiseArray.create({

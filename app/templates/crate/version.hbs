@@ -128,6 +128,13 @@
             {{#if crate.repository}}
                 <li><a href="{{crate.repository}}">Repository</a></li>
             {{/if}}
+            {{#if crate.reverse_dependencies}}
+                <li>
+                  {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id)}}
+                    Dependent crates
+                  {{/link-to}}
+                </li>
+            {{/if}}
           </ul>
         </div>
     {{/if}}
