@@ -37,8 +37,13 @@
 
 {{#if currentVersion.yanked}}
     <div class='crate-info'>
-        This crate has been yanked, but it is still available for download for
-        other crates that may be depending on it.
+        <div>
+        <p>This crate has been yanked, but it is still available for download for
+        other crates that may be depending on it.</p>
+        <p>You may wish to
+          {{#link-to 'crate' crate}}view the newest version{{/link-to}} instead.
+        </p>
+        </div>
     </div>
 {{else}}
 <div class='crate-info'>
