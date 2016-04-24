@@ -2,7 +2,7 @@
 
 <div id='crates-heading'>
     <div class='info'>
-        <img class='logo' src="/assets/crate.png"/>
+        <img class='logo crate' src="/assets/crate.png"/>
         <h1>{{ crate.name }}</h1>
         <h2>{{ currentVersion.num }}</h2>
     </div>
@@ -25,7 +25,7 @@
             <a class='yellow-button' download
                {{action 'download' currentVersion}}
                href='{{currentVersion.dl_path}}'>
-                <img src="/assets/button-download.png"/>
+                <img class="button-download" src="/assets/button-download.png"/>
                 Download
             </a>
         --}}
@@ -197,14 +197,14 @@
         <h3>Stats Overview</h3>
         <div class='stat'>
             <span class='num'>
-                <img src="/assets/download.png"/>
+                <img class="download" src="/assets/download.png"/>
                 {{ format-num downloadsContext.downloads }}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
-                <img src="/assets/package.png"/>
+                <img class="package" src="/assets/package.png"/>
                 {{ crate.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
