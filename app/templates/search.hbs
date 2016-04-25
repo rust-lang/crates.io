@@ -2,7 +2,7 @@
 
 <div id='crates-heading' class='crate-search'>
     <div class='info'>
-        <img class='logo' src="/assets/magnifier.png"/>
+        <img class='magnifier' src="/assets/magnifier.png"/>
         <h1>Search Results</h1>
     </div>
     {{#if q}}
@@ -28,12 +28,12 @@
 
 <div class='pagination'>
     {{#link-to (query-params page=prevPage) class='prev'}}
-        <img src="/assets/left-pag.png"/>
+        <img class="left-pag" src="/assets/left-pag.png"/>
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to (query-params page=nextPage) class='next'}}
-        <img src="/assets/right-pag.png"/>
+        <img class="right-pag" src="/assets/right-pag.png"/>
     {{/link-to}}
 </div>

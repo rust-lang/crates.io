@@ -1,5 +1,5 @@
 <div id='crates-heading'>
-    <img class='logo' src="/assets/crate.png"/>
+    <img class='logo crate' src="/assets/crate.png"/>
     <h1>All Crates</h1>
     <h2>for keyword '{{ keyword.keyword }}'</h2>
 </div>
@@ -17,7 +17,7 @@
         <span class='small'>Sort by</span>
         {{#rl-dropdown-container class="dropdown-container"}}
             {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
-                <img src="/assets/sort.png"/>
+                <img class="sort" src="/assets/sort.png"/>
                 {{ currentSortBy }}
                 <span class='arrow'></span>
             {{/rl-dropdown-toggle}}
@@ -46,12 +46,12 @@
 
 <div class='pagination'>
     {{#link-to (query-params page=prevPage) class="prev"}}
-        <img src="/assets/left-pag.png"/>
+        <img class="left-pag" src="/assets/left-pag.png"/>
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to (query-params page=nextPage) class="next"}}
-        <img src="/assets/right-pag.png"/>
+        <img class="right-pag" src="/assets/right-pag.png"/>
     {{/link-to}}
 </div>
