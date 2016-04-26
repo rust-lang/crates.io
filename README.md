@@ -127,7 +127,7 @@ little more complicated.
 ## Tools
 
 For more information on using ember-cli, visit
-[http://iamstef.net/ember-cli/](http://iamstef.net/ember-cli/).
+[http://iamstef.net/ember-cli/](http://ember-cli.com/).
 
 For more information on using cargo, visit
 [doc.crates.io](http://doc.crates.io/).
