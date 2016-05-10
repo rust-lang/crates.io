@@ -15,7 +15,6 @@ extern crate time;
 extern crate url;
 
 use std::collections::HashMap;
-use std::error::Error as StdError;
 use std::process::Command;
 use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};

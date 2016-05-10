@@ -1,5 +1,3 @@
-use rustc_serialize::Decoder;
-
 use postgres::GenericConnection;
 use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;

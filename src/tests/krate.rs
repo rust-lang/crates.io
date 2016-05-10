@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use conduit::{Handler, Request, Method};
 use git2;
 use postgres::GenericConnection;
-use rustc_serialize::{json, Decoder};
+use rustc_serialize::json;
 use semver;
 
 use cargo_registry::db::RequestTransaction;
