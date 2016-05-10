@@ -2,7 +2,7 @@ use pg::GenericConnection;
 use pg::rows::Row;
 
 use {Model, User};
-use util::{RequestUtils, CargoResult, ChainError, human};
+use util::{CargoResult, ChainError, human};
 use util::errors::NotFound;
 use http;
 use app::App;

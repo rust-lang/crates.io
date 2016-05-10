@@ -30,7 +30,7 @@ use keyword::EncodableKeyword;
 use upload;
 use user::RequestUser;
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights};
-use util::errors::{NotFound, CargoError};
+use util::errors::NotFound;
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
