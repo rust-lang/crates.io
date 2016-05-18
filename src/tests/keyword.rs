@@ -42,6 +42,17 @@ fn show() {
     assert_eq!(json.keyword.keyword, "foo".to_string());
 }
 
+#[test]
+fn uppercase() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Get, "/api/v1/keywords/UPPER");
+    ::mock_keyword(&mut req, "UPPER");
+
+    let mut res = ok_resp!(middle.call(&mut req));
+    let json: GoodKeyword = ::json(&mut res);
+    assert_eq!(json.keyword.keyword, "upper".to_string());
+}
+
 fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
 
 #[test]
