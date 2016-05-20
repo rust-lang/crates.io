@@ -66,15 +66,13 @@ fn transfer(tx: &postgres::Transaction) {
         let krate = Crate::from_row(&krate);
         println!("transferring {}", krate.name);
         let owners = krate.owners(tx).unwrap();
-        if owners.len() == 1 {
-            let n = tx.execute("UPDATE crate_owners SET owner_id = $1
-                                 WHERE owner_id = $2 AND crate_id = $3",
-                               &[&to.id, &from.id, &krate.id]).unwrap();
-            assert_eq!(n, 1);
-        } else {
-            println!("error: not exactly one owner for {}", krate.name);
-            return
+        if owners.len() != 1 {
+            println!("warning: not exactly one owner for {}", krate.name);
         }
+        let n = tx.execute("UPDATE crate_owners SET owner_id = $1
+                             WHERE owner_id = $2 AND crate_id = $3",
+                           &[&to.id, &from.id, &krate.id]).unwrap();
+        assert_eq!(n, 1);
 
         let n = tx.execute("UPDATE crates SET user_id = $1
                              WHERE id = $2",
