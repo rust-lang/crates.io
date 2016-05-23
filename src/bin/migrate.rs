@@ -682,6 +682,52 @@ fn migrations() -> Vec<Migration> {
                 DROP FUNCTION touch_crate();
             ")
         }),
+        Migration::new(20160326123149, |tx| {
+            use postgres::error::{Error, SqlState};
+
+            for row in try!(tx.query("SELECT id FROM keywords ORDER BY id", &[])).iter() {
+                let kw_id: i32 = row.get(0);
+                let err = {
+                    let tx = try!(tx.transaction());
+                    let res = tx.execute("UPDATE keywords SET keyword = LOWER(keyword)
+                                          WHERE id = $1", &[&kw_id]);
+                    match res {
+                        Ok(n) => {
+                            assert_eq!(n, 1);
+                            try!(tx.commit());
+                            continue;
+                        },
+                        Err(e) => /* Rollback update, fall through */ e
+                    }
+                };
+
+                match err {
+                    Error::Db(ref e) if e.code == SqlState::UniqueViolation => {
+                        // There is already a lower-case version of this keyword.
+                        // Merge into the other one.
+                        let target_id: i32 = try!(tx.query("
+                            SELECT id FROM keywords WHERE keyword = LOWER((
+                                SELECT keyword FROM keywords WHERE id = $1
+                            ))
+                        ", &[&kw_id])).get(0).get(0);
+
+                        try!(tx.batch_execute(&format!("
+                            UPDATE crates_keywords SET keyword_id = {}
+                                WHERE keyword_id = {};
+                            UPDATE keywords SET crates_cnt = crates_cnt + (
+                                SELECT crates_cnt FROM keywords WHERE id = {}
+                            ) WHERE id = {};
+                            DELETE FROM keywords WHERE id = {};
+                        ", target_id, kw_id, kw_id, target_id, kw_id)));
+                    },
+                    e => return Err(e)
+                }
+            }
+
+            Ok(())
+        }, |_tx| {
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
