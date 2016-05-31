@@ -32,7 +32,8 @@ body {
 }
 
 .ember-application > div {
-    width: 900px;
+    // width: 900px;
+    width: 100%;
     @media only screen and (max-width: 900px) {
         width: 100%;
     }
@@ -53,8 +54,12 @@ body {
 
 #header {
     color: white;
+    background-color: #F27A11;
+    font-size: 110%;
     position: relative;
-    height: 100px;
+    height: 40px;
+    padding-right: 20px;
+    width: 100%;
     @include display-flex;
     @include align-items(center);
     @include justify-content(space-between);
@@ -112,7 +117,7 @@ body {
     }
 }
 
-#header input.search, #mobile-search input.search {
+#main-search input.search, #mobile-search input.search {
     font-size: 90%;
     border: none;
     color: black;
@@ -335,8 +340,9 @@ img {
     }
 
     &.lock {
-        width: 10px;
-        height: 13px;
+        width: 20px;
+        height: 20px;
+        padding-right: 3px;
     }
 
     &.download-clear-back {

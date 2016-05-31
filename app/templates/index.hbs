@@ -1,3 +1,19 @@
+{{#link-to "index"}}
+    <img src="/assets/Cargo-Logo-Small.png" id="logo"
+            height=100 width=100 />
+{{/link-to}}
+{{#link-to "index"}}
+    <h1>CARGO</h1>
+{{/link-to}}
+
+<form id='main-search' class='search' action='/search' {{ action "search" on="submit" }} >
+    {{input type="text" class="search" name="q"
+            placeholder="Search"
+            value=search
+            autofocus="autofocus"
+            tabindex="1"}}
+</form>
+
 <div id='title-header'>
     <h1>The Rust community&rsquo;s crate host</h1>
 

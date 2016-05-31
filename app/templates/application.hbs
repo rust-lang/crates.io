@@ -1,26 +1,6 @@
 {{title "Cargo" separator=' - ' prepend=true}}
 
-<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
-  <img src='/assets/forkme.png'/>
-</a>
-
 <div id="header">
-    {{#link-to "index"}}
-        <img src="/assets/Cargo-Logo-Small.png" id="logo"
-             height=100 width=100 />
-    {{/link-to}}
-    {{#link-to "index"}}
-        <h1>CARGO</h1>
-    {{/link-to}}
-
-    <form class='search' action='/search' {{ action "search" on="submit" }} >
-        {{input type="text" class="search" name="q"
-                placeholder="Search"
-                value=search
-                autofocus="autofocus"
-                tabindex="1"}}
-    </form>
-
     <div class='nav'>
         {{#link-to "crates" (query-params letter="null" page=1)}}
             <button type="button">Browse All Crates</button>
@@ -62,7 +42,7 @@
         {{else}}
             {{#link-to "login"}}
                 <button type="button">
-                    <img class="lock" src="/assets/lock.png"/>
+                    <img class="lock" src="/assets/github.png"/>
                     Log in with GitHub
                 </button>
             {{/link-to}}
