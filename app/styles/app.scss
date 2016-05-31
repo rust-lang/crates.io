@@ -43,19 +43,29 @@ body {
   @include display-flex;
   @include flex-direction(column);
 
-  margin-bottom: 10px;
+  // margin-bottom: 10px;
   background-color: $main-bg;
   padding: 15px;
-  @include border-radius(10px);
-  box-shadow: 0px 0px 5px 2px #3b6837;
-  border: 5px solid #62865f;
+  // @include border-radius(10px);
+  // box-shadow: 0px 0px 5px 2px #3b6837;
+  // border: 5px solid #62865f;
   color: $main-color;
+}
+
+#logo {
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    top: -70px;
+    // left: -150px;
 }
 
 #header {
     color: white;
-    background-color: #F27A11;
-    font-size: 110%;
+    font-family: helvetica;
+    background-color: #E07212;
+    font-size: 130%;
     position: relative;
     height: 40px;
     padding-right: 20px;
@@ -117,18 +127,31 @@ body {
     }
 }
 
+.vcenter {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}
+
 #main-search input.search, #mobile-search input.search {
-    font-size: 90%;
-    border: none;
-    color: black;
-    outline: 0;
-    margin-left: 30px;
-    padding: 5px 5px 5px 25px;
+    font-size: 150%;
+    display: inline-block;
+    border-color: #E07212;
+    border-style: solid;
+    border-width: 1px;
+    margin-left: 50px;
+    margin-top: 40px;
+    // color: black;
+    // outline: 0;
+    // margin-left: 30px;
+    padding: 5px 5px 5px 40px;
+    width: 70%;
+    height: 100%;
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
-    background-position: 6px 6px;
+    background-position: 10px 15px;
     background-size: 14px 15px;
-    @include border-radius(15px);
+    // @include border-radius(15px);
 }
 
 #mobile-search {

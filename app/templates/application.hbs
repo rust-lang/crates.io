@@ -1,7 +1,13 @@
 {{title "Cargo" separator=' - ' prepend=true}}
 
+
 <div id="header">
     <div class='nav'>
+        {{#link-to 'install' (query-params letter="null" page=1)}}
+            <button type="button">Install</button>
+        {{/link-to}}
+        <span class="sep">|</span>
+
         {{#link-to "crates" (query-params letter="null" page=1)}}
             <button type="button">Browse All Crates</button>
         {{/link-to}}
@@ -84,12 +90,4 @@
     <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
 
     {{outlet}}
-</div>
-
-<div class='after-main-links'>
-    {{#link-to 'install'}}Install{{/link-to}}
-    <span class="sep">|</span>
-    <a href='http://doc.crates.io'>Getting Started</a>
-    <span class="sep">|</span>
-    <a href='http://doc.crates.io/guide.html'>Guide</a>
 </div>

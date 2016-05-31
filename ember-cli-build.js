@@ -22,6 +22,9 @@ module.exports = function(defaults) {
 
   app.import('bower_components/moment/moment.js');
   app.import('bower_components/normalize-css/normalize.css');
+  app.import('bower_components/bootstrap/dist/css/bootstrap.css');
+  app.import('bower_components/bootstrap/dist/css/bootstrap-theme.css');
+  app.import('bower_components/bootstrap/dist/js/bootstrap.js');
 
   return app.toTree();
 };
