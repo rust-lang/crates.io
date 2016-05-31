@@ -77,7 +77,8 @@ body {
 
     a {
         color: white; text-decoration: none;
-        &:hover { color: darken(white, 15%); }
+        &:hover { background-color: darken($header-bg, 2%); }
+        h1:hover{}
     }
 
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
