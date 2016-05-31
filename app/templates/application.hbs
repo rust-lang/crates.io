@@ -1,7 +1,10 @@
 {{title "Cargo" separator=' - ' prepend=true}}
 
-
 <div id="header">
+    {{#link-to "index"}}
+        <h1 id='cargo-name'>CARGO</h1>
+    {{/link-to}}
+
     <div class='nav'>
         {{#link-to 'install' (query-params letter="null" page=1)}}
             <button type="button">Install</button>

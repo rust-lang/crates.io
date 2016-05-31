@@ -1,12 +1,12 @@
 <div class="container">
 <div class='row'>
-    <div class='col-sm-3 col-centered'>
+    <div class='col-sm-5 col-centered'>
         {{#link-to "index"}}
             <img src="/assets/Cargo-Logo-Small.png" id="logo"/>
         {{/link-to}}
     </div>
 
-    <div class='col-sm-9 vcenter'>
+    <div class='col-sm-7 vcenter'>
         <form id='main-search' class='search' action='/search' {{ action "search" on="submit" }} >
             {{input type="text" class="form-control search" name="q"
                     placeholder="Search Crates"
@@ -18,11 +18,6 @@
 </div>
 </div>
 
-
-
-    {{#link-to "index"}}
-        <h1>CARGO</h1>
-    {{/link-to}}
 
 <div id='title-header'>
     <h1>The Rust community&rsquo;s crate host</h1>
