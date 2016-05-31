@@ -340,9 +340,10 @@ img {
     }
 
     &.lock {
-        width: 20px;
+        width: 25px;
         height: 20px;
         padding-right: 3px;
+        filter: invert(1);
     }
 
     &.download-clear-back {
