@@ -19,41 +19,46 @@
 </div>
 
 
-<div id='title-header'>
-    <h1>The Rust community&rsquo;s crate host</h1>
+<div id='blurb' class="container">
+<div class='row'>
+    <div class='col-sm-8 col-centered'>
+        <h2>The Rust community&rsquo;s crate host</h2>
 
-    <div class='links'>
-        {{#link-to "install" class='yellow-button'}}
-            <img class="button-download" src="/assets/button-download.png"/>
-            Install Cargo
-        {{/link-to}}
+        <div id='intro'>
+            Instantly publish your crates and install them. Use the API to
+            interact and find out more information about available crates. Become
+            a contributor and enhance the site with your work.
+        </div>
 
-        <a href='http://doc.crates.io/guide.html' class='yellow-button'>
-            <img class="flag" src="/assets/flag.png"/>
-            Getting Started
-        </a>
+        <div class='links'>
+            {{#link-to "install" class='yellow-button'}}
+                <img class="button-download" src="/assets/button-download.png"/>
+                Install Cargo
+            {{/link-to}}
+
+            <a href='http://doc.crates.io/guide.html' class='yellow-button'>
+                <img class="flag" src="/assets/flag.png"/>
+                Getting Started
+            </a>
+        </div>
+    </div>
+
+
+    <div class='col-sm-4 col-centered'>
+        <div id='stats'>
+            <div class='downloads'>
+                <img class="download" src="/assets/download.png"/>
+                <span class='num'>{{format-num model.num_downloads}}</span>
+                <span class='desc small'>Downloads</span>
+            </div>
+            <div class='crates'>
+                <img class="crate" src="/assets/crate.png"/>
+                <span class='num'>{{format-num model.num_crates}}</span>
+                <span class='desc small'>Crates in stock</span>
+            </div>
+        </div>
     </div>
 </div>
-
-<div id='blurb'>
-    <div id='intro'>
-        Instantly publish your crates and install them. Use the API to
-        interact and find out more information about available crates. Become
-        a contributor and enhance the site with your work.
-    </div>
-
-    <div id='stats'>
-        <div class='downloads'>
-            <img class="download" src="/assets/download.png"/>
-            <span class='num'>{{format-num model.num_downloads}}</span>
-            <span class='desc small'>Downloads</span>
-        </div>
-        <div class='crates'>
-            <img class="crate" src="/assets/crate.png"/>
-            <span class='num'>{{format-num model.num_crates}}</span>
-            <span class='desc small'>Crates in stock</span>
-        </div>
-    </div>
 </div>
 
 <div id='home-crates' class='crate-lists'>
