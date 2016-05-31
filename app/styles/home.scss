@@ -1,9 +1,9 @@
 @mixin button($start, $end) {
     $s2: darken($start, 5%);
     $e2: darken($end, 5%);
-    padding: 15px 40px;
+    padding: 10px 20px;
     display: inline-block;
-    color: $main-color;
+    color: $blurb-fg;
     text-decoration: none;
     font-weight: bold;
     border: none;
@@ -15,6 +15,7 @@
         float: left;
         display: inline-block;
         margin-right: 10px;
+        margin-top: 5px;
     }
 
     &:hover { @include vertical-gradient($s2, $e2); outline: 0; }
@@ -24,6 +25,20 @@
 .yellow-button {
     @include button(#fede9e, #fdc452);
     vertical-align: middle;
+    font-size: 0.7em;
+    margin-right: 20px;
+    box-shadow: 0px 2px 6px gray;
+
+    &:hover {
+        color: $blurb-fg;
+        text-decoration: none;
+        box-shadow: 0px 2px 6px #693100;
+    }
+
+    &:active {
+        text-decoration: none;
+        box-shadow: 0px 2px 3px #693100;
+    }
 }
 
 .tan-button {
@@ -57,17 +72,18 @@
 }
 
 #blurb {
-    margin: 30px 0 40px 0;
+    margin: 5px;
     @include display-flex;
-    color: #693100;
-
-    h2 { font-size: 3.5em; }
+    color: $blurb-fg;
+    font-size: 1em;
+    position: relative;
+    top: -50px;
 
     #intro {
         @include flex(6);
         line-height: 25px;
-        padding: 10px;
         font-size: 1.5em;
+        h2 { font-size: 2em; font-weight: bold; }
     }
 
     #stats {
@@ -76,7 +92,9 @@
         @include flex-direction(column);
 
         border-left: 1px solid $gray-border;
-        padding: 10px;
+        margin: 0 auto;
+        padding: 50px;
+        padding-left: 80px;
 
         span { margin-left: 10px; }
         .num {
