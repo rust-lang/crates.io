@@ -131,7 +131,7 @@
     h2 { font-size: 105%; }
     > div { margin: 0 15px; }
 
-    ul { list-style: none; padding: 0; margin-top: 40px; }
+    ul { list-style: none; padding: 0; margin: 40px auto; }
     li { margin: 8px auto; padding: 10px 30px; }
 
     #most-downloaded ul {
@@ -145,7 +145,6 @@
         text-decoration: none;
         font-size: 110%;
         font-weight: bold;
-        // padding: 20px 10px;
         @include display-flex;
         @include align-items(center);
 
@@ -189,4 +188,10 @@
 
 footer {
     background-color: $footer-bg;
+
+    a { display: inline-block; }
+
+    a:hover {
+        background-color: darken($footer-bg, 3%);
+    }
 }
