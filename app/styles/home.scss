@@ -92,16 +92,15 @@
         @include flex-direction(column);
 
         border-left: 1px solid $gray-border;
-        margin: 0 auto;
         padding: 50px;
-        padding-left: 80px;
+        padding-left: 100px;
 
         span { margin-left: 10px; }
         .num {
             font-size: 30px;
             font-weight: bold;
         }
-        .crates { margin-top: 10px; }
+        .crates { margin-bottom: 20px; }
         .crates, .downloads {
             @include display-flex;
             @include align-items(center);

@@ -180,9 +180,10 @@ textarea:focus, input:focus, .uneditable-input:focus {
     }
 }
 
-span.small {
+span.small, div.small {
     color: $main-color-light;
-    font-size: 80%;
+    font-size: 100%;
+    margin-left: 15px;
     .num {
         font-weight: bold;
         color: $main-color;
@@ -352,8 +353,9 @@ img {
     }
 
     &.package, &.crate {
-        width: 32px;
-        height: 33px;
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
     }
 
     &.my-packages {
@@ -394,8 +396,9 @@ img {
     }
 
     &.download {
-        width: 32px;
-        height: 33px;
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
     }
 
     &.following {
