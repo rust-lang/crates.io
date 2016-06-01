@@ -74,7 +74,10 @@ body {
     @include justify-content(space-between);
 
     a {
-        color: white; text-decoration: none;
+        color: white;
+        display: inline-block;
+        text-decoration: none;
+        padding: 0px 10px;
         &:hover { background-color: darken($header-bg, 2%); }
     }
 
@@ -308,9 +311,12 @@ ul.dropdown {
         opacity: 1;
     }
 }
+
 .dropdown-container {
     display: inline-block;
     position: relative;
+    padding: 0px 10px;
+    &:hover { background-color: darken($header-bg, 2%); }
 }
 
 .hidden { display: none; }
