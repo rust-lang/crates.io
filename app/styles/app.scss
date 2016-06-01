@@ -9,6 +9,7 @@ $gray-border: #d5d3cb;
 $header-bg: #E07212;
 $blurb-fg: #693100;
 $link-color: rgb(0, 172, 91);
+$footer-bg: #693100;
 
 @import "home";
 @import "crate";
@@ -377,10 +378,16 @@ img {
 
     &.icon {
         width: 25px;
-        height: 20px;
+        height: 25px;
         padding-bottom: 1px;
         padding-right: 3px;
         filter: invert(1);
+
+        &.footer {
+            width: 40px;
+            height: 40px;
+            margin: 20px;
+        }
     }
 
     &.download-clear-back {
