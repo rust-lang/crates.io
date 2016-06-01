@@ -76,6 +76,7 @@
     @include display-flex;
     color: $blurb-fg;
     font-size: 1em;
+    width: 100%;
     position: relative;
     top: -50px;
 
@@ -93,7 +94,7 @@
 
         border-left: 1px solid $gray-border;
         padding: 50px;
-        padding-left: 100px;
+        // padding-left: 100px;
 
         span { margin-left: 10px; }
         .num {
@@ -104,6 +105,7 @@
         .crates, .downloads {
             @include display-flex;
             @include align-items(center);
+            margin-left: 15%;
         }
     }
 
