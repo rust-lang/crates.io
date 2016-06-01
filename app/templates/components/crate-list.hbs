@@ -2,8 +2,9 @@
     {{#each crates as |crate|}}
         <li>
             {{#link-to 'crate' crate class='name'}}
-                {{ crate.name }} ({{ crate.max_version }})
-                <img class="right-arrow" src="/assets/right-arrow.png"/>
+                <img class="rust-box" src="/assets/rust_box.png"/>
+                <div class='crate-name'>{{ crate.name }}</div>
+                <div class='crate-version'>{{ crate.max_version }}</div>
             {{/link-to}}
         </li>
     {{/each}}

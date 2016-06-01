@@ -120,27 +120,38 @@
 
 .crate-lists {
     @include display-flex;
+    font-size: 1.5em;
 
     h2 { font-size: 105%; }
     > div { margin: 0 15px; }
 
-    ul { list-style: none; padding: 0; }
-    li { margin: 8px 0; }
+    ul { list-style: none; padding: 0; margin-top: 40px; }
+    li { margin: 8px auto; padding: 10px 30px; }
 
     li a {
         width: 100%;
-        color: lighten($main-color, 10%);
+        color: black;
         text-decoration: none;
-        background-color: $main-bg-dark;
-        font-size: 90%;
-        padding: 20px 10px;
+        font-size: 110%;
+        font-weight: bold;
+        // padding: 20px 10px;
         @include display-flex;
-        @include justify-content(space-between);
         @include align-items(center);
 
-        img { vertical-align: middle; }
+        img {
+            vertical-align: middle;
+            margin-right: 10px;
+            width: 40px;
+        }
     }
-    li a:hover { background-color: darken($main-bg-dark, 5%); }
+    li a:hover { color: $header-bg; }
+
+    .crate-version {
+        color: $blurb-fg;
+        display: inline-block;
+        font-size: 80%;
+        margin-left: 10px;
+    }
 
     @media only screen and (max-width: 750px) {
         #just-updated { display: none; }
@@ -151,3 +162,16 @@
 }
 
 #home-crates > div { @include flex(1); }
+
+#home-crates {
+    width: 100%;
+    color: $blurb-fg;
+    background-color: #f9edcc;
+
+    h3 {
+        font-family: 'Verdana';
+        font-weight: bold;
+        vertical-align: middle;
+        text-align: center;
+    }
+}

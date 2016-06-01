@@ -20,8 +20,7 @@ $link-color: rgb(0, 172, 91);
 }
 
 html {
-    background: url('/assets/noise.png');
-    background-color: $html-bg;
+    background-color: $main-bg;
 }
 
 html, body { margin: 0; }
@@ -45,12 +44,10 @@ body {
   @include display-flex;
   @include flex-direction(column);
 
-  // margin-bottom: 10px;
+  margin: 0px;
+  width: 100%;
   background-color: $main-bg;
-  padding: 15px;
-  // @include border-radius(10px);
-  // box-shadow: 0px 0px 5px 2px #3b6837;
-  // border: 5px solid #62865f;
+  padding: 0px;
   color: $main-color;
 }
 
@@ -164,7 +161,7 @@ body {
 
 textarea:focus, input:focus, .uneditable-input:focus {
     border-color: rgba(229, 103, 23, 0.8) !important;
-    box-shadow: 0 1px 1px rgba(229, 103, 23, 0.075) inset, 0 0 3px rgba(229, 103, 23, 0.6) !important;
+    box-shadow: 0 2px 2px rgba(229, 103, 23, 0.075) inset, 0 0 3px rgba(229, 103, 23, 0.6) !important;
     outline: 0 none !important;
 }
 
