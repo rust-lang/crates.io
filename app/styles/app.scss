@@ -68,7 +68,7 @@ body {
     background-color: #E07212;
     font-size: 130%;
     position: relative;
-    height: 40px;
+    height: 60px;
     padding-right: 20px;
     width: 100%;
     @include display-flex;
@@ -131,7 +131,7 @@ body {
         margin: 10px;
         margin-left: 25px;
         font-family: helvetica, Serif;
-        font-size: 180%;
+        font-size: 230%;
         font-weight: bold;
     }
 }
@@ -378,9 +378,10 @@ img {
         height: 33px;
     }
 
-    &.lock {
+    &.icon {
         width: 25px;
         height: 20px;
+        padding-bottom: 1px;
         padding-right: 3px;
         filter: invert(1);
     }
