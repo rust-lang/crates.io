@@ -14,7 +14,7 @@
         @include align-items(center);
     }
     h1 { padding-left: 10px; }
-    h2 { color: $blurb-fg; padding-left: 10px; }
+    h2 { color: $blurb-fg; padding-left: 10px; padding-top: 10px; font-size: 1.5em; }
     .right {
         @include flex(2);
         @include display-flex;
@@ -140,7 +140,6 @@
 
 .about {
     font-size: 1.3em;
-    // line-height: 100%;
     vertical-align: middle;
     text-align: justify;
     p { margin: auto auto; }
