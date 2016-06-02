@@ -3,16 +3,18 @@
     padding: 20px;
     background-color: $main-bg-dark;
     margin-bottom: 20px;
-    @include border-radius(5px);
-    @include display-flex;
-    @include align-items(center);
+    // @include border-radius(5px);
+    // @include display-flex;
+    // @include align-items(center);
 
+    .crates-heading-name {
+        img, h1, h2, .name {display: inline-block; vertical-align: middle; }
+    }
     .info {
-        @include display-flex;
         @include align-items(center);
     }
     h1 { padding-left: 10px; }
-    h2 { color: $main-color-light; padding-left: 10px; }
+    h2 { color: $blurb-fg; padding-left: 10px; }
     .right {
         @include flex(2);
         @include display-flex;
@@ -136,6 +138,14 @@
     a.active { background-color: $main-bg-dark; }
 }
 
+.about {
+    font-size: 1.3em;
+    // line-height: 100%;
+    vertical-align: middle;
+    text-align: justify;
+    p { margin: auto auto; }
+}
+
 .crate-info {
     @include display-flex;
     @include flex-direction(column);
@@ -147,12 +157,12 @@
         @include flex-direction(row);
 
         .docs {
-            @include flex(7);
-            padding-right: 40px;
+            vertical-align: middle;
+            text-align: center;
+            padding: 10px;
         }
         .authorship {
             @include flex(3);
-            border-left: 2px solid $gray-border;
             padding-left: 20px;
 
             .top, .bottom {
@@ -179,11 +189,7 @@
 
             > * { @include flex(1); }
         }
-    }
 
-    .about {
-        line-height: 180%;
-        margin-bottom: 40px;
     }
 
 
@@ -194,6 +200,7 @@
         padding: 0;
         margin: 0;
         li { margin: 0 7px 7px 0; }
+        img { border-radius: 5px; }
     }
 
     .install {
