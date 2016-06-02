@@ -146,11 +146,19 @@
 }
 
 .crate-info {
-    @include display-flex;
-    @include flex-direction(column);
+    // @include display-flex;
+    // @include flex-direction(column);
     padding-bottom: 20px;
-    border-bottom: 5px solid $gray-border;
+    // border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
+
+    a {
+        color: $header-bg;
+    }
+
+    h3 {
+        font-weight: bold;
+    }
 
     @media only screen and (min-width: 820px) {
         @include flex-direction(row);
@@ -162,15 +170,11 @@
         }
         .authorship {
             @include flex(3);
-            padding-left: 20px;
 
             .top, .bottom {
                 @include flex-direction(column);
             }
 
-            ul {
-              padding-left: 20px;
-            }
         }
     }
 
@@ -191,6 +195,7 @@
 
     }
 
+    ul { list-style: none; padding: 0px; }
 
     ul.owners, ul.keywords {
         @include display-flex;
@@ -199,7 +204,7 @@
         padding: 0;
         margin: 0;
         li { margin: 0 7px 7px 0; }
-        img { border-radius: 5px; }
+        img { border-radius: 5px; width: 50px; height: 50px; }
     }
 
     .install {
