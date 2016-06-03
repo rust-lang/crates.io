@@ -1,11 +1,7 @@
 #crates-heading {
     width: 100%;
     padding: 20px;
-    background-color: $main-bg-dark;
-    margin-bottom: 20px;
-    // @include border-radius(5px);
-    // @include display-flex;
-    // @include align-items(center);
+    background-color: darken($main-bg, 6%);
 
     .crates-heading-name {
         img, h1, h2, .name {display: inline-block; vertical-align: middle; }
@@ -145,6 +141,35 @@
     p { margin: auto auto; }
 }
 
+.install {
+    font-size: 120%;
+    margin: 0px;
+    padding: 10px;
+    background-color: darken($main-bg, 3%);
+    @include display-flex;
+
+    .action {
+        display: none;
+        text-align: center;
+        color: $header-bg;
+        font-family: times;
+        font-size: 1.4em;
+    }
+    code {
+        background-color: $main-bg;
+        border-radius: 10px;
+        color: black;
+        font-size: 0.9em;
+        padding: 10px;
+        padding-left: 30px;
+    }
+
+    @media only screen and (min-width: 500px) {
+        .action { @include flex(2); display: block; }
+        code { @include flex(8); }
+    }
+}
+
 .crate-info {
     // @include display-flex;
     // @include flex-direction(column);
@@ -207,30 +232,6 @@
         img { border-radius: 5px; width: 50px; height: 50px; }
     }
 
-    .install {
-        font-size: 120%;
-        padding: 10px;
-        background-color: darken($main-bg-dark, 8%);
-        @include display-flex;
-
-        .action {
-            display: none;
-            text-align: center;
-            padding-top: 18px;
-            padding-right: 10px;
-        }
-        code {
-            @include flex(1);
-            background: $main-color;
-            color: white;
-            padding: 20px;
-        }
-
-        @media only screen and (min-width: 500px) {
-            .action { @include flex(2); display: block; }
-            code { @include flex(8); }
-        }
-    }
 
     .last-update {
         color: $main-color-light;
