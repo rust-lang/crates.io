@@ -208,8 +208,8 @@
     <div class='stats'>
         <h3>Stats Overview</h3>
         <div class='stat'>
+            <img class="download" src="/assets/download.png"/>
             <span class='num'>
-                <img class="download" src="/assets/download.png"/>
                 {{ format-num downloadsContext.downloads }}
             </span>
             <span class='desc small'>Downloads all time</span>
@@ -226,7 +226,7 @@
     <div class='versions'>
         <span class='small'>Showing stats for</span>
 
-        {{#rl-dropdown-container class="button-holder"}}
+        {{#rl-dropdown-container class="button-holder butt"}}
             {{#rl-dropdown-toggle class="tan-button dropdown"}}
                 {{#if requestedVersion}}
                     {{ requestedVersion }}

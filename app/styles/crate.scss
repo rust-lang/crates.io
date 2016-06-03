@@ -171,10 +171,8 @@
 }
 
 .crate-info {
-    // @include display-flex;
-    // @include flex-direction(column);
     padding-bottom: 20px;
-    // border-bottom: 5px solid $gray-border;
+    border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
     a {
@@ -248,19 +246,23 @@
     @include display-flex;
     @include flex-wrap(wrap);
 
-    h3 { width: 100%; }
+    h3 {
+        width: 100%;
+        font-weight: bold;
+        font-size: 2em;
+        color: $header-bg;
+        margin: 20px 0px 30px 30px;
+    }
+
     .stat {
         border-left: 1px solid $gray-border;
         padding: 10px 20px;
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include flex-direction(column);
-        @include flex-grow(1);
 
         .num {
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            color: $blurb-fg;
         }
     }
 
@@ -284,6 +286,7 @@
         width: 100%;
         margin: 30px 0;
         padding-bottom: 20px;
+        background-color: $main-bg;
 
         h4 { color: $main-color-light; }
     }
