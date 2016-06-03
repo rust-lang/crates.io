@@ -272,6 +272,7 @@
         @include flex-wrap(wrap);
     }
     .versions {
+        margin-top: 50px;
         @include flex-grow(3);
         text-align: center;
         @include display-flex;
@@ -279,7 +280,9 @@
         .small { padding: 10px; }
     }
 
-    .button-holder { position: relative; }
+    .button-holder {
+        position: relative;
+    }
 
     .graph {
         @include flex-grow(10);
