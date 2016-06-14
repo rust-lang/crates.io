@@ -45,13 +45,13 @@
 </div>
 
 <div class='pagination'>
-    {{#link-to (query-params page=prevPage) class="prev"}}
+    {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
         <img class="left-pag" src="/assets/left-pag.png"/>
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
-    {{#link-to (query-params page=nextPage) class="next"}}
+    {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
         <img class="right-pag" src="/assets/right-pag.png"/>
     {{/link-to}}
 </div>
