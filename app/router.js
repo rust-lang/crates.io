@@ -32,8 +32,8 @@ Router.map(function() {
     this.route('dashboard');
     this.route('keywords');
     this.route('keyword', { path: '/keywords/:keyword_id' }, function() {
-      this.route('index', { path: '/' });
-  });
+        this.route('index', { path: '/' });
+    });
     this.route('catchAll', { path: '*path' });
 });
 
