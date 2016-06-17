@@ -7,5 +7,6 @@
     "requireParenthesesAroundArrowParam": null,
     "validateIndentation": 4,
     "disallowConstOutsideModuleScope": false,
-    "requireSpread": false
+    "requireSpread": false,
+    "disallowDirectPropertyAccess": false
 }
