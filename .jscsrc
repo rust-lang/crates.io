@@ -5,5 +5,7 @@
     "requireCamelCaseOrUpperCaseIdentifiers": null,
     "requireCommentsToIncludeAccess": null,
     "requireParenthesesAroundArrowParam": null,
-    "validateIndentation": 4
+    "validateIndentation": 4,
+    "disallowConstOutsideModuleScope": false,
+    "requireSpread": false
 }

@@ -44,7 +44,7 @@
     "ember-page-title": "2.0.7",
     "ember-rl-dropdown": "0.7.0",
     "ember-route-alias": "^0.1.3",
-    "ember-suave": "3.0.1",
+    "ember-suave": "2.0.0",
     "emberx-select": "2.1.2",
     "loader.js": "4.0.9"
   },
