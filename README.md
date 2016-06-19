@@ -44,35 +44,8 @@ This requires NPM 2.0.
 If you'd like to change the API server (the Rust backend), then the setup is a
 little more complicated.
 
-1. Define some environment variables:
-
-    ```
-    # Credentials for uploading packages to S3, these can be blank if you're not
-    # publishing locally.
-    export S3_BUCKET=...
-    export S3_ACCESS_KEY=...
-    export S3_SECRET_KEY=...
-    export S3_REGION=...      # not needed if the S3 bucket is in US standard
-
-    # Credentials for talking to github, can be blank if you're not logging in.
-    #
-    # When registering a new application, be sure to set the callback url to the
-    # address `http://localhost:4200/authorize/github`.
-    export GH_CLIENT_ID=...
-    export GH_CLIENT_SECRET=...
-
-    # Key to sign and encrypt cookies with
-    export SESSION_KEY=...
-
-    # Location of the *postgres* database
-    #
-    # e.g. postgres://postgres:@localhost/cargo_registry
-    export DATABASE_URL=...
-
-    # Remote and local locations of the registry index
-    export GIT_REPO_URL=file://`pwd`/tmp/index-bare
-    export GIT_REPO_CHECKOUT=`pwd`/tmp/index-co
-    ```
+1. Copy the `.env.sample` file to `.env` and change any applicable values as
+    directed by the comments in the file.
 
 2. Set up the git index
 
@@ -111,13 +84,22 @@ little more complicated.
     export TEST_DATABASE_URL=...
     ```
 
-2. Run the API server tests
+2. Set the s3 bucket to `alexcrichton-test`. No actual requests to s3 will be
+   made; the requests and responses are recorded in files in
+   `tests/http-data` and the s3 bucket name needs to match the requests in the
+   files.
+
+    ```
+    export S3_BUCKET=alexcrichton-test
+    ```
+
+3. Run the API server tests
 
     ```
     cargo test
     ```
 
-3. Run frontend tests
+4. Run frontend tests
 
     ```
     ember test
