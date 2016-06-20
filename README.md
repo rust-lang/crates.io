@@ -99,7 +99,9 @@ little more complicated.
     cargo test
     ```
 
-4. Run frontend tests
+4. Install [phantomjs](http://phantomjs.org/)
+
+5. Run frontend tests
 
     ```
     ember test
