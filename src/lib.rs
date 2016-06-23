@@ -120,15 +120,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/me/updates", C(user::updates));
     router.get("/summary", C(krate::summary));
 
-    let env = app.config.env;
-    if env == Env::Development {
-        let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
-        let s = Arc::new(s);
-        router.get("/git/index/*path", R(s.clone()));
-        router.post("/git/index/*path", R(s));
-    }
+    let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
+    let s = Arc::new(s);
+    router.get("/git/index/*path", R(s.clone()));
+    router.post("/git/index/*path", R(s));
 
     let mut m = MiddlewareBuilder::new(R404(router));
+    let env = app.config.env;
     if env == Env::Development {
         m.add(DebugMiddleware);
     }
