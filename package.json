@@ -26,7 +26,6 @@
     "ember-cli-app-version": "^1.0.0",
     "ember-cli-babel": "^5.1.5",
     "ember-cli-dependency-checker": "^1.1.0",
-    "ember-cli-fastboot": "0.6.2",
     "ember-cli-htmlbars": "^1.0.1",
     "ember-cli-htmlbars-inline-precompile": "^0.3.1",
     "ember-cli-ic-ajax": "1.0.0",
