@@ -1,6 +1,6 @@
 import Ember from 'ember';
-import Resolver from 'ember/resolver';
-import loadInitializers from 'ember/load-initializers';
+import Resolver from './resolver';
+import loadInitializers from 'ember-load-initializers';
 import config from './config/environment';
 import RouteAliasResolverMixin from 'cargo/mixins/route-alias-resolver';
 
@@ -17,6 +17,7 @@ App = Ember.Application.extend({
 });
 
 loadInitializers(App, config.modulePrefix);
+
 Ember.$.ajaxSetup({
     cache: false
 });
