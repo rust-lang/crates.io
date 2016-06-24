@@ -1,0 +1,54 @@
+{
+  "name": "Crates.io Mirror",
+  "description": "A mirror of crates.io",
+  "repository": "https://github.com/rust-lang/crates.io",
+  "env": {
+      "HEROKU": "1",
+      "MIRROR": "1",
+      "GH_CLIENT_ID": {
+          "value": "",
+          "required": false
+      },
+      "GH_CLIENT_SECRET": {
+          "value": "",
+          "required": false
+      },
+      "GIT_REPO_CHECKOUT": "./tmp/index-co",
+      "GIT_REPO_URL": "https://github.com/rust-lang/crates.io-index.git",
+      "S3_BUCKET": "crates-io",
+      "S3_ACCESS_KEY": {
+          "value": "",
+          "required": false
+      },
+      "S3_SECRET_KEY": {
+          "value": "",
+          "required": false
+      },
+      "SESSION_KEY": {
+          "generator": "secret"
+      }
+  },
+  "formation": {
+      "web": {
+          "quantity": 1,
+          "size": "Free"
+      }
+  },
+  "addons": [
+      "heroku-postgresql:hobby-dev"
+  ],
+  "buildpacks": [
+      {
+        "url": "https://github.com/rcaught/heroku-buildpack-cmake"
+      },
+      {
+        "url": "https://github.com/alexcrichton/heroku-buildpack-rust"
+      },
+      {
+        "url": "https://github.com/tonycoco/heroku-buildpack-ember-cli"
+      },
+      {
+        "url": "https://github.com/ryandotsmith/nginx-buildpack.git"
+      }
+  ]
+}
