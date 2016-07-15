@@ -60,7 +60,7 @@ oauth2 = "0.1"
 log = "0.3"
 env_logger = "0.3"
 rustc-serialize = "0.3"
-license-exprs = "^1.1"
+license-exprs = "^1.3"
 dotenv = "0.8.0"
 
 conduit = "0.7"
