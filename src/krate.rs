@@ -39,7 +39,6 @@ use version::EncodableVersion;
 pub struct Crate {
     pub id: i32,
     pub name: String,
-    pub user_id: i32,
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
@@ -157,13 +156,12 @@ impl Crate {
         }
 
         let stmt = try!(conn.prepare("INSERT INTO crates
-                                      (name, user_id, description, homepage,
+                                      (name, description, homepage,
                                        documentation, readme,
                                        repository, license, max_upload_size)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&name, &user_id,
-                                     &description, &homepage,
+        let rows = try!(stmt.query(&[&name, &description, &homepage,
                                      &documentation, &readme,
                                      &repository, &license, &max_upload_size]));
         let ret: Crate = Model::from_row(&try!(rows.iter().next().chain_error(|| {
@@ -239,7 +237,7 @@ impl Crate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, license, repository,
-            readme: _, id: _, user_id: _, max_upload_size: _,
+            readme: _, id: _, max_upload_size: _,
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -434,7 +432,6 @@ impl Model for Crate {
         Crate {
             id: row.get("id"),
             name: row.get("name"),
-            user_id: row.get("user_id"),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),

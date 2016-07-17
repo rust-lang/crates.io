@@ -728,6 +728,17 @@ fn migrations() -> Vec<Migration> {
         }, |_tx| {
             Ok(())
         }),
+        Migration::run(20160717173343,
+            "DROP INDEX index_crates_user_id",
+            "CREATE INDEX index_crates_user_id \
+             ON crates (user_id)",
+        ),
+        undo_foreign_key(20160717174005, "crates", "user_id",
+                         "user_id", "users (id)"),
+        Migration::run(20160717174656,
+            "ALTER TABLE crates DROP COLUMN user_id",
+            "ALTER TABLE crates ADD COLUMN user_id INTEGER NOT NULL",
+        ),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
