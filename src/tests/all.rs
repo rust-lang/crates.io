@@ -181,7 +181,6 @@ fn krate(name: &str) -> Crate {
     cargo_registry::krate::Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
-        user_id: 100,
         updated_at: time::now().to_timespec(),
         created_at: time::now().to_timespec(),
         downloads: 10,
