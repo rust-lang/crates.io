@@ -4,6 +4,7 @@ export default Ember.Route.extend({
     queryParams: {
         q: { refreshModel: true },
         page: { refreshModel: true },
+        sort: { refreshModel: true },
     },
 
     model(params) {
