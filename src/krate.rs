@@ -456,8 +456,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
     let sort_sql = match sort {
-        "downloads" => "ORDER BY crates.downloads DESC",
-        _ => "ORDER BY crates.name ASC",
+        "downloads" => "crates.downloads DESC",
+        _ => "crates.name ASC",
     };
 
     // Different queries for different parameters.
@@ -469,12 +469,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut args = vec![&limit as &ToSql, &offset];
     let (q, cnt) = query.get("q").map(|query| {
         args.insert(0, query);
-        ("SELECT crates.* FROM crates,
+        (format!("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
                                ts_rank_cd(textsearchable_index_col, q) rank
           WHERE q @@ textsearchable_index_col
-          ORDER BY name = $1 DESC, rank DESC, crates.name ASC
-          LIMIT $2 OFFSET $3".to_string(),
+          ORDER BY name = $1 DESC, rank DESC, {}
+          LIMIT $2 OFFSET $3", sort_sql),
          "SELECT COUNT(crates.*) FROM crates,
                                       plainto_tsquery($1) q
           WHERE q @@ textsearchable_index_col".to_string())
@@ -484,7 +484,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                                            .to_lowercase().collect::<String>());
             needs_pattern = true;
             (format!("SELECT * FROM crates WHERE canon_crate_name(name) \
-                      LIKE $1 {} LIMIT $2 OFFSET $3", sort_sql),
+                      LIKE $1 ORDER BY {} LIMIT $2 OFFSET $3", sort_sql),
              "SELECT COUNT(*) FROM crates WHERE canon_crate_name(name) \
               LIKE $1".to_string())
         })
@@ -497,7 +497,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                         INNER JOIN keywords
                                 ON crates_keywords.keyword_id = keywords.id
                         WHERE lower(keywords.keyword) = lower($1)";
-            (format!("SELECT crates.* {} {} LIMIT $2 OFFSET $3", base, sort_sql),
+            (format!("SELECT crates.* {} ORDER BY {} LIMIT $2 OFFSET $3", base, sort_sql),
              format!("SELECT COUNT(crates.*) {}", base))
         })
     }).or_else(|| {
@@ -508,7 +508,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                        INNER JOIN crate_owners
                           ON crate_owners.crate_id = crates.id
                        WHERE crate_owners.owner_id = $1
-                       AND crate_owners.owner_kind = {} {}
+                       AND crate_owners.owner_kind = {} 
+                       ORDER BY {}
                       LIMIT $2 OFFSET $3",
                      OwnerKind::User as i32, sort_sql),
              format!("SELECT COUNT(crates.*) FROM crates
@@ -524,7 +525,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             (format!("SELECT crates.* FROM crates
                       INNER JOIN follows
                          ON follows.crate_id = crates.id AND
-                            follows.user_id = $1
+                            follows.user_id = $1 ORDER BY 
                       {} LIMIT $2 OFFSET $3", sort_sql),
              "SELECT COUNT(crates.*) FROM crates
               INNER JOIN follows
@@ -532,7 +533,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                     follows.user_id = $1".to_string())
         })
     }).unwrap_or_else(|| {
-        (format!("SELECT * FROM crates {} LIMIT $1 OFFSET $2",
+        (format!("SELECT * FROM crates ORDER BY {} LIMIT $1 OFFSET $2",
                  sort_sql),
          "SELECT COUNT(*) FROM crates".to_string())
     });
