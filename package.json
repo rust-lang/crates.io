@@ -36,7 +36,7 @@
     "ember-cli-moment-shim": "2.0.0",
     "ember-cli-qunit": "2.1.0",
     "ember-cli-release": "^0.2.9",
-    "ember-cli-sass": "5.3.1",
+    "ember-cli-sass": "5.4.0",
     "ember-cli-sri": "^2.1.0",
     "ember-cli-uglify": "^1.2.0",
     "ember-data": "^2.6.0",
