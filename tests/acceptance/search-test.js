@@ -19,7 +19,7 @@ test('searching for "rust"', function(assert) {
         assert.notOk(find('a[href="/search?page=3&q=rust"]')[0]);
 
         hasText(assert, '#crates-heading', 'Search Results for \'rust\'');
-        hasText(assert, '#results', 'Displaying 1-10 of 18 total results');
+        hasText(assert, '#results', 'Displaying 1-10 of 18 total results Sort by Relevance Relevance Downloads');
 
         hasText(assert, '#crates .row:first .desc .info', 'rust_mixin 0.0.1');
         hasText(assert, '#crates .row:first .desc .summary', 'Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)');
@@ -35,7 +35,7 @@ test('searching for "rust"', function(assert) {
         assert.notOk(find('a[href="/search?page=3&q=rust"]')[0]);
 
         hasText(assert, '#crates-heading', 'Search Results for \'rust\'');
-        hasText(assert, '#results', 'Displaying 11-18 of 18 total results');
+        hasText(assert, '#results', 'Displaying 11-18 of 18 total results Sort by Relevance Relevance Downloads');
 
         hasText(assert, '#crates .row:first .desc .info', 'rusted_cypher 0.7.1');
     });
