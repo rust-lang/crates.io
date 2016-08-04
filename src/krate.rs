@@ -469,11 +469,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut args = vec![&limit as &ToSql, &offset];
     let (q, cnt) = query.get("q").map(|query| {
         args.insert(0, query);
+        let sort_sql = format!("{},", sort_sql); // Append Comma
         (format!("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
                                ts_rank_cd(textsearchable_index_col, q) rank
           WHERE q @@ textsearchable_index_col
-          ORDER BY name = $1 DESC, rank DESC, {}
+          ORDER BY name = $1 DESC, {} rank DESC
           LIMIT $2 OFFSET $3", sort_sql),
          "SELECT COUNT(crates.*) FROM crates,
                                       plainto_tsquery($1) q
