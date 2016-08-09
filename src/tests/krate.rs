@@ -169,6 +169,72 @@ fn exact_match_first_on_queries() {
 }
 
 #[test]
+fn exact_match_on_queries_with_sort() {
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let _ = ::mock_user(&mut req, ::user("foo"));
+    let mut krate = ::krate("foo");
+    krate.description = Some("bar baz const".to_string());
+    krate.downloads = 50;
+    let (k, _) = ::mock_crate(&mut req, krate.clone());
+    let mut krate2 = ::krate("bar");
+    krate2.description = Some("foo baz foo baz const".to_string());
+    krate2.downloads = 3333;
+    let (k2, _) = ::mock_crate(&mut req, krate2.clone());
+    let mut krate3 = ::krate("baz");
+    krate3.description = Some("foo bar foo bar foo bar const".to_string());
+    krate3.downloads = 100000;
+    let (k3, _) = ::mock_crate(&mut req, krate3.clone());
+    let mut krate4 = ::krate("other");
+    krate4.description = Some("other const".to_string());
+    krate4.downloads = 999999;
+    let (k4, _) = ::mock_crate(&mut req, krate4.clone());
+    
+    {
+        let req2: &mut Request = &mut req;
+        let tx = req2.tx().unwrap();
+        tx.execute("UPDATE crates set downloads = $1
+                    WHERE id = $2", &[&krate.downloads, &k.id]).unwrap();
+        tx.execute("UPDATE crates set downloads = $1
+                    WHERE id = $2", &[&krate2.downloads, &k2.id]).unwrap();
+        tx.execute("UPDATE crates set downloads = $1
+                    WHERE id = $2", &[&krate3.downloads, &k3.id]).unwrap();
+        tx.execute("UPDATE crates set downloads = $1
+                    WHERE id = $2", &[&krate4.downloads, &k4.id]).unwrap();
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo&sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "foo");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "bar");
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar&sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "foo");
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=baz&sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "baz");
+    assert_eq!(json.crates[1].name, "bar");
+    assert_eq!(json.crates[2].name, "foo");
+
+    let mut response = ok_resp!(middle.call(req.with_query("q=const&sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "other");
+    assert_eq!(json.crates[1].name, "baz");
+    assert_eq!(json.crates[2].name, "bar");
+    assert_eq!(json.crates[3].name, "foo");
+}
+
+#[test]
 fn show() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo");
