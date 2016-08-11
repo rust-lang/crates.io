@@ -38,7 +38,7 @@ pub fn parse_github_response<T: Decodable>(resp: curl::http::Response)
                               https://crates.io/login"));
         }
         _ => {
-            return Err(internal(format!("didn't get a 200 result from
+            return Err(internal(format!("didn't get a 200 result from \
                                         github: {}", resp)));
         }
     }
