@@ -739,6 +739,8 @@ fn migrations() -> Vec<Migration> {
             "ALTER TABLE crates DROP COLUMN user_id",
             "ALTER TABLE crates ADD COLUMN user_id INTEGER NOT NULL",
         ),
+
+        Migration::add_column(20160811151953, "users", "gh_id", "INTEGER"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

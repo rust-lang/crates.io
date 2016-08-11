@@ -11,33 +11,6 @@ name = "cargo_registry"
 test = false
 doctest = false
 
-[[bin]]
-name = "server"
-test = false
-
-[[bin]]
-name = "migrate"
-test = false
-
-[[bin]]
-name = "update-downloads"
-
-[[bin]]
-name = "delete-crate"
-test = false
-
-[[bin]]
-name = "delete-version"
-test = false
-
-[[bin]]
-name = "populate"
-test = false
-
-[[bin]]
-name = "transfer-crates"
-test = false
-
 [[test]]
 name = "all"
 path = "src/tests/all.rs"
