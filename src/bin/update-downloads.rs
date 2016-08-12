@@ -149,7 +149,7 @@ mod test {
     }
 
     fn user(conn: &postgres::Transaction) -> User{
-        User::find_or_insert(conn, "login", None, None, None,
+        User::find_or_insert(conn, 2, "login", None, None, None,
                              "access_token", "api_token").unwrap()
     }
 

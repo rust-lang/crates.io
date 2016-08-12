@@ -168,6 +168,7 @@ static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 fn user(login: &str) -> User {
     User {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login.to_string(),
         email: None,
         name: None,
@@ -197,6 +198,7 @@ fn krate(name: &str) -> Crate {
 
 fn mock_user(req: &mut Request, u: User) -> User {
     let u = User::find_or_insert(req.tx().unwrap(),
+                                 u.gh_id,
                                  &u.gh_login,
                                  u.email.as_ref().map(|s| &s[..]),
                                  u.name.as_ref().map(|s| &s[..]),

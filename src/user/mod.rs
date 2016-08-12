@@ -25,6 +25,7 @@ pub mod middleware;
 pub struct User {
     pub id: i32,
     pub gh_login: String,
+    pub gh_id: i32,
     pub name: Option<String>,
     pub email: Option<String>,
     pub avatar: Option<String>,
@@ -68,6 +69,7 @@ impl User {
 
     /// Updates a user or inserts a new user into the database.
     pub fn find_or_insert(conn: &GenericConnection,
+                          id: i32,
                           login: &str,
                           email: Option<&str>,
                           name: Option<&str>,
@@ -82,26 +84,32 @@ impl User {
                                       SET gh_access_token = $1,
                                           email = $2,
                                           name = $3,
-                                          gh_avatar = $4
-                                      WHERE gh_login = $5
+                                          gh_avatar = $4,
+                                          gh_login = $5
+                                      WHERE gh_id = $6
                                       RETURNING *"));
         let rows = try!(stmt.query(&[&access_token,
-                                     &email, &name, &avatar,
-                                     &login]));
+                                     &email,
+                                     &name,
+                                     &avatar,
+                                     &login,
+                                     &id]));
         match rows.iter().next() {
             Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
         }
         let stmt = try!(conn.prepare("INSERT INTO users
                                       (email, gh_access_token, api_token,
-                                       gh_login, name, gh_avatar)
-                                      VALUES ($1, $2, $3, $4, $5, $6)
+                                       gh_login, name, gh_avatar, gh_id)
+                                      VALUES ($1, $2, $3, $4, $5, $6, $7)
                                       RETURNING *"));
         let rows = try!(stmt.query(&[&email,
                                      &access_token,
                                      &api_token,
                                      &login,
-                                     &name, &avatar]));
+                                     &name,
+                                     &avatar,
+                                     &id]));
         Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
         }))))
@@ -115,7 +123,7 @@ impl User {
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
         let User { id, email, api_token: _, gh_access_token: _,
-                   name, gh_login, avatar } = self;
+                   name, gh_login, avatar, gh_id: _ } = self;
         EncodableUser {
             id: id,
             email: email,
@@ -134,6 +142,7 @@ impl Model for User {
             gh_access_token: row.get("gh_access_token"),
             api_token: row.get("api_token"),
             gh_login: row.get("gh_login"),
+            gh_id: row.get("gh_id"),
             name: row.get("name"),
             avatar: row.get("gh_avatar"),
         }
@@ -218,6 +227,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         email: Option<String>,
         name: Option<String>,
         login: String,
+        id: i32,
         avatar_url: Option<String>,
     }
 
@@ -233,6 +243,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Into the database!
     let api_token = User::new_api_token();
     let user = try!(User::find_or_insert(try!(req.tx()),
+                                         ghuser.id,
                                          &ghuser.login,
                                          ghuser.email.as_ref()
                                                .map(|s| &s[..]),

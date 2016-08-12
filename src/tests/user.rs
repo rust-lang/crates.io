@@ -35,16 +35,23 @@ fn user_insert() {
     let conn = t!(app.database.get());
     let tx = t!(conn.transaction());
 
-    let user = t!(User::find_or_insert(&tx, "foo", None, None, None, "bar", "baz"));
+    let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar", "baz"));
     assert_eq!(t!(User::find_by_api_token(&tx, "baz")), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
-    assert_eq!(t!(User::find_or_insert(&tx, "foo", None, None, None,
+    assert_eq!(t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
                                        "bar", "api")), user);
-    let user2 = t!(User::find_or_insert(&tx, "foo", None, None, None,
+    let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
                                         "baz", "api"));
     assert!(user != user2);
+    assert_eq!(user.id, user2.id);
     assert_eq!(user2.gh_access_token, "baz");
+
+    let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None,
+                                        "baz", "api"));
+    assert!(user != user3);
+    assert_eq!(user.id, user3.id);
+    assert_eq!(user3.gh_login, "bar");
 }
 
 #[test]
@@ -68,7 +75,7 @@ fn reset_token() {
     let mut req = ::req(app, Method::Put, "/me/reset_token");
     let user = {
         let tx = RequestTransaction::tx(&mut req as &mut Request);
-        User::find_or_insert(tx.unwrap(), "foo", None,
+        User::find_or_insert(tx.unwrap(), 1, "foo", None,
                              None, None, "bar", "baz").unwrap()
     };
     ::mock_user(&mut req, user.clone());

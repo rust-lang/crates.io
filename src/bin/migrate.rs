@@ -741,6 +741,7 @@ fn migrations() -> Vec<Migration> {
         ),
 
         Migration::add_column(20160811151953, "users", "gh_id", "INTEGER"),
+        index(20160811151954, "users", "gh_id"),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
