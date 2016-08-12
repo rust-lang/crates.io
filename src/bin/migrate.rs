@@ -742,6 +742,15 @@ fn migrations() -> Vec<Migration> {
 
         Migration::add_column(20160811151953, "users", "gh_id", "INTEGER"),
         index(20160811151954, "users", "gh_id"),
+        Migration::new(20160812094501, |tx| {
+            try!(tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
+                             SET NOT NULL", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
+                             DROP NOT NULL", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
