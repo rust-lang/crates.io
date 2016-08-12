@@ -751,6 +751,19 @@ fn migrations() -> Vec<Migration> {
                              DROP NOT NULL", &[]));
             Ok(())
         }),
+        Migration::new(20160812094502, |tx| {
+            // Enusre that gh_id is always unique (sure hope it is), but
+            // only where the id is > 0. Historically we didn't track id, and we
+            // had to fill it in at one point after-the-fact. User rows that
+            // couldn't be resolved either have a github id of 0 or -1 so they
+            // can't ever be logged into again.
+            try!(tx.execute("CREATE UNIQUE INDEX users_gh_id \
+                             ON users (gh_id) WHERE gh_id > 0", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP INDEX users_gh_id", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
