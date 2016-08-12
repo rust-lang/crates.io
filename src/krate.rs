@@ -827,6 +827,22 @@ fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
+
+    try!(increment_download_counts(req, crate_name, version));
+    let redirect_url = format!("https://{}/crates/{}/{}-{}.crate",
+                               req.app().bucket.host(),
+                               crate_name, crate_name, version);
+
+    if req.wants_json() {
+        #[derive(RustcEncodable)]
+        struct R { url: String }
+        Ok(req.json(&R{ url: redirect_url }))
+    } else {
+        Ok(req.redirect(redirect_url))
+    }
+}
+
+fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
     let tx = try!(req.tx());
     let stmt = try!(tx.prepare("SELECT versions.id as version_id
                                 FROM crates
@@ -836,7 +852,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
                                       canon_crate_name($1)
                                   AND versions.num = $2
                                 LIMIT 1"));
-    let rows = try!(stmt.query(&[crate_name, version]));
+    let rows = try!(stmt.query(&[&crate_name, &version]));
     let row = try!(rows.iter().next().chain_error(|| {
         human("crate or version not found")
     }));
@@ -862,19 +878,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         try!(tx.execute("INSERT INTO version_downloads
                          (version_id) VALUES ($1)", &[&version_id]));
     }
-
-    // Now that we've done our business, redirect to the actual data.
-    let redirect_url = format!("https://{}/crates/{}/{}-{}.crate",
-                               req.app().bucket.host(),
-                               crate_name, crate_name, version);
-
-    if req.wants_json() {
-        #[derive(RustcEncodable)]
-        struct R { url: String }
-        Ok(req.json(&R{ url: redirect_url }))
-    } else {
-        Ok(req.redirect(redirect_url))
-    }
+    Ok(())
 }
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
