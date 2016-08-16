@@ -73,11 +73,6 @@ fn transfer(tx: &postgres::Transaction) {
                              WHERE owner_id = $2 AND crate_id = $3",
                            &[&to.id, &from.id, &krate.id]).unwrap();
         assert_eq!(n, 1);
-
-        let n = tx.execute("UPDATE crates SET user_id = $1
-                             WHERE id = $2",
-                           &[&to.id, &krate.id]).unwrap();
-        assert_eq!(n, 1);
     }
 
     get_confirm("commit?");
