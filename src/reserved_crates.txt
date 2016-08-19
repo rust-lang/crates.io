@@ -1,7 +1,12 @@
 alloc
 arena
 ast
+builtins
 collections
+compiler-builtins
+compiler-rt
+compiler_builtins
+compiler_rt
 compiletest
 core
 coretest
