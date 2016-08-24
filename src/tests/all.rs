@@ -90,6 +90,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
+        mirror: false,
     };
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);

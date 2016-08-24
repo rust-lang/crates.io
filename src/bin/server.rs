@@ -57,6 +57,7 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_env,
         max_upload_size: 10 * 1024 * 1024,
+        mirror: env::var("MIRROR").is_ok(),
     };
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
