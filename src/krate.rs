@@ -828,7 +828,16 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    try!(increment_download_counts(req, crate_name, version));
+    // If we are a mirror, ignore failure to update download counts.
+    // API-only mirrors won't have any crates in their database, and
+    // incrementing the download count will look up the crate in the
+    // database. Mirrors just want to pass along a redirect URL.
+    if req.app().config.mirror {
+        let _ = increment_download_counts(req, crate_name, version);
+    } else {
+        try!(increment_download_counts(req, crate_name, version));
+    }
+
     let redirect_url = format!("https://{}/crates/{}/{}-{}.crate",
                                req.app().bucket.host(),
                                crate_name, crate_name, version);
