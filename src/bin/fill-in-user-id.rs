@@ -33,6 +33,7 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_registry::Env::Production,
         max_upload_size: 0,
+        mirror: false,
     };
     let app = cargo_registry::App::new(&config);
     {
