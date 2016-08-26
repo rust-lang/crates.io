@@ -45,7 +45,8 @@ If you'd like to change the API server (the Rust backend), then the setup is a
 little more complicated.
 
 1. Copy the `.env.sample` file to `.env` and change any applicable values as
-    directed by the comments in the file.
+    directed by the comments in the file. Make sure the values in your new
+    `.env` are exported in the shell you use for the following commands.
 
 2. Set up the git index
 
@@ -53,11 +54,16 @@ little more complicated.
     ./script/init-local-index.sh
     ```
 
-3. Build the server
+    But *do not* modify your `~/.cargo/config` yet. Do that after step 3.
+
+3. Build the server.
 
     ```
     cargo build
     ```
+
+    On OS X 10.11, you will need to install the openssl headers first, and tell
+    cargo where to find them. See https://github.com/sfackler/rust-openssl#osx.
 
 4. Run the migrations
 
