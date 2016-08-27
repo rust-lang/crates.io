@@ -19,6 +19,7 @@
         @include flex-direction(row-reverse);
         @include align-items(center);
     }
+    h3 { font-style: italic; }
     @media only screen and (max-width: 650px) {
         .right { display: none; }
     }
