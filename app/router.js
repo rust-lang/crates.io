@@ -27,7 +27,9 @@ Router.map(function() {
         this.route('crates');
         this.route('following');
     });
-    this.route('user', { path: '/users/:user_id' });
+    this.route('user', { path: '/users/:user_id' }, function() {
+        this.route('crates');
+    });
     this.route('install');
     this.route('search');
     this.route('dashboard');
