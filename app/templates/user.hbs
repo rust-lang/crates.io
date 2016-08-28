@@ -1,19 +1,24 @@
 <div id='crates-heading'>
-    <img class='gear logo' src="/assets/gear.png"/>
+    {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
     <h1>{{ model.login }}</h1>
 </div>
 
 <div id='user-profile'>
-    <h2>{{ model.login }}</h2>
-
     <div class='info'>
-        {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
+        <div id='crates'>
+            <div class='header'>
+                <h2>
+                    <img class="my-packages" src="/assets/my-packages.png"/>
+                    Crates
+                </h2>
 
-        <dl>
-            <dt>Name</dt>
-            <dd>{{ model.name }}</dd>
-            <dt>GitHub Account</dt>
-            <dd>{{ model.login }}</dd>
-        </dl>
+                {{#if hasMoreCrates}}
+                    <span class='small'>
+                        {{link-to 'Show all' 'me.crates'}}
+                    </span>
+                {{/if}}
+            </div>
+            {{crate-downloads-list crates=visibleCrates}}
+        </div>
     </div>
 </div>
