@@ -8,7 +8,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
     },
 
     model(params) {
-        params.user_id = this.paramsFor("user").user_id;
+        params.user_id = this.paramsFor('user').user_id;
         return Ember.RSVP.hash({
             user: this.store.find('user', params.user_id),
             crates: this.store.query('crate', params)

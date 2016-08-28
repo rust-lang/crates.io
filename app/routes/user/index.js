@@ -7,7 +7,7 @@ export default Ember.Route.extend({
         this._super(controller, model);
 
         controller.set('fetchingFeed', true);
-        controller.set('crates', this.get('data.crates')); 
+        controller.set('crates', this.get('data.crates'));
     },
 
     model(params) {
