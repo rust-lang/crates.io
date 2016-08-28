@@ -1,0 +1,19 @@
+<div id='crates-heading'>
+    <img class='gear logo' src="/assets/gear.png"/>
+    <h1>{{ model.login }}</h1>
+</div>
+
+<div id='user-profile'>
+    <h2>{{ model.login }}</h2>
+
+    <div class='info'>
+        {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
+
+        <dl>
+            <dt>Name</dt>
+            <dd>{{ model.name }}</dd>
+            <dt>GitHub Account</dt>
+            <dd>{{ model.login }}</dd>
+        </dl>
+    </div>
+</div>

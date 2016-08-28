@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
+use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
 use pg::types::Slice;
@@ -287,6 +288,20 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let token = user.api_token.clone();
     Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
 }
+
+/// Handles the `GET /users/:user_id` route.
+pub fn show(req: &mut Request) -> CargoResult<Response> {
+    let name = &req.params()["user_id"];
+    let conn = try!(req.tx());
+    let user = try!(User::find_by_login(conn, &name));
+
+    #[derive(RustcEncodable)]
+    struct R {
+        user: EncodableUser,
+    }
+    Ok(req.json(&R{ user: user.clone().encodable() }))
+}
+
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
