@@ -5,6 +5,7 @@
         <img class='logo crate' src="/assets/crate.png"/>
         <h1>{{ crate.name }}</h1>
         <h2>{{ currentVersion.num }}</h2>
+
     </div>
 
     <div class='right'>
@@ -67,6 +68,12 @@
                 <div class='date'>{{moment-from-now crate.updated_at}}</div>
             </div>
 
+            <div>
+                <img src="https://img.shields.io/crates/dv/{{ crate.name}}.svg"
+                    alt="{{ crate.name }}’s download count badge"
+                    title="{{ crate.name }}’s download count badge" />
+            </div>
+
             <div class="authors">
                 <h3>Authors</h3>
                 <ul>
@@ -110,6 +117,8 @@
                     {{/each}}
                 </ul>
             </div>
+
+            
         </div>
     </div>
 </div>
