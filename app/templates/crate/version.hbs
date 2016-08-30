@@ -65,12 +65,18 @@
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
                 <div class='date'>{{moment-from-now crate.updated_at}}</div>
-            </div>
-
-            <div>
-                <img src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                    alt="{{ crate.name }}’s current version badge"
-                    title="{{ crate.name }}’s current version badge" />
+                <p>
+                    <img 
+                        src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
+                        alt="{{ crate.name }}’s current version badge"
+                        title="{{ crate.name }}’s current version badge" />
+                </p>
+                <p>
+                    <img 
+                        src="https://img.shields.io/crates/d/{{ crate.name }}.svg"
+                        alt="{{ crate.name }}’s current version downloads badge"
+                        title="{{ crate.name }}’s current version downloads badge" />
+                </p>
             </div>
 
             <div class="authors">
@@ -88,6 +94,7 @@
                 <div>
                     <h3>License</h3>
                     <p>{{ crate.license }}</p>
+                    <p><img src="https://img.shields.io/crates/l/{{ crate.name }}.svg" alt="{{ crate.name }}’s current version license badge" title="{{ crate.name }}’s current version license badge" /></p>
                 </div>
             {{/if}}
 
