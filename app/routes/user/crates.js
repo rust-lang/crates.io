@@ -7,7 +7,7 @@ export default Ember.Route.extend({
     },
 
     model(params) {
-        const user_id = this.paramsFor('user').user_id;
+        const { user_id } = this.paramsFor('user');
         return this.store.find('user', user_id).then(
             (user) => {
                 params.user_id = user.get('id');
@@ -24,7 +24,7 @@ export default Ember.Route.extend({
                     return this.replaceWith('index');
                 }
             }
-        )
+        );
     },
 });
 
