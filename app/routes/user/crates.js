@@ -8,16 +8,24 @@ export default Ember.Route.extend(AuthenticatedRoute, {
     },
 
     model(params) {
-        params.user_id = this.paramsFor('user').user_id;
-        return Ember.RSVP.hash({
-            user: this.store.find('user', params.user_id),
-            crates: this.store.query('crate', params)
-        }).catch(e => {
-            if (e.errors.any(e => e.detail === 'Not Found')) {
-                this.controllerFor('application').set('nextFlashError', `User '${params.user_id}' does not exist`);
-                return this.replaceWith('index');
+        const user_id = this.paramsFor('user').user_id;
+        return this.store.find('user', user_id).then(
+            (user) => {
+                params.user_id = user.get('id');
+                return Ember.RSVP.hash({
+                    crates: this.store.query('crate', params),
+                    user
+                });
+            },
+            (e) => {
+                if (e.errors.any(e => e.detail === 'Not Found')) {
+                    this
+                        .controllerFor('application')
+                        .set('nextFlashError', `User '${params.user_id}' does not exist`);
+                    return this.replaceWith('index');
+                }
             }
-        });
+        )
     },
 });
 
