@@ -47,7 +47,7 @@ export default Ember.Component.extend({
                 // the line altogether.
                 if (!on[k] && value === 0) {
                     data[i][k + 1] = null;
-                } 
+                }
                 // If we are off and the value is not zero, we
                 // need to turn back on.  (keep the value the same though)
                 else if (!on[k] && value !== 0) {
