@@ -288,6 +288,13 @@ ul.dropdown {
     h1 { font-size: 1.5em; }
 }
 
+h1 {
+  span.subtitle {
+    display: block;
+    font-size: small;
+  }
+}
+
 #p404 {
     font-size: 120%;
     line-height: 3em;
