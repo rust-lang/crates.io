@@ -6,7 +6,10 @@ $main-color-light: lighten($main-color, 30%);
 $main-bg: #f9f7ec;
 $main-bg-dark: #edebdd;
 $gray-border: #d5d3cb;
+$header-bg: #E07212;
+$blurb-fg: #693100;
 $link-color: rgb(0, 172, 91);
+$footer-bg: #693100;
 
 @import "home";
 @import "crate";
@@ -18,8 +21,7 @@ $link-color: rgb(0, 172, 91);
 }
 
 html {
-    background: url('/assets/noise.png');
-    background-color: $html-bg;
+    background-color: $main-bg;
 }
 
 html, body { margin: 0; }
@@ -32,7 +34,8 @@ body {
 }
 
 .ember-application > div {
-    width: 900px;
+    // width: 900px;
+    width: 100%;
     @media only screen and (max-width: 900px) {
         width: 100%;
     }
@@ -42,26 +45,40 @@ body {
   @include display-flex;
   @include flex-direction(column);
 
-  margin-bottom: 10px;
+  margin: 0px;
+  width: 100%;
   background-color: $main-bg;
-  padding: 15px;
-  @include border-radius(10px);
-  box-shadow: 0px 0px 5px 2px #3b6837;
-  border: 5px solid #62865f;
+  padding: 0px;
   color: $main-color;
+}
+
+#logo {
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    top: -70px;
 }
 
 #header {
     color: white;
+    font-family: helvetica;
+    background-color: #E07212;
+    font-size: 130%;
     position: relative;
-    height: 100px;
+    height: 60px;
+    padding-right: 20px;
+    width: 100%;
     @include display-flex;
     @include align-items(center);
     @include justify-content(space-between);
 
     a {
-        color: white; text-decoration: none;
-        &:hover { color: darken(white, 15%); }
+        color: white;
+        display: inline-block;
+        text-decoration: none;
+        padding: 0px 10px;
+        &:hover { background-color: darken($header-bg, 2%); }
     }
 
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
@@ -110,20 +127,46 @@ body {
         .nav { display: none; }
         form.search { display: none; }
     }
+
+    #cargo-name {
+        margin: 10px;
+        margin-left: 25px;
+        font-family: helvetica, Serif;
+        font-size: 230%;
+        font-weight: bold;
+    }
 }
 
-#header input.search, #mobile-search input.search {
-    font-size: 90%;
-    border: none;
+.vcenter {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}
+
+#main-search input.search, #mobile-search input.search {
+    font-size: 150%;
+    display: inline-block;
+    border-color: $header-bg;
+    border-style: solid;
+    border-width: 2px;
+    margin-left: 10%;
+    margin-top: 90px;
     color: black;
     outline: 0;
-    margin-left: 30px;
-    padding: 5px 5px 5px 25px;
+    padding: 5px 5px 5px 40px;
+    width: 70%;
+    height: 100%;
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
-    background-position: 6px 6px;
+    background-position: 10px 15px;
     background-size: 14px 15px;
-    @include border-radius(15px);
+    background-color: $main-bg;
+}
+
+textarea:focus, input:focus, .uneditable-input:focus {
+    border-color: rgba(229, 103, 23, 0.8) !important;
+    box-shadow: 0 2px 2px rgba(229, 103, 23, 0.075) inset, 0 0 3px rgba(229, 103, 23, 0.6) !important;
+    outline: 0 none !important;
 }
 
 #mobile-search {
@@ -138,9 +181,10 @@ body {
     }
 }
 
-span.small {
+span.small, div.small {
     color: $main-color-light;
-    font-size: 80%;
+    font-size: 100%;
+    margin-left: 15px;
     .num {
         font-weight: bold;
         color: $main-color;
@@ -267,9 +311,12 @@ ul.dropdown {
         opacity: 1;
     }
 }
+
 .dropdown-container {
     display: inline-block;
     position: relative;
+    padding: 0px 10px;
+    &:hover { background-color: darken($header-bg, 2%); }
 }
 
 .hidden { display: none; }
@@ -310,8 +357,9 @@ img {
     }
 
     &.package, &.crate {
-        width: 32px;
-        height: 33px;
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
     }
 
     &.my-packages {
@@ -334,9 +382,18 @@ img {
         height: 33px;
     }
 
-    &.lock {
-        width: 10px;
-        height: 13px;
+    &.icon {
+        width: 25px;
+        height: 25px;
+        padding-bottom: 1px;
+        padding-right: 3px;
+        filter: invert(1);
+
+        &.footer {
+            width: 30px;
+            height: 30px;
+            margin: 10px 10px;
+        }
     }
 
     &.download-clear-back {
@@ -350,8 +407,9 @@ img {
     }
 
     &.download {
-        width: 32px;
-        height: 33px;
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
     }
 
     &.following {

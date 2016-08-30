@@ -1,18 +1,16 @@
 #crates-heading {
     width: 100%;
     padding: 20px;
-    background-color: $main-bg-dark;
-    margin-bottom: 20px;
-    @include border-radius(5px);
-    @include display-flex;
-    @include align-items(center);
+    background-color: darken($main-bg, 6%);
 
+    .crates-heading-name {
+        img, h1, h2, .name {display: inline-block; vertical-align: middle; }
+    }
     .info {
-        @include display-flex;
         @include align-items(center);
     }
     h1 { padding-left: 10px; }
-    h2 { color: $main-color-light; padding-left: 10px; }
+    h2 { color: $blurb-fg; padding-left: 10px; padding-top: 10px; font-size: 1.5em; }
     .right {
         @include flex(2);
         @include display-flex;
@@ -136,32 +134,70 @@
     a.active { background-color: $main-bg-dark; }
 }
 
-.crate-info {
+.about {
+    font-size: 1.3em;
+    vertical-align: middle;
+    text-align: justify;
+    p { margin: auto auto; }
+}
+
+.install {
+    font-size: 120%;
+    margin: 0px;
+    padding: 10px;
+    background-color: darken($main-bg, 3%);
     @include display-flex;
-    @include flex-direction(column);
+
+    .action {
+        display: none;
+        text-align: center;
+        color: $header-bg;
+        font-family: times;
+        font-size: 1.4em;
+    }
+    code {
+        background-color: $main-bg;
+        border-radius: 10px;
+        color: black;
+        font-size: 0.9em;
+        padding: 10px;
+        padding-left: 30px;
+    }
+
+    @media only screen and (min-width: 500px) {
+        .action { @include flex(2); display: block; }
+        code { @include flex(8); }
+    }
+}
+
+.crate-info {
     padding-bottom: 20px;
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
+
+    a {
+        color: $header-bg;
+    }
+
+    h3 {
+        font-weight: bold;
+    }
 
     @media only screen and (min-width: 820px) {
         @include flex-direction(row);
 
         .docs {
-            @include flex(7);
-            padding-right: 40px;
+            vertical-align: middle;
+            text-align: center;
+            padding: 10px;
         }
         .authorship {
             @include flex(3);
-            border-left: 2px solid $gray-border;
-            padding-left: 20px;
 
             .top, .bottom {
                 @include flex-direction(column);
             }
 
-            ul {
-              padding-left: 20px;
-            }
         }
     }
 
@@ -179,13 +215,10 @@
 
             > * { @include flex(1); }
         }
+
     }
 
-    .about {
-        line-height: 180%;
-        margin-bottom: 40px;
-    }
-
+    ul { list-style: none; padding: 0px; }
 
     ul.owners, ul.keywords {
         @include display-flex;
@@ -194,32 +227,9 @@
         padding: 0;
         margin: 0;
         li { margin: 0 7px 7px 0; }
+        img { border-radius: 5px; width: 50px; height: 50px; }
     }
 
-    .install {
-        font-size: 120%;
-        padding: 10px;
-        background-color: darken($main-bg-dark, 8%);
-        @include display-flex;
-
-        .action {
-            display: none;
-            text-align: center;
-            padding-top: 18px;
-            padding-right: 10px;
-        }
-        code {
-            @include flex(1);
-            background: $main-color;
-            color: white;
-            padding: 20px;
-        }
-
-        @media only screen and (min-width: 500px) {
-            .action { @include flex(2); display: block; }
-            code { @include flex(8); }
-        }
-    }
 
     .last-update {
         color: $main-color-light;
@@ -236,19 +246,23 @@
     @include display-flex;
     @include flex-wrap(wrap);
 
-    h3 { width: 100%; }
+    h3 {
+        width: 100%;
+        font-weight: bold;
+        font-size: 2em;
+        color: $header-bg;
+        margin: 20px 0px 30px 30px;
+    }
+
     .stat {
         border-left: 1px solid $gray-border;
         padding: 10px 20px;
-        @include display-flex;
-        @include flex-wrap(wrap);
-        @include flex-direction(column);
-        @include flex-grow(1);
 
         .num {
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            color: $blurb-fg;
         }
     }
 
@@ -258,6 +272,7 @@
         @include flex-wrap(wrap);
     }
     .versions {
+        margin-top: 50px;
         @include flex-grow(3);
         text-align: center;
         @include display-flex;
@@ -265,13 +280,16 @@
         .small { padding: 10px; }
     }
 
-    .button-holder { position: relative; }
+    .button-holder {
+        position: relative;
+    }
 
     .graph {
         @include flex-grow(10);
         width: 100%;
         margin: 30px 0;
         padding-bottom: 20px;
+        background-color: $main-bg;
 
         h4 { color: $main-color-light; }
     }

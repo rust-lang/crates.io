@@ -1,9 +1,9 @@
 @mixin button($start, $end) {
     $s2: darken($start, 5%);
     $e2: darken($end, 5%);
-    padding: 15px 40px;
+    padding: 10px 20px;
     display: inline-block;
-    color: $main-color;
+    color: $blurb-fg;
     text-decoration: none;
     font-weight: bold;
     border: none;
@@ -15,6 +15,7 @@
         float: left;
         display: inline-block;
         margin-right: 10px;
+        margin-top: 5px;
     }
 
     &:hover { @include vertical-gradient($s2, $e2); outline: 0; }
@@ -24,10 +25,39 @@
 .yellow-button {
     @include button(#fede9e, #fdc452);
     vertical-align: middle;
+    font-size: 0.7em;
+    margin-right: 20px;
+    box-shadow: 0px 2px 6px gray;
+
+    &:hover {
+        color: $blurb-fg;
+        text-decoration: none;
+        box-shadow: 0px 2px 6px #693100;
+    }
+
+    &:active {
+        text-decoration: none;
+        box-shadow: 0px 2px 3px #693100;
+    }
 }
 
 .tan-button {
-    @include button(rgb(232, 227, 199), rgb(214, 205, 153));
+    @include button(#fede9e, #fdc452);
+    vertical-align: middle;
+    font-size: 0.7em;
+    margin-right: 20px;
+    box-shadow: 0px 2px 6px gray;
+
+    &:hover {
+        color: $blurb-fg;
+        text-decoration: none;
+        box-shadow: 0px 2px 6px #693100;
+    }
+
+    &:active {
+        text-decoration: none;
+        box-shadow: 0px 2px 3px #693100;
+    }
 }
 
 #title-header {
@@ -57,10 +87,26 @@
 }
 
 #blurb {
-    margin: 30px 0 40px 0;
+    margin: 5px;
     @include display-flex;
+    color: $blurb-fg;
+    font-size: 1em;
+    width: 100%;
+    position: relative;
+    top: -50px;
 
-    #intro { @include flex(6); line-height: 25px; padding: 10px;}
+    #intro {
+        @include flex(6);
+        line-height: 25px;
+        font-size: 1.2em;
+        h2 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        p {
+            margin: 40px 0px 20px;
+        }
+    }
 
     #stats {
         @include flex(4);
@@ -68,17 +114,19 @@
         @include flex-direction(column);
 
         border-left: 1px solid $gray-border;
-        padding: 10px;
+        padding: 50px;
+        // padding-left: 100px;
 
         span { margin-left: 10px; }
         .num {
             font-size: 30px;
             font-weight: bold;
         }
-        .crates { margin-top: 10px; }
+        .crates { margin-bottom: 20px; }
         .crates, .downloads {
             @include display-flex;
             @include align-items(center);
+            margin-left: 15%;
         }
     }
 
@@ -93,27 +141,42 @@
 
 .crate-lists {
     @include display-flex;
+    font-size: 1.5em;
 
     h2 { font-size: 105%; }
     > div { margin: 0 15px; }
 
-    ul { list-style: none; padding: 0; }
-    li { margin: 8px 0; }
+    ul { list-style: none; padding: 0; margin: 40px auto; }
+    li { margin: 8px auto; padding: 10px 30px; }
+
+    #most-downloaded ul {
+        border-left: 1px solid $gray-border;
+        border-right: 1px solid $gray-border;
+    }
 
     li a {
         width: 100%;
-        color: lighten($main-color, 10%);
+        color: black;
         text-decoration: none;
-        background-color: $main-bg-dark;
-        font-size: 90%;
-        padding: 20px 10px;
+        font-size: 110%;
+        font-weight: bold;
         @include display-flex;
-        @include justify-content(space-between);
         @include align-items(center);
 
-        img { vertical-align: middle; }
+        img {
+            vertical-align: middle;
+            margin-right: 10px;
+            width: 40px;
+        }
     }
-    li a:hover { background-color: darken($main-bg-dark, 5%); }
+    li a:hover { color: $header-bg; }
+
+    .crate-version {
+        color: $blurb-fg;
+        display: inline-block;
+        font-size: 80%;
+        margin-left: 10px;
+    }
 
     @media only screen and (max-width: 750px) {
         #just-updated { display: none; }
@@ -124,3 +187,26 @@
 }
 
 #home-crates > div { @include flex(1); }
+
+#home-crates {
+    width: 100%;
+    color: $header-bg;
+    background-color: #f9f0d9;
+
+    h3 {
+        font-family: 'Verdana';
+        font-weight: bold;
+        vertical-align: middle;
+        text-align: center;
+    }
+}
+
+footer {
+    background-color: $footer-bg;
+
+    a { display: inline-block; }
+
+    a:hover {
+        background-color: darken($footer-bg, 3%);
+    }
+}

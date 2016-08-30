@@ -17,6 +17,7 @@
     "normalize-css": "~3.0.3",
     "pretender": "~1.1.0",
     "lodash": "~3.7.0",
-    "Faker": "~3.0.0"
+    "Faker": "~3.0.0",
+    "bootstrap": "^3.3.6"
   }
 }

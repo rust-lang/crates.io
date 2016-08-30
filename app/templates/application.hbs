@@ -1,32 +1,23 @@
 {{title "Cargo" separator=' - ' prepend=true}}
 
-<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
-  <img src='/assets/forkme.png'/>
-</a>
-
+<header>
 <div id="header">
-    {{#link-to "index"}}
-        <img src="/assets/Cargo-Logo-Small.png" id="logo"
-             height=100 width=100 />
-    {{/link-to}}
-    {{#link-to "index"}}
-        <h1>CARGO</h1>
-    {{/link-to}}
-
-    <form class='search' action='/search' {{ action "search" on="submit" }} >
-        {{input type="text" class="search" name="q"
-                placeholder="Search"
-                value=search
-                autofocus="autofocus"
-                tabindex="1"}}
-    </form>
+    <h1 id='cargo-name'>CARGO</h1>
 
     <div class='nav'>
+        {{#link-to 'install' (query-params letter="null" page=1)}}
+            <img class="icon" src="/assets/nav_download.png"/>
+            <button type="button">Install</button>
+        {{/link-to}}
+        <span class="sep">|</span>
+
         {{#link-to "crates" (query-params letter="null" page=1)}}
+            <img class="icon" src="/assets/nav_crate.png"/>
             <button type="button">Browse All Crates</button>
         {{/link-to}}
         <span class="sep">|</span>
         {{#rl-dropdown-container class="dropdown-container"}}
+            <img class="icon" src="/assets/nav_document.png"/>
             {{#rl-dropdown-toggle class="dropdown"}}
                 Docs
                 <span class='arrow'></span>
@@ -62,8 +53,8 @@
             {{/rl-dropdown-container}}
         {{else}}
             {{#link-to "login"}}
+                <img class="icon" src="/assets/nav_github.png"/>
                 <button type="button">
-                    <img class="lock" src="/assets/lock.png"/>
                     Log in with GitHub
                 </button>
             {{/link-to}}
@@ -92,6 +83,7 @@
     <div class='links'>
     </div>
 </div>
+</header>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
     {{input type="text" class="search" name="q"
@@ -105,12 +97,4 @@
     <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
 
     {{outlet}}
-</div>
-
-<div class='after-main-links'>
-    {{#link-to 'install'}}Install{{/link-to}}
-    <span class="sep">|</span>
-    <a href='http://doc.crates.io'>Getting Started</a>
-    <span class="sep">|</span>
-    <a href='http://doc.crates.io/guide.html'>Guide</a>
 </div>
