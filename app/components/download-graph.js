@@ -47,10 +47,10 @@ export default Ember.Component.extend({
                 // the line altogether.
                 if (!on[k] && value === 0) {
                     data[i][k + 1] = null;
-
+                } 
                 // If we are off and the value is not zero, we
                 // need to turn back on.  (keep the value the same though)
-                } else if (!on[k] && value !== 0) {
+                else if (!on[k] && value !== 0) {
                     on[k] = true;
 
                     // We previously wrote a null into data[i - 1][k + 1],
@@ -59,9 +59,10 @@ export default Ember.Component.extend({
                     if (i > 1) {
                         data[i - 1][k + 1] = 0;
                     }
+                }
                 // If we are on and the value is zero, turn off
                 // but keep the zero in the array
-                } else if (on[k] && value === 0) {
+                else if (on[k] && value === 0) {
                     on[k] = false;
                 }
             }
