@@ -1,0 +1,16 @@
+<div id='crates-heading'>
+    {{#user-link user=model}}
+        {{user-avatar user=model size='medium'}}
+    {{/user-link}}
+    <h1>
+        {{#link-to 'user' model}}
+            {{ model.login }}
+        {{/link-to}}
+    </h1>
+</div>
+
+<div id='user-profile'>
+    <div class='info'>
+      {{outlet}}
+    </div>
+</div>

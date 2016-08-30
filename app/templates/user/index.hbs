@@ -1,24 +1,7 @@
-<div id='crates-heading'>
-    {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
-    <h1>{{ model.login }}</h1>
-</div>
+<p>
+    Generic profile information here.
+</p>
 
-<div id='user-profile'>
-    <div class='info'>
-        <div id='crates'>
-            <div class='header'>
-                <h2>
-                    <img class="my-packages" src="/assets/my-packages.png"/>
-                    Crates
-                </h2>
-
-                {{#if hasMoreCrates}}
-                    <span class='small'>
-                        {{link-to 'Show all' 'me.crates'}}
-                    </span>
-                {{/if}}
-            </div>
-            {{crate-downloads-list crates=visibleCrates}}
-        </div>
-    </div>
-</div>
+{{#link-to 'user.crates' model.login}}
+    See all their crates
+{{/link-to}}
