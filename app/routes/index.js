@@ -2,6 +2,13 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
+    headTags: [{
+        type: 'meta',
+        attrs: {
+            name: 'description',
+            content: 'cargo is the package manager and crate host for rust'
+        }
+    }],
     model() {
         function addCrates(store, crates) {
             for (var i = 0; i < crates.length; i++) {
