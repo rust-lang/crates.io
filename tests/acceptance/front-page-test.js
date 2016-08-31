@@ -8,7 +8,7 @@ test('visiting /', function(assert) {
 
     andThen(function() {
         assert.equal(currentURL(), '/');
-        assert.equal(document.title, 'Cargo');
+        assert.equal(document.title, 'Cargo: packages for Rust');
 
         findWithAssert('a[href="/install"]');
         findWithAssert('a[href="/crates"]');

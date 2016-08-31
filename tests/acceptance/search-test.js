@@ -13,7 +13,7 @@ test('searching for "rust"', function(assert) {
 
     andThen(function() {
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(document.title, 'Search Results for \'rust\' - Cargo');
+        assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
 
         findWithAssert('a[href="/search?page=2&q=rust"]');
         assert.notOk(find('a[href="/search?page=3&q=rust"]')[0]);
@@ -29,7 +29,7 @@ test('searching for "rust"', function(assert) {
 
     andThen(function() {
         assert.equal(currentURL(), '/search?page=2&q=rust');
-        assert.equal(document.title, 'Search Results for \'rust\' - Cargo');
+        assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
 
         findWithAssert('a[href="/search?q=rust"]');
         assert.notOk(find('a[href="/search?page=3&q=rust"]')[0]);
