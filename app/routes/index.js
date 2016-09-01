@@ -9,6 +9,7 @@ export default Ember.Route.extend({
             content: 'cargo is the package manager and crate host for rust'
         }
     }],
+
     model() {
         function addCrates(store, crates) {
             for (var i = 0; i < crates.length; i++) {

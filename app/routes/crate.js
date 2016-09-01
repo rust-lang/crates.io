@@ -7,5 +7,22 @@ export default Ember.Route.extend({
                 return this.controllerFor('application').set('flashError', `Crate '${params.crate_id}' does not exist`);
             }
         });
+    },
+
+    afterModel(model) {
+        this.setHeadTags(model);
+    },
+
+    setHeadTags(model) {
+        var headTags = [{
+            type: 'meta',
+            tagId: 'meta-description-tag',
+            attrs: {
+                name: 'description',
+                content: model.get('description') || 'A package for Rust.'
+            }
+        }];
+
+        this.set('headTags', headTags);
     }
 });
