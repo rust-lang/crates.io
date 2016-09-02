@@ -1,23 +1,19 @@
 import Ember from 'ember';
+import PaginationMixin from '../mixins/pagination';
 
-const TO_SHOW = 5;
 const { computed } = Ember;
 
-export default Ember.Controller.extend({
-    init() {
-        this._super(...arguments);
+// TODO: reduce duplication with controllers/crates
 
-        this.fetchingFeed = true;
-        this.loadingMore = false;
-        this.hasMore = false;
-        this.crates = [];
-    },
+export default Ember.Controller.extend(PaginationMixin, {
+    queryParams: ['page', 'per_page', 'sort'],
+    page: '1',
+    per_page: 10,
+    sort: 'alpha',
 
-    visibleCrates: computed('crates', function() {
-        return this.get('crates').slice(0, TO_SHOW);
+    totalItems: computed.readOnly('model.crates.meta.total'),
+
+    currentSortBy: computed('sort', function() {
+        return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
     }),
-
-    hasMoreCrates: computed('crates', function() {
-        return this.get('crates.length') > TO_SHOW;
-    })
 });

@@ -1,6 +1,10 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
+    queryParams: {
+        page: { refreshModel: true },
+        sort: { refreshModel: true },
+    },
     data: {},
 
     setupController(controller, model) {
@@ -11,21 +15,23 @@ export default Ember.Route.extend({
     },
 
     model(params) {
-        return this.store.find('user', params.user_id).catch(e => {
-            if (e.errors.any(e => e.detail === 'Not Found')) {
-                this.controllerFor('application').set('nextFlashError', `User '${params.user_id}' does not exist`);
-                return this.replaceWith('index');
+        const { user_id } = params;
+        return this.store.find('user', user_id).then(
+            (user) => {
+                params.user_id = user.get('id');
+                return Ember.RSVP.hash({
+                    crates: this.store.query('crate', params),
+                    user
+                });
+            },
+            (e) => {
+                if (e.errors.any(e => e.detail === 'Not Found')) {
+                    this
+                        .controllerFor('application')
+                        .set('nextFlashError', `User '${params.user_id}' does not exist`);
+                    return this.replaceWith('index');
+                }
             }
-        });
+        );
     },
-
-    afterModel(user) {
-        let crates = this.store.query('crate', {
-            user_id: user.get('id')
-        });
-
-        return Ember.RSVP.hash({
-            crates,
-        }).then((hash) => this.set('data', hash));
-    }
 });
