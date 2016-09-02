@@ -32,7 +32,7 @@ export default Ember.Component.extend({
             //
             // End before the last element is reached because we never
             // want to change the last element.
-            for (let i = 1; i < data.length - 1 ; i++) {
+            for (let i = 1; i < data.length - 1; i++) {
                 // k + 1 because the first entry in the array is the date
                 let value = data[i][k];
 
