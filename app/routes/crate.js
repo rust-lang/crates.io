@@ -10,7 +10,9 @@ export default Ember.Route.extend({
     },
 
     afterModel(model) {
-        this.setHeadTags(model);
+        if (typeof model.get === 'function') {
+            this.setHeadTags(model);
+        }
     },
 
     setHeadTags(model) {
