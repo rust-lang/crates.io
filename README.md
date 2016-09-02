@@ -5,7 +5,7 @@ Source code for the default registry for Cargo users. Can be found online at
 
 [crates-io]: https://crates.io
 
-## Installation
+## Development Setup
 
 * `git clone` this repository
 * `npm install`
@@ -121,3 +121,62 @@ For more information on using ember-cli, visit
 
 For more information on using cargo, visit
 [doc.crates.io](http://doc.crates.io/).
+
+## Deploy a read-only, download-API-only mirror
+
+This mirror will function as a read-only duplicate of crates.io's API. You will
+be able to download crates using your index and your mirror, but the crate files
+will still come from crates.io's S3 storage.
+
+Your mirror will not:
+
+- Allow users to sign up/sign in
+- Allow crate publish
+- Keep track of any statistics
+- Display available crates in its UI
+
+### API server
+
+To deploy the API on Heroku, use this button:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)][deploy]
+
+[deploy]: https://heroku.com/deploy
+
+You do not need to fill in any of the optional fields.
+
+### Index mirror
+
+You also need a mirror of the crates.io git index, and your index needs to point
+to your API server.
+
+1. `git clone https://github.com/rust-lang/crates.io-index.git`
+2. Edit the config.json file to point to your API server so it looks like:
+
+    ```json
+    {
+      "dl": "https://[your heroku app name].herokuapp.com/api/v1/crates",
+      "api": "https://[your heroku app name].herokuapp.com/"
+    }
+    ```
+
+3. Commit and push to wherever you will be hosting your index (ex: github,
+    gitlab, an internal git server)
+4. In your cargo project, replace the crates.io source with your source by
+    changing your `.cargo/config` to point to wherever you are hosting your git
+    index:
+
+    ```toml
+    [source]
+
+    [source.mirror]
+    registry = "https://[host and path to your git server]/crates.io-index"
+
+    [source.crates-io]
+    replace-with = "mirror"
+    registry = 'https://doesnt-matter-but-must-be-present'
+    ```
+
+5. In order to keep your mirror index up to date, schedule a `git pull` of the
+    official index. How to do this depends on how you are hosting your index,
+    but could be done through `cron` or a scheduled CI job, for example.
