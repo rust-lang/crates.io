@@ -20,50 +20,47 @@ export default Ember.Component.extend({
 
         let data = this.get('data');
 
-        let datapoints_count = (data[1] || []).length - 1;
+        let subarray_length = (data[1] || []).length;
 
-        // "on" is an array of booleans where each
-        // element in the array says whether or not the
-        // corresponding line in the data is being drawn or not.
-        //
-        // Each line starts as not being drawn, and can pick up and
-        // be stopped arbitrarily many times before the graph is complete.
-        let on = [];
-        for (let i = 0; i < datapoints_count; i++) {
-            on.push(false);
-        }
+        // Start at 1 to skip the date element in the 0th
+        // location in the array.
+        for (let k = 1; k < subarray_length; k++) {
+            let on = false;
 
-        // Start at 1 because the 0th entry in the array
-        // is an array of version numbers
-        for (let i = 1; i < data.length; i++) {
-            for (let k = 0; k < datapoints_count; k++) {
+            // Start at 1 because the 0th entry in the array
+            // is an array of version numbers.
+            //
+            // End before the last element is reached because we never
+            // want to change the last element.
+            for (let i = 1; i < data.length - 1; i++) {
                 // k + 1 because the first entry in the array is the date
-                let value = data[i][k + 1];
+                let value = data[i][k];
 
                 // If we are "off" and are looking at a zero
                 // replace the data at this point with `null`.
                 //
                 // Null tells google.visualization to stop drawing
                 // the line altogether.
-                if (!on[k] && value === 0) {
-                    data[i][k + 1] = null;
+                if (!on && value === 0) {
+                    data[i][k] = null;
                 }
+
                 // If we are off and the value is not zero, we
                 // need to turn back on.  (keep the value the same though)
-                else if (!on[k] && value !== 0) {
-                    on[k] = true;
+                else if (!on && value !== 0) {
+                    on = true;
 
                     // We previously wrote a null into data[i - 1][k + 1],
                     // so to make the graph look pretty, we'll switch it back
                     // to the zero that it was before.
-                    if (i > 1) {
-                        data[i - 1][k + 1] = 0;
+                    if (i >= 2) {
+                        data[i - 1][k] = 0;
                     }
                 }
                 // If we are on and the value is zero, turn off
                 // but keep the zero in the array
-                else if (on[k] && value === 0) {
-                    on[k] = false;
+                else if (on && value === 0) {
+                    on = false;
                 }
             }
         }
