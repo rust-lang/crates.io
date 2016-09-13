@@ -35,7 +35,7 @@
     "ember-cli-meta-tags": "^2.0.2",
     "ember-cli-mirage": "0.1.13",
     "ember-cli-moment-shim": "2.0.0",
-    "ember-cli-qunit": "3.0.0",
+    "ember-cli-qunit": "3.0.1",
     "ember-cli-release": "^0.2.9",
     "ember-cli-sass": "5.5.1",
     "ember-cli-sri": "^2.1.0",
