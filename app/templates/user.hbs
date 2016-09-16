@@ -1,11 +1,7 @@
 <div id='crates-heading'>
-    {{#user-link user=model}}
-        {{user-avatar user=model.user size='medium'}}
-    {{/user-link}}
+    {{user-avatar user=model.user size='medium'}}
     <h1>
-        {{#link-to 'user' model.user.login}}
-            {{ model.user.login }}
-        {{/link-to}}
+        {{ model.user.login }}
     </h1>
 </div>
 
