@@ -3,6 +3,9 @@
     <h1>
         {{ model.user.login }}
     </h1>
+    {{#user-link user=model.user}}
+      <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
+    {{/user-link}}
 </div>
 
 <div id='user-profile'>
