@@ -11,7 +11,10 @@
         @include display-flex;
         @include align-items(center);
     }
-    h1 { padding-left: 10px; }
+    h1 {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
     h2 { color: $main-color-light; padding-left: 10px; }
     .right {
         @include flex(2);
