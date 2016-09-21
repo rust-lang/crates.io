@@ -196,4 +196,9 @@ registry = "https://[host and path to your git server]/crates.io-index"
 
 [source.crates-io]
 replace-with = "mirror"
+registry = 'https://doesnt-matter-but-must-be-present'
 ```
+
+Once [rust-lang/cargo#3089](https://github.com/rust-lang/cargo/pull/3089) is
+released, it won't be necessary to specify a registry URL for a source being
+replaced.
