@@ -3,8 +3,9 @@
   "description": "A mirror of crates.io",
   "repository": "https://github.com/rust-lang/crates.io",
   "env": {
-      "HEROKU": "1",
-      "MIRROR": "1",
+      "GIT_REPO_URL": {
+          "description": "The git URL of your crates index repository.",
+      },
       "GH_CLIENT_ID": {
           "value": "",
           "required": false
@@ -13,8 +14,6 @@
           "value": "",
           "required": false
       },
-      "GIT_REPO_CHECKOUT": "./tmp/index-co",
-      "GIT_REPO_URL": "https://github.com/rust-lang/crates.io-index.git",
       "S3_BUCKET": "crates-io",
       "S3_ACCESS_KEY": {
           "value": "",
@@ -26,7 +25,10 @@
       },
       "SESSION_KEY": {
           "generator": "secret"
-      }
+      },
+      "HEROKU": "1",
+      "MIRROR": "1",
+      "GIT_REPO_CHECKOUT": "./tmp/index-co"
   },
   "formation": {
       "web": {

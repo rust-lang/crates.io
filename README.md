@@ -152,7 +152,9 @@ To deploy the API on Heroku, use this button:
 
 [deploy]: https://heroku.com/deploy
 
-You do not need to fill in any of the optional fields.
+The only config variable you need to set is `GIT_REPO_URL`, which should be the
+git URL of your crates index repository; see the next section for setup
+instructions for that.
 
 ### Index mirror setup
 
