@@ -122,7 +122,16 @@ For more information on using ember-cli, visit
 For more information on using cargo, visit
 [doc.crates.io](http://doc.crates.io/).
 
-## Deploy a read-only, download-API-only mirror
+## Deploying a Mirror
+
+**DISCLAIMER: The process of setting up a mirror is a work-in-progress and is
+likely to change. It is not currently recommended for mission-critical
+production use. It also requires a version of cargo newer than 0.13.0-nightly
+(f09ef68 2016-08-02); the version of cargo currently on rustc's beta channel
+fulfils this requirement and will be shipped with rustc 1.12.0 scheduled to be
+released on 2016-09-29.**
+
+### Current functionality: a read-only, download-API-only mirror
 
 This mirror will function as a read-only duplicate of crates.io's API. You will
 be able to download crates using your index and your mirror, but the crate files
@@ -135,7 +144,7 @@ Your mirror will not:
 - Keep track of any statistics
 - Display available crates in its UI
 
-### API server
+### API server setup
 
 To deploy the API on Heroku, use this button:
 
@@ -145,7 +154,7 @@ To deploy the API on Heroku, use this button:
 
 You do not need to fill in any of the optional fields.
 
-### Index mirror
+### Index mirror setup
 
 You also need a mirror of the crates.io git index, and your index needs to point
 to your API server.
@@ -162,21 +171,27 @@ to your API server.
 
 3. Commit and push to wherever you will be hosting your index (ex: github,
     gitlab, an internal git server)
-4. In your cargo project, replace the crates.io source with your source by
-    changing your `.cargo/config` to point to wherever you are hosting your git
-    index:
 
-    ```toml
-    [source]
-
-    [source.mirror]
-    registry = "https://[host and path to your git server]/crates.io-index"
-
-    [source.crates-io]
-    replace-with = "mirror"
-    registry = 'https://doesnt-matter-but-must-be-present'
-    ```
-
-5. In order to keep your mirror index up to date, schedule a `git pull` of the
+4. In order to keep your mirror index up to date, schedule a `git pull` of the
     official index. How to do this depends on how you are hosting your index,
     but could be done through `cron` or a scheduled CI job, for example.
+
+### Cargo setup
+
+**NOTE: The following configuration requires a cargo version newer than
+0.13.0-nightly (f09ef68 2016-08-02). The version of cargo that comes with rust
+1.12.0 fulfils this requirement; this version is currently on the beta channel
+and is scheduled to be released on 2016-09-29.**
+
+In the project where you want to use your mirror, change your `.cargo/config`
+to replace the crates.io source to point to your crates index:
+
+```toml
+[source]
+
+[source.mirror]
+registry = "https://[host and path to your git server]/crates.io-index"
+
+[source.crates-io]
+replace-with = "mirror"
+```
