@@ -41,16 +41,16 @@
   ],
   "buildpacks": [
       {
-        "url": "https://github.com/rcaught/heroku-buildpack-cmake"
+        "url": "https://github.com/rcaught/heroku-buildpack-cmake.git#e4e2c9e"
       },
       {
-        "url": "https://github.com/alexcrichton/heroku-buildpack-rust"
+        "url": "https://github.com/alexcrichton/heroku-buildpack-rust.git#ca218b5"
       },
       {
-        "url": "https://github.com/tonycoco/heroku-buildpack-ember-cli"
+        "url": "https://github.com/tonycoco/heroku-buildpack-ember-cli.git#e4aed2b"
       },
       {
-        "url": "https://github.com/ryandotsmith/nginx-buildpack.git"
+        "url": "https://github.com/ryandotsmith/nginx-buildpack.git#005ca03"
       }
   ]
 }
