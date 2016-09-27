@@ -4,7 +4,7 @@
   "repository": "https://github.com/rust-lang/crates.io",
   "env": {
       "GIT_REPO_URL": {
-          "description": "The git URL of your crates index repository.",
+          "description": "The git URL of your crates index repository."
       },
       "GH_CLIENT_ID": {
           "value": "",
