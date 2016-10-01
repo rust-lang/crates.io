@@ -121,18 +121,21 @@
     }
     li a:hover { background-color: darken($main-bg-dark, 5%); }
 
-    @media only screen and (max-width: 750px) {
-        #just-updated { display: none; }
-    }
-    @media only screen and (max-width: 550px) {
-        #new-crates { display: none; }
-    }
 }
 
-#home-crates > div {
-    @include flex(1);
+#home-crates {
+    @include flex-wrap(wrap);
+    @include justify-content(center);
 
-    // flexbox trick to help truncate text and prevent overflow
-    // https://css-tricks.com/flexbox-truncated-text/
-    min-width: 0;
+    > div {
+      margin: 0;
+      padding: 0 15px;
+      width: 33.33%;
+      @media only screen and (max-width: 750px) {
+        width: 50%;
+      }
+      @media only screen and (max-width: 550px) {
+        width: 100%;
+      }
+    }
 }
