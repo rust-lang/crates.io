@@ -18,6 +18,7 @@ grammar
 graphviz
 macro
 macros
+proc_macro
 rbml
 rust-installer
 rustbook
