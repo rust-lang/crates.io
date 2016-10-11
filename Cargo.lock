@@ -219,7 +219,7 @@ dependencies = [
  "libc 0.2.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl-sys 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
