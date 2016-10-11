@@ -9,4 +9,4 @@ license = "MIT"
 repository = "https://github.com/conduit-rust/conduit"
 
 [dependencies]
-semver = "0.2.0"
+semver = "0.5.0"
