@@ -9,12 +9,12 @@ This project is built on ember-cli and cargo, visit
 
 ## Working on the Frontend
 
-```
+```bash
 git clone https://github.com/rust-lang/crates.io.git
 cd crates.io/
-npm install
-npm install -g ember-cli bower
-bower install
+npm install -g yarn # if you don't have yarn
+yarn
+yarn run bower install
 ```
 
 The website's frontend is built with [Ember.js](http://emberjs.com/). This 
@@ -22,7 +22,7 @@ makes it possible to work on the frontend without running a local backend.
 To start the frontend run:
 
 ```bash
-npm run start:staging
+yarn run start:staging
 ```
 
 This will run a local frontend using the staging backend (hosted on Heroku at 
@@ -37,9 +37,9 @@ specify arguments to `npm start`. For example you can set the proxy to
 To do this, run:
 
 ```bash
-npm start -- --proxy https://crates.io
+yarn start -- --proxy https://crates.io
 # or
-npm run start:live
+yarn run start:live
 ```
 
 **Note**: This requires npm 2.
@@ -52,8 +52,8 @@ phantomjs-prebuilt`.
 Then run the tests with:
 
 ```
-ember test
-ember test --server
+yarn run ember test
+yarn run ember test --server
 ```
 
 ## Working on the Backend
@@ -97,7 +97,7 @@ follows:
 6. **Optionally** start a local frontend:
 
     ```
-    npm run start:local
+    yarn run start:local
     ```
 
 ### Running Tests
