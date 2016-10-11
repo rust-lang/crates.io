@@ -26,7 +26,7 @@ dependencies = [
  "openssl 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2_postgres 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2_postgres 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "s3 0.0.1",
@@ -515,7 +515,7 @@ dependencies = [
 
 [[package]]
 name = "r2d2_postgres"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "postgres 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -732,7 +732,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum pnacl-build-helper 1.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "61c9231d31aea845007443d62fcbb58bb6949ab9c18081ee1e09920e0cf1118b"
 "checksum postgres 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)" = "991779b6de908cfbd9fdc7e250681649017bd40500bcae733ad41c34c85de811"
 "checksum r2d2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)" = "d154b63cf63b74f7d46f6dc48a71d7b50ac98437767085697ea374758e392f09"
-"checksum r2d2_postgres 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "55c25114b302611a94694653b12e49bbada4af61bf7b7fbd6c364c49d1a751bc"
+"checksum r2d2_postgres 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5d6a89004a606289a10237da3c2676afcbf5ab23fedbab23b0f516cb9d9067ca"
 "checksum rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)" = "2791d88c6defac799c3f20d74f094ca33b9332612d9aef9078519c82e4fe04a5"
 "checksum regex 0.1.77 (registry+https://github.com/rust-lang/crates.io-index)" = "64b03446c466d35b42f2a8b203c8e03ed8b91c0f17b56e1f84f7210a257aa665"
 "checksum regex-syntax 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "48f0573bcee95a48da786f8823465b5f2a1fae288a55407aca991e5b3e0eae11"
