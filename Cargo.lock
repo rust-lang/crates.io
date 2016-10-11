@@ -14,7 +14,7 @@ dependencies = [
  "conduit-router 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-static 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "curl 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "curl 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -222,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "curl"
-version = "0.2.18"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "curl-sys 0.1.34 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -437,7 +437,7 @@ name = "oauth2"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "curl 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "curl 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -574,7 +574,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "s3"
 version = "0.0.1"
 dependencies = [
- "curl 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "curl 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -695,7 +695,7 @@ dependencies = [
 "checksum conduit-test 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "df1bf05c09f1ba796f416b411c70c458bf178307e38078e6b525b79fe681afd1"
 "checksum conduit-utils 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)" = "135d0844c510e99e6d6b09b98794f40e010ae98912142c291735c960c7fb785b"
 "checksum cookie 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "2fa3d3deaa24f00707d1806cd880e851bb1733571599797ba892d39638d504f9"
-"checksum curl 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)" = "2a48b72c66a1b8fc6767fe4f3cda7d6b9bdfab8f3f168344b830eddbbe8e2da0"
+"checksum curl 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)" = "48121fcaa9dc3564dea237c5b473967c682dcc1a5910312d7b9fc54fd5bcc188"
 "checksum curl-sys 0.1.34 (registry+https://github.com/rust-lang/crates.io-index)" = "93196668f75a947d849e1f2db9277223884ece3af169cbff3d36ceeeaf7736b0"
 "checksum dotenv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "eea1395d2df3b5344dc577809296d9578303296e8d105c408aa80ed67d598ef1"
 "checksum env_logger 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b6bbe7c0b619c81b9a1fd122ab3c7ef19a7b27cdba3c8486314b6f275ca211a4"
