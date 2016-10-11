@@ -18,7 +18,7 @@ use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 use semver;
 use time::{Timespec, Duration};
-use url::{self, Url};
+use url::Url;
 
 use {Model, User, Keyword, Version};
 use app::{App, RequestApp};
@@ -182,17 +182,14 @@ impl Crate {
             let url = try!(Url::parse(url).map_err(|_| {
                 human(format!("`{}` is not a valid url: `{}`", field, url))
             }));
-            match &url.scheme[..] {
+            match &url.scheme()[..] {
                 "http" | "https" => {}
                 s => return Err(human(format!("`{}` has an invalid url \
                                                scheme: `{}`", field, s)))
             }
-            match url.scheme_data {
-                url::SchemeData::Relative(..) => {}
-                url::SchemeData::NonRelative(..) => {
-                    return Err(human(format!("`{}` must have relative scheme \
-                                              data: {}", field, url)))
-                }
+            if url.cannot_be_a_base() {
+                return Err(human(format!("`{}` must have relative scheme \
+                                                        data: {}", field, url)))
             }
             Ok(())
         }

@@ -78,7 +78,8 @@ impl<'a> RequestUtils for Request + 'a {
     fn query(&self) -> HashMap<String, String> {
         url::form_urlencoded::parse(self.query_string().unwrap_or("")
                                         .as_bytes())
-            .into_iter().collect()
+            .map(|(a, b)| (a.into_owned(), b.into_owned()))
+            .collect()
     }
 
     fn redirect(&self, url: String) -> Response {
