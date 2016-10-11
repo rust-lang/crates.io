@@ -20,7 +20,7 @@ use cargo_registry::env;
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::SslMode::None).unwrap();
+                                             postgres::TlsMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();
@@ -29,7 +29,7 @@ fn main() {
     }
 }
 
-fn update(tx: &postgres::Transaction) -> postgres::Result<()> {
+fn update(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
     let ids = env::args().skip(1).filter_map(|arg| {
         arg.parse::<i32>().ok()
     });

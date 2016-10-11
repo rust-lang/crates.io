@@ -15,7 +15,7 @@ use cargo_registry::model::Model;
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::SslMode::None).unwrap();
+                                             postgres::TlsMode::None).unwrap();
     let migrations = migrations();
 
     let arg = env::args().nth(1);
@@ -26,7 +26,7 @@ fn main() {
     }
 }
 
-fn apply(tx: postgres::Transaction,
+fn apply(tx: postgres::transaction::Transaction,
          migrations: Vec<Migration>) -> postgres::Result<()> {
     let mut mgr = try!(migrate::Manager::new(tx));
     for m in migrations.into_iter() {
@@ -36,7 +36,7 @@ fn apply(tx: postgres::Transaction,
     mgr.finish()
 }
 
-fn rollback(tx: postgres::Transaction,
+fn rollback(tx: postgres::transaction::Transaction,
             migrations: Vec<Migration>) -> postgres::Result<()> {
     let mut mgr = try!(migrate::Manager::new(tx));
     for m in migrations.into_iter().rev() {
@@ -809,7 +809,7 @@ fn migrations() -> Vec<Migration> {
 }
 
 // DO NOT UPDATE OR USE FOR NEW MIGRATIONS
-fn fix_duplicate_crate_owners(tx: &postgres::Transaction) -> postgres::Result<()> {
+fn fix_duplicate_crate_owners(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
     let v: Vec<(i32, i32)> = {
         let stmt = try!(tx.prepare("SELECT user_id, crate_id
                                       FROM crate_owners

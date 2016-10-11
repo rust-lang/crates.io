@@ -4,7 +4,7 @@ extern crate postgres;
 
 use std::collections::HashSet;
 
-use postgres::Transaction;
+use postgres::transaction::Transaction;
 use postgres::Result as PgResult;
 
 struct A<'a, 'b: 'a> {
@@ -72,7 +72,7 @@ fn run(sql: String) -> Step {
 }
 
 impl<'a> Manager<'a> {
-    pub fn new(tx: postgres::Transaction) -> PgResult<Manager> {
+    pub fn new(tx: Transaction) -> PgResult<Manager> {
         let mut mgr = Manager { tx: tx, versions: HashSet::new() };
         try!(mgr.load());
         Ok(mgr)

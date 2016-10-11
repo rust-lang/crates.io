@@ -4,7 +4,6 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg::types::Slice;
 use rustc_serialize::json;
 use semver;
 use time::Duration;
@@ -244,7 +243,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             LEFT JOIN crates ON crates.id = versions.crate_id
             WHERE versions.id = ANY($1)
         "));
-        for row in try!(stmt.query(&[&Slice(&ids)])).iter() {
+        for row in try!(stmt.query(&[&ids])).iter() {
             let v: Version = Model::from_row(&row);
             let crate_name: String = row.get("crate_name");
             versions.push(v.encodable(&crate_name));

@@ -12,7 +12,7 @@ use curl::http;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg::types::{ToSql, Slice};
+use pg::types::ToSql;
 use pg;
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
@@ -905,7 +905,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                                    AND version_id = ANY($2)
                                  ORDER BY date ASC"));
     let mut downloads = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &Slice(&ids)])).iter() {
+    for row in try!(stmt.query(&[&cutoff_date, &ids])).iter() {
         let download: VersionDownload = Model::from_row(&row);
         downloads.push(download.encodable());
     }
@@ -922,7 +922,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         GROUP BY DATE(version_downloads.date)
         ORDER BY DATE(version_downloads.date) ASC"));
     let mut extra = Vec::new();
-    for row in try!(stmt.query(&[&cutoff_date, &krate.id, &Slice(&ids)])).iter() {
+    for row in try!(stmt.query(&[&cutoff_date, &krate.id, &ids])).iter() {
         extra.push(ExtraDownload {
             downloads: row.get("downloads"),
             date: row.get("date")
