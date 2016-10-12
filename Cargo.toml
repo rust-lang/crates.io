@@ -9,5 +9,5 @@ repository = "https://github.com/conduit-rust/conduit-middleware"
 license = "MIT"
 
 [dependencies]
-conduit = "0.7"
-semver = "0.2"
+conduit = "0.8"
+semver = "0.5.0"
