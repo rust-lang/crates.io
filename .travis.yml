@@ -23,7 +23,7 @@ before_script:
 script:
   - cargo build
   - cargo test
-  - yarn run ember test
+  - yarn run test
 
 after_success:
   - travis-cargo coveralls --no-sudo
