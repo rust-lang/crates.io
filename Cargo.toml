@@ -22,7 +22,7 @@ rand = "0.3"
 time = "0.1"
 git2 = "0.5"
 flate2 = "0.2"
-semver = "0.2"
+semver = "0.5"
 url = "1.2.1"
 postgres = { version = "0.12", features = ["with-time"] }
 r2d2 = "0.7.0"
