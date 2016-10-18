@@ -7,8 +7,9 @@ use pg;
 use pg::GenericConnection;
 use r2d2;
 use r2d2_postgres;
+use r2d2_postgres::postgres;
 use r2d2_postgres::PostgresConnectionManager as PCM;
-use r2d2_postgres::SslMode;
+use r2d2_postgres::TlsMode;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 
@@ -19,8 +20,8 @@ pub type Pool = r2d2::Pool<PCM>;
 pub type Config = r2d2::Config<pg::Connection, r2d2_postgres::Error>;
 type PooledConnnection = r2d2::PooledConnection<PCM>;
 
-pub fn pool(url: &str, config: r2d2::Config<pg::Connection, r2d2_postgres::Error>) -> Pool {
-    let mgr = PCM::new(url, SslMode::None).unwrap();
+pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres::Error>) -> Pool {
+    let mgr = PCM::new(url, TlsMode::None).unwrap();
     r2d2::Pool::new(config, mgr).unwrap()
 }
 
@@ -35,7 +36,7 @@ pub struct Transaction {
     // into `PooledConnnection`, but this `Transaction` can be moved around in
     // memory, so we need the borrow to be from a stable address. The `Box` will
     // provide this stable address.
-    tx: LazyCell<pg::Transaction<'static>>,
+    tx: LazyCell<pg::transaction::Transaction<'static>>,
     slot: LazyCell<Box<PooledConnnection>>,
     commit: Cell<Option<bool>>,
 
@@ -55,14 +56,14 @@ impl Transaction {
         }
     }
 
-    pub fn conn(&self) -> CargoResult<&pg::Connection> {
+    pub fn conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
             let conn = try!(self.app.database.get().map_err(|e| {
                 internal(format!("failed to get a database connection: {}", e))
             }));
             self.slot.fill(Box::new(conn));
         }
-        Ok(&***self.slot.borrow().unwrap())
+        Ok(&**self.slot.borrow().unwrap())
     }
 
     fn tx<'a>(&'a self) -> CargoResult<&'a (GenericConnection + 'a)> {
@@ -74,12 +75,12 @@ impl Transaction {
             if !self.tx.filled() {
                 let conn = try!(self.conn());
                 let t = try!(conn.transaction());
-                let t = mem::transmute::<_, pg::Transaction<'static>>(t);
+                let t = mem::transmute::<_, pg::transaction::Transaction<'static>>(t);
                 self.tx.fill(t);
             }
         }
         let tx = self.tx.borrow();
-        let tx: &'a pg::Transaction<'static> = tx.unwrap();
+        let tx: &'a pg::transaction::Transaction<'static> = tx.unwrap();
         Ok(tx)
     }
 
@@ -121,7 +122,7 @@ pub trait RequestTransaction {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
-    fn db_conn(&self) -> CargoResult<&pg::Connection>;
+    fn db_conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>>;
 
     /// Return the lazily initialized postgres transaction for this request.
     ///
@@ -136,7 +137,7 @@ pub trait RequestTransaction {
 }
 
 impl<'a> RequestTransaction for Request + 'a {
-    fn db_conn(&self) -> CargoResult<&pg::Connection> {
+    fn db_conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
             .conn()

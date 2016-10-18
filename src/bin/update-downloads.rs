@@ -20,7 +20,7 @@ fn main() {
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
         let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                                 postgres::SslMode::None).unwrap();
+                                                 postgres::TlsMode::None).unwrap();
         update(&conn).unwrap();
         drop(conn);
         if daemon {
@@ -54,7 +54,7 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     Ok(())
 }
 
-fn collect(tx: &postgres::Transaction,
+fn collect(tx: &postgres::transaction::Transaction,
            rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
     use time::Duration;
 
@@ -145,15 +145,15 @@ mod test {
 
     fn conn() -> postgres::Connection {
         postgres::Connection::connect(&env("TEST_DATABASE_URL")[..],
-                                      postgres::SslMode::None).unwrap()
+                                      postgres::TlsMode::None).unwrap()
     }
 
-    fn user(conn: &postgres::Transaction) -> User{
+    fn user(conn: &postgres::transaction::Transaction) -> User{
         User::find_or_insert(conn, 2, "login", None, None, None,
                              "access_token", "api_token").unwrap()
     }
 
-    fn crate_downloads(tx: &postgres::Transaction, id: i32, expected: usize) {
+    fn crate_downloads(tx: &postgres::transaction::Transaction, id: i32, expected: usize) {
         let stmt = tx.prepare("SELECT * FROM crate_downloads
                                WHERE crate_id = $1").unwrap();
         let dl: i32 = stmt.query(&[&id]).unwrap().iter()

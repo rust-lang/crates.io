@@ -21,7 +21,7 @@ use cargo_registry::{Crate, env};
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::SslMode::None).unwrap();
+                                             postgres::TlsMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
         delete(&tx);
@@ -30,7 +30,7 @@ fn main() {
     }
 }
 
-fn delete(tx: &postgres::Transaction) {
+fn delete(tx: &postgres::transaction::Transaction) {
     let name = match env::args().nth(1) {
         None => { println!("needs a crate-name argument"); return }
         Some(s) => s,

@@ -20,7 +20,7 @@ use cargo_registry::Model;
 #[allow(dead_code)]
 fn main() {
     let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::SslMode::None).unwrap();
+                                             postgres::TlsMode::None).unwrap();
     {
         let tx = conn.transaction().unwrap();
         transfer(&tx);
@@ -29,7 +29,7 @@ fn main() {
     }
 }
 
-fn transfer(tx: &postgres::Transaction) {
+fn transfer(tx: &postgres::transaction::Transaction) {
     let from = match env::args().nth(1) {
         None => { println!("needs a from-user argument"); return }
         Some(s) => s,

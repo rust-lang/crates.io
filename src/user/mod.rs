@@ -5,7 +5,6 @@ use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg::types::Slice;
 use rand::{thread_rng, Rng};
 
 use {Model, Version};
@@ -329,7 +328,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     if crate_ids.len() > 0 {
         let stmt = try!(tx.prepare("SELECT * FROM crates WHERE id = ANY($1)"));
-        for row in try!(stmt.query(&[&Slice(&crate_ids)])).iter() {
+        for row in try!(stmt.query(&[&crate_ids])).iter() {
             let krate: Crate = Model::from_row(&row);
             map.insert(krate.id, krate.name.clone());
             crates.push(krate);

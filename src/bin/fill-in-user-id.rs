@@ -51,7 +51,7 @@ struct GithubUser {
     id: i32,
 }
 
-fn update(app: &App, tx: &postgres::Transaction) {
+fn update(app: &App, tx: &postgres::transaction::Transaction) {
     let mut rows = Vec::new();
     let query = "SELECT id, gh_login, gh_access_token, gh_avatar FROM users \
                   WHERE gh_id IS NULL";

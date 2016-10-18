@@ -6,7 +6,6 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg::types::Slice;
 
 use {Model, Crate};
 use db::RequestTransaction;
@@ -95,7 +94,7 @@ impl Keyword {
             try!(conn.execute("DELETE FROM crates_keywords
                                 WHERE keyword_id = ANY($1)
                                   AND crate_id = $2",
-                              &[&Slice(&to_rm), &krate.id]));
+                              &[&to_rm, &krate.id]));
         }
 
         if to_add.len() > 0 {
