@@ -48,8 +48,8 @@ impl Handler for Static {
         }
         let mtime = FileTime::from_last_modification_time(&data);
         let ts = time::Timespec {
-            sec: (mtime.seconds_relative_to_1970() as i64) / 1000,
-            nsec: (((mtime.nanoseconds() as u32) % 1000) as i32) * 1000000
+            sec: mtime.seconds_relative_to_1970() as i64,
+            nsec: mtime.nanoseconds() as i32,
         };
         let tm = time::at(ts).to_utc();
 
@@ -70,9 +70,12 @@ impl Handler for Static {
 }
 
 fn not_found() -> Response {
+    let mut headers = HashMap::new();
+    headers.insert("Content-Length".to_string(), vec!["0".to_string()]);
+    headers.insert("Content-Type".to_string(), vec!["text/plain".to_string()]);
     Response {
         status: (404, "Not Found"),
-        headers: HashMap::new(),
+        headers: headers,
         body: Box::new(io::empty()),
     }
 }
