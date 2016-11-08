@@ -39,7 +39,7 @@ impl Handler for Middleware {
         // serve up that page. Otherwise proxy on to the rest of the app.
         let wants_html = req.headers().find("Accept").map(|accept| {
             accept.iter().any(|s| s.contains("html"))
-        }).unwrap_or(false);
+        }).unwrap_or(true); // If no Accept header is specified, serve up html.
         if wants_html {
             self.dist.call(&mut RequestProxy {
                 other: req,
