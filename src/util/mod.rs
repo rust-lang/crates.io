@@ -93,8 +93,9 @@ impl<'a> RequestUtils for Request + 'a {
     }
 
     fn wants_json(&self) -> bool {
-        let content = self.headers().find("Accept").unwrap_or(Vec::new());
-        content.iter().any(|s| s.contains("json"))
+        self.headers().find("Accept").map(|accept| {
+            accept.iter().any(|s| s.contains("json"))
+        }).unwrap_or(false)
     }
 
     fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)> {

@@ -37,10 +37,9 @@ impl Handler for Middleware {
 
         // Second, if we're requesting html, then we've only got one page so
         // serve up that page. Otherwise proxy on to the rest of the app.
-        let wants_html = {
-            let content = req.headers().find("Accept").unwrap_or(Vec::new());
-            content.iter().any(|s| s.contains("html"))
-        };
+        let wants_html = req.headers().find("Accept").map(|accept| {
+            accept.iter().any(|s| s.contains("html"))
+        }).unwrap_or(false);
         if wants_html {
             self.dist.call(&mut RequestProxy {
                 other: req,
