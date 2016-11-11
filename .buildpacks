@@ -1,5 +1,5 @@
 https://github.com/rcaught/heroku-buildpack-cmake#e4e2c9e
 https://github.com/emk/heroku-buildpack-rust#035823
 https://github.com/heroku/heroku-buildpack-nodejs#yarn
-https://github.com/tonycoco/heroku-buildpack-ember-cli#3be749b
+https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/emberjs.tgz
 https://github.com/ryandotsmith/nginx-buildpack.git#af813ba
