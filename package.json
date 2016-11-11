@@ -7,12 +7,13 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "ember build",
-    "start": "ember server",
-    "start:local": "ember server --proxy http://127.0.0.1:8888",
-    "start:staging": "ember server --proxy https://staging-crates-io.herokuapp.com",
-    "start:live": "ember server --proxy https://crates.io",
-    "test": "ember test"
+    "build": "yarn run ember build",
+    "start": "yarn run ember server",
+    "start:local": "yarn run ember server --proxy http://127.0.0.1:8888",
+    "start:staging": "yarn run ember server --proxy https://staging-crates-io.herokuapp.com",
+    "start:live": "yarn run ember server --proxy https://crates.io",
+    "test": "yarn run ember test",
+    "ember": "ember"
   },
   "repository": "",
   "engines": {
