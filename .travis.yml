@@ -4,19 +4,18 @@ sudo: false
 
 cache:
   directories:
-    - node_modules
+    - $HOME/.yarn-cache
 
 before_install:
-  - nvm install 0.12
+  - nvm install 4.6.0
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
-  - "npm config set spin false"
-  - "npm install -g npm@^2"
+  - npm config set spin false
+  - npm install -g yarn
 
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - npm install -g bower
-  - npm install
-  - bower install
+  - yarn
+  - yarn run bower install
 
 before_script:
   - psql -c 'create database cargo_registry_test;' -U postgres
@@ -24,7 +23,7 @@ before_script:
 script:
   - cargo build
   - cargo test
-  - npm test
+  - yarn run test
 
 after_success:
   - travis-cargo coveralls --no-sudo
