@@ -229,6 +229,10 @@ impl Crate {
         parts.next().is_none()
     }
 
+    pub fn minimal_encodable(self) -> EncodableCrate {
+        self.encodable(None, None, None)
+    }
+
     pub fn encodable(self,
                      versions: Option<Vec<i32>>,
                      keywords: Option<&[Keyword]>,
@@ -582,7 +586,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     for row in try!(stmt.query(&args)).iter() {
         let krate: Crate = Model::from_row(&row);
-        crates.push(krate.encodable(None, None, None));
+        crates.push(krate.minimal_encodable());
     }
 
     // Query for the total count of crates
@@ -617,7 +621,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);
-            krate.encodable(None, None, None)
+            krate.minimal_encodable()
         }).collect::<Vec<EncodableCrate>>())
     };
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
@@ -796,7 +800,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(RustcEncodable)]
     struct R { krate: EncodableCrate }
-    Ok(req.json(&R { krate: krate.encodable(None, None, None) }))
+    Ok(req.json(&R { krate: krate.minimal_encodable() }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
