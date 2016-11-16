@@ -1,12 +1,14 @@
 use time::Timespec;
 
 use conduit::{Request, Response};
+use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
 
 use Model;
 use db::RequestTransaction;
-use util::{RequestUtils, CargoResult};
+use util::{RequestUtils, CargoResult, ChainError};
+use util::errors::NotFound;
 
 #[derive(Clone)]
 pub struct Category {
@@ -92,4 +94,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         categories: categories,
         meta: Meta { total: total },
     }))
+}
+
+/// Handles the `GET /categories/:category_id` route.
+pub fn show(req: &mut Request) -> CargoResult<Response> {
+    let name = &req.params()["category_id"];
+    let conn = try!(req.tx());
+    let cat = try!(Category::find_by_category(&*conn, &name));
+    let cat = try!(cat.chain_error(|| NotFound));
+
+    #[derive(RustcEncodable)]
+    struct R { category: EncodableCategory }
+    Ok(req.json(&R { category: cat.encodable() }))
 }
