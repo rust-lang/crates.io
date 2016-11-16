@@ -272,20 +272,21 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
                 deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, deps, Vec::new()));
+    req.with_body(&new_req_body(krate, version, deps, Vec::new(), Vec::new()));
     return req;
 }
 
 fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str,
                          kws: Vec<String>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), kws));
+    req.with_body(&new_req_body(krate, version, Vec::new(), kws, Vec::new()));
     return req;
 }
 
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
-                kws: Vec<String>) -> Vec<u8> {
+                kws: Vec<String>, cats: Vec<String>) -> Vec<u8> {
     let kws = kws.into_iter().map(u::Keyword).collect();
+    let cats = cats.into_iter().map(u::Category).collect();
     new_crate_to_body(&u::NewCrate {
         name: u::CrateName(krate.name),
         vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
@@ -297,6 +298,7 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
         documentation: krate.documentation,
         readme: krate.readme,
         keywords: Some(u::KeywordList(kws)),
+        categories: Some(u::CategoryList(cats)),
         license: Some("MIT".to_string()),
         license_file: None,
         repository: krate.repository,

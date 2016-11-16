@@ -48,6 +48,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         documentation: None,
         readme: None,
         keywords: None,
+        categories: None,
         license: Some("MIT".to_string()),
         license_file: None,
         repository: None,
@@ -190,7 +191,7 @@ fn exact_match_on_queries_with_sort() {
     krate4.description = Some("other const".to_string());
     krate4.downloads = 999999;
     let (k4, _) = ::mock_crate(&mut req, krate4.clone());
-    
+
     {
         let req2: &mut Request = &mut req;
         let tx = req2.tx().unwrap();
@@ -461,7 +462,9 @@ fn new_crate_owner() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
+    let body = ::new_req_body(
+        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
+    );
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)

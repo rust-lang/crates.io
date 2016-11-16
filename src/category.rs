@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -5,7 +6,7 @@ use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
 
-use Model;
+use {Model, Crate};
 use db::RequestTransaction;
 use util::{RequestUtils, CargoResult, ChainError};
 use util::errors::NotFound;
@@ -35,6 +36,14 @@ impl Category {
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
+    pub fn find_all_by_category(conn: &GenericConnection, names: &[String])
+                                  -> CargoResult<Vec<Category>> {
+        let stmt = try!(conn.prepare("SELECT * FROM categories \
+                                      WHERE category = ANY($1)"));
+        let rows = try!(stmt.query(&[&names]));
+        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    }
+
     pub fn encodable(self) -> EncodableCategory {
         let Category { id: _, crates_cnt, category, created_at } = self;
         EncodableCategory {
@@ -43,6 +52,52 @@ impl Category {
             crates_cnt: crates_cnt,
             category: category,
         }
+    }
+
+    pub fn update_crate(conn: &GenericConnection,
+                        krate: &Crate,
+                        categories: &[String]) -> CargoResult<()> {
+        let old_categories = try!(krate.categories(conn));
+        let old_categories_ids: HashSet<_> = old_categories.iter().map(|cat| {
+            cat.id
+        }).collect();
+        // If a new category specified is not in the database, filter
+        // it out and don't add it.
+        let new_categories = try!(
+            Category::find_all_by_category(conn, categories)
+        );
+        let new_categories_ids: HashSet<_> = new_categories.iter().map(|cat| {
+            cat.id
+        }).collect();
+
+        let to_rm: Vec<_> = old_categories_ids
+                                .difference(&new_categories_ids)
+                                .cloned()
+                                .collect();
+        let to_add: Vec<_> = new_categories_ids
+                                .difference(&old_categories_ids)
+                                .cloned()
+                                .collect();
+
+        if to_rm.len() > 0 {
+            try!(conn.execute("DELETE FROM crates_categories \
+                                WHERE category_id = ANY($1) \
+                                  AND crate_id = $2",
+                              &[&to_rm, &krate.id]));
+        }
+
+        if !to_add.is_empty() {
+            let insert: Vec<_> = to_add.into_iter().map(|id| {
+                format!("({}, {})", krate.id, id)
+            }).collect();
+            let insert = insert.join(", ");
+            try!(conn.execute(&format!("INSERT INTO crates_categories \
+                                        (crate_id, category_id) VALUES {}",
+                                       insert),
+                              &[]));
+        }
+
+        Ok(())
     }
 }
 

@@ -134,7 +134,9 @@ fn remove_team_as_named_owner() {
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
+    let body = ::new_req_body(
+        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
+    );
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                         .with_body(&body)
                                         .with_method(Method::Put)));
@@ -164,7 +166,9 @@ fn remove_team_as_team_owner() {
     assert!(json.errors[0].detail.contains("don't have permission"),
             "{:?}", json.errors);
 
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
+    let body = ::new_req_body(
+        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
+    );
     ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                             .with_body(&body)
                             .with_method(Method::Put)));
@@ -185,7 +189,9 @@ fn publish_not_owned() {
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
+    let body = ::new_req_body(
+        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
+    );
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                         .with_body(&body)
                                         .with_method(Method::Put)));
@@ -207,7 +213,9 @@ fn publish_owned() {
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new());
+    let body = ::new_req_body(
+        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
+    );
     ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                             .with_body(&body)
                             .with_method(Method::Put)));
