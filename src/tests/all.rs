@@ -64,13 +64,13 @@ struct Error { detail: String }
 struct Bad { errors: Vec<Error> }
 
 mod category;
+mod git;
 mod keyword;
 mod krate;
-mod user;
 mod record;
-mod git;
-mod version;
 mod team;
+mod user;
+mod version;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     dotenv::dotenv().ok();
