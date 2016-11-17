@@ -104,6 +104,19 @@
                 {{/if}}
             {{/unless}}
 
+            {{#unless crate.categories.isPending}}
+                {{#if anyCategories}}
+                    <div>
+                        <h3>Categories</h3>
+                        <ul class='categories'>
+                            {{#each categories as |category|}}
+                                <li>{{link-to category.id 'category' category}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/if}}
+            {{/unless}}
+
             <div>
                 <h3>Owners</h3>
                 <ul class='owners'>

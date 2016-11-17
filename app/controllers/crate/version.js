@@ -19,6 +19,7 @@ export default Ember.Controller.extend({
     currentVersion: computed.alias('model'),
     requestedVersion: null,
     keywords: computed.alias('crate.keywords'),
+    categories: computed.alias('crate.categories'),
 
     sortedVersions: computed.readOnly('crate.versions'),
 
@@ -49,6 +50,7 @@ export default Ember.Controller.extend({
     }),
 
     anyKeywords: computed.gt('keywords.length', 0),
+    anyCategories: computed.gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
         var deps = this.get('currentVersion.dependencies');
