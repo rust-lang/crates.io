@@ -79,7 +79,7 @@ impl Category {
                                 .cloned()
                                 .collect();
 
-        if to_rm.len() > 0 {
+        if !to_rm.is_empty() {
             try!(conn.execute("DELETE FROM crates_categories \
                                 WHERE category_id = ANY($1) \
                                   AND crate_id = $2",
