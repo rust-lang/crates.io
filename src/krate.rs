@@ -693,7 +693,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     let categories = new_crate.categories.as_ref().map(|s| &s[..])
                                      .unwrap_or(&[]);
-    let categories = categories.iter().map(|k| k[..].to_string()).collect::<Vec<_>>();
+    let categories: Vec<_> = categories.iter().map(|k| k[..].to_string()).collect();
 
     // Persist the new crate, if it doesn't already exist
     let mut krate = try!(Crate::find_or_insert(try!(req.tx()), name, user.id,
