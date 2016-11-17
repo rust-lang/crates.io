@@ -462,9 +462,7 @@ fn new_crate_owner() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
-    let body = ::new_req_body(
-        ::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new()
-    );
+    let body = ::new_req_body_foo_version_2();
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                                .with_method(Method::Put)
