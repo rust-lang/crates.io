@@ -99,8 +99,13 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     return (bomb, app, middleware);
 
     fn db_setup(db: &str) {
-        let migrate = t!(env::current_exe()).parent().unwrap().join("migrate");
-        assert!(t!(Command::new(&migrate).env("DATABASE_URL", db)
+        let mut me = t!(env::current_exe());
+        me.pop();
+        if me.ends_with("deps") {
+            me.pop();
+        }
+        me.push("migrate");
+        assert!(t!(Command::new(&me).env("DATABASE_URL", db)
                            .status()).success());
     }
 }
