@@ -115,6 +115,18 @@ impl Category {
 
         Ok(invalid_categories)
     }
+
+    pub fn count_toplevel(conn: &GenericConnection) -> CargoResult<i64> {
+        let sql = format!("\
+            SELECT COUNT(*) \
+            FROM {} \
+            WHERE category NOT LIKE '%::%'",
+            Model::table_name(None::<Self>
+        ));
+        let stmt = try!(conn.prepare(&sql));
+        let rows = try!(stmt.query(&[]));
+        Ok(rows.iter().next().unwrap().get("count"))
+    }
 }
 
 impl Model for Category {
@@ -141,10 +153,13 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         _ => "ORDER BY category ASC",
     };
 
-    // Collect all the categories
-    let stmt = try!(conn.prepare(&format!("SELECT * FROM categories {} \
-                                           LIMIT $1 OFFSET $2",
-                                          sort_sql)));
+    // Collect all the top-level categories
+    let stmt = try!(conn.prepare(&format!(
+        "SELECT * FROM categories \
+         WHERE category NOT LIKE '%::%' {} \
+         LIMIT $1 OFFSET $2",
+         sort_sql
+    )));
 
     let categories: Vec<_> = try!(stmt.query(&[&limit, &offset]))
         .iter()
@@ -155,7 +170,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .collect();
 
     // Query for the total count of categories
-    let total = try!(Category::count(conn));
+    let total = try!(Category::count_toplevel(conn));
 
     #[derive(RustcEncodable)]
     struct R { categories: Vec<EncodableCategory>, meta: Meta }

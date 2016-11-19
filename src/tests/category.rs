@@ -16,14 +16,21 @@ struct GoodCategory { category: EncodableCategory }
 fn index() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/categories");
+
+    // List 0 categories if none exist
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CategoryList = ::json(&mut response);
     assert_eq!(json.categories.len(), 0);
     assert_eq!(json.meta.total, 0);
 
+    // Create a category and a subcategory
     ::mock_category(&mut req, "foo", "foo");
+    ::mock_category(&mut req, "foo::bar", "foo::bar");
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CategoryList = ::json(&mut response);
+
+    // Only the top-level categories should be on the page
     assert_eq!(json.categories.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.categories[0].category, "foo");
