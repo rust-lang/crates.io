@@ -15,6 +15,7 @@ use util::errors::NotFound;
 pub struct Category {
     pub id: i32,
     pub category: String,
+    pub slug: String,
     pub created_at: Timespec,
     pub crates_cnt: i32,
 }
@@ -23,6 +24,7 @@ pub struct Category {
 pub struct EncodableCategory {
     pub id: String,
     pub category: String,
+    pub slug: String,
     pub created_at: String,
     pub crates_cnt: i32,
 }
@@ -38,18 +40,21 @@ impl Category {
                    .map(|row| Model::from_row(&row))
     }
 
-    pub fn find_all_by_category(conn: &GenericConnection, names: &[String])
-                                  -> CargoResult<Vec<Category>> {
+    pub fn find_by_slug(conn: &GenericConnection, slug: &str)
+                            -> CargoResult<Category> {
         let stmt = try!(conn.prepare("SELECT * FROM categories \
-                                      WHERE category = ANY($1)"));
-        let rows = try!(stmt.query(&[&names]));
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+                                      WHERE slug = LOWER($1)"));
+        let rows = try!(stmt.query(&[&slug]));
+        rows.iter().next()
+                   .chain_error(|| NotFound)
+                   .map(|row| Model::from_row(&row))
     }
 
     pub fn encodable(self) -> EncodableCategory {
-        let Category { id: _, crates_cnt, category, created_at } = self;
+        let Category { id: _, crates_cnt, category, slug, created_at } = self;
         EncodableCategory {
-            id: category.clone(),
+            id: slug.clone(),
+            slug: slug.clone(),
             created_at: ::encode_time(created_at),
             crates_cnt: crates_cnt,
             category: category,
@@ -63,11 +68,13 @@ impl Category {
         let old_categories_ids: HashSet<_> = old_categories.iter().map(|cat| {
             cat.id
         }).collect();
+
         // If a new category specified is not in the database, filter
         // it out and don't add it.
-        let new_categories = try!(
-            Category::find_all_by_category(conn, categories)
-        );
+        let new_categories: Vec<Category> = categories.iter().flat_map(|c| {
+            Category::find_by_slug(conn, &c).ok()
+        }).collect();
+
         let new_categories_ids: HashSet<_> = new_categories.iter().map(|cat| {
             cat.id
         }).collect();
@@ -110,6 +117,7 @@ impl Model for Category {
             created_at: row.get("created_at"),
             crates_cnt: row.get("crates_cnt"),
             category: row.get("category"),
+            slug: row.get("slug"),
         }
     }
     fn table_name(_: Option<Category>) -> &'static str { "categories" }
@@ -155,9 +163,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let name = &req.params()["category_id"];
+    let slug = &req.params()["category_id"];
     let conn = try!(req.tx());
-    let cat = try!(Category::find_by_category(&*conn, &name));
+    let cat = try!(Category::find_by_slug(&*conn, &slug));
 
     #[derive(RustcEncodable)]
     struct R { category: EncodableCategory }

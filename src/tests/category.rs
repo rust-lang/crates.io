@@ -21,7 +21,7 @@ fn index() {
     assert_eq!(json.categories.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    ::mock_category(&mut req, "foo");
+    ::mock_category(&mut req, "foo", "foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CategoryList = ::json(&mut response);
     assert_eq!(json.categories.len(), 1);
@@ -32,14 +32,15 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/categories/foo");
+    let mut req = ::req(app, Method::Get, "/api/v1/categories/foo-bar");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 404);
 
-    ::mock_category(&mut req, "foo");
+    ::mock_category(&mut req, "Foo Bar", "foo-bar");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCategory = ::json(&mut response);
-    assert_eq!(json.category.category, "foo");
+    assert_eq!(json.category.category, "Foo Bar");
+    assert_eq!(json.category.slug, "foo-bar");
 }
 
 fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
@@ -55,46 +56,49 @@ fn update_crate() {
     };
     ::mock_user(&mut req, ::user("foo"));
     let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
-    ::mock_category(&mut req, "cat1");
-    ::mock_category(&mut req, "cat2");
+    ::mock_category(&mut req, "cat1", "cat1");
+    ::mock_category(&mut req, "Category 2", "category-2");
 
     // Updating with no categories has no effect
     Category::update_crate(tx(&req), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
-    assert_eq!(cnt(&mut req, "cat2"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Happy path adding one category
     Category::update_crate(tx(&req), &krate, &["cat1".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
-    assert_eq!(cnt(&mut req, "cat2"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Replacing one category with another
-    Category::update_crate(tx(&req), &krate, &["cat2".to_string()]).unwrap();
+    Category::update_crate(
+        tx(&req), &krate, &["category-2".to_string()]
+    ).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
-    assert_eq!(cnt(&mut req, "cat2"), 1);
+    assert_eq!(cnt(&mut req, "category-2"), 1);
 
     // Removing one category
     Category::update_crate(tx(&req), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
-    assert_eq!(cnt(&mut req, "cat2"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Adding 2 categories
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
-                                               "cat2".to_string()]).unwrap();
+    Category::update_crate(
+        tx(&req), &krate, &["cat1".to_string(),
+                            "category-2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
-    assert_eq!(cnt(&mut req, "cat2"), 1);
+    assert_eq!(cnt(&mut req, "category-2"), 1);
 
     // Removing all categories
     Category::update_crate(tx(&req), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
-    assert_eq!(cnt(&mut req, "cat2"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Attempting to add one valid category and one invalid category
     Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
                                                "catnope".to_string()]).unwrap();
 
     assert_eq!(cnt(&mut req, "cat1"), 1);
-    assert_eq!(cnt(&mut req, "cat2"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Does not add the invalid category to the category list
     // (unlike the behavior of keywords)
@@ -103,4 +107,12 @@ fn update_crate() {
     let json: CategoryList = ::json(&mut response);
     assert_eq!(json.categories.len(), 2);
     assert_eq!(json.meta.total, 2);
+
+    // Attempting to add a category by display text; must use slug
+    Category::update_crate(
+        tx(&req), &krate, &["Category 2".to_string()]
+    ).unwrap();
+    assert_eq!(cnt(&mut req, "cat1"), 0);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
+
 }

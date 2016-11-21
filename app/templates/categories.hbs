@@ -43,7 +43,7 @@
     {{#each model as |category|}}
         <div class='row'>
             <div class='info'>
-                {{link-to category.id "category" category}}
+                {{link-to category.category "category" category.slug}}
                 <span class='vers small'>
                     {{ format-num category.crates_cnt }}
                     crates

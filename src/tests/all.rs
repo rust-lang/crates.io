@@ -251,13 +251,13 @@ fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
     Keyword::find_or_insert(req.tx().unwrap(), name).unwrap()
 }
 
-fn mock_category(req: &mut Request, name: &str) -> Category {
+fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
     let conn = req.tx().unwrap();
     let stmt = conn.prepare(" \
-        INSERT INTO categories (category) \
-        VALUES ($1) \
+        INSERT INTO categories (category, slug) \
+        VALUES ($1, $2) \
         RETURNING *").unwrap();
-    let rows = stmt.query(&[&name]).unwrap();
+    let rows = stmt.query(&[&name, &slug]).unwrap();
     Model::from_row(&rows.iter().next().unwrap())
 }
 

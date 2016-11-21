@@ -248,7 +248,7 @@ impl Crate {
             None => Some(format!("/api/v1/crates/{}/versions", name)),
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
-        let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.category.clone()).collect());
+        let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
