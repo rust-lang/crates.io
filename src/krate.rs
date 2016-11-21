@@ -739,8 +739,16 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Update all keywords for this crate
     try!(Keyword::update_crate(try!(req.tx()), &krate, &keywords));
 
-    // Update all categories for this crate
-    try!(Category::update_crate(try!(req.tx()), &krate, &categories));
+    // Update all categories for this crate, collecting any invalid categories
+    // in order to be able to warn about them
+    let ignored_invalid_categories = try!(
+        Category::update_crate(try!(req.tx()), &krate, &categories)
+    );
+    let warnings: Vec<String> =
+        ignored_invalid_categories.iter().map(|category| {
+            format!("'{}' is not a recognized category name \
+                     and has been ignored.", category)
+        }).collect();
 
     // Upload the crate to S3
     let mut handle = req.app().handle();
@@ -799,8 +807,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     bomb.path = None;
 
     #[derive(RustcEncodable)]
-    struct R { krate: EncodableCrate }
-    Ok(req.json(&R { krate: krate.minimal_encodable() }))
+    struct R { krate: EncodableCrate, warnings: Vec<String> }
+    Ok(req.json(&R { krate: krate.minimal_encodable(), warnings: warnings }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {

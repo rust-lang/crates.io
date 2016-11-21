@@ -26,7 +26,7 @@ struct CrateMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
-struct GoodCrate { krate: EncodableCrate }
+struct GoodCrate { krate: EncodableCrate, warnings: Vec<String> }
 #[derive(RustcDecodable)]
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion>, keywords: Vec<EncodableKeyword> }
 #[derive(RustcDecodable)]
@@ -882,6 +882,36 @@ fn bad_keywords() {
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
+}
+
+#[test]
+fn good_categories() {
+    let (_b, app, middle) = ::app();
+    let krate = ::krate("foo");
+    let cats = vec!["cat1".into()];
+    let mut req = ::new_req_with_categories(app, krate, "1.0.0", cats);
+    ::mock_category(&mut req, "cat1", "cat1");
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo");
+    assert_eq!(json.krate.max_version, "1.0.0");
+    assert_eq!(json.warnings.len(), 0);
+}
+
+#[test]
+fn ignored_categories() {
+    let (_b, app, middle) = ::app();
+    let krate = ::krate("foo");
+    let cats = vec!["bar".into()];
+    let mut req = ::new_req_with_categories(app, krate, "1.0.0", cats);
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo");
+    assert_eq!(json.krate.max_version, "1.0.0");
+    assert_eq!(json.warnings, vec!["\'bar\' is not a recognized category name \
+                                    and has been ignored.".to_string()]);
 }
 
 #[test]

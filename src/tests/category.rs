@@ -94,9 +94,11 @@ fn update_crate() {
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Attempting to add one valid category and one invalid category
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
-                                               "catnope".to_string()]).unwrap();
-
+    let invalid_categories = Category::update_crate(
+        tx(&req), &krate, &["cat1".to_string(),
+                            "catnope".to_string()]
+    ).unwrap();
+    assert_eq!(invalid_categories, vec!["catnope".to_string()]);
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
