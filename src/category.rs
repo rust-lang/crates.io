@@ -29,6 +29,16 @@ pub struct EncodableCategory {
     pub crates_cnt: i32,
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct EncodableCategoryWithSubcategories {
+    pub id: String,
+    pub category: String,
+    pub slug: String,
+    pub created_at: String,
+    pub crates_cnt: i32,
+    pub subcategories: Vec<EncodableCategory>,
+}
+
 impl Category {
     pub fn find_by_category(conn: &GenericConnection, name: &str)
                             -> CargoResult<Category> {
@@ -127,6 +137,14 @@ impl Category {
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().next().unwrap().get("count"))
     }
+
+    pub fn subcategories(&self, conn: &GenericConnection)
+                                -> CargoResult<Vec<Category>> {
+        let stmt = try!(conn.prepare("SELECT * FROM categories \
+                                      WHERE category ILIKE $1 || '::%'"));
+        let rows = try!(stmt.query(&[&self.category]));
+        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    }
 }
 
 impl Model for Category {
@@ -153,10 +171,20 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         _ => "ORDER BY category ASC",
     };
 
-    // Collect all the top-level categories
+    // Collect all the top-level categories and sum up the crates_cnt of
+    // the crates in all subcategories
     let stmt = try!(conn.prepare(&format!(
-        "SELECT * FROM categories \
-         WHERE category NOT LIKE '%::%' {} \
+        "SELECT c.id, c.category, c.slug, c.created_at, \
+                counts.sum::int as crates_cnt \
+         FROM categories as c \
+         LEFT JOIN ( \
+             SELECT split_part(categories.category, '::', 1), \
+                    sum(categories.crates_cnt) \
+             FROM categories \
+             GROUP BY split_part(categories.category, '::', 1) \
+         ) as counts \
+         ON c.category = counts.split_part \
+         WHERE c.category NOT LIKE '%::%' {} \
          LIMIT $1 OFFSET $2",
          sort_sql
     )));
@@ -188,8 +216,20 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = try!(req.tx());
     let cat = try!(Category::find_by_slug(&*conn, &slug));
+    let subcats = try!(cat.subcategories(&*conn)).into_iter().map(|s| {
+        s.encodable()
+    }).collect();
+    let cat = cat.encodable();
+    let cat_with_subcats = EncodableCategoryWithSubcategories {
+        id: cat.id,
+        category: cat.category,
+        slug: cat.slug,
+        created_at: cat.created_at,
+        crates_cnt: cat.crates_cnt,
+        subcategories: subcats,
+    };
 
     #[derive(RustcEncodable)]
-    struct R { category: EncodableCategory }
-    Ok(req.json(&R { category: cat.encodable() }))
+    struct R { category: EncodableCategoryWithSubcategories}
+    Ok(req.json(&R { category: cat_with_subcats }))
 }

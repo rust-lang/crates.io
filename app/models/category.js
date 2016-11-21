@@ -6,5 +6,7 @@ export default DS.Model.extend({
     created_at: DS.attr('date'),
     crates_cnt: DS.attr('number'),
 
+    subcategories: DS.attr(),
+
     crates: DS.hasMany('crate', { async: true })
 });

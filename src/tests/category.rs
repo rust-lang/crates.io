@@ -3,7 +3,7 @@ use conduit::{Handler, Request, Method};
 use conduit_test::MockRequest;
 
 use cargo_registry::db::RequestTransaction;
-use cargo_registry::category::{Category, EncodableCategory};
+use cargo_registry::category::{Category, EncodableCategory, EncodableCategoryWithSubcategories};
 
 #[derive(RustcDecodable)]
 struct CategoryList { categories: Vec<EncodableCategory>, meta: CategoryMeta }
@@ -11,6 +11,10 @@ struct CategoryList { categories: Vec<EncodableCategory>, meta: CategoryMeta }
 struct CategoryMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GoodCategory { category: EncodableCategory }
+#[derive(RustcDecodable)]
+struct CategoryWithSubcategories {
+    category: EncodableCategoryWithSubcategories
+}
 
 #[test]
 fn index() {
@@ -39,15 +43,23 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = ::app();
+
+    // Return not found if a category doesn't exist
     let mut req = ::req(app, Method::Get, "/api/v1/categories/foo-bar");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 404);
 
+    // Create a category and a subcategory
     ::mock_category(&mut req, "Foo Bar", "foo-bar");
+    ::mock_category(&mut req, "Foo Bar::Baz", "foo-bar::baz");
+
+    // The category and its subcategories should be in the json
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCategory = ::json(&mut response);
+    let json: CategoryWithSubcategories = ::json(&mut response);
     assert_eq!(json.category.category, "Foo Bar");
     assert_eq!(json.category.slug, "foo-bar");
+    assert_eq!(json.category.subcategories.len(), 1);
+    assert_eq!(json.category.subcategories[0].category, "Foo Bar::Baz");
 }
 
 fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }

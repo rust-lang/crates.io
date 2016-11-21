@@ -5,6 +5,25 @@
     <h1>{{ category.category }} Crates</h1>
 </div>
 
+{{#if category.subcategories }}
+  <div id='subcategories'>
+      <h2>Subcategories</h2>
+      <div class='white-rows'>
+          {{#each category.subcategories as |subcategory| }}
+              <div class='row'>
+                  <div class='info'>
+                      {{link-to subcategory.category "category" subcategory.slug}}
+                      <span class='vers small'>
+                          {{ format-num subcategory.crates_cnt }}
+                          crates
+                      </span>
+                  </div>
+              </div>
+          {{/each}}
+      </div>
+  </div>
+{{/if}}
+
 <div id='results'>
     <div class='nav'>
         <span class='amt small'>
