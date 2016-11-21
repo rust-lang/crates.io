@@ -29,11 +29,13 @@ pub struct EncodableCategory {
 
 impl Category {
     pub fn find_by_category(conn: &GenericConnection, name: &str)
-                            -> CargoResult<Option<Category>> {
+                            -> CargoResult<Category> {
         let stmt = try!(conn.prepare("SELECT * FROM categories \
                                       WHERE category = $1"));
         let rows = try!(stmt.query(&[&name]));
-        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
+        rows.iter().next()
+                   .chain_error(|| NotFound)
+                   .map(|row| Model::from_row(&row))
     }
 
     pub fn find_all_by_category(conn: &GenericConnection, names: &[String])
@@ -156,7 +158,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["category_id"];
     let conn = try!(req.tx());
     let cat = try!(Category::find_by_category(&*conn, &name));
-    let cat = try!(cat.chain_error(|| NotFound));
 
     #[derive(RustcEncodable)]
     struct R { category: EncodableCategory }
