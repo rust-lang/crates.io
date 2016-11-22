@@ -530,7 +530,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                         INNER JOIN categories \
                                 ON crates_categories.category_id = \
                                    categories.id \
-                        WHERE lower(categories.category) = lower($1)";
+                        WHERE categories.slug = $1 OR \
+                              categories.slug LIKE $1 || '::%'";
             (format!("SELECT crates.* {} ORDER BY {} LIMIT $2 OFFSET $3", base, sort_sql),
              format!("SELECT COUNT(crates.*) {}", base))
         })
