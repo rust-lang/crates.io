@@ -1,28 +1,16 @@
 // Sync available crate categories from `src/categories.txt`.
-// Only needs to be run for new databases or when `src/categories.txt`
-// has been updated.
-//
-// Usage:
-//      cargo run --bin sync-categories
+// Runs when the server is started.
 
-#![deny(warnings)]
+use pg;
+use env;
+use util::errors::CargoResult;
 
-extern crate cargo_registry;
-extern crate postgres;
-
-use cargo_registry::env;
-
-fn main() {
-    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::TlsMode::None).unwrap();
+pub fn sync() -> CargoResult<()> {
+    let conn = pg::Connection::connect(&env("DATABASE_URL")[..],
+                                             pg::TlsMode::None).unwrap();
     let tx = conn.transaction().unwrap();
-    sync(&tx).unwrap();
-    tx.set_commit();
-    tx.finish().unwrap();
-}
 
-fn sync(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
-    let categories = include_str!("../categories.txt");
+    let categories = include_str!("./categories.txt");
 
     let slug_categories: Vec<_> = categories.lines().map(|c| {
         let mut parts = c.split(' ');
@@ -50,5 +38,7 @@ fn sync(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
             in_clause
         )[..]
     ));
+    tx.set_commit();
+    tx.finish().unwrap();
     Ok(())
 }

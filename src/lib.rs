@@ -52,6 +52,7 @@ use conduit_middleware::MiddlewareBuilder;
 use util::{C, R, R404};
 
 pub mod app;
+pub mod categories;
 pub mod category;
 pub mod config;
 pub mod db;
