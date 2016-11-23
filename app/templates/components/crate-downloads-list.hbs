@@ -1,7 +1,7 @@
 <ul>
     {{#each crates as |crate|}}
         <li>
-            {{#link-to 'crate' crate class='name'}}
+            {{#link-to 'crate' crate.id class='name'}}
                 {{ crate.name }} ({{ crate.max_version }})
                 <div class='right'>
                     <img class="download-clear-back" src="/assets/download-clear-back.png"/>
