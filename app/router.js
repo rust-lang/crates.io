@@ -39,6 +39,7 @@ Router.map(function() {
     this.route('category', { path: '/categories/:category_id' }, function() {
         this.route('index', { path: '/' });
     });
+    this.route('category_slugs');
     this.route('catchAll', { path: '*path' });
 });
 

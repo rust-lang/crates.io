@@ -233,3 +233,23 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R { category: EncodableCategoryWithSubcategories}
     Ok(req.json(&R { category: cat_with_subcats }))
 }
+
+/// Handles the `GET /category_slugs` route.
+pub fn slugs(req: &mut Request) -> CargoResult<Response> {
+    let conn = try!(req.tx());
+    let stmt = try!(conn.prepare("SELECT slug FROM categories \
+                                  ORDER BY slug"));
+    let rows = try!(stmt.query(&[]));
+
+    #[derive(RustcEncodable)]
+    struct Slug { id: String, slug: String }
+
+    let slugs: Vec<Slug> = rows.iter().map(|r| {
+        let slug: String = r.get("slug");
+        Slug { id: slug.clone(), slug: slug }
+    }).collect();
+
+    #[derive(RustcEncodable)]
+    struct R { category_slugs: Vec<Slug> }
+    Ok(req.json(&R { category_slugs: slugs }))
+}
