@@ -745,11 +745,6 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let ignored_invalid_categories = try!(
         Category::update_crate(try!(req.tx()), &krate, &categories)
     );
-    let warnings: Vec<String> =
-        ignored_invalid_categories.iter().map(|category| {
-            format!("'{}' is not a recognized category name \
-                     and has been ignored.", category)
-        }).collect();
 
     // Upload the crate to S3
     let mut handle = req.app().handle();
@@ -808,7 +803,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     bomb.path = None;
 
     #[derive(RustcEncodable)]
-    struct R { krate: EncodableCrate, warnings: Vec<String> }
+    struct Warnings { invalid_categories: Vec<String> }
+    let warnings = Warnings {
+        invalid_categories: ignored_invalid_categories,
+    };
+
+    #[derive(RustcEncodable)]
+    struct R { krate: EncodableCrate, warnings: Warnings }
     Ok(req.json(&R { krate: krate.minimal_encodable(), warnings: warnings }))
 }
 

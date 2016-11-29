@@ -26,7 +26,9 @@ struct CrateMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
-struct GoodCrate { krate: EncodableCrate, warnings: Vec<String> }
+struct Warnings { invalid_categories: Vec<String> }
+#[derive(RustcDecodable)]
+struct GoodCrate { krate: EncodableCrate, warnings: Warnings }
 #[derive(RustcDecodable)]
 struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion>, keywords: Vec<EncodableKeyword> }
 #[derive(RustcDecodable)]
@@ -896,7 +898,7 @@ fn good_categories() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo");
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.len(), 0);
+    assert_eq!(json.warnings.invalid_categories.len(), 0);
 }
 
 #[test]
@@ -910,8 +912,7 @@ fn ignored_categories() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo");
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings, vec!["\'bar\' is not a recognized category name \
-                                    and has been ignored.".to_string()]);
+    assert_eq!(json.warnings.invalid_categories, vec!["bar".to_string()]);
 }
 
 #[test]
