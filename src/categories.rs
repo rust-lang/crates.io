@@ -13,9 +13,9 @@ pub fn sync() -> CargoResult<()> {
     let categories = include_str!("./categories.txt");
 
     let slug_categories: Vec<_> = categories.lines().map(|c| {
-        let mut parts = c.split(' ');
+        let mut parts = c.splitn(2, ' ');
         let slug = parts.next().expect("No slug found!");
-        let name = parts.collect::<Vec<_>>().join(" ");
+        let name = parts.next().expect("No display name found!");
         (slug, name)
     }).collect();
 
