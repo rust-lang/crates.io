@@ -97,6 +97,7 @@
         padding: 20px 0;
         @include display-flex;
         @include justify-content(space-between);
+        @include flex-wrap(wrap);
 
         &:last-of-type { border: none; }
     }
@@ -123,6 +124,24 @@
         color: $main-color-light;
     }
     .downloads { @include display-flex; @include align-items(center); }
+
+    .quick-links {
+        ul {
+            @include display-flex;
+            font-size: 80%;
+            list-style-type: none;
+            margin: 1em 0 0 0;
+            padding: 0;
+
+            li {
+                margin-right: 1em;
+
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
 }
 
 .pagination {
