@@ -1,7 +1,12 @@
 <div class='desc'>
     <div class='info'>
         {{#link-to 'crate' crate.id}}{{ crate.name }}{{/link-to}}
-        <span class='vers small'>{{ crate.max_version }}</span>
+        <span class='vers'>
+            <img
+                src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
+                alt="{{ crate.max_version }}"
+                title="{{ crate.name }}’s current version badge" />
+        </span>
     </div>
     <div class='summary'>
         <span class='small'>
