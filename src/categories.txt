@@ -53,7 +53,6 @@ libraries::hashing Libraries::Hashing
 libraries::image-encoding Libraries::Image encoding
 libraries::image-processing Libraries::Image processing
 libraries::internationalization Libraries::Internationalization
-libraries::io Libraries::I/O
 libraries::logging Libraries::Logging
 libraries::markup-language Libraries::Markup language
 libraries::memory-management Libraries::Memory management
