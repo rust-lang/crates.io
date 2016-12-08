@@ -18,7 +18,6 @@ libraries::asynchronous Libraries::Asynchronous
 libraries::audio Libraries::Audio
 libraries::authentication Libraries::Authentication
 libraries::caching Libraries::Caching
-libraries::command-line-argument-parsing Libraries::Command-line argument parsing
 libraries::command-line-interface Libraries::Command-line interface
 libraries::compression Libraries::Compression
 libraries::concurrency Libraries::Concurrency
