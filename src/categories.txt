@@ -16,17 +16,6 @@ development-tools::debugging::gdb Development Tools::Debugging::GDB
 development-tools::debugging::lldb Development Tools::Debugging::LLDB
 development-tools::embedded Development Tools::Embedded
 development-tools::embedded::cross-compiling Development Tools::Embedded::Cross compiling
-development-tools::ffi Development Tools::FFI
-development-tools::ffi::c Development Tools::FFI::C
-development-tools::ffi::erlang Development Tools::FFI::Erlang
-development-tools::ffi::java Development Tools::FFI::Java
-development-tools::ffi::lua Development Tools::FFI::Lua
-development-tools::ffi::mruby Development Tools::FFI::mruby
-development-tools::ffi::node.js Development Tools::FFI::Node.js
-development-tools::ffi::objective-c Development Tools::FFI::Objective C
-development-tools::ffi::python Development Tools::FFI::Python
-development-tools::ffi::r Development Tools::FFI::R
-development-tools::ffi::ruby Development Tools::FFI::Ruby
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
 libraries::astronomy Libraries::Astronomy
@@ -50,6 +39,17 @@ libraries::date-and-time Libraries::Date and time
 libraries::distributed-systems Libraries::Distributed systems
 libraries::email Libraries::Email
 libraries::encoding Libraries::Encoding
+libraries::ffi Libraries::FFI
+libraries::ffi::c Libraries::FFI::C
+libraries::ffi::erlang Libraries::FFI::Erlang
+libraries::ffi::java Libraries::FFI::Java
+libraries::ffi::lua Libraries::FFI::Lua
+libraries::ffi::mruby Libraries::FFI::mruby
+libraries::ffi::node.js Libraries::FFI::Node.js
+libraries::ffi::objective-c Libraries::FFI::Objective C
+libraries::ffi::python Libraries::FFI::Python
+libraries::ffi::r Libraries::FFI::R
+libraries::ffi::ruby Libraries::FFI::Ruby
 libraries::filesystem Libraries::Filesystem
 libraries::game-development Libraries::Game development
 libraries::geospatial Libraries::Geospatial
