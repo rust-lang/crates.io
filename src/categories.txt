@@ -32,18 +32,6 @@ libraries::distributed-systems Libraries::Distributed systems
 libraries::email Libraries::Email
 libraries::encoding Libraries::Encoding
 libraries::ffi Libraries::FFI
-libraries::ffi::c Libraries::FFI::C
-libraries::ffi::c++ Libraries::FFI::C++
-libraries::ffi::erlang Libraries::FFI::Erlang
-libraries::ffi::go Libraries::FFI::Go
-libraries::ffi::java Libraries::FFI::Java
-libraries::ffi::lua Libraries::FFI::Lua
-libraries::ffi::node.js Libraries::FFI::Node.js
-libraries::ffi::objective-c Libraries::FFI::Objective C
-libraries::ffi::python Libraries::FFI::Python
-libraries::ffi::r Libraries::FFI::R
-libraries::ffi::ruby Libraries::FFI::Ruby
-libraries::ffi::swift Libraries::FFI::Swift
 libraries::filesystem Libraries::Filesystem
 libraries::game-engines Libraries::Game engines
 libraries::geospatial Libraries::Geospatial
