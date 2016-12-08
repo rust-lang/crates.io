@@ -24,7 +24,6 @@ libraries::cloud Libraries::Cloud
 libraries::command-line-argument-parsing Libraries::Command-line argument parsing
 libraries::command-line-interface Libraries::Command-line interface
 libraries::compression Libraries::Compression
-libraries::computation Libraries::Computation
 libraries::concurrency Libraries::Concurrency
 libraries::cryptography Libraries::Cryptography
 libraries::database Libraries::Database
