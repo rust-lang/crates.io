@@ -54,6 +54,7 @@ libraries::filesystem Libraries::Filesystem
 libraries::game-development Libraries::Game development
 libraries::geospatial Libraries::Geospatial
 libraries::graphics Libraries::Graphics
+libraries::gui Libraries::GUI
 libraries::hashing Libraries::Hashing
 libraries::image-processing Libraries::Image processing
 libraries::internationalization Libraries::Internationalization
