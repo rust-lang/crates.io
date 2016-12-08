@@ -17,6 +17,7 @@ development-tools::embedded Development Tools::Embedded
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
 libraries::3d-engines Libraries::3D engines
+libraries::allocators Libraries::Allocators
 libraries::asynchronous Libraries::Asynchronous
 libraries::audio Libraries::Audio
 libraries::authentication Libraries::Authentication
