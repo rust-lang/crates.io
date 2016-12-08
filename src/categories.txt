@@ -58,6 +58,7 @@ libraries::serialization Libraries::Serialization
 libraries::template-engine Libraries::Template engine
 libraries::text-processing Libraries::Text processing
 libraries::virtualization Libraries::Virtualization
+libraries::visualization Libraries::Visualization
 libraries::web-programming Libraries::Web programming
 libraries::web-programming::deployment Libraries::Web programming::Deployment
 libraries::web-programming::http-client Libraries::Web programming::HTTP Client
