@@ -16,11 +16,9 @@ development-tools::debugging Development Tools::Debugging
 development-tools::embedded Development Tools::Embedded
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
-libraries::astronomy Libraries::Astronomy
 libraries::asynchronous Libraries::Asynchronous
 libraries::audio Libraries::Audio
 libraries::authentication Libraries::Authentication
-libraries::bioinformatics Libraries::Bioinformatics
 libraries::caching Libraries::Caching
 libraries::cloud Libraries::Cloud
 libraries::command-line-argument-parsing Libraries::Command-line argument parsing
@@ -60,12 +58,16 @@ libraries::image-processing Libraries::Image processing
 libraries::internationalization Libraries::Internationalization
 libraries::io Libraries::I/O
 libraries::logging Libraries::Logging
-libraries::machine-learning Libraries::Machine learning
 libraries::markup-language Libraries::Markup language
 libraries::mobile Libraries::Mobile
 libraries::network-programming Libraries::Network programming
 libraries::ownership Libraries::Ownership
 libraries::parsing Libraries::Parsing
+libraries::science::math Libraries::Science::Math
+libraries::science::physics Libraries::Science::Physics
+libraries::science::chemistry Libraries::Science::Chemistry
+libraries::science::biology Libraries::Science::Biology
+libraries::science::machine-learning Libraries::Science::Machine learning
 libraries::serialization Libraries::Serialization
 libraries::template-engine Libraries::Template engine
 libraries::text-processing Libraries::Text processing
