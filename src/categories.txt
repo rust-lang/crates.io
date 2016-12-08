@@ -1,4 +1,4 @@
-applications::audio Applications::Audio
+applications::multimedia Applications::Multimedia
 applications::database Applications::Database
 applications::emulators Applications::Emulators
 applications::games Applications::Games
