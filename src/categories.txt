@@ -53,6 +53,7 @@ libraries::game-development Libraries::Game development
 libraries::geospatial Libraries::Geospatial
 libraries::graphics Libraries::Graphics
 libraries::gui Libraries::GUI
+libraries::hardware-support Libraries::Hardware Support
 libraries::hashing Libraries::Hashing
 libraries::image-encoding Libraries::Image encoding
 libraries::image-processing Libraries::Image processing
