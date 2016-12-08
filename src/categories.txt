@@ -53,6 +53,7 @@ libraries::os::unix-apis Libraries::OS::Unix APIs
 libraries::os::windows-apis Libraries::OS::Windows APIs
 libraries::ownership Libraries::Ownership
 libraries::parsing Libraries::Parsing
+libraries::pretty-printing Libraries::Pretty printing
 libraries::science::math Libraries::Science::Math
 libraries::science::physics Libraries::Science::Physics
 libraries::science::chemistry Libraries::Science::Chemistry
