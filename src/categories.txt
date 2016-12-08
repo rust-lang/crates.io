@@ -63,6 +63,7 @@ libraries::machine-learning Libraries::Machine learning
 libraries::markup-language Libraries::Markup language
 libraries::mobile Libraries::Mobile
 libraries::network-programming Libraries::Network programming
+libraries::ownership Libraries::Ownership
 libraries::parsing Libraries::Parsing
 libraries::serialization Libraries::Serialization
 libraries::template-engine Libraries::Template engine
