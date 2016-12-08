@@ -33,6 +33,7 @@ libraries::distributed-systems Libraries::Distributed systems
 libraries::email Libraries::Email
 libraries::encoding Libraries::Encoding
 libraries::ffi Libraries::FFI
+libraries::ffi::external-libraries Libraries::FFI::External libraries
 libraries::filesystem Libraries::Filesystem
 libraries::game-engines Libraries::Game engines
 libraries::geospatial Libraries::Geospatial
