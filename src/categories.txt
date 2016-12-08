@@ -11,11 +11,11 @@ applications::virtualization Applications::Virtualization
 development-tools::build-system Development Tools::Build system
 development-tools::build-system::cargo Development Tools::Build system::Cargo
 development-tools::build-system::cmake Development Tools::Build system::Cmake
+development-tools::cross-compiling Development Tools::Cross compiling
 development-tools::debugging Development Tools::Debugging
 development-tools::debugging::gdb Development Tools::Debugging::GDB
 development-tools::debugging::lldb Development Tools::Debugging::LLDB
 development-tools::embedded Development Tools::Embedded
-development-tools::embedded::cross-compiling Development Tools::Embedded::Cross compiling
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
 libraries::astronomy Libraries::Astronomy
