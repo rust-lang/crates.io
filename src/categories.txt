@@ -9,8 +9,6 @@ applications::text-editors Applications::Text editors
 applications::text-processing Applications::Text processing
 applications::virtualization Applications::Virtualization
 development-tools::build-system Development Tools::Build system
-development-tools::build-system::cargo Development Tools::Build system::Cargo
-development-tools::build-system::cmake Development Tools::Build system::Cmake
 development-tools::cross-compiling Development Tools::Cross compiling
 development-tools::debugging Development Tools::Debugging
 development-tools::embedded Development Tools::Embedded
