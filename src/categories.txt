@@ -16,7 +16,6 @@ development-tools::debugging Development Tools::Debugging
 development-tools::embedded Development Tools::Embedded
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
-libraries::3d-engines Libraries::3D engines
 libraries::asynchronous Libraries::Asynchronous
 libraries::audio Libraries::Audio
 libraries::authentication Libraries::Authentication
@@ -48,7 +47,7 @@ libraries::ffi::r Libraries::FFI::R
 libraries::ffi::ruby Libraries::FFI::Ruby
 libraries::ffi::swift Libraries::FFI::Swift
 libraries::filesystem Libraries::Filesystem
-libraries::game-development Libraries::Game development
+libraries::game-engines Libraries::Game engines
 libraries::geospatial Libraries::Geospatial
 libraries::graphics Libraries::Graphics
 libraries::gui Libraries::GUI
