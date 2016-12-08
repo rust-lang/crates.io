@@ -44,7 +44,6 @@ libraries::ffi::c Libraries::FFI::C
 libraries::ffi::erlang Libraries::FFI::Erlang
 libraries::ffi::java Libraries::FFI::Java
 libraries::ffi::lua Libraries::FFI::Lua
-libraries::ffi::mruby Libraries::FFI::mruby
 libraries::ffi::node.js Libraries::FFI::Node.js
 libraries::ffi::objective-c Libraries::FFI::Objective C
 libraries::ffi::python Libraries::FFI::Python
