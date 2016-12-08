@@ -16,6 +16,7 @@ development-tools::debugging Development Tools::Debugging
 development-tools::embedded Development Tools::Embedded
 development-tools::profiling Development Tools::Profiling
 development-tools::testing Development Tools::Testing
+libraries::3d-engines Libraries::3D engines
 libraries::asynchronous Libraries::Asynchronous
 libraries::audio Libraries::Audio
 libraries::authentication Libraries::Authentication
@@ -52,6 +53,7 @@ libraries::geospatial Libraries::Geospatial
 libraries::graphics Libraries::Graphics
 libraries::gui Libraries::GUI
 libraries::hashing Libraries::Hashing
+libraries::image-encoding Libraries::Image encoding
 libraries::image-processing Libraries::Image processing
 libraries::internationalization Libraries::Internationalization
 libraries::io Libraries::I/O
