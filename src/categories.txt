@@ -48,6 +48,9 @@ libraries::markup-language Libraries::Markup language
 libraries::memory-management Libraries::Memory management
 libraries::mobile Libraries::Mobile
 libraries::network-programming Libraries::Network programming
+libraries::os::mac-apis Libraries::OS::Mac APIs
+libraries::os::unix-apis Libraries::OS::Unix APIs
+libraries::os::windows-apis Libraries::OS::Windows APIs
 libraries::ownership Libraries::Ownership
 libraries::parsing Libraries::Parsing
 libraries::science::math Libraries::Science::Math
