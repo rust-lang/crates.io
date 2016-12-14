@@ -11,12 +11,19 @@
       <div class='white-rows'>
           {{#each category.subcategories as |subcategory| }}
               <div class='row'>
-                  <div class='info'>
-                      {{link-to subcategory.category "category" subcategory.slug}}
-                      <span class='vers small'>
-                          {{ format-num subcategory.crates_cnt }}
-                          crates
-                      </span>
+                  <div class='desc'>
+                      <div class='info'>
+                          {{link-to subcategory.category "category" subcategory.slug}}
+                          <span class='small'>
+                              {{ format-num subcategory.crates_cnt }}
+                              crates
+                          </span>
+                      </div>
+                      <div class='summary'>
+                          <span class='small'>
+                              {{ truncate-text subcategory.description }}
+                          </span>
+                      </div>
                   </div>
               </div>
           {{/each}}

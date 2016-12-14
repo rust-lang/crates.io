@@ -9,6 +9,7 @@ use util::errors::{CargoResult, ChainError, internal};
 struct Category {
     name: String,
     slug: String,
+    description: String,
 }
 
 impl Category {
@@ -16,6 +17,7 @@ impl Category {
         Category {
             name: format!("{}::{}", self.name, child.name),
             slug: format!("{}::{}", self.slug, child.slug),
+            description: child.description.clone(),
         }
     }
 }
@@ -35,6 +37,14 @@ fn required_string_from_toml(toml: &toml::Table, key: &str)
         })
 }
 
+fn optional_string_from_toml(toml: &toml::Table, key: &str)
+                             -> String {
+    toml.get(key)
+        .and_then(toml::Value::as_str)
+        .unwrap_or("")
+        .to_string()
+}
+
 fn category_from_toml(toml: &toml::Value, parent: Option<&Category>)
                       -> CargoResult<Vec<Category>> {
     let toml = toml.as_table().chain_error(|| {
@@ -44,6 +54,7 @@ fn category_from_toml(toml: &toml::Value, parent: Option<&Category>)
     let category = Category {
         slug: required_string_from_toml(&toml, "slug")?,
         name: required_string_from_toml(&toml, "name")?,
+        description: optional_string_from_toml(&toml, "description"),
     };
 
     let category = concat_parent_and_child(parent, category);
@@ -85,25 +96,27 @@ pub fn sync() -> CargoResult<()> {
                 .expect("Categories from toml failed")
         }).collect();
 
-    let insert = categories.iter().map(|ref category| {
-        format!("(LOWER('{}'), '{}')", category.slug, category.name)
-    }).collect::<Vec<_>>().join(",");
+    for category in categories.iter() {
+        tx.execute("\
+            INSERT INTO categories (slug, category, description) \
+            VALUES (LOWER($1), $2, $3) \
+            ON CONFLICT (slug) DO UPDATE \
+                SET category = EXCLUDED.category, \
+                    description = EXCLUDED.description;",
+            &[&category.slug, &category.name, &category.description]
+        )?;
+    }
 
     let in_clause = categories.iter().map(|ref category| {
         format!("LOWER('{}')", category.slug)
     }).collect::<Vec<_>>().join(",");
 
-    try!(tx.batch_execute(
-        &format!(" \
-            INSERT INTO categories (slug, category) \
-            VALUES {} \
-            ON CONFLICT (slug) DO UPDATE SET category = EXCLUDED.category; \
-            DELETE FROM categories \
-            WHERE slug NOT IN ({});",
-            insert,
-            in_clause
-        )[..]
-    ));
+    tx.execute(&format!("\
+        DELETE FROM categories \
+        WHERE slug NOT IN ({});",
+        in_clause),
+        &[]
+    )?;
     tx.set_commit();
     tx.finish().unwrap();
     Ok(())

@@ -16,6 +16,7 @@ pub struct Category {
     pub id: i32,
     pub category: String,
     pub slug: String,
+    pub description: String,
     pub created_at: Timespec,
     pub crates_cnt: i32,
 }
@@ -25,6 +26,7 @@ pub struct EncodableCategory {
     pub id: String,
     pub category: String,
     pub slug: String,
+    pub description: String,
     pub created_at: String,
     pub crates_cnt: i32,
 }
@@ -34,6 +36,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub id: String,
     pub category: String,
     pub slug: String,
+    pub description: String,
     pub created_at: String,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
@@ -61,10 +64,13 @@ impl Category {
     }
 
     pub fn encodable(self) -> EncodableCategory {
-        let Category { id: _, crates_cnt, category, slug, created_at } = self;
+        let Category {
+            id: _, crates_cnt, category, slug, description, created_at
+        } = self;
         EncodableCategory {
             id: slug.clone(),
             slug: slug.clone(),
+            description: description.clone(),
             created_at: ::encode_time(created_at),
             crates_cnt: crates_cnt,
             category: category,
@@ -155,6 +161,7 @@ impl Model for Category {
             crates_cnt: row.get("crates_cnt"),
             category: row.get("category"),
             slug: row.get("slug"),
+            description: row.get("description"),
         }
     }
     fn table_name(_: Option<Category>) -> &'static str { "categories" }
@@ -174,7 +181,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Collect all the top-level categories and sum up the crates_cnt of
     // the crates in all subcategories
     let stmt = try!(conn.prepare(&format!(
-        "SELECT c.id, c.category, c.slug, c.created_at, \
+        "SELECT c.id, c.category, c.slug, c.description, c.created_at, \
                 counts.sum::int as crates_cnt \
          FROM categories as c \
          LEFT JOIN ( \
@@ -224,6 +231,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         id: cat.id,
         category: cat.category,
         slug: cat.slug,
+        description: cat.description,
         created_at: cat.created_at,
         crates_cnt: cat.crates_cnt,
         subcategories: subcats,

@@ -42,12 +42,19 @@
 <div class='white-rows'>
     {{#each model as |category|}}
         <div class='row'>
-            <div class='info'>
-                {{link-to category.category "category" category.slug}}
-                <span class='vers small'>
-                    {{ format-num category.crates_cnt }}
-                    crates
-                </span>
+            <div class='desc'>
+                <div class='info'>
+                    {{link-to category.category "category" category.slug}}
+                    <span class='small'>
+                        {{ format-num category.crates_cnt }}
+                        crates
+                    </span>
+                </div>
+                <div class='summary'>
+                    <span class='small'>
+                        {{ truncate-text category.description }}
+                    </span>
+                </div>
             </div>
         </div>
     {{/each}}

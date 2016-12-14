@@ -1,10 +1,12 @@
 [[categories]]
 slug = "development-tools"
 name = "Development Tools"
+description = "Ways to make developing in Rust better"
 
 [[categories.categories]]
   slug = "testing"
   name = "Testing"
+  description = "Additions to automated testing features"
 
   [[categories.categories.categories]]
     slug = "mocking"
@@ -17,11 +19,14 @@ name = "Libraries"
 [[categories.categories]]
   slug = "async"
   name = "Async"
+  description = "Code that can take time to run but won't block"
 
 [[categories.categories]]
   slug = "date-and-time"
   name = "Date and Time"
+  description = "Date and time math"
 
 [[categories]]
 slug = "games"
 name = "Games"
+description = "Share fun things"
