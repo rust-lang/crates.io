@@ -21,6 +21,7 @@ extern crate s3;
 extern crate semver;
 extern crate time;
 extern crate url;
+extern crate toml;
 
 extern crate conduit;
 extern crate conduit_conditional_get;

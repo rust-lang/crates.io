@@ -1,0 +1,27 @@
+[[categories]]
+slug = "development-tools"
+name = "Development Tools"
+
+[[categories.categories]]
+  slug = "testing"
+  name = "Testing"
+
+  [[categories.categories.categories]]
+    slug = "mocking"
+    name = "Mocking"
+
+[[categories]]
+slug = "libraries"
+name = "Libraries"
+
+[[categories.categories]]
+  slug = "async"
+  name = "Async"
+
+[[categories.categories]]
+  slug = "date-and-time"
+  name = "Date and Time"
+
+[[categories]]
+slug = "games"
+name = "Games"
