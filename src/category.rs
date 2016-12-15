@@ -146,9 +146,18 @@ impl Category {
 
     pub fn subcategories(&self, conn: &GenericConnection)
                                 -> CargoResult<Vec<Category>> {
-        let stmt = try!(conn.prepare("SELECT * FROM categories \
-                                      WHERE category ILIKE $1 || '::%'
-                                      AND category NOT ILIKE $1 || '::%::%'"));
+        let stmt = try!(conn.prepare("\
+            SELECT c.id, c.category, c.slug, c.description, c.created_at, \
+            COALESCE (( \
+                SELECT sum(c2.crates_cnt)::int \
+                FROM categories as c2 \
+                WHERE c2.slug = c.slug \
+                OR c2.slug LIKE c.slug || '::%' \
+            ), 0) as crates_cnt \
+            FROM categories as c \
+            WHERE c.category ILIKE $1 || '::%' \
+            AND c.category NOT ILIKE $1 || '::%::%'"));
+
         let rows = try!(stmt.query(&[&self.category]));
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
@@ -183,15 +192,13 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // the crates in all subcategories
     let stmt = try!(conn.prepare(&format!(
         "SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-                counts.sum::int as crates_cnt \
+            COALESCE (( \
+                SELECT sum(c2.crates_cnt)::int \
+                FROM categories as c2 \
+                WHERE c2.slug = c.slug \
+                OR c2.slug LIKE c.slug || '::%' \
+            ), 0) as crates_cnt \
          FROM categories as c \
-         LEFT JOIN ( \
-             SELECT split_part(categories.category, '::', 1), \
-                    sum(categories.crates_cnt) \
-             FROM categories \
-             GROUP BY split_part(categories.category, '::', 1) \
-         ) as counts \
-         ON c.category = counts.split_part \
          WHERE c.category NOT LIKE '%::%' {} \
          LIMIT $1 OFFSET $2",
          sort_sql
