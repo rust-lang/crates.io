@@ -7,7 +7,7 @@ export default Ember.Controller.extend(PaginationMixin, {
     queryParams: ['page', 'per_page', 'sort'],
     page: '1',
     per_page: 10,
-    sort: 'alpha',
+    sort: 'downloads',
 
     totalItems: computed.readOnly('model.meta.total'),
 
