@@ -1,32 +1,27 @@
-[[categories]]
-slug = "development-tools"
+[development-tools]
 name = "Development Tools"
 description = "Ways to make developing in Rust better"
 
-[[categories.categories]]
-  slug = "testing"
+  [development-tools.categories.testing]
   name = "Testing"
   description = "Additions to automated testing features"
 
-  [[categories.categories.categories]]
-    slug = "mocking"
+    [development-tools.categories.testing.categories.mocking]
     name = "Mocking"
+    description = "Mocks are not the same as stubs!"
 
-[[categories]]
-slug = "libraries"
+[libraries]
 name = "Libraries"
+description = "Libraries are reusable pieces of code"
 
-[[categories.categories]]
-  slug = "async"
+  [libraries.categories.async]
   name = "Async"
   description = "Code that can take time to run but won't block"
 
-[[categories.categories]]
-  slug = "date-and-time"
+  [libraries.categories.date-and-time]
   name = "Date and Time"
   description = "Date and time math"
 
-[[categories]]
-slug = "games"
+[games]
 name = "Games"
 description = "Share fun things"

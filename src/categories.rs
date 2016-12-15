@@ -7,71 +7,76 @@ use env;
 use util::errors::{CargoResult, ChainError, internal};
 
 struct Category {
-    name: String,
     slug: String,
+    name: String,
     description: String,
 }
 
 impl Category {
-    fn concat(&self, child: &Category) -> Category {
-        Category {
-            name: format!("{}::{}", self.name, child.name),
-            slug: format!("{}::{}", self.slug, child.slug),
-            description: child.description.clone(),
+    fn from_parent(slug: &str, name: &str, description: &str, parent: Option<&Category>)
+                   -> Category {
+        match parent {
+            Some(parent) => {
+                Category {
+                    slug: format!("{}::{}", parent.slug, slug),
+                    name: format!("{}::{}", parent.name, name),
+                    description: description.into(),
+                }
+            }
+            None => {
+                Category {
+                    slug: slug.into(),
+                    name: name.into(),
+                    description: description.into(),
+                }
+            }
         }
     }
 }
 
-fn concat_parent_and_child(parent: Option<&Category>, child: Category)
-                           -> Category {
-    parent.map(|p| p.concat(&child)).unwrap_or(child)
-}
-
-fn required_string_from_toml(toml: &toml::Table, key: &str)
-                             -> CargoResult<String> {
+fn required_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> CargoResult<&'a str> {
     toml.get(key)
         .and_then(toml::Value::as_str)
-        .map(str::to_string)
         .chain_error(|| {
-            internal("Expected Category toml attribute to be a String")
+            internal(format!("Expected category TOML attribute '{}' to be a String", key))
         })
 }
 
-fn optional_string_from_toml(toml: &toml::Table, key: &str)
-                             -> String {
+fn optional_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> &'a str {
     toml.get(key)
         .and_then(toml::Value::as_str)
         .unwrap_or("")
-        .to_string()
 }
 
-fn category_from_toml(toml: &toml::Value, parent: Option<&Category>)
-                      -> CargoResult<Vec<Category>> {
-    let toml = toml.as_table().chain_error(|| {
-        internal("Category isn't a toml Table")
-    })?;
+fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> CargoResult<Vec<Category>> {
+    let mut result = vec![];
 
-    let category = Category {
-        slug: required_string_from_toml(&toml, "slug")?,
-        name: required_string_from_toml(&toml, "name")?,
-        description: optional_string_from_toml(&toml, "description"),
-    };
+    for (slug, details) in categories {
+        let details = details.as_table().chain_error(|| {
+            internal(format!("category {} was not a TOML table", slug))
+        })?;
 
-    let category = concat_parent_and_child(parent, category);
+        let category = Category::from_parent(
+            slug,
+            required_string_from_toml(&details, "name")?,
+            optional_string_from_toml(&details, "description"),
+            parent,
+        );
 
-    let mut children: Vec<_> = toml.get("categories")
-        .and_then(toml::Value::as_slice)
-        .map(|children| {
-            children.iter()
-                .flat_map(|ref child| {
-                    category_from_toml(child, Some(&category))
-                        .expect("Could not create child from toml")
-                }).collect()
-        }).unwrap_or(Vec::new());
+        if let Some(categories) = details.get("categories") {
+            let categories = categories.as_table().chain_error(|| {
+                internal(format!("child categories of {} were not a table", slug))
+            })?;
 
-    children.push(category);
+            result.extend(
+                categories_from_toml(categories, Some(&category))?
+            );
+        }
 
-    Ok(children)
+        result.push(category)
+    }
+
+    Ok(result)
 }
 
 pub fn sync() -> CargoResult<()> {
@@ -84,17 +89,9 @@ pub fn sync() -> CargoResult<()> {
         "Could not parse categories.toml"
     );
 
-    let categories = toml.get("categories")
-                         .expect("No categories key found")
-                         .as_slice()
-                         .expect("Categories isn't a toml::Array");
-
-    let categories: Vec<_> = categories
-        .iter()
-        .flat_map(|c| {
-            category_from_toml(c, None)
-                .expect("Categories from toml failed")
-        }).collect();
+    let categories = categories_from_toml(&toml, None).expect(
+        "Could not convert categories from TOML"
+    );
 
     for category in categories.iter() {
         tx.execute("\
