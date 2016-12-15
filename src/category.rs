@@ -147,7 +147,8 @@ impl Category {
     pub fn subcategories(&self, conn: &GenericConnection)
                                 -> CargoResult<Vec<Category>> {
         let stmt = try!(conn.prepare("SELECT * FROM categories \
-                                      WHERE category ILIKE $1 || '::%'"));
+                                      WHERE category ILIKE $1 || '::%'
+                                      AND category NOT ILIKE $1 || '::%::%'"));
         let rows = try!(stmt.query(&[&self.category]));
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
