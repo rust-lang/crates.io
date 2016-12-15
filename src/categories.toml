@@ -26,30 +26,224 @@
 #   `@`, `:`, or `.`. They should be all lowercase.
 #
 
+[applications]
+name = "Applications"
+
+[applications.categories.multimedia]
+name = "Multimedia"
+
+[applications.categories.database]
+name = "Database"
+
+[applications.categories.emulators]
+name = "Emulators"
+
+[applications.categories.games]
+name = "Games"
+
+[applications.categories.graphics]
+name = "Graphics"
+
+[applications.categories.operating-systems]
+name = "Operating systems"
+
+[applications.categories.system-tools]
+name = "System tools"
+
+[applications.categories.text-editors]
+name = "Text editors"
+
+[applications.categories.text-processing]
+name = "Text processing"
+
+[applications.categories.virtualization]
+name = "Virtualization"
+
 [development-tools]
-name = "Development Tools"
-description = "Ways to make developing in Rust better"
+name = "Development tools"
 
-  [development-tools.categories.testing]
-  name = "Testing"
-  description = "Additions to automated testing features"
+[development-tools.categories.build-system]
+name = "Build system"
 
-    [development-tools.categories.testing.categories.mocking]
-    name = "Mocking"
-    description = "Mocks are not the same as stubs!"
+[development-tools.categories.cargo-plugins]
+name = "Cargo plugins"
+
+[development-tools.categories.cross-compiling]
+name = "Cross compiling"
+
+[development-tools.categories.debugging]
+name = "Debugging"
+
+[development-tools.categories.embedded]
+name = "Embedded"
+
+[development-tools.categories.profiling]
+name = "Profiling"
+
+[development-tools.categories.testing]
+name = "Testing"
 
 [libraries]
 name = "Libraries"
-description = "Libraries are reusable pieces of code"
 
-  [libraries.categories.async]
-  name = "Async"
-  description = "Code that can take time to run but won't block"
+[libraries.categories.algorithms]
+name = "Algorithms"
 
-  [libraries.categories.date-and-time]
-  name = "Date and Time"
-  description = "Date and time math"
+[libraries.categories.asynchronous]
+name = "Asynchronous"
 
-[games]
-name = "Games"
-description = "Share fun things"
+[libraries.categories.audio]
+name = "Audio"
+
+[libraries.categories.authentication]
+name = "Authentication"
+
+[libraries.categories.caching]
+name = "Caching"
+
+[libraries.categories.command-line-interface]
+name = "Command-line interface"
+
+[libraries.categories.compression]
+name = "Compression"
+
+[libraries.categories.concurrency]
+name = "Concurrency"
+
+[libraries.categories.cryptography]
+name = "Cryptography"
+
+[libraries.categories.database]
+name = "Database"
+
+[libraries.categories.data-structures]
+name = "Data structures"
+
+[libraries.categories.date-and-time]
+name = "Date and time"
+
+[libraries.categories.distributed-systems]
+name = "Distributed systems"
+
+[libraries.categories.email]
+name = "Email"
+
+[libraries.categories.encoding]
+name = "Encoding"
+
+[libraries.categories.ffi]
+name = "FFI"
+
+[libraries.categories.ffi.categories.external-libraries]
+name = "External libraries"
+
+[libraries.categories.filesystem]
+name = "Filesystem"
+
+[libraries.categories.game-engines]
+name = "Game engines"
+
+[libraries.categories.geospatial]
+name = "Geospatial"
+
+[libraries.categories.graphics]
+name = "Graphics"
+
+[libraries.categories.gui]
+name = "GUI"
+
+[libraries.categories.hardware-support]
+name = "Hardware Support"
+
+[libraries.categories.image-encoding]
+name = "Image encoding"
+
+[libraries.categories.image-processing]
+name = "Image processing"
+
+[libraries.categories.internationalization]
+name = "Internationalization"
+
+[libraries.categories.logging]
+name = "Logging"
+
+[libraries.categories.markup-language]
+name = "Markup language"
+
+[libraries.categories.memory-management]
+name = "Memory management"
+
+[libraries.categories.mobile]
+name = "Mobile"
+
+[libraries.categories.network-programming]
+name = "Network programming"
+
+[libraries.categories.os]
+name = "Operating systems"
+
+[libraries.categories.os.categories.mac-apis]
+name = "Mac APIs"
+
+[libraries.categories.os.categories.unix-apis]
+name = "Unix APIs"
+
+[libraries.categories.os.categories.windows-apis]
+name = "Windows APIs"
+
+[libraries.categories.parsing]
+name = "Parsing"
+
+[libraries.categories.pretty-printing]
+name = "Pretty printing"
+
+[libraries.categories.rust-patterns]
+name = "Rust Patterns"
+
+[libraries.categories.science]
+name = "Science"
+
+[libraries.categories.science.categories.math]
+name = "Math"
+
+[libraries.categories.science.categories.physics]
+name = "Physics"
+
+[libraries.categories.science.categories.chemistry]
+name = "Chemistry"
+
+[libraries.categories.science.categories.biology]
+name = "Biology"
+
+[libraries.categories.science.categories.machine-learning]
+name = "Machine learning"
+
+[libraries.categories.serialization]
+name = "Serialization"
+
+[libraries.categories.template-engine]
+name = "Template engine"
+
+[libraries.categories.text-processing]
+name = "Text processing"
+
+[libraries.categories.virtualization]
+name = "Virtualization"
+
+[libraries.categories.visualization]
+name = "Visualization"
+
+[libraries.categories.web-programming]
+name = "Web programming"
+
+[libraries.categories.web-programming.categories.deployment]
+name = "Deployment"
+
+[libraries.categories.web-programming.categories.http-client]
+name = "HTTP Client"
+
+[libraries.categories.web-programming.categories.http-server]
+name = "HTTP Server"
+
+[libraries.categories.web-programming.categories.websocket]
+name = "WebSocket"
