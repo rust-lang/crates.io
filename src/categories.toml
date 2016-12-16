@@ -32,7 +32,7 @@ description = """
 Applications are computer programs that are run by a user to solve a \
 problem. The primary purpose of an application is to be run on its \
 own and not used from another program.\
-"
+"""
 
 [applications.categories.command-line-utilities]
 name = "Command line utilities"
