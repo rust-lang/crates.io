@@ -28,222 +28,331 @@
 
 [applications]
 name = "Applications"
+description = """
+Applications are computer programs that are run by a user to solve a \
+problem. The primary purpose of an application is to be run on its \
+own and not used from another program.\
+"
 
-[applications.categories.multimedia]
-name = "Multimedia"
+[applications.categories.command-line-utilities]
+name = "Command line utilities"
+description = """
+Applications to run at the command line.\
+"""
 
 [applications.categories.database]
 name = "Database"
+description = """
+Databases allow clients to store and query large amounts of data in an \
+efficient manner. This category is for database management systems \
+implemented in Rust.\
+"""
 
 [applications.categories.emulators]
 name = "Emulators"
+description = """
+Emulators allow one computer to behave like another, often to allow \
+running software that is not natively available on the host \
+computer. Video game systems are commonly emulated.\
+"""
 
 [applications.categories.games]
 name = "Games"
+description = """
+Applications for fun and entertainment. If Rust the video game were \
+implemented in Rust the programming language, it would belong in this \
+category. Libraries to help create video games are in the \
+Libraries::Game Engine category.\
+"""
 
-[applications.categories.graphics]
-name = "Graphics"
-
-[applications.categories.operating-systems]
-name = "Operating systems"
-
-[applications.categories.system-tools]
-name = "System tools"
+[applications.categories.multimedia]
+name = "Multimedia"
+description = """
+Multimedia applications allow authoring, editing, or processing \
+content composed of audio, video, images, or combinations of these \
+and other media.\
+"""
 
 [applications.categories.text-editors]
 name = "Text editors"
-
-[applications.categories.text-processing]
-name = "Text processing"
-
-[applications.categories.virtualization]
-name = "Virtualization"
+description = """
+Applications for editing text.\
+"""
 
 [development-tools]
 name = "Development tools"
-
-[development-tools.categories.build-system]
-name = "Build system"
+description = """
+Make writing Rust code easier with code autocompletion, linting, \
+formatting and more. These crates are developer-facing as opposed to \
+user-facing.\
+"""
 
 [development-tools.categories.cargo-plugins]
 name = "Cargo plugins"
-
-[development-tools.categories.cross-compiling]
-name = "Cross compiling"
+description = """
+Subcommands that extend the capabilities of Cargo.\
+"""
 
 [development-tools.categories.debugging]
 name = "Debugging"
+description = """
+Crates to help you figure out what is going on with your code such as \
+logging, tracing, or assertions.\
+"""
 
-[development-tools.categories.embedded]
-name = "Embedded"
+[development-tools.categories.ffi]
+name = "FFI"
+description = """
+Crates to help you better interface with other languages. This \
+includes binding generators and helpful language constructs.\
+"""
 
 [development-tools.categories.profiling]
 name = "Profiling"
+description = """
+Crates to help you figure out the performance of your code.\
+"""
 
 [development-tools.categories.testing]
 name = "Testing"
+description = """
+Crates to help you verify the correctness of your code.\
+"""
 
 [libraries]
 name = "Libraries"
+description = """
+Crates meant to be used as dependencies of other crates.\
+"""
 
 [libraries.categories.algorithms]
 name = "Algorithms"
+description = """
+Rust implementations of core algorithms such as hashing, sorting, \
+searching, and more.\
+"""
 
 [libraries.categories.asynchronous]
 name = "Asynchronous"
-
-[libraries.categories.audio]
-name = "Audio"
+description = """
+Crates to help you deal with events independently of the main program \
+flow, using techniques like futures, promises, waiting, or eventing.\
+"""
 
 [libraries.categories.authentication]
 name = "Authentication"
+description = """
+Crates to help with the process of confirming identities.\
+"""
 
 [libraries.categories.caching]
 name = "Caching"
+description = """
+Crates to store the results of previous computations in order to reuse \
+the results.\
+"""
 
 [libraries.categories.command-line-interface]
 name = "Command-line interface"
+description = """
+Crates to help create command line interfaces, such as argument \
+parsers, line-editing, or output coloring and formatting.\
+"""
 
 [libraries.categories.compression]
 name = "Compression"
+description = """
+Algorithms for making data smaller.\
+"""
 
 [libraries.categories.concurrency]
 name = "Concurrency"
+description = """
+Crates for implementing concurrent and parallel computation.\
+"""
 
 [libraries.categories.cryptography]
 name = "Cryptography"
+description = """
+Algorithms intended for securing data.\
+"""
 
 [libraries.categories.database]
 name = "Database"
+description = """
+Crates to interface with database management systems.\
+"""
 
 [libraries.categories.data-structures]
 name = "Data structures"
+description = """
+Rust implementations of particular ways of organizing data suited for \
+specific purposes.\
+"""
 
 [libraries.categories.date-and-time]
 name = "Date and time"
-
-[libraries.categories.distributed-systems]
-name = "Distributed systems"
+description = """
+Crates to manage the inherent complexity of dealing with the fourth \
+dimension.\
+"""
 
 [libraries.categories.email]
 name = "Email"
+description = """
+Crates to help with Sending, receiving, formatting, and parsing email.\
+"""
 
 [libraries.categories.encoding]
 name = "Encoding"
+description = """
+Serializing and/or deserializing to particular data formats.\
+"""
 
-[libraries.categories.ffi]
-name = "FFI"
-
-[libraries.categories.ffi.categories.external-libraries]
-name = "External libraries"
+[libraries.categories.external-bindings]
+name = "External bindings"
+description = """
+Rust FFI bindings to libraries written in other languages.\
+"""
 
 [libraries.categories.filesystem]
 name = "Filesystem"
+description = """
+Crates for dealing with files and filesystems.\
+"""
 
 [libraries.categories.game-engines]
 name = "Game engines"
-
-[libraries.categories.geospatial]
-name = "Geospatial"
-
-[libraries.categories.graphics]
-name = "Graphics"
+description = """
+Crates for creating games.\
+"""
 
 [libraries.categories.gui]
 name = "GUI"
+description = """
+Crates to help you create a graphical user interface.\
+"""
 
 [libraries.categories.hardware-support]
 name = "Hardware Support"
-
-[libraries.categories.image-encoding]
-name = "Image encoding"
-
-[libraries.categories.image-processing]
-name = "Image processing"
-
-[libraries.categories.internationalization]
-name = "Internationalization"
-
-[libraries.categories.logging]
-name = "Logging"
-
-[libraries.categories.markup-language]
-name = "Markup language"
+description = """
+Crates to interface with specific CPU or other hardware features.\
+"""
 
 [libraries.categories.memory-management]
 name = "Memory management"
+description = """
+Crates to help with allocation, memory mapping, garbage collection, \
+reference counting, or interfaces to foreign memory managers.\
+"""
 
-[libraries.categories.mobile]
-name = "Mobile"
+[libraries.categories.multimedia]
+name = "Multimedia"
+description = """
+Crates that provide audio, video, and image processing or rendering \
+engines.\
+"""
 
 [libraries.categories.network-programming]
 name = "Network programming"
+description = """
+Crates dealing with higher-level network protocols such as FTP, HTTP, \
+or SSH, or lower-level network protocols such as TCP or UDP.\
+"""
 
 [libraries.categories.os]
 name = "Operating systems"
+description = """
+Bindings to operating system-specific APIs.\
+"""
 
-[libraries.categories.os.categories.mac-apis]
-name = "Mac APIs"
+[libraries.categories.os.categories.macos-apis]
+name = "mac OS APIs"
+description = """
+Bindings to mac OS-specific APIs.\
+"""
 
 [libraries.categories.os.categories.unix-apis]
 name = "Unix APIs"
+description = """
+Bindings to Unix-specific APIs.\
+"""
 
 [libraries.categories.os.categories.windows-apis]
 name = "Windows APIs"
+description = """
+Bindings to Windows-specific APIs.\
+"""
 
 [libraries.categories.parsing]
 name = "Parsing"
-
-[libraries.categories.pretty-printing]
-name = "Pretty printing"
+description = """
+Crates to help create parsers of binary and text \
+formats. Format-specific parsers belong in other, more specific \
+categories.\
+"""
 
 [libraries.categories.rust-patterns]
 name = "Rust Patterns"
+description = """
+Shared solutions for particular situations specific to programming in \
+Rust.\
+"""
 
 [libraries.categories.science]
 name = "Science"
-
-[libraries.categories.science.categories.math]
-name = "Math"
-
-[libraries.categories.science.categories.physics]
-name = "Physics"
-
-[libraries.categories.science.categories.chemistry]
-name = "Chemistry"
-
-[libraries.categories.science.categories.biology]
-name = "Biology"
-
-[libraries.categories.science.categories.machine-learning]
-name = "Machine learning"
-
-[libraries.categories.serialization]
-name = "Serialization"
+description = """
+Crates related to solving problems involving math, physics, chemistry, \
+biology, machine learning, geoscience, and other scientific fields.\
+"""
 
 [libraries.categories.template-engine]
 name = "Template engine"
+description = """
+Crates designed to combine templates with data to produce result \
+documents, usually with an emphasis on processing text.\
+"""
 
 [libraries.categories.text-processing]
 name = "Text processing"
+description = """
+Crates to deal with the complexities of human language when expressed \
+in textual form.\
+"""
 
-[libraries.categories.virtualization]
-name = "Virtualization"
+[libraries.categories.value-formatting]
+name = "Value formatting"
+description = """
+Crates to allow an application to format values for display to a user, \
+potentially adapting the display to various languages and regions.\
+"""
 
 [libraries.categories.visualization]
 name = "Visualization"
+description = """
+Ways to view data, such as plotting or graphing.\
+"""
 
 [libraries.categories.web-programming]
 name = "Web programming"
-
-[libraries.categories.web-programming.categories.deployment]
-name = "Deployment"
+description = """
+Crates to create applications for the web.\
+"""
 
 [libraries.categories.web-programming.categories.http-client]
 name = "HTTP Client"
+description = """
+Crates to make HTTP network requests.\
+"""
 
 [libraries.categories.web-programming.categories.http-server]
 name = "HTTP Server"
+description = """
+Crates to serve data over HTTP.\
+"""
 
 [libraries.categories.web-programming.categories.websocket]
 name = "WebSocket"
+description = """
+Crates to communicate over the WebSocket protocol.\
+"""
