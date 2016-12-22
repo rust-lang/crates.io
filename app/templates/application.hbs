@@ -86,14 +86,6 @@
 </div>
 </header>
 
-<form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-    {{input type="text" class="search" name="q"
-            placeholder="Search"
-            value=search
-            autocorrect="off"
-            tabindex="1"}}
-</form>
-
 <div id="main" class='inner-content'>
     <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
 

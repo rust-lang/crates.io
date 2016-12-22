@@ -186,18 +186,6 @@ textarea:focus, input:focus, .uneditable-input:focus {
     outline: 0 none !important;
 }
 
-#mobile-search {
-    display: none;
-    margin-bottom: 10px;
-    input.search {
-        width: 100%;
-        margin: 0;
-    }
-    @media only screen and (max-width: 820px) {
-        display: block;
-    }
-}
-
 span.small, div.small {
     color: $main-color-light;
     font-size: 100%;
