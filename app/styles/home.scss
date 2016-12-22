@@ -127,6 +127,11 @@
             @include display-flex;
             @include align-items(center);
             margin-left: 15%;
+            img {
+                margin-right: 10px;
+                width: 45px;
+                height:: 45px;
+            }
         }
     }
 
