@@ -78,6 +78,9 @@ body {
         display: inline-block;
         text-decoration: none;
         padding: 0px 10px;
+    }
+
+    .nav a {
         &:hover { background-color: darken($header-bg, 2%); }
     }
 
