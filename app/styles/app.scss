@@ -156,7 +156,7 @@ body {
     border-color: $header-bg;
     border-style: solid;
     border-width: 2px;
-    margin-left: 10%;
+    margin-left: 15%;
     margin-top: 90px;
     color: black;
     outline: 0;
@@ -177,6 +177,15 @@ body {
 #blurb {
     @media only screen and (max-width: 991px) {
         margin-top: 70px;
+    }
+
+    .links a {
+        margin-right: 20px;
+        @media only screen and (max-width: 387px) {
+            margin-top: 20px;
+            padding-left: 25%;
+            width: 100%;
+        }
     }
 }
 
