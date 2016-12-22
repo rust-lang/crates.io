@@ -58,6 +58,10 @@ body {
     margin: 0 auto;
     position: relative;
     top: -70px;
+
+    @media only screen and (max-width: 1100px) {
+        top: -10px;
+    }
 }
 
 #header {
@@ -164,6 +168,16 @@ body {
     background-position: 10px 15px;
     background-size: 14px 15px;
     background-color: $main-bg;
+
+    @media only screen and (max-width: 991px) {
+        margin-top: 10px;
+    }
+}
+
+#blurb {
+    @media only screen and (max-width: 991px) {
+        margin-top: 70px;
+    }
 }
 
 textarea:focus, input:focus, .uneditable-input:focus {

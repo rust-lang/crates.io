@@ -2,9 +2,9 @@
 
 <header>
 <div id="header">
-    <a href="/">
+    {{#link-to "index"}}
         <h1 id='cargo-name'>CARGO</h1>
-    </a>
+    {{/link-to}}
 
     <div class='nav'>
         {{#link-to 'install' (query-params letter="null" page=1)}}

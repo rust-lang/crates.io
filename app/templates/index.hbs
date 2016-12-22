@@ -1,13 +1,11 @@
 <div id='main-index-content'>
 <div class="container">
 <div class='row'>
-    <div class='col-sm-5 col-centered'>
-        {{#link-to "index"}}
-            <img src="/assets/Cargo-Logo-Small.png" id="logo"/>
-        {{/link-to}}
+    <div class='col-md-5 col-sm-12 col-centered'>
+        <img src="/assets/Cargo-Logo-Small.png" id="logo"/>
     </div>
 
-    <div class='col-sm-7 vcenter'>
+    <div class='col-md-7 col-sm-12 vcenter'>
         <form id='main-search' class='search' action='/search' {{ action "search" on="submit" }} >
             {{input type="text" class="form-control search" name="q"
                     placeholder="Search Crates"
