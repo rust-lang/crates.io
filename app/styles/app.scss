@@ -187,6 +187,14 @@ body {
             width: 100%;
         }
     }
+
+    #stats {
+        .crates, .downloads {
+            @media only screen and (max-width: 500px) {
+                margin-left: 0px;
+            }
+        }
+    }
 }
 
 textarea:focus, input:focus, .uneditable-input:focus {
