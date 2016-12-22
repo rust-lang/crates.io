@@ -61,13 +61,13 @@ body {
 }
 
 #header {
+    background-color: $header-bg;
     color: white;
     font-family: helvetica;
-    background-color: $header-bg;
     font-size: 130%;
-    position: relative;
     height: 60px;
     padding-right: 20px;
+    position: relative;
     width: 100%;
     @include display-flex;
     @include align-items(center);
@@ -129,11 +129,11 @@ body {
     }
 
     #cargo-name {
-        margin: 10px;
-        margin-left: 25px;
         font-family: helvetica, Serif;
         font-size: 230%;
         font-weight: bold;
+        margin-left: 25px;
+        margin-top: 20px;
     }
 }
 
