@@ -1,14 +1,36 @@
+#cargo-only-install {
+    width: 100%;
+
+    p {
+        color: $blurb-fg;
+        font-size: 1.5em;
+        margin-top: 30px;
+        margin-bottom:: 40px;
+        text-align: left;
+    }
+}
 
 #install-downloads {
     text-align: center;
     table { display: inline-block; }
 
-    td.label { text-align: left; }
-    td a {
-        padding: 10px 20px;
-        border: 1px solid $gray-border;
-        margin: 2px;
-        display: inline-block;
-        @include border-radius(5px);
+    .label {
+        font-family: 'Verdana';
+        font-size: 1.1em;
+        margin-right: 20px;
+        color: $header-bg;
+        text-align: left;
+    }
+    td {
+        padding-top: 10px;
+        padding-right: 10px;
+
+        a {
+            padding: 10px 20px;
+            border: 1px solid $gray-border;
+            margin: 2px;
+            display: inline-block;
+            @include border-radius(5px);
+        }
     }
 }
