@@ -129,8 +129,8 @@ impl Team {
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
         let token = http::token(req_user.gh_access_token.clone());
-        let resp = try!(http::github(app, &url, &token));
-        let teams: Vec<GithubTeam> = try!(http::parse_github_response(resp));
+        let (handle, data) = try!(http::github(app, &url, &token));
+        let teams: Vec<GithubTeam> = try!(http::parse_github_response(handle, data));
 
         let team = try!(teams.into_iter().find(|team| team.slug == team_name)
             .ok_or_else(||{
@@ -149,8 +149,8 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let resp = try!(http::github(app, &url, &token));
-        let org: Org = try!(http::parse_github_response(resp));
+        let (handle, resp) = try!(http::github(app, &url, &token));
+        let org: Org = try!(http::parse_github_response(handle, resp));
 
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
@@ -194,12 +194,14 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
     let url = format!("/teams/{}/memberships/{}",
                         &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
-    let resp = try!(http::github(app, &url, &token));
+    let (mut handle, resp) = try!(http::github(app, &url, &token));
 
     // Officially how `false` is returned
-    if resp.get_code() == 404 { return Ok(false) }
+    if handle.response_code().unwrap() == 404 {
+        return Ok(false)
+    }
 
-    let membership: Membership = try!(http::parse_github_response(resp));
+    let membership: Membership = try!(http::parse_github_response(handle, resp));
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.

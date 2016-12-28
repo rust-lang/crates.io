@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use std::io;
-use openssl::crypto::hash::{Hasher, Type};
+use openssl::hash::{Hasher, MessageDigest};
 
 pub struct HashingReader<R> {
     inner: R,
@@ -9,16 +9,21 @@ pub struct HashingReader<R> {
 
 impl<R: Read> HashingReader<R> {
     pub fn new(r: R) -> HashingReader<R> {
-        HashingReader { inner: r, hasher: Hasher::new(Type::SHA256) }
+        HashingReader {
+            inner: r,
+            hasher: Hasher::new(MessageDigest::sha256()).unwrap(),
+        }
     }
 
-    pub fn finalize(mut self) -> Vec<u8> { self.hasher.finish() }
+    pub fn finalize(mut self) -> Vec<u8> {
+        self.hasher.finish().unwrap()
+    }
 }
 
 impl<R: Read> Read for HashingReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let amt = try!(self.inner.read(buf));
-        let _ = self.hasher.write_all(&buf[..amt]);
+        self.hasher.update(&buf[..amt]).unwrap();
         return Ok(amt)
     }
 }

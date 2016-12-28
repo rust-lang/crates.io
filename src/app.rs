@@ -8,7 +8,7 @@ use git2;
 use oauth2;
 use r2d2;
 use s3;
-use curl::http;
+use curl::easy::Easy;
 
 use {db, Config};
 
@@ -68,12 +68,12 @@ impl App {
         };
     }
 
-    pub fn handle(&self) -> http::Handle {
-        let handle = http::handle();
-        match self.s3_proxy {
-            Some(ref proxy) => handle.proxy(&proxy[..]),
-            None => handle,
+    pub fn handle(&self) -> Easy {
+        let mut handle = Easy::new();
+        if let Some(ref proxy) = self.s3_proxy {
+            handle.proxy(proxy).unwrap();
         }
+        return handle
     }
 }
 

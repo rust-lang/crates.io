@@ -1,4 +1,5 @@
 use curl;
+use curl::easy::{Easy, List};
 use oauth2::*;
 use app::App;
 use util::{CargoResult, internal, ChainError, human};
@@ -10,23 +11,36 @@ use std::str;
 /// because custom error-code handling may be desirable. Use
 /// parse_github_response to handle the "common" processing of responses.
 pub fn github(app: &App, url: &str, auth: &Token)
-              -> Result<curl::http::Response, curl::ErrCode>
-{
+              -> Result<(Easy, Vec<u8>), curl::Error> {
     let url = format!("{}://api.github.com{}", app.config.api_protocol(), url);
     info!("GITHUB HTTP: {}", url);
 
-    app.handle()
-       .get(url)
-       .header("Accept", "application/vnd.github.v3+json")
-       .header("User-Agent", "hello!")
-       .auth_with(auth)
-       .exec()
+    let mut headers = List::new();
+    headers.append("Accept: application/vnd.github.v3+json").unwrap();
+    headers.append("User-Agent: hello!").unwrap();
+    headers.append(&format!("Authorization: token {}", auth.access_token)).unwrap();
+
+    let mut handle = app.handle();
+    handle.url(&url).unwrap();
+    handle.get(true).unwrap();
+    handle.http_headers(headers).unwrap();
+
+    let mut data = Vec::new();
+    {
+        let mut transfer = handle.transfer();
+        transfer.write_function(|buf| {
+            data.extend_from_slice(buf);
+            Ok(buf.len())
+        }).unwrap();
+        try!(transfer.perform());
+    }
+    Ok((handle, data))
 }
 
 /// Checks for normal responses
-pub fn parse_github_response<T: Decodable>(resp: curl::http::Response)
+pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: Vec<u8>)
                                             -> CargoResult<T> {
-    match resp.get_code() {
+    match resp.response_code().unwrap() {
         200 => {} // Ok!
         403 => {
             return Err(human("It looks like you don't have permission \
@@ -37,13 +51,14 @@ pub fn parse_github_response<T: Decodable>(resp: curl::http::Response)
                               github org memberships. Just go to \
                               https://crates.io/login"));
         }
-        _ => {
+        n => {
+            let resp = String::from_utf8_lossy(&data);
             return Err(internal(format!("didn't get a 200 result from \
-                                        github: {}", resp)));
+                                        github, got {} with: {}", n, resp)));
         }
     }
 
-    let json = try!(str::from_utf8(resp.get_body()).ok().chain_error(||{
+    let json = try!(str::from_utf8(&data).ok().chain_error(||{
         internal("github didn't send a utf8-response")
     }));
 

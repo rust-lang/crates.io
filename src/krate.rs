@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use curl::http;
+use curl::easy::Easy;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
@@ -510,7 +510,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                        INNER JOIN crate_owners
                           ON crate_owners.crate_id = crates.id
                        WHERE crate_owners.owner_id = $1
-                       AND crate_owners.owner_kind = {} 
+                       AND crate_owners.owner_kind = {}
                        ORDER BY {}
                       LIMIT $2 OFFSET $3",
                      OwnerKind::User as i32, sort_sql),
@@ -527,7 +527,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             (format!("SELECT crates.* FROM crates
                       INNER JOIN follows
                          ON follows.crate_id = crates.id AND
-                            follows.user_id = $1 ORDER BY 
+                            follows.user_id = $1 ORDER BY
                       {} LIMIT $2 OFFSET $3", sort_sql),
              "SELECT COUNT(crates.*) FROM crates
               INNER JOIN follows
@@ -703,36 +703,38 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Upload the crate to S3
     let mut handle = req.app().handle();
     let path = krate.s3_path(&vers.to_string());
-    let (resp, cksum) = {
+    let (response, cksum) = {
         let length = try!(read_le_u32(req.body()));
         let body = LimitErrorReader::new(req.body(), max);
         let mut body = HashingReader::new(body);
-        let resp = {
-            let s3req = app.bucket.put(&mut handle, &path, &mut body,
-                                       "application/x-tar")
-                                  .content_length(length as usize);
-            try!(s3req.exec().chain_error(|| {
+        let mut response = Vec::new();
+        {
+            let mut s3req = app.bucket.put(&mut handle, &path, &mut body,
+                                           "application/x-tar",
+                                           length as u64);
+            s3req.write_function(|data| {
+                response.extend(data);
+                Ok(data.len())
+            }).unwrap();
+            try!(s3req.perform().chain_error(|| {
                 internal(format!("failed to upload to S3: `{}`", path))
-            }))
-        };
-        (resp, body.finalize())
+            }));
+        }
+        (response, body.finalize())
     };
-    if resp.get_code() != 200 {
+    if handle.response_code().unwrap() != 200 {
+        let response = String::from_utf8_lossy(&response);
         return Err(internal(format!("failed to get a 200 response from S3: {}",
-                                    resp)))
+                                    response)))
     }
 
     // If the git commands fail below, we shouldn't keep the crate on the
     // server.
-    struct Bomb { app: Arc<App>, path: Option<String>, handle: http::Handle }
+    struct Bomb { app: Arc<App>, path: Option<String>, handle: Easy }
     impl Drop for Bomb {
         fn drop(&mut self) {
-            match self.path {
-                Some(ref path) => {
-                    let _ = self.app.bucket.delete(&mut self.handle, &path)
-                                .exec();
-                }
-                None => {}
+            if let Some(ref path) = self.path {
+                drop(self.app.bucket.delete(&mut self.handle, &path).perform());
             }
         }
     }

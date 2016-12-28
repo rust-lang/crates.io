@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -13,7 +13,7 @@ use std::fs;
 
 use bufstream::BufStream;
 use cargo_registry::User;
-use curl::http;
+use curl::easy::{Easy, List, ReadError};
 use rustc_serialize::json;
 
 // A "bomb" so when the test task exists we know when to shut down
@@ -117,10 +117,10 @@ pub fn proxy() -> (String, Bomb) {
 fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
     let mut request = Vec::new();
     t!(socket.read_to_end(&mut request));
-    let http_response = send(&request[..]);
+    let (handle, headers, body) = send(&request[..]);
 
     let mut response = Vec::new();
-    respond(http_response, &mut response);
+    respond(handle, headers, body, &mut response);
     t!(socket.write_all(&response));
 
     t!(write!(data, "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
@@ -129,11 +129,11 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
               response.len(),
               str::from_utf8(&response).unwrap()));
 
-    fn send<R: Read>(rdr: R) -> http::Response {
+    fn send<R: Read>(rdr: R) -> (Easy, Vec<Vec<u8>>, Vec<u8>) {
         let mut socket = BufReader::new(rdr);
         let method;
         let url;
-        let mut headers = HashMap::new();
+        let mut headers = List::new();
         {
             let mut lines = (&mut socket).lines();
             let line = t!(lines.next().unwrap());
@@ -143,47 +143,60 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
 
             for line in lines {
                 let line = t!(line);
-                if line.len() < 3 { break }
-                let mut parts = line.splitn(2, ':');
-                headers.insert(parts.next().unwrap().to_string(),
-                               parts.next().unwrap()[1..].to_string());
+                if line.len() < 3 {
+                    break
+                }
+                t!(headers.append(&line));
             }
         }
 
-        let mut handle = http::handle();
-        let mut req = match &method[..] {
-            "PUT" => handle.put(url, &mut socket),
-            "POST" => handle.post(url, &mut socket),
-            "DELETE" => handle.delete(url),
-            "GET" => handle.get(url),
-            _ => panic!("unknown method: {}", method),
-        };
-        for (k, v) in headers.iter() {
-            let v = v.trim();
-            match &k[..] {
-                "Content-Length" => req = req.content_length(v.parse().unwrap()),
-                "Content-Type" => req = req.content_type(v),
-                "Transfer-Encoding" => {}
-                k => req = req.header(k, v),
-            }
+        let mut handle = Easy::new();
+        t!(handle.url(&url));
+        match &method[..] {
+            "PUT" => t!(handle.put(true)),
+            "POST" => t!(handle.post(true)),
+            "GET" => t!(handle.get(true)),
+            method => t!(handle.custom_request(method)),
         }
-        t!(req.exec())
+        t!(handle.http_headers(headers));
+
+        let mut headers = Vec::new();
+        let mut response = Vec::new();
+        {
+            let mut transfer = handle.transfer();
+            t!(transfer.header_function(|header| {
+                headers.push(header.to_owned());
+                true
+            }));
+            t!(transfer.write_function(|data| {
+                response.extend(data);
+                Ok(data.len())
+            }));
+            t!(transfer.read_function(|buf| {
+                socket.read(buf).map_err(|_| ReadError::Abort)
+            }));
+
+            t!(transfer.perform());
+        }
+
+        (handle, headers, response)
     }
 
-    fn respond<W: Write>(response: http::Response, mut socket: W) {
+    fn respond<W: Write>(mut handle: Easy,
+                         headers: Vec<Vec<u8>>,
+                         body: Vec<u8>,
+                         mut socket: W) {
         t!(socket.write_all(format!("HTTP/1.1 {}\r\n",
-                                    response.get_code()).as_bytes()));
-        for (k, v) in response.get_headers().iter() {
-            if *k == "transfer-encoding" { continue }
-            for v in v.iter() {
-                t!(socket.write_all(k.as_bytes()));
-                t!(socket.write_all(b": "));
-                t!(socket.write_all(v.as_bytes()));
-                t!(socket.write_all(b"\r\n"));
+                                    t!(handle.response_code())).as_bytes()));
+        for header in headers {
+            if header.starts_with(b"Transfer-Encoding: ") {
+                continue
             }
+            t!(socket.write_all(&header));
+            t!(socket.write_all(b"\r\n"));
         }
         t!(socket.write_all(b"\r\n"));
-        t!(socket.write_all(response.get_body()));
+        t!(socket.write_all(&body));
     }
 }
 
@@ -271,7 +284,7 @@ impl GhUser {
             client_id: String,
             client_secret: String,
         }
-        let mut handle = http::handle();
+        let mut handle = Easy::new();
         let url = format!("https://{}:{}@api.github.com/authorizations",
                           self.login, password);
         let body = json::encode(&Authorization {
@@ -280,16 +293,36 @@ impl GhUser {
             client_id: ::env("GH_CLIENT_ID"),
             client_secret: ::env("GH_CLIENT_SECRET"),
         }).unwrap();
-        let resp = handle.post(&url[..], &body[..])
-                         .header("User-Agent", "hello!")
-                         .exec().unwrap();
-        if resp.get_code() < 200 || resp.get_code() >= 300 {
-            panic!("failed to get a 200 {}", resp);
+
+        t!(handle.url(&url));
+        t!(handle.post(true));
+
+        let mut headers = List::new();
+        headers.append("User-Agent: hello!").unwrap();
+        t!(handle.http_headers(headers));
+
+        let mut body = body.as_bytes();
+        let mut response = Vec::new();
+        {
+            let mut transfer = handle.transfer();
+            t!(transfer.read_function(|buf| {
+                body.read(buf).map_err(|_| ReadError::Abort)
+            }));
+            t!(transfer.write_function(|data| {
+                response.extend(data);
+                Ok(data.len())
+            }));
+            t!(transfer.perform())
+        }
+
+        if t!(handle.response_code()) < 200 || t!(handle.response_code()) >= 300 {
+            panic!("failed to get a 200 {}",
+                   String::from_utf8_lossy(&response));
         }
 
         #[derive(RustcDecodable)]
         struct Response { token: String }
-        let resp: Response = json::decode(str::from_utf8(resp.get_body())
+        let resp: Response = json::decode(str::from_utf8(&response)
                                               .unwrap()).unwrap();
         File::create(&self.filename()).unwrap()
              .write_all(&resp.token.as_bytes()).unwrap();

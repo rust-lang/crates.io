@@ -67,8 +67,8 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
         println!("attempt: {}/{}", id, login);
         let res = (|| -> CargoResult<()> {
             let url = format!("/users/{}", login);
-            let resp = try!(http::github(app, &url, &token));
-            let ghuser: GithubUser = try!(http::parse_github_response(resp));
+            let (handle, resp) = try!(http::github(app, &url, &token));
+            let ghuser: GithubUser = try!(http::parse_github_response(handle, resp));
             if let Some(ref avatar) = avatar {
                 if !avatar.contains(&ghuser.id.to_string()) {
                     return Err(human(format!("avatar: {}", avatar)))

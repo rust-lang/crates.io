@@ -122,7 +122,7 @@ impl<E: Error + Send + 'static> From<E> for Box<CargoError> {
     }
 }
 
-impl CargoError for ::curl::ErrCode {
+impl CargoError for ::curl::Error {
     fn description(&self) -> &str { Error::description(self) }
 }
 impl CargoError for ::rustc_serialize::json::DecoderError {

@@ -40,7 +40,8 @@ impl Bucket {
                        easy: &'a mut Easy,
                        path: &str,
                        content: &'b mut Read,
-                       content_type: &str)
+                       content_type: &str,
+                       content_length: u64)
                        -> Transfer<'a, 'b> {
         let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
@@ -54,9 +55,16 @@ impl Bucket {
         headers.append(&format!("Authorization: {}", auth)).unwrap();
         headers.append(&format!("Content-Type: {}", content_type)).unwrap();
 
-        easy.put(true).unwrap();
+        // Disable the `Expect: 100-continue` header for now, this cause
+        // problems with the test harness currently and the purpose is
+        // not yet clear. Would probably be good to reenable at some point.
+        headers.append("Expect:").unwrap();
+
         easy.url(&url).unwrap();
+        easy.put(true).unwrap();
         easy.http_headers(headers).unwrap();
+        easy.upload(true).unwrap();
+        easy.in_filesize(content_length).unwrap();
 
         let mut transfer = easy.transfer();
         transfer.read_function(move |data| {
