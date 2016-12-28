@@ -15,6 +15,7 @@ use std::io;
 use std::io::prelude::*;
 
 use cargo_registry::{Crate, env, User};
+use cargo_registry::owner::OwnerKind;
 use cargo_registry::Model;
 
 #[allow(dead_code)]
@@ -59,19 +60,22 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     get_confirm("continue");
 
 
-    let stmt = tx.prepare("SELECT * FROM crates WHERE user_id = $1")
+    let stmt = tx.prepare("SELECT * FROM crate_owners
+                                   WHERE owner_id = $1
+                                     AND owner_kind = $2")
                  .unwrap();
-    let crates = stmt.query(&[&from.id]).unwrap();
-    for krate in crates.iter() {
-        let krate = Crate::from_row(&krate);
+    let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
+    for row in rows.iter() {
+        let id: i32 = row.get("id");
+        let krate = Crate::find(tx, row.get("crate_id")).unwrap();
         println!("transferring {}", krate.name);
         let owners = krate.owners(tx).unwrap();
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
         let n = tx.execute("UPDATE crate_owners SET owner_id = $1
-                             WHERE owner_id = $2 AND crate_id = $3",
-                           &[&to.id, &from.id, &krate.id]).unwrap();
+                             WHERE id $2",
+                           &[&to.id, &id]).unwrap();
         assert_eq!(n, 1);
     }
 
