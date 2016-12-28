@@ -7,9 +7,10 @@ extern crate openssl;
 
 use std::io::prelude::*;
 
-use curl::http;
-use curl::http::body::ToBody;
-use openssl::crypto::{hmac, hash};
+use curl::easy::{Easy, Transfer, List, ReadError};
+use openssl::hash::MessageDigest;
+use openssl::sign::Signer;
+use openssl::pkey::PKey;
 use rustc_serialize::base64::{ToBase64, STANDARD};
 
 pub struct Bucket {
@@ -35,33 +36,56 @@ impl Bucket {
         }
     }
 
-    pub fn put<'a, 'b, T: ToBody<'b>>(&self, handle: &'a mut http::Handle,
-                                      path: &str, content: T,
-                                      content_type: &str)
-                                      -> http::Request<'a, 'b> {
+    pub fn put<'a, 'b>(&self,
+                       easy: &'a mut Easy,
+                       path: &str,
+                       content: &'b mut Read,
+                       content_type: &str)
+                       -> Transfer<'a, 'b> {
         let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = format!("{}://{}/{}", self.proto, host, path);
-        handle.put(&url[..], content)
-              .header("Host", &host)
-              .header("Date", &date)
-              .header("Authorization", &auth)
-              .content_type(content_type)
+
+        let mut headers = List::new();
+        headers.append(&format!("Host: {}", host)).unwrap();
+        headers.append(&format!("Date: {}", date)).unwrap();
+        headers.append(&format!("Authorization: {}", auth)).unwrap();
+        headers.append(&format!("Content-Type: {}", content_type)).unwrap();
+
+        easy.put(true).unwrap();
+        easy.url(&url).unwrap();
+        easy.http_headers(headers).unwrap();
+
+        let mut transfer = easy.transfer();
+        transfer.read_function(move |data| {
+            content.read(data).map_err(|_| ReadError::Abort)
+        }).unwrap();
+
+        return transfer
     }
 
-    pub fn delete<'a, 'b>(&self, handle: &'a mut http::Handle, path: &str)
-                          -> http::Request<'a, 'b> {
+    pub fn delete<'a, 'b>(&self,
+                          easy: &'a mut Easy,
+                          path: &str)
+                          -> Transfer<'a, 'b> {
         let path = if path.starts_with("/") {&path[1..]} else {path};
         let host = self.host();
         let date = time::now().rfc822z().to_string();
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = format!("{}://{}/{}", self.proto, host, path);
-        handle.delete(&url[..])
-              .header("Host", &host)
-              .header("Date", &date)
-              .header("Authorization", &auth)
+
+        let mut headers = List::new();
+        headers.append(&format!("Host: {}", host)).unwrap();
+        headers.append(&format!("Date: {}", date)).unwrap();
+        headers.append(&format!("Authorization: {}", auth)).unwrap();
+
+        easy.custom_request("DELETE").unwrap();
+        easy.url(&url).unwrap();
+        easy.http_headers(headers).unwrap();
+
+        return easy.transfer()
     }
 
     pub fn host(&self) -> String {
@@ -82,9 +106,10 @@ impl Bucket {
                              headers = "",
                              resource = format!("/{}/{}", self.name, path));
         let signature = {
-            let mut hmac = hmac::HMAC::new(hash::Type::SHA1, self.secret_key.as_bytes());
-            let _ = hmac.write_all(string.as_bytes());
-            hmac.finish().to_base64(STANDARD)
+            let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
+            let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
+            signer.update(string.as_bytes()).unwrap();
+            signer.finish().unwrap().to_base64(STANDARD)
         };
         format!("AWS {}:{}", self.access_key, signature)
     }
