@@ -74,7 +74,7 @@ fn update_crate() {
         ::json::<GoodCategory>(&mut response).category.crates_cnt as usize
     };
     ::mock_user(&mut req, ::user("foo"));
-    let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
+    let (krate, _) = ::mock_crate(&mut req, ::krate("foocat"));
     ::mock_category(&mut req, "cat1", "cat1");
     ::mock_category(&mut req, "Category 2", "category-2");
 
