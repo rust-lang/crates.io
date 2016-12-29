@@ -155,8 +155,8 @@ cache-control: private, max-age=60, s-maxage=60
 x-content-type-options: nosniff
 
 {"state":"active","url":"https://api.github.com/teams/1699377/memberships/crates-tester-1"}
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-2.0.0.crate HTTP/1.1
+===REQUEST 353
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_team_owned/foo_team_owned-2.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Host: alexcrichton-test.s3.amazonaws.com

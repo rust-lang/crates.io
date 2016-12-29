@@ -21,6 +21,7 @@ extern crate s3;
 extern crate semver;
 extern crate time;
 extern crate url;
+extern crate toml;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
@@ -33,6 +34,7 @@ extern crate conduit_router;
 extern crate conduit_static;
 
 pub use app::App;
+pub use self::category::Category;
 pub use config::Config;
 pub use self::dependency::Dependency;
 pub use self::download::{CrateDownload, VersionDownload};
@@ -51,6 +53,8 @@ use conduit_middleware::MiddlewareBuilder;
 use util::{C, R, R404};
 
 pub mod app;
+pub mod categories;
+pub mod category;
 pub mod config;
 pub mod db;
 pub mod dependency;
@@ -100,6 +104,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/versions/:version_id", C(version::show));
     api_router.get("/keywords", C(keyword::index));
     api_router.get("/keywords/:keyword_id", C(keyword::show));
+    api_router.get("/categories", C(category::index));
+    api_router.get("/categories/:category_id", C(category::show));
+    api_router.get("/category_slugs", C(category::slugs));
     api_router.get("/users/:user_id", C(user::show));
     let api_router = Arc::new(R404(api_router));
 

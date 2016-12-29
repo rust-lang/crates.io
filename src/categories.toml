@@ -1,0 +1,55 @@
+# This is where the categories available on crates.io are defined. To propose
+# a change to the categories, send a pull request with your change made to this
+# file.
+#
+# For help with TOML, see: https://github.com/toml-lang/toml
+#
+# Format:
+#
+# ```toml
+# [slug]
+# name = "Display name"
+# description = "Give an idea of the crates that belong in this category."
+#
+#  [slug.categories.subcategory-slug]
+#  name = "Subcategory display name, not including parent category display name"
+#  description = "Give an idea of the crates that belong in this subcategory."
+# ```
+#
+# Notes:
+# - Slugs are the primary identifier. If you make a change to a category's slug,
+#   crates that have been published with that slug will need to be updated to
+#   use the new slug in order to stay in that category. If you only change
+#   names and descriptions, those attributes CAN be updated without affecting
+#   crates in that category.
+# - Slugs are used in the path of URLs, so they should not contain spaces, `/`,
+#   `@`, `:`, or `.`. They should be all lowercase.
+#
+
+[development-tools]
+name = "Development Tools"
+description = "Ways to make developing in Rust better"
+
+  [development-tools.categories.testing]
+  name = "Testing"
+  description = "Additions to automated testing features"
+
+    [development-tools.categories.testing.categories.mocking]
+    name = "Mocking"
+    description = "Mocks are not the same as stubs!"
+
+[libraries]
+name = "Libraries"
+description = "Libraries are reusable pieces of code"
+
+  [libraries.categories.async]
+  name = "Async"
+  description = "Code that can take time to run but won't block"
+
+  [libraries.categories.date-and-time]
+  name = "Date and Time"
+  description = "Date and time math"
+
+[games]
+name = "Games"
+description = "Share fun things"

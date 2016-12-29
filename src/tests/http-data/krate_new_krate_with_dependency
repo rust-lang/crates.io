@@ -1,5 +1,5 @@
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/new/new-1.0.0.crate HTTP/1.1
+===REQUEST 339
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/new_dep/new_dep-1.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Date: Sun, 28 Jun 2015 14:07:18 -0700

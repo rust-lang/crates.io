@@ -20,6 +20,7 @@ pub struct NewCrate {
     pub documentation: Option<String>,
     pub readme: Option<String>,
     pub keywords: Option<KeywordList>,
+    pub categories: Option<CategoryList>,
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
@@ -31,6 +32,8 @@ pub struct CrateVersion(pub semver::Version);
 pub struct CrateVersionReq(pub semver::VersionReq);
 pub struct KeywordList(pub Vec<Keyword>);
 pub struct Keyword(pub String);
+pub struct CategoryList(pub Vec<Category>);
+pub struct Category(pub String);
 pub struct Feature(pub String);
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -61,6 +64,12 @@ impl Decodable for Keyword {
             return Err(d.error(&format!("invalid keyword specified: {}", s)))
         }
         Ok(Keyword(s))
+    }
+}
+
+impl Decodable for Category {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Category, D::Error> {
+        d.read_str().map(Category)
     }
 }
 
@@ -110,6 +119,16 @@ impl Decodable for KeywordList {
     }
 }
 
+impl Decodable for CategoryList {
+    fn decode<D: Decoder>(d: &mut D) -> Result<CategoryList, D::Error> {
+        let inner: Vec<Category> = try!(Decodable::decode(d));
+        if inner.len() > 5 {
+            return Err(d.error("a maximum of 5 categories per crate are allowed"))
+        }
+        Ok(CategoryList(inner))
+    }
+}
+
 impl Decodable for DependencyKind {
     fn decode<D: Decoder>(d: &mut D) -> Result<DependencyKind, D::Error> {
         let s: String = try!(Decodable::decode(d));
@@ -130,6 +149,12 @@ impl Encodable for CrateName {
 }
 
 impl Encodable for Keyword {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
+        d.emit_str(self)
+    }
+}
+
+impl Encodable for Category {
     fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         d.emit_str(self)
     }
@@ -160,6 +185,13 @@ impl Encodable for KeywordList {
     }
 }
 
+impl Encodable for CategoryList {
+    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
+        let CategoryList(ref inner) = *self;
+        inner.encode(d)
+    }
+}
+
 impl Encodable for DependencyKind {
     fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
         match *self {
@@ -176,6 +208,11 @@ impl Deref for CrateName {
 }
 
 impl Deref for Keyword {
+    type Target = str;
+    fn deref(&self) -> &str { &self.0 }
+}
+
+impl Deref for Category {
     type Target = str;
     fn deref(&self) -> &str { &self.0 }
 }
@@ -202,4 +239,9 @@ impl Deref for CrateVersionReq {
 impl Deref for KeywordList {
     type Target = [Keyword];
     fn deref(&self) -> &[Keyword] { &self.0 }
+}
+
+impl Deref for CategoryList {
+    type Target = [Category];
+    fn deref(&self) -> &[Category] { &self.0 }
 }

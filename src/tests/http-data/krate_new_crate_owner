@@ -1,5 +1,5 @@
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0.crate HTTP/1.1
+===REQUEST 344
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_owner/foo_owner-1.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Host: alexcrichton-test.s3.amazonaws.com
@@ -19,8 +19,8 @@ etag: "d41d8cd98f00b204e9800998ecf8427e"
 date: Sun, 28 Jun 2015 21:07:51 GMT
 
 
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-2.0.0.crate HTTP/1.1
+===REQUEST 344
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_owner/foo_owner-2.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Authorization: AWS AKIAJF3GEK7N44BACDZA:wz9J18+QxEhMIqIDnzwP6fGGeGY=

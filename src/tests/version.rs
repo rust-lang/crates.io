@@ -26,7 +26,7 @@ fn index() {
 
     let (v1, v2) = {
         ::mock_user(&mut req, ::user("foo"));
-        let (c, _) = ::mock_crate(&mut req, ::krate("foo"));
+        let (c, _) = ::mock_crate(&mut req, ::krate("foo_vers_index"));
         let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         let m = HashMap::new();
@@ -46,7 +46,7 @@ fn show() {
     let mut req = ::req(app, Method::Get, "/api/v1/versions");
     let v = {
         ::mock_user(&mut req, ::user("foo"));
-        let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
+        let (krate, _) = ::mock_crate(&mut req, ::krate("foo_vers_show"));
         let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), &[]).unwrap()
@@ -60,9 +60,9 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo/1.0.0/authors");
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
     ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_authors"));
     let mut response = ok_resp!(middle.call(&mut req));
     let mut s = String::new();
     response.body.read_to_string(&mut s).unwrap();

@@ -65,7 +65,7 @@ fn update_crate() {
         ::json::<GoodKeyword>(&mut response).keyword.crates_cnt as usize
     };
     ::mock_user(&mut req, ::user("foo"));
-    let (krate, _) = ::mock_crate(&mut req, ::krate("foo"));
+    let (krate, _) = ::mock_crate(&mut req, ::krate("fookey"));
     ::mock_keyword(&mut req, "kw1");
     ::mock_keyword(&mut req, "kw2");
 
