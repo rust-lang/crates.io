@@ -1,5 +1,5 @@
-===REQUEST 2334
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.1.0.crate HTTP/1.1
+===REQUEST 2354
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_whitelist/foo_whitelist-1.1.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Content-Type: application/x-tar

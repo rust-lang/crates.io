@@ -29,10 +29,10 @@ fn not_github() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_not_github"));
 
     let body = r#"{"users":["dropbox:foo:foo"]}"#;
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_not_github/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("unknown organization"),
@@ -44,10 +44,10 @@ fn weird_name() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_weird_name"));
 
     let body = r#"{"users":["github:foo/../bar:wut"]}"#;
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_weird_name/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("organization cannot contain"),
@@ -60,10 +60,10 @@ fn one_colon() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_one_colon"));
 
     let body = r#"{"users":["github:foo"]}"#;
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_one_colon/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("missing github team"),
@@ -75,10 +75,10 @@ fn nonexistent_team() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_nonexistent"));
 
     let body = r#"{"users":["github:crates-test-org:this-does-not-exist"]}"#;
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_nonexistent/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("could not find the github team"),
@@ -91,10 +91,10 @@ fn add_team_as_member() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_team_member"));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_team_member/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 }
@@ -105,10 +105,10 @@ fn add_team_as_non_member() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo", "2.0.0");
     ::mock_user(&mut req, mock_user_on_only_x());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_team_non_member"));
 
     let body = body_for_team_y();
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_team_non_member/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("only members"),
@@ -119,22 +119,22 @@ fn add_team_as_non_member() {
 #[test]
 fn remove_team_as_named_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo_remove_team", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_remove_team"));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_remove_team/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_remove_team/owners")
                             .with_method(Method::Delete)
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body_foo_version_2();
+    let body = ::new_req_body_version_2(::krate("foo_remove_team"));
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                         .with_body(&body)
                                         .with_method(Method::Put)));
@@ -146,25 +146,25 @@ fn remove_team_as_named_owner() {
 #[test]
 fn remove_team_as_team_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::new_req(app, "foo", "1.0.0");
+    let mut req = ::new_req(app, "foo_remove_team_owner", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_remove_team_owner"));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
     let body = body_for_team_x();
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
                                         .with_method(Method::Delete)
                                         .with_body(body.as_bytes())));
 
     assert!(json.errors[0].detail.contains("don't have permission"),
             "{:?}", json.errors);
 
-    let body = ::new_req_body_foo_version_2();
+    let body = ::new_req_body_version_2(::krate("foo_remove_team_owner"));
     ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                             .with_body(&body)
                             .with_method(Method::Put)));
@@ -175,17 +175,17 @@ fn remove_team_as_team_owner() {
 fn publish_not_owned() {
     let (_b, app, middle) = ::app();
 
-    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo_not_owned", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_not_owned"));
 
     let body = body_for_team_y();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_not_owned/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body_foo_version_2();
+    let body = ::new_req_body_version_2(::krate("foo_not_owned"));
     let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/new")
                                         .with_body(&body)
                                         .with_method(Method::Put)));
@@ -197,17 +197,17 @@ fn publish_not_owned() {
 #[test]
 fn publish_owned() {
     let (_b, app, middle) = ::app();
-    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo_team_owned", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_team_owned"));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_team_owned/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
-    let body = ::new_req_body_foo_version_2();
+    let body = ::new_req_body_version_2(::krate("foo_team_owned"));
     ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
                             .with_body(&body)
                             .with_method(Method::Put)));
@@ -217,18 +217,18 @@ fn publish_owned() {
 #[test]
 fn add_owners_as_team_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo_add_owner", "1.0.0");
     ::mock_user(&mut req, mock_user_on_x_and_y());
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_add_owner"));
 
     let body = body_for_team_x();
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_add_owner/owners")
                             .with_method(Method::Put)
                             .with_body(body.as_bytes())));
 
     ::mock_user(&mut req, mock_user_on_only_x());
     let body = r#"{"users":["FlashCat"]}"#;     // User doesn't matter
-    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo/owners")
+    let json = bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_add_owner/owners")
                                         .with_method(Method::Put)
                                         .with_body(body.as_bytes())));
     assert!(json.errors[0].detail.contains("don't have permission"),

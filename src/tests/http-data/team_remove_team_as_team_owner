@@ -194,8 +194,8 @@ x-frame-options: deny
 x-ratelimit-reset: 1439881924
 
 {"state":"active","url":"https://api.github.com/teams/1699377/memberships/crates-tester-1"}
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-2.0.0.crate HTTP/1.1
+===REQUEST 367
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_remove_team_owner/foo_remove_team_owner-2.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Date: Mon, 17 Aug 2015 23:12:52 -0700

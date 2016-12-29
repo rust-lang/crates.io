@@ -1,5 +1,5 @@
-===REQUEST 335
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-0.0.0-pre.crate HTTP/1.1
+===REQUEST 347
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_weird/foo_weird-0.0.0-pre.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Host: alexcrichton-test.s3.amazonaws.com

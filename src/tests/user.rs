@@ -91,7 +91,7 @@ fn my_packages() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let u = ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo"));
+    ::mock_crate(&mut req, ::krate("foo_my_packages"));
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -113,8 +113,8 @@ fn following() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/");
     ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo"));
-    ::mock_crate(&mut req, ::krate("bar"));
+    ::mock_crate(&mut req, ::krate("foo_fighters"));
+    ::mock_crate(&mut req, ::krate("bar_fighters"));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
                                                .with_method(Method::Get)));
@@ -122,9 +122,9 @@ fn following() {
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo/follow")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_fighters/follow")
                             .with_method(Method::Put)));
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar_fighters/follow")
                             .with_method(Method::Put)));
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
@@ -140,7 +140,7 @@ fn following() {
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar/follow")
+    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar_fighters/follow")
                             .with_method(Method::Delete)));
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
                                                .with_method(Method::Get)

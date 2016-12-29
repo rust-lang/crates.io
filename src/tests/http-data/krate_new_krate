@@ -1,5 +1,5 @@
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0.crate HTTP/1.1
+===REQUEST 339
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_new/foo_new-1.0.0.crate HTTP/1.1
 Accept: */*
 Proxy-Connection: Keep-Alive
 Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=

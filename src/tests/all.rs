@@ -290,8 +290,8 @@ fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str,
     return req;
 }
 
-fn new_req_body_foo_version_2() -> Vec<u8> {
-    new_req_body(::krate("foo"), "2.0.0", Vec::new(), Vec::new(), Vec::new())
+fn new_req_body_version_2(krate: Crate) -> Vec<u8> {
+    new_req_body(krate, "2.0.0", Vec::new(), Vec::new(), Vec::new())
 }
 
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
