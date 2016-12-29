@@ -6,7 +6,7 @@ dependencies = [
  "civet 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-cookie 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-cookie 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-json-parser 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-log-requests 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -107,12 +107,12 @@ dependencies = [
 
 [[package]]
 name = "conduit-cookie"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "conduit 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-middleware 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cookie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cookie 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -206,7 +206,7 @@ dependencies = [
 
 [[package]]
 name = "cookie"
-version = "0.4.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "openssl 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -666,7 +666,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cmake 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "eb61a8d3b65f8e0af52ac579923ec48bdd5ca4e335c0fde4071e5860eb650532"
 "checksum conduit 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c71871e85346d0f0c72a9f207748423eeb198d5d07284c74f8a3652dd87bd63a"
 "checksum conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "614f67083e437fd0b8fb9f13067203f358f1c6f52989eb6539292fde007fc6d6"
-"checksum conduit-cookie 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d15f5160a1d701027ee59361634b91d49fed337d6798795132d08c21a6f6950a"
+"checksum conduit-cookie 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)" = "035bb76edb3006275e935a12c51e606fc99cef76b7012f52ad6d1b529e6a22c7"
 "checksum conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "027a1900afd70becd52b5061afc85a24de6af0d9199f39d4e1af8b7ac55fbe6e"
 "checksum conduit-json-parser 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bc93bc19e39022dabb4b9ee18dfb71c039622aa4f4bf3487967ebb4c8de23432"
 "checksum conduit-log-requests 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0570c7b92856bb824920a22a50c62fcc6d4fac2b333af82dcd636a81da0b7601"
@@ -676,7 +676,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c5dadad9ced84acc9f67c778c25cec1c1065d6503d283cc6a1b2a4e545752d51"
 "checksum conduit-test 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "26875a8c1d775b8d01280c329957d6576260e7bfb8e56a1a323fcdbd6c8a65be"
 "checksum conduit-utils 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "922a5739a6a262d77a90196f749a06ea45875491ce1657774371a995ecba93b9"
-"checksum cookie 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "24fcc697127e82832d93475e73ff2a020d371fadd45c43a0522c441095ef8846"
+"checksum cookie 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8d12191219481eb202e05529f646f9af8d1ecfcd53bbf3997d4a4b15ca095cf8"
 "checksum curl 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "29390ee54dfd5acfcc4b0d2acc96da64060e704324a5fe314799c192fe039f76"
 "checksum curl-sys 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "218a149208e1f4e5f7e20f1d0ed1e9431a086a6b4333ff95dba82237be9c283a"
 "checksum dotenv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "eea1395d2df3b5344dc577809296d9578303296e8d105c408aa80ed67d598ef1"
