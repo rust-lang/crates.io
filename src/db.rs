@@ -2,16 +2,19 @@ use std::cell::Cell;
 use std::error::Error;
 use std::mem;
 use std::sync::Arc;
+use std::fmt;
 
-use pg;
-use pg::GenericConnection;
-use r2d2;
-use r2d2_postgres;
-use r2d2_postgres::postgres;
-use r2d2_postgres::PostgresConnectionManager as PCM;
-use r2d2_postgres::TlsMode;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
+use openssl::ssl::{SslConnector, SslConnectorBuilder, SslMethod, SSL_VERIFY_NONE};
+use pg::GenericConnection;
+use pg::tls::{TlsHandshake, Stream, TlsStream};
+use pg;
+use r2d2;
+use r2d2_postgres::PostgresConnectionManager as PCM;
+use r2d2_postgres::TlsMode;
+use r2d2_postgres::postgres;
+use r2d2_postgres;
 
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
@@ -20,8 +23,68 @@ pub type Pool = r2d2::Pool<PCM>;
 pub type Config = r2d2::Config<pg::Connection, r2d2_postgres::Error>;
 type PooledConnnection = r2d2::PooledConnection<PCM>;
 
+/// Creates a TLS handshake mechanism used by our postgres driver to negotiate
+/// the TLS connection.
+pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
+    struct MyHandshake(SslConnector);
+
+    // Note that rust-postgres provides a suite of TLS drivers to select from,
+    // including all the native platform versions. It even correctly verifies
+    // hostnames and such by default!
+    //
+    // Unfortunately for us, though, Heroku doesn't actually use valid
+    // certificates for the database connections that we're initiating. In a
+    // support ticket they've clarified that the certs are self-signed and
+    // relatively ephemeral. As a result we have no choice but to disable
+    // verification of the certificate.
+    //
+    // We use the standard `SslConnector` from the `openssl` crate here as it
+    // will configure a number of other security parameters, but we use it in
+    // two special ways:
+    //
+    // 1. We pass `SSL_VERIFY_NONE` to disable verification of the certificate
+    //    chain
+    // 2. We use a super long and weird method name indicating that we're not
+    //    validating the certificate with a domain name, but rather just the
+    //    certificate itself.
+    //
+    // This should get us connecting to Heroku's databases for now and even
+    // protect us against passive attackers, but hopefully Heroku offers a
+    // better solution in the future for certificate verification...
+
+    impl TlsHandshake for MyHandshake {
+        fn tls_handshake(&self,
+                         _domain: &str,
+                         stream: Stream)
+                         -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
+            let stream = try!(self.0.danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream));
+            Ok(Box::new(stream))
+        }
+    }
+
+    impl fmt::Debug for MyHandshake {
+        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+            fmt.debug_struct("MyHandshake").finish()
+        }
+    }
+
+    let mut builder = SslConnectorBuilder::new(SslMethod::tls()).unwrap();
+    builder.builder_mut()
+           .set_verify(SSL_VERIFY_NONE);
+
+    Box::new(MyHandshake(builder.build()))
+}
+
+// Note that this is intended to be called from scripts, not in the main app, it
+// panics!
+pub fn connect_now() -> pg::Connection {
+    let tls = tls_handshake();
+    pg::Connection::connect(&::env("DATABASE_URL")[..],
+                            pg::TlsMode::Require(&*tls)).unwrap()
+}
+
 pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres::Error>) -> Pool {
-    let mgr = PCM::new(url, TlsMode::None).unwrap();
+    let mgr = PCM::new(url, TlsMode::Require(tls_handshake())).unwrap();
     r2d2::Pool::new(config, mgr).unwrap()
 }
 

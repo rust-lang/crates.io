@@ -8,14 +8,12 @@ use std::env;
 use std::collections::HashSet;
 use migrate::Migration;
 
-use cargo_registry::env;
 use cargo_registry::krate::Crate;
 use cargo_registry::model::Model;
 
 #[allow(dead_code)]
 fn main() {
-    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::TlsMode::None).unwrap();
+    let conn = cargo_registry::db::connect_now();
     let migrations = migrations();
 
     let arg = env::args().nth(1);

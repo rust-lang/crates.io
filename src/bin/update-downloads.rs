@@ -1,15 +1,16 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
+extern crate openssl;
 extern crate postgres;
 extern crate semver;
 extern crate time;
 
-use std::env;
 use std::collections::HashMap;
+use std::env;
 use std::time::Duration;
 
-use cargo_registry::{VersionDownload, Version, Model, env};
+use cargo_registry::{VersionDownload, Version, Model};
 
 static LIMIT: i64 = 1000;
 
@@ -19,8 +20,7 @@ fn main() {
                     == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
-        let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                                 postgres::TlsMode::None).unwrap();
+        let conn = cargo_registry::db::connect_now();
         update(&conn).unwrap();
         drop(conn);
         if daemon {

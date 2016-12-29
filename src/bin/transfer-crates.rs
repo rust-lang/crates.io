@@ -14,14 +14,13 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, env, User};
+use cargo_registry::{Crate, User};
 use cargo_registry::owner::OwnerKind;
 use cargo_registry::Model;
 
 #[allow(dead_code)]
 fn main() {
-    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::TlsMode::None).unwrap();
+    let conn = cargo_registry::db::connect_now();
     {
         let tx = conn.transaction().unwrap();
         transfer(&tx);

@@ -15,12 +15,9 @@ use std::env;
 use time::Duration;
 use rand::{StdRng, Rng};
 
-use cargo_registry::env;
-
 #[allow(dead_code)]
 fn main() {
-    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::TlsMode::None).unwrap();
+    let conn = cargo_registry::db::connect_now();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();

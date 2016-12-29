@@ -16,12 +16,11 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, env};
+use cargo_registry::Crate;
 
 #[allow(dead_code)]
 fn main() {
-    let conn = postgres::Connection::connect(&env("DATABASE_URL")[..],
-                                             postgres::TlsMode::None).unwrap();
+    let conn = cargo_registry::db::connect_now();
     {
         let tx = conn.transaction().unwrap();
         delete(&tx);
