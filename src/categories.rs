@@ -2,8 +2,8 @@
 // Runs when the server is started.
 
 use toml;
-use pg;
-use env;
+
+use db;
 use util::errors::{CargoResult, ChainError, internal};
 
 struct Category {
@@ -80,8 +80,7 @@ fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> 
 }
 
 pub fn sync() -> CargoResult<()> {
-    let conn = pg::Connection::connect(&env("DATABASE_URL")[..],
-                                             pg::TlsMode::None).unwrap();
+    let conn = db::connect_now();
     let tx = conn.transaction().unwrap();
 
     let categories = include_str!("./categories.toml");
