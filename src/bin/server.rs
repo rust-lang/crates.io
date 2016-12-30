@@ -62,7 +62,7 @@ fn main() {
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
 
-    // cargo_registry::categories::sync().unwrap();
+    cargo_registry::categories::sync().unwrap();
 
     let port = if heroku {
         8888
