@@ -1,8 +1,9 @@
 use std::cell::Cell;
+use std::env;
 use std::error::Error;
+use std::fmt;
 use std::mem;
 use std::sync::Arc;
-use std::fmt;
 
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
@@ -79,12 +80,21 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
 // panics!
 pub fn connect_now() -> pg::Connection {
     let tls = tls_handshake();
-    pg::Connection::connect(&::env("DATABASE_URL")[..],
-                            pg::TlsMode::Require(&*tls)).unwrap()
+    let mode = if env::var("HEROKU").is_ok() {
+        pg::TlsMode::Require(&*tls)
+    } else {
+        pg::TlsMode::Prefer(&*tls)
+    };
+    pg::Connection::connect(&::env("DATABASE_URL")[..], mode).unwrap()
 }
 
 pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres::Error>) -> Pool {
-    let mgr = PCM::new(url, TlsMode::Require(tls_handshake())).unwrap();
+    let mode = if env::var("HEROKU").is_ok() {
+        TlsMode::Require(tls_handshake())
+    } else {
+        TlsMode::Prefer(tls_handshake())
+    };
+    let mgr = PCM::new(url, mode).unwrap();
     r2d2::Pool::new(config, mgr).unwrap()
 }
 
