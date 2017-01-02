@@ -206,7 +206,7 @@ Crates to help with Sending, receiving, formatting, and parsing email.\
 [libraries.categories.encoding]
 name = "Encoding"
 description = """
-Serializing and/or deserializing to particular data formats.\
+Encoding and/or decoding data from one data format to another.\
 """
 
 [libraries.categories.external-bindings]
@@ -251,6 +251,30 @@ name = "Multimedia"
 description = """
 Crates that provide audio, video, and image processing or rendering \
 engines.\
+"""
+
+[libraries.categories.multimedia.categories.audio]
+name = "Audio"
+description = """
+Crates that record, output, or process audio.
+"""
+
+[libraries.categories.multimedia.categories.video]
+name = "Video"
+description = """
+Crates that record, output, or process video.
+"""
+
+[libraries.categories.multimedia.categories.images]
+name = "Images"
+description = """
+Crates that process or render images.
+"""
+
+[libraries.categories.multimedia.categories.encoding]
+name = "Encoding"
+description = """
+Crates that encode or decode binary data in multimedia formats.
 """
 
 [libraries.categories.network-programming]
