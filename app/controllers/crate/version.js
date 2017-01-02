@@ -20,6 +20,7 @@ export default Ember.Controller.extend({
     requestedVersion: null,
     keywords: computed.alias('crate.keywords'),
     categories: computed.alias('crate.categories'),
+    badges: computed.alias('crate.badges'),
 
     sortedVersions: computed.readOnly('crate.versions'),
 

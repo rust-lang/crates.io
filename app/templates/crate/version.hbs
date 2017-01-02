@@ -71,6 +71,12 @@
                         alt="{{ crate.name }}’s current version badge"
                         title="{{ crate.name }}’s current version badge" />
                 </p>
+
+                {{#each crate.annotated_badges as |badge|}}
+                    <p>
+                        {{component badge.component_name badge=badge}}
+                    </p>
+                {{/each}}
             </div>
 
             <div class="authors">

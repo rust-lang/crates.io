@@ -23,6 +23,10 @@ test('searching for "rust"', function(assert) {
 
         hasText(assert, '#crates .row:first .desc .info', 'rust_mixin');
         findWithAssert('#crates .row:first .desc .info .vers img[alt="0.0.1"]');
+
+        findWithAssert('#crates .row:first .desc .info .badge:first a img[src="https://ci.appveyor.com/api/projects/status/github/huonw/external_mixin?svg=true&branch=master"]');
+        findWithAssert('#crates .row:first .desc .info .badge:eq(1) a img[src="https://travis-ci.org/huonw/external_mixin.svg?branch=master"]');
+
         hasText(assert, '#crates .row:first .desc .summary', 'Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)');
         hasText(assert, '#crates .row:first .downloads', '477');
     });

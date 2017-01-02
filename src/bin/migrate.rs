@@ -819,6 +819,18 @@ fn migrations() -> Vec<Migration> {
                 ON crates_categories;"));
             Ok(())
         }),
+        Migration::add_table(20170102131034, "badges", " \
+            crate_id         INTEGER NOT NULL, \
+            badge_type       VARCHAR NOT NULL, \
+            attributes       JSONB NOT NULL"),
+        Migration::new(20170102145236, |tx| {
+            try!(tx.execute("CREATE UNIQUE INDEX badges_crate_type \
+                             ON badges (crate_id, badge_type)", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP INDEX badges_crate_type", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

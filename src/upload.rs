@@ -24,6 +24,7 @@ pub struct NewCrate {
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
+    pub badges: Option<HashMap<String, HashMap<String, String>>>,
 }
 
 #[derive(PartialEq, Eq, Hash)]

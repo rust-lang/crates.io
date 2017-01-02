@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::fs::{self, File};
 
 use conduit::{Handler, Request, Method};
+
 use git2;
 use postgres::GenericConnection;
 use rustc_serialize::json;
@@ -26,7 +27,7 @@ struct CrateMeta { total: i32 }
 #[derive(RustcDecodable)]
 struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
-struct Warnings { invalid_categories: Vec<String> }
+struct Warnings { invalid_categories: Vec<String>, invalid_badges: Vec<String> }
 #[derive(RustcDecodable)]
 struct GoodCrate { krate: EncodableCrate, warnings: Warnings }
 #[derive(RustcDecodable)]
@@ -54,6 +55,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         license: Some("MIT".to_string()),
         license_file: None,
         repository: None,
+        badges: None,
     }
 }
 
@@ -916,6 +918,86 @@ fn ignored_categories() {
 }
 
 #[test]
+fn good_badges() {
+    let krate = ::krate("foobadger");
+    let mut badges = HashMap::new();
+    let mut badge_attributes = HashMap::new();
+    badge_attributes.insert(
+        String::from("repository"),
+        String::from("rust-lang/crates.io")
+    );
+    badges.insert(String::from("travis-ci"), badge_attributes);
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req_with_badges(app, krate.clone(), "1.0.0", badges);
+
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foobadger");
+    assert_eq!(json.krate.max_version, "1.0.0");
+
+    let mut response = ok_resp!(
+        middle.call(req.with_method(Method::Get)
+                       .with_path("/api/v1/crates/foobadger")));
+
+    let json: CrateResponse = ::json(&mut response);
+
+    let badges = json.krate.badges.unwrap();
+    assert_eq!(badges.len(), 1);
+    assert_eq!(badges[0].badge_type, "travis-ci");
+    assert_eq!(
+        badges[0].attributes.get("repository").unwrap(),
+        &String::from("rust-lang/crates.io")
+    );
+}
+
+#[test]
+fn ignored_badges() {
+    let krate = ::krate("foo_ignored_badge");
+    let mut badges = HashMap::new();
+
+    // Known badge type, missing required repository attribute
+    let mut badge_attributes = HashMap::new();
+    badge_attributes.insert(
+        String::from("branch"),
+        String::from("master")
+    );
+    badges.insert(String::from("travis-ci"), badge_attributes);
+
+    // Unknown badge type
+    let mut unknown_badge_attributes = HashMap::new();
+    unknown_badge_attributes.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+    badges.insert(String::from("not-a-badge"), unknown_badge_attributes);
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req_with_badges(app, krate.clone(), "1.0.0", badges);
+
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_ignored_badge");
+    assert_eq!(json.krate.max_version, "1.0.0");
+    assert_eq!(json.warnings.invalid_badges.len(), 2);
+    assert!(json.warnings.invalid_badges.contains(&"travis-ci".to_string()));
+    assert!(json.warnings.invalid_badges.contains(&"not-a-badge".to_string()));
+
+    let mut response = ok_resp!(
+        middle.call(req.with_method(Method::Get)
+                       .with_path("/api/v1/crates/foo_ignored_badge")));
+
+    let json: CrateResponse = ::json(&mut response);
+
+    let badges = json.krate.badges.unwrap();
+    assert_eq!(badges.len(), 0);
+}
+
+#[test]
 fn reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
@@ -982,3 +1064,4 @@ fn author_license_and_description_required() {
             !json.errors[0].detail.contains("license"),
             "{:?}", json.errors);
 }
+
