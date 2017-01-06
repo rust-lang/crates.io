@@ -1,6 +1,5 @@
 {
   "predef": [
-    "server",
     "document",
     "window",
     "location",
@@ -13,7 +12,6 @@
     "exists",
     "fillIn",
     "click",
-    "select",
     "keyEvent",
     "triggerEvent",
     "find",
@@ -50,6 +48,6 @@
   "strict": false,
   "white": false,
   "eqnull": true,
-  "esnext": true,
+  "esversion": 6,
   "unused": true
 }
