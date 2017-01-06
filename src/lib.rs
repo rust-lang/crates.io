@@ -20,7 +20,7 @@ pub enum Host<'a> {
     Socket(SocketAddr)
 }
 
-#[derive(PartialEq, Hash, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Hash, Eq, Debug, Clone)]
 pub enum Method {
     Get,
     Post,
@@ -36,7 +36,7 @@ pub enum Method {
     Purge,
 
     // WebDAV, Subversion, UPNP
-    Other(&'static str)
+    Other(String)
 }
 
 /// A Dictionary for extensions provided by the server or middleware
