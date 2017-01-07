@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use std::collections::HashMap;
 use std::error::Error;
 use std::net::SocketAddr;
+use std::fmt;
 
 pub use self::typemap::TypeMap;
 mod typemap;
@@ -37,6 +38,25 @@ pub enum Method {
 
     // WebDAV, Subversion, UPNP
     Other(String)
+}
+
+impl fmt::Display for Method {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let s = match *self {
+            Method::Get => "GET",
+            Method::Post => "POST",
+            Method::Put => "POST",
+            Method::Delete => "DELETE",
+            Method::Head => "HEAD",
+            Method::Connect => "CONNECT",
+            Method::Options => "OPTIONS",
+            Method::Trace => "TRACE",
+            Method::Patch => "PATCH",
+            Method::Purge => "PURGE",
+            Method::Other(ref s) => s,
+        };
+        fmt.write_str(s)
+    }
 }
 
 /// A Dictionary for extensions provided by the server or middleware
