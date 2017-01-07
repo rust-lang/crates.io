@@ -1,6 +1,7 @@
 extern crate semver;
 
 use std::io::prelude::*;
+use std::io;
 use std::collections::HashMap;
 use std::error::Error;
 use std::net::SocketAddr;
@@ -109,7 +110,7 @@ pub struct Response {
     pub headers: HashMap<String, Vec<String>>,
 
     /// A Writer for body of the response
-    pub body: Box<Read + Send>
+    pub body: Box<WriteBody + Send>
 }
 
 /// A Handler takes a request and returns a response or an error.
@@ -124,5 +125,20 @@ impl<F, E> Handler for F
 {
     fn call(&self, request: &mut Request) -> Result<Response, Box<Error+Send>> {
         (*self)(request).map_err(|e| Box::new(e) as Box<Error+Send>)
+    }
+}
+
+/// A trait which writes the response body out to a `Write`r.
+///
+/// This is implemented for all `Read`ers.
+pub trait WriteBody {
+    fn write_body(&mut self, out: &mut Write) -> io::Result<u64>;
+}
+
+impl<R> WriteBody for R
+    where R: Read
+{
+    fn write_body(&mut self, out: &mut Write) -> io::Result<u64> {
+        io::copy(self, out)
     }
 }
