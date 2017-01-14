@@ -26,57 +26,97 @@
 #   `@`, `:`, or `.`. They should be all lowercase.
 #
 
-[applications]
-name = "Applications"
+[algorithms]
+name = "Algorithms"
 description = """
-Applications are computer programs that are run by a user to solve a \
-problem. The primary purpose of an application is to be run on its \
-own and not used from another program.\
+Rust implementations of core algorithms such as hashing, sorting, \
+searching, and more.\
 """
 
-[applications.categories.command-line-utilities]
+[api-bindings]
+name = "API bindings"
+description = """
+Wrappers of specific APIs for convenient access from Rust. Includes \
+HTTP API wrappers.
+"""
+
+[asynchronous]
+name = "Asynchronous"
+description = """
+Crates to help you deal with events independently of the main program \
+flow, using techniques like futures, promises, waiting, or eventing.\
+"""
+
+[authentication]
+name = "Authentication"
+description = """
+Crates to help with the process of confirming identities.\
+"""
+
+[caching]
+name = "Caching"
+description = """
+Crates to store the results of previous computations in order to reuse \
+the results.\
+"""
+
+[command-line-interface]
+name = "Command-line interface"
+description = """
+Crates to help create command line interfaces, such as argument \
+parsers, line-editing, or output coloring and formatting.\
+"""
+
+[command-line-utilities]
 name = "Command line utilities"
 description = """
 Applications to run at the command line.\
 """
 
-[applications.categories.database]
-name = "Database"
+[compression]
+name = "Compression"
+description = """
+Algorithms for making data smaller.\
+"""
+
+[concurrency]
+name = "Concurrency"
+description = """
+Crates for implementing concurrent and parallel computation.\
+"""
+
+[cryptography]
+name = "Cryptography"
+description = """
+Algorithms intended for securing data.\
+"""
+
+[database]
+name = "Database Interfaces"
+description = """
+Crates to interface with database management systems.\
+"""
+
+[database-implementations]
+name = "Database Implementations"
 description = """
 Databases allow clients to store and query large amounts of data in an \
 efficient manner. This category is for database management systems \
 implemented in Rust.\
 """
 
-[applications.categories.emulators]
-name = "Emulators"
+[data-structures]
+name = "Data structures"
 description = """
-Emulators allow one computer to behave like another, often to allow \
-running software that is not natively available on the host \
-computer. Video game systems are commonly emulated.\
+Rust implementations of particular ways of organizing data suited for \
+specific purposes.\
 """
 
-[applications.categories.games]
-name = "Games"
+[date-and-time]
+name = "Date and time"
 description = """
-Applications for fun and entertainment. If Rust the video game were \
-implemented in Rust the programming language, it would belong in this \
-category. Libraries to help create video games are in the \
-Libraries::Game Engine category.\
-"""
-
-[applications.categories.multimedia]
-name = "Multimedia"
-description = """
-Multimedia applications allow authoring, editing, or processing \
-content composed of audio, video, images, or combinations of these \
-and other media.\
-"""
-
-[applications.categories.text-editors]
-name = "Text editors"
-description = """
-Applications for editing text.\
+Crates to manage the inherent complexity of dealing with the fourth \
+dimension.\
 """
 
 [development-tools]
@@ -119,196 +159,135 @@ description = """
 Crates to help you verify the correctness of your code.\
 """
 
-[libraries]
-name = "Libraries"
-description = """
-Crates meant to be used as dependencies of other crates.\
-"""
-
-[libraries.categories.algorithms]
-name = "Algorithms"
-description = """
-Rust implementations of core algorithms such as hashing, sorting, \
-searching, and more.\
-"""
-
-[libraries.categories.asynchronous]
-name = "Asynchronous"
-description = """
-Crates to help you deal with events independently of the main program \
-flow, using techniques like futures, promises, waiting, or eventing.\
-"""
-
-[libraries.categories.authentication]
-name = "Authentication"
-description = """
-Crates to help with the process of confirming identities.\
-"""
-
-[libraries.categories.caching]
-name = "Caching"
-description = """
-Crates to store the results of previous computations in order to reuse \
-the results.\
-"""
-
-[libraries.categories.command-line-interface]
-name = "Command-line interface"
-description = """
-Crates to help create command line interfaces, such as argument \
-parsers, line-editing, or output coloring and formatting.\
-"""
-
-[libraries.categories.compression]
-name = "Compression"
-description = """
-Algorithms for making data smaller.\
-"""
-
-[libraries.categories.concurrency]
-name = "Concurrency"
-description = """
-Crates for implementing concurrent and parallel computation.\
-"""
-
-[libraries.categories.cryptography]
-name = "Cryptography"
-description = """
-Algorithms intended for securing data.\
-"""
-
-[libraries.categories.database]
-name = "Database"
-description = """
-Crates to interface with database management systems.\
-"""
-
-[libraries.categories.data-structures]
-name = "Data structures"
-description = """
-Rust implementations of particular ways of organizing data suited for \
-specific purposes.\
-"""
-
-[libraries.categories.date-and-time]
-name = "Date and time"
-description = """
-Crates to manage the inherent complexity of dealing with the fourth \
-dimension.\
-"""
-
-[libraries.categories.email]
+[email]
 name = "Email"
 description = """
 Crates to help with Sending, receiving, formatting, and parsing email.\
 """
 
-[libraries.categories.encoding]
+[emulators]
+name = "Emulators"
+description = """
+Emulators allow one computer to behave like another, often to allow \
+running software that is not natively available on the host \
+computer. Video game systems are commonly emulated.\
+"""
+
+[encoding]
 name = "Encoding"
 description = """
 Encoding and/or decoding data from one data format to another.\
 """
 
-[libraries.categories.external-bindings]
-name = "External bindings"
+[external-ffi-bindings]
+name = "External FFI bindings"
 description = """
 Rust FFI bindings to libraries written in other languages.\
 """
 
-[libraries.categories.filesystem]
+[filesystem]
 name = "Filesystem"
 description = """
 Crates for dealing with files and filesystems.\
 """
 
-[libraries.categories.game-engines]
+[game-engines]
 name = "Game engines"
 description = """
 Crates for creating games.\
 """
 
-[libraries.categories.gui]
+[games]
+name = "Games"
+description = """
+Applications for fun and entertainment. If Rust the video game were \
+implemented in Rust the programming language, it would belong in this \
+category. Libraries to help create video games are in the \
+Game engines category.\
+"""
+
+[gui]
 name = "GUI"
 description = """
 Crates to help you create a graphical user interface.\
 """
 
-[libraries.categories.hardware-support]
+[hardware-support]
 name = "Hardware Support"
 description = """
 Crates to interface with specific CPU or other hardware features.\
 """
 
-[libraries.categories.memory-management]
+[memory-management]
 name = "Memory management"
 description = """
 Crates to help with allocation, memory mapping, garbage collection, \
 reference counting, or interfaces to foreign memory managers.\
 """
 
-[libraries.categories.multimedia]
+[multimedia]
 name = "Multimedia"
 description = """
 Crates that provide audio, video, and image processing or rendering \
 engines.\
 """
 
-[libraries.categories.multimedia.categories.audio]
+[multimedia.categories.audio]
 name = "Audio"
 description = """
 Crates that record, output, or process audio.
 """
 
-[libraries.categories.multimedia.categories.video]
+[multimedia.categories.video]
 name = "Video"
 description = """
 Crates that record, output, or process video.
 """
 
-[libraries.categories.multimedia.categories.images]
+[multimedia.categories.images]
 name = "Images"
 description = """
 Crates that process or render images.
 """
 
-[libraries.categories.multimedia.categories.encoding]
+[multimedia.categories.encoding]
 name = "Encoding"
 description = """
 Crates that encode or decode binary data in multimedia formats.
 """
 
-[libraries.categories.network-programming]
+[network-programming]
 name = "Network programming"
 description = """
 Crates dealing with higher-level network protocols such as FTP, HTTP, \
 or SSH, or lower-level network protocols such as TCP or UDP.\
 """
 
-[libraries.categories.os]
+[os]
 name = "Operating systems"
 description = """
 Bindings to operating system-specific APIs.\
 """
 
-[libraries.categories.os.categories.macos-apis]
+[os.categories.macos-apis]
 name = "mac OS APIs"
 description = """
 Bindings to mac OS-specific APIs.\
 """
 
-[libraries.categories.os.categories.unix-apis]
+[os.categories.unix-apis]
 name = "Unix APIs"
 description = """
 Bindings to Unix-specific APIs.\
 """
 
-[libraries.categories.os.categories.windows-apis]
+[os.categories.windows-apis]
 name = "Windows APIs"
 description = """
 Bindings to Windows-specific APIs.\
 """
 
-[libraries.categories.parsing]
+[parsing]
 name = "Parsing"
 description = """
 Crates to help create parsers of binary and text \
@@ -316,66 +295,72 @@ formats. Format-specific parsers belong in other, more specific \
 categories.\
 """
 
-[libraries.categories.rust-patterns]
+[rust-patterns]
 name = "Rust Patterns"
 description = """
 Shared solutions for particular situations specific to programming in \
 Rust.\
 """
 
-[libraries.categories.science]
+[science]
 name = "Science"
 description = """
 Crates related to solving problems involving math, physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 
-[libraries.categories.template-engine]
+[template-engine]
 name = "Template engine"
 description = """
 Crates designed to combine templates with data to produce result \
 documents, usually with an emphasis on processing text.\
 """
 
-[libraries.categories.text-processing]
+[text-editors]
+name = "Text editors"
+description = """
+Applications for editing text.\
+"""
+
+[text-processing]
 name = "Text processing"
 description = """
 Crates to deal with the complexities of human language when expressed \
 in textual form.\
 """
 
-[libraries.categories.value-formatting]
+[value-formatting]
 name = "Value formatting"
 description = """
 Crates to allow an application to format values for display to a user, \
 potentially adapting the display to various languages and regions.\
 """
 
-[libraries.categories.visualization]
+[visualization]
 name = "Visualization"
 description = """
 Ways to view data, such as plotting or graphing.\
 """
 
-[libraries.categories.web-programming]
+[web-programming]
 name = "Web programming"
 description = """
 Crates to create applications for the web.\
 """
 
-[libraries.categories.web-programming.categories.http-client]
+[web-programming.categories.http-client]
 name = "HTTP Client"
 description = """
 Crates to make HTTP network requests.\
 """
 
-[libraries.categories.web-programming.categories.http-server]
+[web-programming.categories.http-server]
 name = "HTTP Server"
 description = """
 Crates to serve data over HTTP.\
 """
 
-[libraries.categories.web-programming.categories.websocket]
+[web-programming.categories.websocket]
 name = "WebSocket"
 description = """
 Crates to communicate over the WebSocket protocol.\
