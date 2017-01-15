@@ -1,6 +1,7 @@
 language: rust
 rust: stable
 sudo: false
+dist: trusty
 
 cache:
   directories:
@@ -29,7 +30,7 @@ after_success:
   - travis-cargo coveralls --no-sudo
 
 addons:
-  postgresql: "9.3"
+  postgresql: "9.5"
   apt:
     sources:
       - kalakris-cmake
