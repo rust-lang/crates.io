@@ -20,7 +20,7 @@ use semver;
 use time::{Timespec, Duration};
 use url::Url;
 
-use {Model, User, Keyword, Version, Category};
+use {Model, User, Keyword, Version, Category, Badge};
 use app::{App, RequestApp};
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
@@ -28,6 +28,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::EncodableKeyword;
 use category::EncodableCategory;
+use badge::EncodableBadge;
 use upload;
 use user::RequestUser;
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights};
@@ -61,6 +62,7 @@ pub struct EncodableCrate {
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
+    pub badges: Option<Vec<EncodableBadge>>,
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
@@ -229,14 +231,16 @@ impl Crate {
         parts.next().is_none()
     }
 
-    pub fn minimal_encodable(self) -> EncodableCrate {
-        self.encodable(None, None, None)
+    pub fn minimal_encodable(self,
+                             badges: Option<Vec<Badge>>) -> EncodableCrate {
+        self.encodable(None, None, None, badges)
     }
 
     pub fn encodable(self,
                      versions: Option<Vec<i32>>,
                      keywords: Option<&[Keyword]>,
-                     categories: Option<&[Category]>)
+                     categories: Option<&[Category]>,
+                     badges: Option<Vec<Badge>>)
                      -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, max_version, description,
@@ -249,6 +253,9 @@ impl Crate {
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
+        let badges = badges.map(|bs| {
+            bs.iter().map(|b| b.clone().encodable()).collect()
+        });
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -258,6 +265,7 @@ impl Crate {
             versions: versions,
             keywords: keyword_ids,
             categories: category_ids,
+            badges: badges,
             max_version: max_version.to_string(),
             documentation: documentation,
             homepage: homepage,
@@ -401,6 +409,13 @@ impl Crate {
                                       ON categories.id = \
                                          crates_categories.category_id \
                                       WHERE crates_categories.crate_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    }
+
+    pub fn badges(&self, conn: &GenericConnection) -> CargoResult<Vec<Badge>> {
+        let stmt = try!(conn.prepare("SELECT badges.* from badges \
+                                      WHERE badges.crate_id = $1"));
         let rows = try!(stmt.query(&[&self.id]));
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
@@ -587,7 +602,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     for row in try!(stmt.query(&args)).iter() {
         let krate: Crate = Model::from_row(&row);
-        crates.push(krate.minimal_encodable());
+        let badges = krate.badges(conn);
+        crates.push(krate.minimal_encodable(badges.ok()));
     }
 
     // Query for the total count of crates
@@ -622,7 +638,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);
-            krate.minimal_encodable()
+            krate.minimal_encodable(None)
         }).collect::<Vec<EncodableCrate>>())
     };
     let new_crates = try!(tx.prepare("SELECT * FROM crates \
@@ -660,6 +676,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let ids = versions.iter().map(|v| v.id).collect();
     let kws = try!(krate.keywords(conn));
     let cats = try!(krate.categories(conn));
+    let badges = try!(krate.badges(conn));
 
     #[derive(RustcEncodable)]
     struct R {
@@ -669,7 +686,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         categories: Vec<EncodableCategory>,
     }
     Ok(req.json(&R {
-        krate: krate.clone().encodable(Some(ids), Some(&kws), Some(&cats)),
+        krate: krate.clone().encodable(
+            Some(ids), Some(&kws), Some(&cats), Some(badges)
+        ),
         versions: versions.into_iter().map(|v| {
             v.encodable(&krate.name)
         }).collect(),
@@ -746,6 +765,16 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         Category::update_crate(try!(req.tx()), &krate, &categories)
     );
 
+    // Update all badges for this crate, collecting any invalid badges in
+    // order to be able to warn about them
+    let ignored_invalid_badges = try!(
+        Badge::update_crate(
+            try!(req.tx()),
+            &krate,
+            new_crate.badges.unwrap_or_else(HashMap::new)
+        )
+    );
+
     // Upload the crate to S3
     let mut handle = req.app().handle();
     let path = krate.s3_path(&vers.to_string());
@@ -803,14 +832,21 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     bomb.path = None;
 
     #[derive(RustcEncodable)]
-    struct Warnings { invalid_categories: Vec<String> }
+    struct Warnings {
+        invalid_categories: Vec<String>,
+        invalid_badges: Vec<String>,
+    }
     let warnings = Warnings {
         invalid_categories: ignored_invalid_categories,
+        invalid_badges: ignored_invalid_badges,
     };
 
     #[derive(RustcEncodable)]
     struct R { krate: EncodableCrate, warnings: Warnings }
-    Ok(req.json(&R { krate: krate.minimal_encodable(), warnings: warnings }))
+    Ok(req.json(&R {
+        krate: krate.minimal_encodable(None),
+        warnings: warnings
+    }))
 }
 
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {

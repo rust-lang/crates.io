@@ -19,6 +19,21 @@ export default {
         "name": "rust_mixin",
         "repository": "https://github.com/huonw/external_mixin",
         "updated_at": "2015-02-27T11:52:13Z",
+        "badges": [
+            {
+                "attributes": {
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "appveyor"
+            },
+            {
+                "attributes": {
+                    "branch": "master",
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "travis-ci"
+            }
+        ],
         "versions": null
     }, {
         "created_at": "2015-02-27T11:51:58Z",

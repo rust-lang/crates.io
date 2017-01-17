@@ -34,6 +34,7 @@ extern crate conduit_router;
 extern crate conduit_static;
 
 pub use app::App;
+pub use self::badge::Badge;
 pub use self::category::Category;
 pub use config::Config;
 pub use self::dependency::Dependency;
@@ -53,6 +54,7 @@ use conduit_middleware::MiddlewareBuilder;
 use util::{C, R, R404};
 
 pub mod app;
+pub mod badge;
 pub mod categories;
 pub mod category;
 pub mod config;

@@ -63,6 +63,7 @@ struct Error { detail: String }
 #[derive(RustcDecodable)]
 struct Bad { errors: Vec<Error> }
 
+mod badge;
 mod category;
 mod git;
 mod keyword;
@@ -272,30 +273,49 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
                 deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, deps, Vec::new(), Vec::new()));
+    req.with_body(&new_req_body(
+        krate, version, deps, Vec::new(), Vec::new(), HashMap::new()
+    ));
     return req;
 }
 
 fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str,
                          kws: Vec<String>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), kws, Vec::new()));
+    req.with_body(&new_req_body(
+        krate, version, Vec::new(), kws, Vec::new(), HashMap::new()
+    ));
     return req;
 }
 
 fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str,
                            cats: Vec<String>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), Vec::new(), cats));
+    req.with_body(&new_req_body(
+        krate, version, Vec::new(), Vec::new(), cats, HashMap::new()
+    ));
+    return req;
+}
+
+fn new_req_with_badges(app: Arc<App>, krate: Crate, version: &str,
+                       badges: HashMap<String, HashMap<String, String>>)
+                       -> MockRequest {
+    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    req.with_body(&new_req_body(
+        krate, version, Vec::new(), Vec::new(), Vec::new(), badges
+    ));
     return req;
 }
 
 fn new_req_body_version_2(krate: Crate) -> Vec<u8> {
-    new_req_body(krate, "2.0.0", Vec::new(), Vec::new(), Vec::new())
+    new_req_body(
+        krate, "2.0.0", Vec::new(), Vec::new(), Vec::new(), HashMap::new()
+    )
 }
 
 fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
-                kws: Vec<String>, cats: Vec<String>) -> Vec<u8> {
+                kws: Vec<String>, cats: Vec<String>,
+                badges: HashMap<String, HashMap<String, String>>) -> Vec<u8> {
     let kws = kws.into_iter().map(u::Keyword).collect();
     let cats = cats.into_iter().map(u::Category).collect();
     new_crate_to_body(&u::NewCrate {
@@ -313,6 +333,7 @@ fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
         license: Some("MIT".to_string()),
         license_file: None,
         repository: krate.repository,
+        badges: Some(badges),
     }, &[])
 }
 

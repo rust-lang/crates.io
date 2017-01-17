@@ -7,6 +7,9 @@
                 alt="{{ crate.max_version }}"
                 title="{{ crate.name }}’s current version badge" />
         </span>
+        {{#each crate.annotated_badges as |badge|}}
+            {{component badge.component_name badge=badge}}
+        {{/each}}
     </div>
     <div class='summary'>
         <span class='small'>
