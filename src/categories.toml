@@ -26,30 +26,342 @@
 #   `@`, `:`, or `.`. They should be all lowercase.
 #
 
+[algorithms]
+name = "Algorithms"
+description = """
+Rust implementations of core algorithms such as hashing, sorting, \
+searching, and more.\
+"""
+
+[api-bindings]
+name = "API bindings"
+description = """
+Wrappers of specific APIs for convenient access from Rust. Includes \
+HTTP API wrappers.
+"""
+
+[asynchronous]
+name = "Asynchronous"
+description = """
+Crates to help you deal with events independently of the main program \
+flow, using techniques like futures, promises, waiting, or eventing.\
+"""
+
+[authentication]
+name = "Authentication"
+description = """
+Crates to help with the process of confirming identities.\
+"""
+
+[caching]
+name = "Caching"
+description = """
+Crates to store the results of previous computations in order to reuse \
+the results.\
+"""
+
+[command-line-interface]
+name = "Command-line interface"
+description = """
+Crates to help create command line interfaces, such as argument \
+parsers, line-editing, or output coloring and formatting.\
+"""
+
+[command-line-utilities]
+name = "Command line utilities"
+description = """
+Applications to run at the command line.\
+"""
+
+[compression]
+name = "Compression"
+description = """
+Algorithms for making data smaller.\
+"""
+
+[concurrency]
+name = "Concurrency"
+description = """
+Crates for implementing concurrent and parallel computation.\
+"""
+
+[cryptography]
+name = "Cryptography"
+description = """
+Algorithms intended for securing data.\
+"""
+
+[database]
+name = "Database Interfaces"
+description = """
+Crates to interface with database management systems.\
+"""
+
+[database-implementations]
+name = "Database Implementations"
+description = """
+Databases allow clients to store and query large amounts of data in an \
+efficient manner. This category is for database management systems \
+implemented in Rust.\
+"""
+
+[data-structures]
+name = "Data structures"
+description = """
+Rust implementations of particular ways of organizing data suited for \
+specific purposes.\
+"""
+
+[date-and-time]
+name = "Date and time"
+description = """
+Crates to manage the inherent complexity of dealing with the fourth \
+dimension.\
+"""
+
 [development-tools]
-name = "Development Tools"
-description = "Ways to make developing in Rust better"
+name = "Development tools"
+description = """
+Make writing Rust code easier with code autocompletion, linting, \
+formatting and more. These crates are developer-facing as opposed to \
+user-facing.\
+"""
 
-  [development-tools.categories.testing]
-  name = "Testing"
-  description = "Additions to automated testing features"
+[development-tools.categories.cargo-plugins]
+name = "Cargo plugins"
+description = """
+Subcommands that extend the capabilities of Cargo.\
+"""
 
-    [development-tools.categories.testing.categories.mocking]
-    name = "Mocking"
-    description = "Mocks are not the same as stubs!"
+[development-tools.categories.debugging]
+name = "Debugging"
+description = """
+Crates to help you figure out what is going on with your code such as \
+logging, tracing, or assertions.\
+"""
 
-[libraries]
-name = "Libraries"
-description = "Libraries are reusable pieces of code"
+[development-tools.categories.ffi]
+name = "FFI"
+description = """
+Crates to help you better interface with other languages. This \
+includes binding generators and helpful language constructs.\
+"""
 
-  [libraries.categories.async]
-  name = "Async"
-  description = "Code that can take time to run but won't block"
+[development-tools.categories.profiling]
+name = "Profiling"
+description = """
+Crates to help you figure out the performance of your code.\
+"""
 
-  [libraries.categories.date-and-time]
-  name = "Date and Time"
-  description = "Date and time math"
+[development-tools.categories.testing]
+name = "Testing"
+description = """
+Crates to help you verify the correctness of your code.\
+"""
+
+[email]
+name = "Email"
+description = """
+Crates to help with Sending, receiving, formatting, and parsing email.\
+"""
+
+[emulators]
+name = "Emulators"
+description = """
+Emulators allow one computer to behave like another, often to allow \
+running software that is not natively available on the host \
+computer. Video game systems are commonly emulated.\
+"""
+
+[encoding]
+name = "Encoding"
+description = """
+Encoding and/or decoding data from one data format to another.\
+"""
+
+[external-ffi-bindings]
+name = "External FFI bindings"
+description = """
+Rust FFI bindings to libraries written in other languages.\
+"""
+
+[filesystem]
+name = "Filesystem"
+description = """
+Crates for dealing with files and filesystems.\
+"""
+
+[game-engines]
+name = "Game engines"
+description = """
+Crates for creating games.\
+"""
 
 [games]
 name = "Games"
-description = "Share fun things"
+description = """
+Applications for fun and entertainment. If Rust the video game were \
+implemented in Rust the programming language, it would belong in this \
+category. Libraries to help create video games are in the \
+Game engines category.\
+"""
+
+[gui]
+name = "GUI"
+description = """
+Crates to help you create a graphical user interface.\
+"""
+
+[hardware-support]
+name = "Hardware Support"
+description = """
+Crates to interface with specific CPU or other hardware features.\
+"""
+
+[memory-management]
+name = "Memory management"
+description = """
+Crates to help with allocation, memory mapping, garbage collection, \
+reference counting, or interfaces to foreign memory managers.\
+"""
+
+[multimedia]
+name = "Multimedia"
+description = """
+Crates that provide audio, video, and image processing or rendering \
+engines.\
+"""
+
+[multimedia.categories.audio]
+name = "Audio"
+description = """
+Crates that record, output, or process audio.
+"""
+
+[multimedia.categories.video]
+name = "Video"
+description = """
+Crates that record, output, or process video.
+"""
+
+[multimedia.categories.images]
+name = "Images"
+description = """
+Crates that process or render images.
+"""
+
+[multimedia.categories.encoding]
+name = "Encoding"
+description = """
+Crates that encode or decode binary data in multimedia formats.
+"""
+
+[network-programming]
+name = "Network programming"
+description = """
+Crates dealing with higher-level network protocols such as FTP, HTTP, \
+or SSH, or lower-level network protocols such as TCP or UDP.\
+"""
+
+[os]
+name = "Operating systems"
+description = """
+Bindings to operating system-specific APIs.\
+"""
+
+[os.categories.macos-apis]
+name = "mac OS APIs"
+description = """
+Bindings to mac OS-specific APIs.\
+"""
+
+[os.categories.unix-apis]
+name = "Unix APIs"
+description = """
+Bindings to Unix-specific APIs.\
+"""
+
+[os.categories.windows-apis]
+name = "Windows APIs"
+description = """
+Bindings to Windows-specific APIs.\
+"""
+
+[parsing]
+name = "Parsing"
+description = """
+Crates to help create parsers of binary and text \
+formats. Format-specific parsers belong in other, more specific \
+categories.\
+"""
+
+[rust-patterns]
+name = "Rust Patterns"
+description = """
+Shared solutions for particular situations specific to programming in \
+Rust.\
+"""
+
+[science]
+name = "Science"
+description = """
+Crates related to solving problems involving math, physics, chemistry, \
+biology, machine learning, geoscience, and other scientific fields.\
+"""
+
+[template-engine]
+name = "Template engine"
+description = """
+Crates designed to combine templates with data to produce result \
+documents, usually with an emphasis on processing text.\
+"""
+
+[text-editors]
+name = "Text editors"
+description = """
+Applications for editing text.\
+"""
+
+[text-processing]
+name = "Text processing"
+description = """
+Crates to deal with the complexities of human language when expressed \
+in textual form.\
+"""
+
+[value-formatting]
+name = "Value formatting"
+description = """
+Crates to allow an application to format values for display to a user, \
+potentially adapting the display to various languages and regions.\
+"""
+
+[visualization]
+name = "Visualization"
+description = """
+Ways to view data, such as plotting or graphing.\
+"""
+
+[web-programming]
+name = "Web programming"
+description = """
+Crates to create applications for the web.\
+"""
+
+[web-programming.categories.http-client]
+name = "HTTP Client"
+description = """
+Crates to make HTTP network requests.\
+"""
+
+[web-programming.categories.http-server]
+name = "HTTP Server"
+description = """
+Crates to serve data over HTTP.\
+"""
+
+[web-programming.categories.websocket]
+name = "WebSocket"
+description = """
+Crates to communicate over the WebSocket protocol.\
+"""
