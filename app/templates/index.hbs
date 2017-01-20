@@ -48,4 +48,12 @@
         <h2>Just Updated</h2>
         {{crate-list crates=model.just_updated}}
     </div>
+    <div id='keywords'>
+        <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}}</h2>
+        {{keyword-list keywords=model.popular_keywords}}
+    </div>
+    <div id='categories'>
+        <h2>Popular Categories {{#link-to 'categories'}}(see all){{/link-to}}</h2>
+        {{category-list categories=model.popular_categories}}
+    </div>
 </div>

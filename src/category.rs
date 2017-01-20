@@ -144,6 +144,40 @@ impl Category {
         Ok(rows.iter().next().unwrap().get("count"))
     }
 
+    pub fn toplevel(conn: &GenericConnection,
+                    sort: &str,
+                    limit: i64,
+                    offset: i64) -> CargoResult<Vec<Category>> {
+
+        let sort_sql = match sort {
+            "crates" => "ORDER BY crates_cnt DESC",
+            _ => "ORDER BY category ASC",
+        };
+
+        // Collect all the top-level categories and sum up the crates_cnt of
+        // the crates in all subcategories
+        let stmt = try!(conn.prepare(&format!(
+            "SELECT c.id, c.category, c.slug, c.description, c.created_at, \
+                COALESCE (( \
+                    SELECT sum(c2.crates_cnt)::int \
+                    FROM categories as c2 \
+                    WHERE c2.slug = c.slug \
+                    OR c2.slug LIKE c.slug || '::%' \
+                ), 0) as crates_cnt \
+             FROM categories as c \
+             WHERE c.category NOT LIKE '%::%' {} \
+             LIMIT $1 OFFSET $2",
+             sort_sql
+        )));
+
+        let categories: Vec<_> = try!(stmt.query(&[&limit, &offset]))
+            .iter()
+            .map(|row| Model::from_row(&row))
+            .collect();
+
+        Ok(categories)
+    }
+
     pub fn subcategories(&self, conn: &GenericConnection)
                                 -> CargoResult<Vec<Category>> {
         let stmt = try!(conn.prepare("\
@@ -183,34 +217,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
     let sort = query.get("sort").map_or("alpha", String::as_str);
-    let sort_sql = match sort {
-        "crates" => "ORDER BY crates_cnt DESC",
-        _ => "ORDER BY category ASC",
-    };
 
-    // Collect all the top-level categories and sum up the crates_cnt of
-    // the crates in all subcategories
-    let stmt = try!(conn.prepare(&format!(
-        "SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-            COALESCE (( \
-                SELECT sum(c2.crates_cnt)::int \
-                FROM categories as c2 \
-                WHERE c2.slug = c.slug \
-                OR c2.slug LIKE c.slug || '::%' \
-            ), 0) as crates_cnt \
-         FROM categories as c \
-         WHERE c.category NOT LIKE '%::%' {} \
-         LIMIT $1 OFFSET $2",
-         sort_sql
-    )));
-
-    let categories: Vec<_> = try!(stmt.query(&[&limit, &offset]))
-        .iter()
-        .map(|row| {
-            let category: Category = Model::from_row(&row);
-            category.encodable()
-        })
-        .collect();
+    let categories = try!(Category::toplevel(conn, sort, limit, offset));
+    let categories = categories.into_iter().map(Category::encodable).collect();
 
     // Query for the total count of categories
     let total = try!(Category::count_toplevel(conn));
