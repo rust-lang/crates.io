@@ -36,8 +36,9 @@ searching, and more.\
 [api-bindings]
 name = "API bindings"
 description = """
-Wrappers of specific APIs for convenient access from Rust. Includes \
-HTTP API wrappers.
+Idiomatic wrappers of specific APIs for convenient access from \
+Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe \
+bindings can be found in External FFI bindings.\
 """
 
 [asynchronous]
@@ -92,13 +93,13 @@ Algorithms intended for securing data.\
 """
 
 [database]
-name = "Database Interfaces"
+name = "Database interfaces"
 description = """
 Crates to interface with database management systems.\
 """
 
 [database-implementations]
-name = "Database Implementations"
+name = "Database implementations"
 description = """
 Databases allow clients to store and query large amounts of data in an \
 efficient manner. This category is for database management systems \
@@ -182,7 +183,9 @@ Encoding and/or decoding data from one data format to another.\
 [external-ffi-bindings]
 name = "External FFI bindings"
 description = """
-Rust FFI bindings to libraries written in other languages.\
+Direct Rust FFI bindings to libraries written in other languages; \
+often denoted by a -sys suffix. Safe and idiomatic wrappers are in \
+the API bindings category.
 """
 
 [filesystem]
@@ -213,7 +216,7 @@ Crates to help you create a graphical user interface.\
 """
 
 [hardware-support]
-name = "Hardware Support"
+name = "Hardware support"
 description = """
 Crates to interface with specific CPU or other hardware features.\
 """
@@ -296,7 +299,7 @@ categories.\
 """
 
 [rust-patterns]
-name = "Rust Patterns"
+name = "Rust patterns"
 description = """
 Shared solutions for particular situations specific to programming in \
 Rust.\
@@ -349,13 +352,13 @@ Crates to create applications for the web.\
 """
 
 [web-programming.categories.http-client]
-name = "HTTP Client"
+name = "HTTP client"
 description = """
 Crates to make HTTP network requests.\
 """
 
 [web-programming.categories.http-server]
-name = "HTTP Server"
+name = "HTTP server"
 description = """
 Crates to serve data over HTTP.\
 """
