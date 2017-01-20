@@ -36,8 +36,9 @@ searching, and more.\
 [api-bindings]
 name = "API bindings"
 description = """
-Wrappers of specific APIs for convenient access from Rust. Includes \
-HTTP API wrappers.
+Idiomatic wrappers of specific APIs for convenient access from \
+Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe \
+bindings can be found in External FFI bindings.\
 """
 
 [asynchronous]
@@ -182,7 +183,9 @@ Encoding and/or decoding data from one data format to another.\
 [external-ffi-bindings]
 name = "External FFI bindings"
 description = """
-Rust FFI bindings to libraries written in other languages.\
+Direct Rust FFI bindings to libraries written in other languages; \
+often denoted by a -sys suffix. Safe and idiomatic wrappers are in \
+the API bindings category.
 """
 
 [filesystem]
