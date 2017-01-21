@@ -123,9 +123,8 @@ dimension.\
 [development-tools]
 name = "Development tools"
 description = """
-Make writing Rust code easier with code autocompletion, linting, \
-formatting and more. These crates are developer-facing as opposed to \
-user-facing.\
+Crates that provide developer-facing features such as debugging, linting, \
+performance profiling, autocompletion, formatting, and more.\
 """
 
 [development-tools.categories.cargo-plugins]
