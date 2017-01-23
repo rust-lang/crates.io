@@ -289,6 +289,12 @@ description = """
 Bindings to Windows-specific APIs.\
 """
 
+[parser]
+name = "Parser"
+description = """
+Parser for a specific format or language.\
+"""
+
 [parsing]
 name = "Parsing"
 description = """
