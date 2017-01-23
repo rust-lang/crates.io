@@ -220,6 +220,12 @@ description = """
 Crates to interface with specific CPU or other hardware features.\
 """
 
+[interpreter]
+name = "Interpreter"
+description = """
+Interpreter for a specific language.\
+"""
+
 [memory-management]
 name = "Memory management"
 description = """
