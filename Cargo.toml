@@ -20,7 +20,7 @@ s3 = { path = "src/s3" }
 migrate = { path = "src/migrate" }
 rand = "0.3"
 time = "0.1"
-git2 = "0.6"
+git2 = "0.6.4"
 flate2 = "0.2"
 semver = "0.5"
 url = "1.2.1"

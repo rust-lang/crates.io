@@ -18,7 +18,7 @@ dependencies = [
  "dotenv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "git2 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "license-exprs 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "migrate 0.1.0",
@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "git2"
-version = "0.6.3"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -800,7 +800,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum flate2 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)" = "d4e4d0c15ef829cbc1b7cda651746be19cceeb238be7b1049227b14891df9e25"
 "checksum gcc 0.3.41 (registry+https://github.com/rust-lang/crates.io-index)" = "3689e1982a563af74960ae3a4758aa632bb8fd984cfc3cc3b60ee6109477ab6e"
 "checksum gdi32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0912515a8ff24ba900422ecda800b52f4016a56251922d397c576bf92c690518"
-"checksum git2 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0534ca86640c6a3a0687cc6bee9ec4032509a0d112d97e8241fa6b7e075f6119"
+"checksum git2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)" = "046ae03385257040b2a35e56d9669d950dd911ba2bf48202fbef73ee6aab27b2"
 "checksum hex 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d6a22814455d41612f41161581c2883c0c6a1c41852729b17d5ed88f01e153aa"
 "checksum idna 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1053236e00ce4f668aeca4a769a09b3bf5a682d802abd6f3cb39374f6b162c11"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"

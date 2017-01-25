@@ -131,14 +131,24 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
         try!(repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent]));
 
         // git push
-        let mut callbacks = git2::RemoteCallbacks::new();
-        callbacks.credentials(credentials);
+        let mut ref_status = None;
         let mut origin = try!(repo.find_remote("origin"));
-        let mut opts = git2::PushOptions::new();
-        opts.remote_callbacks(callbacks);
-        match origin.push(&["refs/heads/master"], Some(&mut opts)) {
-            Ok(()) => return Ok(()),
-            Err(..) => {}
+        let res = {
+            let mut callbacks = git2::RemoteCallbacks::new();
+            callbacks.credentials(credentials);
+            callbacks.push_update_reference(|refname, status| {
+                assert_eq!(refname, "refs/heads/master");
+                ref_status = status.map(|s| s.to_string());
+                Ok(())
+            });
+            let mut opts = git2::PushOptions::new();
+            opts.remote_callbacks(callbacks);
+            origin.push(&["refs/heads/master"], Some(&mut opts))
+        };
+        match res {
+            Ok(()) if ref_status.is_none() => return Ok(()),
+            Ok(()) => info!("failed to push a ref: {:?}", ref_status),
+            Err(e) => info!("failure to push: {}", e),
         }
 
         let mut callbacks = git2::RemoteCallbacks::new();
