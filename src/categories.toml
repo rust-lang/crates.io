@@ -249,7 +249,7 @@ Crates that record, output, or process video.
 [multimedia.categories.images]
 name = "Images"
 description = """
-Crates that process or render images.
+Crates that process or build images.
 """
 
 [multimedia.categories.encoding]
@@ -295,6 +295,33 @@ description = """
 Crates to help create parsers of binary and text \
 formats. Format-specific parsers belong in other, more specific \
 categories.\
+"""
+
+[rendering]
+name = "Rendering"
+description = """
+Real-time or offline rendering of 2D or 3D graphics, \
+usually with the help of a graphics card.\
+"""
+
+[rendering.categories.engine]
+name = "Rendering engine"
+description = """
+High-level solutions for rendering on the screen.\
+"""
+
+[rendering.categories.graphics-api]
+name = "Graphics APIs"
+description = """
+Crates that provide direct access to the hardware's or the operating \
+system's rendering capabilities.\
+"""
+
+[rendering.categories.data-formats]
+name = "Data formats"
+description = """
+Loading and parsing of data formats related to 2D or 3D rendering, like \
+3D models or animation sheets.\
 """
 
 [rust-patterns]
