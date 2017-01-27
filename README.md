@@ -29,7 +29,7 @@ This will run a local frontend using the staging backend (hosted on Heroku at
 [staging-crates-io.herokuapp.com](https://staging-crates-io.herokuapp.com)).
 
 If you'd like to run the frontend with a specific backend endpoint, you can 
-specify arguments to `npm start`. For example you can set the proxy to 
+specify arguments to `yarn start`. For example you can set the proxy to 
 `https://crates.io/` to use the production version. 
 
 **Note: it is also possible to make changes to the production data**
