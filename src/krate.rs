@@ -504,7 +504,6 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             "downloads" => format!("{}, rank DESC", sort_sql),
             _ => format!("rank DESC, {}", sort_sql),
         };
-        format!("{},", sort_sql); // Append Comma
         (format!("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
                                ts_rank_cd(textsearchable_index_col, q) rank
