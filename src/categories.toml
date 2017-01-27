@@ -123,8 +123,8 @@ dimension.\
 [development-tools]
 name = "Development tools"
 description = """
-Crates that provide developer-facing features such as debugging, linting, \
-performance profiling, autocompletion, formatting, and more.\
+Crates that provide developer-facing features such as testing, debugging, \
+linting, performance profiling, autocompletion, formatting, and more.\
 """
 
 [development-tools.categories.cargo-plugins]
