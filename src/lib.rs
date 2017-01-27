@@ -94,7 +94,7 @@ impl conduit::Request for MockRequest {
         Version::parse("0.1.0").unwrap()
     }
 
-    fn method(&self) -> Method { self.method }
+    fn method(&self) -> Method { self.method.clone() }
     fn scheme(&self) -> Scheme { Scheme::Http }
     fn host(&self) -> Host { Host::Name("example.com") }
     fn virtual_root(&self) -> Option<&str> { None }
