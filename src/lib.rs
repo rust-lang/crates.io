@@ -46,7 +46,7 @@ impl fmt::Display for Method {
         let s = match *self {
             Method::Get => "GET",
             Method::Post => "POST",
-            Method::Put => "POST",
+            Method::Put => "PUT",
             Method::Delete => "DELETE",
             Method::Head => "HEAD",
             Method::Connect => "CONNECT",
