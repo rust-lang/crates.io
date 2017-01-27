@@ -100,9 +100,9 @@ mod tests {
              .write_all(b"[package]").unwrap();
         let mut req = test::MockRequest::new(Method::Get, "/Cargo.toml");
         let mut res = handler.call(&mut req).ok().expect("No response");
-        let mut body = String::new();
-        res.body.read_to_string(&mut body).unwrap();
-        assert_eq!(body, "[package]");
+        let mut body = Vec::new();
+        res.body.write_body(&mut body).unwrap();
+        assert_eq!(body, b"[package]");
         assert_eq!(res.headers.get("Content-Type"),
                    Some(&vec!("text/plain".to_string())));
         assert_eq!(res.headers.get("Content-Length"),
