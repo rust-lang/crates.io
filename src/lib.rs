@@ -117,7 +117,7 @@ mod tests {
     impl conduit::Request for RequestSentinel {
         fn http_version(&self) -> semver::Version { unimplemented!() }
         fn conduit_version(&self) -> semver::Version { unimplemented!() }
-        fn method(&self) -> Method { self.method }
+        fn method(&self) -> Method { self.method.clone() }
         fn scheme(&self) -> Scheme { unimplemented!() }
         fn host<'a>(&'a self) -> Host<'a> { unimplemented!() }
         fn virtual_root<'a>(&'a self) -> Option<&'a str> { unimplemented!() }
@@ -244,9 +244,9 @@ mod tests {
         let mut req = RequestSentinel::new(Method::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
-        let mut s = String::new();
-        res.body.read_to_string(&mut s).unwrap();
-        assert_eq!(s, "hello".to_string());
+        let mut s = Vec::new();
+        res.body.write_body(&mut s).unwrap();
+        assert_eq!(s, b"hello");
     }
 
     #[test]
@@ -272,9 +272,9 @@ mod tests {
         let mut res = builder.call(&mut req).ok().expect("Error not handled");
 
         assert_eq!(res.status, (500, "Internal Server Error"));
-        let mut s = String::new();
-        res.body.read_to_string(&mut s).unwrap();
-        assert_eq!(s, "Error in handler".to_string());
+        let mut s = Vec::new();
+        res.body.write_body(&mut s).unwrap();
+        assert_eq!(s, b"Error in handler");
     }
 
     #[test]
@@ -286,8 +286,8 @@ mod tests {
         let mut req = RequestSentinel::new(Method::Get, "/");
         let mut res = builder.call(&mut req).ok().expect("No response");
 
-        let mut s = String::new();
-        res.body.read_to_string(&mut s).unwrap();
-        assert_eq!(s, "hello hello".to_string());
+        let mut s = Vec::new();
+        res.body.write_body(&mut s).unwrap();
+        assert_eq!(s, b"hello hello");
     }
 }
