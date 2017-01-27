@@ -239,11 +239,11 @@ mod tests {
 
     fn expect_304(response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
-        let mut body = String::new();
-        response.body.read_to_string(&mut body).ok().expect("No body");
+        let mut body = Vec::new();
+        response.body.write_body(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, (304, "Not Modified"));
-        assert_eq!(body, "");
+        assert_eq!(body, b"");
     }
 
     fn expect_200(response: Result<Response, Box<Error+Send>>) {
@@ -252,11 +252,11 @@ mod tests {
 
     fn expect(status: (u32, &'static str), response: Result<Response, Box<Error+Send>>) {
         let mut response = response.ok().expect("No response");
-        let mut body = String::new();
-        response.body.read_to_string(&mut body).ok().expect("No body");
+        let mut body = Vec::new();
+        response.body.write_body(&mut body).ok().expect("No body");
 
         assert_eq!(response.status, status);
-        assert_eq!(body, "hello");
+        assert_eq!(body, b"hello");
     }
 
     struct SimpleHandler {
