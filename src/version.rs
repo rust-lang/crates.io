@@ -256,7 +256,7 @@ impl Version {
                             krate: &Crate) -> CargoResult<()> {
 
         // Verify specified Rust version will parse before doing any inserting
-        info.channel_version()?;
+        let channel_version = info.channel_version()?;
 
         // Future improvement: allow overwriting an existing row, in which case
         // the ON CONFLICT DO should set `passed` instead of doing nothing.
@@ -270,6 +270,47 @@ impl Version {
             return Err(human(format!(
                 "Build info already specified for {} v{} with {} and target {}",
                 krate.name, self.num, info.rust_version, info.target)));
+        }
+
+        if info.passed && self.num == krate.max_version {
+            match channel_version {
+                ChannelVersion::Nightly(date) => {
+                    let should_update = krate.max_build_info_nightly.as_ref().map(|max| {
+                        date > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_nightly = $1 \
+                                      WHERE id = $2",
+                                      &[&date, &krate.id])?;
+                    }
+                },
+                ChannelVersion::Beta(date) => {
+                    let should_update = krate.max_build_info_beta.as_ref().map(|max| {
+                        date > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_beta = $1 \
+                                      WHERE id = $2",
+                                      &[&date, &krate.id])?;
+                    }
+                },
+                ChannelVersion::Stable(vers) => {
+                    let should_update = krate.max_build_info_stable.as_ref().map(|max| {
+                        vers > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_stable = $1 \
+                                      WHERE id = $2",
+                                      &[&vers.to_string(), &krate.id])?;
+                    }
+                },
+            }
         }
 
         Ok(())

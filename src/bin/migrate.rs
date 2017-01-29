@@ -846,6 +846,16 @@ fn migrations() -> Vec<Migration> {
             try!(tx.execute("DROP INDEX build_info_combo", &[]));
             Ok(())
         }),
+        Migration::run(20170127143020,
+            "ALTER TABLE crates \
+                   ADD COLUMN max_build_info_stable VARCHAR, \
+                   ADD COLUMN max_build_info_beta TIMESTAMP, \
+                   ADD COLUMN max_build_info_nightly TIMESTAMP",
+            "ALTER TABLE crates \
+                   DROP COLUMN max_build_info_stable, \
+                   DROP COLUMN max_build_info_beta, \
+                   DROP COLUMN max_build_info_nightly",
+        ),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

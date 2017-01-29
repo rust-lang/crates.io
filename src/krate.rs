@@ -52,6 +52,9 @@ pub struct Crate {
     pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
+    pub max_build_info_stable: Option<semver::Version>,
+    pub max_build_info_beta: Option<Timespec>,
+    pub max_build_info_nightly: Option<Timespec>,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -246,6 +249,7 @@ impl Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, license, repository,
             readme: _, id: _, max_upload_size: _,
+            max_build_info_stable: _, max_build_info_beta: _, max_build_info_nightly: _,
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -386,11 +390,28 @@ impl Crate {
         let zero = semver::Version::parse("0.0.0").unwrap();
         if *ver > self.max_version || self.max_version == zero {
             self.max_version = ver.clone();
+            self.max_build_info_stable = None;
+            self.max_build_info_beta = None;
+            self.max_build_info_nightly = None;
         }
-        let stmt = try!(conn.prepare("UPDATE crates SET max_version = $1
-                           WHERE id = $2 RETURNING updated_at"));
-        let rows = try!(stmt.query(&[&self.max_version.to_string(), &self.id]));
+
+        let stmt = conn.prepare(" \
+            UPDATE crates \
+            SET max_version = $1,
+                max_build_info_stable = $2,
+                max_build_info_beta = $3,
+                max_build_info_nightly = $4 \
+            WHERE id = $5 \
+            RETURNING updated_at")?;
+        let rows = try!(stmt.query(&[
+            &self.max_version.to_string(),
+            &self.max_build_info_stable.as_ref().map(|vers| vers.to_string()),
+            &self.max_build_info_beta,
+            &self.max_build_info_nightly,
+            &self.id
+        ]));
         self.updated_at = rows.get(0).get("updated_at");
+
         Version::insert(conn, self.id, ver, features, authors)
     }
 
@@ -460,6 +481,7 @@ impl Crate {
 impl Model for Crate {
     fn from_row(row: &Row) -> Crate {
         let max: String = row.get("max_version");
+        let max_build_info_stable: Option<String> = row.get("max_build_info_stable");
         Crate {
             id: row.get("id"),
             name: row.get("name"),
@@ -474,6 +496,11 @@ impl Model for Crate {
             license: row.get("license"),
             repository: row.get("repository"),
             max_upload_size: row.get("max_upload_size"),
+            max_build_info_stable: max_build_info_stable.map(|stable| {
+                semver::Version::parse(&stable).unwrap()
+            }),
+            max_build_info_beta: row.get("max_build_info_beta"),
+            max_build_info_nightly: row.get("max_build_info_nightly"),
         }
     }
     fn table_name(_: Option<Crate>) -> &'static str { "crates" }
