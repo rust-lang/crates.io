@@ -432,13 +432,11 @@ impl Crate {
                 ON versions.id = dependencies.version_id
               INNER JOIN crates
                 ON crates.id = versions.crate_id
-              INNER JOIN crate_downloads
-                ON crate_downloads.crate_id = versions.crate_id
               WHERE dependencies.crate_id = $1
                 AND versions.num = crates.max_version
         ";
         let fetch_sql = format!("SELECT dependencies.*,
-                                        crate_downloads.downloads AS crate_downloads,
+                                        crates.downloads AS crate_downloads,
                                         crates.name AS crate_name
                                         {}
                                ORDER BY crate_downloads DESC
