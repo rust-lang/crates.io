@@ -69,6 +69,9 @@ pub struct EncodableCrate {
     pub created_at: String,
     pub downloads: i32,
     pub max_version: String,
+    pub max_build_info_stable: Option<String>,
+    pub max_build_info_beta: Option<String>,
+    pub max_build_info_nightly: Option<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -249,7 +252,7 @@ impl Crate {
             name, created_at, updated_at, downloads, max_version, description,
             homepage, documentation, license, repository,
             readme: _, id: _, max_upload_size: _,
-            max_build_info_stable: _, max_build_info_beta: _, max_build_info_nightly: _,
+            max_build_info_stable, max_build_info_beta, max_build_info_nightly,
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -271,6 +274,9 @@ impl Crate {
             categories: category_ids,
             badges: badges,
             max_version: max_version.to_string(),
+            max_build_info_stable: max_build_info_stable.map(|s| s.to_string()),
+            max_build_info_beta: max_build_info_beta.map(::encode_time),
+            max_build_info_nightly: max_build_info_nightly.map(::encode_time),
             documentation: documentation,
             homepage: homepage,
             description: description,
