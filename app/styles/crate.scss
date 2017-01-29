@@ -256,6 +256,25 @@
     }
 }
 
+#crate-build-info {
+    padding-bottom: 50px;
+    border-bottom: 5px solid $gray-border;
+    margin-bottom: 30px;
+
+    .description {
+        margin-bottom: 30px;
+    }
+
+    table {
+        border: 1px solid $gray-border;
+        td, th {
+            border: 1px solid $gray-border;
+            padding: 5px 10px;
+            text-align: left;
+        }
+    }
+}
+
 #crate-downloads {
     @include display-flex;
     @include flex-wrap(wrap);

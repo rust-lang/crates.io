@@ -217,6 +217,40 @@
   </div>
 </div>
 
+<div id='crate-build-info'>
+    <h3>Build info</h3>
+
+    {{#if currentVersion.build_info.has_any_info }}
+        <div class='description'>
+            Most recent reported build information for
+            version {{ currentVersion.num }}:
+        </div>
+
+        <table>
+            <tr>
+                <th>Tier 1 Target</th>
+                <th>Stable: {{ value-or-default currentVersion.build_info.latest_stable 'None' }}</th>
+                <th>Beta: {{ value-or-default (format-day currentVersion.build_info.latest_beta) 'None' }}</th>
+                <th>Nightly: {{ value-or-default (format-day currentVersion.build_info.latest_nightly) 'None' }}</th>
+            </tr>
+
+            {{#each currentVersion.build_info.tier1_results as |result|}}
+                <tr>
+                    <td>{{ result.display_target }}</td>
+                    <td>{{ format-build-result result.stable }}</td>
+                    <td>{{ format-build-result result.beta }}</td>
+                    <td>{{ format-build-result result.nightly }}</td>
+                </tr>
+            {{/each}}
+        </table>
+    {{else}}
+        <div class='description'>
+            No build information available for this version. If you are the
+            crate owner... // TODO LINK TO DOCS
+        </div>
+    {{/if}}
+</div>
+
 <div id='crate-downloads'>
     <div class='stats'>
         <h3>Stats Overview</h3>
