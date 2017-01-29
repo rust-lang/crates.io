@@ -9,6 +9,7 @@ pub use owner::{CrateOwner, NewTeam, Owner, OwnerKind, Rights, Team};
 pub use user::{Email, NewUser, User};
 pub use token::ApiToken;
 pub use version::{NewVersion, Version};
+pub use version::build_info::BuildInfo;
 
 mod category;
 mod keyword;

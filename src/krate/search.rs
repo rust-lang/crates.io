@@ -10,7 +10,7 @@ use user::RequestUser;
 use util::{CargoResult, RequestUtils};
 
 use views::EncodableCrate;
-use models::{Badge, Crate, OwnerKind, Version};
+use models::{Badge, BuildInfo, Crate, OwnerKind, Version};
 use schema::*;
 
 use super::{canon_crate_name, ALL_COLUMNS};
@@ -183,28 +183,46 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
+        .map(|versions| {
+            versions
+                .into_iter()
+                .max_by(Version::semantically_newest_first)
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+
+    let build_infos = BuildInfo::belonging_to(&versions)
+        .filter(build_info::passed.eq(true))
+        .select(::version::build_info::BUILD_INFO_FIELDS)
+        .load::<BuildInfo>(&*conn)?
+        .grouped_by(&versions)
+        .into_iter()
+        .map(BuildInfo::max);
 
     let crates = versions
+        .into_iter()
         .zip(crates)
         .zip(perfect_matches)
         .zip(recent_downloads)
+        .zip(build_infos)
         .map(
-            |(((max_version, krate), perfect_match), recent_downloads)| {
+            |((((max_version, krate), perfect_match), recent_downloads), build_info)| {
+                let build_info = build_info?;
                 // FIXME: If we add crate_id to the Badge enum we can eliminate
                 // this N+1
                 let badges = badges::table
                     .filter(badges::crate_id.eq(krate.id))
                     .load::<Badge>(&*conn)?;
                 Ok(krate.minimal_encodable(
-                    &max_version,
+                    &max_version.num,
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
+                    Some(build_info.encode()),
                 ))
             },
         )
-        .collect::<Result<_, ::diesel::result::Error>>()?;
+        .collect::<CargoResult<_>>()?;
 
     #[derive(Serialize)]
     struct R {

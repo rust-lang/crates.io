@@ -9,7 +9,7 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
-use views::EncodableBadge;
+use views::{EncodableBadge, EncodableMaxVersionBuildInfo};
 use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
              ReverseDependency, User, Version};
 
@@ -113,6 +113,9 @@ pub struct EncodableCrate {
     pub repository: Option<String>,
     pub links: CrateLinks,
     pub exact_match: bool,
+    pub max_build_info_stable: Option<String>,
+    pub max_build_info_beta: Option<String>,
+    pub max_build_info_nightly: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -315,6 +318,7 @@ impl Crate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
+        max_build_info: Option<EncodableMaxVersionBuildInfo>,
     ) -> EncodableCrate {
         self.encodable(
             max_version,
@@ -324,6 +328,7 @@ impl Crate {
             badges,
             exact_match,
             recent_downloads,
+            max_build_info,
         )
     }
 
@@ -337,6 +342,7 @@ impl Crate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
+        max_build_info: Option<EncodableMaxVersionBuildInfo>,
     ) -> EncodableCrate {
         let Crate {
             name,
@@ -357,6 +363,7 @@ impl Crate {
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
         let documentation = Crate::remove_blacklisted_documentation_urls(documentation);
+        let max_build_info = max_build_info.unwrap_or_else(EncodableMaxVersionBuildInfo::default);
 
         EncodableCrate {
             id: name.clone(),
@@ -370,6 +377,9 @@ impl Crate {
             categories: category_ids,
             badges: badges,
             max_version: max_version.to_string(),
+            max_build_info_stable: max_build_info.stable,
+            max_build_info_beta: max_build_info.beta,
+            max_build_info_nightly: max_build_info.nightly,
             documentation: documentation,
             homepage: homepage,
             exact_match: exact_match,
@@ -606,6 +616,9 @@ mod tests {
             downloads: 0,
             recent_downloads: None,
             max_version: "".to_string(),
+            max_build_info_stable: None,
+            max_build_info_beta: None,
+            max_build_info_nightly: None,
             description: None,
             homepage: None,
             documentation: None,

@@ -40,7 +40,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(&max_version, None, false, None))
+                Ok(krate.minimal_encodable(&max_version, None, false, None, None))
             })
             .collect()
     };
@@ -156,6 +156,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
             Some(badges),
             false,
             recent_downloads,
+            None,
         ),
         versions: versions
             .into_iter()

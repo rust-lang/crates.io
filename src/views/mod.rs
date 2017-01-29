@@ -77,6 +77,14 @@ pub struct EncodableVersionBuildInfo {
     pub nightly: HashMap<NaiveDate, HashMap<String, bool>>,
 }
 
+/// `MaxBuildInfo` in JSON form.
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct EncodableMaxVersionBuildInfo {
+    pub stable: Option<String>,
+    pub beta: Option<String>,
+    pub nightly: Option<String>,
+}
+
 /// Describes a Rust version by its channel and the released version on that channel.
 /// For use in describing what versions of Rust a particular crate version builds with.
 /// Contains the original version string for inserting into the database.
@@ -165,6 +173,29 @@ impl FromStr for ParsedRustChannelVersion {
     }
 }
 
+impl ParsedRustChannelVersion {
+    pub fn as_stable(&self) -> Option<&semver::Version> {
+        match *self {
+            ParsedRustChannelVersion::Stable(ref v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn as_beta(&self) -> Option<&NaiveDate> {
+        match *self {
+            ParsedRustChannelVersion::Beta(ref v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn as_nightly(&self) -> Option<&NaiveDate> {
+        match *self {
+            ParsedRustChannelVersion::Nightly(ref v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -243,6 +274,7 @@ mod tests {
                 dependencies: "".to_string(),
                 version_downloads: "".to_string(),
                 authors: "".to_string(),
+                build_info: "".to_string(),
             },
         };
         let json = serde_json::to_string(&ver).unwrap();

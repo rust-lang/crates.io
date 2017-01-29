@@ -106,12 +106,7 @@ pub fn build_info(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
 
     let build_infos = BuildInfo::belonging_to(&version)
-        .select((
-            build_info::version_id,
-            build_info::rust_version,
-            build_info::target,
-            build_info::passed,
-        ))
+        .select(::version::build_info::BUILD_INFO_FIELDS)
         .load(&*conn)?;
 
     let mut encodable_build_info = EncodableVersionBuildInfo::default();

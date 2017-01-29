@@ -17,6 +17,9 @@ export default DS.Model.extend({
     documentation: DS.attr('string'),
     repository: DS.attr('string'),
     exact_match: DS.attr('boolean'),
+    max_build_info_nightly: DS.attr('date'),
+    max_build_info_beta: DS.attr('date'),
+    max_build_info_stable: DS.attr('string'),
 
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),

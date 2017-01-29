@@ -11,6 +11,7 @@
         {{#each crate.annotated_badges as |badge|}}
             {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
         {{/each}}
+        {{badge-build-info crate=crate}}
     </div>
     <div class='summary' data-test-description>
         <span class='small'>
