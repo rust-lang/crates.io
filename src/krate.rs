@@ -449,9 +449,9 @@ impl Crate {
 
         let stmt = try!(conn.prepare(&fetch_sql));
         let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit]))
-                                   .iter().map(|r| {
-            (Model::from_row(&r), r.get("crate_name"))
-        }).collect();
+            .iter()
+            .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
+            .collect();
         let stmt = try!(conn.prepare(&count_sql));
         let cnt: i64 = try!(stmt.query(&[&self.id])).iter().next().unwrap().get(0);
 
