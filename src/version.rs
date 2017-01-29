@@ -296,7 +296,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
     let tx = try!(req.tx());
     let deps = try!(version.dependencies(tx));
     let deps = deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(&crate_name)
+        dep.encodable(&crate_name, None)
     }).collect();
 
     #[derive(RustcEncodable)]

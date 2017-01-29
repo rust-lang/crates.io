@@ -29,6 +29,7 @@ pub struct EncodableDependency {
     pub features: String,
     pub target: Option<String>,
     pub kind: Kind,
+    pub downloads: i32,
 }
 
 #[derive(Copy, Clone)]
@@ -76,9 +77,17 @@ impl Dependency {
         }
     }
 
-    pub fn encodable(self, crate_name: &str) -> EncodableDependency {
-        let Dependency { id, version_id, crate_id: _, req, optional,
-                         default_features, features, target, kind } = self;
+    // `downloads` need only be specified when generating a reverse dependency
+    pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
+        let Dependency { id,
+                         version_id,
+                         crate_id: _,
+                         req,
+                         optional,
+                         default_features,
+                         features,
+                         target,
+                         kind } = self;
         EncodableDependency {
             id: id,
             version_id: version_id,
@@ -89,6 +98,7 @@ impl Dependency {
             features: features.join(","),
             target: target,
             kind: kind,
+            downloads: downloads.unwrap_or(0),
         }
     }
 }

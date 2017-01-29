@@ -420,30 +420,32 @@ impl Crate {
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
 
-    /// Returns (dependency, dependent crate name)
+    /// Returns (dependency, dependent crate name, dependent crate downloads)
     pub fn reverse_dependencies(&self,
                                 conn: &GenericConnection,
                                 offset: i64,
                                 limit: i64)
-                                -> CargoResult<(Vec<(Dependency, String)>, i64)> {
+                                -> CargoResult<(Vec<(Dependency, String, i32)>, i64)> {
         let select_sql = "
               FROM dependencies
               INNER JOIN versions
                 ON versions.id = dependencies.version_id
               INNER JOIN crates
                 ON crates.id = versions.crate_id
+              INNER JOIN crate_downloads
+                ON crate_downloads.crate_id = versions.crate_id
               WHERE dependencies.crate_id = $1
                 AND versions.num = crates.max_version
         ";
-        let fetch_sql = format!("SELECT DISTINCT ON (crate_name)
-                                        dependencies.*,
+        let fetch_sql = format!("SELECT dependencies.*,
+                                        crate_downloads.downloads AS crate_downloads,
                                         crates.name AS crate_name
                                         {}
-                               ORDER BY crate_name ASC
+                               ORDER BY crate_downloads DESC
                                  OFFSET $2
-                                  LIMIT $3", select_sql);
-        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}",
+                                  LIMIT $3",
                                 select_sql);
+        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
 
         let stmt = try!(conn.prepare(&fetch_sql));
         let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit]))
@@ -1172,12 +1174,11 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = try!(req.tx());
     let krate = try!(Crate::find_by_name(conn, &name));
-    let tx = try!(req.tx());
     let (offset, limit) = try!(req.pagination(10, 100));
-    let (rev_deps, total) = try!(krate.reverse_dependencies(tx, offset, limit));
-    let rev_deps = rev_deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(&crate_name)
-    }).collect();
+    let (rev_deps, total) = try!(krate.reverse_dependencies(conn, offset, limit));
+    let rev_deps = rev_deps.into_iter()
+        .map(|(dep, crate_name, downloads)| dep.encodable(&crate_name, Some(downloads)))
+        .collect();
 
     #[derive(RustcEncodable)]
     struct R { dependencies: Vec<EncodableDependency>, meta: Meta }
