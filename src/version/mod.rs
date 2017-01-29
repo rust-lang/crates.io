@@ -68,6 +68,7 @@ pub struct EncodableVersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
+    pub build_info: String,
 }
 
 impl Version {
@@ -100,6 +101,7 @@ impl Version {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
+                build_info: format!("/api/v1/crates/{}/{}/build_info", crate_name, num),
             },
         }
     }

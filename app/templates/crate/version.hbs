@@ -123,6 +123,33 @@
                 {{/each}}
             </div>
 
+            {{#if currentVersion.build_info.has_any_positive_results }}
+                <div class="build-info">
+                    <h3>Works on</h3>
+
+                    {{#if currentVersion.build_info.latest_positive_results.stable }}
+                        <div class="build-info-channel">
+                            Stable {{ currentVersion.build_info.latest_positive_results.stable.version }}
+                            on {{ target-icons currentVersion.build_info.latest_positive_results.stable.targets }}
+                        </div>
+                    {{/if}}
+
+                    {{#if currentVersion.build_info.latest_positive_results.beta }}
+                        <div class="build-info-channel">
+                            Beta {{ format-day currentVersion.build_info.latest_positive_results.beta.version }}
+                            on {{ target-icons currentVersion.build_info.latest_positive_results.beta.targets }}
+                        </div>
+                    {{/if}}
+
+                    {{#if currentVersion.build_info.latest_positive_results.nightly }}
+                        <div class="build-info-channel">
+                            Nightly {{ format-day currentVersion.build_info.latest_positive_results.nightly.version }}
+                            on {{ target-icons currentVersion.build_info.latest_positive_results.nightly.targets }}
+                        </div>
+                    {{/if}}
+                </div>
+            {{/if}}
+
             <div class="authors">
                 <h3>Authors</h3>
                 <ul>
