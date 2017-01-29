@@ -435,21 +435,22 @@ impl Crate {
               WHERE dependencies.crate_id = $1
                 AND versions.num = crates.max_version
         ";
-        let fetch_sql = format!("SELECT dependencies.*,
+        let fetch_sql = format!("SELECT DISTINCT ON (crate_name)
+                                        dependencies.*,
                                         crates.downloads AS crate_downloads,
                                         crates.name AS crate_name
                                         {}
-                               ORDER BY crate_downloads DESC
                                  OFFSET $2
                                   LIMIT $3",
                                 select_sql);
         let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
 
         let stmt = try!(conn.prepare(&fetch_sql));
-        let vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit]))
+        let mut vec: Vec<_> = try!(stmt.query(&[&self.id, &offset, &limit]))
             .iter()
             .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
             .collect();
+        vec.sort_by(|a: &(_, _, i32), b: &(_, _, i32)| b.2.cmp(&a.2));
         let stmt = try!(conn.prepare(&count_sql));
         let cnt: i64 = try!(stmt.query(&[&self.id])).iter().next().unwrap().get(0);
 
