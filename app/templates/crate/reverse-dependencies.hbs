@@ -15,7 +15,7 @@
 
 <div class='white-rows'>
     {{#each model as |dependency|}}
-        <div class='row'>
+        <div class='crate row'>
             <div>
             {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
             </div>
