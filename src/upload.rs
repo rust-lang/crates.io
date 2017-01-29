@@ -4,9 +4,11 @@ use std::ops::Deref;
 use rustc_serialize::{Decodable, Decoder, Encoder, Encodable};
 use semver;
 use dependency::Kind as DependencyKind;
+use util::CargoResult;
 
 use keyword::Keyword as CrateKeyword;
 use krate::Crate;
+use version::ChannelVersion;
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct NewCrate {
@@ -46,6 +48,19 @@ pub struct CrateDependency {
     pub version_req: CrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct VersionBuildInfo {
+    pub rust_version: String,
+    pub target: String,
+    pub passed: bool,
+}
+
+impl VersionBuildInfo {
+    pub fn channel_version(&self) -> CargoResult<ChannelVersion> {
+        self.rust_version.parse()
+    }
 }
 
 impl Decodable for CrateName {

@@ -70,3 +70,95 @@ fn authors() {
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
 }
+
+#[test]
+fn publish_build_info() {
+    #[derive(RustcDecodable)] struct O { ok: bool }
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::new_req(app.clone(), "publish-build-info", "1.0.0");
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, ::krate("publish-build-info"));
+
+    let body = "{\
+        \"name\":\"publish-build-info\",\
+        \"vers\":\"1.0.0\",\
+        \"rust_version\":\"rustc 1.16.0-nightly (df8debf6d 2017-01-25)\",\
+        \"target\":\"x86_64-pc-windows-gnu\",\
+        \"passed\":true}";
+
+    let mut response = ok_resp!(middle.call(req.with_path(
+        "/api/v1/crates/publish-build-info/1.0.0/build_info")
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = "{\
+        \"name\":\"publish-build-info\",\
+        \"vers\":\"1.0.0\",\
+        \"rust_version\":\"rustc 1.13.0 (df8debf6d 2017-01-25)\",\
+        \"target\":\"x86_64-pc-windows-gnu\",\
+        \"passed\":true}";
+
+    let mut response = ok_resp!(middle.call(req.with_path(
+        "/api/v1/crates/publish-build-info/1.0.0/build_info")
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = "{\
+        \"name\":\"publish-build-info\",\
+        \"vers\":\"1.0.0\",\
+        \"rust_version\":\"rustc 1.15.0-beta (df8debf6d 2017-01-20)\",\
+        \"target\":\"x86_64-pc-windows-gnu\",\
+        \"passed\":true}";
+
+    let mut response = ok_resp!(middle.call(req.with_path(
+        "/api/v1/crates/publish-build-info/1.0.0/build_info")
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
+    assert!(::json::<O>(&mut response).ok);
+}
+
+#[test]
+fn bad_rust_version_publish_build_info() {
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::new_req(app.clone(), "bad-rust-vers", "1.0.0");
+    ::mock_user(&mut req, ::user("foo"));
+    ::mock_crate(&mut req, ::krate("bad-rust-vers"));
+
+    let body = "{\
+        \"name\":\"bad-rust-vers\",\
+        \"vers\":\"1.0.0\",\
+        \"rust_version\":\"rustc 1.16.0-dev (df8debf6d 2017-01-25)\",\
+        \"target\":\"x86_64-pc-windows-gnu\",\
+        \"passed\":true}";
+
+    let response = bad_resp!(middle.call(req.with_path(
+        "/api/v1/crates/bad-rust-vers/1.0.0/build_info")
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
+
+    assert_eq!(
+        response.errors[0].detail,
+        "rust_version `rustc 1.16.0-dev (df8debf6d 2017-01-25)` \
+         not recognized as nightly, beta, or stable");
+
+    let body = "{\
+        \"name\":\"bad-rust-vers\",\
+        \"vers\":\"1.0.0\",\
+        \"rust_version\":\"1.15.0\",\
+        \"target\":\"x86_64-pc-windows-gnu\",\
+        \"passed\":true}";
+
+    let response = bad_resp!(middle.call(req.with_path(
+        "/api/v1/crates/bad-rust-vers/1.0.0/build_info")
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
+
+    assert_eq!(
+        response.errors[0].detail,
+        "rust_version `1.15.0` not recognized; \
+        expected format like `rustc X.Y.Z (SHA YYYY-MM-DD)`");
+}

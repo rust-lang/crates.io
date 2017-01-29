@@ -831,6 +831,21 @@ fn migrations() -> Vec<Migration> {
             try!(tx.execute("DROP INDEX badges_crate_type", &[]));
             Ok(())
         }),
+        Migration::add_table(20170127104519, "build_info", " \
+            version_id       INTEGER NOT NULL, \
+            rust_version     VARCHAR NOT NULL, \
+            target           VARCHAR NOT NULL, \
+            passed           BOOLEAN NOT NULL, \
+            created_at       TIMESTAMP NOT NULL DEFAULT now(), \
+            updated_at       TIMESTAMP NOT NULL DEFAULT now()"),
+        Migration::new(20170127104925, |tx| {
+            try!(tx.execute("CREATE UNIQUE INDEX build_info_combo \
+                             ON build_info (version_id, rust_version, target)", &[]));
+            Ok(())
+        }, |tx| {
+            try!(tx.execute("DROP INDEX build_info_combo", &[]));
+            Ok(())
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
