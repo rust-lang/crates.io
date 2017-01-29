@@ -146,6 +146,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/crates/:crate_id/:version/download",
         C(version::downloads::download),
     );
+    api_router.put(
+        "/crates/:crate_id/:version/build_info",
+        C(version::build_info::publish_build_info),
+    );
 
     // Routes that appear to be unused
     api_router.get("/versions", C(version::deprecated::index));
@@ -169,6 +173,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get(
         "/crates/:crate_id/:version/authors",
         C(version::metadata::authors),
+    );
+    api_router.get(
+        "/crates/:crate_id/:version/build_info",
+        C(version::metadata::build_info),
     );
     api_router.get(
         "/crates/:crate_id/downloads",

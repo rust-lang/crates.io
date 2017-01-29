@@ -13,12 +13,14 @@ use db::RequestTransaction;
 use util::{human, CargoResult};
 use license_exprs;
 
+pub mod build_info;
 pub mod deprecated;
 pub mod downloads;
 pub mod metadata;
 pub mod yank;
 
 use models::{Crate, Dependency};
+use views::EncodableVersionBuildInfoUpload;
 use schema::*;
 
 // Queryable has a custom implementation below
@@ -137,6 +139,34 @@ impl Version {
             .do_update()
             .set(rendered_at.eq(now))
             .execute(conn)
+    }
+
+    /// When we receive a `POST /crates/:crate_id/:version/build_info` API request that tells us
+    /// about whether a particular version built successfully on a particular Rust version and
+    /// target (sent via `cargo publish-build-info`), store that information in the database.
+    /// Overwrites any previous results reported for the specified `(version_id, rust_version,
+    /// target)` combination.
+    pub fn store_build_info(
+        &self,
+        conn: &PgConnection,
+        info: EncodableVersionBuildInfoUpload,
+    ) -> CargoResult<()> {
+        use schema::build_info::dsl::*;
+        use diesel::pg::upsert::excluded;
+
+        diesel::insert_into(build_info)
+            .values((
+                version_id.eq(self.id),
+                rust_version.eq(info.rust_version.to_string()),
+                target.eq(info.target),
+                passed.eq(info.passed),
+            ))
+            .on_conflict(build_info.primary_key())
+            .do_update()
+            .set(passed.eq(excluded(passed)))
+            .execute(conn)?;
+
+        Ok(())
     }
 }
 

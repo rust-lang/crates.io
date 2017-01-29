@@ -8,7 +8,7 @@ use serde_json::Value;
 use conduit::{Handler, Method};
 use self::diesel::prelude::*;
 
-use views::EncodableVersion;
+use views::{EncodableVersion, EncodableVersionBuildInfo};
 use schema::versions;
 
 #[derive(Deserialize)]
@@ -108,4 +108,168 @@ fn record_rerendered_readme_time() {
         version.record_readme_rendering(&conn).unwrap();
         version.record_readme_rendering(&conn).unwrap();
     }
+}
+
+#[test]
+fn publish_build_info() {
+    #[derive(Deserialize)]
+    struct O {
+        ok: bool,
+    }
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::new_req(Arc::clone(&app), "publish-build-info", "1.0.0");
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("publish-build-info", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let body = r#"{
+        "name":"publish-build-info",
+        "vers":"1.0.0",
+        "rust_version":"rustc 1.16.0-nightly (df8debf6d 2017-01-25)",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":false}"#;
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/publish-build-info/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = r#"{
+        "name":"publish-build-info",
+        "vers":"1.0.0",
+        "rust_version":"rustc 1.16.0-nightly (df8debf6d 2017-01-25)",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":true}"#;
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/publish-build-info/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = r#"{
+        "name":"publish-build-info",
+        "vers":"1.0.0",
+        "rust_version":"rustc 1.13.0 (df8debf6d 2017-01-25)",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":true}"#;
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/publish-build-info/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = r#"{
+        "name":"publish-build-info",
+        "vers":"1.0.0",
+        "rust_version":"rustc 1.15.0-beta (df8debf6d 2017-01-20)",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":true}"#;
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/publish-build-info/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<O>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path(
+        "/api/v1/crates/publish-build-info/1.0.0/build_info"
+    ).with_method(Method::Get)));
+
+    #[derive(Deserialize)]
+    struct R {
+        build_info: EncodableVersionBuildInfo,
+    }
+
+    let json = ::json::<R>(&mut response);
+    assert_eq!(
+        json.build_info.ordering.get("nightly"),
+        Some(&vec![String::from("2017-01-25T00:00:00+00:00")])
+    );
+    assert_eq!(
+        json.build_info.ordering.get("beta"),
+        Some(&vec![String::from("2017-01-20T00:00:00+00:00")])
+    );
+    assert_eq!(
+        json.build_info.ordering.get("stable"),
+        Some(&vec![String::from("1.13.0")])
+    );
+}
+
+#[test]
+fn bad_rust_version_publish_build_info() {
+    let (_b, app, middle) = ::app();
+
+    let mut req = ::new_req(Arc::clone(&app), "bad-rust-vers", "1.0.0");
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("bad-rust-vers", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let body = r#"{
+        "name":"bad-rust-vers",
+        "vers":"1.0.0",
+        "rust_version":"rustc 1.16.0-dev (df8debf6d 2017-01-25)",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":true}"#;
+
+    let response = bad_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/bad-rust-vers/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert_eq!(
+        response.errors[0].detail,
+        "invalid upload request: rust_version `rustc 1.16.0-dev (df8debf6d 2017-01-25)` not \
+         recognized as nightly, beta, or stable at line 4 column 64"
+    );
+
+    let body = r#"{
+        "name":"bad-rust-vers",
+        "vers":"1.0.0",
+        "rust_version":"1.15.0",
+        "target":"x86_64-pc-windows-gnu",
+        "passed":true}"#;
+
+    let response = bad_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/bad-rust-vers/1.0.0/build_info")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert_eq!(
+        response.errors[0].detail,
+        "invalid upload request: rust_version `1.15.0` not recognized; expected format like `rustc X.Y.Z (SHA YYYY-MM-DD)` at line 4 column 31"
+    );
 }
