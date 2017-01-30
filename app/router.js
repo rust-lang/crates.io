@@ -1,8 +1,9 @@
 import Ember from 'ember';
 import config from './config/environment';
 import googlePageview from './mixins/google-pageview';
+import RouterScroll from 'ember-router-scroll';
 
-const Router = Ember.Router.extend(googlePageview, {
+const Router = Ember.Router.extend(googlePageview, RouterScroll, {
     location: config.locationType
 });
 

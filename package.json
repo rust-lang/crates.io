@@ -50,6 +50,7 @@
     "ember-resolver": "^2.0.3",
     "ember-rl-dropdown": "0.7.1",
     "ember-route-alias": "^0.1.3",
+    "ember-router-scroll": "0.1.0",
     "ember-suave": "4.0.0",
     "ember-welcome-page": "^1.0.1",
     "emberx-select": "2.2.2",
