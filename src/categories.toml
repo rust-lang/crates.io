@@ -208,6 +208,12 @@ category. Libraries to help create video games are in the \
 Game engines category.\
 """
 
+[graphics]
+name = "Graphics"
+description = """
+Crates to help interface with specific GPU or other graphical hardware features. \
+"""
+
 [gui]
 name = "GUI"
 description = """
