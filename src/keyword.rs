@@ -54,6 +54,26 @@ impl Keyword {
         }))))
     }
 
+    pub fn all(conn: &GenericConnection, sort: &str, limit: i64, offset: i64)
+               -> CargoResult<Vec<Keyword>> {
+
+        let sort_sql = match sort {
+           "crates" => "ORDER BY crates_cnt DESC",
+           _ => "ORDER BY keyword ASC",
+        };
+
+        let stmt = try!(conn.prepare(&format!("SELECT * FROM keywords {}
+                                               LIMIT $1 OFFSET $2",
+                                               sort_sql)));
+
+        let keywords: Vec<_> = try!(stmt.query(&[&limit, &offset]))
+            .iter()
+            .map(|row| Model::from_row(&row))
+            .collect();
+
+        Ok(keywords)
+    }
+
     pub fn valid_name(name: &str) -> bool {
         if name.len() == 0 { return false }
         name.chars().next().unwrap().is_alphanumeric() &&
@@ -131,20 +151,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let (offset, limit) = try!(req.pagination(10, 100));
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
-    let sort_sql = match sort {
-        "crates" => "ORDER BY crates_cnt DESC",
-        _ => "ORDER BY keyword ASC",
-    };
 
-    // Collect all the keywords
-    let stmt = try!(conn.prepare(&format!("SELECT * FROM keywords {}
-                                           LIMIT $1 OFFSET $2",
-                                          sort_sql)));
-    let mut keywords = Vec::new();
-    for row in try!(stmt.query(&[&limit, &offset])).iter() {
-        let keyword: Keyword = Model::from_row(&row);
-        keywords.push(keyword.encodable());
-    }
+    let keywords = try!(Keyword::all(conn, sort, limit, offset));
+    let keywords = keywords.into_iter().map(Keyword::encodable).collect();
 
     // Query for the total count of keywords
     let total = try!(Keyword::count(conn));

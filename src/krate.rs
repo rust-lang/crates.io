@@ -649,6 +649,16 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let most_downloaded = try!(tx.prepare("SELECT * FROM crates \
                                            ORDER BY downloads DESC LIMIT 10"));
 
+    let popular_keywords = try!(Keyword::all(tx, "crates", 10, 0));
+    let popular_keywords = popular_keywords.into_iter()
+                                           .map(Keyword::encodable)
+                                           .collect();
+
+    let popular_categories = try!(Category::toplevel(tx, "crates", 10, 0));
+    let popular_categories = popular_categories.into_iter()
+                                               .map(Category::encodable)
+                                               .collect();
+
     #[derive(RustcEncodable)]
     struct R {
         num_downloads: i64,
@@ -656,6 +666,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         new_crates: Vec<EncodableCrate>,
         most_downloaded: Vec<EncodableCrate>,
         just_updated: Vec<EncodableCrate>,
+        popular_keywords: Vec<EncodableKeyword>,
+        popular_categories: Vec<EncodableCategory>,
     }
     Ok(req.json(&R {
         num_downloads: num_downloads,
@@ -663,6 +675,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         new_crates: try!(to_crates(new_crates)),
         most_downloaded: try!(to_crates(most_downloaded)),
         just_updated: try!(to_crates(just_updated)),
+        popular_keywords: popular_keywords,
+        popular_categories: popular_categories,
     }))
 }
 
