@@ -1,5 +1,5 @@
+use std::collections::{HashMap, BTreeSet};
 use std::str::FromStr;
-use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -57,6 +57,15 @@ pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
+}
+
+#[derive(RustcEncodable, RustcDecodable, Default)]
+pub struct EncodableBuildInfo {
+    id: i32,
+    pub ordering: HashMap<String, Vec<String>>,
+    pub stable: HashMap<String, HashMap<String, bool>>,
+    pub beta: HashMap<String, HashMap<String, bool>>,
+    pub nightly: HashMap<String, HashMap<String, bool>>,
 }
 
 pub enum ChannelVersion {
@@ -391,6 +400,73 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
     Ok(req.json(&R{ version_downloads: downloads }))
+}
+
+/// Handles the `GET /crates/:crate_id/:version/build_info` route.
+pub fn build_info(req: &mut Request) -> CargoResult<Response> {
+    let (version, _) = try!(version_and_crate(req));
+
+    let tx = try!(req.tx());
+
+    let stmt = try!(tx.prepare("SELECT * FROM build_info
+                                WHERE version_id = $1"));
+    let rows = stmt.query(&[&version.id])?;
+
+    let mut build_info = EncodableBuildInfo::default();
+    build_info.id = version.id;
+    let mut stables = BTreeSet::new();
+    let mut betas = BTreeSet::new();
+    let mut nightlies = BTreeSet::new();
+
+    for row in &rows {
+        let rust_version: String = row.get("rust_version");
+        let rust_version: ChannelVersion = rust_version.parse()?;
+        let target = row.get("target");
+        let passed = row.get("passed");
+
+        match rust_version {
+            ChannelVersion::Stable(semver) => {
+                let key = semver.to_string();
+                stables.insert(semver);
+                build_info.stable.entry(key)
+                                 .or_insert_with(HashMap::new)
+                                 .insert(target, passed);
+            }
+            ChannelVersion::Beta(date) => {
+                let key = ::encode_time(date);
+                betas.insert(date);
+                build_info.beta.entry(key)
+                                  .or_insert_with(HashMap::new)
+                                  .insert(target, passed);
+            }
+            ChannelVersion::Nightly(date) => {
+                let key = ::encode_time(date);
+                nightlies.insert(date);
+                build_info.nightly.entry(key)
+                                  .or_insert_with(HashMap::new)
+                                  .insert(target, passed);
+            }
+        }
+    }
+
+    build_info.ordering.insert(
+        String::from("stable"),
+        stables.into_iter().map(|s| s.to_string()).collect()
+    );
+
+    build_info.ordering.insert(
+        String::from("beta"),
+        betas.into_iter().map(::encode_time).collect()
+    );
+
+    build_info.ordering.insert(
+        String::from("nightly"),
+        nightlies.into_iter().map(::encode_time).collect()
+    );
+
+    #[derive(RustcEncodable)]
+    struct R { build_info: EncodableBuildInfo }
+    Ok(req.json(&R{ build_info: build_info }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.

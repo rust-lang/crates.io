@@ -5,7 +5,7 @@ use conduit::{Handler, Request, Method};
 use semver;
 
 use cargo_registry::db::RequestTransaction;
-use cargo_registry::version::{EncodableVersion, Version};
+use cargo_registry::version::{EncodableVersion, Version, EncodableBuildInfo};
 
 #[derive(RustcDecodable)]
 struct VersionList { versions: Vec<EncodableVersion> }
@@ -118,6 +118,27 @@ fn publish_build_info() {
         .with_method(Method::Put)
         .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path(
+        "/api/v1/crates/publish-build-info/1.0.0/build_info")
+        .with_method(Method::Get)));
+
+    #[derive(RustcDecodable)]
+    struct R { build_info: EncodableBuildInfo }
+
+    let json = ::json::<R>(&mut response);
+    assert_eq!(
+        json.build_info.ordering.get("nightly"),
+        Some(&vec![String::from("2017-01-25T00:00:00Z")])
+    );
+    assert_eq!(
+        json.build_info.ordering.get("beta"),
+        Some(&vec![String::from("2017-01-20T00:00:00Z")])
+    );
+    assert_eq!(
+        json.build_info.ordering.get("stable"),
+        Some(&vec![String::from("1.13.0")])
+    );
 }
 
 #[test]
