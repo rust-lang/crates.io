@@ -15,6 +15,9 @@ pub enum Badge {
     Appveyor {
         repository: String, branch: Option<String>, service: Option<String>,
     },
+    Gitlab {
+        repository: String, branch: Option<String>,
+    },
 }
 
 #[derive(RustcEncodable, RustcDecodable, PartialEq, Debug)]
@@ -58,6 +61,19 @@ impl Model for Badge {
                                                  database"),
                     }
                 },
+                "gitlab" => {
+                    Badge::Gitlab {
+                        branch: attributes.get("branch")
+                                          .and_then(Json::as_string)
+                                          .map(str::to_string),
+                        repository: attributes.get("repository")
+                                        .and_then(Json::as_string)
+                                        .map(str::to_string)
+                                        .expect("Invalid Gitlab badge \
+                                                 without repository in the \
+                                                 database"),
+                    }
+                },
                 _ => {
                     panic!("Unknown badge type {} in the database", badge_type);
                 },
@@ -84,6 +100,7 @@ impl Badge {
         match *self {
             Badge::TravisCi {..} => "travis-ci",
             Badge::Appveyor {..} => "appveyor",
+            Badge::Gitlab{..} => "gitlab",
         }
     }
 
@@ -120,7 +137,16 @@ impl Badge {
                         service
                     );
                 }
-            }
+            },
+            Badge::Gitlab { branch, repository } => {
+                attributes.insert(String::from("repository"), repository);
+                if let Some(branch) = branch {
+                    attributes.insert(
+                        String::from("branch"),
+                        branch
+                    );
+                }
+            },
         }
 
         attributes
@@ -156,7 +182,19 @@ impl Badge {
                     },
                     None => Err(badge_type.to_string()),
                 }
-           },
+            },
+            "gitlab" => {
+                match attributes.get("repository") {
+                    Some(repository) => {
+                        Ok(Badge::Gitlab {
+                            repository: repository.to_string(),
+                            branch: attributes.get("branch")
+                                              .map(String::to_string),
+                        })
+                    },
+                    None => Err(badge_type.to_string()),
+                }
+            },
            _ => Err(badge_type.to_string()),
         }
     }

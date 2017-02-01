@@ -26,8 +26,10 @@ test('searching for "rust"', function(assert) {
 
         findWithAssert('#crates .row:first .desc .info .badge:first a[href="https://ci.appveyor.com/project/huonw/external_mixin"]');
         findWithAssert('#crates .row:first .desc .info .badge:first a img[src="https://ci.appveyor.com/api/projects/status/github/huonw/external_mixin?svg=true&branch=master"]');
-        findWithAssert('#crates .row:first .desc .info .badge:eq(1) a[href="https://travis-ci.org/huonw/external_mixin"]');
-        findWithAssert('#crates .row:first .desc .info .badge:eq(1) a img[src="https://travis-ci.org/huonw/external_mixin.svg?branch=master"]');
+        findWithAssert('#crates .row:first .desc .info .badge:eq(1) a[href="https://gitlab.com/huonw/external_mixin/pipelines"]');
+        findWithAssert('#crates .row:first .desc .info .badge:eq(1) a img[src="https://gitlab.com/huonw/external_mixin/badges/master/build.svg"]');
+        findWithAssert('#crates .row:first .desc .info .badge:eq(2) a[href="https://travis-ci.org/huonw/external_mixin"]');
+        findWithAssert('#crates .row:first .desc .info .badge:eq(2) a img[src="https://travis-ci.org/huonw/external_mixin.svg?branch=master"]');
 
         hasText(assert, '#crates .row:first .desc .summary', 'Yo dawg, use Rust to generate Rust, right in your Rust. (See `external_mixin` to use scripting languages.)');
         hasText(assert, '#crates .row:first .downloads', '477');
