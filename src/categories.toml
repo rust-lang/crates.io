@@ -220,6 +220,12 @@ description = """
 Crates to interface with specific CPU or other hardware features.\
 """
 
+[interpreter]
+name = "Interpreter"
+description = """
+Interpreter for a specific language.\
+"""
+
 [memory-management]
 name = "Memory management"
 description = """
@@ -287,6 +293,12 @@ Bindings to Unix-specific APIs.\
 name = "Windows APIs"
 description = """
 Bindings to Windows-specific APIs.\
+"""
+
+[parser]
+name = "Parser"
+description = """
+Parser for a specific format or language.\
 """
 
 [parsing]
