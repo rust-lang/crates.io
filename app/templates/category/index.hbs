@@ -19,7 +19,7 @@
                       <div class='info'>
                           {{link-to subcategory.category "category" subcategory.slug}}
                           <span class='small'>
-                              {{ pluralize subcategory.crates_cnt "crate" }}
+                              {{ pluralize (format-num subcategory.crates_cnt) "crate" }}
                           </span>
                       </div>
                       <div class='summary'>
