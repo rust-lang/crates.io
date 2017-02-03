@@ -45,8 +45,7 @@
             <div class='info'>
                 {{link-to keyword.id "keyword" keyword}}
                 <span class='vers small'>
-                    {{ format-num keyword.crates_cnt }}
-                    crates
+                    {{ pluralize keyword.crates_cnt "crate" }}
                 </span>
             </div>
         </div>
