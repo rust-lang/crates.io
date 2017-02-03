@@ -289,10 +289,10 @@ description = """
 Bindings to Windows-specific APIs.\
 """
 
-[parser]
-name = "Parser"
+[parser-implementations]
+name = "Parser implementations"
 description = """
-Parser for a specific format or language.\
+Parsers implemented for particular formats or languages.\
 """
 
 [parsing]
