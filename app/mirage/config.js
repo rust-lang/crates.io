@@ -1,5 +1,6 @@
 import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
+import categoriesFixture from '../mirage/fixtures/categories';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
@@ -13,6 +14,8 @@ export default function() {
             };
         }
     });
+
+    this.get('/api/v1/categories', () => categoriesFixture);
 }
 
 function pageParams(request) {
