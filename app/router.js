@@ -23,6 +23,7 @@ Router.map(function() {
 
         // Well-known routes
         this.route('docs');
+        this.route('repo');
     });
     this.route('me', function() {
         this.route('crates');
