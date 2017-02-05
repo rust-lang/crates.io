@@ -153,6 +153,12 @@ Crates to help you better interface with other languages. This \
 includes binding generators and helpful language constructs.\
 """
 
+[development-tools.categories.procedural-macro-helpers]
+name = "Procedural macro helpers"
+description = """
+Crates to help you write procedural macros in Rust.
+"""
+
 [development-tools.categories.profiling]
 name = "Profiling"
 description = """
