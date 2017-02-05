@@ -32,6 +32,13 @@ export default {
                     "repository": "huonw/external_mixin"
                 },
                 "badge_type": "travis-ci"
+            },
+            {
+                "attributes": {
+                    "branch": "master",
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "gitlab"
             }
         ],
         "versions": null

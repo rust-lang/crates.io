@@ -45,6 +45,20 @@ fn update_crate() {
         String::from("rust-lang/rust")
     );
 
+    let gitlab = Badge::Gitlab {
+        branch: Some(String::from("beta")),
+        repository: String::from("rust-lang/rust"),
+    };
+    let mut badge_attributes_gitlab = HashMap::new();
+    badge_attributes_gitlab.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_gitlab.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+
     let mut badges = HashMap::new();
 
     // Updating with no badges has no effect
@@ -68,6 +82,15 @@ fn update_crate() {
     Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
     assert_eq!(krate.badges(tx(&req)).unwrap(), vec![travis_ci.clone()]);
 
+    // Replacing one badge with another (again)
+    badges.clear();
+    badges.insert(
+        String::from("gitlab"),
+        badge_attributes_gitlab.clone()
+    );
+    Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
+    assert_eq!(krate.badges(tx(&req)).unwrap(), vec![gitlab.clone()]);
+
     // Updating badge attributes
     let travis_ci2 = Badge::TravisCi {
         branch: None,
@@ -83,14 +106,14 @@ fn update_crate() {
         badge_attributes_travis_ci2.clone()
     );
     Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
-    assert_eq!(krate.badges(tx(&req)).unwrap(), vec![travis_ci2.clone()]);
+    assert_eq!(krate.badges(tx(&req)).unwrap(), vec![gitlab.clone(), travis_ci2.clone()]);
 
     // Removing one badge
     badges.clear();
     Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
     assert_eq!(krate.badges(tx(&req)).unwrap(), vec![]);
 
-    // Adding 2 badges
+    // Adding 3 badges
     badges.insert(
         String::from("appveyor"),
         badge_attributes_appveyor.clone()
@@ -99,22 +122,28 @@ fn update_crate() {
         String::from("travis-ci"),
         badge_attributes_travis_ci.clone()
     );
+    badges.insert(
+        String::from("gitlab"),
+        badge_attributes_gitlab.clone()
+    );
     Badge::update_crate(
         tx(&req), &krate, badges.clone()
     ).unwrap();
 
     let current_badges = krate.badges(tx(&req)).unwrap();
-    assert_eq!(current_badges.len(), 2);
+    assert_eq!(current_badges.len(), 3);
     assert!(current_badges.contains(&appveyor));
     assert!(current_badges.contains(&travis_ci));
+    assert!(current_badges.contains(&gitlab));
 
     // Removing all badges
     badges.clear();
     Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
     assert_eq!(krate.badges(tx(&req)).unwrap(), vec![]);
 
-    // Attempting to add one valid badge (appveyor) and two invalid badges
-    // (travis-ci without a required attribute and an unknown badge type)
+    // Attempting to add one valid badge (appveyor) and three invalid badges
+    // (travis-ci and gitlab without a required attribute and an unknown badge
+    // type)
 
     // Extra invalid keys are fine, we'll just ignore those
     badge_attributes_appveyor.insert(
@@ -133,6 +162,13 @@ fn update_crate() {
         badge_attributes_travis_ci.clone()
     );
 
+    // Repository is a required key
+    badge_attributes_gitlab.remove("repository");
+    badges.insert(
+        String::from("gitlab"),
+        badge_attributes_gitlab.clone()
+    );
+
     // This is not a badge that crates.io knows about
     let mut invalid_attributes = HashMap::new();
     invalid_attributes.insert(
@@ -147,8 +183,9 @@ fn update_crate() {
     let invalid_badges = Badge::update_crate(
         tx(&req), &krate, badges.clone()
     ).unwrap();
-    assert_eq!(invalid_badges.len(), 2);
+    assert_eq!(invalid_badges.len(), 3);
     assert!(invalid_badges.contains(&String::from("travis-ci")));
+    assert!(invalid_badges.contains(&String::from("gitlab")));
     assert!(invalid_badges.contains(&String::from("not-a-badge")));
     assert_eq!(krate.badges(tx(&req)).unwrap(), vec![appveyor.clone()]);
 }
