@@ -171,6 +171,13 @@ description = """
 Crates to help with Sending, receiving, formatting, and parsing email.\
 """
 
+[embedded]
+name = "Embedded development"
+description = """
+Crates that are primarily useful on embedded devices or \
+without an operating system.
+"""
+
 [emulators]
 name = "Emulators"
 description = """
