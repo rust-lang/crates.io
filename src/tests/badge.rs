@@ -106,7 +106,10 @@ fn update_crate() {
         badge_attributes_travis_ci2.clone()
     );
     Badge::update_crate(tx(&req), &krate, badges.clone()).unwrap();
-    assert_eq!(krate.badges(tx(&req)).unwrap(), vec![gitlab.clone(), travis_ci2.clone()]);
+    let current_badges = krate.badges(tx(&req)).unwrap();
+    assert_eq!(current_badges.len(), 2);
+    assert!(current_badges.contains(&gitlab));
+    assert!(current_badges.contains(&travis_ci2));
 
     // Removing one badge
     badges.clear();
