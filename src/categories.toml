@@ -278,6 +278,12 @@ Crates dealing with higher-level network protocols such as FTP, HTTP, \
 or SSH, or lower-level network protocols such as TCP or UDP.\
 """
 
+[no-std]
+name = "No standard library"
+description = """
+Crates that are able to function without the Rust standard library.
+"""
+
 [os]
 name = "Operating systems"
 description = """
