@@ -506,7 +506,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         };
         (format!("SELECT crates.* FROM crates,
                                plainto_tsquery($1) q,
-                               ts_rank_cd(textsearchable_index_col, q) rank
+                               ts_rank_cd('{0.1, 0.3, 0.5, 1.0}', textsearchable_index_col, q) rank
           WHERE q @@ textsearchable_index_col
           ORDER BY name = $1 DESC, {}
           LIMIT $2 OFFSET $3", rank_sort_sql),
