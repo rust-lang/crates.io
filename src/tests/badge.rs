@@ -55,7 +55,7 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
         String::from("rust-lang/rust")
     );
 
-    let gitlab = Badge::Gitlab {
+    let gitlab = Badge::GitLab {
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
     };

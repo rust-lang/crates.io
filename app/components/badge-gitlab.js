@@ -8,6 +8,6 @@ export default Ember.Component.extend({
         return this.get('badge.attributes.branch') || 'master';
     }),
     text: Ember.computed('badge', function() {
-        return `Gitlab build status for the ${ this.get('branch') } branch`;
+        return `GitLab build status for the ${ this.get('branch') } branch`;
     })
 });

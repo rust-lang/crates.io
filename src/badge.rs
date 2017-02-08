@@ -15,7 +15,7 @@ pub enum Badge {
     Appveyor {
         repository: String, branch: Option<String>, service: Option<String>,
     },
-    Gitlab {
+    GitLab {
         repository: String, branch: Option<String>,
     },
 }
@@ -62,14 +62,14 @@ impl Model for Badge {
                     }
                 },
                 "gitlab" => {
-                    Badge::Gitlab {
+                    Badge::GitLab {
                         branch: attributes.get("branch")
                                           .and_then(Json::as_string)
                                           .map(str::to_string),
                         repository: attributes.get("repository")
                                         .and_then(Json::as_string)
                                         .map(str::to_string)
-                                        .expect("Invalid Gitlab badge \
+                                        .expect("Invalid GitLab badge \
                                                  without repository in the \
                                                  database"),
                     }
@@ -100,7 +100,7 @@ impl Badge {
         match *self {
             Badge::TravisCi {..} => "travis-ci",
             Badge::Appveyor {..} => "appveyor",
-            Badge::Gitlab{..} => "gitlab",
+            Badge::GitLab{..} => "gitlab",
         }
     }
 
@@ -138,7 +138,7 @@ impl Badge {
                     );
                 }
             },
-            Badge::Gitlab { branch, repository } => {
+            Badge::GitLab { branch, repository } => {
                 attributes.insert(String::from("repository"), repository);
                 if let Some(branch) = branch {
                     attributes.insert(
@@ -186,7 +186,7 @@ impl Badge {
             "gitlab" => {
                 match attributes.get("repository") {
                     Some(repository) => {
-                        Ok(Badge::Gitlab {
+                        Ok(Badge::GitLab {
                             repository: repository.to_string(),
                             branch: attributes.get("branch")
                                               .map(String::to_string),
