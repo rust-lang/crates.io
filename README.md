@@ -1,6 +1,6 @@
 # crates.io
 
-Source code for the default [Cargo](http://doc.crates.io) registry. Viewable 
+Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
 online at [crates.io](https://crates.io).
 
 This project is built on ember-cli and cargo, visit
@@ -17,7 +17,7 @@ yarn
 yarn run bower install
 ```
 
-The website's frontend is built with [Ember.js](http://emberjs.com/). This 
+The website's frontend is built with [Ember.js](http://emberjs.com/). This
 makes it possible to work on the frontend without running a local backend.
 To start the frontend run:
 
@@ -25,7 +25,7 @@ To start the frontend run:
 yarn run start:staging
 ```
 
-This will run a local frontend using the staging backend (hosted on Heroku at 
+This will run a local frontend using the staging backend (hosted on Heroku at
 [staging-crates-io.herokuapp.com](https://staging-crates-io.herokuapp.com)).
 
 If you want to set up a particular situation, you can edit the fixture data used
@@ -55,7 +55,7 @@ yarn run start:live
 
 ### Running Tests
 
-Install [phantomjs](http://phantomjs.org/), typically: `npm install 
+Install [phantomjs](http://phantomjs.org/), typically: `npm install
 phantomjs-prebuilt`.
 
 Then run the tests with:
