@@ -70,11 +70,16 @@ yarn run ember test --server
 After cloning the repo, steps for setting up the backend API server are as 
 follows:
 
-1. Copy the `.env.sample` file to `.env` and change any applicable values as
+1. Install [Postgres](https://www.postgresql.org/) >= 9.5 and create a
+    database. For example, if you wanted your database to be named
+    `cargo_registry`, you can run `psql` to connect to postgres, then run
+    `CREATE DATABASE cargo_registry;`.
+
+2. Copy the `.env.sample` file to `.env` and change any applicable values as
     directed by the comments in the file. Make sure the values in your new
     `.env` are exported in the shell you use for the following commands.
 
-2. Set up the git index:
+3. Set up the git index:
 
     ```
     ./script/init-local-index.sh
@@ -82,7 +87,7 @@ follows:
 
     But *do not* modify your `~/.cargo/config` yet. Do that after step 3.
 
-3. Build the server:
+4. Build the server:
 
     ```
     cargo build
@@ -91,19 +96,19 @@ follows:
     On OS X 10.11, you will need to install the openssl headers first, and tell
     cargo where to find them. See https://github.com/sfackler/rust-openssl#osx.
 
-4. Run the migrations:
+5. Run the migrations:
 
     ```
     ./target/debug/migrate
     ```
 
-5. Start the backend server:
+6. Start the backend server:
 
     ```
     ./target/debug/server
     ```
 
-6. **Optionally** start a local frontend:
+7. **Optionally** start a local frontend:
 
     ```
     yarn run start:local
@@ -111,17 +116,24 @@ follows:
 
 ### Running Tests
 
-1. Configure the location of the test database. Note that this should just be a
-   blank database, the test harness will ensure that migrations are run.
+1. Configure the location of the test database. Create a database other than
+    your development database, since running the tests will clear out the data.
+    For example, to use a database named `cargo_registry_test`, create it in
+    postgres by running `psql` to connect to postgres, then run
+    `CREATE DATABASE cargo_registry_test;`. The test harness will ensure that
+    migrations are run.
+
+    In your `.env` file, specify your test database URL. Here's an example,
+    assuming your test database is named `cargo_registry_test`:
 
     ```
-    export TEST_DATABASE_URL=...
+    export TEST_DATABASE_URL=postgres://postgres@localhost/cargo_registry_test
     ```
 
-2. Set the s3 bucket to `alexcrichton-test`. No actual requests to s3 will be
-   made; the requests and responses are recorded in files in
-   `tests/http-data` and the s3 bucket name needs to match the requests in the
-   files.
+2. In your `.env` file, set the s3 bucket to `alexcrichton-test`. No actual
+    requests to s3 will be made; the requests and responses are recorded in
+    files in `tests/http-data` and the s3 bucket name needs to match the
+    requests in the files.
 
     ```
     export S3_BUCKET=alexcrichton-test
