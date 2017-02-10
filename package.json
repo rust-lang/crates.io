@@ -40,6 +40,7 @@
     "ember-cli-qunit": "3.1.1",
     "ember-cli-release": "0.2.9",
     "ember-cli-sass": "6.1.1",
+    "ember-cli-shims": "1.0.2",
     "ember-cli-sri": "2.1.1",
     "ember-cli-test-loader": "1.1.1",
     "ember-cli-uglify": "1.2.0",
@@ -52,7 +53,6 @@
     "ember-rl-dropdown": "0.10.0",
     "ember-route-alias": "0.1.5",
     "ember-router-scroll": "0.1.1",
-    "ember-source": "2.11.0",
     "ember-suave": "4.0.1",
     "emberx-select": "2.2.3",
     "loader.js": "4.1.0"
