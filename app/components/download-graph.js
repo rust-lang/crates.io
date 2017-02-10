@@ -81,7 +81,7 @@ export default Ember.Component.extend({
 
         // use a DataView to calculate an x-day moving average
         var days = 7;
-        var view = new google.visualization.DataView(myData);
+        var view = new window.google.visualization.DataView(myData);
         var moving_avg_func_for_col = function(col) {
             return function(dt, row) {
                 // For the last rows (the *first* days, remember, the dataset is
@@ -110,7 +110,8 @@ export default Ember.Component.extend({
         var [headers, ] = data;
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
-        _.forEach(_.range(headers.length - 1, 0, -1), (dataCol, i) => {
+
+        window._.range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
             columns.push(dataCol); // add the column itself
             columns.push({ // add a 'calculated' column, the moving average
                 type: 'number',
