@@ -226,6 +226,7 @@ pre {
 }
 
 button.dropdown, a.dropdown {
+    color: inherit;
     cursor: pointer;
     .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
     .arrow::after { content: "▼"; }

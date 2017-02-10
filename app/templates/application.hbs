@@ -27,7 +27,7 @@
 
     <div class='nav'>
         {{#link-to "crates" (query-params letter="null" page=1)}}
-            <button type="button">Browse All Crates</button>
+            Browse All Crates
         {{/link-to}}
         <span class="sep">|</span>
         {{#rl-dropdown-container class="dropdown-container"}}
@@ -69,10 +69,8 @@
             {{/rl-dropdown-container}}
         {{else}}
             {{#link-to "login"}}
-                <button type="button">
                     <img class="lock" src="/assets/lock.png"/>
                     Log in with GitHub
-                </button>
             {{/link-to}}
         {{/if}}
     </div>
