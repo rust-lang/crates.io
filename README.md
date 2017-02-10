@@ -1,6 +1,6 @@
 # crates.io
 
-Source code for the default [Cargo](http://doc.crates.io) registry. Viewable 
+Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
 online at [crates.io](https://crates.io).
 
 This project is built on ember-cli and cargo, visit
@@ -17,7 +17,7 @@ yarn
 yarn run bower install
 ```
 
-The website's frontend is built with [Ember.js](http://emberjs.com/). This 
+The website's frontend is built with [Ember.js](http://emberjs.com/). This
 makes it possible to work on the frontend without running a local backend.
 To start the frontend run:
 
@@ -25,7 +25,7 @@ To start the frontend run:
 yarn run start:staging
 ```
 
-This will run a local frontend using the staging backend (hosted on Heroku at 
+This will run a local frontend using the staging backend (hosted on Heroku at
 [staging-crates-io.herokuapp.com](https://staging-crates-io.herokuapp.com)).
 
 If you want to set up a particular situation, you can edit the fixture data used
@@ -55,7 +55,7 @@ yarn run start:live
 
 ### Running Tests
 
-Install [phantomjs](http://phantomjs.org/), typically: `npm install 
+Install [phantomjs](http://phantomjs.org/), typically: `npm install
 phantomjs-prebuilt`.
 
 Then run the tests with:
@@ -67,84 +67,112 @@ yarn run ember test --server
 
 ## Working on the Backend
 
-After cloning the repo, steps for setting up the backend API server are as 
-follows:
+Working on the backend requires a usable postgres server and to configure
+crates.io to use it. There are slight differences in configuration for
+hosting the backend and running tests, both of which are described in more
+details in the appropriate subsections.
 
-1. Install [Postgres](https://www.postgresql.org/) >= 9.5 and create a
-    database. For example, if you wanted your database to be named
-    `cargo_registry`, you can run `psql` to connect to postgres, then run
-    `CREATE DATABASE cargo_registry;`.
+After cloning the repo, do the following:
 
-2. Copy the `.env.sample` file to `.env` and change any applicable values as
-    directed by the comments in the file. Make sure the values in your new
-    `.env` are exported in the shell you use for the following commands.
+1. Install [Postgres](https://www.postgresql.org/) >= 9.5. On Linux this is
+   generally available in the distribution repositories as `postgresql` or
+   `postgresql-server`. This will need to be up and running for running tests
+   for hosting the site locally.
 
-3. Set up the git index:
-
-    ```
-    ./script/init-local-index.sh
-    ```
-
-    But *do not* modify your `~/.cargo/config` yet. Do that after step 3.
-
-4. Build the server:
-
-    ```
-    cargo build
-    ```
-
-    On OS X 10.11, you will need to install the openssl headers first, and tell
-    cargo where to find them. See https://github.com/sfackler/rust-openssl#osx.
-
-5. Run the migrations:
-
-    ```
-    ./target/debug/migrate
-    ```
-
-6. Start the backend server:
-
-    ```
-    ./target/debug/server
-    ```
-
-7. **Optionally** start a local frontend:
-
-    ```
-    yarn run start:local
-    ```
+2. Copy the `.env.sample` file to `.env`. Some settings will need to be
+   modified. These instructions are in the subsequent sections.
 
 ### Running Tests
 
-1. Configure the location of the test database. Create a database other than
-    your development database, since running the tests will clear out the data.
-    For example, to use a database named `cargo_registry_test`, create it in
-    postgres by running `psql` to connect to postgres, then run
-    `CREATE DATABASE cargo_registry_test;`. The test harness will ensure that
-    migrations are run.
+After following the above instructions:
 
-    In your `.env` file, specify your test database URL. Here's an example,
-    assuming your test database is named `cargo_registry_test`:
+1. Configure the location of the test database. Create a database specifically
+   for testing since running the tests will clear the database. For example,
+   to use a database named `cargo_registry_test`, create it in postgres by
+   running `psql` to connect to postgres, then run `CREATE DATABASE
+   cargo_registry_test;`. The test harness will ensure that migrations are run.
 
-    ```
-    export TEST_DATABASE_URL=postgres://postgres@localhost/cargo_registry_test
-    ```
+   In your `.env` file, specify your test database URL. Here's an example,
+   assuming your test database is named `cargo_registry_test`:
+
+   ```
+   export TEST_DATABASE_URL=postgres://postgres@localhost/cargo_registry_test
+   ```
 
 2. In your `.env` file, set the s3 bucket to `alexcrichton-test`. No actual
-    requests to s3 will be made; the requests and responses are recorded in
-    files in `tests/http-data` and the s3 bucket name needs to match the
-    requests in the files.
+   requests to s3 will be made; the requests and responses are recorded in
+   files in `tests/http-data` and the s3 bucket name needs to match the
+   requests in the files.
 
-    ```
-    export S3_BUCKET=alexcrichton-test
-    ```
+   ```
+   export S3_BUCKET=alexcrichton-test
+   ```
 
 3. Run the backend API server tests:
 
-    ```
-    cargo test
-    ```
-    
+   ```
+   cargo test
+   ```
+
+### Hosting crates.io locally
+
+After following the instructions described in "Working on the Backend":
+
+1. Make sure your local postgres instance is running and create a database for
+   use with the local crates.io instance. `cargo_registry` is a good name to
+   use. You can do this by running `psql` to connect to `postgres` and run:
+
+   ```
+   CREATE DATABASE cargo_registry;
+   ```
+
+2. Modify the `.env` configuration file's `DATABASE_URL` setting to point
+   to the local postgres instance with the database you want to use. If you've
+   followed these instructions it should likely look like:
+
+   ```
+   export DATABASE_URL=postgres://postgres@localhost/cargo_registry
+   ```
+
+3. Set up the git index:
+
+   ```
+   ./script/init-local-index.sh
+   ```
+
+   But *do not* modify your `~/.cargo/config` yet (but record the instructions
+   shown at the end of this step as you'll need them later).
+
+4. Build the server:
+
+   ```
+   cargo build
+   ```
+
+   On OS X 10.11, you will need to install the openssl headers first, and tell
+   cargo where to find them. See https://github.com/sfackler/rust-openssl#osx.
+
+5. Modify your `~/.cargo/config` after successfully building crates.io
+   following the instructions shown at the end of Step 3.
+
+5. Run the migrations:
+
+   ```
+   ./target/debug/migrate
+   ```
+
+6. Start the backend server:
+
+   ```
+   ./target/debug/server
+   ```
+
+7. **Optionally** start a local frontend:
+
+   ```
+   yarn run start:local
+   ```
+
 ## Categories
 
 The list of categories available on crates.io is stored in
