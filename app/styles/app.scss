@@ -138,6 +138,10 @@ body {
     }
 }
 
+input.search {
+    box-shadow: none;
+}
+
 span.small {
     color: $main-color-light;
     font-size: 80%;
