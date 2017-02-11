@@ -1,26 +1,31 @@
+import summaryFixture from '../mirage/fixtures/summary';
+import searchFixture from '../mirage/fixtures/search';
+import categoriesFixture from '../mirage/fixtures/categories';
+
 export default function() {
+    this.get('/summary', () => summaryFixture);
 
-    // These comments are here to help you get started. Feel free to delete them.
+    this.get('/api/v1/crates', (db, request) => {
+        if (request.queryParams.q) {
+            const { start, end } = pageParams(request);
+            return {
+                crates: searchFixture.crates.slice(start, end),
+                meta: searchFixture.meta,
+            };
+        }
+    });
 
-    /*
-        Config (with defaults).
+    this.get('/api/v1/categories', () => categoriesFixture);
+}
 
-        Note: these only affect routes defined *after* them!
-    */
+function pageParams(request) {
+    const { queryParams } = request;
 
-    // this.urlPrefix = '';    // make this `http://localhost:8080`, for example, if your API is on a different server
-    // this.namespace = '';    // make this `api`, for example, if your API is namespaced
-    // this.timing = 400;      // delay for each request, automatically set to 0 during testing
+    const page = parseInt(queryParams.page);
+    const perPage = parseInt(queryParams.per_page);
 
-    /*
-        Shorthand cheatsheet:
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
 
-        this.get('/posts');
-        this.post('/posts');
-        this.get('/posts/:id');
-        this.put('/posts/:id'); // or this.patch
-        this.del('/posts/:id');
-
-        http://www.ember-cli-mirage.com/docs/v0.2.x/shorthands/
-    */
+    return { page, perPage, start, end };
 }
