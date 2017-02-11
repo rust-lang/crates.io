@@ -4,7 +4,7 @@ import ajax from 'ic-ajax';
 export default Ember.Route.extend({
 
     model(params) {
-        const requestedVersion = params.version_num;
+        const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
 
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);

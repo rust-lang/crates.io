@@ -138,6 +138,10 @@ body {
     }
 }
 
+input.search {
+    box-shadow: none;
+}
+
 span.small {
     color: $main-color-light;
     font-size: 80%;
@@ -226,6 +230,7 @@ pre {
 }
 
 button.dropdown, a.dropdown {
+    color: inherit;
     cursor: pointer;
     .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
     .arrow::after { content: "▼"; }
