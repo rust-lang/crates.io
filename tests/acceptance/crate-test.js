@@ -12,3 +12,12 @@ test('visiting a crate page from the front page', function(assert) {
         assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
     });
 });
+
+test('visiting a crate page directly', function(assert) {
+    visit('/crates/nanomsg');
+
+    andThen(function() {
+        assert.equal(currentURL(), '/crates/nanomsg');
+        assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+    });
+});

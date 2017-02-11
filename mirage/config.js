@@ -27,10 +27,10 @@ export default function() {
 
     this.get('/api/v1/crates/nanomsg', () => crateFixture);
     this.get('/api/v1/crates/nanomsg/versions', () => crateVersionsFixture);
-    this.get('/api/v1/crates/nanomsg/0.4.2/authors', () => crateAuthorsFixture);
+    this.get('/api/v1/crates/nanomsg/:version_num/authors', () => crateAuthorsFixture);
     this.get('/api/v1/crates/nanomsg/owners', () => crateOwnersFixture);
     this.get('/api/v1/crates/nanomsg/reverse_dependencies', () => crateReverseDependenciesFixture);
-    this.get('/api/v1/crates/nanomsg/0.4.2/dependencies', () => crateDependenciesFixture);
+    this.get('/api/v1/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
     this.get('/api/v1/crates/nanomsg/downloads', () => crateDownloadsFixture);
     this.get('/api/v1/keywords/network', () => keywordFixture);
 }
