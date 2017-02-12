@@ -7,7 +7,7 @@ export default {
         "downloads": 552,
         "homepage": "https://github.com/thehydroimpulse/nanomsg.rs",
         "id": "nanomsg",
-        "keywords": ["nanomsg", "binding", "network", "pub", "sub"],
+        "keywords": ["network"],
         "license": "MIT",
         "links": {
             "owners": "/api/v1/crates/nanomsg/owners",

@@ -24,7 +24,8 @@
     "currentURL",
     "currentPath",
     "currentRouteName",
-    "hasText"
+    "hasText",
+    "matchesText"
   ],
   "node": false,
   "browser": false,
