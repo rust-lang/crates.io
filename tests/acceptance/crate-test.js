@@ -30,3 +30,16 @@ test('navigating to the all versions page', function(assert) {
         matchesText(assert, '.info', /All 12 versions of nanomsg since December \d+, 2014/);
     });
 });
+
+test('navigating to the reverse dependencies page', function(assert) {
+    visit('/crates/nanomsg');
+    click('a:contains("Dependent crates")');
+
+    andThen(function() {
+        assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
+
+        const $revDep = findWithAssert('#crate-all-reverse-dependencies a[href="/crates/unicorn-rpc"]:first');
+
+        hasText(assert, $revDep, 'unicorn-rpc');
+    });
+});
