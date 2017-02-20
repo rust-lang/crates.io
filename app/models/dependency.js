@@ -15,6 +15,7 @@ export default DS.Model.extend({
     default_features: DS.attr('boolean'),
     features: DS.attr('string'),
     kind: DS.attr('string'),
+    downloads: DS.attr('number'),
 
     featureList: computed('features', function() {
         return this.get('features').split(',');

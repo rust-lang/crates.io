@@ -13,15 +13,16 @@
     </div>
 </div>
 
-<div id='crate-all-reverse-dependencies' class='white-rows'>
+<div class='white-rows'>
     {{#each model as |dependency|}}
-        <div class='row'>
+        <div class='crate row'>
             <div>
             {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
             </div>
-            {{#link-to 'crate' dependency.crate_id class='arrow'}}
-                <img class="right-arrow-all-versions" src="/assets/right-arrow-all-versions.png"/>
-            {{/link-to}}
+            <div class='stats downloads'>
+                <img class='download-clear-back' src="/assets/download-clear-back.png"/>
+                <span class='num rev-dep-downloads'>{{ format-num dependency.downloads }}</span>
+            </div>
         </div>
     {{/each}}
 </div>
