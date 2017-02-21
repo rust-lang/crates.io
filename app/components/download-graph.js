@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import _ from 'lodash';
 
 export default Ember.Component.extend({
     classNames: 'graph-data',
@@ -111,7 +112,7 @@ export default Ember.Component.extend({
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
 
-        window._.range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
+        _.range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
             columns.push(dataCol); // add the column itself
             columns.push({ // add a 'calculated' column, the moving average
                 type: 'number',
