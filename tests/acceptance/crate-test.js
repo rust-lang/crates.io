@@ -38,7 +38,7 @@ test('navigating to the reverse dependencies page', function(assert) {
     andThen(function() {
         assert.equal(currentURL(), '/crates/nanomsg/reverse_dependencies');
 
-        const $revDep = findWithAssert('#crate-all-reverse-dependencies a[href="/crates/unicorn-rpc"]:first');
+        const $revDep = findWithAssert('a[href="/crates/unicorn-rpc"]:first');
 
         hasText(assert, $revDep, 'unicorn-rpc');
     });
