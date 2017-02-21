@@ -136,4 +136,12 @@ fn update_crate() {
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
+    // Add a category and its subcategory
+    ::mock_category(&mut req, "cat1::bar", "cat1::bar");
+    Category::update_crate(
+        tx(&req), &krate, &["cat1".to_string(),
+                            "cat1::bar".to_string()]).unwrap();
+    assert_eq!(cnt(&mut req, "cat1"), 1);
+    assert_eq!(cnt(&mut req, "cat1::bar"), 1);
+    assert_eq!(cnt(&mut req, "category-2"), 0);
 }

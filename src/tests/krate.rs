@@ -17,6 +17,7 @@ use cargo_registry::krate::{Crate, EncodableCrate};
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
+use cargo_registry::category::Category;
 
 #[derive(RustcDecodable)]
 struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
@@ -130,6 +131,23 @@ fn index_queries() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw2")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+
+    ::mock_category(&mut req, "cat1", "cat1");
+    ::mock_category(&mut req, "cat1::bar", "cat1::bar");
+    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
+                            "cat1::bar".to_string()]).unwrap();
+    let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
+    let cl = ::json::<CrateList>(&mut response);
+    assert_eq!(cl.crates.len(), 1);
+    assert_eq!(cl.meta.total, 1);
+    let mut response = ok_resp!(middle.call(req.with_query("category=cat1::bar")));
+    let cl = ::json::<CrateList>(&mut response);
+    assert_eq!(cl.crates.len(), 1);
+    assert_eq!(cl.meta.total, 1);
+    let mut response = ok_resp!(middle.call(req.with_query("keyword=cat2")));
+    let cl = ::json::<CrateList>(&mut response);
+    assert_eq!(cl.crates.len(), 0);
+    assert_eq!(cl.meta.total, 0);
 }
 
 #[test]
