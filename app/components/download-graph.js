@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import _ from 'lodash';
 
 export default Ember.Component.extend({
     classNames: 'graph-data',
@@ -79,8 +80,65 @@ export default Ember.Component.extend({
         });
         fmt.format(myData, 0);
 
-        var chart = new window.google.visualization.AreaChart(this.get('element'));
-        chart.draw(myData, {
+        // use a DataView to calculate an x-day moving average
+        var days = 7;
+        var view = new window.google.visualization.DataView(myData);
+        var moving_avg_func_for_col = function(col) {
+            return function(dt, row) {
+                // For the last rows (the *first* days, remember, the dataset is
+                // backwards), we cannot calculate the avg. of previous days.
+                if (row >= dt.getNumberOfRows() - days) {
+                    return null;
+                }
+
+                var total = 0;
+                for (var i = days; i > 0; i--) {
+                    total += dt.getValue(row + i, col);
+                }
+                var avg = total / days;
+                return {
+                    v: avg,
+                    f: avg.toFixed(2)
+                };
+            };
+        };
+
+        var columns = [0]; // 0 = datetime
+        var seriesOption = {};
+        // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
+        var colors = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de',
+                      '#4393c3', '#2166ac', '#053061'];
+        var [headers, ] = data;
+        // Walk over the headers/colums in reverse order, as the newest version
+        // is at the end, but in the UI we want it at the top of the chart legend.
+
+        _.range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
+            columns.push(dataCol); // add the column itself
+            columns.push({ // add a 'calculated' column, the moving average
+                type: 'number',
+                label: `${headers[dataCol]} ${days}-day avg.`,
+                calc: moving_avg_func_for_col(dataCol)
+            });
+            // Note: while the columns start with index 1 (because 0 is the time
+            // axis), the series configuration starts with index 0.
+            seriesOption[i * 2] = {
+                type: 'scatter',
+                color: colors[i % colors.length],
+                pointSize: 3,
+                pointShape: 'square'
+            };
+            seriesOption[i * 2 + 1] = {
+                type: 'line',
+                color: colors[i % colors.length],
+                lineWidth: 2,
+                curveType: 'function',
+                visibleInLegend: false
+            };
+        });
+        view.setColumns(columns);
+
+        var chart = new window.google.visualization.ComboChart(this.get('element'));
+        chart.draw(view, {
             chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
             hAxis: {
                 minorGridlines: { count: 8 },
@@ -89,8 +147,10 @@ export default Ember.Component.extend({
                 minorGridlines: { count: 5 },
                 viewWindow: { min: 0, },
             },
-            isStacked: true,
+            isStacked: false,
             focusTarget: 'category',
+            seriesType: 'scatter',
+            series: seriesOption
         });
     },
 });
