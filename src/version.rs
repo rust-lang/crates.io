@@ -166,17 +166,21 @@ impl Version {
     }
 
     pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
-        let stmt = conn.prepare("SELECT * FROM version_authors
-                                       WHERE version_id = $1")?;
-        let rows = stmt.query(&[&self.id])?;
-        rows.into_iter().map(|row| {
+        let stmt = try!(conn.prepare("SELECT * FROM version_authors
+                                       WHERE version_id = $1"));
+        let rows = try!(stmt.query(&[&self.id]));
+        let mut authors: CargoResult<Vec<Author>> = rows.into_iter().map(|row| {
             let user_id: Option<i32> = row.get("user_id");
             let name: String = row.get("name");
             Ok(match user_id {
                 Some(id) => Author::User(User::find(conn, id)?),
                 None => Author::Name(name),
             })
-        }).collect()
+        }).collect();
+        if let Ok(ref mut v) = authors {
+            v.sort_by(|ref a, ref b| a.name().cmp(&b.name()));
+        }
+        authors
     }
 
     pub fn add_author(&self,
@@ -215,6 +219,15 @@ impl Model for Version {
         }
     }
     fn table_name(_: Option<Version>) -> &'static str { "versions" }
+}
+
+impl Author {
+    fn name(&self) -> Option<&str> {
+        match self {
+            &Author::Name(ref n) => {Some(&n)},
+            &Author::User(ref u) => {u.name.as_ref().map(String::as_str)}
+        }
+    }
 }
 
 /// Handles the `GET /versions` route.
