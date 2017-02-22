@@ -65,7 +65,11 @@ body {
     }
 
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
-    .nav, .menu { @include flex-grow(2); text-align: right; }
+    .nav, .menu {
+        @include flex-grow(2);
+        text-align: right;
+        margin-right: 5px;
+    }
 
     .menu { display: none; }
     .menu ul.dropdown {
@@ -129,6 +133,8 @@ body {
 #mobile-search {
     display: none;
     margin-bottom: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
     input.search {
         width: 100%;
         margin: 0;
