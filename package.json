@@ -47,6 +47,7 @@
     "ember-data": "2.11.1",
     "ember-export-application-global": "1.1.1",
     "ember-load-initializers": "0.6.3",
+    "ember-lodash": "4.17.0",
     "ember-moment": "7.3.0",
     "ember-page-title": "3.1.5",
     "ember-resolver": "2.1.1",
