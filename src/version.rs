@@ -166,21 +166,19 @@ impl Version {
     }
 
     pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
-        let stmt = try!(conn.prepare("SELECT * FROM version_authors
-                                       WHERE version_id = $1"));
-        let rows = try!(stmt.query(&[&self.id]));
-        let mut authors: CargoResult<Vec<Author>> = rows.into_iter().map(|row| {
+        let stmt = conn.prepare("SELECT * FROM version_authors
+                                       WHERE version_id = $1")?;
+        let rows = stmt.query(&[&self.id])?;
+        let mut authors = rows.into_iter().map(|row| {
             let user_id: Option<i32> = row.get("user_id");
             let name: String = row.get("name");
             Ok(match user_id {
                 Some(id) => Author::User(User::find(conn, id)?),
                 None => Author::Name(name),
             })
-        }).collect();
-        if let Ok(ref mut v) = authors {
-            v.sort_by(|ref a, ref b| a.name().cmp(&b.name()));
-        }
-        authors
+        }).collect::<CargoResult<Vec<Author>>>()?;
+        authors.sort_by(|ref a, ref b| a.name().cmp(&b.name()));
+        Ok(authors)
     }
 
     pub fn add_author(&self,
