@@ -158,7 +158,8 @@ impl Version {
                                       FROM dependencies
                                       LEFT JOIN crates
                                         ON crates.id = dependencies.crate_id
-                                      WHERE dependencies.version_id = $1")?;
+                                      WHERE dependencies.version_id = $1
+                                      ORDER BY optional, name")?;
         let rows = stmt.query(&[&self.id])?;
         Ok(rows.iter().map(|r| {
             (Model::from_row(&r), r.get("crate_name"))
