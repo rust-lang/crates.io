@@ -51,14 +51,14 @@ impl Dependency {
                   -> CargoResult<Dependency> {
         let req = req.to_string();
         let features = features.join(",");
-        let stmt = try!(conn.prepare("INSERT INTO dependencies
+        let stmt = conn.prepare("INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *"));
-        let rows = try!(stmt.query(&[&version_id, &crate_id, &req,
-                                      &optional, &default_features,
-                                      &features, target, &(kind as i32)]));
+                                      RETURNING *")?;
+        let rows = stmt.query(&[&version_id, &crate_id, &req,
+            &optional, &default_features,
+            &features, target, &(kind as i32)])?;
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
