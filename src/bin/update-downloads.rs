@@ -36,20 +36,20 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     loop {
         // FIXME(rust-lang/rust#27401): weird declaration to make sure this
         // variable gets dropped.
-        let tx; tx = try!(conn.transaction());
+        let tx; tx = conn.transaction()?;
         {
-            let stmt = try!(tx.prepare("SELECT * FROM version_downloads \
+            let stmt = tx.prepare("SELECT * FROM version_downloads \
                                         WHERE processed = FALSE AND id > $1
                                         ORDER BY id ASC
-                                        LIMIT $2"));
-            let mut rows = try!(stmt.query(&[&max, &LIMIT]));
-            match try!(collect(&tx, &mut rows)) {
+                                        LIMIT $2")?;
+            let mut rows = stmt.query(&[&max, &LIMIT])?;
+            match collect(&tx, &mut rows)? {
                 None => break,
                 Some(m) => max = m,
             }
         }
         tx.set_commit();
-        try!(tx.finish());
+        tx.finish()?;
     }
     Ok(())
 }
@@ -87,10 +87,10 @@ fn collect(tx: &postgres::transaction::Transaction,
 
         // Flag this row as having been processed if we're passed the cutoff,
         // and unconditionally increment the number of counted downloads.
-        try!(tx.execute("UPDATE version_downloads
+        tx.execute("UPDATE version_downloads
                          SET processed = $2, counted = counted + $3
                          WHERE id = $1",
-                        &[id, &(download.date < cutoff), &amt]));
+                   &[id, &(download.date < cutoff), &amt])?;
         println!("{}\n{}", time::at(download.date).rfc822(),
                  time::at(cutoff).rfc822());
         total += amt as i64;
@@ -102,31 +102,31 @@ fn collect(tx: &postgres::transaction::Transaction,
         let crate_id = Version::find(tx, download.version_id).unwrap().crate_id;
 
         // Update the total number of version downloads
-        try!(tx.execute("UPDATE versions
+        tx.execute("UPDATE versions
                          SET downloads = downloads + $1
                          WHERE id = $2",
-                        &[&amt, &download.version_id]));
+                   &[&amt, &download.version_id])?;
         // Update the total number of crate downloads
-        try!(tx.execute("UPDATE crates SET downloads = downloads + $1
-                         WHERE id = $2", &[&amt, &crate_id]));
+        tx.execute("UPDATE crates SET downloads = downloads + $1
+                         WHERE id = $2", &[&amt, &crate_id])?;
 
         // Update the total number of crate downloads for today
-        let cnt = try!(tx.execute("UPDATE crate_downloads
+        let cnt = tx.execute("UPDATE crate_downloads
                                    SET downloads = downloads + $2
                                    WHERE crate_id = $1 AND date = date($3)",
-                                  &[&crate_id, &amt, &download.date]));
+                             &[&crate_id, &amt, &download.date])?;
         if cnt == 0 {
-            try!(tx.execute("INSERT INTO crate_downloads
+            tx.execute("INSERT INTO crate_downloads
                              (crate_id, downloads, date)
                              VALUES ($1, $2, $3)",
-                            &[&crate_id, &amt, &download.date]));
+                       &[&crate_id, &amt, &download.date])?;
         }
     }
 
     // After everything else is done, update the global counter of total
     // downloads.
-    try!(tx.execute("UPDATE metadata SET total_downloads = total_downloads + $1",
-                    &[&total]));
+    tx.execute("UPDATE metadata SET total_downloads = total_downloads + $1",
+               &[&total])?;
 
     Ok(Some(max))
 }

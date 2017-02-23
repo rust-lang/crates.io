@@ -22,7 +22,7 @@ impl<R: Read> HashingReader<R> {
 
 impl<R: Read> Read for HashingReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let amt = try!(self.inner.read(buf));
+        let amt = self.inner.read(buf)?;
         self.hasher.update(&buf[..amt]).unwrap();
         return Ok(amt)
     }

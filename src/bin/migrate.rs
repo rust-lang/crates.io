@@ -26,9 +26,9 @@ fn main() {
 
 fn apply(tx: postgres::transaction::Transaction,
          migrations: Vec<Migration>) -> postgres::Result<()> {
-    let mut mgr = try!(migrate::Manager::new(tx));
+    let mut mgr = migrate::Manager::new(tx)?;
     for m in migrations.into_iter() {
-        try!(mgr.apply(m));
+        mgr.apply(m)?;
     }
     mgr.set_commit();
     mgr.finish()
@@ -36,10 +36,10 @@ fn apply(tx: postgres::transaction::Transaction,
 
 fn rollback(tx: postgres::transaction::Transaction,
             migrations: Vec<Migration>) -> postgres::Result<()> {
-    let mut mgr = try!(migrate::Manager::new(tx));
+    let mut mgr = migrate::Manager::new(tx)?;
     for m in migrations.into_iter().rev() {
         if mgr.contains(m.version()) {
-            try!(mgr.rollback(m));
+            mgr.rollback(m)?;
             break
         }
     }
@@ -79,10 +79,10 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20140925132249, "packages", "created_at",
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::new(20140925132250, |tx| {
-            try!(tx.execute("UPDATE packages SET updated_at = now() \
-                             WHERE updated_at IS NULL", &[]));
-            try!(tx.execute("UPDATE packages SET created_at = now() \
-                             WHERE created_at IS NULL", &[]));
+            tx.execute("UPDATE packages SET updated_at = now() \
+                             WHERE updated_at IS NULL", &[])?;
+            tx.execute("UPDATE packages SET created_at = now() \
+                             WHERE created_at IS NULL", &[])?;
             Ok(())
         }, |_| Ok(())),
         Migration::add_column(20140925132251, "versions", "updated_at",
@@ -90,78 +90,78 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20140925132252, "versions", "created_at",
                               "TIMESTAMP NOT NULL DEFAULT now()"),
         Migration::new(20140925132253, |tx| {
-            try!(tx.execute("UPDATE versions SET updated_at = now() \
-                             WHERE updated_at IS NULL", &[]));
-            try!(tx.execute("UPDATE versions SET created_at = now() \
-                             WHERE created_at IS NULL", &[]));
+            tx.execute("UPDATE versions SET updated_at = now() \
+                             WHERE updated_at IS NULL", &[])?;
+            tx.execute("UPDATE versions SET created_at = now() \
+                             WHERE created_at IS NULL", &[])?;
             Ok(())
         }, |_| Ok(())),
         Migration::new(20140925132254, |tx| {
-            try!(tx.execute("ALTER TABLE versions ALTER COLUMN updated_at \
-                             DROP DEFAULT", &[]));
-            try!(tx.execute("ALTER TABLE versions ALTER COLUMN created_at \
-                             DROP DEFAULT", &[]));
-            try!(tx.execute("ALTER TABLE packages ALTER COLUMN updated_at \
-                             DROP DEFAULT", &[]));
-            try!(tx.execute("ALTER TABLE packages ALTER COLUMN created_at \
-                             DROP DEFAULT", &[]));
+            tx.execute("ALTER TABLE versions ALTER COLUMN updated_at \
+                             DROP DEFAULT", &[])?;
+            tx.execute("ALTER TABLE versions ALTER COLUMN created_at \
+                             DROP DEFAULT", &[])?;
+            tx.execute("ALTER TABLE packages ALTER COLUMN updated_at \
+                             DROP DEFAULT", &[])?;
+            tx.execute("ALTER TABLE packages ALTER COLUMN created_at \
+                             DROP DEFAULT", &[])?;
             Ok(())
         }, |_| Ok(())),
         Migration::add_table(20140925153704, "metadata", "
             total_downloads        BIGINT NOT NULL
         "),
         Migration::new(20140925153705, |tx| {
-            try!(tx.execute("INSERT INTO metadata (total_downloads) \
-                             VALUES ($1)", &[&0i64]));
+            tx.execute("INSERT INTO metadata (total_downloads) \
+                             VALUES ($1)", &[&0i64])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DELETE FROM metadata", &[])); Ok(())
+            tx.execute("DELETE FROM metadata", &[])?; Ok(())
         }),
         Migration::add_column(20140925161623, "packages", "downloads",
                               "INTEGER NOT NULL DEFAULT 0"),
         Migration::add_column(20140925161624, "versions", "downloads",
                               "INTEGER NOT NULL DEFAULT 0"),
         Migration::new(20140925161625, |tx| {
-            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             DROP DEFAULT", &[]));
-            try!(tx.execute("ALTER TABLE packages ALTER COLUMN downloads \
-                             DROP DEFAULT", &[]));
+            tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             DROP DEFAULT", &[])?;
+            tx.execute("ALTER TABLE packages ALTER COLUMN downloads \
+                             DROP DEFAULT", &[])?;
             Ok(())
         }, |_| Ok(())),
         Migration::add_column(20140926130044, "packages", "max_version",
                               "VARCHAR"),
         Migration::new(20140926130045, |tx| {
-            let stmt = try!(tx.prepare("SELECT * FROM packages"));
-            let rows = try!(stmt.query(&[]));
+            let stmt = tx.prepare("SELECT * FROM packages")?;
+            let rows = stmt.query(&[])?;
             for row in rows.iter() {
                 let pkg: Crate = Model::from_row(&row);
                 let versions = pkg.versions(tx).unwrap();
                 let v = versions.iter().max_by_key(|v| &v.num).unwrap();
                 let max = v.num.to_string();
-                try!(tx.execute("UPDATE packages SET max_version = $1 \
+                tx.execute("UPDATE packages SET max_version = $1 \
                                  WHERE id = $2",
-                                &[&max, &pkg.id]));
+                           &[&max, &pkg.id])?;
             }
             Ok(())
         }, |_| Ok(())),
         Migration::new(20140926130046, |tx| {
-            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             SET NOT NULL", &[]));
+            tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             SET NOT NULL", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
-                             DROP NOT NULL", &[]));
+            tx.execute("ALTER TABLE versions ALTER COLUMN downloads \
+                             DROP NOT NULL", &[])?;
             Ok(())
         }),
         Migration::new(20140926174020, |tx| {
-            try!(tx.execute("ALTER TABLE packages RENAME TO crates", &[]));
-            try!(tx.execute("ALTER TABLE versions RENAME COLUMN package_id \
-                             TO crate_id", &[]));
+            tx.execute("ALTER TABLE packages RENAME TO crates", &[])?;
+            tx.execute("ALTER TABLE versions RENAME COLUMN package_id \
+                             TO crate_id", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("ALTER TABLE crates RENAME TO packages", &[]));
-            try!(tx.execute("ALTER TABLE versions RENAME COLUMN crate_id \
-                             TO package_id", &[]));
+            tx.execute("ALTER TABLE crates RENAME TO packages", &[])?;
+            tx.execute("ALTER TABLE versions RENAME COLUMN crate_id \
+                             TO package_id", &[])?;
             Ok(())
         }),
         Migration::run(20140929103749,
@@ -330,7 +330,7 @@ fn migrations() -> Vec<Migration> {
         // http://www.postgresql.org/docs/8.3/static/textsearch-controls.html
         // http://www.postgresql.org/docs/8.3/static/textsearch-features.html
         Migration::new(20141020175650, |tx| {
-            try!(tx.batch_execute("
+            tx.batch_execute("
             CREATE FUNCTION trigger_crates_name_search() RETURNS trigger AS $$
             begin
               new.textsearchable_index_col :=
@@ -349,13 +349,13 @@ fn migrations() -> Vec<Migration> {
             CREATE TRIGGER trigger_crates_tsvector_update BEFORE INSERT OR UPDATE
             ON crates
             FOR EACH ROW EXECUTE PROCEDURE trigger_crates_name_search();
-            "));
+            ")?;
             Ok(())
 
         }, |tx| {
-            try!(tx.execute("DROP TRIGGER trigger_crates_tsvector_update
-                                       ON crates", &[]));
-            try!(tx.execute("DROP FUNCTION trigger_crates_name_search()", &[]));
+            tx.execute("DROP TRIGGER trigger_crates_tsvector_update
+                                       ON crates", &[])?;
+            tx.execute("DROP FUNCTION trigger_crates_name_search()", &[])?;
             Ok(())
         }),
         Migration::add_column(20141020175651, "crates", "keywords", "varchar"),
@@ -381,64 +381,64 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20141023180231, "crates", "repository", "varchar"),
 
         Migration::new(20141112082527, |tx| {
-            try!(tx.execute("ALTER TABLE users DROP CONSTRAINT IF \
-                             EXISTS users_email_key", &[]));
+            tx.execute("ALTER TABLE users DROP CONSTRAINT IF \
+                             EXISTS users_email_key", &[])?;
             Ok(())
 
         }, |_| Ok(())),
         Migration::add_column(20141120162357, "dependencies", "kind", "INTEGER"),
         Migration::new(20141121191309, |tx| {
-            try!(tx.execute("ALTER TABLE crates DROP CONSTRAINT \
-                             packages_name_key", &[]));
-            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
-                             ON crates (lower(name))", &[]));
+            tx.execute("ALTER TABLE crates DROP CONSTRAINT \
+                             packages_name_key", &[])?;
+            tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (lower(name))", &[])?;
             Ok(())
 
         }, |tx| {
-            try!(tx.execute("DROP INDEX index_crates_name", &[]));
-            try!(tx.execute("ALTER TABLE crates ADD CONSTRAINT packages_name_key \
-                             UNIQUE (name)", &[]));
+            tx.execute("DROP INDEX index_crates_name", &[])?;
+            tx.execute("ALTER TABLE crates ADD CONSTRAINT packages_name_key \
+                             UNIQUE (name)", &[])?;
             Ok(())
         }),
         Migration::new(20150209202206, |tx| {
-            try!(fix_duplicate_crate_owners(tx));
-            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+            fix_duplicate_crate_owners(tx)?;
+            tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
                              crate_owners_unique_user_per_crate \
-                             UNIQUE (user_id, crate_id)", &[]));
+                             UNIQUE (user_id, crate_id)", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
-                             crate_owners_unique_user_per_crate", &[]));
+            tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_user_per_crate", &[])?;
             Ok(())
         }),
         Migration::new(20150319224700, |tx| {
-            try!(tx.execute("
+            tx.execute("
                 CREATE FUNCTION canon_crate_name(text) RETURNS text AS $$
                     SELECT replace(lower($1), '-', '_')
                 $$ LANGUAGE SQL
-            ", &[]));
+            ", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DROP FUNCTION canon_crate_name(text)", &[]));
+            tx.execute("DROP FUNCTION canon_crate_name(text)", &[])?;
             Ok(())
         }),
         Migration::new(20150319224701, |tx| {
-            try!(tx.execute("DROP INDEX index_crates_name", &[]));
-            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
-                             ON crates (canon_crate_name(name))", &[]));
+            tx.execute("DROP INDEX index_crates_name", &[])?;
+            tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (canon_crate_name(name))", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DROP INDEX index_crates_name", &[]));
-            try!(tx.execute("CREATE UNIQUE INDEX index_crates_name \
-                             ON crates (lower(name))", &[]));
+            tx.execute("DROP INDEX index_crates_name", &[])?;
+            tx.execute("CREATE UNIQUE INDEX index_crates_name \
+                             ON crates (lower(name))", &[])?;
             Ok(())
         }),
         Migration::new(20150320174400, |tx| {
-            try!(tx.execute("CREATE INDEX index_keywords_lower_keyword ON keywords (lower(keyword))",
-                            &[]));
+            tx.execute("CREATE INDEX index_keywords_lower_keyword ON keywords (lower(keyword))",
+                       &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DROP INDEX index_keywords_lower_keyword", &[]));
+            tx.execute("DROP INDEX index_keywords_lower_keyword", &[])?;
             Ok(())
         }),
         Migration::add_column(20150715170350, "crate_owners", "owner_kind",
@@ -461,24 +461,24 @@ fn migrations() -> Vec<Migration> {
         undo_foreign_key(20150804170130, "crate_owners", "user_id",
                          "owner_id", "users (id)"),
         Migration::new(20150818112907, |tx| {
-            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
-                             crate_owners_unique_user_per_crate", &[]));
-            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+            tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_user_per_crate", &[])?;
+            tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
                              crate_owners_unique_owner_per_crate \
-                             UNIQUE (owner_id, crate_id, owner_kind)", &[]));
+                             UNIQUE (owner_id, crate_id, owner_kind)", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
-                             crate_owners_unique_owner_per_crate", &[]));
-            try!(tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
+            tx.execute("ALTER TABLE crate_owners DROP CONSTRAINT \
+                             crate_owners_unique_owner_per_crate", &[])?;
+            tx.execute("ALTER TABLE crate_owners ADD CONSTRAINT \
                              crate_owners_unique_user_per_crate \
-                             UNIQUE (owner_id, crate_id)", &[]));
+                             UNIQUE (owner_id, crate_id)", &[])?;
             Ok(())
         }),
         Migration::add_column(20151118135514, "crates", "max_upload_size",
                               "INTEGER"),
         Migration::new(20151126095136, |tx| {
-            try!(tx.batch_execute("
+            tx.batch_execute("
             ALTER TABLE version_downloads ALTER downloads SET DEFAULT 1;
             ALTER TABLE version_downloads ALTER counted SET DEFAULT 0;
             ALTER TABLE version_downloads ALTER date SET DEFAULT current_date;
@@ -536,11 +536,11 @@ fn migrations() -> Vec<Migration> {
             CREATE TRIGGER trigger_versions_set_updated_at BEFORE UPDATE
             ON versions
             FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
-            "));
+            ")?;
             Ok(())
 
         }, |tx| {
-            try!(tx.batch_execute("
+            tx.batch_execute("
             ALTER TABLE version_downloads ALTER downloads DROP DEFAULT;
             ALTER TABLE version_downloads ALTER counted DROP DEFAULT;
             ALTER TABLE version_downloads ALTER date DROP DEFAULT;
@@ -570,11 +570,11 @@ fn migrations() -> Vec<Migration> {
             DROP TRIGGER trigger_versions_set_updated_at ON versions;
 
             DROP FUNCTION set_updated_at();
-            "));
+            ")?;
             Ok(())
         }),
         Migration::new(20151211122515, |tx| {
-            try!(tx.batch_execute("
+            tx.batch_execute("
                 CREATE FUNCTION set_updated_at_ignore_downloads() RETURNS trigger AS $$
                 BEGIN
                     IF (NEW.updated_at IS NOT DISTINCT FROM OLD.updated_at AND
@@ -594,10 +594,10 @@ fn migrations() -> Vec<Migration> {
                 CREATE TRIGGER trigger_versions_set_updated_at BEFORE UPDATE
                 ON versions
                 FOR EACH ROW EXECUTE PROCEDURE set_updated_at_ignore_downloads();
-            "));
+            ")?;
             Ok(())
         }, |tx| {
-            try!(tx.batch_execute("
+            tx.batch_execute("
                 DROP TRIGGER trigger_crates_set_updated_at ON crates;
                 DROP TRIGGER trigger_versions_set_updated_at ON versions;
                 DROP FUNCTION set_updated_at_ignore_downloads();
@@ -608,7 +608,7 @@ fn migrations() -> Vec<Migration> {
                 CREATE TRIGGER trigger_versions_set_updated_at BEFORE UPDATE
                 ON versions
                 FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
-            "));
+            ")?;
             Ok(())
         }),
         Migration::new(20160219125609, |tx| {
@@ -683,16 +683,16 @@ fn migrations() -> Vec<Migration> {
         Migration::new(20160326123149, |tx| {
             use postgres::error::{Error, SqlState};
 
-            for row in try!(tx.query("SELECT id FROM keywords ORDER BY id", &[])).iter() {
+            for row in tx.query("SELECT id FROM keywords ORDER BY id", &[])?.iter() {
                 let kw_id: i32 = row.get(0);
                 let err = {
-                    let tx = try!(tx.transaction());
+                    let tx = tx.transaction()?;
                     let res = tx.execute("UPDATE keywords SET keyword = LOWER(keyword)
                                           WHERE id = $1", &[&kw_id]);
                     match res {
                         Ok(n) => {
                             assert_eq!(n, 1);
-                            try!(tx.commit());
+                            tx.commit()?;
                             continue;
                         },
                         Err(e) => /* Rollback update, fall through */ e
@@ -703,20 +703,20 @@ fn migrations() -> Vec<Migration> {
                     Error::Db(ref e) if e.code == SqlState::UniqueViolation => {
                         // There is already a lower-case version of this keyword.
                         // Merge into the other one.
-                        let target_id: i32 = try!(tx.query("
+                        let target_id: i32 = tx.query("
                             SELECT id FROM keywords WHERE keyword = LOWER((
                                 SELECT keyword FROM keywords WHERE id = $1
                             ))
-                        ", &[&kw_id])).get(0).get(0);
+                        ", &[&kw_id])?.get(0).get(0);
 
-                        try!(tx.batch_execute(&format!("
+                        tx.batch_execute(&format!("
                             UPDATE crates_keywords SET keyword_id = {}
                                 WHERE keyword_id = {};
                             UPDATE keywords SET crates_cnt = crates_cnt + (
                                 SELECT crates_cnt FROM keywords WHERE id = {}
                             ) WHERE id = {};
                             DELETE FROM keywords WHERE id = {};
-                        ", target_id, kw_id, kw_id, target_id, kw_id)));
+                        ", target_id, kw_id, kw_id, target_id, kw_id))?;
                     },
                     e => return Err(e)
                 }
@@ -741,12 +741,12 @@ fn migrations() -> Vec<Migration> {
         Migration::add_column(20160811151953, "users", "gh_id", "INTEGER"),
         index(20160811151954, "users", "gh_id"),
         Migration::new(20160812094501, |tx| {
-            try!(tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
-                             SET NOT NULL", &[]));
+            tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
+                             SET NOT NULL", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
-                             DROP NOT NULL", &[]));
+            tx.execute("ALTER TABLE users ALTER COLUMN gh_id \
+                             DROP NOT NULL", &[])?;
             Ok(())
         }),
         Migration::new(20160812094502, |tx| {
@@ -755,11 +755,11 @@ fn migrations() -> Vec<Migration> {
             // had to fill it in at one point after-the-fact. User rows that
             // couldn't be resolved either have a github id of 0 or -1 so they
             // can't ever be logged into again.
-            try!(tx.execute("CREATE UNIQUE INDEX users_gh_id \
-                             ON users (gh_id) WHERE gh_id > 0", &[]));
+            tx.execute("CREATE UNIQUE INDEX users_gh_id \
+                             ON users (gh_id) WHERE gh_id > 0", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DROP INDEX users_gh_id", &[]));
+            tx.execute("DROP INDEX users_gh_id", &[])?;
             Ok(())
         }),
         Migration::add_table(20161115110541, "categories", " \
@@ -783,7 +783,7 @@ fn migrations() -> Vec<Migration> {
         index(20161115111853, "crates_categories", "crate_id"),
         index(20161115111900, "crates_categories", "category_id"),
         Migration::new(20161115111957, |tx| {
-            try!(tx.batch_execute(" \
+            tx.batch_execute(" \
                 CREATE FUNCTION update_categories_crates_cnt() \
                 RETURNS trigger AS $$ \
                 BEGIN \
@@ -808,15 +808,15 @@ fn migrations() -> Vec<Migration> {
                 AFTER INSERT OR DELETE ON crates_categories \
                 FOR EACH ROW \
                 EXECUTE PROCEDURE touch_crate(); \
-            "));
+            ")?;
             Ok(())
         }, |tx| {
-            try!(tx.batch_execute(" \
+            tx.batch_execute(" \
                 DROP TRIGGER trigger_update_categories_crates_cnt \
                 ON crates_categories; \
                 DROP FUNCTION update_categories_crates_cnt(); \
                 DROP TRIGGER touch_crate_on_modify_categories \
-                ON crates_categories;"));
+                ON crates_categories;")?;
             Ok(())
         }),
         Migration::add_table(20170102131034, "badges", " \
@@ -824,11 +824,11 @@ fn migrations() -> Vec<Migration> {
             badge_type       VARCHAR NOT NULL, \
             attributes       JSONB NOT NULL"),
         Migration::new(20170102145236, |tx| {
-            try!(tx.execute("CREATE UNIQUE INDEX badges_crate_type \
-                             ON badges (crate_id, badge_type)", &[]));
+            tx.execute("CREATE UNIQUE INDEX badges_crate_type \
+                             ON badges (crate_id, badge_type)", &[])?;
             Ok(())
         }, |tx| {
-            try!(tx.execute("DROP INDEX badges_crate_type", &[]));
+            tx.execute("DROP INDEX badges_crate_type", &[])?;
             Ok(())
         }),
     ];
@@ -878,24 +878,24 @@ fn migrations() -> Vec<Migration> {
 // DO NOT UPDATE OR USE FOR NEW MIGRATIONS
 fn fix_duplicate_crate_owners(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
     let v: Vec<(i32, i32)> = {
-        let stmt = try!(tx.prepare("SELECT user_id, crate_id
+        let stmt = tx.prepare("SELECT user_id, crate_id
                                       FROM crate_owners
                                      GROUP BY user_id, crate_id
-                                    HAVING COUNT(*) > 1"));
-        let rows = try!(stmt.query(&[]));
+                                    HAVING COUNT(*) > 1")?;
+        let rows = stmt.query(&[])?;
         rows.iter().map(|row| {
             (row.get("user_id"), row.get("crate_id"))
         }).collect()
     };
     for &(user_id, crate_id) in v.iter() {
-        let stmt = try!(tx.prepare("SELECT id FROM crate_owners
+        let stmt = tx.prepare("SELECT id FROM crate_owners
                                     WHERE user_id = $1 AND crate_id = $2
                                     ORDER BY created_at ASC
-                                    OFFSET 1"));
-        let rows = try!(stmt.query(&[&user_id, &crate_id]));
+                                    OFFSET 1")?;
+        let rows = stmt.query(&[&user_id, &crate_id])?;
         for row in rows.iter() {
             let id: i32 = row.get("id");
-            try!(tx.execute("DELETE FROM crate_owners WHERE id = $1", &[&id]));
+            tx.execute("DELETE FROM crate_owners WHERE id = $1", &[&id])?;
         }
     }
     Ok(())

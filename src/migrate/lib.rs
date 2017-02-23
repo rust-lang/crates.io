@@ -74,19 +74,19 @@ fn run(sql: String) -> Step {
 impl<'a> Manager<'a> {
     pub fn new(tx: Transaction) -> PgResult<Manager> {
         let mut mgr = Manager { tx: tx, versions: HashSet::new() };
-        try!(mgr.load());
+        mgr.load()?;
         Ok(mgr)
     }
 
     fn load(&mut self) -> PgResult<()> {
-        try!(self.tx.execute("CREATE TABLE IF NOT EXISTS schema_migrations (
+        self.tx.execute("CREATE TABLE IF NOT EXISTS schema_migrations (
             id              SERIAL PRIMARY KEY,
             version         INT8 NOT NULL UNIQUE
-        )", &[]));
+        )", &[])?;
 
-        let stmt = try!(self.tx.prepare("SELECT version FROM \
-                                         schema_migrations"));
-        for row in try!(stmt.query(&[])).iter() {
+        let stmt = self.tx.prepare("SELECT version FROM \
+                                         schema_migrations")?;
+        for row in stmt.query(&[])?.iter() {
             assert!(self.versions.insert(row.get("version")));
         }
         Ok(())
@@ -99,20 +99,20 @@ impl<'a> Manager<'a> {
     pub fn apply(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.insert(migration.version) { return Ok(()) }
         println!("applying {}", migration.version);
-        try!((migration.up)(A { t: &self.tx }));
-        let stmt = try!(self.tx.prepare("INSERT into schema_migrations
-                                         (version) VALUES ($1)"));
-        try!(stmt.execute(&[&migration.version]));
+        (migration.up)(A { t: &self.tx })?;
+        let stmt = self.tx.prepare("INSERT into schema_migrations
+                                         (version) VALUES ($1)")?;
+        stmt.execute(&[&migration.version])?;
         Ok(())
     }
 
     pub fn rollback(&mut self, mut migration: Migration) -> PgResult<()> {
         if !self.versions.remove(&migration.version) { return Ok(()) }
         println!("rollback {}", migration.version);
-        try!((migration.down)(A { t: &self.tx }));
-        let stmt = try!(self.tx.prepare("DELETE FROM schema_migrations
-                                         WHERE version = $1"));
-        try!(stmt.execute(&[&migration.version]));
+        (migration.down)(A { t: &self.tx })?;
+        let stmt = self.tx.prepare("DELETE FROM schema_migrations
+                                         WHERE version = $1")?;
+        stmt.execute(&[&migration.version])?;
         Ok(())
     }
 
