@@ -8,6 +8,7 @@
     "moment": "2.17.1",
     "moment-timezone": "0.5.11",
     "normalize-css": "5.0.0",
-    "pretender": "1.4.2"
+    "pretender": "1.4.2",
+    "clipboard": "1.6.0"
   }
 }

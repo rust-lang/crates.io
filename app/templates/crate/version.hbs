@@ -57,7 +57,10 @@
         {{/if}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
-            <code>{{ crate.name }} = "{{ currentVersion.num }}"</code>
+            <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
+            <button id="crate-download-button" data-clipboard-action="copy" data-clipboard-target="#crate-toml">
+                <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
+            </button>
         </div>
     </div>
     <div class='authorship'>
@@ -271,3 +274,19 @@
     </div>
 </div>
 {{/if}}
+
+<script type="text/javascript">
+  if (!Clipboard.isSupported()) {
+    document.getElementById('crate-download-button').classList.add('hidden');
+  }
+
+  var clipboard = new Clipboard('#crate-download-button');
+  clipboard.on('success', function(e) {
+      e.clearSelection();
+      // TODO : Add a tooltip to notify the user that it's copied
+  });
+  clipboard.on('error', function(e) {
+      // TODO : Add a tooltip to notify the user that the copy failed, so he will have to use CTRL+C
+  });
+
+</script>
