@@ -14,7 +14,7 @@ export default Ember.Route.extend({
             const unstableFlags = ['alpha', 'beta'];
 
             return unstableFlags.some((flag) => {
-                return version.includes(flag);
+                return version.indexOf(flag) > -1;
             });
         };
 
