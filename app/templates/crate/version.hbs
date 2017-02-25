@@ -291,16 +291,25 @@
       e.clearSelection();
       notificationElement.classList.add('copy-success')
       notificationElement.textContent = successText;
+      fadeOffElement(notificationElement, 2000);
   });
   clipboard.on('error', function(e) {
       var failureText = 'An error occured. Please use CTRL+C.';
 
       notificationElement.classList.add('copy-failure')
       notificationElement.textContent = failureText;
+      fadeOffElement(notificationElement, 2000);
   });
 
-  window.setTimeout(function() {
-    notificationElement.innerHTML = '';
-  }, 2000);
+  function fadeOffElement(element, delay) {
+    setTimeout(function() {
+      resetElement(element);
+    }, delay);
+  }
+
+  function resetElement(element) {
+    element.innerHTML = '';
+    element.className = '';
+  }
 
 </script>
