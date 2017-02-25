@@ -243,13 +243,26 @@
         button {
           padding:5px;
         }
-
         @media only screen and (min-width: 500px) {
             .action { @include flex(2); display: block; }
             code { @include flex(8); }
         }
     }
+    .copy-result {
+      text-align:right;
 
+      span {
+        font-size:80%;
+        font-weight:bold;
+      }
+      .copy-success {
+        color:$link-color;
+      }
+      .copy-failure {
+        color:red;
+      }
+
+    }
     .last-update {
         color: $main-color-light;
         font-size: 90%;

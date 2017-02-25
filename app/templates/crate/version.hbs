@@ -62,6 +62,9 @@
                 <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
             </button>
         </div>
+        <div class="copy-result">
+          <span id="copy-notification"></span>
+        </div>
     </div>
     <div class='authorship'>
         <div class='top'>
@@ -281,12 +284,23 @@
   }
 
   var clipboard = new Clipboard('#crate-download-button');
+  var notificationElement = document.getElementById('copy-notification');
   clipboard.on('success', function(e) {
+      var successText = 'Copied !';
+
       e.clearSelection();
-      // TODO : Add a tooltip to notify the user that it's copied
+      notificationElement.classList.add('copy-success')
+      notificationElement.textContent = successText;
   });
   clipboard.on('error', function(e) {
-      // TODO : Add a tooltip to notify the user that the copy failed, so he will have to use CTRL+C
+      var failureText = 'An error occured. Please use CTRL+C.';
+
+      notificationElement.classList.add('copy-failure')
+      notificationElement.textContent = failureText;
   });
+
+  window.setTimeout(function() {
+    notificationElement.innerHTML = '';
+  }, 2000);
 
 </script>
