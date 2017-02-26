@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeSet};
+use std::str::FromStr;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -6,8 +7,7 @@ use pg::GenericConnection;
 use pg::rows::Row;
 use rustc_serialize::json;
 use semver;
-use time::Duration;
-use time::Timespec;
+use time::{self, Duration, Timespec};
 use url;
 
 use {Model, Crate, User};
@@ -19,7 +19,7 @@ use git;
 use upload;
 use user::RequestUser;
 use owner::{rights, Rights};
-use util::{RequestUtils, CargoResult, ChainError, internal, human};
+use util::{RequestUtils, CargoResult, ChainError, internal, human, CargoError};
 
 #[derive(Clone)]
 pub struct Version {
@@ -57,6 +57,60 @@ pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
+    pub build_info: String,
+}
+
+#[derive(RustcEncodable, RustcDecodable, Default)]
+pub struct EncodableBuildInfo {
+    id: i32,
+    pub ordering: HashMap<String, Vec<String>>,
+    pub stable: HashMap<String, HashMap<String, bool>>,
+    pub beta: HashMap<String, HashMap<String, bool>>,
+    pub nightly: HashMap<String, HashMap<String, bool>>,
+}
+
+pub enum ChannelVersion {
+    Stable(semver::Version),
+    Beta(Timespec),
+    Nightly(Timespec),
+}
+
+impl FromStr for ChannelVersion {
+    type Err = Box<CargoError>;
+
+    fn from_str(s: &str) -> CargoResult<Self> {
+        // Recognized formats:
+        // rustc 1.14.0 (e8a012324 2016-12-16)
+        // rustc 1.15.0-beta.5 (10893a9a3 2017-01-19)
+        // rustc 1.16.0-nightly (df8debf6d 2017-01-25)
+
+        let pieces: Vec<_> = s.split(&[' ', '(', ')'][..])
+                              .filter(|s| !s.trim().is_empty())
+                              .collect();
+        if pieces.len() != 4 {
+            return Err(human(format!(
+                "rust_version `{}` not recognized; \
+                expected format like `rustc X.Y.Z (SHA YYYY-MM-DD)`",
+                s
+            )));
+        }
+
+        if pieces[1].contains("nightly") {
+            Ok(ChannelVersion::Nightly(time::strptime(pieces[3], "%Y-%m-%d")?.to_timespec()))
+        } else if pieces[1].contains("beta") {
+            Ok(ChannelVersion::Beta(time::strptime(pieces[3], "%Y-%m-%d")?.to_timespec()))
+        } else {
+            let v = semver::Version::parse(pieces[1])?;
+            if v.pre.is_empty() {
+                Ok(ChannelVersion::Stable(v))
+            } else {
+                return Err(human(format!(
+                    "rust_version `{}` not recognized as nightly, beta, or stable",
+                    s
+                )));
+            }
+        }
+    }
 }
 
 impl Version {
@@ -117,6 +171,7 @@ impl Version {
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads",
                                            crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
+                build_info: format!("/api/v1/crates/{}/{}/build_info", crate_name, num),
             },
         }
     }
@@ -192,6 +247,72 @@ impl Version {
     pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
         try!(conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
                           &[&yanked, &self.id]));
+        Ok(())
+    }
+
+    pub fn store_build_info(&self,
+                            conn: &GenericConnection,
+                            info: upload::VersionBuildInfo,
+                            krate: &Crate) -> CargoResult<()> {
+
+        // Verify specified Rust version will parse before doing any inserting
+        let channel_version = info.channel_version()?;
+
+        // Future improvement: allow overwriting an existing row, in which case
+        // the ON CONFLICT DO should set `passed` instead of doing nothing.
+        let inserted = conn.execute("INSERT INTO build_info \
+                          (version_id, rust_version, target, passed) \
+                      VALUES ($1, $2, $3, $4) \
+                      ON CONFLICT (version_id, rust_version, target) DO NOTHING",
+            &[&self.id, &info.rust_version, &info.target, &info.passed])?;
+
+        if inserted == 0 {
+            return Err(human(format!(
+                "Build info already specified for {} v{} with {} and target {}",
+                krate.name, self.num, info.rust_version, info.target)));
+        }
+
+        if info.passed && self.num == krate.max_version {
+            match channel_version {
+                ChannelVersion::Nightly(date) => {
+                    let should_update = krate.max_build_info_nightly.as_ref().map(|max| {
+                        date > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_nightly = $1 \
+                                      WHERE id = $2",
+                                      &[&date, &krate.id])?;
+                    }
+                },
+                ChannelVersion::Beta(date) => {
+                    let should_update = krate.max_build_info_beta.as_ref().map(|max| {
+                        date > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_beta = $1 \
+                                      WHERE id = $2",
+                                      &[&date, &krate.id])?;
+                    }
+                },
+                ChannelVersion::Stable(vers) => {
+                    let should_update = krate.max_build_info_stable.as_ref().map(|max| {
+                        vers > *max
+                    }).unwrap_or(true);
+
+                    if should_update {
+                        conn.execute("UPDATE crates \
+                                      SET max_build_info_stable = $1 \
+                                      WHERE id = $2",
+                                      &[&vers.to_string(), &krate.id])?;
+                    }
+                },
+            }
+        }
+
         Ok(())
     }
 }
@@ -324,6 +445,73 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ version_downloads: downloads }))
 }
 
+/// Handles the `GET /crates/:crate_id/:version/build_info` route.
+pub fn build_info(req: &mut Request) -> CargoResult<Response> {
+    let (version, _) = try!(version_and_crate(req));
+
+    let tx = try!(req.tx());
+
+    let stmt = try!(tx.prepare("SELECT * FROM build_info
+                                WHERE version_id = $1"));
+    let rows = stmt.query(&[&version.id])?;
+
+    let mut build_info = EncodableBuildInfo::default();
+    build_info.id = version.id;
+    let mut stables = BTreeSet::new();
+    let mut betas = BTreeSet::new();
+    let mut nightlies = BTreeSet::new();
+
+    for row in &rows {
+        let rust_version: String = row.get("rust_version");
+        let rust_version: ChannelVersion = rust_version.parse()?;
+        let target = row.get("target");
+        let passed = row.get("passed");
+
+        match rust_version {
+            ChannelVersion::Stable(semver) => {
+                let key = semver.to_string();
+                stables.insert(semver);
+                build_info.stable.entry(key)
+                                 .or_insert_with(HashMap::new)
+                                 .insert(target, passed);
+            }
+            ChannelVersion::Beta(date) => {
+                let key = ::encode_time(date);
+                betas.insert(date);
+                build_info.beta.entry(key)
+                                  .or_insert_with(HashMap::new)
+                                  .insert(target, passed);
+            }
+            ChannelVersion::Nightly(date) => {
+                let key = ::encode_time(date);
+                nightlies.insert(date);
+                build_info.nightly.entry(key)
+                                  .or_insert_with(HashMap::new)
+                                  .insert(target, passed);
+            }
+        }
+    }
+
+    build_info.ordering.insert(
+        String::from("stable"),
+        stables.into_iter().map(|s| s.to_string()).collect()
+    );
+
+    build_info.ordering.insert(
+        String::from("beta"),
+        betas.into_iter().map(::encode_time).collect()
+    );
+
+    build_info.ordering.insert(
+        String::from("nightly"),
+        nightlies.into_iter().map(::encode_time).collect()
+    );
+
+    #[derive(RustcEncodable)]
+    struct R { build_info: EncodableBuildInfo }
+    Ok(req.json(&R{ build_info: build_info }))
+}
+
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = try!(version_and_crate(req));
@@ -366,6 +554,29 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
         try!(version.yank(tx, yanked));
         try!(git::yank(&**req.app(), &krate.name, &version.num, yanked));
     }
+
+    #[derive(RustcEncodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R{ ok: true }))
+}
+
+/// Handles the `POST /crates/:crate_id/:version/build_info` route.
+pub fn publish_build_info(req: &mut Request) -> CargoResult<Response> {
+    let mut body = String::new();
+    try!(req.body().read_to_string(&mut body));
+    let info: upload::VersionBuildInfo = try!(json::decode(&body).map_err(|e| {
+        human(format!("invalid upload request: {:?}", e))
+    }));
+
+    let (version, krate) = try!(version_and_crate(req));
+    let user = try!(req.user());
+    let tx = try!(req.tx());
+    let owners = try!(krate.owners(tx));
+    if try!(rights(req.app(), &owners, &user)) < Rights::Publish {
+        return Err(human("must already be an owner to publish build info"))
+    }
+
+    version.store_build_info(tx, info, &krate)?;
 
     #[derive(RustcEncodable)]
     struct R { ok: bool }

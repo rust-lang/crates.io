@@ -101,6 +101,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
     api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
+    api_router.get("/crates/:crate_id/:version/build_info", C(version::build_info));
+    api_router.put("/crates/:crate_id/:version/build_info", C(version::publish_build_info));
     api_router.get("/crates/:crate_id/reverse_dependencies", C(krate::reverse_dependencies));
     api_router.get("/versions", C(version::index));
     api_router.get("/versions/:version_id", C(version::show));
