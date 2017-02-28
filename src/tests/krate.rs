@@ -20,25 +20,54 @@ use cargo_registry::version::EncodableVersion;
 use cargo_registry::category::Category;
 
 #[derive(RustcDecodable)]
-struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
+struct CrateList {
+    crates: Vec<EncodableCrate>,
+    meta: CrateMeta,
+}
 #[derive(RustcDecodable)]
-struct VersionsList { versions: Vec<EncodableVersion> }
+struct VersionsList {
+    versions: Vec<EncodableVersion>,
+}
 #[derive(RustcDecodable)]
-struct CrateMeta { total: i32 }
+struct CrateMeta {
+    total: i32,
+}
 #[derive(RustcDecodable)]
-struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
+struct GitCrate {
+    name: String,
+    vers: String,
+    deps: Vec<String>,
+    cksum: String,
+}
 #[derive(RustcDecodable)]
-struct Warnings { invalid_categories: Vec<String>, invalid_badges: Vec<String> }
+struct Warnings {
+    invalid_categories: Vec<String>,
+    invalid_badges: Vec<String>,
+}
 #[derive(RustcDecodable)]
-struct GoodCrate { krate: EncodableCrate, warnings: Warnings }
+struct GoodCrate {
+    krate: EncodableCrate,
+    warnings: Warnings,
+}
 #[derive(RustcDecodable)]
-struct CrateResponse { krate: EncodableCrate, versions: Vec<EncodableVersion>, keywords: Vec<EncodableKeyword> }
+struct CrateResponse {
+    krate: EncodableCrate,
+    versions: Vec<EncodableVersion>,
+    keywords: Vec<EncodableKeyword>,
+}
 #[derive(RustcDecodable)]
-struct Deps { dependencies: Vec<EncodableDependency> }
+struct Deps {
+    dependencies: Vec<EncodableDependency>,
+}
 #[derive(RustcDecodable)]
-struct RevDeps { dependencies: Vec<EncodableDependency>, meta: CrateMeta }
+struct RevDeps {
+    dependencies: Vec<EncodableDependency>,
+    meta: CrateMeta,
+}
 #[derive(RustcDecodable)]
-struct Downloads { version_downloads: Vec<EncodableVersionDownload> }
+struct Downloads {
+    version_downloads: Vec<EncodableVersionDownload>,
+}
 
 fn new_crate(name: &str) -> u::NewCrate {
     u::NewCrate {
@@ -80,7 +109,9 @@ fn index() {
     assert_eq!(json.crates[0].id, krate.name);
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
+fn tx(req: &Request) -> &GenericConnection {
+    req.tx().unwrap()
+}
 
 #[test]
 fn index_queries() {
@@ -134,8 +165,10 @@ fn index_queries() {
 
     ::mock_category(&mut req, "cat1", "cat1");
     ::mock_category(&mut req, "cat1::bar", "cat1::bar");
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
-                            "cat1::bar".to_string()]).unwrap();
+    Category::update_crate(tx(&req),
+                           &krate,
+                           &["cat1".to_string(), "cat1::bar".to_string()])
+        .unwrap();
     let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
     let cl = ::json::<CrateList>(&mut response);
     assert_eq!(cl.crates.len(), 1);
@@ -163,7 +196,8 @@ fn exact_match_first_on_queries() {
     krate2.description = Some("foo_exact baz_exact foo_exact baz_exact".to_string());
     let (_, _) = ::mock_crate(&mut req, krate2.clone());
     let mut krate3 = ::krate("baz_exact");
-    krate3.description = Some("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact".to_string());
+    krate3.description = Some("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact"
+        .to_string());
     let (_, _) = ::mock_crate(&mut req, krate3.clone());
     let mut krate4 = ::krate("other_exact");
     krate4.description = Some("other_exact".to_string());
@@ -206,7 +240,8 @@ fn exact_match_on_queries_with_sort() {
     krate2.downloads = 3333;
     let (k2, _) = ::mock_crate(&mut req, krate2.clone());
     let mut krate3 = ::krate("baz_sort");
-    krate3.description = Some("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const".to_string());
+    krate3.description = Some("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const"
+        .to_string());
     krate3.downloads = 100000;
     let (k3, _) = ::mock_crate(&mut req, krate3.clone());
     let mut krate4 = ::krate("other_sort");
@@ -218,13 +253,21 @@ fn exact_match_on_queries_with_sort() {
         let req2: &mut Request = &mut req;
         let tx = req2.tx().unwrap();
         tx.execute("UPDATE crates set downloads = $1
-                    WHERE id = $2", &[&krate.downloads, &k.id]).unwrap();
+                    WHERE id = $2",
+                     &[&krate.downloads, &k.id])
+            .unwrap();
         tx.execute("UPDATE crates set downloads = $1
-                    WHERE id = $2", &[&krate2.downloads, &k2.id]).unwrap();
+                    WHERE id = $2",
+                     &[&krate2.downloads, &k2.id])
+            .unwrap();
         tx.execute("UPDATE crates set downloads = $1
-                    WHERE id = $2", &[&krate3.downloads, &k3.id]).unwrap();
+                    WHERE id = $2",
+                     &[&krate3.downloads, &k3.id])
+            .unwrap();
         tx.execute("UPDATE crates set downloads = $1
-                    WHERE id = $2", &[&krate4.downloads, &k4.id]).unwrap();
+                    WHERE id = $2",
+                     &[&krate4.downloads, &k4.id])
+            .unwrap();
     }
 
     let mut response = ok_resp!(middle.call(req.with_query("q=foo_sort&sort=downloads")));
@@ -285,7 +328,8 @@ fn show() {
     assert_eq!(json.versions[0].num, "1.0.0".to_string());
     let suffix = "/api/v1/crates/foo_show/1.0.0/download";
     assert!(json.versions[0].dl_path.ends_with(suffix),
-            "bad suffix {}", json.versions[0].dl_path);
+            "bad suffix {}",
+            json.versions[0].dl_path);
     assert_eq!(1, json.keywords.len());
     assert_eq!("kw1".to_string(), json.keywords[0].id);
 }
@@ -330,7 +374,8 @@ fn new_bad_names() {
         ::logout(&mut req);
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
-                "{:?}", json.errors);
+                "{:?}",
+                json.errors);
     }
 
     bad_name("");
@@ -398,7 +443,9 @@ fn new_krate_with_wildcard_dependency() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo_wild"));
     let json = bad_resp!(middle.call(&mut req));
-    assert!(json.errors[0].detail.contains("dependency constraints"), "{:?}", json.errors);
+    assert!(json.errors[0].detail.contains("dependency constraints"),
+            "{:?}",
+            json.errors);
 }
 
 #[test]
@@ -430,7 +477,8 @@ fn new_krate_wrong_user() {
 
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("another user"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 }
 
 #[test]
@@ -442,20 +490,25 @@ fn new_krate_bad_name() {
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
-                "{:?}", json.errors);
+                "{:?}",
+                json.errors);
     }
     {
         let mut req = ::new_req(app, "áccênts", "2.0.0");
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
-                "{:?}", json.errors);
+                "{:?}",
+                json.errors);
     }
 }
 
 #[test]
 fn new_crate_owner() {
-    #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
 
     let (_b, app, middle) = ::app();
 
@@ -469,26 +522,26 @@ fn new_crate_owner() {
     // Flag the second user as an owner
     let body = r#"{"users":["bar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
-                                               .with_method(Method::Put)
-                                               .with_body(body.as_bytes())));
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
     bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
-                             .with_method(Method::Put)
-                             .with_body(body.as_bytes())));
+        .with_method(Method::Put)
+        .with_body(body.as_bytes())));
 
     // Make sure this shows up as one of their crates.
     let query = format!("user_id={}", u2.id);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates")
-                                               .with_method(Method::Get)
-                                               .with_query(&query)));
+        .with_method(Method::Get)
+        .with_query(&query)));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
     let body = ::new_req_body_version_2(::krate("foo_owner"));
     req.mut_extensions().insert(u2);
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
-                                               .with_method(Method::Put)
-                                               .with_body(&body)));
+        .with_method(Method::Put)
+        .with_body(&body)));
     ::json::<GoodCrate>(&mut response);
 }
 
@@ -531,7 +584,8 @@ fn new_krate_duplicate_version() {
     ::mock_crate(&mut req, ::krate("foo_dupe"));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("already uploaded"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 }
 
 #[test]
@@ -542,7 +596,8 @@ fn new_crate_similar_name() {
     ::mock_crate(&mut req, ::krate("Foo_similar"));
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("previously named"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 }
 
 #[test]
@@ -554,7 +609,8 @@ fn new_crate_similar_name_hyphen() {
         ::mock_crate(&mut req, ::krate("foo_bar_hyphen"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("previously named"),
-                "{:?}", json.errors);
+                "{:?}",
+                json.errors);
     }
     {
         let (_b, app, middle) = ::app();
@@ -563,7 +619,8 @@ fn new_crate_similar_name_hyphen() {
         ::mock_crate(&mut req, ::krate("foo-bar-underscore"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("previously named"),
-                "{:?}", json.errors);
+                "{:?}",
+                json.errors);
     }
 }
 
@@ -592,9 +649,11 @@ fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/fpp");
     fs::create_dir_all(path.parent().unwrap()).unwrap();
-    File::create(&path).unwrap().write_all(
-        br#"{"name":"FPP","vers":"0.0.1","deps":[],"cksum":"3j3"}
-"#).unwrap();
+    File::create(&path)
+        .unwrap()
+        .write_all(br#"{"name":"FPP","vers":"0.0.1","deps":[],"cksum":"3j3"}
+"#)
+        .unwrap();
 
     let mut req = ::new_req(app, "FPP", "1.0.0");
     ::mock_user(&mut req, ::user("foo"));
@@ -625,8 +684,8 @@ fn new_krate_git_upload_with_conflicts() {
         let sig = repo.signature().unwrap();
         let parent = repo.find_commit(target).unwrap();
         let tree = repo.find_tree(parent.tree_id()).unwrap();
-        repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree,
-                    &[&parent]).unwrap();
+        repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree, &[&parent])
+            .unwrap();
     }
 
     let mut req = ::new_req(app, "foo_conflicts", "1.0.0");
@@ -651,8 +710,9 @@ fn new_krate_dependency_missing() {
     ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let json = ::json::<::Bad>(&mut response);
-    assert!(json.errors[0].detail
-                .contains("no known crate named `bar_missing`"));
+    assert!(json.errors[0]
+        .detail
+        .contains("no known crate named `bar_missing`"));
 }
 
 #[test]
@@ -665,7 +725,9 @@ fn summary_doesnt_die() {
 #[test]
 fn download() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
+    let mut req = ::req(app,
+                        Method::Get,
+                        "/api/v1/crates/foo_download/1.0.0/download");
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo_download"));
     let resp = t_resp!(middle.call(&mut req));
@@ -700,7 +762,9 @@ fn download_bad() {
 fn dependencies() {
     let (_b, app, middle) = ::app();
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_deps/1.0.0/dependencies");
+    let mut req = ::req(app,
+                        Method::Get,
+                        "/api/v1/crates/foo_deps/1.0.0/dependencies");
     ::mock_user(&mut req, ::user("foo"));
     let (_, v) = ::mock_crate(&mut req, ::krate("foo_deps"));
     let (c, _) = ::mock_crate(&mut req, ::krate("bar_deps"));
@@ -717,8 +781,14 @@ fn dependencies() {
 
 #[test]
 fn following() {
-    #[derive(RustcDecodable)] struct F { following: bool }
-    #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)]
+    struct F {
+        following: bool,
+    }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_following/following");
@@ -729,46 +799,52 @@ fn following() {
     assert!(!::json::<F>(&mut response).following);
 
     req.with_path("/api/v1/crates/foo_following/follow")
-       .with_method(Method::Put);
+        .with_method(Method::Put);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
     req.with_path("/api/v1/crates/foo_following/following")
-       .with_method(Method::Get);
+        .with_method(Method::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<F>(&mut response).following);
 
     req.with_path("/api/v1/crates")
-       .with_query("following=1");
+        .with_query("following=1");
     let mut response = ok_resp!(middle.call(&mut req));
     let l = ::json::<CrateList>(&mut response);
     assert_eq!(l.crates.len(), 1);
 
     req.with_path("/api/v1/crates/foo_following/follow")
-       .with_method(Method::Delete);
+        .with_method(Method::Delete);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(::json::<O>(&mut response).ok);
 
     req.with_path("/api/v1/crates/foo_following/following")
-       .with_method(Method::Get);
+        .with_method(Method::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert!(!::json::<F>(&mut response).following);
 
     req.with_path("/api/v1/crates")
-       .with_query("following=1")
-       .with_method(Method::Get);
+        .with_query("following=1")
+        .with_method(Method::Get);
     let mut response = ok_resp!(middle.call(&mut req));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 }
 
 #[test]
 fn owners() {
-    #[derive(RustcDecodable)] struct R { users: Vec<EncodableUser> }
-    #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)]
+    struct R {
+        users: Vec<EncodableUser>,
+    }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_owners/owners");
@@ -787,7 +863,7 @@ fn owners() {
 
     let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Put)
-                                               .with_body(body.as_bytes())));
+        .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -796,7 +872,7 @@ fn owners() {
 
     let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                               .with_body(body.as_bytes())));
+        .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -805,19 +881,25 @@ fn owners() {
 
     let body = r#"{"users":["foo"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                               .with_body(body.as_bytes())));
+        .with_body(body.as_bytes())));
     ::json::<::Bad>(&mut response);
 
     let body = r#"{"users":["foobar"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Put)
-                                               .with_body(body.as_bytes())));
+        .with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 }
 
 #[test]
 fn yank() {
-    #[derive(RustcDecodable)] struct O { ok: bool }
-    #[derive(RustcDecodable)] struct V { version: EncodableVersion }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
+    #[derive(RustcDecodable)]
+    struct V {
+        version: EncodableVersion,
+    }
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/fyk");
 
@@ -832,29 +914,29 @@ fn yank() {
 
     // make sure it's not yanked
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
-                                        .with_path("/api/v1/crates/fyk/1.0.0")));
+        .with_path("/api/v1/crates/fyk/1.0.0")));
     assert!(!::json::<V>(&mut r).version.yanked);
 
     // yank it
     let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                        .with_path("/api/v1/crates/fyk/1.0.0/yank")));
+        .with_path("/api/v1/crates/fyk/1.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
     let mut contents = String::new();
     File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
     assert!(contents.contains("\"yanked\":true"));
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
-                                        .with_path("/api/v1/crates/fyk/1.0.0")));
+        .with_path("/api/v1/crates/fyk/1.0.0")));
     assert!(::json::<V>(&mut r).version.yanked);
 
     // un-yank it
     let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
-                                        .with_path("/api/v1/crates/fyk/1.0.0/unyank")));
+        .with_path("/api/v1/crates/fyk/1.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
     let mut contents = String::new();
     File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
     assert!(contents.contains("\"yanked\":false"));
     let mut r = ok_resp!(middle.call(req.with_method(Method::Get)
-                                        .with_path("/api/v1/crates/fyk/1.0.0")));
+        .with_path("/api/v1/crates/fyk/1.0.0")));
     assert!(!::json::<V>(&mut r).version.yanked);
 }
 
@@ -940,10 +1022,8 @@ fn good_badges() {
     let krate = ::krate("foobadger");
     let mut badges = HashMap::new();
     let mut badge_attributes = HashMap::new();
-    badge_attributes.insert(
-        String::from("repository"),
-        String::from("rust-lang/crates.io")
-    );
+    badge_attributes.insert(String::from("repository"),
+                            String::from("rust-lang/crates.io"));
     badges.insert(String::from("travis-ci"), badge_attributes);
 
     let (_b, app, middle) = ::app();
@@ -956,19 +1036,16 @@ fn good_badges() {
     assert_eq!(json.krate.name, "foobadger");
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    let mut response = ok_resp!(
-        middle.call(req.with_method(Method::Get)
-                       .with_path("/api/v1/crates/foobadger")));
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/foobadger")));
 
     let json: CrateResponse = ::json(&mut response);
 
     let badges = json.krate.badges.unwrap();
     assert_eq!(badges.len(), 1);
     assert_eq!(badges[0].badge_type, "travis-ci");
-    assert_eq!(
-        badges[0].attributes.get("repository").unwrap(),
-        &String::from("rust-lang/crates.io")
-    );
+    assert_eq!(badges[0].attributes.get("repository").unwrap(),
+               &String::from("rust-lang/crates.io"));
 }
 
 #[test]
@@ -978,18 +1055,12 @@ fn ignored_badges() {
 
     // Known badge type, missing required repository attribute
     let mut badge_attributes = HashMap::new();
-    badge_attributes.insert(
-        String::from("branch"),
-        String::from("master")
-    );
+    badge_attributes.insert(String::from("branch"), String::from("master"));
     badges.insert(String::from("travis-ci"), badge_attributes);
 
     // Unknown badge type
     let mut unknown_badge_attributes = HashMap::new();
-    unknown_badge_attributes.insert(
-        String::from("repository"),
-        String::from("rust-lang/rust")
-    );
+    unknown_badge_attributes.insert(String::from("repository"), String::from("rust-lang/rust"));
     badges.insert(String::from("not-a-badge"), unknown_badge_attributes);
 
     let (_b, app, middle) = ::app();
@@ -1005,9 +1076,8 @@ fn ignored_badges() {
     assert!(json.warnings.invalid_badges.contains(&"travis-ci".to_string()));
     assert!(json.warnings.invalid_badges.contains(&"not-a-badge".to_string()));
 
-    let mut response = ok_resp!(
-        middle.call(req.with_method(Method::Get)
-                       .with_path("/api/v1/crates/foo_ignored_badge")));
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/foo_ignored_badge")));
 
     let json: CrateResponse = ::json(&mut response);
 
@@ -1021,8 +1091,7 @@ fn reverse_dependencies() {
 
     let v100 = semver::Version::parse("1.0.0").unwrap();
     let v110 = semver::Version::parse("1.1.0").unwrap();
-    let mut req = ::req(app, Method::Get,
-                        "/api/v1/crates/c1/reverse_dependencies");
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
     ::mock_user(&mut req, ::user("foo"));
     let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
     let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
@@ -1061,7 +1130,8 @@ fn author_license_and_description_required() {
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
             json.errors[0].detail.contains("license"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 
     new_crate.license = Some("MIT".to_string());
     new_crate.authors.push("".to_string());
@@ -1070,7 +1140,8 @@ fn author_license_and_description_required() {
     assert!(json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
             !json.errors[0].detail.contains("license"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 
     new_crate.license = None;
     new_crate.license_file = Some("foo".to_string());
@@ -1080,6 +1151,6 @@ fn author_license_and_description_required() {
     assert!(!json.errors[0].detail.contains("author") &&
             json.errors[0].detail.contains("description") &&
             !json.errors[0].detail.contains("license"),
-            "{:?}", json.errors);
+            "{:?}",
+            json.errors);
 }
-

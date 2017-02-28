@@ -4,7 +4,7 @@ use semver;
 
 use Model;
 use git;
-use util::{CargoResult};
+use util::CargoResult;
 
 pub struct Dependency {
     pub id: i32,
@@ -39,15 +39,18 @@ pub enum Kind {
     Normal,
     Build,
     Dev,
-
-    // if you add a kind here, be sure to update `from_row` below.
 }
 
 impl Dependency {
-    pub fn insert(conn: &GenericConnection, version_id: i32, crate_id: i32,
-                  req: &semver::VersionReq, kind: Kind,
-                  optional: bool, default_features: bool,
-                  features: &[String], target: &Option<String>)
+    pub fn insert(conn: &GenericConnection,
+                  version_id: i32,
+                  crate_id: i32,
+                  req: &semver::VersionReq,
+                  kind: Kind,
+                  optional: bool,
+                  default_features: bool,
+                  features: &[String],
+                  target: &Option<String>)
                   -> CargoResult<Dependency> {
         let req = req.to_string();
         let features = features.join(",");
@@ -56,16 +59,27 @@ impl Dependency {
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&version_id, &crate_id, &req,
-                                      &optional, &default_features,
-                                      &features, target, &(kind as i32)]));
+        let rows = try!(stmt.query(&[&version_id,
+                                     &crate_id,
+                                     &req,
+                                     &optional,
+                                     &default_features,
+                                     &features,
+                                     target,
+                                     &(kind as i32)]));
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
     pub fn git_encode(&self, crate_name: &str) -> git::Dependency {
-        let Dependency { id: _, version_id: _, crate_id: _, ref req,
-                         optional, default_features, ref features,
-                         ref target, kind } = *self;
+        let Dependency { id: _,
+                         version_id: _,
+                         crate_id: _,
+                         ref req,
+                         optional,
+                         default_features,
+                         ref features,
+                         ref target,
+                         kind } = *self;
         git::Dependency {
             name: crate_name.to_string(),
             req: req.to_string(),
@@ -115,18 +129,21 @@ impl Model for Dependency {
             req: semver::VersionReq::parse(&req).unwrap(),
             optional: row.get("optional"),
             default_features: row.get("default_features"),
-            features: features.split(',').filter(|s| !s.is_empty())
-                              .map(|s| s.to_string())
-                              .collect(),
+            features: features.split(',')
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .collect(),
             target: row.get("target"),
             kind: match kind.unwrap_or(0) {
                 0 => Kind::Normal,
                 1 => Kind::Build,
                 2 => Kind::Dev,
                 n => panic!("unknown kind: {}", n),
-            }
+            },
         }
     }
 
-    fn table_name(_: Option<Dependency>) -> &'static str { "dependencies" }
+    fn table_name(_: Option<Dependency>) -> &'static str {
+        "dependencies"
+    }
 }

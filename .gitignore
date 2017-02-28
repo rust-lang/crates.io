@@ -17,3 +17,5 @@
 npm-debug.log
 testem.log
 .env
+# rustfmt backup files
+*.bk

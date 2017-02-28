@@ -4,7 +4,8 @@
 //! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
 //! [user](user/index.html) and [version](version/index.html) modules.
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate postgres as pg;
 extern crate rustc_serialize;
 extern crate curl;
@@ -88,8 +89,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/new", C(krate::new));
     api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
-    api_router.get("/crates/:crate_id/:version/dependencies", C(version::dependencies));
-    api_router.get("/crates/:crate_id/:version/downloads", C(version::downloads));
+    api_router.get("/crates/:crate_id/:version/dependencies",
+                   C(version::dependencies));
+    api_router.get("/crates/:crate_id/:version/downloads",
+                   C(version::downloads));
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
     api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
@@ -101,7 +104,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
     api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
-    api_router.get("/crates/:crate_id/reverse_dependencies", C(krate::reverse_dependencies));
+    api_router.get("/crates/:crate_id/reverse_dependencies",
+                   C(krate::reverse_dependencies));
     api_router.get("/versions", C(version::index));
     api_router.get("/versions/:version_id", C(version::show));
     api_router.get("/keywords", C(keyword::index));
@@ -148,8 +152,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.around(util::Head::new());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
-    m.add(conduit_cookie::SessionMiddleware::new("cargo_session",
-                                                 env == Env::Production));
+    m.add(conduit_cookie::SessionMiddleware::new("cargo_session", env == Env::Production));
     m.add(app::AppMiddleware::new(app));
     if env != Env::Test {
         m.add(db::TransactionMiddleware);
@@ -164,8 +167,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     struct DebugMiddleware;
 
     impl conduit_middleware::Middleware for DebugMiddleware {
-        fn before(&self, req: &mut conduit::Request)
-                  -> Result<(), Box<Error+Send>> {
+        fn before(&self, req: &mut conduit::Request) -> Result<(), Box<Error + Send>> {
             println!("  version: {}", req.http_version());
             println!("  method: {:?}", req.method());
             println!("  scheme: {:?}", req.scheme());
@@ -178,9 +180,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             }
             Ok(())
         }
-        fn after(&self, _req: &mut conduit::Request,
-                 res: Result<conduit::Response, Box<Error+Send>>)
-                 -> Result<conduit::Response, Box<Error+Send>> {
+        fn after(&self,
+                 _req: &mut conduit::Request,
+                 res: Result<conduit::Response, Box<Error + Send>>)
+                 -> Result<conduit::Response, Box<Error + Send>> {
             res.map(|res| {
                 println!("  <- {:?}", res.status);
                 for (k, v) in res.headers.iter() {

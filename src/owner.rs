@@ -34,7 +34,6 @@ pub struct Team {
     /// Sugary goodness
     pub name: Option<String>,
     pub avatar: Option<String>,
-
 }
 
 #[derive(RustcEncodable)]
@@ -59,14 +58,11 @@ pub enum Rights {
 
 impl Team {
     /// Just gets the Team from the database by name.
-    pub fn find_by_login(conn: &GenericConnection,
-                         login: &str) -> CargoResult<Self> {
+    pub fn find_by_login(conn: &GenericConnection, login: &str) -> CargoResult<Self> {
         let stmt = try!(conn.prepare("SELECT * FROM teams
                                       WHERE login = $1"));
         let rows = try!(stmt.query(&[&login]));
-        let row = try!(rows.iter().next().chain_error(|| {
-            NotFound
-        }));
+        let row = try!(rows.iter().next().chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
 
@@ -83,24 +79,25 @@ impl Team {
             "github" => {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
-                let team = try!(chunks.next().ok_or_else(||
+                let team = try!(chunks.next().ok_or_else(|| {
                     human("missing github team argument; \
                             format is github:org:team")
-                ));
+                }));
                 Team::create_github_team(app, conn, login, org, team, req_user)
             }
-            _ => {
-                Err(human("unknown organization handler, \
-                            only 'github:org:team' is supported"))
-            }
+            _ => Err(human("unknown organization handler, only 'github:org:team' is supported")),
         }
     }
 
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &GenericConnection, login: &str,
-                              org_name: &str, team_name: &str, req_user: &User)
+    pub fn create_github_team(app: &App,
+                              conn: &GenericConnection,
+                              login: &str,
+                              org_name: &str,
+                              team_name: &str,
+                              req_user: &User)
                               -> CargoResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its data
@@ -109,20 +106,21 @@ impl Team {
         fn whitelist(c: &char) -> bool {
             match *c {
                 'a'...'z' | 'A'...'Z' | '0'...'9' | '-' | '_' => false,
-                _ => true
+                _ => true,
             }
         }
 
         if let Some(c) = org_name.chars().find(whitelist) {
             return Err(human(format!("organization cannot contain special \
-                                        characters like {}", c)));
+                                        characters like {}",
+                                     c)));
         }
 
         #[derive(RustcDecodable)]
         struct GithubTeam {
-            slug: String,   // the name we want to find
-            id: i32,        // unique GH id (needed for membership queries)
-            name: Option<String>,   // Pretty name
+            slug: String, // the name we want to find
+            id: i32, // unique GH id (needed for membership queries)
+            name: Option<String>, // Pretty name
         }
 
         // FIXME: we just set per_page=100 and don't bother chasing pagination
@@ -132,12 +130,11 @@ impl Team {
         let (handle, data) = try!(http::github(app, &url, &token));
         let teams: Vec<GithubTeam> = try!(http::parse_github_response(handle, data));
 
-        let team = try!(teams.into_iter().find(|team| team.slug == team_name)
-            .ok_or_else(||{
-                human(format!("could not find the github team {}/{}",
-                            org_name, team_name))
-            })
-        );
+        let team = try!(teams.into_iter()
+            .find(|team| team.slug == team_name)
+            .ok_or_else(|| {
+                human(format!("could not find the github team {}/{}", org_name, team_name))
+            }));
 
         if !try!(team_with_gh_id_contains_user(app, team.id, req_user)) {
             return Err(human("only members of a team can add it as an owner"));
@@ -181,8 +178,7 @@ impl Team {
     }
 }
 
-fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
-                                                -> CargoResult<bool> {
+fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> CargoResult<bool> {
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 
@@ -191,14 +187,13 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
         state: String,
     }
 
-    let url = format!("/teams/{}/memberships/{}",
-                        &github_id, &user.gh_login);
+    let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
     let (mut handle, resp) = try!(http::github(app, &url, &token));
 
     // Officially how `false` is returned
     if handle.response_code().unwrap() == 404 {
-        return Ok(false)
+        return Ok(false);
     }
 
     let membership: Membership = try!(http::parse_github_response(handle, resp));
@@ -219,23 +214,22 @@ impl Model for Team {
         }
     }
 
-    fn table_name(_: Option<Self>) -> &'static str { "teams" }
+    fn table_name(_: Option<Self>) -> &'static str {
+        "teams"
+    }
 }
 
 impl Owner {
     /// Finds the owner by name, failing out if it doesn't exist.
     /// May be a user's GH login, or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &GenericConnection,
-                         name: &str) -> CargoResult<Owner> {
+    pub fn find_by_login(conn: &GenericConnection, name: &str) -> CargoResult<Owner> {
         let owner = if name.contains(":") {
-            Owner::Team(try!(Team::find_by_login(conn, name).map_err(|_|
-                human(format!("could not find team with name {}", name))
-            )))
+            Owner::Team(try!(Team::find_by_login(conn, name)
+                .map_err(|_| human(format!("could not find team with name {}", name)))))
         } else {
-            Owner::User(try!(User::find_by_login(conn, name).map_err(|_|
-                human(format!("could not find user with login `{}`", name))
-            )))
+            Owner::User(try!(User::find_by_login(conn, name)
+                .map_err(|_| human(format!("could not find user with login `{}`", name)))))
         };
         Ok(owner)
     }
@@ -280,7 +274,8 @@ impl Owner {
                     let mut parts = login.split(":");
                     parts.next(); // discard github
                     format!("https://github.com/orgs/{}/teams/{}",
-                            parts.next().unwrap(), parts.next().unwrap())
+                            parts.next().unwrap(),
+                            parts.next().unwrap())
                 };
                 EncodableOwner {
                     id: id,
@@ -308,14 +303,17 @@ pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
     let mut best = Rights::None;
     for owner in owners {
         match *owner {
-            Owner::User(ref other_user) => if other_user.id == user.id {
-                return Ok(Rights::Full);
-            },
-            Owner::Team(ref team) => if try!(team.contains_user(app, user)) {
-                best = Rights::Publish;
-            },
+            Owner::User(ref other_user) => {
+                if other_user.id == user.id {
+                    return Ok(Rights::Full);
+                }
+            }
+            Owner::Team(ref team) => {
+                if try!(team.contains_user(app, user)) {
+                    best = Rights::Publish;
+                }
+            }
         }
     }
     Ok(best)
 }
-

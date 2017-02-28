@@ -30,8 +30,9 @@ fn main() {
             let mut opts = git2::FetchOptions::new();
             opts.remote_callbacks(cb);
             git2::build::RepoBuilder::new()
-                                     .fetch_options(opts)
-                                     .clone(&url, &checkout).unwrap()
+                .fetch_options(opts)
+                .clone(&url, &checkout)
+                .unwrap()
         }
     };
     let mut cfg = repo.config().unwrap();
@@ -69,7 +70,11 @@ fn main() {
     } else {
         env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
-    let threads = if cargo_env == cargo_registry::Env::Development {1} else {50};
+    let threads = if cargo_env == cargo_registry::Env::Development {
+        1
+    } else {
+        50
+    };
     let mut cfg = civet::Config::new();
     cfg.port(port).threads(threads).keep_alive(true);
     let _a = Server::start(cfg, app);

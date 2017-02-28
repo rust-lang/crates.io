@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use conduit::{Request, Response};
-use conduit_cookie::{RequestSession};
+use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
 use pg::GenericConnection;
 use pg::rows::Row;
@@ -45,26 +45,20 @@ pub struct EncodableUser {
 
 impl User {
     /// Queries the database for a user with a certain `gh_login` value.
-    pub fn find_by_login(conn: &GenericConnection,
-                         login: &str) -> CargoResult<User> {
+    pub fn find_by_login(conn: &GenericConnection, login: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users
                                       WHERE gh_login = $1"));
         let rows = try!(stmt.query(&[&login]));
-        let row = try!(rows.iter().next().chain_error(|| {
-            NotFound
-        }));
+        let row = try!(rows.iter().next().chain_error(|| NotFound));
         Ok(Model::from_row(&row))
     }
 
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &GenericConnection,
-                             token: &str) -> CargoResult<User> {
+    pub fn find_by_api_token(conn: &GenericConnection, token: &str) -> CargoResult<User> {
         let stmt = try!(conn.prepare("SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1"));
         let rows = try!(stmt.query(&[&token]));
-        rows.iter().next().map(|r| Model::from_row(&r)).chain_error(|| {
-            NotFound
-        })
+        rows.iter().next().map(|r| Model::from_row(&r)).chain_error(|| NotFound)
     }
 
     /// Updates a user or inserts a new user into the database.
@@ -75,7 +69,8 @@ impl User {
                           name: Option<&str>,
                           avatar: Option<&str>,
                           access_token: &str,
-                          api_token: &str) -> CargoResult<User> {
+                          api_token: &str)
+                          -> CargoResult<User> {
         // TODO: this is racy, but it looks like any other solution is...
         //       interesting! For now just do the racy thing which will report
         //       more errors than it needs to.
@@ -88,12 +83,7 @@ impl User {
                                           gh_login = $5
                                       WHERE gh_id = $6
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&access_token,
-                                     &email,
-                                     &name,
-                                     &avatar,
-                                     &login,
-                                     &id]));
+        let rows = try!(stmt.query(&[&access_token, &email, &name, &avatar, &login, &id]));
         match rows.iter().next() {
             Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
@@ -103,16 +93,11 @@ impl User {
                                        gh_login, name, gh_avatar, gh_id)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7)
                                       RETURNING *"));
-        let rows = try!(stmt.query(&[&email,
-                                     &access_token,
-                                     &api_token,
-                                     &login,
-                                     &name,
-                                     &avatar,
-                                     &id]));
-        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
-            internal("no user with email we just found")
-        }))))
+        let rows =
+            try!(stmt.query(&[&email, &access_token, &api_token, &login, &name, &avatar, &id]));
+        Ok(Model::from_row(&try!(rows.iter()
+            .next()
+            .chain_error(|| internal("no user with email we just found")))))
     }
 
     /// Generates a new crates.io API token.
@@ -148,7 +133,9 @@ impl Model for User {
         }
     }
 
-    fn table_name(_: Option<User>) -> &'static str { "users" }
+    fn table_name(_: Option<User>) -> &'static str {
+        "users"
+    }
 }
 
 /// Handles the `GET /authorize_url` route.
@@ -174,8 +161,14 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     let url = req.app().github.authorize_url(state.clone());
 
     #[derive(RustcEncodable)]
-    struct R { url: String, state: String }
-    Ok(req.json(&R { url: url.to_string(), state: state }))
+    struct R {
+        url: String,
+        state: String,
+    }
+    Ok(req.json(&R {
+        url: url.to_string(),
+        state: state,
+    }))
 }
 
 /// Handles the `GET /authorize` route.
@@ -218,7 +211,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| &a[..]);
         if Some(&state[..]) != session_state {
-            return Err(human("invalid state parameter"))
+            return Err(human("invalid state parameter"));
         }
     }
 
@@ -245,12 +238,15 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     let user = try!(User::find_or_insert(try!(req.tx()),
                                          ghuser.id,
                                          &ghuser.login,
-                                         ghuser.email.as_ref()
-                                               .map(|s| &s[..]),
-                                         ghuser.name.as_ref()
-                                               .map(|s| &s[..]),
-                                         ghuser.avatar_url.as_ref()
-                                               .map(|s| &s[..]),
+                                         ghuser.email
+                                             .as_ref()
+                                             .map(|s| &s[..]),
+                                         ghuser.name
+                                             .as_ref()
+                                             .map(|s| &s[..]),
+                                         ghuser.avatar_url
+                                             .as_ref()
+                                             .map(|s| &s[..]),
                                          &token.access_token,
                                          &api_token));
     req.session().insert("user_id".to_string(), user.id.to_string());
@@ -274,7 +270,9 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
                       &[&token, &user.id]));
 
     #[derive(RustcEncodable)]
-    struct R { api_token: String }
+    struct R {
+        api_token: String,
+    }
     Ok(req.json(&R { api_token: token }))
 }
 
@@ -283,9 +281,15 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user = try!(req.user());
 
     #[derive(RustcEncodable)]
-    struct R { user: EncodableUser, api_token: String }
+    struct R {
+        user: EncodableUser,
+        api_token: String,
+    }
     let token = user.api_token.clone();
-    Ok(req.json(&R{ user: user.clone().encodable(), api_token: token }))
+    Ok(req.json(&R {
+        user: user.clone().encodable(),
+        api_token: token,
+    }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -298,7 +302,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         user: EncodableUser,
     }
-    Ok(req.json(&R{ user: user.clone().encodable() }))
+    Ok(req.json(&R { user: user.clone().encodable() }))
 }
 
 
@@ -336,19 +340,23 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Encode everything!
-    let crates = crates.into_iter().map(|c| {
-        c.minimal_encodable(None)
-    }).collect();
-    let versions = versions.into_iter().map(|v| {
-        let id = v.crate_id;
-        v.encodable(&map[&id])
-    }).collect();
+    let crates = crates.into_iter()
+        .map(|c| c.minimal_encodable(None))
+        .collect();
+    let versions = versions.into_iter()
+        .map(|v| {
+            let id = v.crate_id;
+            v.encodable(&map[&id])
+        })
+        .collect();
 
     // Check if we have another
     let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
     let stmt = try!(tx.prepare(&sql));
     let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
-                  .iter().next().is_some();
+        .iter()
+        .next()
+        .is_some();
 
     #[derive(RustcEncodable)]
     struct R {
@@ -357,6 +365,12 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         meta: Meta,
     }
     #[derive(RustcEncodable)]
-    struct Meta { more: bool }
-    Ok(req.json(&R{ versions: versions, crates: crates, meta: Meta { more: more } }))
+    struct Meta {
+        more: bool,
+    }
+    Ok(req.json(&R {
+        versions: versions,
+        crates: crates,
+        meta: Meta { more: more },
+    }))
 }
