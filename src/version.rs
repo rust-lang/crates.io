@@ -193,6 +193,30 @@ impl Version {
     pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
         conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
                      &[&yanked, &self.id])?;
+
+        let rows = conn.query("SELECT max_version FROM crates WHERE id = $1",
+                               &[&self.crate_id])?;
+        let max_version = rows.iter()
+                              .next()
+                              .map(|r| r.get::<&str, String>("max_version"))
+                              .map(|v| semver::Version::parse(&v).unwrap())
+                              .unwrap();
+        let zero = semver::Version::parse("0.0.0").unwrap();
+        let max_update_stmt = conn.prepare("UPDATE crates SET max_version = $1 WHERE id = $2")?;
+        if yanked && max_version == self.num {
+            let new_max = conn.query("SELECT num FROM versions \
+                                      WHERE crate_id = $1 AND yanked = FALSE AND id != $2",
+                                     &[&self.crate_id, &self.id])?
+                              .iter()
+                              .map(|r| r.get::<&str, String>("num"))
+                              .filter_map(|v| semver::Version::parse(&v).ok())
+                              .max()
+                              .unwrap();
+            max_update_stmt.execute(&[&new_max.to_string(), &self.crate_id])?;
+        } else if !yanked && (self.num > max_version || max_version == zero) {
+            max_update_stmt.execute(&[&self.num.to_string(), &self.crate_id])?;
+        }
+
         Ok(())
     }
 }
