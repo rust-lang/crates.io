@@ -22,7 +22,7 @@ impl conduit_middleware::Middleware for Middleware {
             Some(id) => {
 
                 // Look for a user in the database with the given `user_id`
-                match User::find(try!(req.tx().map_err(std_error)), id) {
+                match User::find(req.tx().map_err(std_error)?, id) {
                     Ok(user) => user,
                     Err(..) => return Ok(()),
                 }
@@ -36,7 +36,7 @@ impl conduit_middleware::Middleware for Middleware {
                     Some(headers) => {
 
                         // Look for a user in the database with a matching API token
-                        let tx = try!(req.tx().map_err(std_error));
+                        let tx = req.tx().map_err(std_error)?;
                         match User::find_by_api_token(tx, &headers[0]) {
                             Ok(user) => user,
                             Err(..) => return Ok(())

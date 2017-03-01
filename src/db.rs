@@ -58,7 +58,7 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
                          _domain: &str,
                          stream: Stream)
                          -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
-            let stream = try!(self.0.danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream));
+            let stream = self.0.danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream)?;
             Ok(Box::new(stream))
         }
     }
@@ -131,9 +131,9 @@ impl Transaction {
 
     pub fn conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
-            let conn = try!(self.app.database.get().map_err(|e| {
+            let conn = self.app.database.get().map_err(|e| {
                 internal(format!("failed to get a database connection: {}", e))
-            }));
+            })?;
             self.slot.fill(Box::new(conn));
         }
         Ok(&**self.slot.borrow().unwrap())
@@ -146,8 +146,8 @@ impl Transaction {
         // desired effect.
         unsafe {
             if !self.tx.filled() {
-                let conn = try!(self.conn());
-                let t = try!(conn.transaction());
+                let conn = self.conn()?;
+                let t = conn.transaction()?;
                 let t = mem::transmute::<_, pg::transaction::Transaction<'static>>(t);
                 self.tx.fill(t);
             }
@@ -183,9 +183,9 @@ impl Middleware for TransactionMiddleware {
             if res.is_ok() && tx.commit.get() == Some(true) {
                 transaction.set_commit();
             }
-            try!(transaction.finish().map_err(|e| {
-                Box::new(e) as Box<Error+Send>
-            }));
+            transaction.finish().map_err(|e| {
+                Box::new(e) as Box<Error + Send>
+            })?;
         }
         return res
     }

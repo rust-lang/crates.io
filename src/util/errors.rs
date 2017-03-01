@@ -141,9 +141,9 @@ struct ConcreteCargoError {
 
 impl fmt::Display for ConcreteCargoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "{}", self.description));
+        write!(f, "{}", self.description)?;
         match self.detail  {
-            Some(ref s) => try!(write!(f, " ({})", s)),
+            Some(ref s) => write!(f, " ({})", s)?,
             None => {}
         }
         Ok(())
@@ -233,12 +233,12 @@ pub fn std_error(e: Box<CargoError>) -> Box<Error+Send> {
     }
     impl fmt::Display for E {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            try!(write!(f, "{}", self.0));
+            write!(f, "{}", self.0)?;
 
             let mut err = &*self.0;
             while let Some(cause) = err.cause() {
                 err = cause;
-                try!(write!(f, "\nCaused by: {}", err));
+                write!(f, "\nCaused by: {}", err)?;
             }
 
             Ok(())

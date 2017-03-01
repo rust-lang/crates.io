@@ -61,12 +61,12 @@ impl Team {
     /// Just gets the Team from the database by name.
     pub fn find_by_login(conn: &GenericConnection,
                          login: &str) -> CargoResult<Self> {
-        let stmt = try!(conn.prepare("SELECT * FROM teams
-                                      WHERE login = $1"));
-        let rows = try!(stmt.query(&[&login]));
-        let row = try!(rows.iter().next().chain_error(|| {
+        let stmt = conn.prepare("SELECT * FROM teams
+                                      WHERE login = $1")?;
+        let rows = stmt.query(&[&login])?;
+        let row = rows.iter().next().chain_error(|| {
             NotFound
-        }));
+        })?;
         Ok(Model::from_row(&row))
     }
 
@@ -83,10 +83,10 @@ impl Team {
             "github" => {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
-                let team = try!(chunks.next().ok_or_else(||
+                let team = chunks.next().ok_or_else(||
                     human("missing github team argument; \
                             format is github:org:team")
-                ));
+                )?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
             }
             _ => {
@@ -129,17 +129,16 @@ impl Team {
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
         let token = http::token(req_user.gh_access_token.clone());
-        let (handle, data) = try!(http::github(app, &url, &token));
-        let teams: Vec<GithubTeam> = try!(http::parse_github_response(handle, data));
+        let (handle, data) = http::github(app, &url, &token)?;
+        let teams: Vec<GithubTeam> = http::parse_github_response(handle, data)?;
 
-        let team = try!(teams.into_iter().find(|team| team.slug == team_name)
-            .ok_or_else(||{
+        let team = teams.into_iter().find(|team| team.slug == team_name)
+            .ok_or_else(|| {
                 human(format!("could not find the github team {}/{}",
-                            org_name, team_name))
-            })
-        );
+                              org_name, team_name))
+            })?;
 
-        if !try!(team_with_gh_id_contains_user(app, team.id, req_user)) {
+        if !team_with_gh_id_contains_user(app, team.id, req_user)? {
             return Err(human("only members of a team can add it as an owner"));
         }
 
@@ -149,8 +148,8 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let (handle, resp) = try!(http::github(app, &url, &token));
-        let org: Org = try!(http::parse_github_response(handle, resp));
+        let (handle, resp) = http::github(app, &url, &token)?;
+        let org: Org = http::parse_github_response(handle, resp)?;
 
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
@@ -162,12 +161,12 @@ impl Team {
                   avatar: Option<String>)
                   -> CargoResult<Self> {
 
-        let stmt = try!(conn.prepare("INSERT INTO teams
+        let stmt = conn.prepare("INSERT INTO teams
                                    (login, github_id, name, avatar)
                                    VALUES ($1, $2, $3, $4)
-                                   RETURNING *"));
+                                   RETURNING *")?;
 
-        let rows = try!(stmt.query(&[&login, &github_id, &name, &avatar]));
+        let rows = stmt.query(&[&login, &github_id, &name, &avatar])?;
         let row = rows.iter().next().unwrap();
         Ok(Model::from_row(&row))
     }
@@ -194,14 +193,14 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
     let url = format!("/teams/{}/memberships/{}",
                         &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
-    let (mut handle, resp) = try!(http::github(app, &url, &token));
+    let (mut handle, resp) = http::github(app, &url, &token)?;
 
     // Officially how `false` is returned
     if handle.response_code().unwrap() == 404 {
         return Ok(false)
     }
 
-    let membership: Membership = try!(http::parse_github_response(handle, resp));
+    let membership: Membership = http::parse_github_response(handle, resp)?;
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
@@ -229,13 +228,13 @@ impl Owner {
     pub fn find_by_login(conn: &GenericConnection,
                          name: &str) -> CargoResult<Owner> {
         let owner = if name.contains(":") {
-            Owner::Team(try!(Team::find_by_login(conn, name).map_err(|_|
+            Owner::Team(Team::find_by_login(conn, name).map_err(|_|
                 human(format!("could not find team with name {}", name))
-            )))
+            )?)
         } else {
-            Owner::User(try!(User::find_by_login(conn, name).map_err(|_|
+            Owner::User(User::find_by_login(conn, name).map_err(|_|
                 human(format!("could not find user with login `{}`", name))
-            )))
+            )?)
         };
         Ok(owner)
     }
@@ -311,7 +310,7 @@ pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
             Owner::User(ref other_user) => if other_user.id == user.id {
                 return Ok(Rights::Full);
             },
-            Owner::Team(ref team) => if try!(team.contains_user(app, user)) {
+            Owner::Team(ref team) => if team.contains_user(app, user)? {
                 best = Rights::Publish;
             },
         }
