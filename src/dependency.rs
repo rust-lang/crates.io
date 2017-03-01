@@ -38,9 +38,7 @@ pub struct EncodableDependency {
 pub enum Kind {
     Normal,
     Build,
-    Dev, 
-
-    // if you add a kind here, be sure to update `from_row` below.
+    Dev,
 }
 
 impl Dependency {

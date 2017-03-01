@@ -130,10 +130,9 @@ impl Category {
     }
 
     pub fn count_toplevel(conn: &GenericConnection) -> CargoResult<i64> {
-        let sql =
-            format!("\
+        let sql = format!("\
             SELECT COUNT(*) FROM {} WHERE category NOT LIKE '%::%'",
-                    Model::table_name(None::<Self>));
+                          Model::table_name(None::<Self>));
         let stmt = try!(conn.prepare(&sql));
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().next().unwrap().get("count"))
@@ -152,8 +151,7 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        let stmt =
-            try!(conn.prepare(&format!("SELECT c.id, c.category, c.slug, c.description, \
+        let stmt = try!(conn.prepare(&format!("SELECT c.id, c.category, c.slug, c.description, \
                                         c.created_at, COALESCE (( SELECT \
                                         sum(c2.crates_cnt)::int FROM categories as c2 WHERE \
                                         c2.slug = c.slug OR c2.slug LIKE c.slug || '::%' ), 0) \
@@ -170,14 +168,13 @@ impl Category {
     }
 
     pub fn subcategories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
-        let stmt =
-            try!(conn.prepare("\
-            SELECT c.id, c.category, c.slug, c.description, \
-                               c.created_at, COALESCE (( SELECT sum(c2.crates_cnt)::int FROM \
-                               categories as c2 WHERE c2.slug = c.slug OR c2.slug LIKE c.slug \
-                               || '::%' ), 0) as crates_cnt FROM categories as c WHERE \
-                               c.category ILIKE $1 || '::%' AND c.category NOT ILIKE $1 || \
-                               '::%::%'"));
+        let stmt = try!(conn.prepare("\
+            SELECT c.id, c.category, c.slug, \
+                                      c.description, c.created_at, COALESCE (( SELECT \
+                                      sum(c2.crates_cnt)::int FROM categories as c2 WHERE \
+                                      c2.slug = c.slug OR c2.slug LIKE c.slug || '::%' ), 0) as \
+                                      crates_cnt FROM categories as c WHERE c.category ILIKE $1 \
+                                      || '::%' AND c.category NOT ILIKE $1 || '::%::%'"));
 
         let rows = try!(stmt.query(&[&self.category]));
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())

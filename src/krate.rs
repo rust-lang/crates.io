@@ -194,9 +194,7 @@ impl Crate {
                 .map_err(|_| human(format!("`{}` is not a valid url: `{}`", field, url))));
             match &url.scheme()[..] {
                 "http" | "https" => {}
-                s => {
-                    return Err(human(format!("`{}` has an invalid url scheme: `{}`", field, s)))
-                }
+                s => return Err(human(format!("`{}` has an invalid url scheme: `{}`", field, s))),
             }
             if url.cannot_be_a_base() {
                 return Err(human(format!("`{}` must have relative scheme \
