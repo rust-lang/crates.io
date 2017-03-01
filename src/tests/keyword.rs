@@ -6,11 +6,18 @@ use cargo_registry::db::RequestTransaction;
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 
 #[derive(RustcDecodable)]
-struct KeywordList { keywords: Vec<EncodableKeyword>, meta: KeywordMeta }
+struct KeywordList {
+    keywords: Vec<EncodableKeyword>,
+    meta: KeywordMeta,
+}
 #[derive(RustcDecodable)]
-struct KeywordMeta { total: i32 }
+struct KeywordMeta {
+    total: i32,
+}
 #[derive(RustcDecodable)]
-struct GoodKeyword { keyword: EncodableKeyword }
+struct GoodKeyword {
+    keyword: EncodableKeyword,
+}
 
 #[test]
 fn index() {
@@ -53,7 +60,9 @@ fn uppercase() {
     assert_eq!(json.keyword.keyword, "upper".to_string());
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
+fn tx(req: &Request) -> &GenericConnection {
+    req.tx().unwrap()
+}
 
 #[test]
 fn update_crate() {
@@ -85,8 +94,7 @@ fn update_crate() {
     assert_eq!(cnt(&mut req, "kw1"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string(),
-                                              "kw2".to_string()]).unwrap();
+    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string(), "kw2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 1);
     assert_eq!(cnt(&mut req, "kw2"), 1);
 

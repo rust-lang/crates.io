@@ -32,23 +32,29 @@ pub struct App {
 
 /// The `AppMiddleware` injects an `App` instance into the `Request` extensions
 pub struct AppMiddleware {
-    app: Arc<App>
+    app: Arc<App>,
 }
 
 impl App {
     pub fn new(config: &Config) -> App {
-        let mut github = oauth2::Config::new(
-            &config.gh_client_id,
-            &config.gh_client_secret,
-            "https://github.com/login/oauth/authorize",
-            "https://github.com/login/oauth/access_token",
-        );
+        let mut github = oauth2::Config::new(&config.gh_client_id,
+                                             &config.gh_client_secret,
+                                             "https://github.com/login/oauth/authorize",
+                                             "https://github.com/login/oauth/access_token");
 
         github.scopes.push(String::from("read:org"));
 
         let db_config = r2d2::Config::builder()
-            .pool_size(if config.env == ::Env::Production {10} else {1})
-            .helper_threads(if config.env == ::Env::Production {3} else {1})
+            .pool_size(if config.env == ::Env::Production {
+                10
+            } else {
+                1
+            })
+            .helper_threads(if config.env == ::Env::Production {
+                3
+            } else {
+                1
+            })
             .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
@@ -73,7 +79,7 @@ impl App {
         if let Some(ref proxy) = self.s3_proxy {
             handle.proxy(proxy).unwrap();
         }
-        return handle
+        return handle;
     }
 }
 
@@ -84,13 +90,15 @@ impl AppMiddleware {
 }
 
 impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         req.mut_extensions().insert(self.app.clone());
         Ok(())
     }
 
-    fn after(&self, req: &mut Request, res: Result<Response, Box<Error+Send>>)
-             -> Result<Response, Box<Error+Send>> {
+    fn after(&self,
+             req: &mut Request,
+             res: Result<Response, Box<Error + Send>>)
+             -> Result<Response, Box<Error + Send>> {
         req.mut_extensions().pop::<Arc<App>>().unwrap();
         res
     }
@@ -103,7 +111,8 @@ pub trait RequestApp {
 
 impl<'a> RequestApp for Request + 'a {
     fn app(&self) -> &Arc<App> {
-        self.extensions().find::<Arc<App>>()
+        self.extensions()
+            .find::<Arc<App>>()
             .expect("Missing app")
     }
 }

@@ -59,9 +59,13 @@ macro_rules! bad_resp {
 }
 
 #[derive(RustcDecodable, Debug)]
-struct Error { detail: String }
+struct Error {
+    detail: String,
+}
 #[derive(RustcDecodable)]
-struct Bad { errors: Vec<Error> }
+struct Bad {
+    errors: Vec<Error>,
+}
 
 mod badge;
 mod category;
@@ -107,8 +111,10 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
             me.pop();
         }
         me.push("migrate");
-        assert!(t!(Command::new(&me).env("DATABASE_URL", db)
-                           .status()).success());
+        assert!(t!(Command::new(&me)
+                .env("DATABASE_URL", db)
+                .status())
+            .success());
     }
 }
 
@@ -131,7 +137,9 @@ fn ok_resp(r: &conduit::Response) -> bool {
 
 fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
     let bad = json::<Bad>(r);
-    if bad.errors.len() == 0 { return None }
+    if bad.errors.len() == 0 {
+        return None;
+    }
     Some(bad)
 }
 
@@ -154,18 +162,14 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     fn fixup(json: Json) -> Json {
         match json {
             Json::Object(object) => {
-                Json::Object(object.into_iter().map(|(k, v)| {
-                    let k = if k == "crate" {
-                        "krate".to_string()
-                    } else {
-                        k
-                    };
-                    (k, fixup(v))
-                }).collect())
+                Json::Object(object.into_iter()
+                    .map(|(k, v)| {
+                        let k = if k == "crate" { "krate".to_string() } else { k };
+                        (k, fixup(v))
+                    })
+                    .collect())
             }
-            Json::Array(list) => {
-                Json::Array(list.into_iter().map(fixup).collect())
-            }
+            Json::Array(list) => Json::Array(list.into_iter().map(fixup).collect()),
             j => j,
         }
     }
@@ -212,7 +216,8 @@ fn mock_user(req: &mut Request, u: User) -> User {
                                  u.name.as_ref().map(|s| &s[..]),
                                  u.avatar.as_ref().map(|s| &s[..]),
                                  &u.gh_access_token,
-                                 &u.api_token).unwrap();
+                                 &u.api_token)
+        .unwrap();
     req.mut_extensions().insert(u.clone());
     return u;
 }
@@ -221,31 +226,39 @@ fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
     mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap())
 }
 
-fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
-                   -> (Crate, Version) {
+fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version) -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
-    let mut krate = Crate::find_or_insert(req.tx().unwrap(), &krate.name,
-                                          user.id, &krate.description,
+    let mut krate = Crate::find_or_insert(req.tx().unwrap(),
+                                          &krate.name,
+                                          user.id,
+                                          &krate.description,
                                           &krate.homepage,
                                           &krate.documentation,
                                           &krate.readme,
                                           &krate.repository,
                                           &krate.license,
                                           &None,
-                                          krate.max_upload_size).unwrap();
+                                          krate.max_upload_size)
+        .unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
 }
 
-fn mock_dep(req: &mut Request, version: &Version, krate: &Crate,
-            target: Option<&str>) -> Dependency {
+fn mock_dep(req: &mut Request,
+            version: &Version,
+            krate: &Crate,
+            target: Option<&str>)
+            -> Dependency {
     Dependency::insert(req.tx().unwrap(),
                        version.id,
                        krate.id,
                        &semver::VersionReq::parse(">= 0").unwrap(),
                        Kind::Normal,
-                       false, true, &[],
-                       &target.map(|s| s.to_string())).unwrap()
+                       false,
+                       true,
+                       &[],
+                       &target.map(|s| s.to_string()))
+        .unwrap()
 }
 
 fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
@@ -254,10 +267,8 @@ fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
 
 fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
     let conn = req.tx().unwrap();
-    let stmt = conn.prepare(" \
-        INSERT INTO categories (category, slug) \
-        VALUES ($1, $2) \
-        RETURNING *").unwrap();
+    let stmt = conn.prepare(" INSERT INTO categories (category, slug) VALUES ($1, $2) RETURNING *")
+        .unwrap();
     let rows = stmt.query(&[&name, &slug]).unwrap();
     Model::from_row(&rows.iter().next().unwrap())
 }
@@ -270,89 +281,98 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
     new_req_full(app, ::krate(krate), version, Vec::new())
 }
 
-fn new_req_full(app: Arc<App>, krate: Crate, version: &str,
-                deps: Vec<u::CrateDependency>) -> MockRequest {
+fn new_req_full(app: Arc<App>,
+                krate: Crate,
+                version: &str,
+                deps: Vec<u::CrateDependency>)
+                -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate, version, deps, Vec::new(), Vec::new(), HashMap::new()
-    ));
+    req.with_body(&new_req_body(krate, version, deps, Vec::new(), Vec::new(), HashMap::new()));
     return req;
 }
 
-fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str,
-                         kws: Vec<String>) -> MockRequest {
+fn new_req_with_keywords(app: Arc<App>,
+                         krate: Crate,
+                         version: &str,
+                         kws: Vec<String>)
+                         -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate, version, Vec::new(), kws, Vec::new(), HashMap::new()
-    ));
+    req.with_body(&new_req_body(krate, version, Vec::new(), kws, Vec::new(), HashMap::new()));
     return req;
 }
 
-fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str,
-                           cats: Vec<String>) -> MockRequest {
+fn new_req_with_categories(app: Arc<App>,
+                           krate: Crate,
+                           version: &str,
+                           cats: Vec<String>)
+                           -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate, version, Vec::new(), Vec::new(), cats, HashMap::new()
-    ));
+    req.with_body(&new_req_body(krate, version, Vec::new(), Vec::new(), cats, HashMap::new()));
     return req;
 }
 
-fn new_req_with_badges(app: Arc<App>, krate: Crate, version: &str,
+fn new_req_with_badges(app: Arc<App>,
+                       krate: Crate,
+                       version: &str,
                        badges: HashMap<String, HashMap<String, String>>)
                        -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate, version, Vec::new(), Vec::new(), Vec::new(), badges
-    ));
+    req.with_body(&new_req_body(krate, version, Vec::new(), Vec::new(), Vec::new(), badges));
     return req;
 }
 
 fn new_req_body_version_2(krate: Crate) -> Vec<u8> {
-    new_req_body(
-        krate, "2.0.0", Vec::new(), Vec::new(), Vec::new(), HashMap::new()
-    )
+    new_req_body(krate,
+                 "2.0.0",
+                 Vec::new(),
+                 Vec::new(),
+                 Vec::new(),
+                 HashMap::new())
 }
 
-fn new_req_body(krate: Crate, version: &str, deps: Vec<u::CrateDependency>,
-                kws: Vec<String>, cats: Vec<String>,
-                badges: HashMap<String, HashMap<String, String>>) -> Vec<u8> {
+fn new_req_body(krate: Crate,
+                version: &str,
+                deps: Vec<u::CrateDependency>,
+                kws: Vec<String>,
+                cats: Vec<String>,
+                badges: HashMap<String, HashMap<String, String>>)
+                -> Vec<u8> {
     let kws = kws.into_iter().map(u::Keyword).collect();
     let cats = cats.into_iter().map(u::Category).collect();
     new_crate_to_body(&u::NewCrate {
-        name: u::CrateName(krate.name),
-        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
-        features: HashMap::new(),
-        deps: deps,
-        authors: vec!["foo".to_string()],
-        description: Some("description".to_string()),
-        homepage: krate.homepage,
-        documentation: krate.documentation,
-        readme: krate.readme,
-        keywords: Some(u::KeywordList(kws)),
-        categories: Some(u::CategoryList(cats)),
-        license: Some("MIT".to_string()),
-        license_file: None,
-        repository: krate.repository,
-        badges: Some(badges),
-    }, &[])
+                          name: u::CrateName(krate.name),
+                          vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+                          features: HashMap::new(),
+                          deps: deps,
+                          authors: vec!["foo".to_string()],
+                          description: Some("description".to_string()),
+                          homepage: krate.homepage,
+                          documentation: krate.documentation,
+                          readme: krate.readme,
+                          keywords: Some(u::KeywordList(kws)),
+                          categories: Some(u::CategoryList(cats)),
+                          license: Some("MIT".to_string()),
+                          license_file: None,
+                          repository: krate.repository,
+                          badges: Some(badges),
+                      },
+                      &[])
 }
 
 fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
     let json = json::encode(&new_crate).unwrap();
     let mut body = Vec::new();
-    body.extend([
-        (json.len() >>  0) as u8,
-        (json.len() >>  8) as u8,
-        (json.len() >> 16) as u8,
-        (json.len() >> 24) as u8,
-    ].iter().cloned());
+    body.extend([(json.len() >> 0) as u8,
+                 (json.len() >> 8) as u8,
+                 (json.len() >> 16) as u8,
+                 (json.len() >> 24) as u8]
+        .iter()
+        .cloned());
     body.extend(json.as_bytes().iter().cloned());
-    body.extend(&[
-        (krate.len() >>  0) as u8,
-        (krate.len() >>  8) as u8,
-        (krate.len() >> 16) as u8,
-        (krate.len() >> 24) as u8,
-    ]);
+    body.extend(&[(krate.len() >> 0) as u8,
+                  (krate.len() >> 8) as u8,
+                  (krate.len() >> 16) as u8,
+                  (krate.len() >> 24) as u8]);
     body.extend(krate);
     body
 }

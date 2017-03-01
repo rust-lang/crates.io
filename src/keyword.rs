@@ -29,42 +29,43 @@ pub struct EncodableKeyword {
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &GenericConnection, name: &str)
-                           -> CargoResult<Option<Keyword>> {
+    pub fn find_by_keyword(conn: &GenericConnection, name: &str) -> CargoResult<Option<Keyword>> {
         let stmt = try!(conn.prepare("SELECT * FROM keywords \
                                       WHERE keyword = LOWER($1)"));
         let rows = try!(stmt.query(&[&name]));
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
-    pub fn find_or_insert(conn: &GenericConnection, name: &str)
-                          -> CargoResult<Keyword> {
+    pub fn find_or_insert(conn: &GenericConnection, name: &str) -> CargoResult<Keyword> {
         // TODO: racy (the select then insert is not atomic)
         let stmt = try!(conn.prepare("SELECT * FROM keywords
                                       WHERE keyword = LOWER($1)"));
         for row in try!(stmt.query(&[&name])).iter() {
-            return Ok(Model::from_row(&row))
+            return Ok(Model::from_row(&row));
         }
 
         let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
                                       RETURNING *"));
         let rows = try!(stmt.query(&[&name]));
-        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
-            internal("no version returned")
-        }))))
+        Ok(Model::from_row(&try!(rows.iter()
+            .next()
+            .chain_error(|| internal("no version returned")))))
     }
 
-    pub fn all(conn: &GenericConnection, sort: &str, limit: i64, offset: i64)
+    pub fn all(conn: &GenericConnection,
+               sort: &str,
+               limit: i64,
+               offset: i64)
                -> CargoResult<Vec<Keyword>> {
 
         let sort_sql = match sort {
-           "crates" => "ORDER BY crates_cnt DESC",
-           _ => "ORDER BY keyword ASC",
+            "crates" => "ORDER BY crates_cnt DESC",
+            _ => "ORDER BY keyword ASC",
         };
 
         let stmt = try!(conn.prepare(&format!("SELECT * FROM keywords {}
                                                LIMIT $1 OFFSET $2",
-                                               sort_sql)));
+                                              sort_sql)));
 
         let keywords: Vec<_> = try!(stmt.query(&[&limit, &offset]))
             .iter()
@@ -75,10 +76,12 @@ impl Keyword {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        if name.len() == 0 { return false }
+        if name.len() == 0 {
+            return false;
+        }
         name.chars().next().unwrap().is_alphanumeric() &&
-            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
-            name.chars().all(|c| c.is_ascii())
+        name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
+        name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {
@@ -93,22 +96,27 @@ impl Keyword {
 
     pub fn update_crate(conn: &GenericConnection,
                         krate: &Crate,
-                        keywords: &[String]) -> CargoResult<()> {
+                        keywords: &[String])
+                        -> CargoResult<()> {
         let old_kws = try!(krate.keywords(conn));
-        let old_kws = old_kws.iter().map(|kw| {
-            (&kw.keyword[..], kw)
-        }).collect::<HashMap<_, _>>();
-        let new_kws = try!(keywords.iter().map(|k| {
-            let kw = try!(Keyword::find_or_insert(conn, &k));
-            Ok((&k[..], kw))
-        }).collect::<CargoResult<HashMap<_, _>>>());
+        let old_kws = old_kws.iter()
+            .map(|kw| (&kw.keyword[..], kw))
+            .collect::<HashMap<_, _>>();
+        let new_kws = try!(keywords.iter()
+            .map(|k| {
+                let kw = try!(Keyword::find_or_insert(conn, &k));
+                Ok((&k[..], kw))
+            })
+            .collect::<CargoResult<HashMap<_, _>>>());
 
-        let to_rm = old_kws.iter().filter(|&(kw, _)| {
-            !new_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
-        let to_add = new_kws.iter().filter(|&(kw, _)| {
-            !old_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
+        let to_rm = old_kws.iter()
+            .filter(|&(kw, _)| !new_kws.contains_key(kw))
+            .map(|(_, v)| v.id)
+            .collect::<Vec<_>>();
+        let to_add = new_kws.iter()
+            .filter(|&(kw, _)| !old_kws.contains_key(kw))
+            .map(|(_, v)| v.id)
+            .collect::<Vec<_>>();
 
         if to_rm.len() > 0 {
             try!(conn.execute("DELETE FROM crates_keywords
@@ -118,11 +126,14 @@ impl Keyword {
         }
 
         if to_add.len() > 0 {
-            let insert = to_add.iter().map(|id| {
-                let crate_id: i32 = krate.id;
-                let id: i32 = *id;
-                format!("({}, {})", crate_id,  id)
-            }).collect::<Vec<_>>().join(", ");
+            let insert = to_add.iter()
+                .map(|id| {
+                    let crate_id: i32 = krate.id;
+                    let id: i32 = *id;
+                    format!("({}, {})", crate_id, id)
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
             try!(conn.execute(&format!("INSERT INTO crates_keywords
                                         (crate_id, keyword_id) VALUES {}",
                                        insert),
@@ -142,7 +153,9 @@ impl Model for Keyword {
             keyword: row.get("keyword"),
         }
     }
-    fn table_name(_: Option<Keyword>) -> &'static str { "keywords" }
+    fn table_name(_: Option<Keyword>) -> &'static str {
+        "keywords"
+    }
 }
 
 /// Handles the `GET /keywords` route.
@@ -159,9 +172,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let total = try!(Keyword::count(conn));
 
     #[derive(RustcEncodable)]
-    struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
+    struct R {
+        keywords: Vec<EncodableKeyword>,
+        meta: Meta,
+    }
     #[derive(RustcEncodable)]
-    struct Meta { total: i64 }
+    struct Meta {
+        total: i64,
+    }
 
     Ok(req.json(&R {
         keywords: keywords,
@@ -177,6 +195,8 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let kw = try!(kw.chain_error(|| NotFound));
 
     #[derive(RustcEncodable)]
-    struct R { keyword: EncodableKeyword }
+    struct R {
+        keyword: EncodableKeyword,
+    }
     Ok(req.json(&R { keyword: kw.encodable() }))
 }

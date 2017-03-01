@@ -21,8 +21,7 @@ pub struct EncodableVersionDownload {
 
 impl VersionDownload {
     pub fn encodable(self) -> EncodableVersionDownload {
-        let VersionDownload { id, version_id, downloads, counted: _,
-                              date } = self;
+        let VersionDownload { id, version_id, downloads, counted: _, date } = self;
         EncodableVersionDownload {
             id: id,
             version: version_id,
@@ -43,7 +42,9 @@ impl Model for VersionDownload {
         }
     }
 
-    fn table_name(_: Option<VersionDownload>) -> &'static str { "version_downloads" }
+    fn table_name(_: Option<VersionDownload>) -> &'static str {
+        "version_downloads"
+    }
 }
 
 pub struct CrateDownload {
@@ -63,5 +64,7 @@ impl Model for CrateDownload {
         }
     }
 
-    fn table_name(_: Option<CrateDownload>) -> &'static str { "crate_downloads" }
+    fn table_name(_: Option<CrateDownload>) -> &'static str {
+        "crate_downloads"
+    }
 }

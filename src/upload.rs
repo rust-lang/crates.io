@@ -52,7 +52,7 @@ impl Decodable for CrateName {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
         let s = try!(d.read_str());
         if !Crate::valid_name(&s) {
-            return Err(d.error(&format!("invalid crate name specified: {}", s)))
+            return Err(d.error(&format!("invalid crate name specified: {}", s)));
         }
         Ok(CrateName(s))
     }
@@ -62,7 +62,7 @@ impl Decodable for Keyword {
     fn decode<D: Decoder>(d: &mut D) -> Result<Keyword, D::Error> {
         let s = try!(d.read_str());
         if !CrateKeyword::valid_name(&s) {
-            return Err(d.error(&format!("invalid keyword specified: {}", s)))
+            return Err(d.error(&format!("invalid keyword specified: {}", s)));
         }
         Ok(Keyword(s))
     }
@@ -78,7 +78,7 @@ impl Decodable for Feature {
     fn decode<D: Decoder>(d: &mut D) -> Result<Feature, D::Error> {
         let s = try!(d.read_str());
         if !Crate::valid_feature_name(&s) {
-            return Err(d.error(&format!("invalid feature name specified: {}", s)))
+            return Err(d.error(&format!("invalid feature name specified: {}", s)));
         }
         Ok(Feature(s))
     }
@@ -108,12 +108,12 @@ impl Decodable for KeywordList {
     fn decode<D: Decoder>(d: &mut D) -> Result<KeywordList, D::Error> {
         let inner: Vec<Keyword> = try!(Decodable::decode(d));
         if inner.len() > 5 {
-            return Err(d.error("a maximum of 5 keywords per crate are allowed"))
+            return Err(d.error("a maximum of 5 keywords per crate are allowed"));
         }
         for val in inner.iter() {
             if val.len() > 20 {
                 return Err(d.error("keywords must contain less than 20 \
-                                    characters"))
+                                    characters"));
             }
         }
         Ok(KeywordList(inner))
@@ -124,7 +124,7 @@ impl Decodable for CategoryList {
     fn decode<D: Decoder>(d: &mut D) -> Result<CategoryList, D::Error> {
         let inner: Vec<Category> = try!(Decodable::decode(d));
         if inner.len() > 5 {
-            return Err(d.error("a maximum of 5 categories per crate are allowed"))
+            return Err(d.error("a maximum of 5 categories per crate are allowed"));
         }
         Ok(CategoryList(inner))
     }
@@ -137,8 +137,11 @@ impl Decodable for DependencyKind {
             "dev" => Ok(DependencyKind::Dev),
             "build" => Ok(DependencyKind::Build),
             "normal" => Ok(DependencyKind::Normal),
-            s => Err(d.error(&format!("invalid dependency kind `{}`, must be \
-                                       one of dev, build, or normal", s))),
+            s => {
+                Err(d.error(&format!("invalid dependency kind `{}`, must be one of dev, build, \
+                                      or normal",
+                                     s)))
+            }
         }
     }
 }
@@ -205,44 +208,58 @@ impl Encodable for DependencyKind {
 
 impl Deref for CrateName {
     type Target = str;
-    fn deref(&self) -> &str { &self.0 }
+    fn deref(&self) -> &str {
+        &self.0
+    }
 }
 
 impl Deref for Keyword {
     type Target = str;
-    fn deref(&self) -> &str { &self.0 }
+    fn deref(&self) -> &str {
+        &self.0
+    }
 }
 
 impl Deref for Category {
     type Target = str;
-    fn deref(&self) -> &str { &self.0 }
+    fn deref(&self) -> &str {
+        &self.0
+    }
 }
 
 impl Deref for Feature {
     type Target = str;
-    fn deref(&self) -> &str { &self.0 }
+    fn deref(&self) -> &str {
+        &self.0
+    }
 }
 
 impl Deref for CrateVersion {
     type Target = semver::Version;
     fn deref<'a>(&'a self) -> &'a semver::Version {
-        let CrateVersion(ref s) = *self; s
+        let CrateVersion(ref s) = *self;
+        s
     }
 }
 
 impl Deref for CrateVersionReq {
     type Target = semver::VersionReq;
     fn deref<'a>(&'a self) -> &'a semver::VersionReq {
-        let CrateVersionReq(ref s) = *self; s
+        let CrateVersionReq(ref s) = *self;
+        s
     }
 }
 
 impl Deref for KeywordList {
     type Target = [Keyword];
-    fn deref(&self) -> &[Keyword] { &self.0 }
+    fn deref(&self) -> &[Keyword] {
+        &self.0
+    }
 }
 
 impl Deref for CategoryList {
     type Target = [Category];
-    fn deref(&self) -> &[Category] { &self.0 }
+    fn deref(&self) -> &[Category] {
+        &self.0
+    }
 }

@@ -43,30 +43,28 @@ pub struct EncodableCategoryWithSubcategories {
 }
 
 impl Category {
-    pub fn find_by_category(conn: &GenericConnection, name: &str)
-                            -> CargoResult<Category> {
+    pub fn find_by_category(conn: &GenericConnection, name: &str) -> CargoResult<Category> {
         let stmt = try!(conn.prepare("SELECT * FROM categories \
                                       WHERE category = $1"));
         let rows = try!(stmt.query(&[&name]));
-        rows.iter().next()
-                   .chain_error(|| NotFound)
-                   .map(|row| Model::from_row(&row))
+        rows.iter()
+            .next()
+            .chain_error(|| NotFound)
+            .map(|row| Model::from_row(&row))
     }
 
-    pub fn find_by_slug(conn: &GenericConnection, slug: &str)
-                            -> CargoResult<Category> {
+    pub fn find_by_slug(conn: &GenericConnection, slug: &str) -> CargoResult<Category> {
         let stmt = try!(conn.prepare("SELECT * FROM categories \
                                       WHERE slug = LOWER($1)"));
         let rows = try!(stmt.query(&[&slug]));
-        rows.iter().next()
-                   .chain_error(|| NotFound)
-                   .map(|row| Model::from_row(&row))
+        rows.iter()
+            .next()
+            .chain_error(|| NotFound)
+            .map(|row| Model::from_row(&row))
     }
 
     pub fn encodable(self) -> EncodableCategory {
-        let Category {
-            id: _, crates_cnt, category, slug, description, created_at
-        } = self;
+        let Category { id: _, crates_cnt, category, slug, description, created_at } = self;
         EncodableCategory {
             id: slug.clone(),
             slug: slug.clone(),
@@ -79,37 +77,36 @@ impl Category {
 
     pub fn update_crate(conn: &GenericConnection,
                         krate: &Crate,
-                        categories: &[String]) -> CargoResult<Vec<String>> {
+                        categories: &[String])
+                        -> CargoResult<Vec<String>> {
         let old_categories = try!(krate.categories(conn));
-        let old_categories_ids: HashSet<_> = old_categories.iter().map(|cat| {
-            cat.id
-        }).collect();
+        let old_categories_ids: HashSet<_> = old_categories.iter()
+            .map(|cat| cat.id)
+            .collect();
 
         // If a new category specified is not in the database, filter
         // it out and don't add it. Return it to be able to warn about it.
         let mut invalid_categories = vec![];
-        let new_categories: Vec<Category> = categories.iter().flat_map(|c| {
-            match Category::find_by_slug(conn, &c) {
+        let new_categories: Vec<Category> = categories.iter()
+            .flat_map(|c| match Category::find_by_slug(conn, &c) {
                 Ok(cat) => Some(cat),
                 Err(_) => {
                     invalid_categories.push(c.to_string());
                     None
-                },
-            }
-        }).collect();
+                }
+            })
+            .collect();
 
-        let new_categories_ids: HashSet<_> = new_categories.iter().map(|cat| {
-            cat.id
-        }).collect();
+        let new_categories_ids: HashSet<_> = new_categories.iter()
+            .map(|cat| cat.id)
+            .collect();
 
-        let to_rm: Vec<_> = old_categories_ids
-                                .difference(&new_categories_ids)
-                                .cloned()
-                                .collect();
-        let to_add: Vec<_> = new_categories_ids
-                                .difference(&old_categories_ids)
-                                .cloned()
-                                .collect();
+        let to_rm: Vec<_> = old_categories_ids.difference(&new_categories_ids)
+            .cloned()
+            .collect();
+        let to_add: Vec<_> = new_categories_ids.difference(&old_categories_ids)
+            .cloned()
+            .collect();
 
         if !to_rm.is_empty() {
             try!(conn.execute("DELETE FROM crates_categories \
@@ -119,9 +116,9 @@ impl Category {
         }
 
         if !to_add.is_empty() {
-            let insert: Vec<_> = to_add.into_iter().map(|id| {
-                format!("({}, {})", krate.id, id)
-            }).collect();
+            let insert: Vec<_> = to_add.into_iter()
+                .map(|id| format!("({}, {})", krate.id, id))
+                .collect();
             let insert = insert.join(", ");
             try!(conn.execute(&format!("INSERT INTO crates_categories \
                                         (crate_id, category_id) VALUES {}",
@@ -133,12 +130,10 @@ impl Category {
     }
 
     pub fn count_toplevel(conn: &GenericConnection) -> CargoResult<i64> {
-        let sql = format!("\
-            SELECT COUNT(*) \
-            FROM {} \
-            WHERE category NOT LIKE '%::%'",
-            Model::table_name(None::<Self>
-        ));
+        let sql =
+            format!("\
+            SELECT COUNT(*) FROM {} WHERE category NOT LIKE '%::%'",
+                    Model::table_name(None::<Self>));
         let stmt = try!(conn.prepare(&sql));
         let rows = try!(stmt.query(&[]));
         Ok(rows.iter().next().unwrap().get("count"))
@@ -147,7 +142,8 @@ impl Category {
     pub fn toplevel(conn: &GenericConnection,
                     sort: &str,
                     limit: i64,
-                    offset: i64) -> CargoResult<Vec<Category>> {
+                    offset: i64)
+                    -> CargoResult<Vec<Category>> {
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -156,19 +152,14 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        let stmt = try!(conn.prepare(&format!(
-            "SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-                COALESCE (( \
-                    SELECT sum(c2.crates_cnt)::int \
-                    FROM categories as c2 \
-                    WHERE c2.slug = c.slug \
-                    OR c2.slug LIKE c.slug || '::%' \
-                ), 0) as crates_cnt \
-             FROM categories as c \
-             WHERE c.category NOT LIKE '%::%' {} \
-             LIMIT $1 OFFSET $2",
-             sort_sql
-        )));
+        let stmt =
+            try!(conn.prepare(&format!("SELECT c.id, c.category, c.slug, c.description, \
+                                        c.created_at, COALESCE (( SELECT \
+                                        sum(c2.crates_cnt)::int FROM categories as c2 WHERE \
+                                        c2.slug = c.slug OR c2.slug LIKE c.slug || '::%' ), 0) \
+                                        as crates_cnt FROM categories as c WHERE c.category \
+                                        NOT LIKE '%::%' {} LIMIT $1 OFFSET $2",
+                                       sort_sql)));
 
         let categories: Vec<_> = try!(stmt.query(&[&limit, &offset]))
             .iter()
@@ -178,19 +169,15 @@ impl Category {
         Ok(categories)
     }
 
-    pub fn subcategories(&self, conn: &GenericConnection)
-                                -> CargoResult<Vec<Category>> {
-        let stmt = try!(conn.prepare("\
-            SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-            COALESCE (( \
-                SELECT sum(c2.crates_cnt)::int \
-                FROM categories as c2 \
-                WHERE c2.slug = c.slug \
-                OR c2.slug LIKE c.slug || '::%' \
-            ), 0) as crates_cnt \
-            FROM categories as c \
-            WHERE c.category ILIKE $1 || '::%' \
-            AND c.category NOT ILIKE $1 || '::%::%'"));
+    pub fn subcategories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
+        let stmt =
+            try!(conn.prepare("\
+            SELECT c.id, c.category, c.slug, c.description, \
+                               c.created_at, COALESCE (( SELECT sum(c2.crates_cnt)::int FROM \
+                               categories as c2 WHERE c2.slug = c.slug OR c2.slug LIKE c.slug \
+                               || '::%' ), 0) as crates_cnt FROM categories as c WHERE \
+                               c.category ILIKE $1 || '::%' AND c.category NOT ILIKE $1 || \
+                               '::%::%'"));
 
         let rows = try!(stmt.query(&[&self.category]));
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
@@ -208,7 +195,9 @@ impl Model for Category {
             description: row.get("description"),
         }
     }
-    fn table_name(_: Option<Category>) -> &'static str { "categories" }
+    fn table_name(_: Option<Category>) -> &'static str {
+        "categories"
+    }
 }
 
 /// Handles the `GET /categories` route.
@@ -225,9 +214,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let total = try!(Category::count_toplevel(conn));
 
     #[derive(RustcEncodable)]
-    struct R { categories: Vec<EncodableCategory>, meta: Meta }
+    struct R {
+        categories: Vec<EncodableCategory>,
+        meta: Meta,
+    }
     #[derive(RustcEncodable)]
-    struct Meta { total: i64 }
+    struct Meta {
+        total: i64,
+    }
 
     Ok(req.json(&R {
         categories: categories,
@@ -240,9 +234,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = try!(req.tx());
     let cat = try!(Category::find_by_slug(&*conn, &slug));
-    let subcats = try!(cat.subcategories(&*conn)).into_iter().map(|s| {
-        s.encodable()
-    }).collect();
+    let subcats = try!(cat.subcategories(&*conn))
+        .into_iter()
+        .map(|s| s.encodable())
+        .collect();
     let cat = cat.encodable();
     let cat_with_subcats = EncodableCategoryWithSubcategories {
         id: cat.id,
@@ -255,7 +250,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     };
 
     #[derive(RustcEncodable)]
-    struct R { category: EncodableCategoryWithSubcategories}
+    struct R {
+        category: EncodableCategoryWithSubcategories,
+    }
     Ok(req.json(&R { category: cat_with_subcats }))
 }
 
@@ -267,14 +264,24 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     let rows = try!(stmt.query(&[]));
 
     #[derive(RustcEncodable)]
-    struct Slug { id: String, slug: String }
+    struct Slug {
+        id: String,
+        slug: String,
+    }
 
-    let slugs: Vec<Slug> = rows.iter().map(|r| {
-        let slug: String = r.get("slug");
-        Slug { id: slug.clone(), slug: slug }
-    }).collect();
+    let slugs: Vec<Slug> = rows.iter()
+        .map(|r| {
+            let slug: String = r.get("slug");
+            Slug {
+                id: slug.clone(),
+                slug: slug,
+            }
+        })
+        .collect();
 
     #[derive(RustcEncodable)]
-    struct R { category_slugs: Vec<Slug> }
+    struct R {
+        category_slugs: Vec<Slug>,
+    }
     Ok(req.json(&R { category_slugs: slugs }))
 }
