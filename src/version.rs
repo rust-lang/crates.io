@@ -198,22 +198,25 @@ impl Version {
                                &[&self.crate_id])?;
         let max_version = rows.iter()
                               .next()
-                              .map(|r| r.get::<&str, String>("max_version"))
-                              .map(|v| semver::Version::parse(&v).unwrap())
-                              .unwrap();
-        let zero = semver::Version::parse("0.0.0").unwrap();
+                              .and_then(|r| r.get::<&str, Option<String>>("max_version"))
+                              .map(|v| semver::Version::parse(&v).unwrap());
         let max_update_stmt = conn.prepare("UPDATE crates SET max_version = $1 WHERE id = $2")?;
-        if yanked && max_version == self.num {
-            let new_max = conn.query("SELECT num FROM versions \
-                                      WHERE crate_id = $1 AND yanked = FALSE AND id != $2",
-                                     &[&self.crate_id, &self.id])?
-                              .iter()
-                              .map(|r| r.get::<&str, String>("num"))
-                              .filter_map(|v| semver::Version::parse(&v).ok())
-                              .max()
-                              .unwrap();
-            max_update_stmt.execute(&[&new_max.to_string(), &self.crate_id])?;
-        } else if !yanked && (self.num > max_version || max_version == zero) {
+        if let Some(max_version) = max_version {
+            let zero = semver::Version::parse("0.0.0").unwrap();
+            if yanked && max_version == self.num {
+                let new_max = conn.query("SELECT num FROM versions \
+                                          WHERE crate_id = $1 AND yanked = FALSE AND id != $2",
+                                         &[&self.crate_id, &self.id])?
+                                  .iter()
+                                  .map(|r| r.get::<&str, String>("num"))
+                                  .filter_map(|v| semver::Version::parse(&v).ok())
+                                  .max();
+                max_update_stmt.execute(&[&new_max.map(|v| v.to_string()), &self.crate_id])?;
+            } else if !yanked && (self.num > max_version || max_version == zero) {
+                max_update_stmt.execute(&[&self.num.to_string(), &self.crate_id])?;
+            }
+        } else if !yanked {
+            // no max version, all versions yanked
             max_update_stmt.execute(&[&self.num.to_string(), &self.crate_id])?;
         }
 

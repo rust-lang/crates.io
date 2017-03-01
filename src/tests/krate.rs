@@ -347,7 +347,8 @@ fn new_krate() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
 }
 
 #[test]
@@ -360,7 +361,8 @@ fn new_krate_weird_version() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_weird");
-    assert_eq!(json.krate.max_version, "0.0.0-pre");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "0.0.0-pre");
 }
 
 #[test]
@@ -917,7 +919,8 @@ fn good_categories() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_good_cat");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
     assert_eq!(json.warnings.invalid_categories.len(), 0);
 }
 
@@ -931,7 +934,8 @@ fn ignored_categories() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_ignored_cat");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
     assert_eq!(json.warnings.invalid_categories, vec!["bar".to_string()]);
 }
 
@@ -954,7 +958,8 @@ fn good_badges() {
 
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foobadger");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
 
     let mut response = ok_resp!(
         middle.call(req.with_method(Method::Get)
@@ -1000,7 +1005,8 @@ fn ignored_badges() {
 
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_ignored_badge");
-    assert_eq!(json.krate.max_version, "1.0.0");
+    assert!(json.krate.max_version.is_some());
+    assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
     assert_eq!(json.warnings.invalid_badges.len(), 2);
     assert!(json.warnings.invalid_badges.contains(&"travis-ci".to_string()));
     assert!(json.warnings.invalid_badges.contains(&"not-a-badge".to_string()));
