@@ -22,6 +22,6 @@ module.exports = function(defaults) {
 
   app.import('bower_components/moment/moment.js');
   app.import('bower_components/normalize-css/normalize.css');
-
+  app.import('bower_components/clipboard/dist/clipboard.js');
   return app.toTree();
 };
