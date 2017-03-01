@@ -242,13 +242,13 @@
             padding: 20px;
         }
         button, button:active {
-          padding:5px 0;
-          background-color: #FFFFFF;
-          border: none;
-          width: 60px;
+            padding: 5px 0;
+            background-color: #FFFFFF;
+            border: none;
+            width: 60px;
         }
-        button:hover{
-          background: #edebdd;
+        button:hover {
+            background: #edebdd;
         }
         @media only screen and (min-width: 500px) {
             .action { @include flex(2); display: block; }
@@ -256,19 +256,18 @@
         }
     }
     .copy-result {
-      text-align:right;
+        text-align: right;
 
-      span {
-        font-size:80%;
-        font-weight:bold;
-      }
-      .copy-success {
-        color:$link-color;
-      }
-      .copy-failure {
-        color:red;
-      }
-
+        span {
+            font-size: 80%;
+            font-weight: bold;
+        }
+        .copy-success {
+            color: $link-color;
+        }
+        .copy-failure {
+            color: red;
+        }
     }
     .last-update {
         color: $main-color-light;

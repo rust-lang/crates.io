@@ -63,7 +63,7 @@
             </button>
         </div>
         <div class="copy-result">
-          <span id="copy-notification"></span>
+            <span id="copy-notification"></span>
         </div>
     </div>
     <div class='authorship'>
@@ -279,37 +279,38 @@
 {{/if}}
 
 <script type="text/javascript">
-  if (!Clipboard.isSupported()) {
-    document.getElementById('crate-download-button').classList.add('hidden');
-  }
+    if (!Clipboard.isSupported()) {
+        document.getElementById('crate-download-button').classList.add('hidden');
+    }
 
-  var clipboard = new Clipboard('#crate-download-button');
-  var notificationElement = document.getElementById('copy-notification');
-  clipboard.on('success', function(e) {
-      var successText = 'Copied !';
+    var clipboard = new Clipboard('#crate-download-button');
+    var notificationElement = document.getElementById('copy-notification');
 
-      e.clearSelection();
-      notificationElement.classList.add('copy-success')
-      notificationElement.textContent = successText;
-      fadeOffElement(notificationElement, 2000);
-  });
-  clipboard.on('error', function(e) {
-      var failureText = 'An error occured. Please use CTRL+C.';
+    clipboard.on('success', function(e) {
+        var successText = 'Copied !';
 
-      notificationElement.classList.add('copy-failure')
-      notificationElement.textContent = failureText;
-      fadeOffElement(notificationElement, 2000);
-  });
+        e.clearSelection();
+        notificationElement.classList.add('copy-success')
+        notificationElement.textContent = successText;
+        fadeOffElement(notificationElement, 2000);
+    });
 
-  function fadeOffElement(element, delay) {
-    setTimeout(function() {
-      resetElement(element);
-    }, delay);
-  }
+    clipboard.on('error', function(e) {
+        var failureText = 'An error occured. Please use CTRL+C.';
 
-  function resetElement(element) {
-    element.innerHTML = '';
-    element.className = '';
-  }
+        notificationElement.classList.add('copy-failure')
+        notificationElement.textContent = failureText;
+        fadeOffElement(notificationElement, 2000);
+    });
 
+    function fadeOffElement(element, delay) {
+        setTimeout(function() {
+            resetElement(element);
+        }, delay);
+    }
+
+    function resetElement(element) {
+        element.innerHTML = '';
+        element.className = '';
+    }
 </script>
