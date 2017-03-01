@@ -240,8 +240,14 @@
             color: white;
             padding: 20px;
         }
-        button {
-          padding:5px;
+        button, button:active {
+          padding:5px 0;
+          background-color: #FFFFFF;
+          border: none;
+          width: 60px;
+        }
+        button:hover{
+          background: #edebdd;
         }
         @media only screen and (min-width: 500px) {
             .action { @include flex(2); display: block; }
