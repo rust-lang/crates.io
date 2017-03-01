@@ -873,7 +873,10 @@ fn yank_not_owner() {
 
 #[test]
 fn yank_max_version() {
-    #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
     let (_b, app, middle) = ::app();
 
     // Upload a new crate
@@ -889,67 +892,67 @@ fn yank_max_version() {
     // add version 2.0.0
     let body = ::new_req_body_version_2(::krate("fyk_max"));
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
-                                               .with_method(Method::Put)
-                                               .with_body(&body)));
+        .with_method(Method::Put)
+        .with_body(&body)));
     let json: GoodCrate = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "2.0.0");
 
     // yank version 1.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "2.0.0");
 
     // unyank version 1.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
-                                        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "2.0.0");
 
     // yank version 2.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                        .with_path("/api/v1/crates/fyk_max/2.0.0/yank")));
+        .with_path("/api/v1/crates/fyk_max/2.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "1.0.0");
 
     // yank version 1.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
-                                        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_none());
 
     // unyank version 2.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
-                                        .with_path("/api/v1/crates/fyk_max/2.0.0/unyank")));
+        .with_path("/api/v1/crates/fyk_max/2.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "2.0.0");
 
     // unyank version 1.0.0
     let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
-                                        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
     assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
-                                               .with_path("/api/v1/crates/fyk_max")));
+        .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
     assert!(json.krate.max_version.is_some());
     assert_eq!(json.krate.max_version.unwrap(), "2.0.0");
