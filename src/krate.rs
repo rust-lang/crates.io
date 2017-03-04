@@ -385,6 +385,7 @@ impl Crate {
         }
         let zero = semver::Version::parse("0.0.0").unwrap();
         let new_max = match self.max_version {
+            None => true,
             Some(ref max_version) if *ver > *max_version || *max_version == zero => true,
             _ => false,
         };
