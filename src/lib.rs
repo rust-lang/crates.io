@@ -5,6 +5,8 @@
 //! [user](user/index.html) and [version](version/index.html) modules.
 
 #[macro_use] extern crate log;
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_codegen;
 extern crate postgres as pg;
 extern crate rustc_serialize;
 extern crate curl;
@@ -15,6 +17,7 @@ extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
+extern crate r2d2_diesel;
 extern crate r2d2_postgres;
 extern crate rand;
 extern crate s3;
@@ -63,15 +66,16 @@ pub mod dependency;
 pub mod dist;
 pub mod download;
 pub mod git;
+pub mod http;
 pub mod keyword;
 pub mod krate;
 pub mod model;
+pub mod owner;
+pub mod schema;
 pub mod upload;
 pub mod user;
-pub mod owner;
 pub mod util;
 pub mod version;
-pub mod http;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Env {
@@ -151,6 +155,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session",
                                                  env == Env::Production));
     m.add(app::AppMiddleware::new(app));
+    m.add(db::DieselMiddleware);
     if env != Env::Test {
         m.add(db::TransactionMiddleware);
     }

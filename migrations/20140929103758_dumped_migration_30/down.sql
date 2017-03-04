@@ -1,0 +1,1 @@
+DROP INDEX index_crate_downloads_date;

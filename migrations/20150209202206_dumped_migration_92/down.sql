@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners DROP CONSTRAINT crate_owners_unique_user_per_crate;

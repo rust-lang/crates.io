@@ -18,6 +18,9 @@ pub struct App {
     /// The database connection pool
     pub database: db::Pool,
 
+    /// The database connection pool
+    pub diesel_database: db::DieselPool,
+
     /// The GitHub OAuth2 configuration
     pub github: oauth2::Config,
     pub bucket: s3::Bucket,
@@ -50,10 +53,15 @@ impl App {
             .pool_size(if config.env == ::Env::Production {10} else {1})
             .helper_threads(if config.env == ::Env::Production {3} else {1})
             .build();
+        let diesel_db_config = r2d2::Config::builder()
+            .pool_size(if config.env == ::Env::Production {10} else {1})
+            .helper_threads(if config.env == ::Env::Production {3} else {1})
+            .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
         return App {
             database: db::pool(&config.db_url, db_config),
+            diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
             github: github,
             bucket: s3::Bucket::new(config.s3_bucket.clone(),
                                     config.s3_region.clone(),

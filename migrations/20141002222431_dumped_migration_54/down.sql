@@ -1,0 +1,1 @@
+ALTER TABLE version_downloads DROP CONSTRAINT fk_version_downloads_version_id;

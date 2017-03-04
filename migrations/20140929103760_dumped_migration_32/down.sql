@@ -1,0 +1,1 @@
+DROP INDEX index_version_downloads_version_id;

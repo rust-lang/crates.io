@@ -1,0 +1,1 @@
+CREATE INDEX index_crate_updated_at ON crates (updated_at);

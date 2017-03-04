@@ -3,34 +3,94 @@ use std::collections::HashMap;
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
 
-use {Model, Version};
 use app::RequestApp;
 use db::RequestTransaction;
+use {http, Model, Version};
 use krate::{Crate, EncodableCrate};
+use schema::users;
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
-use http;
 
 pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable)]
 pub struct User {
     pub id: i32,
-    pub gh_login: String,
-    pub gh_id: i32,
-    pub name: Option<String>,
     pub email: Option<String>,
-    pub avatar: Option<String>,
     pub gh_access_token: String,
     pub api_token: String,
+    pub gh_login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub gh_id: i32,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[table_name="users"]
+pub struct NewUser<'a> {
+    pub gh_id: i32,
+    pub gh_login: &'a str,
+    pub email: Option<&'a str>,
+    pub name: Option<&'a str>,
+    pub gh_avatar: Option<&'a str>,
+    pub gh_access_token: &'a str,
+    pub api_token: &'a str,
+}
+
+impl<'a> NewUser<'a> {
+    pub fn new(gh_id: i32,
+               gh_login: &'a str,
+               email: Option<&'a str>,
+               name: Option<&'a str>,
+               gh_avatar: Option<&'a str>,
+               gh_access_token: &'a str,
+               api_token: &'a str) -> Self {
+        NewUser {
+            gh_id: gh_id,
+            gh_login: gh_login,
+            email: email,
+            name: name,
+            gh_avatar: gh_avatar,
+            gh_access_token: gh_access_token,
+            api_token: api_token,
+        }
+    }
+
+    /// Inserts the user into the database, or updates an existing one.
+    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<User> {
+        use diesel::{insert, update};
+        use diesel::pg::upsert::*;
+        use self::users::dsl::*;
+
+        conn.transaction(|| {
+            // FIXME: When Diesel 0.12 is released, this should be updated to be
+            // less racy.
+            // insert(&self.on_conflict(gh_id, do_update().set(self)))
+            //     .into(users)
+            //     .get_result(conn)
+            let maybe_inserted = insert(&self.on_conflict_do_nothing())
+                .into(users)
+                .get_result(conn)
+                .optional()?;
+            if let Some(user) = maybe_inserted {
+                return Ok(user);
+            }
+            update(users.filter(gh_id.eq(self.gh_id)))
+                .set(self)
+                .get_result(conn)
+                .map_err(Into::into)
+        })
+    }
 }
 
 /// The serialization format for the `User` model.
@@ -290,15 +350,18 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
+    use self::users::dsl::{users, gh_login};
+
     let name = &req.params()["user_id"];
-    let conn = req.tx()?;
-    let user = User::find_by_login(conn, &name)?;
+    let conn = req.db_conn()?;
+    let user = users.filter(gh_login.eq(name))
+        .first::<User>(conn)?;
 
     #[derive(RustcEncodable)]
     struct R {
         user: EncodableUser,
     }
-    Ok(req.json(&R{ user: user.clone().encodable() }))
+    Ok(req.json(&R{ user: user.encodable() }))
 }
 
 

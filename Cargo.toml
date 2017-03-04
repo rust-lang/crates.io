@@ -36,6 +36,9 @@ rustc-serialize = "0.3"
 license-exprs = "^1.3"
 dotenv = "0.8.0"
 toml = "0.2"
+diesel = { version = "0.11.0", features = ["postgres"] }
+diesel_codegen = { version = "0.11.0", features = ["postgres"] }
+r2d2-diesel = "0.11.0"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"

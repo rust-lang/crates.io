@@ -1,0 +1,1 @@
+ALTER TABLE version_authors DROP CONSTRAINT fk_version_authors_version_id;

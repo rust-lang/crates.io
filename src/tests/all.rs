@@ -6,6 +6,7 @@ extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
+extern crate diesel;
 extern crate dotenv;
 extern crate git2;
 extern crate postgres;
@@ -15,7 +16,6 @@ extern crate time;
 extern crate url;
 
 use std::collections::HashMap;
-use std::process::Command;
 use std::env;
 use std::sync::{Once, ONCE_INIT, Arc};
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
@@ -28,6 +28,8 @@ use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::Kind;
 use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model};
 use cargo_registry::upload as u;
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 
 macro_rules! t {
     ($e:expr) => (
@@ -96,19 +98,16 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     };
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);
+    t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let middleware = cargo_registry::middleware(app.clone());
     return (bomb, app, middleware);
 
     fn db_setup(db: &str) {
-        let mut me = t!(env::current_exe());
-        me.pop();
-        if me.ends_with("deps") {
-            me.pop();
-        }
-        me.push("migrate");
-        assert!(t!(Command::new(&me).env("DATABASE_URL", db)
-                           .status()).success());
+        use diesel::migrations::run_pending_migrations;
+
+        let connection = PgConnection::establish(db).unwrap();
+        run_pending_migrations(&connection).unwrap();
     }
 }
 

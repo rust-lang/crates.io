@@ -1,0 +1,1 @@
+CREATE INDEX index_crates_name_search ON crates USING gin(textsearchable_index_col);

@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners ADD COLUMN deleted BOOLEAN NOT NULL;

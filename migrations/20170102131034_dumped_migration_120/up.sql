@@ -1,0 +1,1 @@
+CREATE TABLE badges ( crate_id         INTEGER NOT NULL, badge_type       VARCHAR NOT NULL, attributes       JSONB NOT NULL);
