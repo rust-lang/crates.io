@@ -10,7 +10,7 @@ use time::Duration;
 use time::Timespec;
 use url;
 
-use {Model, Crate, User};
+use {Model, Crate};
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency, Kind};
@@ -33,9 +33,8 @@ pub struct Version {
     pub yanked: bool,
 }
 
-pub enum Author {
-    User(User), //TODO: not used. this should be removed.
-    Name(String),
+pub struct Author {
+    pub name: String
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -170,14 +169,9 @@ impl Version {
                                        WHERE version_id = $1
                                        ORDER BY name ASC")?;
         let rows = stmt.query(&[&self.id])?;
-        rows.into_iter().map(|row| {
-            let user_id: Option<i32> = row.get("user_id");
-            let name: String = row.get("name");
-            Ok(match user_id {
-                Some(id) => Author::User(User::find(conn, id)?),
-                None => Author::Name(name),
-            })
-        }).collect()
+        Ok(rows.into_iter().map(|row| {
+            Author { name: row.get("name") }
+        }).collect())
     }
 
     pub fn add_author(&self,
@@ -327,19 +321,16 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 pub fn authors(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let tx = req.tx()?;
-    let (mut users, mut names) = (Vec::new(), Vec::new());
-    for author in version.authors(tx)?.into_iter() {
-        match author {
-            Author::User(u) => users.push(u.encodable()),
-            Author::Name(n) => names.push(n),
-        }
-    }
+    let names = version.authors(tx)?.into_iter().map(|a| a.name).collect();
 
+    // It was imagined that we wold associate authors with users.
+    // This was never implemented. This complicated return struct
+    // is all that is left, hear for backwards compatibility.
     #[derive(RustcEncodable)]
     struct R { users: Vec<::user::EncodableUser>, meta: Meta }
     #[derive(RustcEncodable)]
     struct Meta { names: Vec<String> }
-    Ok(req.json(&R{ users: users, meta: Meta { names: names } }))
+    Ok(req.json(&R{ users: vec![], meta: Meta { names: names } }))
 }
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
