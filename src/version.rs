@@ -34,7 +34,7 @@ pub struct Version {
 }
 
 pub enum Author {
-    User(User),
+    User(User), //TODO: not used. this should be removed.
     Name(String),
 }
 
@@ -167,25 +167,22 @@ impl Version {
 
     pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
         let stmt = conn.prepare("SELECT * FROM version_authors
-                                       WHERE version_id = $1")?;
+                                       WHERE version_id = $1
+                                       ORDER BY name ASC")?;
         let rows = stmt.query(&[&self.id])?;
-        let mut authors = rows.into_iter().map(|row| {
+        rows.into_iter().map(|row| {
             let user_id: Option<i32> = row.get("user_id");
             let name: String = row.get("name");
             Ok(match user_id {
                 Some(id) => Author::User(User::find(conn, id)?),
                 None => Author::Name(name),
             })
-        }).collect::<CargoResult<Vec<Author>>>()?;
-        authors.sort_by(|ref a, ref b| a.name().cmp(&b.name()));
-        Ok(authors)
+        }).collect()
     }
 
     pub fn add_author(&self,
                       conn: &GenericConnection,
                       name: &str) -> CargoResult<()> {
-        println!("add author: {}", name);
-        // TODO: at least try to link `name` to a pre-existing user
         conn.execute("INSERT INTO version_authors (version_id, name)
                            VALUES ($1, $2)", &[&self.id, &name])?;
         Ok(())
@@ -217,15 +214,6 @@ impl Model for Version {
         }
     }
     fn table_name(_: Option<Version>) -> &'static str { "versions" }
-}
-
-impl Author {
-    fn name(&self) -> Option<&str> {
-        match self {
-            &Author::Name(ref n) => {Some(&n)},
-            &Author::User(ref u) => {u.name.as_ref().map(String::as_str)}
-        }
-    }
 }
 
 /// Handles the `GET /versions` route.
