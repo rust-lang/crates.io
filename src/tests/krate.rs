@@ -5,7 +5,6 @@ use std::fs::{self, File};
 use conduit::{Handler, Request, Method};
 
 use git2;
-use postgres::GenericConnection;
 use rustc_serialize::json;
 use semver;
 
@@ -80,8 +79,6 @@ fn index() {
     assert_eq!(json.crates[0].id, krate.name);
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
-
 #[test]
 fn index_queries() {
     let (_b, app, middle) = ::app();
@@ -94,8 +91,8 @@ fn index_queries() {
     let (krate, _) = ::mock_crate(&mut req, krate.clone());
     let krate2 = ::krate("BAR_INDEX_QUERIES");
     let (krate2, _) = ::mock_crate(&mut req, krate2.clone());
-    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
-    Keyword::update_crate(tx(&req), &krate2, &["KW1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate2, &["KW1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
@@ -134,7 +131,7 @@ fn index_queries() {
 
     ::mock_category(&mut req, "cat1", "cat1");
     ::mock_category(&mut req, "cat1::bar", "cat1::bar");
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
+    Category::update_crate(req.tx().unwrap(), &krate, &["cat1".to_string(),
                             "cat1::bar".to_string()]).unwrap();
     let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
     let cl = ::json::<CrateList>(&mut response);
@@ -215,8 +212,7 @@ fn exact_match_on_queries_with_sort() {
     let (k4, _) = ::mock_crate(&mut req, krate4.clone());
 
     {
-        let req2: &mut Request = &mut req;
-        let tx = req2.tx().unwrap();
+        let tx = req.tx().unwrap();
         tx.execute("UPDATE crates set downloads = $1
                     WHERE id = $2", &[&krate.downloads, &k.id]).unwrap();
         tx.execute("UPDATE crates set downloads = $1
@@ -267,7 +263,7 @@ fn show() {
     krate.documentation = Some(format!("https://example.com"));
     krate.homepage = Some(format!("http://example.com"));
     let (krate, _) = ::mock_crate(&mut req, krate.clone());
-    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);

@@ -7,7 +7,6 @@
 
 #![deny(warnings)]
 
-#[macro_use]
 extern crate cargo_registry;
 extern crate postgres;
 extern crate time;

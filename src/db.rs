@@ -209,7 +209,7 @@ pub trait RequestTransaction {
     fn commit(&self);
 }
 
-impl<'a> RequestTransaction for Request + 'a {
+impl<T: Request + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         self.extensions().find::<Transaction>()
             .expect("Transaction not present in request")
