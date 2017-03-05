@@ -1,14 +1,9 @@
 use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
-use std::io::prelude::*;
-use std::io;
-use std::mem;
-use std::sync::Arc;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use curl::easy::Easy;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::*;
@@ -36,7 +31,7 @@ use upload;
 use user::RequestUser;
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use util::errors::NotFound;
-use util::{LimitErrorReader, HashingReader};
+use util::{read_le_u32, read_fill};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 use schema::*;
@@ -890,45 +885,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     )?;
     let max_version = krate.max_version(req.tx()?)?;
 
-    // Upload the crate to S3
-    let mut handle = req.app().handle();
-    let path = krate.s3_path(&vers.to_string());
-    let (response, cksum) = {
-        let length = read_le_u32(req.body())?;
-        let body = LimitErrorReader::new(req.body(), max);
-        let mut body = HashingReader::new(body);
-        let mut response = Vec::new();
-        {
-            let mut s3req = app.bucket.put(&mut handle, &path, &mut body,
-                                           "application/x-tar",
-                                           length as u64);
-            s3req.write_function(|data| {
-                response.extend(data);
-                Ok(data.len())
-            }).unwrap();
-            s3req.perform().chain_error(|| {
-                internal(format!("failed to upload to S3: `{}`", path))
-            })?;
-        }
-        (response, body.finalize())
-    };
-    if handle.response_code().unwrap() != 200 {
-        let response = String::from_utf8_lossy(&response);
-        return Err(internal(format!("failed to get a 200 response from S3: {}",
-                                    response)))
-    }
-
+    // Upload the crate, return way to delete the crate from the server
     // If the git commands fail below, we shouldn't keep the crate on the
     // server.
-    struct Bomb { app: Arc<App>, path: Option<String>, handle: Easy }
-    impl Drop for Bomb {
-        fn drop(&mut self) {
-            if let Some(ref path) = self.path {
-                drop(self.app.bucket.delete(&mut self.handle, &path).perform());
-            }
-        }
-    }
-    let mut bomb = Bomb { app: app.clone(), path: Some(path), handle: handle };
+    let (cksum, mut bomb) = app.uploader.upload(req, &krate, max, &vers)?;
 
     // Register this crate in our local git repo.
     let git_crate = git::Crate {
@@ -1003,28 +963,6 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     Ok((new, user.clone()))
 }
 
-fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
-    let mut b = [0; 4];
-    read_fill(r, &mut b)?;
-    Ok(((b[0] as u32) <<  0) |
-       ((b[1] as u32) <<  8) |
-       ((b[2] as u32) << 16) |
-       ((b[3] as u32) << 24))
-}
-
-fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8])
-                               -> io::Result<()> {
-    while slice.len() > 0 {
-        let n = r.read(slice)?;
-        if n == 0 {
-            return Err(io::Error::new(io::ErrorKind::Other,
-                                      "end of file reached"))
-        }
-        slice = &mut mem::replace(&mut slice, &mut [])[n..];
-    }
-    Ok(())
-}
-
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
@@ -1040,9 +978,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         increment_download_counts(req, crate_name, version)?;
     }
 
-    let redirect_url = format!("https://{}/crates/{}/{}-{}.crate",
-                               req.app().bucket.host(),
-                               crate_name, crate_name, version);
+    let redirect_url = req.app().uploader.crate_location(crate_name, version);
 
     if req.wants_json() {
         #[derive(RustcEncodable)]

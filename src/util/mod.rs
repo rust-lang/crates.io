@@ -16,7 +16,7 @@ pub use self::errors::{CargoError, CargoResult, internal, human, internal_error}
 pub use self::errors::{ChainError, std_error};
 pub use self::hasher::{HashingReader};
 pub use self::head::Head;
-pub use self::io_util::LimitErrorReader;
+pub use self::io_util::{LimitErrorReader, read_le_u32, read_fill};
 pub use self::lazy_cell::LazyCell;
 pub use self::request_proxy::RequestProxy;
 
