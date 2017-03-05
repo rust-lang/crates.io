@@ -85,10 +85,10 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     let (proxy, bomb) = record::proxy();
     let config = cargo_registry::Config {
-        s3_bucket: env::var("S3_BUCKET").unwrap_or(String::new()),
-        s3_access_key: env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-        s3_secret_key: env::var("S3_SECRET_KEY").unwrap_or(String::new()),
-        s3_region: env::var("S3_REGION").ok(),
+        s3_bucket: String::from("alexcrichton-test"),
+        s3_access_key: String::new(),
+        s3_secret_key: String::new(),
+        s3_region: None,
         s3_proxy: Some(proxy),
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),

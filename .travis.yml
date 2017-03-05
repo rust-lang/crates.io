@@ -45,7 +45,6 @@ env:
   global:
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
-    - S3_BUCKET=alexcrichton-test
 
 notifications:
   email:
