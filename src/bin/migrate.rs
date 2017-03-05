@@ -868,6 +868,12 @@ fn migrations() -> Vec<Migration> {
             tx.execute("DROP TABLE reserved_crate_names", &[])?;
             Ok(())
         }),
+        Migration::new(20170305123234, |tx| {
+            tx.execute("ALTER TABLE crates DROP COLUMN max_version", &[])?;
+            Ok(())
+        }, |_| {
+            panic!("Unreversible migration")
+        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 

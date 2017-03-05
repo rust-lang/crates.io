@@ -193,7 +193,6 @@ fn krate(name: &str) -> Crate {
         updated_at: time::now().to_timespec(),
         created_at: time::now().to_timespec(),
         downloads: 10,
-        max_version: semver::Version::parse("0.0.0").unwrap(),
         documentation: None,
         homepage: None,
         description: None,

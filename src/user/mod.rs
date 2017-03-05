@@ -337,8 +337,9 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
     // Encode everything!
     let crates = crates.into_iter().map(|c| {
-        c.minimal_encodable(None)
-    }).collect();
+        let max_version = c.max_version(tx)?;
+        Ok(c.minimal_encodable(max_version, None))
+    }).collect::<CargoResult<_>>()?;
     let versions = versions.into_iter().map(|v| {
         let id = v.crate_id;
         v.encodable(&map[&id])

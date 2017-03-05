@@ -44,7 +44,6 @@ pub struct Crate {
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
-    pub max_version: semver::Version,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -233,18 +232,20 @@ impl Crate {
     }
 
     pub fn minimal_encodable(self,
+                             max_version: semver::Version,
                              badges: Option<Vec<Badge>>) -> EncodableCrate {
-        self.encodable(None, None, None, badges)
+        self.encodable(max_version, None, None, None, badges)
     }
 
     pub fn encodable(self,
+                     max_version: semver::Version,
                      versions: Option<Vec<i32>>,
                      keywords: Option<&[Keyword]>,
                      categories: Option<&[Category]>,
                      badges: Option<Vec<Badge>>)
                      -> EncodableCrate {
         let Crate {
-            name, created_at, updated_at, downloads, max_version, description,
+            name, created_at, updated_at, downloads, description,
             homepage, documentation, license, repository,
             readme: _, id: _, max_upload_size: _,
         } = self;
@@ -255,7 +256,7 @@ impl Crate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| {
-            bs.iter().map(|b| b.clone().encodable()).collect()
+            bs.into_iter().map(|b| b.encodable()).collect()
         });
         EncodableCrate {
             id: name.clone(),
@@ -280,6 +281,16 @@ impl Crate {
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name)
             },
         }
+    }
+
+    pub fn max_version(&self, conn: &GenericConnection) -> CargoResult<semver::Version> {
+        let stmt = conn.prepare("SELECT num FROM versions WHERE crate_id = $1
+                                 AND yanked = 'f'")?;
+        let rows = stmt.query(&[&self.id])?;
+        Ok(rows.iter()
+            .map(|r| semver::Version::parse(&r.get::<_, String>("num")).unwrap())
+            .max()
+            .unwrap_or_else(|| semver::Version::parse("0.0.0").unwrap()))
     }
 
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
@@ -384,14 +395,6 @@ impl Crate {
             }
             None => {}
         }
-        let zero = semver::Version::parse("0.0.0").unwrap();
-        if *ver > self.max_version || self.max_version == zero {
-            self.max_version = ver.clone();
-        }
-        let stmt = conn.prepare("UPDATE crates SET max_version = $1
-                           WHERE id = $2 RETURNING updated_at")?;
-        let rows = stmt.query(&[&self.max_version.to_string(), &self.id])?;
-        self.updated_at = rows.get(0).get("updated_at");
         Version::insert(conn, self.id, ver, features, authors)
     }
 
@@ -434,7 +437,7 @@ impl Crate {
               INNER JOIN crates
                 ON crates.id = versions.crate_id
               WHERE dependencies.crate_id = $1
-                AND versions.num = crates.max_version
+                AND versions.num = $2
         ";
         let fetch_sql = format!("SELECT DISTINCT ON (crate_downloads, crate_name)
                                         dependencies.*,
@@ -442,18 +445,19 @@ impl Crate {
                                         crates.name AS crate_name
                                         {}
                                ORDER BY crate_downloads DESC
-                                 OFFSET $2
-                                  LIMIT $3",
+                                 OFFSET $3
+                                  LIMIT $4",
                                 select_sql);
         let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
 
         let stmt = conn.prepare(&fetch_sql)?;
-        let vec: Vec<_> = stmt.query(&[&self.id, &offset, &limit])?
+        let max_version = self.max_version(conn)?.to_string();
+        let vec: Vec<_> = stmt.query(&[&self.id, &max_version, &offset, &limit])?
             .iter()
             .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
             .collect();
         let stmt = conn.prepare(&count_sql)?;
-        let cnt: i64 = stmt.query(&[&self.id])?.iter().next().unwrap().get(0);
+        let cnt: i64 = stmt.query(&[&self.id, &max_version])?.iter().next().unwrap().get(0);
 
         Ok((vec, cnt))
     }
@@ -461,7 +465,6 @@ impl Crate {
 
 impl Model for Crate {
     fn from_row(row: &Row) -> Crate {
-        let max: String = row.get("max_version");
         Crate {
             id: row.get("id"),
             name: row.get("name"),
@@ -472,7 +475,6 @@ impl Model for Crate {
             documentation: row.get("documentation"),
             homepage: row.get("homepage"),
             readme: row.get("readme"),
-            max_version: semver::Version::parse(&max).unwrap(),
             license: row.get("license"),
             repository: row.get("repository"),
             max_upload_size: row.get("max_upload_size"),
@@ -603,8 +605,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut crates = Vec::new();
     for row in stmt.query(&args)?.iter() {
         let krate: Crate = Model::from_row(&row);
-        let badges = krate.badges(conn);
-        crates.push(krate.minimal_encodable(badges.ok()));
+        let badges = krate.badges(conn)?;
+        let max_version = krate.max_version(conn)?;
+        crates.push(krate.minimal_encodable(max_version, Some(badges)));
     }
 
     // Query for the total count of crates
@@ -637,10 +640,11 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
     let to_crates = |stmt: pg::stmt::Statement| -> CargoResult<Vec<_>> {
         let rows = stmt.query(&[])?;
-        Ok(rows.iter().map(|r| {
+        rows.iter().map(|r| {
             let krate: Crate = Model::from_row(&r);
-            krate.minimal_encodable(None)
-        }).collect::<Vec<EncodableCrate>>())
+            let max_version = krate.max_version(tx)?;
+            Ok(krate.minimal_encodable(max_version, None))
+        }).collect()
     };
     let new_crates = tx.prepare("SELECT * FROM crates \
                                         ORDER BY created_at DESC LIMIT 10")?;
@@ -692,6 +696,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let kws = krate.keywords(conn)?;
     let cats = krate.categories(conn)?;
     let badges = krate.badges(conn)?;
+    let max_version = krate.max_version(conn)?;
 
     #[derive(RustcEncodable)]
     struct R {
@@ -702,7 +707,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         krate: krate.clone().encodable(
-            Some(ids), Some(&kws), Some(&cats), Some(badges)
+            max_version, Some(ids), Some(&kws), Some(&cats), Some(badges)
         ),
         versions: versions.into_iter().map(|v| {
             v.encodable(&krate.name)
@@ -785,6 +790,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         &krate,
         new_crate.badges.unwrap_or_else(HashMap::new)
     )?;
+    let max_version = krate.max_version(req.tx()?)?;
 
     // Upload the crate to S3
     let mut handle = req.app().handle();
@@ -855,7 +861,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     #[derive(RustcEncodable)]
     struct R { krate: EncodableCrate, warnings: Warnings }
     Ok(req.json(&R {
-        krate: krate.minimal_encodable(None),
+        krate: krate.minimal_encodable(max_version, None),
         warnings: warnings
     }))
 }
