@@ -8,7 +8,7 @@ use app::{App, RequestApp};
 use std::sync::Arc;
 
 pub enum Uploader {
-    S3 { bucket: s3::Bucket },
+    S3 { bucket: s3::Bucket, proxy: Option<String> },
     // next: LocalUploader {},
 }
 
@@ -20,12 +20,19 @@ impl Uploader {
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
                                     config.api_protocol()),
+            proxy: config.s3_proxy.clone(),
+        }
+    }
+
+    pub fn proxy(&self) -> Option<&str> {
+        match *self {
+            Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
         }
     }
 
     pub fn crate_location(&self, crate_name: &str, version: &str) -> String {
         match *self {
-            Uploader::S3 { ref bucket } => {
+            Uploader::S3 { ref bucket, .. } => {
                 format!("https://{}/crates/{}/{}-{}.crate",
                         bucket.host(),
                         crate_name, crate_name, version)
@@ -35,7 +42,7 @@ impl Uploader {
 
     pub fn upload(&self, req: &mut Request, krate: &Crate, max: u64, vers: &semver::Version) -> CargoResult<(Vec<u8>, Bomb)> {
         match *self {
-            Uploader::S3 { ref bucket } => {
+            Uploader::S3 { ref bucket, .. } => {
                 let mut handle = req.app().handle();
                 let path = krate.s3_path(&vers.to_string());
                 let (response, cksum) = {
@@ -73,7 +80,7 @@ impl Uploader {
 
     pub fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
-            Uploader::S3 { ref bucket } => {
+            Uploader::S3 { ref bucket, .. } => {
                 let mut handle = app.handle();
                 bucket.delete(&mut handle, path).perform()?;
                 Ok(())

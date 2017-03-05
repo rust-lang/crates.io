@@ -23,7 +23,6 @@ pub struct App {
     /// The GitHub OAuth2 configuration
     pub github: oauth2::Config,
     pub uploader: Uploader,
-    pub s3_proxy: Option<String>,
     pub session_key: String,
     pub git_repo: Mutex<git2::Repository>,
     pub git_repo_checkout: PathBuf,
@@ -64,7 +63,6 @@ impl App {
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
             github: github,
             uploader: Uploader::new_s3(&config),
-            s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
@@ -74,7 +72,7 @@ impl App {
 
     pub fn handle(&self) -> Easy {
         let mut handle = Easy::new();
-        if let Some(ref proxy) = self.s3_proxy {
+        if let Some(ref proxy) = self.uploader.proxy() {
             handle.proxy(proxy).unwrap();
         }
         return handle
