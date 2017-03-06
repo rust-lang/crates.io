@@ -10,6 +10,7 @@
 extern crate postgres as pg;
 extern crate rustc_serialize;
 extern crate curl;
+extern crate diesel_full_text_search;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
