@@ -34,6 +34,7 @@ fn main() {
         env: cargo_registry::Env::Production,
         max_upload_size: 0,
         mirror: false,
+        api_protocol: String::from("https"),
     };
     let app = cargo_registry::App::new(&config);
     {

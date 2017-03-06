@@ -15,12 +15,5 @@ pub struct Config {
     pub env: ::Env,
     pub max_upload_size: u64,
     pub mirror: bool,
-}
-
-impl Config {
-    pub fn api_protocol(&self) -> &'static str {
-        // When testing we route all API traffic over HTTP so we can
-        // sniff/record it, but everywhere else we use https
-        if self.env == ::Env::Test {"http"} else {"https"}
-    }
+    pub api_protocol: String,
 }

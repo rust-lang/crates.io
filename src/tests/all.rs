@@ -98,6 +98,9 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
         mirror: false,
+        // When testing we route all API traffic over HTTP so we can
+        // sniff/record it, but everywhere else we use https
+        api_protocol: String::from("http"),
     };
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);

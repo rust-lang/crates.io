@@ -19,7 +19,7 @@ impl Uploader {
                                     config.s3_region.clone(),
                                     config.s3_access_key.clone(),
                                     config.s3_secret_key.clone(),
-                                    config.api_protocol()),
+                                    &config.api_protocol),
             proxy: config.s3_proxy.clone(),
         }
     }

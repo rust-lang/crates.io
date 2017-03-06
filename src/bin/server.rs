@@ -44,6 +44,7 @@ fn main() {
     } else {
         cargo_registry::Env::Development
     };
+    let api_protocol = String::from("https");
     let config = cargo_registry::Config {
         s3_bucket: env("S3_BUCKET"),
         s3_access_key: env("S3_ACCESS_KEY"),
@@ -58,6 +59,7 @@ fn main() {
         env: cargo_env,
         max_upload_size: 10 * 1024 * 1024,
         mirror: env::var("MIRROR").is_ok(),
+        api_protocol: api_protocol,
     };
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
