@@ -1,3 +1,5 @@
+use conduit::{Request, Response};
+use conduit_middleware::Middleware;
 use curl;
 use curl::easy::{Easy, List};
 use oauth2::*;
@@ -6,7 +8,7 @@ use util::{CargoResult, internal, ChainError, human};
 use serde_json;
 use serde::Deserialize;
 use std::str;
-
+use std::error::Error;
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
@@ -86,5 +88,40 @@ pub fn token(token: String) -> Token {
         access_token: token,
         scopes: Vec::new(),
         token_type: String::new(),
+    }
+}
+
+pub struct SecurityHeadersMiddleware;
+
+impl Middleware for SecurityHeadersMiddleware {
+    fn after(&self, _: &mut Request, mut res: Result<Response, Box<Error+Send>>)
+        -> Result<Response, Box<Error+Send>> {
+        if let Ok(ref mut response) = res {
+            response.headers.insert(
+                "Content-Security-Policy".into(),
+                vec!["default-src 'self'; \
+                      script-src 'self' https://www.google-analytics.com https://www.google.com; \
+                      style-src 'self' https://www.google.com; \
+                      img-src *; \
+                      object-src 'none'".into()],
+            );
+            response.headers.insert(
+                "X-Content-Type-Options".into(),
+                vec!["nosniff".into()],
+            );
+            response.headers.insert(
+                "X-Frame-Options".into(),
+                vec!["SAMEORIGIN".into()],
+            );
+            response.headers.insert(
+                "X-XSS-Protection".into(),
+                vec!["1; mode=block".into()],
+            );
+            response.headers.insert(
+                "Strict-Transport-Security".into(),
+                vec!["max-age=31536000; includeSubDomains".into()],
+            );
+        }
+        res
     }
 }
