@@ -14,6 +14,7 @@ extern crate rustc_serialize;
 extern crate semver;
 extern crate time;
 extern crate url;
+extern crate s3;
 
 use std::collections::HashMap;
 use std::env;
@@ -84,12 +85,22 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     git::init();
 
     let (proxy, bomb) = record::proxy();
+
+    // When testing we route all API traffic over HTTP so we can
+    // sniff/record it, but everywhere else we use https
+    let api_protocol = String::from("http");
+
+    let uploader = cargo_registry::Uploader::S3 {
+        bucket: s3::Bucket::new(String::from("alexcrichton-test"),
+                                None,
+                                String::new(),
+                                String::new(),
+                                &api_protocol),
+        proxy: Some(proxy),
+    };
+
     let config = cargo_registry::Config {
-        s3_bucket: String::from("alexcrichton-test"),
-        s3_access_key: String::new(),
-        s3_secret_key: String::new(),
-        s3_region: None,
-        s3_proxy: Some(proxy),
+        uploader: uploader,
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or(String::new()),
@@ -98,9 +109,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
         mirror: false,
-        // When testing we route all API traffic over HTTP so we can
-        // sniff/record it, but everywhere else we use https
-        api_protocol: String::from("http"),
+        api_protocol: api_protocol,
     };
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);

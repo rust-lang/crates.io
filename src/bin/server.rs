@@ -5,6 +5,7 @@ extern crate conduit_middleware;
 extern crate civet;
 extern crate git2;
 extern crate env_logger;
+extern crate s3;
 
 use cargo_registry::env;
 use civet::Server;
@@ -45,12 +46,17 @@ fn main() {
         cargo_registry::Env::Development
     };
     let api_protocol = String::from("https");
+    let uploader = cargo_registry::Uploader::S3 {
+        bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                env::var("S3_REGION").ok(),
+                                env("S3_ACCESS_KEY"),
+                                env("S3_SECRET_KEY"),
+                                &api_protocol),
+        proxy: None,
+    };
+
     let config = cargo_registry::Config {
-        s3_bucket: env("S3_BUCKET"),
-        s3_access_key: env("S3_ACCESS_KEY"),
-        s3_secret_key: env("S3_SECRET_KEY"),
-        s3_region: env::var("S3_REGION").ok(),
-        s3_proxy: None,
+        uploader: uploader,
         session_key: env("SESSION_KEY"),
         git_repo_checkout: checkout,
         gh_client_id: env("GH_CLIENT_ID"),

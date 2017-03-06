@@ -1,12 +1,9 @@
 use std::path::PathBuf;
+use Uploader;
 
 #[derive(Clone)]
 pub struct Config {
-    pub s3_bucket: String,
-    pub s3_region: Option<String>,
-    pub s3_access_key: String,
-    pub s3_secret_key: String,
-    pub s3_proxy: Option<String>,
+    pub uploader: Uploader,
     pub session_key: String,
     pub git_repo_checkout: PathBuf,
     pub gh_client_id: String,

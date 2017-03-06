@@ -2,28 +2,18 @@ use conduit::Request;
 use krate::Crate;
 use util::{CargoResult, internal, ChainError};
 use util::{LimitErrorReader, HashingReader, read_le_u32};
-use {s3, Config};
+use s3;
 use semver;
 use app::{App, RequestApp};
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub enum Uploader {
     S3 { bucket: s3::Bucket, proxy: Option<String> },
     // next: LocalUploader {},
 }
 
 impl Uploader {
-    pub fn new_s3(config: &Config) -> Uploader {
-        Uploader::S3 {
-            bucket: s3::Bucket::new(config.s3_bucket.clone(),
-                                    config.s3_region.clone(),
-                                    config.s3_access_key.clone(),
-                                    config.s3_secret_key.clone(),
-                                    &config.api_protocol),
-            proxy: config.s3_proxy.clone(),
-        }
-    }
-
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
@@ -97,7 +87,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            drop(self.app.uploader.delete(self.app.clone(), &path));
+            drop(self.app.config.uploader.delete(self.app.clone(), &path));
         }
     }
 }

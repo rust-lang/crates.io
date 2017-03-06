@@ -888,7 +888,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Upload the crate, return way to delete the crate from the server
     // If the git commands fail below, we shouldn't keep the crate on the
     // server.
-    let (cksum, mut bomb) = app.uploader.upload(req, &krate, max, &vers)?;
+    let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, &vers)?;
 
     // Register this crate in our local git repo.
     let git_crate = git::Crate {
@@ -978,7 +978,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         increment_download_counts(req, crate_name, version)?;
     }
 
-    let redirect_url = req.app().uploader.crate_location(crate_name, version);
+    let redirect_url = req.app().config.uploader.crate_location(crate_name, version);
 
     if req.wants_json() {
         #[derive(RustcEncodable)]
