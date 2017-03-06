@@ -9,7 +9,12 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub enum Uploader {
+    /// For production usage, uploads and redirects to s3.
+    /// For test usage with a proxy.
     S3 { bucket: s3::Bucket, proxy: Option<String> },
+
+    /// For one-off scripts where creating a Config is needed, but uploading is not.
+    NoOp,
     // next: LocalUploader {},
 }
 
@@ -17,6 +22,7 @@ impl Uploader {
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
+            Uploader::NoOp => None,
         }
     }
 
@@ -26,7 +32,8 @@ impl Uploader {
                 format!("https://{}/crates/{}/{}-{}.crate",
                         bucket.host(),
                         crate_name, crate_name, version)
-            }
+            },
+            Uploader::NoOp => panic!("no-op uploader does not have crate files"),
         }
     }
 
@@ -64,7 +71,8 @@ impl Uploader {
                     app: req.app().clone(),
                     path: Some(path),
                 }))
-            }
+            },
+            Uploader::NoOp => Ok((vec![], Bomb { app: req.app().clone(), path: None })),
         }
     }
 
@@ -75,6 +83,7 @@ impl Uploader {
                 bucket.delete(&mut handle, path).perform()?;
                 Ok(())
             },
+            Uploader::NoOp => Ok(()),
         }
     }
 }
