@@ -18,6 +18,7 @@ use r2d2_postgres::TlsMode;
 use r2d2_postgres::postgres;
 use r2d2_postgres;
 use r2d2_diesel::{self, ConnectionManager};
+use url::Url;
 
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
@@ -103,7 +104,11 @@ pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres:
 }
 
 pub fn diesel_pool(url: &str, config: r2d2::Config<PgConnection, r2d2_diesel::Error>) -> DieselPool {
-    let manager = ConnectionManager::new(url);
+    let mut url = Url::parse(url).expect("Invalid database URL");
+    if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+        url.query_pairs_mut().append_pair("sslmode", "require");
+    }
+    let manager = ConnectionManager::new(url.into_string());
     r2d2::Pool::new(config, manager).unwrap()
 }
 
