@@ -33,3 +33,73 @@ fn update(tx: &postgres::transaction::Transaction) {
                      &[&new_max.map(|v| v.to_string()), &crate_id]).unwrap();
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
+    use postgres;
+    use semver;
+
+    use cargo_registry::{Version, Crate, User, Model, env};
+
+    fn conn() -> postgres::Connection {
+        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..],
+                                      postgres::TlsMode::None).unwrap()
+    }
+
+    fn user(conn: &postgres::transaction::Transaction) -> User{
+        User::find_or_insert(conn, 2, "login", None, None, None,
+                             "access_token", "api_token").unwrap()
+    }
+
+    #[test]
+    fn max_to_null() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None, &None,
+                                          &None, &None, &None, &None,
+                                          &None, None).unwrap();
+        let v1 = semver::Version::parse("1.0.0").unwrap();
+        let version = Version::insert(&tx, krate.id, &v1, &HashMap::new(), &[]).unwrap();
+        version.yank(&conn, true).unwrap();
+        ::update(&tx);
+        assert_eq!(Crate::find(&tx, krate.id).unwrap().max_version, None);
+    }
+
+    #[test]
+    fn max_to_same() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None, &None,
+                                          &None, &None, &None, &None,
+                                          &None, None).unwrap();
+        let v1 = semver::Version::parse("1.0.0").unwrap();
+        Version::insert(&tx, krate.id, &v1, &HashMap::new(), &[]).unwrap();
+        ::update(&tx);
+        assert_eq!(Crate::find(&tx, krate.id).unwrap().max_version, Some(v1));
+    }
+
+    #[test]
+    fn multiple_crates() {
+        let conn = conn();
+        let tx = conn.transaction().unwrap();
+        let user = user(&tx);
+        let krate1 = Crate::find_or_insert(&tx, "foo1", user.id, &None, &None,
+                                           &None, &None, &None, &None,
+                                           &None, None).unwrap();
+        let krate2 = Crate::find_or_insert(&tx, "foo2", user.id, &None, &None,
+                                           &None, &None, &None, &None,
+                                           &None, None).unwrap();
+        let v1 = semver::Version::parse("1.0.0").unwrap();
+        let krate1_ver = Version::insert(&tx, krate1.id, &v1, &HashMap::new(),
+                                         &[]).unwrap();
+        Version::insert(&tx, krate2.id, &v1, &HashMap::new(), &[]).unwrap();
+        krate1_ver.yank(&conn, true).unwrap();
+        ::update(&tx);
+        assert_eq!(Crate::find(&tx, krate1.id).unwrap().max_version, None);
+        assert_eq!(Crate::find(&tx, krate2.id).unwrap().max_version, Some(v1));
+    }
+}
