@@ -39,20 +39,53 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
+    let api_protocol = String::from("https");
+    let mirror = env::var("MIRROR").is_ok();
+
     let heroku = env::var("HEROKU").is_ok();
     let cargo_env = if heroku {
         cargo_registry::Env::Production
     } else {
         cargo_registry::Env::Development
     };
-    let api_protocol = String::from("https");
-    let uploader = cargo_registry::Uploader::S3 {
-        bucket: s3::Bucket::new(env("S3_BUCKET"),
-                                env::var("S3_REGION").ok(),
-                                env("S3_ACCESS_KEY"),
-                                env("S3_SECRET_KEY"),
-                                &api_protocol),
-        proxy: None,
+
+    let uploader = match (cargo_env, mirror) {
+        (cargo_registry::Env::Production, false) => {
+            // `env` panics if these vars are not set
+            cargo_registry::Uploader::S3 {
+                bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                        env::var("S3_REGION").ok(),
+                                        env("S3_ACCESS_KEY"),
+                                        env("S3_SECRET_KEY"),
+                                        &api_protocol),
+                proxy: None,
+            }
+        },
+        (cargo_registry::Env::Production, true) => {
+            // Read-only mirrors don't need access key or secret key,
+            // but they might have them. Definitely need bucket though.
+            cargo_registry::Uploader::S3 {
+                bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                        env::var("S3_REGION").ok(),
+                                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+                                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                                        &api_protocol),
+                proxy: None,
+            }
+        },
+        (cargo_registry::Env::Development, _) => {
+            // Allow for any of these to be blank in development
+            cargo_registry::Uploader::S3 {
+                bucket: s3::Bucket::new(env::var("S3_BUCKET").unwrap_or(String::new()),
+                                        env::var("S3_REGION").ok(),
+                                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+                                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                                        &api_protocol),
+                proxy: None,
+            }
+        },
+        // See immediately before this match where we choose either prod or dev
+        (cargo_registry::Env::Test, _) => unreachable!(),
     };
 
     let config = cargo_registry::Config {
@@ -64,7 +97,7 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_env,
         max_upload_size: 10 * 1024 * 1024,
-        mirror: env::var("MIRROR").is_ok(),
+        mirror: mirror,
         api_protocol: api_protocol,
     };
     let app = cargo_registry::App::new(&config);
