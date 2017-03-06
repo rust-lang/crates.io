@@ -52,16 +52,15 @@ struct GithubUser {
 }
 
 fn update(app: &App, tx: &postgres::transaction::Transaction) {
-    let mut rows = Vec::new();
-    let query = "SELECT id, gh_login, gh_access_token, gh_avatar FROM users \
-                  WHERE gh_id IS NULL";
-    for row in &tx.query(query, &[]).unwrap() {
+    let query = "SELECT id, gh_login, gh_access_token, gh_avatar FROM users
+                 WHERE gh_id IS NULL";
+    let rows = tx.query(query, &[]).unwrap().into_iter().map(|row| {
         let id: i32 = row.get("id");
         let login: String = row.get("gh_login");
         let token: String = row.get("gh_access_token");
         let avatar: Option<String> = row.get("gh_avatar");
-        rows.push((id, login, http::token(token), avatar));
-    }
+        (id, login, http::token(token), avatar)
+    }).collect::<Vec<_>>();
 
     for (id, login, token, avatar) in rows {
         println!("attempt: {}/{}", id, login);
