@@ -1,5 +1,4 @@
-use postgres::GenericConnection;
-use conduit::{Handler, Request, Method};
+use conduit::{Handler, Method};
 use conduit_test::MockRequest;
 
 use cargo_registry::db::RequestTransaction;
@@ -62,8 +61,6 @@ fn show() {
     assert_eq!(json.category.subcategories[0].category, "Foo Bar::Baz");
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
-
 #[test]
 fn update_crate() {
     let (_b, app, middle) = ::app();
@@ -79,42 +76,42 @@ fn update_crate() {
     ::mock_category(&mut req, "Category 2", "category-2");
 
     // Updating with no categories has no effect
-    Category::update_crate(tx(&req), &krate, &[]).unwrap();
+    Category::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Happy path adding one category
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string()]).unwrap();
+    Category::update_crate(req.tx().unwrap(), &krate, &["cat1".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Replacing one category with another
     Category::update_crate(
-        tx(&req), &krate, &["category-2".to_string()]
+        req.tx().unwrap(), &krate, &["category-2".to_string()]
     ).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 1);
 
     // Removing one category
-    Category::update_crate(tx(&req), &krate, &[]).unwrap();
+    Category::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Adding 2 categories
     Category::update_crate(
-        tx(&req), &krate, &["cat1".to_string(),
+        req.tx().unwrap(), &krate, &["cat1".to_string(),
                             "category-2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 1);
 
     // Removing all categories
-    Category::update_crate(tx(&req), &krate, &[]).unwrap();
+    Category::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Attempting to add one valid category and one invalid category
     let invalid_categories = Category::update_crate(
-        tx(&req), &krate, &["cat1".to_string(),
+        req.tx().unwrap(), &krate, &["cat1".to_string(),
                             "catnope".to_string()]
     ).unwrap();
     assert_eq!(invalid_categories, vec!["catnope".to_string()]);
@@ -131,7 +128,7 @@ fn update_crate() {
 
     // Attempting to add a category by display text; must use slug
     Category::update_crate(
-        tx(&req), &krate, &["Category 2".to_string()]
+        req.tx().unwrap(), &krate, &["Category 2".to_string()]
     ).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
@@ -139,7 +136,7 @@ fn update_crate() {
     // Add a category and its subcategory
     ::mock_category(&mut req, "cat1::bar", "cat1::bar");
     Category::update_crate(
-        tx(&req), &krate, &["cat1".to_string(),
+        req.tx().unwrap(), &krate, &["cat1".to_string(),
                             "cat1::bar".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "cat1::bar"), 1);

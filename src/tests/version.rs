@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use rustc_serialize::json::Json;
 
-use conduit::{Handler, Request, Method};
+use conduit::{Handler, Method};
 use semver;
 
 use cargo_registry::db::RequestTransaction;
@@ -27,7 +27,6 @@ fn index() {
     let (v1, v2) = {
         ::mock_user(&mut req, ::user("foo"));
         let (c, _) = ::mock_crate(&mut req, ::krate("foo_vers_index"));
-        let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         let m = HashMap::new();
         let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, &[]).unwrap();
@@ -47,7 +46,6 @@ fn show() {
     let v = {
         ::mock_user(&mut req, ::user("foo"));
         let (krate, _) = ::mock_crate(&mut req, ::krate("foo_vers_show"));
-        let req: &mut Request = &mut req;
         let tx = req.tx().unwrap();
         Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), &[]).unwrap()
     };
