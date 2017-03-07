@@ -11,7 +11,7 @@ export default Ember.Route.extend({
         const maxVersion = crate.get('max_version');
 
         // Fall back to the crate's `max_version` property
-        if (!requestedVersion) {
+        if (!requestedVersion && maxVersion !== '0.0.0') {
             params.version_num = maxVersion;
         }
 
