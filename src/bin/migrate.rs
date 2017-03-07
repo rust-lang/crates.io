@@ -868,19 +868,6 @@ fn migrations() -> Vec<Migration> {
             tx.execute("DROP TABLE reserved_crate_names", &[])?;
             Ok(())
         }),
-        Migration::new(20170305123234, |tx| {
-            tx.execute("ALTER TABLE crates DROP COLUMN max_version", &[])?;
-            Ok(())
-        }, |tx| {
-            tx.execute("ALTER TABLE crates ADD COLUMN max_version VARCHAR NOT NULL DEFAULT '0.0.0'", &[])?;
-            tx.execute("UPDATE crates SET max_version = COALESCE((
-                SELECT num FROM VERSIONS
-                 WHERE num SIMILAR TO '[0-9]+\\.[0-9]+\\.[0-9]+'
-              ORDER BY split_part(num, '.', 1)::int, split_part(num, '.', 2)::int, split_part(num, '.', 3)::int
-              LIMIT 1
-            ), '0.0.0')", &[])?;
-            Ok(())
-        }),
     ];
     // NOTE: Generate a new id via `date +"%Y%m%d%H%M%S"`
 
