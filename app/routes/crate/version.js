@@ -11,7 +11,7 @@ export default Ember.Route.extend({
         const maxVersion = crate.get('max_version');
 
         // Fall back to the crate's `max_version` property
-        if (!requestedVersion) {
+        if (!requestedVersion && maxVersion !== '0.0.0') {
             params.version_num = maxVersion;
         }
 
@@ -29,7 +29,7 @@ export default Ember.Route.extend({
         return crate.get('versions')
             .then(versions => {
                 const version = versions.find(version => version.get('num') === params.version_num);
-                if (!version) {
+                if (params.version_num && !version) {
                     this.controllerFor('application').set('nextFlashError',
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }
