@@ -54,7 +54,7 @@ impl App {
             .helper_threads(if config.env == ::Env::Production {3} else {1})
             .build();
         let diesel_db_config = r2d2::Config::builder()
-            .pool_size(if config.env == ::Env::Production {10} else {1})
+            .pool_size(if config.env == ::Env::Production {1} else {1})
             .helper_threads(if config.env == ::Env::Production {3} else {1})
             .build();
 
