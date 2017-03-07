@@ -3,22 +3,37 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use diesel::*;
+use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
+use schema::*;
 use util::{RequestUtils, CargoResult, ChainError};
 use util::errors::NotFound;
 
-#[derive(Clone)]
+#[derive(Clone, Identifiable, Associations, Queryable)]
+#[has_many(crates_categories)]
+#[table_name="categories"]
 pub struct Category {
     pub id: i32,
     pub category: String,
     pub slug: String,
     pub description: String,
-    pub created_at: Timespec,
     pub crates_cnt: i32,
+    pub created_at: Timespec,
+}
+
+#[derive(Associations, Insertable, Identifiable)]
+#[belongs_to(Category)]
+#[belongs_to(Crate)]
+#[table_name="crates_categories"]
+#[primary_key(crate_id, category_id)]
+struct CrateCategory {
+    crate_id: i32,
+    category_id: i32,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -77,7 +92,27 @@ impl Category {
         }
     }
 
-    pub fn update_crate(conn: &GenericConnection,
+    pub fn update_crate<'a>(conn: &PgConnection,
+                            krate: &Crate,
+                            slugs: &[&'a str]) -> QueryResult<Vec<&'a str>> {
+        use diesel::expression::dsl::any;
+
+        let categories = categories::table
+            .filter(categories::slug.eq(any(slugs)))
+            .load::<Category>(conn)?;
+        let invalid_categories = slugs.iter().cloned()
+            .filter(|s| !categories.iter().any(|c| c.slug == *s))
+            .collect();
+        let crate_categories = categories.iter()
+            .map(|c| CrateCategory { category_id: c.id, crate_id: krate.id })
+            .collect::<Vec<_>>();
+
+        delete(CrateCategory::belonging_to(krate)).execute(conn)?;
+        insert(&crate_categories).into(crates_categories::table).execute(conn)?;
+        Ok(invalid_categories)
+    }
+
+    pub fn update_crate_old(conn: &GenericConnection,
                         krate: &Crate,
                         categories: &[String]) -> CargoResult<Vec<String>> {
         let old_categories = krate.categories(conn)?;
@@ -191,6 +226,32 @@ impl Category {
 
         let rows = stmt.query(&[&self.category])?;
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    }
+}
+
+#[derive(Insertable, Default)]
+#[table_name="categories"]
+pub struct NewCategory<'a> {
+    pub category: &'a str,
+    pub slug: &'a str,
+}
+
+impl<'a> NewCategory<'a> {
+    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
+        use schema::categories::dsl::*;
+        use diesel::pg::upsert::*;
+
+        let maybe_inserted = insert(&self.on_conflict_do_nothing())
+            .into(categories)
+            .get_result(conn)
+            .optional()?;
+
+        if let Some(c) = maybe_inserted {
+            return Ok(c);
+        }
+
+        categories.filter(slug.eq(self.slug))
+            .first(conn)
     }
 }
 

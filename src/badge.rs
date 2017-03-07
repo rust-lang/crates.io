@@ -1,12 +1,16 @@
-use util::CargoResult;
-use krate::Crate;
 use Model;
+use krate::Crate;
+use schema::badges;
+use util::CargoResult;
 
-use std::collections::HashMap;
+use diesel::pg::Pg;
+use diesel::prelude::*;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rustc_serialize::Decodable;
 use rustc_serialize::json::{Json, Decoder};
+use serde_json;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Badge {
@@ -25,6 +29,17 @@ pub enum Badge {
 pub struct EncodableBadge {
     pub badge_type: String,
     pub attributes: HashMap<String, String>,
+}
+
+impl Queryable<badges::SqlType, Pg> for Badge {
+    type Row = (i32, String, serde_json::Value);
+
+    fn build((_, badge_type, attributes): Self::Row) -> Self {
+        let attributes = serde_json::from_value::<HashMap<String, String>>(attributes)
+            .expect("attributes was not a map in the database");
+        Self::from_attributes(&badge_type, &attributes)
+            .expect("invalid badge in the database")
+    }
 }
 
 impl Model for Badge {

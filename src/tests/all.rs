@@ -21,15 +21,18 @@ use std::sync::{Once, ONCE_INIT, Arc};
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use rustc_serialize::json::{self, Json};
 
-use conduit::{Request, Method};
-use conduit_test::MockRequest;
 use cargo_registry::app::App;
 use cargo_registry::db::{self, RequestTransaction};
+use cargo_registry::category::NewCategory;
 use cargo_registry::dependency::Kind;
-use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model};
+use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
-use diesel::prelude::*;
+use cargo_registry::user::NewUser;
+use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model};
+use conduit::{Request, Method};
+use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -172,6 +175,18 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
 
 static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
+fn new_user(login: &str) -> NewUser {
+    NewUser {
+        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_login: login,
+        email: None,
+        name: None,
+        gh_avatar: None,
+        gh_access_token: "some random token",
+        api_token: "some random token",
+    }
+}
+
 fn user(login: &str) -> User {
     User {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
@@ -182,6 +197,13 @@ fn user(login: &str) -> User {
         avatar: None,
         gh_access_token: "some random token".into(),
         api_token: "some random token".into(),
+    }
+}
+
+fn new_crate(name: &str) -> NewCrate {
+    NewCrate {
+        name: name,
+        ..NewCrate::default()
     }
 }
 
@@ -251,6 +273,10 @@ fn mock_dep(req: &mut Request, version: &Version, krate: &Crate,
 
 fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
     Keyword::find_or_insert(req.tx().unwrap(), name).unwrap()
+}
+
+fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
+    NewCategory { category, slug, ..NewCategory::default() }
 }
 
 fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {

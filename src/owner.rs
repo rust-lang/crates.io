@@ -6,6 +6,16 @@ use util::{CargoResult, ChainError, human};
 use util::errors::NotFound;
 use http;
 use app::App;
+use schema::crate_owners;
+
+#[derive(Insertable)]
+#[table_name="crate_owners"]
+pub struct CrateOwner {
+    pub crate_id: i32,
+    pub owner_id: i32,
+    pub created_by: i32,
+    pub owner_kind: i32,
+}
 
 #[repr(u32)]
 pub enum OwnerKind {

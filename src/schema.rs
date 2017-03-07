@@ -48,12 +48,11 @@ table! {
         updated_at -> Timestamp,
         created_at -> Timestamp,
         downloads -> Int4,
-        max_version -> Nullable<Varchar>,
         description -> Nullable<Varchar>,
         homepage -> Nullable<Varchar>,
         documentation -> Nullable<Varchar>,
         readme -> Nullable<Varchar>,
-        textsearchable_index_col -> Nullable<::diesel_full_text_search::TsVector>,
+        textsearchable_index_col -> ::diesel_full_text_search::TsVector,
         license -> Nullable<Varchar>,
         repository -> Nullable<Varchar>,
         max_upload_size -> Nullable<Int4>,
@@ -114,6 +113,12 @@ table! {
 }
 
 table! {
+    reserved_crate_names (name) {
+        name -> Text,
+    }
+}
+
+table! {
     teams (id) {
         id -> Int4,
         login -> Varchar,
@@ -165,6 +170,6 @@ table! {
         created_at -> Timestamp,
         downloads -> Int4,
         features -> Nullable<Varchar>,
-        yanked -> Nullable<Bool>,
+        yanked -> Bool,
     }
 }

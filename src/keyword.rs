@@ -4,20 +4,35 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use diesel;
 use pg::GenericConnection;
 use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
+use schema::*;
 use util::{RequestUtils, CargoResult, ChainError, internal};
 use util::errors::NotFound;
 
-#[derive(Clone)]
+#[derive(Clone, Identifiable, Associations, Queryable)]
+#[has_many(crates_keywords)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
-    pub created_at: Timespec,
     pub crates_cnt: i32,
+    pub created_at: Timespec,
+}
+
+#[derive(Associations, Insertable, Identifiable)]
+#[belongs_to(Keyword)]
+#[belongs_to(Crate)]
+#[table_name="crates_keywords"]
+#[primary_key(crate_id, keyword_id)]
+struct CrateKeyword {
+    crate_id: i32,
+    keyword_id: i32,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -35,6 +50,27 @@ impl Keyword {
                                       WHERE keyword = LOWER($1)")?;
         let rows = stmt.query(&[&name])?;
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
+    }
+
+    pub fn find_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
+        use diesel::pg::upsert::*;
+        use diesel::expression::dsl::any;
+
+        #[derive(Insertable)]
+        #[table_name="keywords"]
+        struct NewKeyword<'a> {
+            keyword: &'a str,
+        }
+        sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);
+
+        let (lowercase_names, new_keywords): (Vec<_>, Vec<_>) = names.iter()
+            .map(|s| (s.to_lowercase(), NewKeyword { keyword: *s }))
+            .unzip();
+
+        diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
+            .execute(conn)?;
+        keywords::table.filter(lower(keywords::keyword).eq(any(lowercase_names)))
+            .load(conn)
     }
 
     pub fn find_or_insert(conn: &GenericConnection, name: &str)
@@ -91,7 +127,21 @@ impl Keyword {
         }
     }
 
-    pub fn update_crate(conn: &GenericConnection,
+    pub fn update_crate(conn: &PgConnection,
+                        krate: &Crate,
+                        keywords: &[&str]) -> QueryResult<()> {
+        let keywords = Keyword::find_all(conn, keywords)?;
+        diesel::delete(CrateKeyword::belonging_to(krate))
+            .execute(conn)?;
+        let crate_keywords = keywords.into_iter().map(|kw| {
+            CrateKeyword { crate_id: krate.id, keyword_id: kw.id }
+        }).collect::<Vec<_>>();
+        diesel::insert(&crate_keywords).into(crates_keywords::table)
+            .execute(conn)?;
+        Ok(())
+    }
+
+    pub fn update_crate_old(conn: &GenericConnection,
                         krate: &Crate,
                         keywords: &[String]) -> CargoResult<()> {
         let old_kws = krate.keywords(conn)?;

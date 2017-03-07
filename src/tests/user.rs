@@ -106,11 +106,20 @@ fn reset_token() {
 }
 
 #[test]
-fn my_packages() {
+fn crates_by_user_id() {
     let (_b, app, middle) = ::app();
+    let u;
+    {
+        let conn = app.diesel_database.get().unwrap();
+        u = ::new_user("foo")
+            .create_or_update(&conn)
+            .unwrap();
+        ::new_crate("foo_my_packages")
+            .create_or_update(&conn, None, u.id)
+            .unwrap();
+    }
+
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
-    let u = ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_my_packages"));
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
