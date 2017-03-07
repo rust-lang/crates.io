@@ -82,6 +82,9 @@ After cloning the repo, do the following:
 2. Copy the `.env.sample` file to `.env`. Some settings will need to be
    modified. These instructions are in the subsequent sections.
 
+3. Install `diesel_cli` using `cargo install diesel_cli --no-default-features
+   --features postgres`.
+
 ### Running Tests
 
 After following the above instructions:
@@ -158,7 +161,7 @@ After following the instructions described in "Working on the Backend":
 5. Run the migrations:
 
    ```
-   ./target/debug/migrate
+   diesel migration run
    ```
 
 6. Start the backend server:
