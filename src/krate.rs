@@ -152,10 +152,11 @@ impl Crate {
             None => {}
         }
 
-        // Blacklist the current set of crates in the rust distribution
-        const RESERVED: &'static str = include_str!("reserved_crates.txt");
-
-        if RESERVED.lines().any(|krate| name == krate) {
+        let stmt = conn.prepare("SELECT 1 FROM reserved_crate_names
+                                 WHERE canon_crate_name(name) =
+                                       canon_crate_name($1)")?;
+        let rows = stmt.query(&[&name])?;
+        if !rows.is_empty() {
             return Err(human("cannot upload a crate with a reserved name"))
         }
 

@@ -347,6 +347,23 @@ fn new_krate() {
 }
 
 #[test]
+fn new_krate_with_reserved_name() {
+    fn test_bad_name(name: &str) {
+        let (_b, app, middle) = ::app();
+        let mut req = ::new_req(app, name, "1.0.0");
+        ::mock_user(&mut req, ::user("foo"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.contains("cannot upload a crate with a reserved name"));
+    }
+
+    test_bad_name("std");
+    test_bad_name("STD");
+    test_bad_name("compiler-rt");
+    test_bad_name("compiler_rt");
+    test_bad_name("coMpiLer_Rt");
+}
+
+#[test]
 fn new_krate_weird_version() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app, "foo_weird", "0.0.0-pre");
