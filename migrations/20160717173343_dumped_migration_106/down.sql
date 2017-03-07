@@ -1,0 +1,1 @@
+CREATE INDEX index_crates_user_id ON crates (user_id);

@@ -1,0 +1,1 @@
+ALTER TABLE versions ALTER COLUMN downloads SET NOT NULL;

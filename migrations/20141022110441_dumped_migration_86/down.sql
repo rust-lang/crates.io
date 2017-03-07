@@ -1,0 +1,1 @@
+ALTER TABLE dependencies DROP COLUMN target;

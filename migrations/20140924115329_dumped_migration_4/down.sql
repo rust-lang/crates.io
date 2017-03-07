@@ -1,0 +1,1 @@
+ALTER TABLE versions DROP CONSTRAINT unique_num;

@@ -1,0 +1,1 @@
+DROP INDEX index_crate_created_at;

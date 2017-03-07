@@ -17,9 +17,10 @@ install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - yarn
   - yarn run bower install
+  - cargo install diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
-  - psql -c 'create database cargo_registry_test;' -U postgres
+  - diesel database setup
 
 script:
   - cargo build
@@ -42,6 +43,7 @@ addons:
 
 env:
   global:
+    - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - S3_BUCKET=alexcrichton-test
 

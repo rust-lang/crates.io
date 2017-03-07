@@ -1,0 +1,1 @@
+ALTER TABLE dependencies DROP CONSTRAINT fk_dependencies_version_id;

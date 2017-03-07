@@ -1,0 +1,1 @@
+CREATE TABLE crates_categories ( crate_id         INTEGER NOT NULL, category_id      INTEGER NOT NULL);

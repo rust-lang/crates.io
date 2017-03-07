@@ -1,0 +1,1 @@
+ALTER TABLE crates ADD COLUMN description VARCHAR;

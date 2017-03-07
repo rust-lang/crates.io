@@ -1,0 +1,1 @@
+ALTER TABLE crates ADD COLUMN textsearchable_index_col tsvector;

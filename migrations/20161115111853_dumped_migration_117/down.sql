@@ -1,0 +1,1 @@
+DROP INDEX index_crates_categories_crate_id;

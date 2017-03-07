@@ -1,0 +1,1 @@
+ALTER TABLE packages ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT now();

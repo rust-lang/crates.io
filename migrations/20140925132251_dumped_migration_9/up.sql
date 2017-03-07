@@ -1,0 +1,1 @@
+ALTER TABLE versions ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT now();

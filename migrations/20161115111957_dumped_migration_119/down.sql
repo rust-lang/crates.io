@@ -1,0 +1,1 @@
+DROP TRIGGER trigger_update_categories_crates_cnt ON crates_categories; DROP FUNCTION update_categories_crates_cnt(); DROP TRIGGER touch_crate_on_modify_categories ON crates_categories;
