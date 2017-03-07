@@ -31,8 +31,7 @@ fn main() {
             conn.execute("INSERT INTO __diesel_schema_migrations (
                 SELECT version::text AS version, CURRENT_TIMESTAMP as run_on
                     FROM schema_migrations
-            )")?;
-            conn.execute("DROP TABLE schema_migrations")
+            ) ON CONFLICT DO NOTHING")?;
         }).unwrap();
     }
 
