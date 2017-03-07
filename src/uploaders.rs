@@ -29,19 +29,24 @@ impl Uploader {
     pub fn crate_location(&self, crate_name: &str, version: &str) -> String {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                format!("https://{}/crates/{}/{}-{}.crate",
+                format!("https://{}/{}",
                         bucket.host(),
-                        crate_name, crate_name, version)
+                        Uploader::crate_path(crate_name, version))
             },
             Uploader::NoOp => panic!("no-op uploader does not have crate files"),
         }
+    }
+
+    fn crate_path(name: &str, version: &str) -> String {
+        // No slash in front so we can use join
+        format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
     pub fn upload(&self, req: &mut Request, krate: &Crate, max: u64, vers: &semver::Version) -> CargoResult<(Vec<u8>, Bomb)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = req.app().handle();
-                let path = krate.s3_path(&vers.to_string());
+                let path = format!("/{}", Uploader::crate_path(&krate.name, &vers.to_string()));
                 let (response, cksum) = {
                     let length = read_le_u32(req.body())?;
                     let body = LimitErrorReader::new(req.body(), max);

@@ -519,10 +519,6 @@ impl Crate {
         Ok(())
     }
 
-    pub fn s3_path(&self, version: &str) -> String {
-        format!("/crates/{}/{}-{}.crate", self.name, self.name, version)
-    }
-
     pub fn add_version(&mut self,
                        conn: &GenericConnection,
                        ver: &semver::Version,
