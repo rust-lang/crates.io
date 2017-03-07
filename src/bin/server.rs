@@ -74,14 +74,19 @@ fn main() {
             }
         },
         (cargo_registry::Env::Development, _) => {
-            // Allow for any of these to be blank in development
-            cargo_registry::Uploader::S3 {
-                bucket: s3::Bucket::new(env::var("S3_BUCKET").unwrap_or(String::new()),
-                                        env::var("S3_REGION").ok(),
-                                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-                                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
-                                        &api_protocol),
-                proxy: None,
+            if env::var("S3_BUCKET").is_ok() {
+                println!("Using S3 uploader");
+                cargo_registry::Uploader::S3 {
+                    bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                            env::var("S3_REGION").ok(),
+                                            env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+                                            env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                                            &api_protocol),
+                    proxy: None,
+                }
+            } else {
+                println!("Using local uploader, crate files will be in the dist directory");
+                cargo_registry::Uploader::Local
             }
         },
         // See immediately before this match where we choose either prod or dev

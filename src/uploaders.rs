@@ -6,6 +6,9 @@ use s3;
 use semver;
 use app::{App, RequestApp};
 use std::sync::Arc;
+use std::fs::{self, File};
+use std::env;
+use std::io;
 
 #[derive(Clone)]
 pub enum Uploader {
@@ -13,16 +16,19 @@ pub enum Uploader {
     /// For test usage with a proxy.
     S3 { bucket: s3::Bucket, proxy: Option<String> },
 
+    /// For development usage only: "uploads" crate files to `dist` and serves them
+    /// from there as well to enable local publishing and download
+    Local,
+
     /// For one-off scripts where creating a Config is needed, but uploading is not.
     NoOp,
-    // next: LocalUploader {},
 }
 
 impl Uploader {
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
-            Uploader::NoOp => None,
+            Uploader::Local | Uploader::NoOp => None,
         }
     }
 
@@ -33,6 +39,10 @@ impl Uploader {
                         bucket.host(),
                         Uploader::crate_path(crate_name, version))
             },
+            Uploader::Local => {
+                format!("/local_uploads/{}",
+                        Uploader::crate_path(crate_name, version))
+            }
             Uploader::NoOp => panic!("no-op uploader does not have crate files"),
         }
     }
@@ -77,6 +87,32 @@ impl Uploader {
                     path: Some(path),
                 }))
             },
+            Uploader::Local => {
+                let path = Uploader::crate_path(&krate.name, &vers.to_string());
+                let crate_filename = env::current_dir().unwrap()
+                                                       .join("dist")
+                                                       .join("local_uploads")
+                                                       .join(path);
+
+                let crate_dir = crate_filename.parent().unwrap();
+                fs::create_dir_all(crate_dir)?;
+
+                let mut crate_file = File::create(&crate_filename)?;
+
+                let cksum = {
+                    read_le_u32(req.body())?;
+                    let body = LimitErrorReader::new(req.body(), max);
+                    let mut body = HashingReader::new(body);
+
+                    io::copy(&mut body, &mut crate_file)?;
+                    body.finalize()
+                };
+
+                Ok((cksum, Bomb {
+                    app: req.app().clone(),
+                    path: crate_filename.to_str().map(String::from)
+                }))
+            },
             Uploader::NoOp => Ok((vec![], Bomb { app: req.app().clone(), path: None })),
         }
     }
@@ -88,6 +124,10 @@ impl Uploader {
                 bucket.delete(&mut handle, path).perform()?;
                 Ok(())
             },
+            Uploader::Local => {
+                fs::remove_file(path)?;
+                Ok(())
+            }
             Uploader::NoOp => Ok(()),
         }
     }
