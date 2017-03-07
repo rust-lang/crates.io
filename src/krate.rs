@@ -44,7 +44,7 @@ pub struct Crate {
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
-    pub max_version: semver::Version,
+    pub max_version: Option<semver::Version>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -65,7 +65,7 @@ pub struct EncodableCrate {
     pub badges: Option<Vec<EncodableBadge>>,
     pub created_at: String,
     pub downloads: i32,
-    pub max_version: String,
+    pub max_version: Option<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -267,7 +267,7 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges: badges,
-            max_version: max_version.to_string(),
+            max_version: max_version.map(|v| v.to_string()),
             documentation: documentation,
             homepage: homepage,
             description: description,
@@ -385,12 +385,18 @@ impl Crate {
             None => {}
         }
         let zero = semver::Version::parse("0.0.0").unwrap();
-        if *ver > self.max_version || self.max_version == zero {
-            self.max_version = ver.clone();
+        let new_max = match self.max_version {
+            None => true,
+            Some(ref max_version) if *ver > *max_version || *max_version == zero => true,
+            _ => false,
+        };
+        if new_max {
+            self.max_version = Some(ver.clone());
         }
         let stmt = conn.prepare("UPDATE crates SET max_version = $1
                            WHERE id = $2 RETURNING updated_at")?;
-        let rows = stmt.query(&[&self.max_version.to_string(), &self.id])?;
+        let max_version = self.max_version.clone().map(|v| v.to_string());
+        let rows = stmt.query(&[&max_version, &self.id])?;
         self.updated_at = rows.get(0).get("updated_at");
         Version::insert(conn, self.id, ver, features, authors)
     }
@@ -461,7 +467,7 @@ impl Crate {
 
 impl Model for Crate {
     fn from_row(row: &Row) -> Crate {
-        let max: String = row.get("max_version");
+        let max: Option<String> = row.get("max_version");
         Crate {
             id: row.get("id"),
             name: row.get("name"),
@@ -472,7 +478,7 @@ impl Model for Crate {
             documentation: row.get("documentation"),
             homepage: row.get("homepage"),
             readme: row.get("readme"),
-            max_version: semver::Version::parse(&max).unwrap(),
+            max_version: max.map(|m| semver::Version::parse(&m).unwrap()),
             license: row.get("license"),
             repository: row.get("repository"),
             max_upload_size: row.get("max_upload_size"),
