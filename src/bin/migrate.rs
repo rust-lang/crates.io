@@ -27,12 +27,10 @@ fn main() {
     }
 
     if table_exists("schema_migrations", &conn) {
-        conn.transaction(|| {
-            conn.execute("INSERT INTO __diesel_schema_migrations (
-                SELECT version::text AS version, CURRENT_TIMESTAMP as run_on
-                    FROM schema_migrations
-            ) ON CONFLICT DO NOTHING")?;
-        }).unwrap();
+        conn.execute("INSERT INTO __diesel_schema_migrations (
+            SELECT version::text AS version, CURRENT_TIMESTAMP as run_on
+                FROM schema_migrations
+        ) ON CONFLICT DO NOTHING").unwrap();
     }
 
     println!("The `migrate` binary is no longer used. Use `diesel migration run` \
