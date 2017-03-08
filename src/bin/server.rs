@@ -7,7 +7,7 @@ extern crate git2;
 extern crate env_logger;
 extern crate s3;
 
-use cargo_registry::env;
+use cargo_registry::{env, Env};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
@@ -44,13 +44,13 @@ fn main() {
 
     let heroku = env::var("HEROKU").is_ok();
     let cargo_env = if heroku {
-        cargo_registry::Env::Production
+        Env::Production
     } else {
-        cargo_registry::Env::Development
+        Env::Development
     };
 
     let uploader = match (cargo_env, mirror) {
-        (cargo_registry::Env::Production, false) => {
+        (Env::Production, false) => {
             // `env` panics if these vars are not set
             cargo_registry::Uploader::S3 {
                 bucket: s3::Bucket::new(env("S3_BUCKET"),
@@ -61,7 +61,7 @@ fn main() {
                 proxy: None,
             }
         },
-        (cargo_registry::Env::Production, true) => {
+        (Env::Production, true) => {
             // Read-only mirrors don't need access key or secret key,
             // but they might have them. Definitely need bucket though.
             cargo_registry::Uploader::S3 {
@@ -113,7 +113,7 @@ fn main() {
     } else {
         env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
-    let threads = if cargo_env == cargo_registry::Env::Development {1} else {50};
+    let threads = if cargo_env == Env::Development {1} else {50};
     let mut cfg = civet::Config::new();
     cfg.port(port).threads(threads).keep_alive(true);
     let _a = Server::start(cfg, app);
