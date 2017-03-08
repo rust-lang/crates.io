@@ -1030,13 +1030,12 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
              AND versions.id != ALL($3)
         GROUP BY DATE(version_downloads.date)
         ORDER BY DATE(version_downloads.date) ASC")?;
-    let mut extra = Vec::new();
-    for row in stmt.query(&[&cutoff_date, &krate.id, &ids])?.iter() {
-        extra.push(ExtraDownload {
+    let extra = stmt.query(&[&cutoff_date, &krate.id, &ids])?.iter().map(|row| {
+        ExtraDownload {
             downloads: row.get("downloads"),
             date: row.get("date")
-        });
-    }
+        }
+    }).collect::<Vec<_>>();
 
     #[derive(RustcEncodable)]
     struct ExtraDownload { date: String, downloads: i64 }
