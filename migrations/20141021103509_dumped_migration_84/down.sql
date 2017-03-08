@@ -1,0 +1,1 @@
+DROP INDEX index_keywords_keyword;

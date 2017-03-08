@@ -1,0 +1,1 @@
+ALTER TABLE crates DROP COLUMN textsearchable_index_col;

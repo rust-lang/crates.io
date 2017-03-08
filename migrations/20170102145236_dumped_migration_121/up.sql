@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX badges_crate_type ON badges (crate_id, badge_type);

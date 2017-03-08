@@ -5,7 +5,6 @@ use std::fs::{self, File};
 use conduit::{Handler, Request, Method};
 
 use git2;
-use postgres::GenericConnection;
 use rustc_serialize::json;
 use semver;
 
@@ -80,8 +79,6 @@ fn index() {
     assert_eq!(json.crates[0].id, krate.name);
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
-
 #[test]
 fn index_queries() {
     let (_b, app, middle) = ::app();
@@ -94,8 +91,8 @@ fn index_queries() {
     let (krate, _) = ::mock_crate(&mut req, krate.clone());
     let krate2 = ::krate("BAR_INDEX_QUERIES");
     let (krate2, _) = ::mock_crate(&mut req, krate2.clone());
-    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
-    Keyword::update_crate(tx(&req), &krate2, &["KW1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate2, &["KW1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
@@ -134,7 +131,7 @@ fn index_queries() {
 
     ::mock_category(&mut req, "cat1", "cat1");
     ::mock_category(&mut req, "cat1::bar", "cat1::bar");
-    Category::update_crate(tx(&req), &krate, &["cat1".to_string(),
+    Category::update_crate(req.tx().unwrap(), &krate, &["cat1".to_string(),
                             "cat1::bar".to_string()]).unwrap();
     let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
     let cl = ::json::<CrateList>(&mut response);
@@ -215,8 +212,7 @@ fn exact_match_on_queries_with_sort() {
     let (k4, _) = ::mock_crate(&mut req, krate4.clone());
 
     {
-        let req2: &mut Request = &mut req;
-        let tx = req2.tx().unwrap();
+        let tx = req.tx().unwrap();
         tx.execute("UPDATE crates set downloads = $1
                     WHERE id = $2", &[&krate.downloads, &k.id]).unwrap();
         tx.execute("UPDATE crates set downloads = $1
@@ -267,7 +263,7 @@ fn show() {
     krate.documentation = Some(format!("https://example.com"));
     krate.homepage = Some(format!("http://example.com"));
     let (krate, _) = ::mock_crate(&mut req, krate.clone());
-    Keyword::update_crate(tx(&req), &krate, &["kw1".into()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".into()]).unwrap();
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateResponse = ::json(&mut response);
@@ -348,6 +344,23 @@ fn new_krate() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
+fn new_krate_with_reserved_name() {
+    fn test_bad_name(name: &str) {
+        let (_b, app, middle) = ::app();
+        let mut req = ::new_req(app, name, "1.0.0");
+        ::mock_user(&mut req, ::user("foo"));
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(json.errors[0].detail.contains("cannot upload a crate with a reserved name"));
+    }
+
+    test_bad_name("std");
+    test_bad_name("STD");
+    test_bad_name("compiler-rt");
+    test_bad_name("compiler_rt");
+    test_bad_name("coMpiLer_Rt");
 }
 
 #[test]
@@ -867,6 +880,130 @@ fn yank_not_owner() {
     ::mock_user(&mut req, ::user("bar"));
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
+}
+
+#[test]
+fn yank_max_version() {
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
+    let (_b, app, middle) = ::app();
+
+    // Upload a new crate
+    let mut req = ::new_req(app, "fyk_max", "1.0.0");
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    // double check the max version
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "1.0.0");
+
+    // add version 2.0.0
+    let body = ::new_req_body_version_2(::krate("fyk_max"));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
+        .with_method(Method::Put)
+        .with_body(&body)));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+
+    // yank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+
+    // unyank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+
+    // yank version 2.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
+        .with_path("/api/v1/crates/fyk_max/2.0.0/yank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "1.0.0");
+
+    // yank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "0.0.0");
+
+    // unyank version 2.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
+        .with_path("/api/v1/crates/fyk_max/2.0.0/unyank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+
+    // unyank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+}
+
+#[test]
+fn publish_after_yank_max_version() {
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
+    let (_b, app, middle) = ::app();
+
+    // Upload a new crate
+    let mut req = ::new_req(app, "fyk_max", "1.0.0");
+    ::mock_user(&mut req, ::user("foo"));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    // double check the max version
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "1.0.0");
+
+    // yank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "0.0.0");
+
+    // add version 2.0.0
+    let body = ::new_req_body_version_2(::krate("fyk_max"));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/new")
+        .with_method(Method::Put)
+        .with_body(&body)));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
+
+    // unyank version 1.0.0
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+    assert!(::json::<O>(&mut r).ok);
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
+        .with_path("/api/v1/crates/fyk_max")));
+    let json: CrateResponse = ::json(&mut response);
+    assert_eq!(json.krate.max_version, "2.0.0");
 }
 
 #[test]

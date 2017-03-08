@@ -1,0 +1,1 @@
+ALTER TABLE dependencies ADD COLUMN target varchar;

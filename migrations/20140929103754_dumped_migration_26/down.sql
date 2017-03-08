@@ -1,0 +1,1 @@
+DROP INDEX index_version_dependencies_version_id;

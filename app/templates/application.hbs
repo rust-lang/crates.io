@@ -61,7 +61,7 @@
                     <span class='arrow'></span>
                 {{/rl-dropdown-toggle}}
 
-                {{#rl-dropdown tagName="ul" id="current-user-links" class="dropdown" closeOnChildClick="a:link"}}
+                {{#rl-dropdown tagName="ul" class="dropdown current-user-links" closeOnChildClick="a:link"}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
@@ -81,7 +81,7 @@
                 Menu
                 <span class='arrow'></span>
             {{/rl-dropdown-toggle}}
-            {{#rl-dropdown tagName='ul' id='current-user-links' class='dropdown' closeOnChildClick='a:link'}}
+            {{#rl-dropdown tagName='ul' class='dropdown current-user-links' closeOnChildClick='a:link'}}
                 <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
                 {{#if session.currentUser}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>

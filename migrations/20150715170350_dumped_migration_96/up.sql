@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners ADD COLUMN owner_kind INTEGER NOT NULL DEFAULT 0;

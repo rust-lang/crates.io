@@ -19,7 +19,8 @@ export default Ember.Route.extend({
         };
 
         // Fallback to the crate's last stable version
-        if (!requestedVersion) {
+        // If `max_version` is `0.0.0` then all versions have been yanked
+        if (!requestedVersion && maxVersion !== '0.0.0') {
             if (isUnstableVersion(maxVersion)) {
                 crate.get('versions').then(versions => {
                     const latestStableVersion = versions.find(version => {
@@ -54,7 +55,7 @@ export default Ember.Route.extend({
         return crate.get('versions')
             .then(versions => {
                 const version = versions.find(version => version.get('num') === params.version_num);
-                if (!version) {
+                if (params.version_num && !version) {
                     this.controllerFor('application').set('nextFlashError',
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }

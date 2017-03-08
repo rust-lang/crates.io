@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners ALTER owner_kind DROP DEFAULT;

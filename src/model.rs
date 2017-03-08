@@ -11,16 +11,16 @@ pub trait Model: Sized {
     fn find(conn: &GenericConnection, id: i32) -> CargoResult<Self> {
         let sql = format!("SELECT * FROM {} WHERE id = $1",
                           Model::table_name(None::<Self>));
-        let stmt = try!(conn.prepare(&sql));
-        let rows = try!(stmt.query(&[&id]));
-        let row = try!(rows.into_iter().next().chain_error(|| NotFound));
+        let stmt = conn.prepare(&sql)?;
+        let rows = stmt.query(&[&id])?;
+        let row = rows.into_iter().next().chain_error(|| NotFound)?;
         Ok(Model::from_row(&row))
     }
 
     fn count(conn: &GenericConnection) -> CargoResult<i64> {
         let sql = format!("SELECT COUNT(*) FROM {}", Model::table_name(None::<Self>));
-        let stmt = try!(conn.prepare(&sql));
-        let rows = try!(stmt.query(&[]));
+        let stmt = conn.prepare(&sql)?;
+        let rows = stmt.query(&[])?;
         Ok(rows.iter().next().unwrap().get("count"))
     }
 }

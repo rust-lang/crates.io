@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
+use diesel::pg::PgConnection;
 use openssl::ssl::{SslConnector, SslConnectorBuilder, SslMethod, SSL_VERIFY_NONE};
 use pg::GenericConnection;
 use pg::tls::{TlsHandshake, Stream, TlsStream};
@@ -16,6 +17,8 @@ use r2d2_postgres::PostgresConnectionManager as PCM;
 use r2d2_postgres::TlsMode;
 use r2d2_postgres::postgres;
 use r2d2_postgres;
+use r2d2_diesel::{self, ConnectionManager};
+use url::Url;
 
 use app::{App, RequestApp};
 use util::{CargoResult, LazyCell, internal};
@@ -23,6 +26,8 @@ use util::{CargoResult, LazyCell, internal};
 pub type Pool = r2d2::Pool<PCM>;
 pub type Config = r2d2::Config<pg::Connection, r2d2_postgres::Error>;
 type PooledConnnection = r2d2::PooledConnection<PCM>;
+pub type DieselPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+type DieselPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 /// Creates a TLS handshake mechanism used by our postgres driver to negotiate
 /// the TLS connection.
@@ -58,7 +63,7 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
                          _domain: &str,
                          stream: Stream)
                          -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
-            let stream = try!(self.0.danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream));
+            let stream = self.0.danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream)?;
             Ok(Box::new(stream))
         }
     }
@@ -98,6 +103,15 @@ pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres:
     r2d2::Pool::new(config, mgr).unwrap()
 }
 
+pub fn diesel_pool(url: &str, config: r2d2::Config<PgConnection, r2d2_diesel::Error>) -> DieselPool {
+    let mut url = Url::parse(url).expect("Invalid database URL");
+    if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+        url.query_pairs_mut().append_pair("sslmode", "require");
+    }
+    let manager = ConnectionManager::new(url.into_string());
+    r2d2::Pool::new(config, manager).unwrap()
+}
+
 pub struct TransactionMiddleware;
 
 pub struct Transaction {
@@ -131,9 +145,9 @@ impl Transaction {
 
     pub fn conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
-            let conn = try!(self.app.database.get().map_err(|e| {
+            let conn = self.app.database.get().map_err(|e| {
                 internal(format!("failed to get a database connection: {}", e))
-            }));
+            })?;
             self.slot.fill(Box::new(conn));
         }
         Ok(&**self.slot.borrow().unwrap())
@@ -146,8 +160,8 @@ impl Transaction {
         // desired effect.
         unsafe {
             if !self.tx.filled() {
-                let conn = try!(self.conn());
-                let t = try!(conn.transaction());
+                let conn = self.conn()?;
+                let t = conn.transaction()?;
                 let t = mem::transmute::<_, pg::transaction::Transaction<'static>>(t);
                 self.tx.fill(t);
             }
@@ -183,11 +197,20 @@ impl Middleware for TransactionMiddleware {
             if res.is_ok() && tx.commit.get() == Some(true) {
                 transaction.set_commit();
             }
-            try!(transaction.finish().map_err(|e| {
-                Box::new(e) as Box<Error+Send>
-            }));
+            transaction.finish().map_err(|e| {
+                Box::new(e) as Box<Error + Send>
+            })?;
         }
         return res
+    }
+}
+
+pub struct DieselMiddleware;
+
+impl Middleware for DieselMiddleware {
+    fn before(&self, request: &mut Request) -> Result<(), Box<Error+Send>> {
+        request.mut_extensions().insert(LazyCell::<DieselPooledConn>::new());
+        Ok(())
     }
 }
 
@@ -195,7 +218,7 @@ pub trait RequestTransaction {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
-    fn db_conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>>;
+    fn db_conn(&self) -> CargoResult<&PgConnection>;
 
     /// Return the lazily initialized postgres transaction for this request.
     ///
@@ -203,17 +226,20 @@ pub trait RequestTransaction {
     /// only be set to commit() if a successful response code of 200 is seen.
     fn tx(&self) -> CargoResult<&GenericConnection>;
 
-    /// Flag the transaction to not be committed
+    /// Flag the transaction to not be committed. Does not affect Diesel connections
     fn rollback(&self);
-    /// Flag this transaction to be committed
+    /// Flag this transaction to be committed. Does not affect Diesel connections.
     fn commit(&self);
 }
 
-impl<'a> RequestTransaction for Request + 'a {
-    fn db_conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
-        self.extensions().find::<Transaction>()
-            .expect("Transaction not present in request")
-            .conn()
+impl<T: Request + ?Sized> RequestTransaction for T {
+    fn db_conn(&self) -> CargoResult<&PgConnection> {
+        let cell = self.extensions().find::<LazyCell<DieselPooledConn>>()
+            .expect("PgConnection not present in request");
+        if !cell.filled() {
+            cell.fill(self.app().diesel_database.get()?);
+        }
+        Ok(&**cell.borrow().unwrap())
     }
 
     fn tx(&self) -> CargoResult<&GenericConnection> {

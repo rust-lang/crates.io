@@ -31,27 +31,27 @@ pub struct EncodableKeyword {
 impl Keyword {
     pub fn find_by_keyword(conn: &GenericConnection, name: &str)
                            -> CargoResult<Option<Keyword>> {
-        let stmt = try!(conn.prepare("SELECT * FROM keywords \
-                                      WHERE keyword = LOWER($1)"));
-        let rows = try!(stmt.query(&[&name]));
+        let stmt = conn.prepare("SELECT * FROM keywords \
+                                      WHERE keyword = LOWER($1)")?;
+        let rows = stmt.query(&[&name])?;
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
     pub fn find_or_insert(conn: &GenericConnection, name: &str)
                           -> CargoResult<Keyword> {
         // TODO: racy (the select then insert is not atomic)
-        let stmt = try!(conn.prepare("SELECT * FROM keywords
-                                      WHERE keyword = LOWER($1)"));
-        for row in try!(stmt.query(&[&name])).iter() {
+        let stmt = conn.prepare("SELECT * FROM keywords
+                                      WHERE keyword = LOWER($1)")?;
+        for row in stmt.query(&[&name])?.iter() {
             return Ok(Model::from_row(&row))
         }
 
-        let stmt = try!(conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
-                                      RETURNING *"));
-        let rows = try!(stmt.query(&[&name]));
-        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
+        let stmt = conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
+                                      RETURNING *")?;
+        let rows = stmt.query(&[&name])?;
+        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
             internal("no version returned")
-        }))))
+        })?))
     }
 
     pub fn all(conn: &GenericConnection, sort: &str, limit: i64, offset: i64)
@@ -62,11 +62,11 @@ impl Keyword {
            _ => "ORDER BY keyword ASC",
         };
 
-        let stmt = try!(conn.prepare(&format!("SELECT * FROM keywords {}
+        let stmt = conn.prepare(&format!("SELECT * FROM keywords {}
                                                LIMIT $1 OFFSET $2",
-                                               sort_sql)));
+                                         sort_sql))?;
 
-        let keywords: Vec<_> = try!(stmt.query(&[&limit, &offset]))
+        let keywords: Vec<_> = stmt.query(&[&limit, &offset])?
             .iter()
             .map(|row| Model::from_row(&row))
             .collect();
@@ -94,14 +94,14 @@ impl Keyword {
     pub fn update_crate(conn: &GenericConnection,
                         krate: &Crate,
                         keywords: &[String]) -> CargoResult<()> {
-        let old_kws = try!(krate.keywords(conn));
+        let old_kws = krate.keywords(conn)?;
         let old_kws = old_kws.iter().map(|kw| {
             (&kw.keyword[..], kw)
         }).collect::<HashMap<_, _>>();
-        let new_kws = try!(keywords.iter().map(|k| {
-            let kw = try!(Keyword::find_or_insert(conn, &k));
+        let new_kws = keywords.iter().map(|k| {
+            let kw = Keyword::find_or_insert(conn, &k)?;
             Ok((&k[..], kw))
-        }).collect::<CargoResult<HashMap<_, _>>>());
+        }).collect::<CargoResult<HashMap<_, _>>>()?;
 
         let to_rm = old_kws.iter().filter(|&(kw, _)| {
             !new_kws.contains_key(kw)
@@ -111,10 +111,10 @@ impl Keyword {
         }).map(|(_, v)| v.id).collect::<Vec<_>>();
 
         if to_rm.len() > 0 {
-            try!(conn.execute("DELETE FROM crates_keywords
+            conn.execute("DELETE FROM crates_keywords
                                 WHERE keyword_id = ANY($1)
                                   AND crate_id = $2",
-                              &[&to_rm, &krate.id]));
+                         &[&to_rm, &krate.id])?;
         }
 
         if to_add.len() > 0 {
@@ -123,10 +123,10 @@ impl Keyword {
                 let id: i32 = *id;
                 format!("({}, {})", crate_id,  id)
             }).collect::<Vec<_>>().join(", ");
-            try!(conn.execute(&format!("INSERT INTO crates_keywords
+            conn.execute(&format!("INSERT INTO crates_keywords
                                         (crate_id, keyword_id) VALUES {}",
-                                       insert),
-                              &[]));
+                                  insert),
+                         &[])?;
         }
 
         Ok(())
@@ -147,16 +147,16 @@ impl Model for Keyword {
 
 /// Handles the `GET /keywords` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = try!(req.tx());
-    let (offset, limit) = try!(req.pagination(10, 100));
+    let conn = req.tx()?;
+    let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
-    let keywords = try!(Keyword::all(conn, sort, limit, offset));
+    let keywords = Keyword::all(conn, sort, limit, offset)?;
     let keywords = keywords.into_iter().map(Keyword::encodable).collect();
 
     // Query for the total count of keywords
-    let total = try!(Keyword::count(conn));
+    let total = Keyword::count(conn)?;
 
     #[derive(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
@@ -172,9 +172,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /keywords/:keyword_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
-    let conn = try!(req.tx());
-    let kw = try!(Keyword::find_by_keyword(&*conn, &name));
-    let kw = try!(kw.chain_error(|| NotFound));
+    let conn = req.tx()?;
+    let kw = Keyword::find_by_keyword(&*conn, &name)?;
+    let kw = kw.chain_error(|| NotFound)?;
 
     #[derive(RustcEncodable)]
     struct R { keyword: EncodableKeyword }

@@ -1,0 +1,1 @@
+CREATE INDEX index_version_dependencies_depends_on_id ON version_dependencies (depends_on_id);

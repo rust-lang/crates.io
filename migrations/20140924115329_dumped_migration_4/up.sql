@@ -1,0 +1,1 @@
+ALTER TABLE versions ADD CONSTRAINT unique_num UNIQUE (package_id, num);

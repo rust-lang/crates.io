@@ -67,16 +67,16 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
         println!("attempt: {}/{}", id, login);
         let res = (|| -> CargoResult<()> {
             let url = format!("/users/{}", login);
-            let (handle, resp) = try!(http::github(app, &url, &token));
-            let ghuser: GithubUser = try!(http::parse_github_response(handle, resp));
+            let (handle, resp) = http::github(app, &url, &token)?;
+            let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
             if let Some(ref avatar) = avatar {
                 if !avatar.contains(&ghuser.id.to_string()) {
                     return Err(human(format!("avatar: {}", avatar)))
                 }
             }
             if ghuser.login == login {
-                try!(tx.execute("UPDATE users SET gh_id = $1 WHERE id = $2",
-                                &[&ghuser.id, &id]));
+                tx.execute("UPDATE users SET gh_id = $1 WHERE id = $2",
+                           &[&ghuser.id, &id])?;
                 Ok(())
             } else {
                 Err(human(format!("different login: {}", ghuser.login)))

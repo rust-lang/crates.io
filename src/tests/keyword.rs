@@ -1,5 +1,4 @@
-use postgres::GenericConnection;
-use conduit::{Handler, Request, Method};
+use conduit::{Handler, Method};
 use conduit_test::MockRequest;
 
 use cargo_registry::db::RequestTransaction;
@@ -53,8 +52,6 @@ fn uppercase() {
     assert_eq!(json.keyword.keyword, "upper".to_string());
 }
 
-fn tx(req: &Request) -> &GenericConnection { req.tx().unwrap() }
-
 #[test]
 fn update_crate() {
     let (_b, app, middle) = ::app();
@@ -69,28 +66,28 @@ fn update_crate() {
     ::mock_keyword(&mut req, "kw1");
     ::mock_keyword(&mut req, "kw2");
 
-    Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 1);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw2".to_string()]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 1);
 
-    Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 
-    Keyword::update_crate(tx(&req), &krate, &["kw1".to_string(),
+    Keyword::update_crate(req.tx().unwrap(), &krate, &["kw1".to_string(),
                                               "kw2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 1);
     assert_eq!(cnt(&mut req, "kw2"), 1);
 
-    Keyword::update_crate(tx(&req), &krate, &[]).unwrap();
+    Keyword::update_crate(req.tx().unwrap(), &krate, &[]).unwrap();
     assert_eq!(cnt(&mut req, "kw1"), 0);
     assert_eq!(cnt(&mut req, "kw2"), 0);
 

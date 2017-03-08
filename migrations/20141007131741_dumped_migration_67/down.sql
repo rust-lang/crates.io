@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners DROP COLUMN updated_at;

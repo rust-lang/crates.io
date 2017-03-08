@@ -53,16 +53,16 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
 
     commit_and_push(repo, || {
         // Add the crate to its relevant file
-        try!(fs::create_dir_all(dst.parent().unwrap()));
+        fs::create_dir_all(dst.parent().unwrap())?;
         let mut prev = String::new();
         if fs::metadata(&dst).is_ok() {
-            try!(File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev)));
+            File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
         }
         let s = json::encode(krate).unwrap();
         let new = prev + &s;
-        let mut f = try!(File::create(&dst));
-        try!(f.write_all(new.as_bytes()));
-        try!(f.write_all(b"\n"));
+        let mut f = File::create(&dst)?;
+        f.write_all(new.as_bytes())?;
+        f.write_all(b"\n")?;
 
         Ok((format!("Updating crate `{}#{}`", krate.name, krate.vers),
             dst.clone()))
@@ -78,11 +78,11 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
 
     commit_and_push(repo, || {
         let mut prev = String::new();
-        try!(File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev)));
+        File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
         let new = prev.lines().map(|line| {
-            let mut git_crate = try!(json::decode::<Crate>(line).map_err(|_| {
+            let mut git_crate = json::decode::<Crate>(line).map_err(|_| {
                 internal(format!("couldn't decode: `{}`", line))
-            }));
+            })?;
             if git_crate.name != krate ||
                git_crate.vers.to_string() != version.to_string() {
                 return Ok(line.to_string())
@@ -90,10 +90,10 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
             git_crate.yanked = Some(yanked);
             Ok(json::encode(&git_crate).unwrap())
         }).collect::<CargoResult<Vec<String>>>();
-        let new = try!(new).join("\n");
-        let mut f = try!(File::create(&dst));
-        try!(f.write_all(new.as_bytes()));
-        try!(f.write_all(b"\n"));
+        let new = new?.join("\n");
+        let mut f = File::create(&dst)?;
+        f.write_all(new.as_bytes())?;
+        f.write_all(b"\n")?;
 
         Ok((format!("{} crate `{}#{}`",
                     if yanked {"Yanking"} else {"Unyanking"},
@@ -112,27 +112,27 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
     // race to commit the changes. For now we just cap out the maximum number of
     // retries at a fixed number.
     for _ in 0..20 {
-        let (msg, dst) = try!(f());
+        let (msg, dst) = f()?;
 
         // git add $file
-        let mut index = try!(repo.index());
+        let mut index = repo.index()?;
         let mut repo_path = repo_path.iter();
         let dst = dst.iter().skip_while(|s| Some(*s) == repo_path.next())
                      .collect::<PathBuf>();
-        try!(index.add_path(&dst));
-        try!(index.write());
-        let tree_id = try!(index.write_tree());
-        let tree = try!(repo.find_tree(tree_id));
+        index.add_path(&dst)?;
+        index.write()?;
+        let tree_id = index.write_tree()?;
+        let tree = repo.find_tree(tree_id)?;
 
         // git commit -m "..."
-        let head = try!(repo.head());
-        let parent = try!(repo.find_commit(head.target().unwrap()));
-        let sig = try!(repo.signature());
-        try!(repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent]));
+        let head = repo.head()?;
+        let parent = repo.find_commit(head.target().unwrap())?;
+        let sig = repo.signature()?;
+        repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
 
         // git push
         let mut ref_status = None;
-        let mut origin = try!(repo.find_remote("origin"));
+        let mut origin = repo.find_remote("origin")?;
         let res = {
             let mut callbacks = git2::RemoteCallbacks::new();
             callbacks.credentials(credentials);
@@ -153,15 +153,15 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(credentials);
-        try!(origin.update_tips(Some(&mut callbacks), true,
-                                git2::AutotagOption::Unspecified,
-                                None));
+        origin.update_tips(Some(&mut callbacks), true,
+                           git2::AutotagOption::Unspecified,
+                           None)?;
 
         // Ok, we need to update, so fetch and reset --hard
-        try!(origin.fetch(&["refs/heads/*:refs/heads/*"], None, None));
-        let head = try!(repo.head()).target().unwrap();
-        let obj = try!(repo.find_object(head, None));
-        try!(repo.reset(&obj, git2::ResetType::Hard, None));
+        origin.fetch(&["refs/heads/*:refs/heads/*"], None, None)?;
+        let head = repo.head()?.target().unwrap();
+        let obj = repo.find_object(head, None)?;
+        repo.reset(&obj, git2::ResetType::Hard, None)?;
     }
 
     Err(internal("Too many rebase failures"))

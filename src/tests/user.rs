@@ -2,7 +2,7 @@ use conduit::{Handler, Request, Method};
 
 use cargo_registry::Model;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, EncodableUser};
+use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::version::EncodableVersion;
 
@@ -10,6 +10,8 @@ use cargo_registry::version::EncodableVersion;
 struct AuthResponse { url: String, state: String }
 #[derive(RustcDecodable)]
 struct MeResponse { user: EncodableUser, api_token: String }
+#[derive(RustcDecodable)]
+struct UserShowResponse { user: EncodableUser }
 
 #[test]
 fn auth_gives_a_token() {
@@ -67,6 +69,28 @@ fn me() {
     let json: MeResponse = ::json(&mut response);
     assert_eq!(json.user.email, user.email);
     assert_eq!(json.api_token, user.api_token);
+}
+
+#[test]
+fn show() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = t!(app.diesel_database.get());
+
+        t!(NewUser::new(1, "foo", Some("foo@bar.com"), None, None, "bar", "baz").create_or_update(&conn));
+        t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar", "baz").create_or_update(&conn));
+    }
+
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: UserShowResponse = ::json(&mut response);
+    assert_eq!(Some("foo@bar.com".into()), json.user.email);
+    assert_eq!("foo", json.user.login);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
+    let json: UserShowResponse = ::json(&mut response);
+    assert_eq!(Some("bar@baz.com".into()), json.user.email);
+    assert_eq!("bar", json.user.login);
 }
 
 #[test]

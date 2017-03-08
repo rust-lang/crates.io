@@ -1,0 +1,1 @@
+DROP TABLE crate_downloads;

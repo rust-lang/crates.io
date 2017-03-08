@@ -3,34 +3,94 @@ use std::collections::HashMap;
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
 
-use {Model, Version};
 use app::RequestApp;
 use db::RequestTransaction;
+use {http, Model, Version};
 use krate::{Crate, EncodableCrate};
+use schema::users;
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
-use http;
 
 pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable)]
 pub struct User {
     pub id: i32,
-    pub gh_login: String,
-    pub gh_id: i32,
-    pub name: Option<String>,
     pub email: Option<String>,
-    pub avatar: Option<String>,
     pub gh_access_token: String,
     pub api_token: String,
+    pub gh_login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub gh_id: i32,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[table_name="users"]
+pub struct NewUser<'a> {
+    pub gh_id: i32,
+    pub gh_login: &'a str,
+    pub email: Option<&'a str>,
+    pub name: Option<&'a str>,
+    pub gh_avatar: Option<&'a str>,
+    pub gh_access_token: &'a str,
+    pub api_token: &'a str,
+}
+
+impl<'a> NewUser<'a> {
+    pub fn new(gh_id: i32,
+               gh_login: &'a str,
+               email: Option<&'a str>,
+               name: Option<&'a str>,
+               gh_avatar: Option<&'a str>,
+               gh_access_token: &'a str,
+               api_token: &'a str) -> Self {
+        NewUser {
+            gh_id: gh_id,
+            gh_login: gh_login,
+            email: email,
+            name: name,
+            gh_avatar: gh_avatar,
+            gh_access_token: gh_access_token,
+            api_token: api_token,
+        }
+    }
+
+    /// Inserts the user into the database, or updates an existing one.
+    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<User> {
+        use diesel::{insert, update};
+        use diesel::pg::upsert::*;
+        use self::users::dsl::*;
+
+        conn.transaction(|| {
+            // FIXME: When Diesel 0.12 is released, this should be updated to be
+            // less racy.
+            // insert(&self.on_conflict(gh_id, do_update().set(self)))
+            //     .into(users)
+            //     .get_result(conn)
+            let maybe_inserted = insert(&self.on_conflict_do_nothing())
+                .into(users)
+                .get_result(conn)
+                .optional()?;
+            if let Some(user) = maybe_inserted {
+                return Ok(user);
+            }
+            update(users.filter(gh_id.eq(self.gh_id)))
+                .set(self)
+                .get_result(conn)
+                .map_err(Into::into)
+        })
+    }
 }
 
 /// The serialization format for the `User` model.
@@ -47,21 +107,21 @@ impl User {
     /// Queries the database for a user with a certain `gh_login` value.
     pub fn find_by_login(conn: &GenericConnection,
                          login: &str) -> CargoResult<User> {
-        let stmt = try!(conn.prepare("SELECT * FROM users
-                                      WHERE gh_login = $1"));
-        let rows = try!(stmt.query(&[&login]));
-        let row = try!(rows.iter().next().chain_error(|| {
+        let stmt = conn.prepare("SELECT * FROM users
+                                      WHERE gh_login = $1")?;
+        let rows = stmt.query(&[&login])?;
+        let row = rows.iter().next().chain_error(|| {
             NotFound
-        }));
+        })?;
         Ok(Model::from_row(&row))
     }
 
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &GenericConnection,
                              token: &str) -> CargoResult<User> {
-        let stmt = try!(conn.prepare("SELECT * FROM users \
-                                      WHERE api_token = $1 LIMIT 1"));
-        let rows = try!(stmt.query(&[&token]));
+        let stmt = conn.prepare("SELECT * FROM users \
+                                      WHERE api_token = $1 LIMIT 1")?;
+        let rows = stmt.query(&[&token])?;
         rows.iter().next().map(|r| Model::from_row(&r)).chain_error(|| {
             NotFound
         })
@@ -80,39 +140,39 @@ impl User {
         //       interesting! For now just do the racy thing which will report
         //       more errors than it needs to.
 
-        let stmt = try!(conn.prepare("UPDATE users
+        let stmt = conn.prepare("UPDATE users
                                       SET gh_access_token = $1,
                                           email = $2,
                                           name = $3,
                                           gh_avatar = $4,
                                           gh_login = $5
                                       WHERE gh_id = $6
-                                      RETURNING *"));
-        let rows = try!(stmt.query(&[&access_token,
-                                     &email,
-                                     &name,
-                                     &avatar,
-                                     &login,
-                                     &id]));
+                                      RETURNING *")?;
+        let rows = stmt.query(&[&access_token,
+            &email,
+            &name,
+            &avatar,
+            &login,
+            &id])?;
         match rows.iter().next() {
             Some(ref row) => return Ok(Model::from_row(row)),
             None => {}
         }
-        let stmt = try!(conn.prepare("INSERT INTO users
+        let stmt = conn.prepare("INSERT INTO users
                                       (email, gh_access_token, api_token,
                                        gh_login, name, gh_avatar, gh_id)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7)
-                                      RETURNING *"));
-        let rows = try!(stmt.query(&[&email,
-                                     &access_token,
-                                     &api_token,
-                                     &login,
-                                     &name,
-                                     &avatar,
-                                     &id]));
-        Ok(Model::from_row(&try!(rows.iter().next().chain_error(|| {
+                                      RETURNING *")?;
+        let rows = stmt.query(&[&email,
+            &access_token,
+            &api_token,
+            &login,
+            &name,
+            &avatar,
+            &id])?;
+        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
-        }))))
+        })?))
     }
 
     /// Generates a new crates.io API token.
@@ -237,22 +297,22 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         Err(s) => return Err(human(s)),
     };
 
-    let (handle, resp) = try!(http::github(req.app(), "/user", &token));
-    let ghuser: GithubUser = try!(http::parse_github_response(handle, resp));
+    let (handle, resp) = http::github(req.app(), "/user", &token)?;
+    let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
 
     // Into the database!
     let api_token = User::new_api_token();
-    let user = try!(User::find_or_insert(try!(req.tx()),
-                                         ghuser.id,
-                                         &ghuser.login,
-                                         ghuser.email.as_ref()
-                                               .map(|s| &s[..]),
-                                         ghuser.name.as_ref()
-                                               .map(|s| &s[..]),
-                                         ghuser.avatar_url.as_ref()
-                                               .map(|s| &s[..]),
-                                         &token.access_token,
-                                         &api_token));
+    let user = User::find_or_insert(req.tx()?,
+                                    ghuser.id,
+                                    &ghuser.login,
+                                    ghuser.email.as_ref()
+                                        .map(|s| &s[..]),
+                                    ghuser.name.as_ref()
+                                        .map(|s| &s[..]),
+                                    ghuser.avatar_url.as_ref()
+                                        .map(|s| &s[..]),
+                                    &token.access_token,
+                                    &api_token)?;
     req.session().insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     me(req)
@@ -266,12 +326,12 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me/reset_token` route.
 pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
-    let user = try!(req.user());
+    let user = req.user()?;
 
     let token = User::new_api_token();
-    let conn = try!(req.tx());
-    try!(conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
-                      &[&token, &user.id]));
+    let conn = req.tx()?;
+    conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
+                 &[&token, &user.id])?;
 
     #[derive(RustcEncodable)]
     struct R { api_token: String }
@@ -280,7 +340,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
-    let user = try!(req.user());
+    let user = req.user()?;
 
     #[derive(RustcEncodable)]
     struct R { user: EncodableUser, api_token: String }
@@ -290,23 +350,26 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
+    use self::users::dsl::{users, gh_login};
+
     let name = &req.params()["user_id"];
-    let conn = try!(req.tx());
-    let user = try!(User::find_by_login(conn, &name));
+    let conn = req.db_conn()?;
+    let user = users.filter(gh_login.eq(name))
+        .first::<User>(conn)?;
 
     #[derive(RustcEncodable)]
     struct R {
         user: EncodableUser,
     }
-    Ok(req.json(&R{ user: user.clone().encodable() }))
+    Ok(req.json(&R{ user: user.encodable() }))
 }
 
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
-    let user = try!(req.user());
-    let (offset, limit) = try!(req.pagination(10, 100));
-    let tx = try!(req.tx());
+    let user = req.user()?;
+    let (offset, limit) = req.pagination(10, 100)?;
+    let tx = req.tx()?;
     let sql = "SELECT versions.* FROM versions
                INNER JOIN follows
                   ON follows.user_id = $1 AND
@@ -314,10 +377,10 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
                ORDER BY versions.created_at DESC OFFSET $2 LIMIT $3";
 
     // Load all versions
-    let stmt = try!(tx.prepare(sql));
+    let stmt = tx.prepare(sql)?;
     let mut versions = Vec::new();
     let mut crate_ids = Vec::new();
-    for row in try!(stmt.query(&[&user.id, &offset, &limit])).iter() {
+    for row in stmt.query(&[&user.id, &offset, &limit])?.iter() {
         let version: Version = Model::from_row(&row);
         crate_ids.push(version.crate_id);
         versions.push(version);
@@ -327,8 +390,8 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     let mut map = HashMap::new();
     let mut crates = Vec::new();
     if crate_ids.len() > 0 {
-        let stmt = try!(tx.prepare("SELECT * FROM crates WHERE id = ANY($1)"));
-        for row in try!(stmt.query(&[&crate_ids])).iter() {
+        let stmt = tx.prepare("SELECT * FROM crates WHERE id = ANY($1)")?;
+        for row in stmt.query(&[&crate_ids])?.iter() {
             let krate: Crate = Model::from_row(&row);
             map.insert(krate.id, krate.name.clone());
             crates.push(krate);
@@ -337,8 +400,9 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
     // Encode everything!
     let crates = crates.into_iter().map(|c| {
-        c.minimal_encodable(None)
-    }).collect();
+        let max_version = c.max_version(tx)?;
+        Ok(c.minimal_encodable(max_version, None))
+    }).collect::<CargoResult<_>>()?;
     let versions = versions.into_iter().map(|v| {
         let id = v.crate_id;
         v.encodable(&map[&id])
@@ -346,8 +410,8 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
     // Check if we have another
     let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
-    let stmt = try!(tx.prepare(&sql));
-    let more = try!(stmt.query(&[&user.id, &(offset + limit), &limit]))
+    let stmt = tx.prepare(&sql)?;
+    let more = stmt.query(&[&user.id, &(offset + limit), &limit])?
                   .iter().next().is_some();
 
     #[derive(RustcEncodable)]
