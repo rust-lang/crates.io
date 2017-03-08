@@ -5,7 +5,8 @@ use Model;
 use std::collections::HashMap;
 use pg::GenericConnection;
 use pg::rows::Row;
-use rustc_serialize::json::Json;
+use rustc_serialize::Decodable;
+use rustc_serialize::json::{Json, Decoder};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Badge {
@@ -29,61 +30,12 @@ pub struct EncodableBadge {
 impl Model for Badge {
     fn from_row(row: &Row) -> Badge {
         let attributes: Json = row.get("attributes");
-        if let Json::Object(attributes) = attributes {
-            let badge_type: String = row.get("badge_type");
-            match badge_type.as_str() {
-                "travis-ci" => {
-                    Badge::TravisCi {
-                        branch: attributes.get("branch")
-                                          .and_then(Json::as_string)
-                                          .map(str::to_string),
-                        repository: attributes.get("repository")
-                                        .and_then(Json::as_string)
-                                        .map(str::to_string)
-                                        .expect("Invalid TravisCi badge \
-                                                 without repository in the \
-                                                 database"),
-                    }
-                },
-                "appveyor" => {
-                    Badge::Appveyor {
-                        service: attributes.get("service")
-                                           .and_then(Json::as_string)
-                                           .map(str::to_string),
-                        branch: attributes.get("branch")
-                                          .and_then(Json::as_string)
-                                          .map(str::to_string),
-                        repository: attributes.get("repository")
-                                        .and_then(Json::as_string)
-                                        .map(str::to_string)
-                                        .expect("Invalid Appveyor badge \
-                                                 without repository in the \
-                                                 database"),
-                    }
-                },
-                "gitlab" => {
-                    Badge::GitLab {
-                        branch: attributes.get("branch")
-                                          .and_then(Json::as_string)
-                                          .map(str::to_string),
-                        repository: attributes.get("repository")
-                                        .and_then(Json::as_string)
-                                        .map(str::to_string)
-                                        .expect("Invalid GitLab badge \
-                                                 without repository in the \
-                                                 database"),
-                    }
-                },
-                _ => {
-                    panic!("Unknown badge type {} in the database", badge_type);
-                },
-            }
-        } else {
-            panic!(
-                "badge attributes {:?} in the database was not a JSON object",
-                attributes
-            );
-        }
+        let badge_type: String = row.get("badge_type");
+        let mut decoder = Decoder::new(attributes);
+        let attributes = HashMap::<String, String>::decode(&mut decoder)
+            .expect("Attributes was not a json object");
+        Self::from_attributes(&badge_type, &attributes)
+            .expect("Invalid CI badge in the database")
     }
     fn table_name(_: Option<Badge>) -> &'static str { "badges" }
 }
