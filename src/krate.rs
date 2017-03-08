@@ -1015,11 +1015,9 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
                                  WHERE date > $1
                                    AND version_id = ANY($2)
                                  ORDER BY date ASC")?;
-    let mut downloads = Vec::new();
-    for row in stmt.query(&[&cutoff_date, &ids])?.iter() {
-        let download: VersionDownload = Model::from_row(&row);
-        downloads.push(download.encodable());
-    }
+    let downloads = stmt.query(&[&cutoff_date, &ids])?.iter().map(|row| {
+        VersionDownload::from_row(&row).encodable()
+    }).collect::<Vec<_>>();
 
     let stmt = tx.prepare("\
           SELECT COALESCE(to_char(DATE(version_downloads.date), 'YYYY-MM-DD'), '') AS date,
