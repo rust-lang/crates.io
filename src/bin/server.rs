@@ -7,7 +7,7 @@ extern crate git2;
 extern crate env_logger;
 extern crate s3;
 
-use cargo_registry::{env, Env};
+use cargo_registry::{env, Env, Uploader};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
@@ -52,7 +52,7 @@ fn main() {
     let uploader = match (cargo_env, mirror) {
         (Env::Production, false) => {
             // `env` panics if these vars are not set
-            cargo_registry::Uploader::S3 {
+            Uploader::S3 {
                 bucket: s3::Bucket::new(env("S3_BUCKET"),
                                         env::var("S3_REGION").ok(),
                                         env("S3_ACCESS_KEY"),
@@ -64,7 +64,7 @@ fn main() {
         (Env::Production, true) => {
             // Read-only mirrors don't need access key or secret key,
             // but they might have them. Definitely need bucket though.
-            cargo_registry::Uploader::S3 {
+            Uploader::S3 {
                 bucket: s3::Bucket::new(env("S3_BUCKET"),
                                         env::var("S3_REGION").ok(),
                                         env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
@@ -76,7 +76,7 @@ fn main() {
         _ => {
             if env::var("S3_BUCKET").is_ok() {
                 println!("Using S3 uploader");
-                cargo_registry::Uploader::S3 {
+                Uploader::S3 {
                     bucket: s3::Bucket::new(env("S3_BUCKET"),
                                             env::var("S3_REGION").ok(),
                                             env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
@@ -86,7 +86,7 @@ fn main() {
                 }
             } else {
                 println!("Using local uploader, crate files will be in the dist directory");
-                cargo_registry::Uploader::Local
+                Uploader::Local
             }
         },
     };
