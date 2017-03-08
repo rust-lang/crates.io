@@ -8,7 +8,6 @@ opt-level = 2
 
 [lib]
 name = "cargo_registry"
-test = false
 doctest = false
 
 [[test]]
