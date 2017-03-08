@@ -307,11 +307,9 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let stmt = tx.prepare("SELECT * FROM version_downloads
                                 WHERE date > $1 AND version_id = $2
                                 ORDER BY date ASC")?;
-    let mut downloads = Vec::new();
-    for row in stmt.query(&[&cutoff_date, &version.id])?.iter() {
-        let download: VersionDownload = Model::from_row(&row);
-        downloads.push(download.encodable());
-    }
+    let downloads = stmt.query(&[&cutoff_date, &version.id])?.iter().map(|row| {
+        VersionDownload::from_row(&row).encodable()
+    }).collect();
 
     #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }
