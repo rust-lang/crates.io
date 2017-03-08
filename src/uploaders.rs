@@ -32,18 +32,19 @@ impl Uploader {
         }
     }
 
-    pub fn crate_location(&self, crate_name: &str, version: &str) -> String {
+    pub fn crate_location(&self, crate_name: &str, version: &str)
+                          -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                format!("https://{}/{}",
+                Some(format!("https://{}/{}",
                         bucket.host(),
-                        Uploader::crate_path(crate_name, version))
+                        Uploader::crate_path(crate_name, version)))
             },
             Uploader::Local => {
-                format!("/local_uploads/{}",
-                        Uploader::crate_path(crate_name, version))
+                Some(format!("/local_uploads/{}",
+                        Uploader::crate_path(crate_name, version)))
             }
-            Uploader::NoOp => panic!("no-op uploader does not have crate files"),
+            Uploader::NoOp => None,
         }
     }
 

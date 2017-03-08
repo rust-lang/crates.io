@@ -974,7 +974,10 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         increment_download_counts(req, crate_name, version)?;
     }
 
-    let redirect_url = req.app().config.uploader.crate_location(crate_name, version);
+    let redirect_url = req.app().config.uploader
+        .crate_location(crate_name, version).ok_or_else(||
+            human("crate files not found")
+        )?;
 
     if req.wants_json() {
         #[derive(RustcEncodable)]
