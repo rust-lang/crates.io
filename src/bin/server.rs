@@ -73,7 +73,7 @@ fn main() {
                 proxy: None,
             }
         },
-        (cargo_registry::Env::Development, _) => {
+        _ => {
             if env::var("S3_BUCKET").is_ok() {
                 println!("Using S3 uploader");
                 cargo_registry::Uploader::S3 {
@@ -89,8 +89,6 @@ fn main() {
                 cargo_registry::Uploader::Local
             }
         },
-        // See immediately before this match where we choose either prod or dev
-        (cargo_registry::Env::Test, _) => unreachable!(),
     };
 
     let config = cargo_registry::Config {
