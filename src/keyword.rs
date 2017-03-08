@@ -9,15 +9,26 @@ use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
+use schema::*;
 use util::{RequestUtils, CargoResult, ChainError, internal};
 use util::errors::NotFound;
 
-#[derive(Clone)]
+#[derive(Clone, Identifiable, Associations)]
+#[has_many(crates_keywords)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
     pub created_at: Timespec,
     pub crates_cnt: i32,
+}
+
+#[derive(Associations)]
+#[belongs_to(Keyword)]
+#[table_name="crates_keywords"]
+#[allow(dead_code)]
+struct CrateKeyword {
+    crate_id: i32,
+    keyword_id: i32,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]

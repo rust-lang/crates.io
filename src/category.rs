@@ -8,10 +8,13 @@ use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
+use schema::*;
 use util::{RequestUtils, CargoResult, ChainError};
 use util::errors::NotFound;
 
-#[derive(Clone)]
+#[derive(Clone, Identifiable, Associations)]
+#[has_many(crates_categories)]
+#[table_name="categories"]
 pub struct Category {
     pub id: i32,
     pub category: String,
@@ -19,6 +22,15 @@ pub struct Category {
     pub description: String,
     pub created_at: Timespec,
     pub crates_cnt: i32,
+}
+
+#[derive(Associations)]
+#[belongs_to(Category)]
+#[table_name="crates_categories"]
+#[allow(dead_code)] // FIXME: Hey @sgrif add better many-to-many support to Diesel, wouldya?
+struct CrateCategory {
+    crate_id: i32,
+    category_id: i32,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
