@@ -1184,6 +1184,102 @@ fn reverse_dependencies() {
 }
 
 #[test]
+fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
+    let (_b, app, middle) = ::app();
+
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v110 = semver::Version::parse("1.1.0").unwrap();
+    let v200 = semver::Version::parse("2.0.0").unwrap();
+    let mut req = ::req(app, Method::Get,
+                        "/api/v1/crates/c1/reverse_dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v110);
+    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
+    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
+
+    ::mock_dep(&mut req, &c2v2, &c1, None);
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.dependencies.len(), 1);
+    assert_eq!(deps.meta.total, 1);
+    assert_eq!(deps.dependencies[0].crate_id, "c2");
+}
+
+#[test]
+fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
+    let (_b, app, middle) = ::app();
+
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v200 = semver::Version::parse("2.0.0").unwrap();
+    let mut req = ::req(app, Method::Get,
+                        "/api/v1/crates/c1/reverse_dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
+    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
+    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
+
+    ::mock_dep(&mut req, &c2v1, &c1, None);
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.dependencies.len(), 0);
+    assert_eq!(deps.meta.total, 0);
+}
+
+#[test]
+fn prerelease_versions_not_included_in_reverse_dependencies() {
+    let (_b, app, middle) = ::app();
+
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v110_pre = semver::Version::parse("1.1.0-pre").unwrap();
+    let mut req = ::req(app, Method::Get,
+                        "/api/v1/crates/c1/reverse_dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
+    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v110_pre);
+    let (_, c3v1) = ::mock_crate_vers(&mut req, ::krate("c3"), &v100);
+    let _ = ::mock_crate_vers(&mut req, ::krate("c3"), &v110_pre);
+
+    ::mock_dep(&mut req, &c3v1, &c1, None);
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.dependencies.len(), 1);
+    assert_eq!(deps.meta.total, 1);
+    assert_eq!(deps.dependencies[0].crate_id, "c3");
+}
+
+#[test]
+fn yanked_versions_not_included_in_reverse_dependencies() {
+    let (_b, app, middle) = ::app();
+
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v200 = semver::Version::parse("2.0.0").unwrap();
+    let mut req = ::req(app, Method::Get,
+                        "/api/v1/crates/c1/reverse_dependencies");
+    ::mock_user(&mut req, ::user("foo"));
+    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
+    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
+    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
+
+    ::mock_dep(&mut req, &c2v2, &c1, None);
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.dependencies.len(), 1);
+    assert_eq!(deps.meta.total, 1);
+    assert_eq!(deps.dependencies[0].crate_id, "c2");
+
+    t!(c2v2.yank(req.tx().unwrap(), true));
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let deps = ::json::<RevDeps>(&mut response);
+    assert_eq!(deps.dependencies.len(), 0);
+    assert_eq!(deps.meta.total, 0);
+}
+
+#[test]
 fn author_license_and_description_required() {
     let (_b, app, middle) = ::app();
     ::user("foo");

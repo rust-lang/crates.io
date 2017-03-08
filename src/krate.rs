@@ -432,12 +432,17 @@ impl Crate {
                                 -> CargoResult<(Vec<(Dependency, String, i32)>, i64)> {
         let select_sql = "
               FROM dependencies
-              INNER JOIN versions
+              INNER JOIN (
+                SELECT versions.*,
+                    row_number() OVER (PARTITION BY crate_id ORDER BY to_semver_no_prerelease(num) DESC NULLS LAST) rn
+                    FROM versions
+                    WHERE NOT yanked
+              ) versions
                 ON versions.id = dependencies.version_id
               INNER JOIN crates
                 ON crates.id = versions.crate_id
               WHERE dependencies.crate_id = $1
-                AND versions.num = $2
+                AND rn = 1
         ";
         let fetch_sql = format!("SELECT DISTINCT ON (crate_downloads, crate_name)
                                         dependencies.*,
@@ -445,19 +450,18 @@ impl Crate {
                                         crates.name AS crate_name
                                         {}
                                ORDER BY crate_downloads DESC
-                                 OFFSET $3
-                                  LIMIT $4",
+                                 OFFSET $2
+                                  LIMIT $3",
                                 select_sql);
         let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
 
         let stmt = conn.prepare(&fetch_sql)?;
-        let max_version = self.max_version(conn)?.to_string();
-        let vec: Vec<_> = stmt.query(&[&self.id, &max_version, &offset, &limit])?
+        let vec: Vec<_> = stmt.query(&[&self.id, &offset, &limit])?
             .iter()
             .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
             .collect();
         let stmt = conn.prepare(&count_sql)?;
-        let cnt: i64 = stmt.query(&[&self.id, &max_version])?.iter().next().unwrap().get(0);
+        let cnt: i64 = stmt.query(&[&self.id])?.iter().next().unwrap().get(0);
 
         Ok((vec, cnt))
     }
