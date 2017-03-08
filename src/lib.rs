@@ -88,6 +88,14 @@ pub enum Env {
     Production,
 }
 
+// There may be more ways to run crates.io servers in the future, such as a
+// mirror that also has private crates that crates.io does not have.
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum Replica {
+    Primary,
+    ReadOnlyMirror,
+}
+
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 

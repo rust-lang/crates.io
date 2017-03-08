@@ -18,7 +18,7 @@ use semver;
 use time::{Timespec, Duration};
 use url::Url;
 
-use {Model, User, Keyword, Version, Category, Badge};
+use {Model, User, Keyword, Version, Category, Badge, Replica};
 use app::{App, RequestApp};
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
@@ -968,7 +968,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     // API-only mirrors won't have any crates in their database, and
     // incrementing the download count will look up the crate in the
     // database. Mirrors just want to pass along a redirect URL.
-    if req.app().config.mirror {
+    if req.app().config.mirror == Replica::ReadOnlyMirror {
         let _ = increment_download_counts(req, crate_name, version);
     } else {
         increment_download_counts(req, crate_name, version)?;

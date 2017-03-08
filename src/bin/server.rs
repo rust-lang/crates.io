@@ -7,7 +7,7 @@ extern crate git2;
 extern crate env_logger;
 extern crate s3;
 
-use cargo_registry::{env, Env, Uploader};
+use cargo_registry::{env, Env, Uploader, Replica};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
@@ -40,7 +40,11 @@ fn main() {
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
     let api_protocol = String::from("https");
-    let mirror = env::var("MIRROR").is_ok();
+    let mirror = if env::var("MIRROR").is_ok() {
+        Replica::ReadOnlyMirror
+    } else {
+        Replica::Primary
+    };
 
     let heroku = env::var("HEROKU").is_ok();
     let cargo_env = if heroku {
@@ -50,7 +54,7 @@ fn main() {
     };
 
     let uploader = match (cargo_env, mirror) {
-        (Env::Production, false) => {
+        (Env::Production, Replica::Primary) => {
             // `env` panics if these vars are not set
             Uploader::S3 {
                 bucket: s3::Bucket::new(env("S3_BUCKET"),
@@ -61,7 +65,7 @@ fn main() {
                 proxy: None,
             }
         },
-        (Env::Production, true) => {
+        (Env::Production, Replica::ReadOnlyMirror) => {
             // Read-only mirrors don't need access key or secret key,
             // but they might have them. Definitely need bucket though.
             Uploader::S3 {

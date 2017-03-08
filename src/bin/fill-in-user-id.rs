@@ -14,7 +14,7 @@ extern crate rustc_serialize;
 
 use std::path::PathBuf;
 
-use cargo_registry::{http, env, App};
+use cargo_registry::{http, env, App, Replica};
 use cargo_registry::util::{CargoResult, human};
 
 #[allow(dead_code)]
@@ -31,7 +31,7 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_registry::Env::Production,
         max_upload_size: 0,
-        mirror: false,
+        mirror: Replica::Primary,
         api_protocol: api_protocol,
     };
     let app = cargo_registry::App::new(&config);

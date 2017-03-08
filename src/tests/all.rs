@@ -29,7 +29,7 @@ use cargo_registry::dependency::Kind;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
-use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model};
+use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
@@ -108,7 +108,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
-        mirror: false,
+        mirror: Replica::Primary,
         api_protocol: api_protocol,
     };
     INIT.call_once(|| db_setup(&config.db_url));

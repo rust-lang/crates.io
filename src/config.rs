@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use Uploader;
+use {Uploader, Replica};
 
 #[derive(Clone)]
 pub struct Config {
@@ -11,6 +11,6 @@ pub struct Config {
     pub db_url: String,
     pub env: ::Env,
     pub max_upload_size: u64,
-    pub mirror: bool,
+    pub mirror: Replica,
     pub api_protocol: String,
 }
