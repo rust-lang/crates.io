@@ -30,8 +30,7 @@ table! {
 }
 
 table! {
-    crate_owners (id) {
-        id -> Int4,
+    crate_owners (crate_id, owner_id, owner_kind) {
         crate_id -> Int4,
         owner_id -> Int4,
         created_at -> Timestamp,
