@@ -10,12 +10,26 @@ export default Ember.Route.extend({
         const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
 
-        const isUnstableVersion = (version) => {
-            const unstableFlags = ['alpha', 'beta'];
+        const isUnstableVersion = version => {
+            const versionLen = version.length;
+            let majorMinorPatchChars = 0;
+            let result = false;
 
-            return unstableFlags.some((flag) => {
-                return version.indexOf(flag) > -1;
-            });
+            for (let i = 0; i < versionLen; i++) {
+                const char = version.charAt(i);
+
+                if (!isNaN(parseInt(char)) || char === '.') {
+                    majorMinorPatchChars++;
+                } else {
+                    break;
+                }
+            }
+
+            if (versionLen !== majorMinorPatchChars) {
+                result = true;
+            }
+
+            return result;
         };
 
         // Fallback to the crate's last stable version
