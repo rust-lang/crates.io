@@ -180,8 +180,8 @@ fn user(login: &str) -> User {
         email: None,
         name: None,
         avatar: None,
-        gh_access_token: User::new_api_token(), // just randomize it
-        api_token: User::new_api_token(),
+        gh_access_token: "some random token".into(),
+        api_token: "some random token".into(),
     }
 }
 
@@ -209,10 +209,13 @@ fn mock_user(req: &mut Request, u: User) -> User {
                                  u.email.as_ref().map(|s| &s[..]),
                                  u.name.as_ref().map(|s| &s[..]),
                                  u.avatar.as_ref().map(|s| &s[..]),
-                                 &u.gh_access_token,
-                                 &u.api_token).unwrap();
-    req.mut_extensions().insert(u.clone());
+                                 &u.gh_access_token).unwrap();
+    sign_in_as(req, &u);
     return u;
+}
+
+fn sign_in_as(req: &mut Request, user: &User) {
+    req.mut_extensions().insert(user.clone());
 }
 
 fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {

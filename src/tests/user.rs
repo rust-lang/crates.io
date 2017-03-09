@@ -1,4 +1,4 @@
-use conduit::{Handler, Request, Method};
+use conduit::{Handler, Method};
 
 use cargo_registry::Model;
 use cargo_registry::krate::EncodableCrate;
@@ -37,20 +37,20 @@ fn user_insert() {
     let conn = t!(app.database.get());
     let tx = t!(conn.transaction());
 
-    let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar", "baz"));
-    assert_eq!(t!(User::find_by_api_token(&tx, "baz")), user);
+    let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar"));
+    assert_eq!(t!(User::find_by_api_token(&tx, &user.api_token)), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
     assert_eq!(t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
-                                       "bar", "api")), user);
+                                       "bar")), user);
     let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
-                                        "baz", "api"));
+                                        "baz"));
     assert!(user != user2);
     assert_eq!(user.id, user2.id);
     assert_eq!(user2.gh_access_token, "baz");
 
     let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None,
-                                        "baz", "api"));
+                                        "baz"));
     assert!(user != user3);
     assert_eq!(user.id, user3.id);
     assert_eq!(user3.gh_login, "bar");
@@ -63,8 +63,7 @@ fn me() {
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = ::user("foo");
-    ::mock_user(&mut req, user.clone());
+    let user = ::mock_user(&mut req, ::user("foo"));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: MeResponse = ::json(&mut response);
     assert_eq!(json.user.email, user.email);
@@ -77,8 +76,8 @@ fn show() {
     {
         let conn = t!(app.diesel_database.get());
 
-        t!(NewUser::new(1, "foo", Some("foo@bar.com"), None, None, "bar", "baz").create_or_update(&conn));
-        t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar", "baz").create_or_update(&conn));
+        t!(NewUser::new(1, "foo", Some("foo@bar.com"), None, None, "bar").create_or_update(&conn));
+        t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar").create_or_update(&conn));
     }
 
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
@@ -97,16 +96,12 @@ fn show() {
 fn reset_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Put, "/me/reset_token");
-    let user = {
-        let tx = RequestTransaction::tx(&mut req as &mut Request);
-        User::find_or_insert(tx.unwrap(), 1, "foo", None,
-                             None, None, "bar", "baz").unwrap()
-    };
-    ::mock_user(&mut req, user.clone());
+    let user = User::find_or_insert(req.tx().unwrap(), 1, "foo", None,
+                                    None, None, "bar").unwrap();
+    ::sign_in_as(&mut req, &user);
     ok_resp!(middle.call(&mut req));
 
-    let tx = RequestTransaction::tx(&mut req as &mut Request);
-    let u2 = User::find(tx.unwrap(), user.id).unwrap();
+    let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
     assert!(u2.api_token != user.api_token);
 }
 
