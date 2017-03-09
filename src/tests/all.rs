@@ -276,7 +276,7 @@ fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
-    NewCategory { category, slug, ..NewCategory::default() }
+    NewCategory { category: category, slug: slug, ..NewCategory::default() }
 }
 
 fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
