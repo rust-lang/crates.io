@@ -91,8 +91,6 @@ fn collect(tx: &postgres::transaction::Transaction,
                          SET processed = $2, counted = counted + $3
                          WHERE id = $1",
                    &[id, &(download.date < cutoff), &amt])?;
-        println!("{}\n{}", time::at(download.date).rfc822(),
-                 time::at(cutoff).rfc822());
         total += amt as i64;
 
         if amt == 0 {
