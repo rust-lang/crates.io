@@ -4,11 +4,11 @@
 //! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
 //! [user](user/index.html) and [version](version/index.html) modules.
 
-#[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
-extern crate postgres as pg;
-extern crate rustc_serialize;
+#[macro_use] extern crate log;
+#[macro_use] extern crate serde_json;
+#[macro_use] extern crate serde_derive;
 extern crate curl;
 extern crate diesel_full_text_search;
 extern crate dotenv;
@@ -17,16 +17,17 @@ extern crate git2;
 extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
+extern crate postgres as pg;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate r2d2_postgres;
 extern crate rand;
+extern crate rustc_serialize;
 extern crate s3;
 extern crate semver;
-extern crate serde_json;
 extern crate time;
-extern crate url;
 extern crate toml;
+extern crate url;
 
 extern crate conduit;
 extern crate conduit_conditional_get;

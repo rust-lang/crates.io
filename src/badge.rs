@@ -7,25 +7,27 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use pg::GenericConnection;
 use pg::rows::Row;
-use rustc_serialize::Decodable;
-use rustc_serialize::json::{Json, Decoder};
 use serde_json;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(tag = "badge_type", content = "attributes")]
 pub enum Badge {
+    #[serde(rename = "travis-ci")]
     TravisCi {
         repository: String, branch: Option<String>,
     },
+    #[serde(rename = "appveyor")]
     Appveyor {
         repository: String, branch: Option<String>, service: Option<String>,
     },
+    #[serde(rename = "gitlab")]
     GitLab {
         repository: String, branch: Option<String>,
     },
 }
 
-#[derive(RustcEncodable, RustcDecodable, PartialEq, Debug)]
+#[derive(RustcEncodable, RustcDecodable, PartialEq, Debug, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
     pub attributes: HashMap<String, String>,
@@ -35,21 +37,18 @@ impl Queryable<badges::SqlType, Pg> for Badge {
     type Row = (i32, String, serde_json::Value);
 
     fn build((_, badge_type, attributes): Self::Row) -> Self {
-        let attributes = serde_json::from_value::<HashMap<String, String>>(attributes)
-            .expect("attributes was not a map in the database");
-        Self::from_attributes(&badge_type, &attributes)
-            .expect("invalid badge in the database")
+        let json = json!({"badge_type": badge_type, "attributes": attributes});
+        serde_json::from_value(json)
+            .expect("Invalid CI badge in the database")
     }
 }
 
 impl Model for Badge {
     fn from_row(row: &Row) -> Badge {
-        let attributes: Json = row.get("attributes");
         let badge_type: String = row.get("badge_type");
-        let mut decoder = Decoder::new(attributes);
-        let attributes = HashMap::<String, String>::decode(&mut decoder)
-            .expect("Attributes was not a json object");
-        Self::from_attributes(&badge_type, &attributes)
+        let attributes: serde_json::Value = row.get("attributes");
+        let json = json!({"badge_type": badge_type, "attributes": attributes});
+        serde_json::from_value(json)
             .expect("Invalid CI badge in the database")
     }
     fn table_name(_: Option<Badge>) -> &'static str { "badges" }
@@ -57,10 +56,7 @@ impl Model for Badge {
 
 impl Badge {
     pub fn encodable(self) -> EncodableBadge {
-        EncodableBadge {
-            badge_type: self.badge_type().to_string(),
-            attributes: self.attributes(),
-        }
+        serde_json::from_value(serde_json::to_value(self).unwrap()).unwrap()
     }
 
     pub fn badge_type(&self) -> &'static str {
@@ -71,101 +67,6 @@ impl Badge {
         }
     }
 
-    pub fn json_attributes(self) -> Json {
-        Json::Object(self.attributes().into_iter().map(|(k, v)| {
-            (k, Json::String(v))
-        }).collect())
-    }
-
-    fn attributes(self) -> HashMap<String, String> {
-        let mut attributes = HashMap::new();
-
-        match self {
-            Badge::TravisCi { branch, repository } => {
-                attributes.insert(String::from("repository"), repository);
-                if let Some(branch) = branch {
-                    attributes.insert(
-                        String::from("branch"),
-                        branch
-                    );
-                }
-            },
-            Badge::Appveyor { service, branch, repository } => {
-                attributes.insert(String::from("repository"), repository);
-                if let Some(branch) = branch {
-                    attributes.insert(
-                        String::from("branch"),
-                        branch
-                    );
-                }
-                if let Some(service) = service {
-                    attributes.insert(
-                        String::from("service"),
-                        service
-                    );
-                }
-            },
-            Badge::GitLab { branch, repository } => {
-                attributes.insert(String::from("repository"), repository);
-                if let Some(branch) = branch {
-                    attributes.insert(
-                        String::from("branch"),
-                        branch
-                    );
-                }
-            },
-        }
-
-        attributes
-    }
-
-    fn from_attributes(badge_type: &str,
-                       attributes: &HashMap<String, String>)
-                       -> Result<Badge, String> {
-        match badge_type {
-            "travis-ci" => {
-                match attributes.get("repository") {
-                    Some(repository) => {
-                        Ok(Badge::TravisCi {
-                            repository: repository.to_string(),
-                            branch: attributes.get("branch")
-                                              .map(String::to_string),
-                        })
-                    },
-                    None => Err(badge_type.to_string()),
-                }
-            },
-            "appveyor" => {
-                match attributes.get("repository") {
-                    Some(repository) => {
-                        Ok(Badge::Appveyor {
-                            repository: repository.to_string(),
-                            branch: attributes.get("branch")
-                                              .map(String::to_string),
-                            service: attributes.get("service")
-                                              .map(String::to_string),
-
-                        })
-                    },
-                    None => Err(badge_type.to_string()),
-                }
-            },
-            "gitlab" => {
-                match attributes.get("repository") {
-                    Some(repository) => {
-                        Ok(Badge::GitLab {
-                            repository: repository.to_string(),
-                            branch: attributes.get("branch")
-                                              .map(String::to_string),
-                        })
-                    },
-                    None => Err(badge_type.to_string()),
-                }
-            },
-           _ => Err(badge_type.to_string()),
-        }
-    }
-
     pub fn update_crate(conn: &GenericConnection,
                         krate: &Crate,
                         badges: HashMap<String, HashMap<String, String>>)
@@ -173,10 +74,11 @@ impl Badge {
 
         let mut invalid_badges = vec![];
 
-        let badges: Vec<_> = badges.iter().filter_map(|(k, v)| {
-            Badge::from_attributes(k, v).map_err(|invalid_badge| {
-                invalid_badges.push(invalid_badge)
-            }).ok()
+        let badges: Vec<Badge> = badges.into_iter().filter_map(|(k, v)| {
+            let json = json!({"badge_type": k, "attributes": v});
+            serde_json::from_value(json)
+                .map_err(|_| invalid_badges.push(k))
+                .ok()
         }).collect();
 
         conn.execute("\
@@ -186,12 +88,13 @@ impl Badge {
         )?;
 
         for badge in badges {
+            let json = serde_json::to_value(badge)?;
             conn.execute("\
                 INSERT INTO badges (crate_id, badge_type, attributes) \
                 VALUES ($1, $2, $3) \
                 ON CONFLICT (crate_id, badge_type) DO UPDATE \
                     SET attributes = EXCLUDED.attributes;",
-                &[&krate.id, &badge.badge_type(), &badge.json_attributes()]
+                &[&krate.id, &json["badge_type"].as_str(), &json["attributes"]]
             )?;
         }
         Ok(invalid_badges)
