@@ -97,19 +97,21 @@ impl Category {
                             slugs: &[&'a str]) -> QueryResult<Vec<&'a str>> {
         use diesel::expression::dsl::any;
 
-        let categories = categories::table
-            .filter(categories::slug.eq(any(slugs)))
-            .load::<Category>(conn)?;
-        let invalid_categories = slugs.iter().cloned()
-            .filter(|s| !categories.iter().any(|c| c.slug == *s))
-            .collect();
-        let crate_categories = categories.iter()
-            .map(|c| CrateCategory { category_id: c.id, crate_id: krate.id })
-            .collect::<Vec<_>>();
+        conn.transaction(|| {
+            let categories = categories::table
+                .filter(categories::slug.eq(any(slugs)))
+                .load::<Category>(conn)?;
+            let invalid_categories = slugs.iter().cloned()
+                .filter(|s| !categories.iter().any(|c| c.slug == *s))
+                .collect();
+            let crate_categories = categories.iter()
+                .map(|c| CrateCategory { category_id: c.id, crate_id: krate.id })
+                .collect::<Vec<_>>();
 
-        delete(CrateCategory::belonging_to(krate)).execute(conn)?;
-        insert(&crate_categories).into(crates_categories::table).execute(conn)?;
-        Ok(invalid_categories)
+            delete(CrateCategory::belonging_to(krate)).execute(conn)?;
+            insert(&crate_categories).into(crates_categories::table).execute(conn)?;
+            Ok(invalid_categories)
+        })
     }
 
     pub fn update_crate_old(conn: &GenericConnection,
@@ -237,7 +239,7 @@ pub struct NewCategory<'a> {
 }
 
 impl<'a> NewCategory<'a> {
-    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
+    pub fn find_or_create(&self, conn: &PgConnection) -> QueryResult<Category> {
         use schema::categories::dsl::*;
         use diesel::pg::upsert::*;
 

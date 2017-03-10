@@ -52,7 +52,7 @@ impl Keyword {
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
-    pub fn find_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
+    pub fn find_or_create_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
         use diesel::pg::upsert::*;
         use diesel::expression::dsl::any;
 
@@ -130,15 +130,17 @@ impl Keyword {
     pub fn update_crate(conn: &PgConnection,
                         krate: &Crate,
                         keywords: &[&str]) -> QueryResult<()> {
-        let keywords = Keyword::find_all(conn, keywords)?;
-        diesel::delete(CrateKeyword::belonging_to(krate))
-            .execute(conn)?;
-        let crate_keywords = keywords.into_iter().map(|kw| {
-            CrateKeyword { crate_id: krate.id, keyword_id: kw.id }
-        }).collect::<Vec<_>>();
-        diesel::insert(&crate_keywords).into(crates_keywords::table)
-            .execute(conn)?;
-        Ok(())
+        conn.transaction(|| {
+            let keywords = Keyword::find_or_create_all(conn, keywords)?;
+            diesel::delete(CrateKeyword::belonging_to(krate))
+                .execute(conn)?;
+            let crate_keywords = keywords.into_iter().map(|kw| {
+                CrateKeyword { crate_id: krate.id, keyword_id: kw.id }
+            }).collect::<Vec<_>>();
+            diesel::insert(&crate_keywords).into(crates_keywords::table)
+                .execute(conn)?;
+            Ok(())
+        })
     }
 
     pub fn update_crate_old(conn: &GenericConnection,

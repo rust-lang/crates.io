@@ -123,22 +123,24 @@ impl<'a> NewCrate<'a> {
         self.validate(license_file)?;
         self.ensure_name_not_reserved(conn)?;
 
-        // To avoid race conditions, we try to insert
-        // first so we know whether to add an owner
-        if let Some(krate) = self.save_new_crate(conn, uploader)? {
-            return Ok(krate)
-        }
+        conn.transaction(|| {
+            // To avoid race conditions, we try to insert
+            // first so we know whether to add an owner
+            if let Some(krate) = self.save_new_crate(conn, uploader)? {
+                return Ok(krate)
+            }
 
-        // We don't want to change the max_upload_size
-        self.max_upload_size = None;
+            // We don't want to change the max_upload_size
+            self.max_upload_size = None;
 
-        let target = crates::table.filter(
-            canon_crate_name(crates::name)
-                .eq(canon_crate_name(self.name)));
-        update(target).set(&self)
-            .returning(ALL_COLUMNS)
-            .get_result(conn)
-            .map_err(Into::into)
+            let target = crates::table.filter(
+                canon_crate_name(crates::name)
+                    .eq(canon_crate_name(self.name)));
+            update(target).set(&self)
+                .returning(ALL_COLUMNS)
+                .get_result(conn)
+                .map_err(Into::into)
+        })
     }
 
     fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
@@ -205,23 +207,25 @@ impl<'a> NewCrate<'a> {
         use schema::crates::dsl::*;
         use diesel::insert;
 
-        let maybe_inserted = insert(&self.on_conflict_do_nothing()).into(crates)
-            .returning(ALL_COLUMNS)
-            .get_result::<Crate>(conn)
-            .optional()?;
+        conn.transaction(|| {
+            let maybe_inserted = insert(&self.on_conflict_do_nothing()).into(crates)
+                .returning(ALL_COLUMNS)
+                .get_result::<Crate>(conn)
+                .optional()?;
 
-        if let Some(ref krate) = maybe_inserted {
-            let owner = CrateOwner {
-                crate_id: krate.id,
-                owner_id: user_id,
-                created_by: user_id,
-                owner_kind: OwnerKind::User as i32,
-            };
-            insert(&owner).into(crate_owners::table)
-                .execute(conn)?;
-        }
+            if let Some(ref krate) = maybe_inserted {
+                let owner = CrateOwner {
+                    crate_id: krate.id,
+                    owner_id: user_id,
+                    created_by: user_id,
+                    owner_kind: OwnerKind::User as i32,
+                };
+                insert(&owner).into(crate_owners::table)
+                    .execute(conn)?;
+            }
 
-        Ok(maybe_inserted)
+            Ok(maybe_inserted)
+        })
     }
 }
 
