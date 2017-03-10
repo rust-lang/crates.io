@@ -4,37 +4,36 @@ use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::*;
+use diesel::prelude::*;
 use diesel_full_text_search::*;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg;
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 use semver;
 use time::{Timespec, Duration};
 use url::Url;
 
-use {Model, User, Keyword, Version, Category, Badge, Replica};
 use app::{App, RequestApp};
+use badge::EncodableBadge;
+use category::EncodableCategory;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::EncodableKeyword;
-use category::EncodableCategory;
-use badge::EncodableBadge;
+use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
+use schema::*;
 use upload;
 use user::RequestUser;
-use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use util::errors::NotFound;
 use util::{read_le_u32, read_fill};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
-use schema::*;
+use {Model, User, Keyword, Version, Category, Badge, Replica};
 
 #[derive(Clone, Queryable, Identifiable, AsChangeset)]
 pub struct Crate {
@@ -719,40 +718,50 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
-    let tx = req.tx()?;
-    let num_crates = Crate::count(tx)?;
-    let num_downloads = {
-        let stmt = tx.prepare("SELECT total_downloads FROM metadata")?;
-        let rows = stmt.query(&[])?;
-        rows.iter().next().unwrap().get("total_downloads")
+    use schema::crates::dsl::*;
+
+    let conn = req.db_conn()?;
+    let num_crates = crates.count().get_result(conn)?;
+    let num_downloads = metadata::table.select(metadata::total_downloads)
+        .get_result(conn)?;
+
+    let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
+        Version::belonging_to(&krates)
+            .load::<Version>(conn)?
+            .grouped_by(&krates)
+            .into_iter()
+            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
+            .zip(krates)
+            .map(|(max_version, krate)| {
+                 Ok(krate.minimal_encodable(max_version, None))
+            }).collect()
     };
 
-    let to_crates = |stmt: pg::stmt::Statement| -> CargoResult<Vec<_>> {
-        let rows = stmt.query(&[])?;
-        rows.iter().map(|r| {
-            let krate: Crate = Model::from_row(&r);
-            let max_version = krate.max_version(tx)?;
-            Ok(krate.minimal_encodable(max_version, None))
-        }).collect()
-    };
-    let new_crates = tx.prepare("SELECT * FROM crates \
-                                        ORDER BY created_at DESC LIMIT 10")?;
-    let just_updated = tx.prepare("SELECT * FROM crates \
-                                        WHERE updated_at::timestamp(0) !=
-                                              created_at::timestamp(0)
-                                        ORDER BY updated_at DESC LIMIT 10")?;
-    let most_downloaded = tx.prepare("SELECT * FROM crates \
-                                           ORDER BY downloads DESC LIMIT 10")?;
+    let new_crates = crates.order(created_at.desc())
+        .select(ALL_COLUMNS)
+        .limit(10)
+        .load(conn)?;
+    let just_updated = crates.filter(updated_at.ne(created_at))
+        .order(updated_at.desc())
+        .select(ALL_COLUMNS)
+        .limit(10)
+        .load(conn)?;
+    let most_downloaded = crates.order(downloads.desc())
+        .select(ALL_COLUMNS)
+        .limit(10)
+        .load(conn)?;
 
-    let popular_keywords = Keyword::all(tx, "crates", 10, 0)?;
-    let popular_keywords = popular_keywords.into_iter()
-                                           .map(Keyword::encodable)
-                                           .collect();
+    let popular_keywords = keywords::table.order(keywords::crates_cnt.desc())
+        .limit(10)
+        .load(conn)?
+        .into_iter()
+        .map(Keyword::encodable)
+        .collect();
 
-    let popular_categories = Category::toplevel(tx, "crates", 10, 0)?;
-    let popular_categories = popular_categories.into_iter()
-                                               .map(Category::encodable)
-                                               .collect();
+    let popular_categories = Category::toplevel(conn, "crates", 10, 0)?
+        .into_iter()
+        .map(Category::encodable)
+        .collect();
 
     #[derive(RustcEncodable)]
     struct R {
@@ -767,9 +776,9 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R {
         num_downloads: num_downloads,
         num_crates: num_crates,
-        new_crates: to_crates(new_crates)?,
-        most_downloaded: to_crates(most_downloaded)?,
-        just_updated: to_crates(just_updated)?,
+        new_crates: encode_crates(new_crates)?,
+        most_downloaded: encode_crates(most_downloaded)?,
+        just_updated: encode_crates(just_updated)?,
         popular_keywords: popular_keywords,
         popular_categories: popular_categories,
     }))
