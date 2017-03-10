@@ -8,7 +8,6 @@
 extern crate cargo_registry;
 extern crate postgres;
 extern crate time;
-extern crate semver;
 
 use std::env;
 use std::io;
