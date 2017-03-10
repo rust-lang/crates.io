@@ -10,7 +10,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::easy::Easy;
 use diesel::prelude::*;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::PgConnection;
 use diesel::pg::upsert::*;
 use diesel_full_text_search::*;
 use license_exprs;
@@ -638,68 +638,71 @@ impl Model for Crate {
 /// Handles the `GET /crates` route.
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::sql;
+    use diesel::types::BigInt;
+
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-
-    // This is a bit of a hack, but Boxed queries in Diesel don't implement `.clone()` and we need
-    // the query twice so we can `.count` it. This function is basically free, but it'd be nice to
-    // not have to wrap this in a funciton.
-    fn crates_query<'a>(params: &'a HashMap<String, String>, user: CargoResult<&User>)
-        -> CargoResult<crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>> {
-        let mut query = crates::table.select(ALL_COLUMNS).into_boxed();
-
-        if let Some(q_string) = params.get("q") {
-            let q = plainto_tsquery(q_string);
-            query = query.filter(q.matches(crates::textsearchable_index_col));
-        } else if let Some(letter) = params.get("letter") {
-            let pattern = format!("{}%", letter.chars().next().unwrap()
-                                           .to_lowercase().collect::<String>());
-            query = query.filter(canon_crate_name(crates::name).like(pattern));
-        } else if let Some(kw) = params.get("keyword") {
-            query = query.filter(crates::id.eq_any(
-                crates_keywords::table.select(crates_keywords::crate_id)
-                    .inner_join(keywords::table)
-                    .filter(lower(keywords::keyword).eq(lower(kw)))
-            ));
-        } else if let Some(cat) = params.get("category") {
-            query = query.filter(crates::id.eq_any(
-                crates_categories::table.select(crates_categories::crate_id)
-                    .inner_join(categories::table)
-                    .filter(categories::category.eq(cat).or(
-                            categories::category.like(format!("{}::%", cat))))
-            ));
-        } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
-            query = query.filter(crates::id.eq_any((
-                crate_owners::table.select(crate_owners::crate_id)
-                    .filter(crate_owners::owner_id.eq(user_id))
-                    .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
-            )));
-        } else if params.get("following").is_some() {
-            query = query.filter(crates::id.eq_any((
-                follows::table.select(follows::crate_id)
-                    .filter(follows::user_id.eq(user?.id))
-            )));
-        }
-        Ok(query)
-    }
-
-    let mut query = crates_query(&params, req.user())?;
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
-    match (params.get("q"), sort) {
-        (Some(q), "downloads") => {
-            query = query.order((crates::name.eq(q).desc(), crates::downloads.desc()))
-        }
-        (Some(q_string), _) => {
-            let q = plainto_tsquery(q_string);
-            let rank = ts_rank_cd(crates::textsearchable_index_col, q);
-            query = query.order((crates::name.eq(q_string).desc(), rank.desc()))
-        }
-        (None, "downloads") => query = query.order(crates::downloads.desc()),
-        _ => query = query.order(crates::name.asc()),
+
+    let mut query = crates::table
+        .select((ALL_COLUMNS, sql::<BigInt>("COUNT(*) OVER ()")))
+        .limit(limit)
+        .offset(offset)
+        .into_boxed();
+
+    if sort == "downloads" {
+        query = query.order(crates::downloads.desc())
+    } else {
+        query = query.order(crates::name.asc())
     }
 
-    let crates = query.limit(limit).offset(offset).load::<Crate>(conn)?;
+    if let Some(q_string) = params.get("q") {
+        let q = plainto_tsquery(q_string);
+        query = query.filter(q.matches(crates::textsearchable_index_col));
+
+        let perfect_match = crates::name.eq(q_string).desc();
+        if sort == "downloads" {
+            query = query.order((perfect_match, crates::downloads.desc()));
+        } else {
+            let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+            query = query.order((perfect_match, rank.desc()))
+        }
+    } else if let Some(letter) = params.get("letter") {
+        let pattern = format!("{}%", letter.chars().next().unwrap()
+                                       .to_lowercase().collect::<String>());
+        query = query.filter(canon_crate_name(crates::name).like(pattern));
+    } else if let Some(kw) = params.get("keyword") {
+        query = query.filter(crates::id.eq_any(
+            crates_keywords::table.select(crates_keywords::crate_id)
+                .inner_join(keywords::table)
+                .filter(lower(keywords::keyword).eq(lower(kw)))
+        ));
+    } else if let Some(cat) = params.get("category") {
+        query = query.filter(crates::id.eq_any(
+            crates_categories::table.select(crates_categories::crate_id)
+                .inner_join(categories::table)
+                .filter(categories::category.eq(cat).or(
+                        categories::category.like(format!("{}::%", cat))))
+        ));
+    } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+        query = query.filter(crates::id.eq_any((
+            crate_owners::table.select(crate_owners::crate_id)
+                .filter(crate_owners::owner_id.eq(user_id))
+                .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+        )));
+    } else if params.get("following").is_some() {
+        query = query.filter(crates::id.eq_any((
+            follows::table.select(follows::crate_id)
+                .filter(follows::user_id.eq(req.user()?.id))
+        )));
+    }
+
+    let data = query.load::<(Crate, i64)>(conn)?;
+    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
+    let crates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
+
     let versions = Version::belonging_to(&crates)
         .load::<Version>(conn)?
         .grouped_by(&crates)
@@ -718,8 +721,6 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             .load::<Badge>(conn)?;
         Ok(krate.minimal_encodable(max_version, Some(badges)))
     }).collect::<Result<_, ::diesel::result::Error>>()?;
-
-    let total = crates_query(&params, req.user())?.count().get_result(conn)?;
 
     #[derive(RustcEncodable)]
     struct R { crates: Vec<EncodableCrate>, meta: Meta }
