@@ -10,18 +10,22 @@ use time::Duration;
 use time::Timespec;
 use url;
 
-use {Model, Crate};
 use app::RequestApp;
 use db::RequestTransaction;
+use diesel::prelude::*;
+use diesel::pg::Pg;
 use dependency::{Dependency, EncodableDependency, Kind};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
+use owner::{rights, Rights};
+use schema::versions;
 use upload;
 use user::RequestUser;
-use owner::{rights, Rights};
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
+use {Model, Crate};
 
-#[derive(Clone)]
+#[derive(Clone, Identifiable, Associations)]
+#[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
@@ -187,6 +191,40 @@ impl Version {
         conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
                      &[&yanked, &self.id])?;
         Ok(())
+    }
+
+    pub fn max<T>(versions: T) -> semver::Version where
+        T: IntoIterator<Item=semver::Version>,
+    {
+        versions.into_iter()
+            .max()
+            .unwrap_or_else(|| semver::Version {
+                major: 0,
+                minor: 0,
+                patch: 0,
+                pre: vec![],
+                build: vec![],
+            })
+    }
+}
+
+impl Queryable<versions::SqlType, Pg> for Version {
+    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool);
+
+    fn build(row: Self::Row) -> Self {
+        let features = row.6.map(|s| {
+            json::decode(&s).unwrap()
+        }).unwrap_or_else(|| HashMap::new());
+        Version {
+            id: row.0,
+            crate_id: row.1,
+            num: semver::Version::parse(&row.2).unwrap(),
+            updated_at: row.3,
+            created_at: row.4,
+            downloads: row.5,
+            features: features,
+            yanked: row.7,
+        }
     }
 }
 

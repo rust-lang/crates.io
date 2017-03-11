@@ -9,10 +9,13 @@ use std::sync::Arc;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use curl::easy::Easy;
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
+use diesel::pg::upsert::*;
+use diesel_full_text_search::*;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
-use pg::types::ToSql;
 use pg;
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
@@ -31,13 +34,14 @@ use category::EncodableCategory;
 use badge::EncodableBadge;
 use upload;
 use user::RequestUser;
-use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights};
+use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use util::errors::NotFound;
 use util::{LimitErrorReader, HashingReader};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
+use schema::*;
 
-#[derive(Clone)]
+#[derive(Clone, Queryable, Identifiable, AsChangeset)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -52,6 +56,19 @@ pub struct Crate {
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
 }
+
+/// We literally never want to select textsearchable_index_col
+/// so we provide this type and constant to pass to `.select`
+type AllColumns = (crates::id, crates::name, crates::updated_at,
+    crates::created_at, crates::downloads, crates::description,
+    crates::homepage, crates::documentation, crates::readme, crates::license,
+    crates::repository, crates::max_upload_size);
+
+pub const ALL_COLUMNS: AllColumns = (crates::id, crates::name,
+    crates::updated_at, crates::created_at, crates::downloads,
+    crates::description, crates::homepage, crates::documentation,
+    crates::readme, crates::license, crates::repository,
+    crates::max_upload_size);
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableCrate {
@@ -79,6 +96,137 @@ pub struct CrateLinks {
     pub versions: Option<String>,
     pub owners: Option<String>,
     pub reverse_dependencies: String,
+}
+
+#[derive(Insertable, AsChangeset, Default)]
+#[table_name="crates"]
+pub struct NewCrate<'a> {
+    pub name: &'a str,
+    pub description: Option<&'a str>,
+    pub homepage: Option<&'a str>,
+    pub documentation: Option<&'a str>,
+    pub readme: Option<&'a str>,
+    pub repository: Option<&'a str>,
+    pub license: Option<&'a str>,
+    pub max_upload_size: Option<i32>,
+}
+
+impl<'a> NewCrate<'a> {
+    pub fn create_or_update(
+        mut self,
+        conn: &PgConnection,
+        license_file: Option<&str>,
+        uploader: i32,
+    ) -> CargoResult<Crate> {
+        use diesel::update;
+
+        self.validate(license_file)?;
+        self.ensure_name_not_reserved(conn)?;
+
+        conn.transaction(|| {
+            // To avoid race conditions, we try to insert
+            // first so we know whether to add an owner
+            if let Some(krate) = self.save_new_crate(conn, uploader)? {
+                return Ok(krate)
+            }
+
+            // We don't want to change the max_upload_size
+            self.max_upload_size = None;
+
+            let target = crates::table.filter(
+                canon_crate_name(crates::name)
+                    .eq(canon_crate_name(self.name)));
+            update(target).set(&self)
+                .returning(ALL_COLUMNS)
+                .get_result(conn)
+                .map_err(Into::into)
+        })
+    }
+
+    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
+            let url = match url {
+                Some(s) => s,
+                None => return Ok(())
+            };
+            let url = Url::parse(url).map_err(|_| {
+                human(format!("`{}` is not a valid url: `{}`", field, url))
+            })?;
+            match &url.scheme()[..] {
+                "http" | "https" => {}
+                s => return Err(human(format!("`{}` has an invalid url \
+                                               scheme: `{}`", field, s)))
+            }
+            if url.cannot_be_a_base() {
+                return Err(human(format!("`{}` must have relative scheme \
+                                                        data: {}", field, url)))
+            }
+            Ok(())
+        }
+
+        validate_url(self.homepage, "homepage")?;
+        validate_url(self.documentation, "documentation")?;
+        validate_url(self.repository, "repository")?;
+        self.validate_license(license_file)?;
+        Ok(())
+    }
+
+    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+        if let Some(ref license) = self.license {
+            for part in license.split("/") {
+               license_exprs::validate_license_expr(part)
+                   .map_err(|e| human(format!("{}; see http://opensource.org/licenses \
+                                              for options, and http://spdx.org/licenses/ \
+                                              for their identifiers", e)))?;
+            }
+        } else if license_file.is_some() {
+            // If no license is given, but a license file is given, flag this
+            // crate as having a nonstandard license. Note that we don't
+            // actually do anything else with license_file currently.
+            self.license = Some("non-standard");
+        }
+        Ok(())
+    }
+
+    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
+        use schema::reserved_crate_names::dsl::*;
+        use diesel::select;
+        use diesel::expression::dsl::exists;
+
+        let reserved_name = select(exists(reserved_crate_names
+            .filter(canon_crate_name(name).eq(canon_crate_name(self.name)))
+            )).get_result::<bool>(conn)?;
+        if reserved_name {
+            Err(human("cannot upload a crate with a reserved name"))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> CargoResult<Option<Crate>> {
+        use schema::crates::dsl::*;
+        use diesel::insert;
+
+        conn.transaction(|| {
+            let maybe_inserted = insert(&self.on_conflict_do_nothing()).into(crates)
+                .returning(ALL_COLUMNS)
+                .get_result::<Crate>(conn)
+                .optional()?;
+
+            if let Some(ref krate) = maybe_inserted {
+                let owner = CrateOwner {
+                    crate_id: krate.id,
+                    owner_id: user_id,
+                    created_by: user_id,
+                    owner_kind: OwnerKind::User as i32,
+                };
+                insert(&owner).into(crate_owners::table)
+                    .execute(conn)?;
+            }
+
+            Ok(maybe_inserted)
+        })
+    }
 }
 
 impl Crate {
@@ -287,10 +435,8 @@ impl Crate {
         let stmt = conn.prepare("SELECT num FROM versions WHERE crate_id = $1
                                  AND yanked = 'f'")?;
         let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter()
-            .map(|r| semver::Version::parse(&r.get::<_, String>("num")).unwrap())
-            .max()
-            .unwrap_or_else(|| semver::Version::parse("0.0.0").unwrap()))
+        Ok(Version::max(rows.iter().map(|r| r.get::<_, String>("num"))
+           .map(|s| semver::Version::parse(&s).unwrap())))
     }
 
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
@@ -490,136 +636,84 @@ impl Model for Crate {
 /// Handles the `GET /crates` route.
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.tx()?;
+    use diesel::expression::dsl::sql;
+    use diesel::types::BigInt;
+
+    let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
-    let query = req.query();
-    let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
-    let sort_sql = match sort {
-        "downloads" => "crates.downloads DESC",
-        _ => "crates.name ASC",
-    };
+    let params = req.query();
+    let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
-    // Different queries for different parameters.
-    //
-    // Sure wish we had an arel-like thing here...
-    let mut pattern = String::new();
-    let mut id = -1;
-    let (mut needs_id, mut needs_pattern) = (false, false);
-    let mut args = vec![&limit as &ToSql, &offset];
-    let (q, cnt) = query.get("q").map(|query| {
-        args.insert(0, query);
-        let rank_sort_sql = match sort {
-            "downloads" => format!("{}, rank DESC", sort_sql),
-            _ => format!("rank DESC, {}", sort_sql),
-        };
-        (format!("SELECT crates.* FROM crates,
-                               plainto_tsquery($1) q,
-                               ts_rank_cd(textsearchable_index_col, q) rank
-          WHERE q @@ textsearchable_index_col
-          ORDER BY name = $1 DESC, {}
-          LIMIT $2 OFFSET $3", rank_sort_sql),
-         "SELECT COUNT(crates.*) FROM crates,
-                                      plainto_tsquery($1) q
-          WHERE q @@ textsearchable_index_col".to_string())
-    }).or_else(|| {
-        query.get("letter").map(|letter| {
-            pattern = format!("{}%", letter.chars().next().unwrap()
-                                           .to_lowercase().collect::<String>());
-            needs_pattern = true;
-            (format!("SELECT * FROM crates WHERE canon_crate_name(name) \
-                      LIKE $1 ORDER BY {} LIMIT $2 OFFSET $3", sort_sql),
-             "SELECT COUNT(*) FROM crates WHERE canon_crate_name(name) \
-              LIKE $1".to_string())
-        })
-    }).or_else(|| {
-        query.get("keyword").map(|kw| {
-            args.insert(0, kw);
-            let base = "FROM crates
-                        INNER JOIN crates_keywords
-                                ON crates.id = crates_keywords.crate_id
-                        INNER JOIN keywords
-                                ON crates_keywords.keyword_id = keywords.id
-                        WHERE lower(keywords.keyword) = lower($1)";
-            (format!("SELECT crates.* {} ORDER BY {} LIMIT $2 OFFSET $3", base, sort_sql),
-             format!("SELECT COUNT(crates.*) {}", base))
-        })
-    }).or_else(|| {
-        query.get("category").map(|cat| {
-            args.insert(0, cat);
-            let base = "FROM crates
-                        INNER JOIN crates_categories
-                                ON crates.id = crates_categories.crate_id
-                        INNER JOIN categories
-                                ON crates_categories.category_id =
-                                   categories.id
-                        WHERE categories.slug = $1 OR
-                              categories.slug LIKE $1 || '::%'";
-            (format!("SELECT DISTINCT crates.* {} ORDER BY {} LIMIT $2 OFFSET $3", base, sort_sql),
-             format!("SELECT COUNT(DISTINCT crates.*) {}", base))
-        })
-    }).or_else(|| {
-        query.get("user_id").and_then(|s| s.parse::<i32>().ok()).map(|user_id| {
-            id = user_id;
-            needs_id = true;
-            (format!("SELECT crates.* FROM crates
-                       INNER JOIN crate_owners
-                          ON crate_owners.crate_id = crates.id
-                       WHERE crate_owners.owner_id = $1
-                       AND crate_owners.owner_kind = {}
-                       ORDER BY {}
-                      LIMIT $2 OFFSET $3",
-                     OwnerKind::User as i32, sort_sql),
-             format!("SELECT COUNT(crates.*) FROM crates
-               INNER JOIN crate_owners
-                  ON crate_owners.crate_id = crates.id
-               WHERE crate_owners.owner_id = $1 \
-                 AND crate_owners.owner_kind = {}",
-                 OwnerKind::User as i32))
-        })
-    }).or_else(|| {
-        query.get("following").map(|_| {
-            needs_id = true;
-            (format!("SELECT crates.* FROM crates
-                      INNER JOIN follows
-                         ON follows.crate_id = crates.id AND
-                            follows.user_id = $1 ORDER BY
-                      {} LIMIT $2 OFFSET $3", sort_sql),
-             "SELECT COUNT(crates.*) FROM crates
-              INNER JOIN follows
-                 ON follows.crate_id = crates.id AND
-                    follows.user_id = $1".to_string())
-        })
-    }).unwrap_or_else(|| {
-        (format!("SELECT * FROM crates ORDER BY {} LIMIT $1 OFFSET $2",
-                 sort_sql),
-         "SELECT COUNT(*) FROM crates".to_string())
-    });
+    let mut query = crates::table
+        .select((ALL_COLUMNS, sql::<BigInt>("COUNT(*) OVER ()")))
+        .limit(limit)
+        .offset(offset)
+        .into_boxed();
 
-    if needs_id {
-        if id == -1 {
-            id = req.user()?.id;
+    if sort == "downloads" {
+        query = query.order(crates::downloads.desc())
+    } else {
+        query = query.order(crates::name.asc())
+    }
+
+    if let Some(q_string) = params.get("q") {
+        let q = plainto_tsquery(q_string);
+        query = query.filter(q.matches(crates::textsearchable_index_col));
+
+        let perfect_match = crates::name.eq(q_string).desc();
+        if sort == "downloads" {
+            query = query.order((perfect_match, crates::downloads.desc()));
+        } else {
+            let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+            query = query.order((perfect_match, rank.desc()))
         }
-        args.insert(0, &id);
-    } else if needs_pattern {
-        args.insert(0, &pattern);
+    } else if let Some(letter) = params.get("letter") {
+        let pattern = format!("{}%", letter.chars().next().unwrap()
+                                       .to_lowercase().collect::<String>());
+        query = query.filter(canon_crate_name(crates::name).like(pattern));
+    } else if let Some(kw) = params.get("keyword") {
+        query = query.filter(crates::id.eq_any(
+            crates_keywords::table.select(crates_keywords::crate_id)
+                .inner_join(keywords::table)
+                .filter(lower(keywords::keyword).eq(lower(kw)))
+        ));
+    } else if let Some(cat) = params.get("category") {
+        query = query.filter(crates::id.eq_any(
+            crates_categories::table.select(crates_categories::crate_id)
+                .inner_join(categories::table)
+                .filter(categories::category.eq(cat).or(
+                        categories::category.like(format!("{}::%", cat))))
+        ));
+    } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+        query = query.filter(crates::id.eq_any((
+            crate_owners::table.select(crate_owners::crate_id)
+                .filter(crate_owners::owner_id.eq(user_id))
+                .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+        )));
+    } else if params.get("following").is_some() {
+        query = query.filter(crates::id.eq_any((
+            follows::table.select(follows::crate_id)
+                .filter(follows::user_id.eq(req.user()?.id))
+        )));
     }
 
-    // Collect all the crates
-    let stmt = conn.prepare(&q)?;
-    let mut crates = Vec::new();
-    for row in stmt.query(&args)?.iter() {
-        let krate: Crate = Model::from_row(&row);
-        let badges = krate.badges(conn)?;
-        let max_version = krate.max_version(conn)?;
-        crates.push(krate.minimal_encodable(max_version, Some(badges)));
-    }
+    let data = query.load::<(Crate, i64)>(conn)?;
+    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
+    let crates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
 
-    // Query for the total count of crates
-    let stmt = conn.prepare(&cnt)?;
-    let args = if args.len() > 2 {&args[..1]} else {&args[..0]};
-    let rows = stmt.query(args)?;
-    let row = rows.iter().next().unwrap();
-    let total = row.get(0);
+    let versions = Version::belonging_to(&crates)
+        .load::<Version>(conn)?
+        .grouped_by(&crates)
+        .into_iter()
+        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
+
+    let crates = versions.zip(crates).map(|(max_version, krate)| {
+        // FIXME: If we add crate_id to the Badge enum we can eliminate
+        // this N+1
+        let badges = badges::table.filter(badges::crate_id.eq(krate.id))
+            .load::<Badge>(conn)?;
+        Ok(krate.minimal_encodable(max_version, Some(badges)))
+    }).collect::<Result<_, ::diesel::result::Error>>()?;
 
     #[derive(RustcEncodable)]
     struct R { crates: Vec<EncodableCrate>, meta: Meta }
@@ -781,11 +875,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Update all keywords for this crate
-    Keyword::update_crate(req.tx()?, &krate, &keywords)?;
+    Keyword::update_crate_old(req.tx()?, &krate, &keywords)?;
 
     // Update all categories for this crate, collecting any invalid categories
     // in order to be able to warn about them
-    let ignored_invalid_categories = Category::update_crate(req.tx()?, &krate, &categories)?;
+    let ignored_invalid_categories = Category::update_crate_old(req.tx()?, &krate, &categories)?;
 
     // Update all badges for this crate, collecting any invalid badges in
     // order to be able to warn about them
@@ -1202,3 +1296,7 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     struct Meta { total: i64 }
     Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }
+
+use diesel::types::Text;
+sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
+sql_function!(lower, lower_t, (x: Text) -> Text);
