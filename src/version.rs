@@ -192,6 +192,20 @@ impl Version {
                      &[&yanked, &self.id])?;
         Ok(())
     }
+
+    pub fn max<T>(versions: T) -> semver::Version where
+        T: IntoIterator<Item=semver::Version>,
+    {
+        versions.into_iter()
+            .max()
+            .unwrap_or_else(|| semver::Version {
+                major: 0,
+                minor: 0,
+                patch: 0,
+                pre: vec![],
+                build: vec![],
+            })
+    }
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {

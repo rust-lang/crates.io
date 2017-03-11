@@ -183,7 +183,6 @@ fn new_user(login: &str) -> NewUser {
         name: None,
         gh_avatar: None,
         gh_access_token: "some random token",
-        api_token: "some random token",
     }
 }
 

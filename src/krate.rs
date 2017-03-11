@@ -435,10 +435,8 @@ impl Crate {
         let stmt = conn.prepare("SELECT num FROM versions WHERE crate_id = $1
                                  AND yanked = 'f'")?;
         let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter()
-            .map(|r| semver::Version::parse(&r.get::<_, String>("num")).unwrap())
-            .max()
-            .unwrap_or_else(|| semver::Version::parse("0.0.0").unwrap()))
+        Ok(Version::max(rows.iter().map(|r| r.get::<_, String>("num"))
+           .map(|s| semver::Version::parse(&s).unwrap())))
     }
 
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
@@ -707,12 +705,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .load::<Version>(conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| {
-            versions.into_iter()
-                .map(|v| v.num)
-                .max()
-                .unwrap_or_else(|| semver::Version::parse("0.0.0").unwrap())
-        });
+        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
 
     let crates = versions.zip(crates).map(|(max_version, krate)| {
         // FIXME: If we add crate_id to the Badge enum we can eliminate
