@@ -219,10 +219,10 @@ fn sign_in_as(req: &mut Request, user: &User) {
 }
 
 fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
-    mock_crate_vers(req, krate, "1.0.0")
+    mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap())
 }
 
-fn mock_crate_vers(req: &mut Request, krate: Crate, v: &str)
+fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                    -> (Crate, Version) {
     let user = req.extensions().find::<User>().unwrap();
     let mut krate = Crate::find_or_insert(req.tx().unwrap(), &krate.name,
@@ -234,8 +234,7 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &str)
                                           &krate.license,
                                           &None,
                                           krate.max_upload_size).unwrap();
-    let v = semver::Version::parse(v).unwrap();
-    let v = krate.add_version(req.tx().unwrap(), &v, &HashMap::new(), &[]);
+    let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
 }
 

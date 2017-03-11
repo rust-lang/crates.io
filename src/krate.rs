@@ -5,7 +5,6 @@ use std::io::prelude::*;
 use std::io;
 use std::mem;
 use std::sync::Arc;
-use std::borrow::Cow;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -65,7 +64,7 @@ pub struct EncodableCrate {
     pub badges: Option<Vec<EncodableBadge>>,
     pub created_at: String,
     pub downloads: i32,
-    pub max_version: Cow<'static, str>,
+    pub max_version: String,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -233,13 +232,13 @@ impl Crate {
     }
 
     pub fn minimal_encodable(self,
-                             max_version: Cow<'static, str>,
+                             max_version: semver::Version,
                              badges: Option<Vec<Badge>>) -> EncodableCrate {
         self.encodable(max_version, None, None, None, badges)
     }
 
     pub fn encodable(self,
-                     max_version: Cow<'static, str>,
+                     max_version: semver::Version,
                      versions: Option<Vec<i32>>,
                      keywords: Option<&[Keyword]>,
                      categories: Option<&[Category]>,
@@ -269,7 +268,7 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges: badges,
-            max_version: max_version,
+            max_version: max_version.to_string(),
             documentation: documentation,
             homepage: homepage,
             description: description,
@@ -284,14 +283,14 @@ impl Crate {
         }
     }
 
-    pub fn max_version(&self, conn: &GenericConnection) -> CargoResult<Cow<'static, str>> {
+    pub fn max_version(&self, conn: &GenericConnection) -> CargoResult<semver::Version> {
         let stmt = conn.prepare("SELECT num FROM versions WHERE crate_id = $1
                                  AND yanked = 'f'")?;
         let rows = stmt.query(&[&self.id])?;
         Ok(rows.iter()
-            .map(|r| Cow::Owned(r.get("num")))
-            .max_by_key(|v| semver::Version::parse(&v).ok())
-            .unwrap_or_else(|| Cow::Borrowed("0.0.0")))
+            .map(|r| semver::Version::parse(&r.get::<_, String>("num")).unwrap())
+            .max()
+            .unwrap_or_else(|| semver::Version::parse("0.0.0").unwrap()))
     }
 
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
@@ -389,7 +388,7 @@ impl Crate {
                        features: &HashMap<String, Vec<String>>,
                        authors: &[String])
                        -> CargoResult<Version> {
-        match Version::find_by_num(conn, self.id, &ver.to_string())? {
+        match Version::find_by_num(conn, self.id, ver)? {
             Some(..) => {
                 return Err(human(format!("crate version `{}` is already uploaded",
                                          ver)))
