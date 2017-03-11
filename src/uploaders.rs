@@ -72,14 +72,14 @@ impl Uploader {
                             Ok(data.len())
                         }).unwrap();
                         s3req.perform().chain_error(|| {
-                            internal(format!("failed to upload to S3: `{}`", path))
+                            internal(&format_args!("failed to upload to S3: `{}`", path))
                         })?;
                     }
                     (response, body.finalize())
                 };
                 if handle.response_code().unwrap() != 200 {
                     let response = String::from_utf8_lossy(&response);
-                    return Err(internal(format!("failed to get a 200 response from S3: {}",
+                    return Err(internal(&format_args!("failed to get a 200 response from S3: {}",
                                                 response)))
                 }
 

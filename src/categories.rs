@@ -38,7 +38,7 @@ fn required_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> CargoResul
     toml.get(key)
         .and_then(toml::Value::as_str)
         .chain_error(|| {
-            internal(format!("Expected category TOML attribute '{}' to be a String", key))
+            internal(&format_args!("Expected category TOML attribute '{}' to be a String", key))
         })
 }
 
@@ -53,7 +53,7 @@ fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> 
 
     for (slug, details) in categories {
         let details = details.as_table().chain_error(|| {
-            internal(format!("category {} was not a TOML table", slug))
+            internal(&format_args!("category {} was not a TOML table", slug))
         })?;
 
         let category = Category::from_parent(
@@ -65,7 +65,7 @@ fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> 
 
         if let Some(categories) = details.get("categories") {
             let categories = categories.as_table().chain_error(|| {
-                internal(format!("child categories of {} were not a table", slug))
+                internal(&format_args!("child categories of {} were not a table", slug))
             })?;
 
             result.extend(

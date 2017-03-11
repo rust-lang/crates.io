@@ -124,7 +124,7 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(whitelist) {
-            return Err(human(format!("organization cannot contain special \
+            return Err(human(&format_args!("organization cannot contain special \
                                         characters like {}", c)));
         }
 
@@ -144,7 +144,7 @@ impl Team {
 
         let team = teams.into_iter().find(|team| team.slug == team_name)
             .ok_or_else(|| {
-                human(format!("could not find the github team {}/{}",
+                human(&format_args!("could not find the github team {}/{}",
                               org_name, team_name))
             })?;
 
@@ -239,11 +239,11 @@ impl Owner {
                          name: &str) -> CargoResult<Owner> {
         let owner = if name.contains(":") {
             Owner::Team(Team::find_by_login(conn, name).map_err(|_|
-                human(format!("could not find team with name {}", name))
+                human(&format_args!("could not find team with name {}", name))
             )?)
         } else {
             Owner::User(User::find_by_login(conn, name).map_err(|_|
-                human(format!("could not find user with login `{}`", name))
+                human(&format_args!("could not find user with login `{}`", name))
             )?)
         };
         Ok(owner)

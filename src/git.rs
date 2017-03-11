@@ -81,7 +81,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
         File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
         let new = prev.lines().map(|line| {
             let mut git_crate = json::decode::<Crate>(line).map_err(|_| {
-                internal(format!("couldn't decode: `{}`", line))
+                internal(&format_args!("couldn't decode: `{}`", line))
             })?;
             if git_crate.name != krate ||
                git_crate.vers.to_string() != version.to_string() {

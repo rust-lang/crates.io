@@ -207,7 +207,7 @@ pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
     })
 }
 
-pub fn internal<S: fmt::Display>(error: S) -> Box<CargoError> {
+pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
         detail: None,
@@ -216,7 +216,7 @@ pub fn internal<S: fmt::Display>(error: S) -> Box<CargoError> {
     })
 }
 
-pub fn human<S: fmt::Display>(error: S) -> Box<CargoError> {
+pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
         detail: None,
