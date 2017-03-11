@@ -142,7 +142,9 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            drop(self.app.config.uploader.delete(self.app.clone(), &path));
+            if let Err(e) = self.app.config.uploader.delete(self.app.clone(), &path) {
+                println!("unable to delete {}, {:?}", path, e);
+            }
         }
     }
 }
