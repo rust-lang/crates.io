@@ -25,7 +25,7 @@ use util::{RequestUtils, CargoResult, ChainError, internal, human};
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
-    pub num: semver::Version,
+    pub num: String,
     pub updated_at: Timespec,
     pub created_at: Timespec,
     pub downloads: i32,
@@ -61,9 +61,8 @@ pub struct VersionLinks {
 impl Version {
     pub fn find_by_num(conn: &GenericConnection,
                        crate_id: i32,
-                       num: &semver::Version)
+                       num: &str)
                        -> CargoResult<Option<Version>> {
-        let num = num.to_string();
         let stmt = conn.prepare("SELECT * FROM versions \
                                       WHERE crate_id = $1 AND num = $2")?;
         let rows = stmt.query(&[&crate_id, &num])?;
@@ -192,7 +191,6 @@ impl Version {
 
 impl Model for Version {
     fn from_row(row: &Row) -> Version {
-        let num: String = row.get("num");
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {
             json::decode(&s).unwrap()
@@ -200,7 +198,7 @@ impl Model for Version {
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
-            num: semver::Version::parse(&num).unwrap(),
+            num: row.get("num"),
             updated_at: row.get("updated_at"),
             created_at: row.get("created_at"),
             downloads: row.get("downloads"),
@@ -271,9 +269,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
-    let semver = semver::Version::parse(semver).map_err(|_| {
-        human(format!("invalid semver: {}", semver))
-    })?;
     let tx = req.tx()?;
     let krate = Crate::find_by_name(tx, crate_name)?;
     let version = Version::find_by_num(tx, krate.id, &semver)?;
