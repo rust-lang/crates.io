@@ -4,6 +4,7 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
+use semver;
 use git2;
 use rustc_serialize::json;
 
@@ -68,7 +69,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     })
 }
 
-pub fn yank(app: &App, krate: &str, version: &str,
+pub fn yank(app: &App, krate: &str, version: &semver::Version,
             yanked: bool) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;

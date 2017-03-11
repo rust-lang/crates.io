@@ -10,6 +10,7 @@
 extern crate cargo_registry;
 extern crate postgres;
 extern crate time;
+extern crate semver;
 
 use std::env;
 use std::io;
@@ -37,6 +38,7 @@ fn delete(tx: &postgres::transaction::Transaction) {
         None => { println!("needs a version argument"); return }
         Some(s) => s,
     };
+    let version = semver::Version::parse(&version).unwrap();
 
     let krate = Crate::find_by_name(tx, &name).unwrap();
     let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
