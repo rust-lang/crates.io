@@ -195,10 +195,8 @@ categories will be synced from this file.
 
 **DISCLAIMER: The process of setting up a mirror is a work-in-progress and is
 likely to change. It is not currently recommended for mission-critical
-production use. It also requires a version of cargo newer than 0.13.0-nightly
-(f09ef68 2016-08-02); the version of cargo currently on rustc's beta channel
-fulfils this requirement and will be shipped with rustc 1.12.0 scheduled to be
-released on 2016-09-29.**
+production use. It also requires Cargo from Rust distribution 1.12.0 or
+later.**
 
 ### Current functionality: a read-only, download-API-only mirror
 
@@ -249,10 +247,8 @@ to your API server.
 
 ### Local Cargo Setup
 
-**NOTE: The following configuration requires a cargo version newer than
-0.13.0-nightly (f09ef68 2016-08-02). The version of cargo that comes with rust
-1.12.0 fulfils this requirement; this version is currently on the beta channel
-and is scheduled to be released on 2016-09-29.**
+NOTE: The following configuration requires Cargo from Rust 1.12.0
+distribution or later.
 
 In the project where you want to use your mirror, change your `.cargo/config`
 to replace the crates.io source to point to your crates index:
@@ -265,9 +261,4 @@ registry = "https://[host and path to your git server]/crates.io-index"
 
 [source.crates-io]
 replace-with = "mirror"
-registry = 'https://doesnt-matter-but-must-be-present'
 ```
-
-Once [rust-lang/cargo#3089](https://github.com/rust-lang/cargo/pull/3089) is
-released, it won't be necessary to specify a registry URL for a source being
-replaced.
