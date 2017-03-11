@@ -27,7 +27,7 @@ test('navigating to the all versions page', function(assert) {
     click('#crate-versions span.small a');
 
     andThen(function() {
-        matchesText(assert, '.info', /All 12 versions of nanomsg since December \d+, 2014/);
+        matchesText(assert, '.info', /All 13 versions of nanomsg since December \d+, 2014/);
     });
 });
 

@@ -20,11 +20,12 @@ export default {
             "version_downloads": "/api/v1/crates/nanomsg/downloads",
             "versions": null
         },
-        "max_version": "0.6.1",
+        "max_version": "0.7.0-alpha",
         "name": "nanomsg",
         "repository": "https://github.com/thehydroimpulse/nanomsg.rs",
-        "updated_at": "2016-12-27T08:40:00Z",
+        "updated_at": "2016-12-28T08:40:00Z",
         "versions": [
+            40906,
             40905,
             28431,
             21273,
@@ -48,6 +49,26 @@ export default {
         }
     ],
     "versions": [
+        {
+            "crate": "nanomsg",
+            "created_at": "2016-12-28T08:40:00Z",
+            "dl_path": "/api/v1/crates/nanomsg/0.7.0-alpha/download",
+            "downloads": 260,
+            "features": {
+                "bundled": [
+                    "nanomsg-sys/bundled"
+                ]
+            },
+            "id": 40906,
+            "links": {
+                "authors": "/api/v1/crates/nanomsg/0.7.0-alpha/authors",
+                "dependencies": "/api/v1/crates/nanomsg/0.7.0-alpha/dependencies",
+                "version_downloads": "/api/v1/crates/nanomsg/0.7.0-alpha/downloads"
+            },
+            "num": "0.7.0-alpha",
+            "updated_at": "2016-12-28T08:40:00Z",
+            "yanked": false
+        },
         {
             "crate": "nanomsg",
             "created_at": "2016-12-27T08:40:00Z",
