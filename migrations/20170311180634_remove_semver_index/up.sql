@@ -1,0 +1,1 @@
+DROP INDEX versions_to_semver_no_prerelease_idx;
