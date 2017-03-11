@@ -148,7 +148,7 @@ mod test {
 
     fn user(conn: &postgres::transaction::Transaction) -> User{
         User::find_or_insert(conn, 2, "login", None, None, None,
-                             "access_token", "api_token").unwrap()
+                             "access_token").unwrap()
     }
 
     fn crate_downloads(tx: &postgres::transaction::Transaction, id: i32, expected: usize) {

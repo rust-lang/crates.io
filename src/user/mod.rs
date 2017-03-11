@@ -44,7 +44,6 @@ pub struct NewUser<'a> {
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: &'a str,
-    pub api_token: &'a str,
 }
 
 impl<'a> NewUser<'a> {
@@ -53,8 +52,7 @@ impl<'a> NewUser<'a> {
                email: Option<&'a str>,
                name: Option<&'a str>,
                gh_avatar: Option<&'a str>,
-               gh_access_token: &'a str,
-               api_token: &'a str) -> Self {
+               gh_access_token: &'a str) -> Self {
         NewUser {
             gh_id: gh_id,
             gh_login: gh_login,
@@ -62,7 +60,6 @@ impl<'a> NewUser<'a> {
             name: name,
             gh_avatar: gh_avatar,
             gh_access_token: gh_access_token,
-            api_token: api_token,
         }
     }
 
@@ -134,8 +131,7 @@ impl User {
                           email: Option<&str>,
                           name: Option<&str>,
                           avatar: Option<&str>,
-                          access_token: &str,
-                          api_token: &str) -> CargoResult<User> {
+                          access_token: &str) -> CargoResult<User> {
         // TODO: this is racy, but it looks like any other solution is...
         //       interesting! For now just do the racy thing which will report
         //       more errors than it needs to.
@@ -159,13 +155,12 @@ impl User {
             None => {}
         }
         let stmt = conn.prepare("INSERT INTO users
-                                      (email, gh_access_token, api_token,
+                                      (email, gh_access_token,
                                        gh_login, name, gh_avatar, gh_id)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7)
+                                      VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *")?;
         let rows = stmt.query(&[&email,
             &access_token,
-            &api_token,
             &login,
             &name,
             &avatar,
@@ -173,11 +168,6 @@ impl User {
         Ok(Model::from_row(&rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
         })?))
-    }
-
-    /// Generates a new crates.io API token.
-    pub fn new_api_token() -> String {
-        thread_rng().gen_ascii_chars().take(32).collect()
     }
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
@@ -300,8 +290,6 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
 
-    // Into the database!
-    let api_token = User::new_api_token();
     let user = User::find_or_insert(req.tx()?,
                                     ghuser.id,
                                     &ghuser.login,
@@ -311,8 +299,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
                                         .map(|s| &s[..]),
                                     ghuser.avatar_url.as_ref()
                                         .map(|s| &s[..]),
-                                    &token.access_token,
-                                    &api_token)?;
+                                    &token.access_token)?;
     req.session().insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     me(req)
@@ -328,10 +315,12 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
 
-    let token = User::new_api_token();
     let conn = req.tx()?;
-    conn.execute("UPDATE users SET api_token = $1 WHERE id = $2",
-                 &[&token, &user.id])?;
+    let rows = conn.query("UPDATE users SET api_token = DEFAULT \
+                           WHERE id = $1 RETURNING api_token", &[&user.id])?;
+    let token = rows.iter().next()
+        .map(|r| r.get("api_token"))
+        .chain_error(|| NotFound)?;
 
     #[derive(RustcEncodable)]
     struct R { api_token: String }
@@ -423,4 +412,51 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     #[derive(RustcEncodable)]
     struct Meta { more: bool }
     Ok(req.json(&R{ versions: versions, crates: crates, meta: Meta { more: more } }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use diesel::pg::PgConnection;
+    use dotenv::dotenv;
+    use std::env;
+
+    fn connection() -> PgConnection {
+        let _ = dotenv();
+        let database_url = env::var("TEST_DATABASE_URL")
+            .expect("TEST_DATABASE_URL must be set to run tests");
+        let conn = PgConnection::establish(&database_url).unwrap();
+        conn.begin_test_transaction().unwrap();
+        conn
+    }
+
+    #[test]
+    fn new_users_have_different_api_tokens() {
+        let conn = connection();
+        let user1 = NewUser::new(1, "foo", None, None, None, "foo")
+            .create_or_update(&conn).unwrap();
+        let user2 = NewUser::new(2, "bar", None, None, None, "bar")
+            .create_or_update(&conn).unwrap();
+
+        assert_ne!(user1.id, user2.id);
+        assert_ne!(user1.api_token, user2.api_token);
+        assert_eq!(32, user1.api_token.len());
+    }
+
+    #[test]
+    fn updating_existing_user_doesnt_change_api_token() {
+        let conn = connection();
+        let user_after_insert = NewUser::new(1, "foo", None, None, None, "foo")
+            .create_or_update(&conn).unwrap();
+        let original_token = user_after_insert.api_token;
+        NewUser::new(1, "bar", None, None, None, "bar_token")
+            .create_or_update(&conn).unwrap();
+        let mut users = users::table.load::<User>(&conn).unwrap();
+        assert_eq!(1, users.len());
+        let user = users.pop().unwrap();
+
+        assert_eq!("bar", user.gh_login);
+        assert_eq!("bar_token", user.gh_access_token);
+        assert_eq!(original_token, user.api_token);
+    }
 }
