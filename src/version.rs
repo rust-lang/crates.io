@@ -89,8 +89,8 @@ impl Version {
         let ret: Version = Model::from_row(&rows.iter().next().chain_error(|| {
             internal("no version returned")
         })?);
-        for author in authors.iter() {
-            ret.add_author(conn, &author)?;
+        for author in authors {
+            ret.add_author(conn, author)?;
         }
         Ok(ret)
     }
@@ -100,8 +100,8 @@ impl Version {
     }
 
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
-        let Version { id, crate_id: _, num, updated_at, created_at,
-                      downloads, features, yanked } = self;
+        let Version { id, num, updated_at, created_at,
+                      downloads, features, yanked, .. } = self;
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
@@ -134,10 +134,10 @@ impl Version {
             human(&format_args!("no known crate named `{}`", &**name))
         })?;
         if dep.version_req.0 == semver::VersionReq::parse("*").unwrap() {
-            return Err(human(&format_args!("wildcard (`*`) dependency constraints are not allowed \
-                                      on crates.io. See http://doc.crates.io/faq.html#can-\
-                                      libraries-use--as-a-version-for-their-dependencies for more \
-                                      information")));
+            return Err(human("wildcard (`*`) dependency constraints are not allowed \
+                              on crates.io. See http://doc.crates.io/faq.html#can-\
+                              libraries-use--as-a-version-for-their-dependencies for more \
+                              information"));
         }
         let features: Vec<String> = dep.features.iter().map(|s| {
             s[..].to_string()
@@ -213,7 +213,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
     fn build(row: Self::Row) -> Self {
         let features = row.6.map(|s| {
             json::decode(&s).unwrap()
-        }).unwrap_or_else(|| HashMap::new());
+        }).unwrap_or_else(HashMap::new);
         Version {
             id: row.0,
             crate_id: row.1,
@@ -233,7 +233,7 @@ impl Model for Version {
         let features: Option<String> = row.get("features");
         let features = features.map(|s| {
             json::decode(&s).unwrap()
-        }).unwrap_or_else(|| HashMap::new());
+        }).unwrap_or_else(HashMap::new);
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
@@ -267,7 +267,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     //
     // TODO: can rust-postgres do this for us?
     let mut versions = Vec::new();
-    if ids.len() > 0 {
+    if !ids.is_empty() {
         let stmt = conn.prepare("\
             SELECT versions.*, crates.name AS crate_name
               FROM versions
@@ -340,7 +340,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let cutoff_end_date = req.query().get("before_date")
         .and_then(|d| strptime(d, "%Y-%m-%d").ok())
-        .unwrap_or(now_utc()).to_timespec();
+        .unwrap_or_else(now_utc).to_timespec();
     let cutoff_start_date = cutoff_end_date + Duration::days(-89);
 
     let tx = req.tx()?;
@@ -386,7 +386,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let user = req.user()?;
     let tx = req.tx()?;
     let owners = krate.owners(tx)?;
-    if rights(req.app(), &owners, &user)? < Rights::Publish {
+    if rights(req.app(), &owners, user)? < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"))
     }
 

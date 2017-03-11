@@ -3,6 +3,9 @@
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
 //! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
 //! [user](user/index.html) and [version](version/index.html) modules.
+#![deny(warnings)]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
@@ -162,7 +165,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env != Env::Test {
         m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
     }
-    m.around(util::Head::new());
+    m.around(util::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
     m.add(conduit_cookie::SessionMiddleware::new("cargo_session",
@@ -173,7 +176,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
     m.add(user::Middleware);
     if env != Env::Test {
-        m.around(dist::Middleware::new());
+        m.around(dist::Middleware::default());
     }
 
     return m;
@@ -190,7 +193,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             println!("  path: {}", req.path());
             println!("  query_string: {:?}", req.query_string());
             println!("  remote_addr: {:?}", req.remote_addr());
-            for &(k, ref v) in req.headers().all().iter() {
+            for &(k, ref v) in &req.headers().all() {
                 println!("  hdr: {}={:?}", k, v);
             }
             Ok(())
@@ -200,7 +203,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
                  -> Result<conduit::Response, Box<Error+Send>> {
             res.map(|res| {
                 println!("  <- {:?}", res.status);
-                for (k, v) in res.headers.iter() {
+                for (k, v) in &res.headers {
                     println!("  <- {} {:?}", k, v);
                 }
                 res
@@ -219,8 +222,7 @@ pub fn encode_time(ts: time::Timespec) -> String {
 
 pub fn env(s: &str) -> String {
     dotenv::dotenv().ok();
-    match ::std::env::var(s) {
-        Ok(s) => s,
-        Err(_) => panic!("must have `{}` defined", s),
-    }
+    ::std::env::var(s).unwrap_or_else(|_| {
+        panic!("must have `{}` defined", s)
+    })
 }

@@ -42,6 +42,7 @@ diesel_full_text_search = "0.12.0"
 serde_json = "0.9.9"
 serde_derive = "0.9.11"
 serde = "0.9.11"
+clippy = { version = "=0.0.118", optional = true }
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
@@ -54,10 +55,10 @@ conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
 
-
 [dev-dependencies]
 conduit-test = "0.8"
 bufstream = "0.1"
 
 [features]
 unstable = []
+lint = ["clippy"]

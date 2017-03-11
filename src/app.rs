@@ -58,7 +58,7 @@ impl App {
             .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
-        return App {
+        App {
             database: db::pool(&config.db_url, db_config),
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
             github: github,
@@ -66,15 +66,15 @@ impl App {
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
-        };
+        }
     }
 
     pub fn handle(&self) -> Easy {
         let mut handle = Easy::new();
-        if let Some(ref proxy) = self.config.uploader.proxy() {
+        if let Some(proxy) = self.config.uploader.proxy() {
             handle.proxy(proxy).unwrap();
         }
-        return handle
+        handle
     }
 }
 

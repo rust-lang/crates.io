@@ -21,8 +21,7 @@ pub struct EncodableVersionDownload {
 
 impl VersionDownload {
     pub fn encodable(self) -> EncodableVersionDownload {
-        let VersionDownload { id, version_id, downloads, counted: _,
-                              date } = self;
+        let VersionDownload { id, version_id, downloads, date, .. } = self;
         EncodableVersionDownload {
             id: id,
             version: version_id,

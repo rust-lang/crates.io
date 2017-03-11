@@ -6,14 +6,9 @@ use conduit_middleware::AroundMiddleware;
 
 use util::RequestProxy;
 
+#[derive(Default)]
 pub struct Head {
     handler: Option<Box<Handler>>,
-}
-
-impl Head {
-    pub fn new() -> Head {
-        Head { handler: None }
-    }
 }
 
 impl AroundMiddleware for Head {

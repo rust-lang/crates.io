@@ -41,6 +41,13 @@ addons:
       - libelf-dev
       - libdw-dev
 
+matrix:
+  include:
+  - rust: nightly-2017-03-04
+    env: CLIPPY=YESPLEASE
+    script:
+    - cargo rustc --lib --features "lint" -- -Zno-trans
+
 env:
   global:
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test

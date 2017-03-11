@@ -37,7 +37,7 @@ impl conduit_middleware::Middleware for Middleware {
 
                         // Look for a user in the database with a matching API token
                         let tx = req.tx().map_err(std_error)?;
-                        match User::find_by_api_token(tx, &headers[0]) {
+                        match User::find_by_api_token(tx, headers[0]) {
                             Ok(user) => user,
                             Err(..) => return Ok(())
                         }

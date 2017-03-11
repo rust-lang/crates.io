@@ -11,8 +11,8 @@ pub struct Middleware {
     dist: Static,
 }
 
-impl Middleware {
-    pub fn new() -> Middleware {
+impl Default for  Middleware {
+    fn default() -> Middleware {
         Middleware {
             handler: None,
             dist: Static::new("dist"),

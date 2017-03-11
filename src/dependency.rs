@@ -18,6 +18,12 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
+pub struct ReverseDependency {
+    dependency: Dependency,
+    crate_name: String,
+    crate_downloads: i32,
+}
+
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableDependency {
     pub id: i32,
@@ -42,6 +48,8 @@ pub enum Kind {
 }
 
 impl Dependency {
+    // FIXME: Encapsulate this in a `NewDependency` struct
+    #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
     pub fn insert(conn: &GenericConnection, version_id: i32, crate_id: i32,
                   req: &semver::VersionReq, kind: Kind,
                   optional: bool, default_features: bool,
@@ -88,6 +96,12 @@ impl Dependency {
     }
 }
 
+impl ReverseDependency {
+    pub fn encodable(self) -> EncodableDependency {
+        self.dependency.encodable(&self.crate_name, Some(self.crate_downloads))
+    }
+}
+
 impl Model for Dependency {
     fn from_row(row: &Row) -> Dependency {
         let req: String = row.get("req");
@@ -110,4 +124,16 @@ impl Model for Dependency {
     }
 
     fn table_name(_: Option<Dependency>) -> &'static str { "dependencies" }
+}
+
+impl Model for ReverseDependency {
+    fn from_row(row: &Row) -> Self {
+        ReverseDependency {
+            dependency: Model::from_row(row),
+            crate_name: row.get("crate_name"),
+            crate_downloads: row.get("crate_downloads"),
+        }
+    }
+
+    fn table_name(_: Option<Self>) -> &'static str { panic!("no table") }
 }

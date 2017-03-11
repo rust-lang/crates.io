@@ -153,7 +153,7 @@ impl Transaction {
         Ok(&**self.slot.borrow().unwrap())
     }
 
-    fn tx<'a>(&'a self) -> CargoResult<&'a (GenericConnection + 'a)> {
+    fn tx(&self) -> CargoResult<&GenericConnection> {
         // Similar to above, the transaction for this request is actually tied
         // to the connection in the request itself, not 'static. We transmute it
         // to static as its paired with the inner connection to achieve the
@@ -167,7 +167,7 @@ impl Transaction {
             }
         }
         let tx = self.tx.borrow();
-        let tx: &'a pg::transaction::Transaction<'static> = tx.unwrap();
+        let tx: &pg::transaction::Transaction<'static> = tx.unwrap();
         Ok(tx)
     }
 
@@ -201,7 +201,7 @@ impl Middleware for TransactionMiddleware {
                 Box::new(e) as Box<Error + Send>
             })?;
         }
-        return res
+        res
     }
 }
 

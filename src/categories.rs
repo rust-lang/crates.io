@@ -58,8 +58,8 @@ fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> 
 
         let category = Category::from_parent(
             slug,
-            required_string_from_toml(&details, "name")?,
-            optional_string_from_toml(&details, "description"),
+            required_string_from_toml(details, "name")?,
+            optional_string_from_toml(details, "description"),
             parent,
         );
 
@@ -92,7 +92,7 @@ pub fn sync() -> CargoResult<()> {
         "Could not convert categories from TOML"
     );
 
-    for category in categories.iter() {
+    for category in &categories {
         tx.execute("\
             INSERT INTO categories (slug, category, description) \
             VALUES (LOWER($1), $2, $3) \
@@ -103,7 +103,7 @@ pub fn sync() -> CargoResult<()> {
         )?;
     }
 
-    let in_clause = categories.iter().map(|ref category| {
+    let in_clause = categories.iter().map(|category| {
         format!("LOWER('{}')", category.slug)
     }).collect::<Vec<_>>().join(",");
 

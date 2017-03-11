@@ -137,9 +137,8 @@ impl User {
             &avatar,
             &login,
             &id])?;
-        match rows.iter().next() {
-            Some(ref row) => return Ok(Model::from_row(row)),
-            None => {}
+        if let Some(ref row) = rows.iter().next() {
+            return Ok(Model::from_row(row));
         }
         let stmt = conn.prepare("INSERT INTO users
                                       (email, gh_access_token,
@@ -159,8 +158,7 @@ impl User {
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
-        let User { id, email, api_token: _, gh_access_token: _,
-                   name, gh_login, avatar, gh_id: _ } = self;
+        let User { id, email, name, gh_login, avatar, .. } = self;
         EncodableUser {
             id: id,
             email: email,
@@ -246,8 +244,8 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     // Parse the url query
     let mut query = req.query();
-    let code = query.remove("code").unwrap_or(String::new());
-    let state = query.remove("state").unwrap_or(String::new());
+    let code = query.remove("code").unwrap_or_default();
+    let state = query.remove("state").unwrap_or_default();
 
     // Make sure that the state we just got matches the session state that we
     // should have issued earlier.
@@ -273,7 +271,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         .map_err(|s| human(&s))?;
 
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
-    let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
+    let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
 
     let user = User::find_or_insert(req.tx()?,
                                     ghuser.id,

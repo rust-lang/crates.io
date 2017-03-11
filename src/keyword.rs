@@ -110,14 +110,14 @@ impl Keyword {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        if name.len() == 0 { return false }
+        if name.is_empty() { return false }
         name.chars().next().unwrap().is_alphanumeric() &&
             name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
             name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {
-        let Keyword { id: _, crates_cnt, keyword, created_at } = self;
+        let Keyword { crates_cnt, keyword, created_at, .. } = self;
         EncodableKeyword {
             id: keyword.clone(),
             created_at: ::encode_time(created_at),
@@ -150,8 +150,8 @@ impl Keyword {
             (&kw.keyword[..], kw)
         }).collect::<HashMap<_, _>>();
         let new_kws = keywords.iter().map(|k| {
-            let kw = Keyword::find_or_insert(conn, &k)?;
-            Ok((&k[..], kw))
+            let kw = Keyword::find_or_insert(conn, k)?;
+            Ok((k.as_str(), kw))
         }).collect::<CargoResult<HashMap<_, _>>>()?;
 
         let to_rm = old_kws.iter().filter(|&(kw, _)| {
@@ -161,14 +161,14 @@ impl Keyword {
             !old_kws.contains_key(kw)
         }).map(|(_, v)| v.id).collect::<Vec<_>>();
 
-        if to_rm.len() > 0 {
+        if !to_rm.is_empty() {
             conn.execute("DELETE FROM crates_keywords
                                 WHERE keyword_id = ANY($1)
                                   AND crate_id = $2",
                          &[&to_rm, &krate.id])?;
         }
 
-        if to_add.len() > 0 {
+        if !to_add.is_empty() {
             let insert = to_add.iter().map(|id| {
                 let crate_id: i32 = krate.id;
                 let id: i32 = *id;
@@ -224,7 +224,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
     let conn = req.tx()?;
-    let kw = Keyword::find_by_keyword(&*conn, &name)?;
+    let kw = Keyword::find_by_keyword(conn, name)?;
     let kw = kw.chain_error(|| NotFound)?;
 
     #[derive(RustcEncodable)]
