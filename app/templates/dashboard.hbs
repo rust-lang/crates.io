@@ -49,10 +49,12 @@
             {{#each myFeed as |version|}}
                 <div class='row'>
                     <div class='info'>
-                        {{link-to version.crate.name 'crate.version' version.num}}
+                        {{#link-to 'crate.version' version.crateName version.num}}
+                        {{ version.crateName }}
                         <span class='small'>{{ version.num }}</span>
+                        {{/link-to}}
                         <span class='date small'>
-                            {{from-now version.created_at}}
+                            {{moment-from-now version.created_at}}
                         </span>
                     </div>
                 </div>

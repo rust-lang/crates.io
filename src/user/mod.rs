@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
@@ -11,19 +10,19 @@ use rand::{thread_rng, Rng};
 
 use app::RequestApp;
 use db::RequestTransaction;
-use {http, Model, Version};
-use krate::{Crate, EncodableCrate};
-use schema::users;
+use krate::Follow;
+use schema::*;
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
+use {http, Model, Version};
 
 pub use self::middleware::{Middleware, RequestUser};
 
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -356,62 +355,45 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::{any, sql};
+    use diesel::types::BigInt;
+
     let user = req.user()?;
     let (offset, limit) = req.pagination(10, 100)?;
-    let tx = req.tx()?;
-    let sql = "SELECT versions.* FROM versions
-               INNER JOIN follows
-                  ON follows.user_id = $1 AND
-                     follows.crate_id = versions.crate_id
-               ORDER BY versions.created_at DESC OFFSET $2 LIMIT $3";
+    let conn = req.db_conn()?;
 
-    // Load all versions
-    let stmt = tx.prepare(sql)?;
-    let mut versions = Vec::new();
-    let mut crate_ids = Vec::new();
-    for row in stmt.query(&[&user.id, &offset, &limit])?.iter() {
-        let version: Version = Model::from_row(&row);
-        crate_ids.push(version.crate_id);
-        versions.push(version);
-    }
+    let followed_crates = Follow::belonging_to(user)
+        .select(follows::crate_id);
+    let data = versions::table
+        .select(versions::id) // FIXME: Remove this line when upgraded to Diesel 0.12
+        .inner_join(crates::table)
+        .filter(crates::id.eq(any(followed_crates)))
+        .order(versions::created_at.desc())
+        .limit(limit)
+        .offset(offset)
+        .select((
+            versions::all_columns,
+            crates::name,
+            sql::<BigInt>("COUNT(*) OVER ()"),
+        ))
+        .load::<(Version, String, i64)>(conn)?;
 
-    // Load all crates
-    let mut map = HashMap::new();
-    let mut crates = Vec::new();
-    if crate_ids.len() > 0 {
-        let stmt = tx.prepare("SELECT * FROM crates WHERE id = ANY($1)")?;
-        for row in stmt.query(&[&crate_ids])?.iter() {
-            let krate: Crate = Model::from_row(&row);
-            map.insert(krate.id, krate.name.clone());
-            crates.push(krate);
-        }
-    }
+    let more = data.get(0)
+        .map(|&(_, _, count)| count > offset + limit)
+        .unwrap_or(false);
 
-    // Encode everything!
-    let crates = crates.into_iter().map(|c| {
-        let max_version = c.max_version(tx)?;
-        Ok(c.minimal_encodable(max_version, None))
-    }).collect::<CargoResult<_>>()?;
-    let versions = versions.into_iter().map(|v| {
-        let id = v.crate_id;
-        v.encodable(&map[&id])
+    let versions = data.into_iter().map(|(version, crate_name, _)| {
+        version.encodable(&crate_name)
     }).collect();
-
-    // Check if we have another
-    let sql = format!("SELECT 1 WHERE EXISTS({})", sql);
-    let stmt = tx.prepare(&sql)?;
-    let more = stmt.query(&[&user.id, &(offset + limit), &limit])?
-                  .iter().next().is_some();
 
     #[derive(RustcEncodable)]
     struct R {
         versions: Vec<EncodableVersion>,
-        crates: Vec<EncodableCrate>,
         meta: Meta,
     }
     #[derive(RustcEncodable)]
     struct Meta { more: bool }
-    Ok(req.json(&R{ versions: versions, crates: crates, meta: Meta { more: more } }))
+    Ok(req.json(&R{ versions: versions, meta: Meta { more: more } }))
 }
 
 #[cfg(test)]

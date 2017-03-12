@@ -4,9 +4,11 @@ use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use diesel::pg::PgConnection;
+use diesel::associations::Identifiable;
 use diesel::pg::upsert::*;
+use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
+use diesel;
 use diesel_full_text_search::*;
 use license_exprs;
 use pg::GenericConnection;
@@ -35,7 +37,8 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Clone, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Queryable, Identifiable, AsChangeset, Associations)]
+#[has_many(versions)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -63,6 +66,8 @@ pub const ALL_COLUMNS: AllColumns = (crates::id, crates::name,
     crates::description, crates::homepage, crates::documentation,
     crates::readme, crates::license, crates::repository,
     crates::max_upload_size);
+
+type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableCrate {
@@ -224,6 +229,15 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
+    pub fn by_name(name: &str) -> CrateQuery {
+        crates::table
+            .select(ALL_COLUMNS)
+            .filter(
+                canon_crate_name(crates::name).eq(
+                    canon_crate_name(name))
+            ).into_boxed()
+    }
+
     pub fn find_by_name(conn: &GenericConnection,
                         name: &str) -> CargoResult<Crate> {
         let stmt = conn.prepare("SELECT * FROM crates \
@@ -1093,17 +1107,35 @@ fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
     Ok((user.clone(), krate))
 }
 
+#[derive(Insertable, Queryable, Identifiable, Associations)]
+#[belongs_to(User)]
+#[primary_key(user_id, crate_id)]
+#[table_name="follows"]
+pub struct Follow {
+    user_id: i32,
+    crate_id: i32,
+}
+
+fn follow_target(req: &mut Request) -> CargoResult<Follow> {
+    let user = req.user()?;
+    let conn = req.db_conn()?;
+    let crate_name = &req.params()["crate_id"];
+    let crate_id = Crate::by_name(crate_name)
+        .select(crates::id)
+        .first(conn)?;
+    Ok(Follow {
+        user_id: user.id,
+        crate_id: crate_id,
+    })
+}
+
 /// Handles the `PUT /crates/:crate_id/follow` route.
 pub fn follow(req: &mut Request) -> CargoResult<Response> {
-    let (user, krate) = user_and_crate(req)?;
-    let tx = req.tx()?;
-    let stmt = tx.prepare("SELECT 1 FROM follows
-                                WHERE user_id = $1 AND crate_id = $2")?;
-    let rows = stmt.query(&[&user.id, &krate.id])?;
-    if !rows.iter().next().is_some() {
-        tx.execute("INSERT INTO follows (user_id, crate_id)
-                         VALUES ($1, $2)", &[&user.id, &krate.id])?;
-    }
+    let follow = follow_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::insert(&follow.on_conflict_do_nothing())
+        .into(follows::table)
+        .execute(conn)?;
     #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
@@ -1111,11 +1143,9 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
 pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
-    let (user, krate) = user_and_crate(req)?;
-    let tx = req.tx()?;
-    tx.execute("DELETE FROM follows
-                     WHERE user_id = $1 AND crate_id = $2",
-               &[&user.id, &krate.id])?;
+    let follow = follow_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::delete(&follow).execute(conn)?;
     #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
@@ -1123,14 +1153,15 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/following` route.
 pub fn following(req: &mut Request) -> CargoResult<Response> {
-    let (user, krate) = user_and_crate(req)?;
-    let tx = req.tx()?;
-    let stmt = tx.prepare("SELECT 1 FROM follows
-                                WHERE user_id = $1 AND crate_id = $2")?;
-    let rows = stmt.query(&[&user.id, &krate.id])?;
+    use diesel::expression::dsl::exists;
+
+    let follow = follow_target(req)?;
+    let conn = req.db_conn()?;
+    let following = diesel::select(exists(follows::table.find(follow.id())))
+        .get_result(conn)?;
     #[derive(RustcEncodable)]
     struct R { following: bool }
-    Ok(req.json(&R { following: rows.iter().next().is_some() }))
+    Ok(req.json(&R { following: following }))
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
