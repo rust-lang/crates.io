@@ -576,38 +576,18 @@ impl Crate {
                                 offset: i64,
                                 limit: i64)
                                 -> CargoResult<(Vec<(Dependency, String, i32)>, i64)> {
-        let select_sql = "
-              FROM dependencies
-              INNER JOIN (
-                SELECT versions.*,
-                    row_number() OVER (PARTITION BY crate_id ORDER BY to_semver_no_prerelease(num) DESC NULLS LAST) rn
-                    FROM versions
-                    WHERE NOT yanked
-              ) versions
-                ON versions.id = dependencies.version_id
-              INNER JOIN crates
-                ON crates.id = versions.crate_id
-              WHERE dependencies.crate_id = $1
-                AND rn = 1
-        ";
-        let fetch_sql = format!("SELECT DISTINCT ON (crate_downloads, crate_name)
-                                        dependencies.*,
-                                        crates.downloads AS crate_downloads,
-                                        crates.name AS crate_name
-                                        {}
-                               ORDER BY crate_downloads DESC
-                                 OFFSET $2
-                                  LIMIT $3",
-                                select_sql);
-        let count_sql = format!("SELECT COUNT(DISTINCT(crates.id)) {}", select_sql);
+        let stmt = conn.prepare(include_str!("krate_reverse_dependencies.sql"))?;
 
-        let stmt = conn.prepare(&fetch_sql)?;
-        let vec: Vec<_> = stmt.query(&[&self.id, &offset, &limit])?
+        let rows = stmt.query(&[&self.id, &offset, &limit])?;
+        let cnt = if rows.is_empty() {
+            0i64
+        } else {
+            rows.get(0).get("total")
+        };
+        let vec: Vec<_> = rows
             .iter()
             .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
             .collect();
-        let stmt = conn.prepare(&count_sql)?;
-        let cnt: i64 = stmt.query(&[&self.id])?.iter().next().unwrap().get(0);
 
         Ok((vec, cnt))
     }
