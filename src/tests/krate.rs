@@ -700,12 +700,18 @@ fn download() {
     assert_eq!(downloads.version_downloads.len(), 1);
 
     let yesterday = now_utc() + Duration::days(-1);
-    let yesterday = "before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap();
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&yesterday);
+    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()));
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 0);
+
+    let tomorrow = now_utc() + Duration::days(1);
+    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
+    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()));
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
 
 }
 
