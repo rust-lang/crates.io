@@ -341,7 +341,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["user_id"];
     let conn = req.db_conn()?;
     let user = users.filter(gh_login.eq(name))
-        .first::<User>(conn)?;
+        .first::<User>(&*conn)?;
 
     #[derive(RustcEncodable)]
     struct R {
@@ -374,7 +374,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
             crates::name,
             sql::<BigInt>("COUNT(*) OVER ()"),
         ))
-        .load::<(Version, String, i64)>(conn)?;
+        .load::<(Version, String, i64)>(&*conn)?;
 
     let more = data.get(0)
         .map(|&(_, _, count)| count > offset + limit)

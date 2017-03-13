@@ -205,20 +205,11 @@ impl Middleware for TransactionMiddleware {
     }
 }
 
-pub struct DieselMiddleware;
-
-impl Middleware for DieselMiddleware {
-    fn before(&self, request: &mut Request) -> Result<(), Box<Error+Send>> {
-        request.mut_extensions().insert(LazyCell::<DieselPooledConn>::new());
-        Ok(())
-    }
-}
-
 pub trait RequestTransaction {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
-    fn db_conn(&self) -> CargoResult<&PgConnection>;
+    fn db_conn(&self) -> CargoResult<DieselPooledConn>;
 
     /// Return the lazily initialized postgres transaction for this request.
     ///
@@ -233,13 +224,9 @@ pub trait RequestTransaction {
 }
 
 impl<T: Request + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> CargoResult<&PgConnection> {
-        let cell = self.extensions().find::<LazyCell<DieselPooledConn>>()
-            .expect("PgConnection not present in request");
-        if !cell.filled() {
-            cell.fill(self.app().diesel_database.get()?);
-        }
-        Ok(&**cell.borrow().unwrap())
+    fn db_conn(&self) -> CargoResult<DieselPooledConn> {
+        self.app().diesel_database.get()
+            .map_err(Into::into)
     }
 
     fn tx(&self) -> CargoResult<&GenericConnection> {
