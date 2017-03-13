@@ -6,8 +6,7 @@ use pg::GenericConnection;
 use pg::rows::Row;
 use rustc_serialize::json;
 use semver;
-use time::Duration;
-use time::Timespec;
+use time::{Duration, Timespec, now_utc, strptime};
 use url;
 
 use {Model, Crate};
@@ -300,17 +299,18 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    let (offset, limit) = req.pagination(90, 100)?;
     let (version, _) = version_and_crate(req)?;
+    let cutoff_end_date = req.query().get("before_date")
+        .and_then(|d| strptime(d, "%Y-%m-%d").ok())
+        .unwrap_or(now_utc()).to_timespec();
+    let cutoff_start_date = cutoff_end_date + Duration::days(-90);
 
     let tx = req.tx()?;
-    let cutoff_end_date = ::now() + Duration::days(-offset);
-    let cutoff_start_date = cutoff_end_date + Duration::days(-limit);
     let stmt = tx.prepare("SELECT * FROM version_downloads
                                 WHERE date > $1 AND date <= $2 AND version_id = $3
                                 ORDER BY date ASC")?;
     let downloads = stmt.query(&[&cutoff_start_date, &cutoff_end_date, &version.id])?
-        .iter().map(|row| { VersionDownload::from_row(&row).encodable() }).collect();
+        .iter().map(|row| VersionDownload::from_row(&row).encodable()).collect();
 
     #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload> }

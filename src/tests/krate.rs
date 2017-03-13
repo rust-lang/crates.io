@@ -677,6 +677,7 @@ fn summary_doesnt_die() {
 
 #[test]
 fn download() {
+    use ::time::{Duration, now_utc, strftime};
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
     ::mock_user(&mut req, ::user("foo"));
@@ -697,6 +698,15 @@ fn download() {
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
+
+    let yesterday = now_utc() + Duration::days(-1);
+    let yesterday = "before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap();
+    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
+    req.with_query(&yesterday);
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 0);
+
 }
 
 #[test]
