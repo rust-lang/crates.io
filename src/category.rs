@@ -8,11 +8,11 @@ use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 
-use {Model, Crate};
 use db::RequestTransaction;
 use schema::*;
-use util::{RequestUtils, CargoResult, ChainError};
 use util::errors::NotFound;
+use util::{RequestUtils, CargoResult, ChainError};
+use {Model, Crate};
 
 #[derive(Clone, Identifiable, Associations, Queryable)]
 #[has_many(crates_categories)]
@@ -181,7 +181,33 @@ impl Category {
         Ok(rows.iter().next().unwrap().get("count"))
     }
 
-    pub fn toplevel(conn: &GenericConnection,
+    pub fn toplevel(conn: &PgConnection,
+                    sort: &str,
+                    limit: i64,
+                    offset: i64) -> QueryResult<Vec<Category>> {
+        use diesel::select;
+        use diesel::expression::dsl::*;
+
+        let sort_sql = match sort {
+            "crates" => "ORDER BY crates_cnt DESC",
+            _ => "ORDER BY category ASC",
+        };
+
+        // Collect all the top-level categories and sum up the crates_cnt of
+        // the crates in all subcategories
+        select(sql::<categories::SqlType>(&format!(
+            "c.id, c.category, c.slug, c.description,
+                sum(c2.crates_cnt)::int as crates_cnt, c.created_at
+             FROM categories as c
+             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug
+             WHERE split_part(c.slug, '::', 1) = c.slug
+             GROUP BY c.id
+             {} LIMIT {} OFFSET {}",
+            sort_sql, limit, offset
+        ))).load(conn)
+    }
+
+    pub fn toplevel_old(conn: &GenericConnection,
                     sort: &str,
                     limit: i64,
                     offset: i64) -> CargoResult<Vec<Category>> {
@@ -278,7 +304,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let query = req.query();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let categories = Category::toplevel(conn, sort, limit, offset)?;
+    let categories = Category::toplevel_old(conn, sort, limit, offset)?;
     let categories = categories.into_iter().map(Category::encodable).collect();
 
     // Query for the total count of categories
@@ -342,15 +368,15 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pg::{Connection, TlsMode};
+    use diesel::connection::SimpleConnection;
     use dotenv::dotenv;
     use std::env;
 
-    fn pg_connection() -> Connection {
+    fn pg_connection() -> PgConnection {
         let _ = dotenv();
         let database_url = env::var("TEST_DATABASE_URL")
             .expect("TEST_DATABASE_URL must be set to run tests");
-        let conn = Connection::connect(database_url, TlsMode::None).unwrap();
+        let conn = PgConnection::establish(&database_url).unwrap();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE").unwrap();
         conn

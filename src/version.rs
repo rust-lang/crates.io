@@ -11,13 +11,13 @@ use url;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use diesel::prelude::*;
-use diesel::pg::Pg;
 use dependency::{Dependency, EncodableDependency, Kind};
+use diesel::pg::Pg;
+use diesel::prelude::*;
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use owner::{rights, Rights};
-use schema::versions;
+use schema::*;
 use upload;
 use user::RequestUser;
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
