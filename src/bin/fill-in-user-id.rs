@@ -14,18 +14,16 @@ extern crate rustc_serialize;
 
 use std::path::PathBuf;
 
-use cargo_registry::{http, env, App};
+use cargo_registry::{http, env, App, Replica};
 use cargo_registry::util::{CargoResult, human};
 
 #[allow(dead_code)]
 fn main() {
     git2::Repository::init("tmp/test").unwrap();
+    let api_protocol = String::from("https");
+    let uploader = cargo_registry::Uploader::NoOp;
     let config = cargo_registry::Config {
-        s3_bucket: String::new(),
-        s3_access_key: String::new(),
-        s3_secret_key: String::new(),
-        s3_region: None,
-        s3_proxy: None,
+        uploader: uploader,
         session_key: String::new(),
         git_repo_checkout: PathBuf::from("tmp/test"),
         gh_client_id: env("GH_CLIENT_ID"),
@@ -33,7 +31,8 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_registry::Env::Production,
         max_upload_size: 0,
-        mirror: false,
+        mirror: Replica::Primary,
+        api_protocol: api_protocol,
     };
     let app = cargo_registry::App::new(&config);
     {

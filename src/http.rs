@@ -12,7 +12,7 @@ use std::str;
 /// parse_github_response to handle the "common" processing of responses.
 pub fn github(app: &App, url: &str, auth: &Token)
               -> Result<(Easy, Vec<u8>), curl::Error> {
-    let url = format!("{}://api.github.com{}", app.config.api_protocol(), url);
+    let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
     info!("GITHUB HTTP: {}", url);
 
     let mut headers = List::new();

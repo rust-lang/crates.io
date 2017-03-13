@@ -5,8 +5,9 @@ extern crate conduit_middleware;
 extern crate civet;
 extern crate git2;
 extern crate env_logger;
+extern crate s3;
 
-use cargo_registry::env;
+use cargo_registry::{env, Env, Uploader, Replica};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
@@ -38,18 +39,64 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
+    let api_protocol = String::from("https");
+    let mirror = if env::var("MIRROR").is_ok() {
+        Replica::ReadOnlyMirror
+    } else {
+        Replica::Primary
+    };
+
     let heroku = env::var("HEROKU").is_ok();
     let cargo_env = if heroku {
-        cargo_registry::Env::Production
+        Env::Production
     } else {
-        cargo_registry::Env::Development
+        Env::Development
     };
+
+    let uploader = match (cargo_env, mirror) {
+        (Env::Production, Replica::Primary) => {
+            // `env` panics if these vars are not set
+            Uploader::S3 {
+                bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                        env::var("S3_REGION").ok(),
+                                        env("S3_ACCESS_KEY"),
+                                        env("S3_SECRET_KEY"),
+                                        &api_protocol),
+                proxy: None,
+            }
+        },
+        (Env::Production, Replica::ReadOnlyMirror) => {
+            // Read-only mirrors don't need access key or secret key,
+            // but they might have them. Definitely need bucket though.
+            Uploader::S3 {
+                bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                        env::var("S3_REGION").ok(),
+                                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+                                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                                        &api_protocol),
+                proxy: None,
+            }
+        },
+        _ => {
+            if env::var("S3_BUCKET").is_ok() {
+                println!("Using S3 uploader");
+                Uploader::S3 {
+                    bucket: s3::Bucket::new(env("S3_BUCKET"),
+                                            env::var("S3_REGION").ok(),
+                                            env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+                                            env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                                            &api_protocol),
+                    proxy: None,
+                }
+            } else {
+                println!("Using local uploader, crate files will be in the dist directory");
+                Uploader::Local
+            }
+        },
+    };
+
     let config = cargo_registry::Config {
-        s3_bucket: env("S3_BUCKET"),
-        s3_access_key: env("S3_ACCESS_KEY"),
-        s3_secret_key: env("S3_SECRET_KEY"),
-        s3_region: env::var("S3_REGION").ok(),
-        s3_proxy: None,
+        uploader: uploader,
         session_key: env("SESSION_KEY"),
         git_repo_checkout: checkout,
         gh_client_id: env("GH_CLIENT_ID"),
@@ -57,7 +104,8 @@ fn main() {
         db_url: env("DATABASE_URL"),
         env: cargo_env,
         max_upload_size: 10 * 1024 * 1024,
-        mirror: env::var("MIRROR").is_ok(),
+        mirror: mirror,
+        api_protocol: api_protocol,
     };
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
@@ -69,7 +117,7 @@ fn main() {
     } else {
         env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
     };
-    let threads = if cargo_env == cargo_registry::Env::Development {1} else {50};
+    let threads = if cargo_env == Env::Development {1} else {50};
     let mut cfg = civet::Config::new();
     cfg.port(port).threads(threads).keep_alive(true);
     let _a = Server::start(cfg, app);

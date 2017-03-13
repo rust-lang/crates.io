@@ -14,6 +14,7 @@ extern crate rustc_serialize;
 extern crate semver;
 extern crate time;
 extern crate url;
+extern crate s3;
 
 use std::collections::HashMap;
 use std::env;
@@ -28,7 +29,7 @@ use cargo_registry::dependency::Kind;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
-use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model};
+use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
@@ -84,12 +85,22 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     git::init();
 
     let (proxy, bomb) = record::proxy();
+
+    // When testing we route all API traffic over HTTP so we can
+    // sniff/record it, but everywhere else we use https
+    let api_protocol = String::from("http");
+
+    let uploader = cargo_registry::Uploader::S3 {
+        bucket: s3::Bucket::new(String::from("alexcrichton-test"),
+                                None,
+                                String::new(),
+                                String::new(),
+                                &api_protocol),
+        proxy: Some(proxy),
+    };
+
     let config = cargo_registry::Config {
-        s3_bucket: env::var("S3_BUCKET").unwrap_or(String::new()),
-        s3_access_key: env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-        s3_secret_key: env::var("S3_SECRET_KEY").unwrap_or(String::new()),
-        s3_region: env::var("S3_REGION").ok(),
-        s3_proxy: Some(proxy),
+        uploader: uploader,
         session_key: "test".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or(String::new()),
@@ -97,7 +108,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
-        mirror: false,
+        mirror: Replica::Primary,
+        api_protocol: api_protocol,
     };
     INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);

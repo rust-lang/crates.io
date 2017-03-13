@@ -7,7 +7,6 @@ use conduit_middleware::Middleware;
 use git2;
 use oauth2;
 use r2d2;
-use s3;
 use curl::easy::Easy;
 
 use {db, Config};
@@ -23,8 +22,7 @@ pub struct App {
 
     /// The GitHub OAuth2 configuration
     pub github: oauth2::Config,
-    pub bucket: s3::Bucket,
-    pub s3_proxy: Option<String>,
+
     pub session_key: String,
     pub git_repo: Mutex<git2::Repository>,
     pub git_repo_checkout: PathBuf,
@@ -64,12 +62,6 @@ impl App {
             database: db::pool(&config.db_url, db_config),
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
             github: github,
-            bucket: s3::Bucket::new(config.s3_bucket.clone(),
-                                    config.s3_region.clone(),
-                                    config.s3_access_key.clone(),
-                                    config.s3_secret_key.clone(),
-                                    config.api_protocol()),
-            s3_proxy: config.s3_proxy.clone(),
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
@@ -79,7 +71,7 @@ impl App {
 
     pub fn handle(&self) -> Easy {
         let mut handle = Easy::new();
-        if let Some(ref proxy) = self.s3_proxy {
+        if let Some(ref proxy) = self.config.uploader.proxy() {
             handle.proxy(proxy).unwrap();
         }
         return handle

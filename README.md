@@ -102,16 +102,7 @@ After following the above instructions:
    export TEST_DATABASE_URL=postgres://postgres@localhost/cargo_registry_test
    ```
 
-2. In your `.env` file, set the s3 bucket to `alexcrichton-test`. No actual
-   requests to s3 will be made; the requests and responses are recorded in
-   files in `tests/http-data` and the s3 bucket name needs to match the
-   requests in the files.
-
-   ```
-   export S3_BUCKET=alexcrichton-test
-   ```
-
-3. Run the backend API server tests:
+2. Run the backend API server tests:
 
    ```
    cargo test

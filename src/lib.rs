@@ -49,6 +49,7 @@ pub use self::krate::Crate;
 pub use self::model::Model;
 pub use self::user::User;
 pub use self::version::Version;
+pub use self::uploaders::{Uploader, Bomb};
 
 use std::sync::Arc;
 use std::error::Error;
@@ -75,6 +76,7 @@ pub mod model;
 pub mod owner;
 pub mod schema;
 pub mod upload;
+pub mod uploaders;
 pub mod user;
 pub mod util;
 pub mod version;
@@ -84,6 +86,14 @@ pub enum Env {
     Development,
     Test,
     Production,
+}
+
+// There may be more ways to run crates.io servers in the future, such as a
+// mirror that also has private crates that crates.io does not have.
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum Replica {
+    Primary,
+    ReadOnlyMirror,
 }
 
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {

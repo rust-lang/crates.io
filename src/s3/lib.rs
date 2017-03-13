@@ -13,6 +13,7 @@ use openssl::sign::Signer;
 use openssl::pkey::PKey;
 use rustc_serialize::base64::{ToBase64, STANDARD};
 
+#[derive(Clone)]
 pub struct Bucket {
     name: String,
     region: Option<String>,
