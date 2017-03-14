@@ -143,8 +143,8 @@ fn index_queries() {
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw2")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 
-    ::new_category("cat1", "cat1").find_or_create(req.db_conn().unwrap()).unwrap();
-    ::new_category("cat1::bar", "cat1::bar").find_or_create(req.db_conn().unwrap()).unwrap();
+    ::new_category("Category 1", "cat1").find_or_create(req.db_conn().unwrap()).unwrap();
+    ::new_category("Category 1::Ba'r", "cat1::bar").find_or_create(req.db_conn().unwrap()).unwrap();
     Category::update_crate(req.db_conn().unwrap(), &krate, &["cat1"]).unwrap();
     Category::update_crate(req.db_conn().unwrap(), &krate2, &["cat1::bar"]).unwrap();
     let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
