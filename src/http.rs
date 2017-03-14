@@ -53,7 +53,7 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: Vec<u8>)
         }
         n => {
             let resp = String::from_utf8_lossy(&data);
-            return Err(internal(format!("didn't get a 200 result from \
+            return Err(internal(&format_args!("didn't get a 200 result from \
                                         github, got {} with: {}", n, resp)));
         }
     }

@@ -149,16 +149,16 @@ impl<'a> NewCrate<'a> {
                 None => return Ok(())
             };
             let url = Url::parse(url).map_err(|_| {
-                human(format!("`{}` is not a valid url: `{}`", field, url))
+                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
             })?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
-                s => return Err(human(format!("`{}` has an invalid url \
-                                               scheme: `{}`", field, s)))
+                s => return Err(human(&format_args!("`{}` has an invalid url \
+                                                    scheme: `{}`", field, s)))
             }
             if url.cannot_be_a_base() {
-                return Err(human(format!("`{}` must have relative scheme \
-                                                        data: {}", field, url)))
+                return Err(human(&format_args!("`{}` must have relative scheme \
+                                               data: {}", field, url)))
             }
             Ok(())
         }
@@ -174,9 +174,9 @@ impl<'a> NewCrate<'a> {
         if let Some(ref license) = self.license {
             for part in license.split("/") {
                license_exprs::validate_license_expr(part)
-                   .map_err(|e| human(format!("{}; see http://opensource.org/licenses \
-                                              for options, and http://spdx.org/licenses/ \
-                                              for their identifiers", e)))?;
+                   .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
+                                                    for options, and http://spdx.org/licenses/ \
+                                                    for their identifiers", e)))?;
             }
         } else if license_file.is_some() {
             // If no license is given, but a license file is given, flag this
@@ -340,15 +340,15 @@ impl Crate {
                 None => return Ok(())
             };
             let url = Url::parse(url).map_err(|_| {
-                human(format!("`{}` is not a valid url: `{}`", field, url))
+                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
             })?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
-                s => return Err(human(format!("`{}` has an invalid url \
+                s => return Err(human(&format_args!("`{}` has an invalid url \
                                                scheme: `{}`", field, s)))
             }
             if url.cannot_be_a_base() {
-                return Err(human(format!("`{}` must have relative scheme \
+                return Err(human(&format_args!("`{}` must have relative scheme \
                                                         data: {}", field, url)))
             }
             Ok(())
@@ -359,7 +359,7 @@ impl Crate {
                    .map(license_exprs::validate_license_expr)
                    .collect::<Result<Vec<_>, _>>()
                    .map(|_| ())
-                   .map_err(|e| human(format!("{}; see http://opensource.org/licenses \
+                   .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
                                                   for options, and http://spdx.org/licenses/ \
                                                   for their identifiers", e)))
         }
@@ -488,7 +488,7 @@ impl Crate {
             Ok(Owner::Team(team)) => if team.contains_user(app, req_user)? {
                 Owner::Team(team)
             } else {
-                return Err(human(format!("only members of {} can add it as \
+                return Err(human(&format_args!("only members of {} can add it as \
                                           an owner", login)));
             },
             Err(err) => if login.contains(":") {
@@ -522,7 +522,7 @@ impl Crate {
                         _req_user: &User,
                         login: &str) -> CargoResult<()> {
         let owner = Owner::find_by_login(conn, login).map_err(|_| {
-            human(format!("could not find owner with login `{}`", login))
+            human(&format_args!("could not find owner with login `{}`", login))
         })?;
         conn.execute("UPDATE crate_owners
                               SET deleted = TRUE
@@ -540,7 +540,7 @@ impl Crate {
                        -> CargoResult<Version> {
         match Version::find_by_num(conn, self.id, ver)? {
             Some(..) => {
-                return Err(human(format!("crate version `{}` is already uploaded",
+                return Err(human(&format_args!("crate version `{}` is already uploaded",
                                          ver)))
             }
             None => {}
@@ -845,7 +845,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     if krate.name != name {
-        return Err(human(format!("crate was previously named `{}`", krate.name)))
+        return Err(human(&format_args!("crate was previously named `{}`", krate.name)))
     }
 
     let length = req.content_length().chain_error(|| {
@@ -854,7 +854,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let max = krate.max_upload_size.map(|m| m as u64)
                    .unwrap_or(app.config.max_upload_size);
     if length > max {
-        return Err(human(format!("max upload size is: {}", max)))
+        return Err(human(&format_args!("max upload size is: {}", max)))
     }
 
     // Persist the new version of this crate
@@ -899,7 +899,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         yanked: Some(false),
     };
     git::add_crate(&**req.app(), &git_crate).chain_error(|| {
-        internal(format!("could not add crate `{}` to the git repo", name))
+        internal(&format_args!("could not add crate `{}` to the git repo", name))
     })?;
 
     // Now that we've come this far, we're committed!
@@ -928,7 +928,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     let amt = read_le_u32(req.body())? as u64;
     let max = req.app().config.max_upload_size;
     if amt > max {
-        return Err(human(format!("max upload size is: {}", max)))
+        return Err(human(&format_args!("max upload size is: {}", max)))
     }
     let mut json = vec![0; amt as usize];
     read_fill(req.body(), &mut json)?;
@@ -936,7 +936,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
         human("json body was not valid utf-8")
     })?;
     let new: upload::NewCrate = json::decode(&json).map_err(|e| {
-        human(format!("invalid upload request: {:?}", e))
+        human(&format_args!("invalid upload request: {:?}", e))
     })?;
 
     // Make sure required fields are provided
@@ -953,7 +953,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
         missing.push("authors");
     }
     if missing.len() > 0 {
-        return Err(human(format!("missing or empty metadata fields: {}. Please \
+        return Err(human(&format_args!("missing or empty metadata fields: {}. Please \
             see http://doc.crates.io/manifest.html#package-metadata for \
             how to upload metadata", missing.join(", "))));
     }
@@ -1216,7 +1216,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     for login in &logins {
         if add {
             if owners.iter().any(|owner| owner.login() == *login) {
-                return Err(human(format!("`{}` is already an owner", login)))
+                return Err(human(&format_args!("`{}` is already an owner", login)))
             }
             krate.owner_add(req.app(), tx, &user, &login)?;
         } else {

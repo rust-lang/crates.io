@@ -131,10 +131,10 @@ impl Version {
                           -> CargoResult<(Dependency, Crate)> {
         let name = &dep.name;
         let krate = Crate::find_by_name(conn, name).map_err(|_| {
-            human(format!("no known crate named `{}`", &**name))
+            human(&format_args!("no known crate named `{}`", &**name))
         })?;
         if dep.version_req.0 == semver::VersionReq::parse("*").unwrap() {
-            return Err(human(format!("wildcard (`*`) dependency constraints are not allowed \
+            return Err(human(&format_args!("wildcard (`*`) dependency constraints are not allowed \
                                       on crates.io. See http://doc.crates.io/faq.html#can-\
                                       libraries-use--as-a-version-for-their-dependencies for more \
                                       information")));
@@ -309,13 +309,13 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
     let semver = semver::Version::parse(semver).map_err(|_| {
-        human(format!("invalid semver: {}", semver))
+        human(&format_args!("invalid semver: {}", semver))
     })?;
     let tx = req.tx()?;
     let krate = Crate::find_by_name(tx, crate_name)?;
     let version = Version::find_by_num(tx, krate.id, &semver)?;
     let version = version.chain_error(|| {
-        human(format!("crate `{}` does not have a version `{}`",
+        human(&format_args!("crate `{}` does not have a version `{}`",
                       crate_name, semver))
     })?;
     Ok((version, krate))

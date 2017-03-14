@@ -105,7 +105,7 @@ impl<'a> RequestUtils for Request + 'a {
         let limit = query.get("per_page").and_then(|s| s.parse::<usize>().ok())
                          .unwrap_or(default);
         if limit > max {
-            return Err(human(format!("cannot request more than {} items", max)))
+            return Err(human(&format_args!("cannot request more than {} items", max)))
         }
         if page == 0 {
             return Err(human("page indexing starts from 1, page 0 is invalid"))

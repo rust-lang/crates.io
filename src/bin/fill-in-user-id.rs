@@ -69,7 +69,7 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
             let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
             if let Some(ref avatar) = avatar {
                 if !avatar.contains(&ghuser.id.to_string()) {
-                    return Err(human(format!("avatar: {}", avatar)))
+                    return Err(human(&format_args!("avatar: {}", avatar)))
                 }
             }
             if ghuser.login == login {
@@ -77,7 +77,7 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
                            &[&ghuser.id, &id])?;
                 Ok(())
             } else {
-                Err(human(format!("different login: {}", ghuser.login)))
+                Err(human(&format_args!("different login: {}", ghuser.login)))
             }
         })();
         if let Err(e) = res {

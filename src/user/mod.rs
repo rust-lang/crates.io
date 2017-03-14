@@ -281,10 +281,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = match req.app().github.exchange(code.clone()) {
-        Ok(token) => token,
-        Err(s) => return Err(human(s)),
-    };
+    let token = req.app().github.exchange(code.clone())
+        .map_err(|s| human(&s))?;
 
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, resp)?;
