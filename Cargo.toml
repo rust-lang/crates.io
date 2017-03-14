@@ -23,9 +23,9 @@ git2 = "0.6.4"
 flate2 = "0.2"
 semver = "0.5"
 url = "1.2.1"
-postgres = { version = "0.13", features = ["with-time", "with-openssl", "with-rustc-serialize"] }
+postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json"] }
 r2d2 = "0.7.0"
-r2d2_postgres = "0.11"
+r2d2_postgres = "0.12.0"
 openssl = "0.9"
 curl = "0.4"
 oauth2 = "0.3"
@@ -39,7 +39,9 @@ diesel = { version = "0.11.0", features = ["postgres", "serde_json", "deprecated
 diesel_codegen = { version = "0.11.0", features = ["postgres"] }
 r2d2-diesel = "0.11.0"
 diesel_full_text_search = "0.11.0"
-serde_json = "0.9.0"
+serde_json = "0.9.9"
+serde_derive = "0.9.11"
+serde = "0.9.11"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
