@@ -769,63 +769,53 @@ fn dependencies() {
 
 #[test]
 fn following() {
-    // #[derive(RustcDecodable)] struct F { following: bool }
-    // #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct F { following: bool }
+    #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_following/following");
 
     let user;
-    let krate;
     {
         let conn = app.diesel_database.get().unwrap();
         user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        krate = ::new_crate("foo_following").create_or_update(&conn, None, user.id).unwrap();
-
-        // FIXME: Go back to hitting the actual endpoint once it's using Diesel
-        conn
-            .execute(&format!("INSERT INTO follows (user_id, crate_id) VALUES ({}, {})",
-                              user.id, krate.id))
-            .unwrap();
+        ::new_crate("foo_following").create_or_update(&conn, None, user.id).unwrap();
     }
 
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(!::json::<F>(&mut response).following);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(!::json::<F>(&mut response).following);
 
-    // req.with_path("/api/v1/crates/foo_following/follow")
-    //    .with_method(Method::Put);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(::json::<O>(&mut response).ok);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(::json::<O>(&mut response).ok);
+    req.with_path("/api/v1/crates/foo_following/follow")
+       .with_method(Method::Put);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
 
-    // req.with_path("/api/v1/crates/foo_following/following")
-    //    .with_method(Method::Get);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(::json::<F>(&mut response).following);
+    req.with_path("/api/v1/crates/foo_following/following")
+       .with_method(Method::Get);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<F>(&mut response).following);
 
     req.with_path("/api/v1/crates")
-       .with_query("following=1");
+        .with_method(Method::Get)
+        .with_query("following=1");
     let mut response = ok_resp!(middle.call(&mut req));
     let l = ::json::<CrateList>(&mut response);
     assert_eq!(l.crates.len(), 1);
 
-    // FIXME: Go back to hitting the actual endpoint once it's using Diesel
-    req.db_conn().unwrap()
-        .execute("TRUNCATE TABLE follows")
-        .unwrap();
-    // req.with_path("/api/v1/crates/foo_following/follow")
-    //    .with_method(Method::Delete);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(::json::<O>(&mut response).ok);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(::json::<O>(&mut response).ok);
+    req.with_path("/api/v1/crates/foo_following/follow")
+       .with_method(Method::Delete);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(::json::<O>(&mut response).ok);
 
-    // req.with_path("/api/v1/crates/foo_following/following")
-    //    .with_method(Method::Get);
-    // let mut response = ok_resp!(middle.call(&mut req));
-    // assert!(!::json::<F>(&mut response).following);
+    req.with_path("/api/v1/crates/foo_following/following")
+       .with_method(Method::Get);
+    let mut response = ok_resp!(middle.call(&mut req));
+    assert!(!::json::<F>(&mut response).following);
 
     req.with_path("/api/v1/crates")
        .with_query("following=1")

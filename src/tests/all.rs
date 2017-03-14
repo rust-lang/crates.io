@@ -1,12 +1,13 @@
 #![deny(warnings)]
 
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_codegen;
 extern crate bufstream;
 extern crate cargo_registry;
 extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
-extern crate diesel;
 extern crate dotenv;
 extern crate git2;
 extern crate postgres;

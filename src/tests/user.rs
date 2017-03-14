@@ -1,9 +1,12 @@
 use conduit::{Handler, Method};
+use diesel::prelude::*;
+use diesel::insert;
 
 use cargo_registry::Model;
-use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::db::RequestTransaction;
+use cargo_registry::krate::EncodableCrate;
+use cargo_registry::schema::versions;
+use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
 
 #[derive(RustcDecodable)]
@@ -139,10 +142,27 @@ fn following() {
     #[derive(RustcDecodable)] struct Meta { more: bool }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_fighters"));
-    ::mock_crate(&mut req, ::krate("bar_fighters"));
+    let mut req = ::req(app.clone(), Method::Get, "/");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        #[derive(Insertable)]
+        #[table_name="versions"]
+        struct NewVersion<'a> {
+            crate_id: i32,
+            num: &'a str,
+        }
+        let id1 = ::new_crate("foo_fighters").create_or_update(&conn, None, user.id)
+            .unwrap().id;
+        let id2 = ::new_crate("bar_fighters").create_or_update(&conn, None, user.id)
+            .unwrap().id;
+        let new_versions = vec![
+            NewVersion { crate_id: id1, num: "1.0.0" },
+            NewVersion { crate_id: id2, num: "1.0.0" },
+        ];
+        insert(&new_versions).into(versions::table).execute(&*conn).unwrap();
+    }
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
                                                .with_method(Method::Get)));
