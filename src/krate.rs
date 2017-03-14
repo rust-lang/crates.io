@@ -672,8 +672,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query = query.filter(crates::id.eq_any(
             crates_categories::table.select(crates_categories::crate_id)
                 .inner_join(categories::table)
-                .filter(categories::category.eq(cat).or(
-                        categories::category.like(format!("{}::%", cat))))
+                .filter(categories::slug.eq(cat).or(
+                        categories::slug.like(format!("{}::%", cat))))
         ));
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
         query = query.filter(crates::id.eq_any((
