@@ -681,12 +681,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         )));
     }
 
-    let data = query.load::<(Crate, i64)>(conn)?;
+    let data = query.load::<(Crate, i64)>(&*conn)?;
     let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
     let crates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
-        .load::<Version>(conn)?
+        .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
@@ -695,7 +695,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         // FIXME: If we add crate_id to the Badge enum we can eliminate
         // this N+1
         let badges = badges::table.filter(badges::crate_id.eq(krate.id))
-            .load::<Badge>(conn)?;
+            .load::<Badge>(&*conn)?;
         Ok(krate.minimal_encodable(max_version, Some(badges)))
     }).collect::<Result<_, ::diesel::result::Error>>()?;
 
@@ -715,13 +715,13 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
-    let num_crates = crates.count().get_result(conn)?;
+    let num_crates = crates.count().get_result(&*conn)?;
     let num_downloads = metadata::table.select(metadata::total_downloads)
-        .get_result(conn)?;
+        .get_result(&*conn)?;
 
     let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
         Version::belonging_to(&krates)
-            .load::<Version>(conn)?
+            .load::<Version>(&*conn)?
             .grouped_by(&krates)
             .into_iter()
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
@@ -734,25 +734,25 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let new_crates = crates.order(created_at.desc())
         .select(ALL_COLUMNS)
         .limit(10)
-        .load(conn)?;
+        .load(&*conn)?;
     let just_updated = crates.filter(updated_at.ne(created_at))
         .order(updated_at.desc())
         .select(ALL_COLUMNS)
         .limit(10)
-        .load(conn)?;
+        .load(&*conn)?;
     let most_downloaded = crates.order(downloads.desc())
         .select(ALL_COLUMNS)
         .limit(10)
-        .load(conn)?;
+        .load(&*conn)?;
 
     let popular_keywords = keywords::table.order(keywords::crates_cnt.desc())
         .limit(10)
-        .load(conn)?
+        .load(&*conn)?
         .into_iter()
         .map(Keyword::encodable)
         .collect();
 
-    let popular_categories = Category::toplevel(conn, "crates", 10, 0)?
+    let popular_categories = Category::toplevel(&conn, "crates", 10, 0)?
         .into_iter()
         .map(Category::encodable)
         .collect();
@@ -1102,7 +1102,7 @@ fn follow_target(req: &mut Request) -> CargoResult<Follow> {
     let crate_name = &req.params()["crate_id"];
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
-        .first(conn)?;
+        .first(&*conn)?;
     Ok(Follow {
         user_id: user.id,
         crate_id: crate_id,
@@ -1115,7 +1115,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     diesel::insert(&follow.on_conflict_do_nothing())
         .into(follows::table)
-        .execute(conn)?;
+        .execute(&*conn)?;
     #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
@@ -1125,7 +1125,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
 pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
-    diesel::delete(&follow).execute(conn)?;
+    diesel::delete(&follow).execute(&*conn)?;
     #[derive(RustcEncodable)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
@@ -1138,7 +1138,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     let following = diesel::select(exists(follows::table.find(follow.id())))
-        .get_result(conn)?;
+        .get_result(&*conn)?;
     #[derive(RustcEncodable)]
     struct R { following: bool }
     Ok(req.json(&R { following: following }))

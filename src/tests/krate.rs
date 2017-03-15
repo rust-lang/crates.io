@@ -63,18 +63,21 @@ fn new_crate(name: &str) -> u::NewCrate {
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    let u = ::new_user("foo")
-        .create_or_update(req.db_conn().unwrap())
-        .unwrap();
-    let krate = ::new_crate("fooindex")
-        .create_or_update(req.db_conn().unwrap(), None, u.id)
-        .unwrap();
+    let krate = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo")
+            .create_or_update(&conn)
+            .unwrap();
+        ::new_crate("fooindex")
+            .create_or_update(&conn, None, u.id)
+            .unwrap()
+    };
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: CrateList = ::json(&mut response);
@@ -107,7 +110,7 @@ fn index_queries() {
         Keyword::update_crate(&conn, &krate2, &["KW1"]).unwrap();
     }
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
     assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
 
@@ -143,10 +146,13 @@ fn index_queries() {
     let mut response = ok_resp!(middle.call(req.with_query("keyword=kw2")));
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 
-    ::new_category("Category 1", "cat1").find_or_create(req.db_conn().unwrap()).unwrap();
-    ::new_category("Category 1::Ba'r", "cat1::bar").find_or_create(req.db_conn().unwrap()).unwrap();
-    Category::update_crate(req.db_conn().unwrap(), &krate, &["cat1"]).unwrap();
-    Category::update_crate(req.db_conn().unwrap(), &krate2, &["cat1::bar"]).unwrap();
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_category("Category 1", "cat1").find_or_create(&conn).unwrap();
+        ::new_category("Category 1::Ba'r", "cat1::bar").find_or_create(&conn).unwrap();
+        Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
+        Category::update_crate(&conn, &krate2, &["cat1::bar"]).unwrap();
+    }
     let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
     let cl = ::json::<CrateList>(&mut response);
     assert_eq!(cl.crates.len(), 2);
