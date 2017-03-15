@@ -3,8 +3,6 @@ import Ember from 'ember';
 
 Ember.Inflector.inflector.irregular('dependency', 'dependencies');
 
-const { computed } = Ember;
-
 export default DS.Model.extend({
     version: DS.belongsTo('version', {
         async: false
@@ -13,11 +11,7 @@ export default DS.Model.extend({
     req: DS.attr('string'),
     optional: DS.attr('boolean'),
     default_features: DS.attr('boolean'),
-    features: DS.attr('string'),
+    features: DS.attr({ defaultValue: () => [] }),
     kind: DS.attr('string'),
     downloads: DS.attr('number'),
-
-    featureList: computed('features', function() {
-        return this.get('features').split(',');
-    })
 });

@@ -83,9 +83,9 @@ table! {
         req -> Varchar,
         optional -> Bool,
         default_features -> Bool,
-        features -> Varchar,
+        features -> Array<Text>,
         target -> Nullable<Varchar>,
-        kind -> Nullable<Int4>,
+        kind -> Int4,
     }
 }
 
