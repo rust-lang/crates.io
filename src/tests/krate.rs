@@ -774,6 +774,21 @@ fn dependencies() {
 }
 
 #[test]
+fn diesel_not_found_results_in_404() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_following/following");
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let response = middle.call(&mut req).unwrap();
+    assert_eq!((404, "Not Found"), response.status);
+}
+
+#[test]
 fn following() {
     #[derive(RustcDecodable)] struct F { following: bool }
     #[derive(RustcDecodable)] struct O { ok: bool }
