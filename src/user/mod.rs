@@ -30,7 +30,7 @@ pub struct User {
     pub api_token: String,
     pub gh_login: String,
     pub name: Option<String>,
-    pub avatar: Option<String>,
+    pub gh_avatar: Option<String>,
     pub gh_id: i32,
 }
 
@@ -158,11 +158,11 @@ impl User {
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
-        let User { id, email, name, gh_login, avatar, .. } = self;
+        let User { id, email, name, gh_login, gh_avatar, .. } = self;
         EncodableUser {
             id: id,
             email: email,
-            avatar: avatar,
+            avatar: gh_avatar,
             login: gh_login,
             name: name,
         }
@@ -179,7 +179,7 @@ impl Model for User {
             gh_login: row.get("gh_login"),
             gh_id: row.get("gh_id"),
             name: row.get("name"),
-            avatar: row.get("gh_avatar"),
+            gh_avatar: row.get("gh_avatar"),
         }
     }
 

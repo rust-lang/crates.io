@@ -58,6 +58,14 @@ impl Decodable for CrateName {
     }
 }
 
+impl<T: ?Sized> PartialEq<T> for CrateName where
+    String: PartialEq<T>,
+{
+    fn eq(&self, rhs: &T) -> bool {
+        self.0 == *rhs
+    }
+}
+
 impl Decodable for Keyword {
     fn decode<D: Decoder>(d: &mut D) -> Result<Keyword, D::Error> {
         let s = d.read_str()?;
@@ -101,6 +109,14 @@ impl Decodable for CrateVersionReq {
             Ok(v) => Ok(CrateVersionReq(v)),
             Err(..) => Err(d.error(&format!("invalid version req: {}", s))),
         }
+    }
+}
+
+impl<T: ?Sized> PartialEq<T> for CrateVersionReq where
+    semver::VersionReq: PartialEq<T>,
+{
+    fn eq(&self, rhs: &T) -> bool {
+        self.0 == *rhs
     }
 }
 

@@ -42,14 +42,14 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     let from = User::find_by_login(tx, &from).unwrap();
     let to = User::find_by_login(tx, &to).unwrap();
 
-    if from.avatar != to.avatar {
+    if from.gh_avatar != to.gh_avatar {
         println!("====================================================");
         println!("WARNING");
         println!("");
         println!("this may not be the same github user, different avatar urls");
         println!("");
-        println!("from: {:?}", from.avatar);
-        println!("to:   {:?}", to.avatar);
+        println!("from: {:?}", from.gh_avatar);
+        println!("to:   {:?}", to.gh_avatar);
 
         get_confirm("continue?");
     }
@@ -68,7 +68,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         let id: i32 = row.get("id");
         let krate = Crate::find(tx, row.get("crate_id")).unwrap();
         println!("transferring {}", krate.name);
-        let owners = krate.owners(tx).unwrap();
+        let owners = krate.owners_old(tx).unwrap();
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }

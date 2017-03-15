@@ -30,7 +30,7 @@ pub struct Category {
 #[belongs_to(Crate)]
 #[table_name="crates_categories"]
 #[primary_key(crate_id, category_id)]
-struct CrateCategory {
+pub struct CrateCategory {
     crate_id: i32,
     category_id: i32,
 }

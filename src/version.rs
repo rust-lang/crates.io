@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use diesel::pg::{Pg, PgConnection};
+use diesel::prelude::*;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rustc_serialize::json;
@@ -12,8 +14,6 @@ use url;
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency, Kind};
-use diesel::pg::Pg;
-use diesel::prelude::*;
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use owner::{rights, Rights};
@@ -34,6 +34,14 @@ pub struct Version {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+}
+
+#[derive(Insertable)]
+#[table_name="versions"]
+pub struct NewVersion {
+    crate_id: i32,
+    num: String,
+    features: String,
 }
 
 pub struct Author {
@@ -205,6 +213,55 @@ impl Version {
                 build: vec![],
             })
     }
+}
+
+impl NewVersion {
+    pub fn new(
+        crate_id: i32,
+        num: &semver::Version,
+        features: &HashMap<String, Vec<String>>,
+    ) -> CargoResult<Self> {
+        let features = json::encode(features)?;
+        Ok(NewVersion {
+            crate_id: crate_id,
+            num: num.to_string(),
+            features: features,
+        })
+    }
+
+    pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
+        use diesel::{select, insert};
+        use diesel::expression::dsl::exists;
+        use schema::versions::dsl::*;
+
+        let already_uploaded = versions.filter(crate_id.eq(self.crate_id))
+            .filter(num.eq(&self.num));
+        if select(exists(already_uploaded)).get_result(conn)? {
+            return Err(human(&format_args!("crate version `{}` is already \
+                                           uploaded", self.num)));
+        }
+
+        conn.transaction(|| {
+            let version = insert(self).into(versions)
+                .get_result::<Version>(conn)?;
+
+            let new_authors = authors.iter().map(|s| NewAuthor {
+                version_id: version.id,
+                name: &*s,
+            }).collect::<Vec<_>>();
+
+            insert(&new_authors).into(version_authors::table)
+                .execute(conn)?;
+            Ok(version)
+        })
+    }
+}
+
+#[derive(Insertable)]
+#[table_name="version_authors"]
+struct NewAuthor<'a> {
+    version_id: i32,
+    name: &'a str,
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
@@ -385,7 +442,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let (version, krate) = version_and_crate(req)?;
     let user = req.user()?;
     let tx = req.tx()?;
-    let owners = krate.owners(tx)?;
+    let owners = krate.owners_old(tx)?;
     if rights(req.app(), &owners, user)? < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"))
     }

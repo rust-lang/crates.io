@@ -24,12 +24,13 @@ use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use rustc_serialize::json::{self, Json};
 
 use cargo_registry::app::App;
-use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::category::NewCategory;
+use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::Kind;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
+use cargo_registry::version::NewVersion;
 use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
@@ -206,7 +207,7 @@ fn user(login: &str) -> User {
         gh_login: login.to_string(),
         email: None,
         name: None,
-        avatar: None,
+        gh_avatar: None,
         gh_access_token: "some random token".into(),
         api_token: "some random token".into(),
     }
@@ -217,6 +218,11 @@ fn new_crate(name: &str) -> NewCrate {
         name: name,
         ..NewCrate::default()
     }
+}
+
+fn new_version(crate_id: i32, num: &str) -> NewVersion {
+    let num = semver::Version::parse(num).unwrap();
+    NewVersion::new(crate_id, &num, &HashMap::new()).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -242,7 +248,7 @@ fn mock_user(req: &mut Request, u: User) -> User {
                                  &u.gh_login,
                                  u.email.as_ref().map(|s| &s[..]),
                                  u.name.as_ref().map(|s| &s[..]),
-                                 u.avatar.as_ref().map(|s| &s[..]),
+                                 u.gh_avatar.as_ref().map(|s| &s[..]),
                                  &u.gh_access_token).unwrap();
     sign_in_as(req, &u);
     return u;
@@ -250,6 +256,12 @@ fn mock_user(req: &mut Request, u: User) -> User {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
+}
+
+fn sign_in(req: &mut Request, app: &App) {
+    let conn = app.diesel_database.get().unwrap();
+    let user = ::new_user("foo").create_or_update(&conn).unwrap();
+    sign_in_as(req, &user);
 }
 
 fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {

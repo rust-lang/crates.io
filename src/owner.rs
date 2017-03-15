@@ -1,15 +1,19 @@
 use pg::GenericConnection;
 use pg::rows::Row;
 
-use {Model, User};
-use util::{CargoResult, ChainError, human};
-use util::errors::NotFound;
-use http;
 use app::App;
-use schema::crate_owners;
+use http;
+use schema::*;
+use util::errors::NotFound;
+use util::{CargoResult, ChainError, human};
+use {Model, User, Crate};
 
-#[derive(Insertable)]
+#[derive(Insertable, Associations, Identifiable)]
+#[belongs_to(Crate)]
+#[belongs_to(User, foreign_key="owner_id")]
+#[belongs_to(Team, foreign_key="owner_id")]
 #[table_name="crate_owners"]
+#[primary_key(crate_id, owner_id, owner_kind)]
 pub struct CrateOwner {
     pub crate_id: i32,
     pub owner_id: i32,
@@ -31,9 +35,8 @@ pub enum Owner {
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
+#[derive(Queryable, Identifiable)]
 pub struct Team {
-    /// We're assuming these are stable
-    pub github_id: i32,
     /// Unique table id
     pub id: i32,
     /// "github:org:team"
@@ -41,6 +44,8 @@ pub struct Team {
     /// We only query membership with github using the github_id, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,
+    /// We're assuming these are stable
+    pub github_id: i32,
     /// Sugary goodness
     pub name: Option<String>,
     pub avatar: Option<String>,
@@ -272,13 +277,13 @@ impl Owner {
 
     pub fn encodable(self) -> EncodableOwner {
         match self {
-            Owner::User(User { id, email, name, gh_login, avatar, .. }) => {
+            Owner::User(User { id, email, name, gh_login, gh_avatar, .. }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
                     login: gh_login,
                     email: email,
-                    avatar: avatar,
+                    avatar: gh_avatar,
                     url: Some(url),
                     name: name,
                     kind: String::from("user"),
