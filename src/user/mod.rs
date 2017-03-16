@@ -64,28 +64,16 @@ impl<'a> NewUser<'a> {
 
     /// Inserts the user into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<User> {
-        use diesel::{insert, update};
+        use diesel::insert;
+        use diesel::expression::dsl::sql;
+        use diesel::types::Integer;
         use diesel::pg::upsert::*;
-        use self::users::dsl::*;
 
-        conn.transaction(|| {
-            // FIXME: When Diesel 0.12 is released, this should be updated to be
-            // less racy.
-            // insert(&self.on_conflict(gh_id, do_update().set(self)))
-            //     .into(users)
-            //     .get_result(conn)
-            let maybe_inserted = insert(&self.on_conflict_do_nothing())
-                .into(users)
-                .get_result(conn)
-                .optional()?;
-            if let Some(user) = maybe_inserted {
-                return Ok(user);
-            }
-            update(users.filter(gh_id.eq(self.gh_id)))
-                .set(self)
-                .get_result(conn)
-                .map_err(Into::into)
-        })
+        let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
+        insert(&self.on_conflict(conflict_target, do_update().set(self)))
+            .into(users::table)
+            .get_result(conn)
+            .map_err(Into::into)
     }
 }
 
@@ -362,9 +350,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
     let followed_crates = Follow::belonging_to(user)
         .select(follows::crate_id);
-    let data = versions::table
-        .select(versions::id) // FIXME: Remove this line when upgraded to Diesel 0.12
-        .inner_join(crates::table)
+    let data = versions::table.inner_join(crates::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
         .limit(limit)

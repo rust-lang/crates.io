@@ -37,8 +37,7 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Clone, Queryable, Identifiable, AsChangeset, Associations)]
-#[has_many(versions)]
+#[derive(Clone, Queryable, Identifiable, AsChangeset)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -99,6 +98,7 @@ pub struct CrateLinks {
 
 #[derive(Insertable, AsChangeset, Default)]
 #[table_name="crates"]
+#[primary_key(name, max_upload_size)] // This is actually just to skip updating them
 pub struct NewCrate<'a> {
     pub name: &'a str,
     pub description: Option<&'a str>,
@@ -128,9 +128,6 @@ impl<'a> NewCrate<'a> {
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
                 return Ok(krate)
             }
-
-            // We don't want to change the max_upload_size
-            self.max_upload_size = None;
 
             let target = crates::table.filter(
                 canon_crate_name(crates::name)
