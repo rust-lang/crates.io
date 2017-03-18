@@ -512,7 +512,7 @@ fn new_krate_bad_name() {
 
 #[test]
 fn new_crate_owner() {
-    // #[derive(RustcDecodable)] struct O { ok: bool }
+    #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
 
@@ -527,22 +527,15 @@ fn new_crate_owner() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    // FIXME: Once owner endpoints use diesel, go back to hitting the real endpoint
-    {
-        let conn = app.diesel_database.get().unwrap();
-        conn.execute(&format!("INSERT INTO crate_owners (crate_id, owner_id, owner_kind) \
-            (SELECT id AS crate_id, {} AS owner_id, 0 AS owner_kind FROM crates)", u2.id))
-            .unwrap();
-    }
     // Flag the second user as an owner
-    // let body = r#"{"users":["bar"]}"#;
-    // let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
-    //                                            .with_method(Method::Put)
-    //                                            .with_body(body.as_bytes())));
-    // assert!(::json::<O>(&mut response).ok);
-    // bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
-    //                          .with_method(Method::Put)
-    //                          .with_body(body.as_bytes())));
+    let body = r#"{"users":["bar"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
+                                               .with_method(Method::Put)
+                                               .with_body(body.as_bytes())));
+    assert!(::json::<O>(&mut response).ok);
+    bad_resp!(middle.call(req.with_path("/api/v1/crates/foo_owner/owners")
+                             .with_method(Method::Put)
+                             .with_body(body.as_bytes())));
 
     // Make sure this shows up as one of their crates.
     let query = format!("user_id={}", u2.id);
@@ -899,11 +892,14 @@ fn owners() {
     #[derive(RustcDecodable)] struct O { ok: bool }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_owners/owners");
-    let other = ::user("foobar");
-    ::mock_user(&mut req, other);
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_owners"));
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_owners/owners");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_user("foobar").create_or_update(&conn).unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        ::new_crate("foo_owners").create_or_update(&conn, None, user.id).unwrap();
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let r: R = ::json(&mut response);

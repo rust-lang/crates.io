@@ -1,4 +1,3 @@
-
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
@@ -7,6 +6,7 @@ use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
+use std::borrow::Cow;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -42,7 +42,7 @@ pub struct NewUser<'a> {
     pub email: Option<&'a str>,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
-    pub gh_access_token: &'a str,
+    pub gh_access_token: Cow<'a, str>,
 }
 
 impl<'a> NewUser<'a> {
@@ -58,7 +58,7 @@ impl<'a> NewUser<'a> {
             email: email,
             name: name,
             gh_avatar: gh_avatar,
-            gh_access_token: gh_access_token,
+            gh_access_token: Cow::Borrowed(gh_access_token),
         }
     }
 

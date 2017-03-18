@@ -512,8 +512,13 @@ impl Crate {
         Ok(owners)
     }
 
-    pub fn owner_add(&self, app: &App, conn: &GenericConnection, req_user: &User,
-                     login: &str) -> CargoResult<()> {
+    pub fn owner_add(
+        &self,
+        app: &App,
+        conn: &PgConnection,
+        req_user: &User,
+        login: &str,
+    ) -> CargoResult<()> {
         let owner = match Owner::find_by_login(conn, login) {
             Ok(owner @ Owner::User(_)) => { owner }
             Ok(Owner::Team(team)) => if team.contains_user(app, req_user)? {
@@ -529,37 +534,34 @@ impl Crate {
             },
         };
 
-        // First try to un-delete if they've been soft deleted previously, then
-        // do an insert if that didn't actually affect anything.
-        let amt = conn.execute("UPDATE crate_owners
-                                        SET deleted = FALSE
-                                      WHERE crate_id = $1 AND owner_id = $2
-                                        AND owner_kind = $3",
-                               &[&self.id, &owner.id(), &owner.kind()])?;
-        assert!(amt <= 1);
-        if amt == 0 {
-            conn.execute("INSERT INTO crate_owners
-                               (crate_id, owner_id, created_by, owner_kind)
-                               VALUES ($1, $2, $3, $4)",
-                         &[&self.id, &owner.id(), &req_user.id,
-                             &owner.kind()])?;
-        }
+        let crate_owner = CrateOwner {
+            crate_id: self.id,
+            owner_id: owner.id(),
+            created_by: req_user.id,
+            owner_kind: owner.kind() as i32,
+        };
+        diesel::insert(&crate_owner.on_conflict(
+                crate_owners::table.primary_key(),
+                do_update().set(crate_owners::deleted.eq(false)),
+            )).into(crate_owners::table)
+            .execute(conn)?;
 
         Ok(())
     }
 
     pub fn owner_remove(&self,
-                        conn: &GenericConnection,
+                        conn: &PgConnection,
                         _req_user: &User,
                         login: &str) -> CargoResult<()> {
         let owner = Owner::find_by_login(conn, login).map_err(|_| {
             human(&format_args!("could not find owner with login `{}`", login))
         })?;
-        conn.execute("UPDATE crate_owners
-                              SET deleted = TRUE
-                            WHERE crate_id = $1 AND owner_id = $2
-                              AND owner_kind = $3",
-                     &[&self.id, &owner.id(), &owner.kind()])?;
+        let target = crate_owners::table.find((
+            self.id(),
+            owner.id(),
+            owner.kind() as i32,
+        ));
+        diesel::delete(target).execute(conn)?;
         Ok(())
     }
 
@@ -1120,14 +1122,6 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ version_downloads: downloads, meta: meta }))
 }
 
-fn user_and_crate(req: &mut Request) -> CargoResult<(User, Crate)> {
-    let user = req.user()?;
-    let crate_name = &req.params()["crate_id"];
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    Ok((user.clone(), krate))
-}
-
 #[derive(Insertable, Queryable, Identifiable, Associations)]
 #[belongs_to(User)]
 #[primary_key(user_id, crate_id)]
@@ -1202,10 +1196,12 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    let owners = krate.owners_old(tx)?;
-    let owners = owners.into_iter().map(|o| o.encodable()).collect();
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let owners = krate.owners(&conn)?
+        .into_iter()
+        .map(Owner::encodable)
+        .collect();
 
     #[derive(RustcEncodable)]
     struct R { users: Vec<EncodableOwner> }
@@ -1225,9 +1221,11 @@ pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
 fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
-    let (user, krate) = user_and_crate(req)?;
-    let tx = req.tx()?;
-    let owners = krate.owners_old(tx)?;
+    let user = req.user()?;
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(&req.params()["crate_id"])
+        .first::<Crate>(&*conn)?;
+    let owners = krate.owners(&conn)?;
 
     match rights(req.app(), &owners, &user)? {
         Rights::Full => {} // Yes!
@@ -1259,14 +1257,14 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.iter().any(|owner| owner.login() == *login) {
                 return Err(human(&format_args!("`{}` is already an owner", login)))
             }
-            krate.owner_add(req.app(), tx, &user, login)?;
+            krate.owner_add(req.app(), &conn, &user, login)?;
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
             if *login == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            krate.owner_remove(tx, &user, login)?;
+            krate.owner_remove(&conn, &user, login)?;
         }
     }
 

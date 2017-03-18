@@ -17,11 +17,12 @@ extern crate time;
 extern crate url;
 extern crate s3;
 
+use rustc_serialize::json::{self, Json};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::sync::{Once, ONCE_INIT, Arc};
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
-use rustc_serialize::json::{self, Json};
+use std::sync::{Once, ONCE_INIT, Arc};
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
@@ -196,7 +197,7 @@ fn new_user(login: &str) -> NewUser {
         email: None,
         name: None,
         gh_avatar: None,
-        gh_access_token: "some random token",
+        gh_access_token: Cow::Borrowed("some random token"),
     }
 }
 
@@ -315,6 +316,21 @@ fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
 
 fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
+}
+
+fn request_with_user_and_mock_crate(
+    app: &Arc<App>,
+    user: NewUser,
+    krate: &str,
+) -> MockRequest {
+    let mut req = new_req(app.clone(), krate, "1.0.0");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = user.create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
+        ::new_crate(krate).create_or_update(&conn, None, user.id).unwrap();
+    }
+    req
 }
 
 fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
