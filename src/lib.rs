@@ -44,7 +44,7 @@ pub use self::badge::Badge;
 pub use self::category::Category;
 pub use config::Config;
 pub use self::dependency::Dependency;
-pub use self::download::{CrateDownload, VersionDownload};
+pub use self::download::VersionDownload;
 pub use self::keyword::Keyword;
 pub use self::krate::Crate;
 pub use self::model::Model;

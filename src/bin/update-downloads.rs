@@ -116,7 +116,7 @@ fn collect(tx: &postgres::transaction::Transaction,
         if cnt == 0 {
             tx.execute("INSERT INTO crate_downloads
                              (crate_id, downloads, date)
-                             VALUES ($1, $2, $3)",
+                             VALUES ($1, $2, date($3))",
                        &[&crate_id, &amt, &download.date])?;
         }
     }

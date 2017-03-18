@@ -21,11 +21,10 @@ table! {
 }
 
 table! {
-    crate_downloads (id) {
-        id -> Int4,
+    crate_downloads (crate_id, date) {
         crate_id -> Int4,
         downloads -> Int4,
-        date -> Timestamp,
+        date -> Date,
     }
 }
 
