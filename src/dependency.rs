@@ -26,20 +26,18 @@ pub struct EncodableDependency {
     pub req: String,
     pub optional: bool,
     pub default_features: bool,
-    pub features: String,
+    pub features: Vec<String>,
     pub target: Option<String>,
     pub kind: Kind,
     pub downloads: i32,
 }
 
 #[derive(Copy, Clone)]
-// NB: this order is important, it must be retained! The database stores an
-// integer corresponding to each variant.
+#[repr(u32)]
 pub enum Kind {
-    Normal,
-    Build,
-    Dev,
-
+    Normal = 0,
+    Build = 1,
+    Dev = 2,
     // if you add a kind here, be sure to update `from_row` below.
 }
 
@@ -50,7 +48,6 @@ impl Dependency {
                   features: &[String], target: &Option<String>)
                   -> CargoResult<Dependency> {
         let req = req.to_string();
-        let features = features.join(",");
         let stmt = conn.prepare("INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
@@ -62,42 +59,30 @@ impl Dependency {
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
-    pub fn git_encode(&self, crate_name: &str) -> git::Dependency {
-        let Dependency { id: _, version_id: _, crate_id: _, ref req,
-                         optional, default_features, ref features,
-                         ref target, kind } = *self;
+    pub fn git_encode(self, crate_name: &str) -> git::Dependency {
         git::Dependency {
-            name: crate_name.to_string(),
-            req: req.to_string(),
-            features: features.clone(),
-            optional: optional,
-            default_features: default_features,
-            target: target.clone(),
-            kind: Some(kind),
+            name: crate_name.into(),
+            req: self.req.to_string(),
+            features: self.features,
+            optional: self.optional,
+            default_features: self.default_features,
+            target: self.target,
+            kind: Some(self.kind),
         }
     }
 
     // `downloads` need only be specified when generating a reverse dependency
     pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
-        let Dependency { id,
-                         version_id,
-                         crate_id: _,
-                         req,
-                         optional,
-                         default_features,
-                         features,
-                         target,
-                         kind } = self;
         EncodableDependency {
-            id: id,
-            version_id: version_id,
-            crate_id: crate_name.to_string(),
-            req: req.to_string(),
-            optional: optional,
-            default_features: default_features,
-            features: features.join(","),
-            target: target,
-            kind: kind,
+            id: self.id,
+            version_id: self.version_id,
+            crate_id: crate_name.into(),
+            req: self.req.to_string(),
+            optional: self.optional,
+            default_features: self.default_features,
+            features: self.features,
+            target: self.target,
+            kind: self.kind,
             downloads: downloads.unwrap_or(0),
         }
     }
@@ -105,9 +90,7 @@ impl Dependency {
 
 impl Model for Dependency {
     fn from_row(row: &Row) -> Dependency {
-        let features: String = row.get("features");
         let req: String = row.get("req");
-        let kind: Option<i32> = row.get("kind");
         Dependency {
             id: row.get("id"),
             version_id: row.get("version_id"),
@@ -115,11 +98,9 @@ impl Model for Dependency {
             req: semver::VersionReq::parse(&req).unwrap(),
             optional: row.get("optional"),
             default_features: row.get("default_features"),
-            features: features.split(',').filter(|s| !s.is_empty())
-                              .map(|s| s.to_string())
-                              .collect(),
+            features: row.get("features"),
             target: row.get("target"),
-            kind: match kind.unwrap_or(0) {
+            kind: match row.get("kind") {
                 0 => Kind::Normal,
                 1 => Kind::Build,
                 2 => Kind::Dev,
