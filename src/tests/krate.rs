@@ -939,7 +939,6 @@ fn owners() {
 }
 
 #[test]
-#[ignore] // FIXME: This test needs the yank endpoints to be using Diesel. We can't mock out what /crates/new does.
 fn yank() {
     #[derive(RustcDecodable)] struct O { ok: bool }
     #[derive(RustcDecodable)] struct V { version: EncodableVersion }
@@ -947,8 +946,8 @@ fn yank() {
     let path = ::git::checkout().join("3/f/fyk");
 
     // Upload a new crate, putting it in the git index
-    let mut req = ::new_req(app, "fyk", "1.0.0");
-    ::mock_user(&mut req, ::user("foo"));
+    let mut req = ::new_req(app.clone(), "fyk", "1.0.0");
+    ::sign_in(&mut req, &app);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
     let mut contents = String::new();
@@ -986,16 +985,14 @@ fn yank() {
 #[test]
 fn yank_not_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Delete, "/api/v1/crates/foo_not/1.0.0/yank");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_not"));
-    ::mock_user(&mut req, ::user("bar"));
+    let mut req = ::request_with_user_and_mock_crate(
+        &app, ::new_user("bar"), "foo_not");
+    ::sign_in(&mut req, &app);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }
 
 #[test]
-#[ignore] // FIXME: This test needs the yank endpoints to be using Diesel. We can't mock out what /crates/new does.
 fn yank_max_version() {
     #[derive(RustcDecodable)]
     struct O {
@@ -1004,8 +1001,8 @@ fn yank_max_version() {
     let (_b, app, middle) = ::app();
 
     // Upload a new crate
-    let mut req = ::new_req(app, "fyk_max", "1.0.0");
-    ::mock_user(&mut req, ::user("foo"));
+    let mut req = ::new_req(app.clone(), "fyk_max", "1.0.0");
+    ::sign_in(&mut req, &app);
     let mut response = ok_resp!(middle.call(&mut req));
 
     // double check the max version
@@ -1077,10 +1074,10 @@ fn yank_max_version() {
 
 #[test]
 fn publish_after_yank_max_version() {
-    // #[derive(RustcDecodable)]
-    // struct O {
-    //     ok: bool,
-    // }
+    #[derive(RustcDecodable)]
+    struct O {
+        ok: bool,
+    }
     let (_b, app, middle) = ::app();
 
     // Upload a new crate
@@ -1092,14 +1089,10 @@ fn publish_after_yank_max_version() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    // FIXME: Go back to hitting the real endpoint when yank uses Diesel
-    assert_eq!(1, app.diesel_database.get().unwrap()
-        .execute("UPDATE versions SET yanked = 't'")
-        .unwrap());
     // yank version 1.0.0
-    // let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
-    //     .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
-    // assert!(::json::<O>(&mut r).ok);
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Delete)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/yank")));
+    assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
         .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
@@ -1113,14 +1106,10 @@ fn publish_after_yank_max_version() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.max_version, "2.0.0");
 
-    // FIXME: Go back to hitting the real endpoint when unyank uses Diesel
-    assert_eq!(1, app.diesel_database.get().unwrap()
-        .execute("UPDATE versions SET yanked = 'f' WHERE num = '1.0.0'")
-        .unwrap());
     // unyank version 1.0.0
-    // let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
-    //     .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
-    // assert!(::json::<O>(&mut r).ok);
+    let mut r = ok_resp!(middle.call(req.with_method(Method::Put)
+        .with_path("/api/v1/crates/fyk_max/1.0.0/unyank")));
+    assert!(::json::<O>(&mut r).ok);
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)
         .with_path("/api/v1/crates/fyk_max")));
     let json: CrateResponse = ::json(&mut response);
