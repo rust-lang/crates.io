@@ -721,6 +721,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
     let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
         Version::belonging_to(&krates)
+            .filter(versions::yanked.eq(false))
             .load::<Version>(&*conn)?
             .grouped_by(&krates)
             .into_iter()
