@@ -348,14 +348,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /versions/:version_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let (version, krate) = match req.params().find("crate_id") {
-        Some(..) => version_and_crate_old(req)?,
+        Some(..) => version_and_crate(req)?,
         None => {
             let id = &req.params()["version_id"];
             let id = id.parse().unwrap_or(0);
-            let conn = req.tx()?;
-            let version = Version::find(&*conn, id)?;
-            let krate = Crate::find(&*conn, version.crate_id)?;
-            (version, krate)
+            let conn = req.db_conn()?;
+            versions::table.find(id)
+                .inner_join(crates::table)
+                .select((versions::all_columns, ::krate::ALL_COLUMNS))
+                .first(&*conn)?
         }
     };
 
