@@ -16,8 +16,7 @@ use schema::*;
 use util::{RequestUtils, CargoResult, ChainError, internal};
 use util::errors::NotFound;
 
-#[derive(Clone, Identifiable, Associations, Queryable)]
-#[has_many(crates_keywords)]
+#[derive(Clone, Identifiable, Queryable)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,

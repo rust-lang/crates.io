@@ -14,8 +14,7 @@ use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, ChainError};
 use {Model, Crate};
 
-#[derive(Clone, Identifiable, Associations, Queryable)]
-#[has_many(crates_categories)]
+#[derive(Clone, Identifiable, Queryable)]
 #[table_name="categories"]
 pub struct Category {
     pub id: i32,
