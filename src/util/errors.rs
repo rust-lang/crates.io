@@ -1,7 +1,9 @@
+use std::any::Any;
 use std::error::Error;
 use std::fmt;
 
 use conduit::Response;
+use diesel::result::{Error as DieselError};
 
 use util::json_response;
 
@@ -107,8 +109,14 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Error + Send + 'static> From<E> for Box<CargoError> {
+impl<E: Any + Error + Send + 'static> From<E> for Box<CargoError> {
     fn from(err: E) -> Box<CargoError> {
+        if let Some(err) = Any::downcast_ref::<DieselError>(&err) {
+            if let DieselError::NotFound = *err {
+                return Box::new(NotFound);
+            }
+        }
+
         struct Shim<E>(E);
         impl<E: Error + Send + 'static> CargoError for Shim<E> {
             fn description(&self) -> &str { Error::description(&self.0) }
