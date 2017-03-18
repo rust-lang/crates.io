@@ -1,5 +1,7 @@
 # crates.io
 
+[![Build Status](https://travis-ci.org/rust-lang/crates.io.svg?branch=master)](https://travis-ci.org/rust-lang/crates.io)
+
 Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
 online at [crates.io](https://crates.io).
 
