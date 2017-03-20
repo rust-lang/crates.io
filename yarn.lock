@@ -1485,19 +1485,9 @@ ember-cli-htmlbars-inline-precompile@0.3.6:
     ember-cli-htmlbars "^1.0.0"
     hash-for-dep "^1.0.2"
 
-ember-cli-htmlbars@1.2.0:
+ember-cli-htmlbars@1.2.0, ember-cli-htmlbars@^1.0.0, ember-cli-htmlbars@^1.0.1, ember-cli-htmlbars@^1.0.10, ember-cli-htmlbars@^1.0.3, ember-cli-htmlbars@^1.1.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-1.2.0.tgz#327e1a5dda1c85c6fcf8be888f7894b32c3f393b"
-  dependencies:
-    broccoli-persistent-filter "^1.0.3"
-    ember-cli-version-checker "^1.0.2"
-    hash-for-dep "^1.0.2"
-    json-stable-stringify "^1.0.0"
-    strip-bom "^2.0.0"
-
-ember-cli-htmlbars@^1.0.0, ember-cli-htmlbars@^1.0.1, ember-cli-htmlbars@^1.0.10, ember-cli-htmlbars@^1.0.3, ember-cli-htmlbars@^1.1.0:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-1.1.1.tgz#8776cf59796dac8f32e8625fc6d1ea45ffa55de1"
   dependencies:
     broccoli-persistent-filter "^1.0.3"
     ember-cli-version-checker "^1.0.2"
@@ -1560,9 +1550,9 @@ ember-cli-meta-tags@3.0.4:
     ember-cli-htmlbars "^1.0.10"
     ember-runtime-enumerable-includes-polyfill "^1.0.2"
 
-ember-cli-mirage@0.2.8:
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/ember-cli-mirage/-/ember-cli-mirage-0.2.8.tgz#878ece5b6fc07c195a0b8edb8e1785a65d346acf"
+ember-cli-mirage@0.2.9:
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/ember-cli-mirage/-/ember-cli-mirage-0.2.9.tgz#f710bb97e6895b3918839127ab5e570538d668b4"
   dependencies:
     broccoli-funnel "^1.0.2"
     broccoli-merge-trees "^1.1.0"
@@ -1906,12 +1896,6 @@ ember-resolver@3.0.0:
   dependencies:
     ember-cli-babel "^5.1.6"
     ember-cli-version-checker "^1.1.6"
-
-ember-rl-dropdown@0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/ember-rl-dropdown/-/ember-rl-dropdown-0.10.0.tgz#0b4b4fb411f5073061bc061bab32d9214f0e6cfe"
-  dependencies:
-    ember-cli-babel "^5.1.6"
 
 ember-route-alias@0.1.5:
   version "0.1.5"
