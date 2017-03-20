@@ -26,7 +26,7 @@ url = "1.2.1"
 postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json"] }
 r2d2 = "0.7.0"
 r2d2_postgres = "0.12.0"
-openssl = "0.9"
+openssl = "0.9.9"
 curl = "0.4"
 oauth2 = "0.3"
 log = "0.3"
