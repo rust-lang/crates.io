@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
+extern crate chrono;
 extern crate openssl;
 extern crate postgres;
 extern crate semver;
@@ -56,20 +57,17 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
 
 fn collect(tx: &postgres::transaction::Transaction,
            rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
-    use time::Duration;
-
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
-    let cutoff = time::now_utc().to_timespec();
-    let cutoff = cutoff - Duration::days(1);
+    let now = chrono::UTC::now();
+    let cutoff = now.naive_utc().date() - chrono::Duration::days(1);
 
     let mut map = HashMap::new();
     for row in rows.iter() {
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download).is_none());
     }
-    println!("updating {} versions (cutoff {})", map.len(),
-             time::at(cutoff).rfc822());
+    println!("updating {} versions (cutoff {})", map.len(), now.to_rfc2822());
     if map.len() == 0 {
         return Ok(None)
     }
@@ -111,12 +109,12 @@ fn collect(tx: &postgres::transaction::Transaction,
         // Update the total number of crate downloads for today
         let cnt = tx.execute("UPDATE crate_downloads
                                    SET downloads = downloads + $2
-                                   WHERE crate_id = $1 AND date = date($3)",
+                                   WHERE crate_id = $1 AND date = $3",
                              &[&crate_id, &amt, &download.date])?;
         if cnt == 0 {
             tx.execute("INSERT INTO crate_downloads
                              (crate_id, downloads, date)
-                             VALUES ($1, $2, date($3))",
+                             VALUES ($1, $2, $3)",
                        &[&crate_id, &amt, &download.date])?;
         }
     }
@@ -175,8 +173,8 @@ mod test {
                     VALUES ($1)",
                    &[&version.id]).unwrap();
         tx.execute("INSERT INTO version_downloads \
-                    (version_id, processed)
-                    VALUES ($1, true)",
+                    (version_id, date, processed)
+                    VALUES ($1, current_date - interval '1 day', true)",
                    &[&version.id]).unwrap();
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
@@ -223,7 +221,7 @@ mod test {
         let time = time::now_utc().to_timespec() - Duration::hours(2);
         tx.execute("INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, $2, false)",
+                    VALUES ($1, 2, 2, date($2), false)",
                    &[&version.id, &time]).unwrap();
         ::update(&tx).unwrap();
         let stmt = tx.prepare("SELECT processed FROM version_downloads
@@ -255,8 +253,8 @@ mod test {
                     VALUES ($1, 2, 1, current_date, false)",
                    &[&version.id]).unwrap();
         tx.execute("INSERT INTO version_downloads \
-                    (version_id)
-                    VALUES ($1)",
+                    (version_id, date)
+                    VALUES ($1, current_date - interval '1 day')",
                    &[&version.id]).unwrap();
 
         let version_before = Version::find(&tx, version.id).unwrap();
@@ -268,7 +266,7 @@ mod test {
         let krate2 = Crate::find(&tx, krate.id).unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
-        crate_downloads(&tx, krate.id, 2);
+        crate_downloads(&tx, krate.id, 1);
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 2);
     }

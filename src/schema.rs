@@ -155,7 +155,7 @@ table! {
         version_id -> Int4,
         downloads -> Int4,
         counted -> Int4,
-        date -> Timestamp,
+        date -> Date,
         processed -> Bool,
     }
 }

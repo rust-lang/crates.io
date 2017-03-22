@@ -9,6 +9,7 @@
 #[macro_use] extern crate log;
 #[macro_use] extern crate serde_json;
 #[macro_use] extern crate serde_derive;
+extern crate chrono;
 extern crate curl;
 extern crate diesel_full_text_search;
 extern crate dotenv;

@@ -1,5 +1,5 @@
+use chrono::NaiveDate;
 use pg::rows::Row;
-use time::Timespec;
 
 use Model;
 
@@ -8,7 +8,7 @@ pub struct VersionDownload {
     pub version_id: i32,
     pub downloads: i32,
     pub counted: i32,
-    pub date: Timespec,
+    pub date: NaiveDate,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -21,13 +21,11 @@ pub struct EncodableVersionDownload {
 
 impl VersionDownload {
     pub fn encodable(self) -> EncodableVersionDownload {
-        let VersionDownload { id, version_id, downloads, counted: _,
-                              date } = self;
         EncodableVersionDownload {
-            id: id,
-            version: version_id,
-            downloads: downloads,
-            date: ::encode_time(date),
+            id: self.id,
+            version: self.version_id,
+            downloads: self.downloads,
+            date: self.date.to_string(),
         }
     }
 }
