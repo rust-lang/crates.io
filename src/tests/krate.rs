@@ -988,6 +988,7 @@ fn yank_not_owner() {
     let mut req = ::request_with_user_and_mock_crate(
         &app, ::new_user("bar"), "foo_not");
     ::sign_in(&mut req, &app);
+    req.with_method(Method::Delete).with_path("/api/v1/crates/foo_not/1.0.0/yank");
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<::Bad>(&mut response);
 }

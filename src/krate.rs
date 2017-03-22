@@ -561,7 +561,8 @@ impl Crate {
             owner.id(),
             owner.kind() as i32,
         ));
-        diesel::delete(target).execute(conn)?;
+        diesel::update(target).set(crate_owners::deleted.eq(true))
+            .execute(conn)?;
         Ok(())
     }
 

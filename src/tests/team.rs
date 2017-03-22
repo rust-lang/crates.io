@@ -52,7 +52,7 @@ fn weird_name() {
             "{:?}", json.errors);
 }
 
-// // Test adding team without second `:`
+// Test adding team without second `:`
 #[test]
 fn one_colon() {
     let (_b, app, middle) = ::app();
@@ -81,7 +81,7 @@ fn nonexistent_team() {
             "{:?}", json.errors);
 }
 
-// // Test adding team as owner when on it
+// Test adding team as owner when on it
 #[test]
 fn add_team_as_member() {
     let (_b, app, middle) = ::app();
@@ -94,7 +94,7 @@ fn add_team_as_member() {
                             .with_body(body.as_bytes())));
 }
 
-// // Test adding team as owner when not on in
+// Test adding team as owner when not on in
 #[test]
 fn add_team_as_non_member() {
     let (_b, app, middle) = ::app();
