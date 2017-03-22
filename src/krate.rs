@@ -1046,7 +1046,8 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
     tx.execute("INSERT INTO crate_downloads (crate_id, downloads, date)
                     VALUES ($1, 1, CURRENT_DATE)
                     ON CONFLICT (crate_id, date) DO UPDATE
-                    SET downloads = crate_downloads.downloads + 1", &[&crate_id])?;
+                    SET downloads = crate_downloads.downloads + 1",
+                    &[&crate_id])?;
 
     let rows = tx.query("UPDATE versions SET downloads = downloads + 1
                          WHERE crate_id = $1 AND num = $2
@@ -1056,16 +1057,10 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
     })?;
     let version_id: i32 = row.get("id");
 
-    // Update the version_downloads table in a way that lets the
-    // update-downloads script know not to count this download
-    // (It will still be running at this point to process downloads
-    // from before this was deployed)
     tx.execute("INSERT INTO version_downloads
-                (version_id, date, downloads, counted, processed)
-                VALUES ($1, CURRENT_DATE, 1, 1, 't')
+                (version_id) VALUES ($1)
                 ON CONFLICT (version_id, date) DO UPDATE
-                SET downloads = version_downloads.downloads + 1,
-                    counted = version_downloads.counted + 1",
+                SET downloads = version_downloads.downloads + 1",
                 &[&version_id])?;
 
     // We update this last since doing it sooner would effectively cause an

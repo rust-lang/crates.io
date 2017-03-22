@@ -150,13 +150,10 @@ table! {
 }
 
 table! {
-    version_downloads (id) {
-        id -> Int4,
+    version_downloads (version_id, date) {
         version_id -> Int4,
         downloads -> Int4,
-        counted -> Int4,
         date -> Date,
-        processed -> Bool,
     }
 }
 
