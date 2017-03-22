@@ -1034,40 +1034,46 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
 
 fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
     let tx = req.tx()?;
-    let stmt = tx.prepare("SELECT versions.id as version_id
-                                FROM crates
-                                INNER JOIN versions ON
-                                    crates.id = versions.crate_id
-                                WHERE canon_crate_name(crates.name) =
-                                      canon_crate_name($1)
-                                  AND versions.num = $2
-                                LIMIT 1")?;
-    let rows = stmt.query(&[&crate_name, &version])?;
-    let row = rows.iter().next().chain_error(|| {
-        human("crate or version not found")
-    })?;
-    let version_id: i32 = row.get("version_id");
-    let now = ::now();
 
-    // Bump download counts.
-    //
-    // Note that this is *not* an atomic update, and that's somewhat
-    // intentional. It doesn't appear that postgres supports an atomic update of
-    // a counter, so we just do the hopefully "least racy" thing. This is
-    // largely ok because these download counters are just that, counters. No
-    // need to have super high-fidelity counter.
-    //
-    // Also, we only update the counter for *today*, nothing else. We have lots
-    // of other counters, but they're all updated later on via the
-    // update-downloads script.
-    let amt = tx.execute("UPDATE version_downloads
-                               SET downloads = downloads + 1
-                               WHERE version_id = $1 AND date($2) = date(date)",
-                         &[&version_id, &now])?;
-    if amt == 0 {
-        tx.execute("INSERT INTO version_downloads
-                         (version_id) VALUES ($1)", &[&version_id])?;
-    }
+    let rows = tx.query("UPDATE crates SET downloads = downloads + 1
+                         WHERE canon_crate_name(name) = canon_crate_name($1)
+                         RETURNING id", &[&crate_name])?;
+    let row = rows.iter().next().chain_error(|| {
+        human("crate not found")
+    })?;
+    let crate_id: i32 = row.get("id");
+
+    tx.execute("INSERT INTO crate_downloads (crate_id, downloads, date)
+                    VALUES ($1, 1, CURRENT_DATE)
+                    ON CONFLICT (crate_id, date) DO UPDATE
+                    SET downloads = crate_downloads.downloads + 1", &[&crate_id])?;
+
+    let rows = tx.query("UPDATE versions SET downloads = downloads + 1
+                         WHERE crate_id = $1 AND num = $2
+                         RETURNING id", &[&crate_id, &version])?;
+    let row = rows.iter().next().chain_error(|| {
+        human("version not found")
+    })?;
+    let version_id: i32 = row.get("id");
+
+    // Update the version_downloads table in a way that lets the
+    // update-downloads script know not to count this download
+    // (It will still be running at this point to process downloads
+    // from before this was deployed)
+    tx.execute("INSERT INTO version_downloads
+                (version_id, date, downloads, counted, processed)
+                VALUES ($1, CURRENT_DATE, 1, 1, 't')
+                ON CONFLICT (version_id, date) DO UPDATE
+                SET downloads = version_downloads.downloads + 1,
+                    counted = version_downloads.counted + 1",
+                &[&version_id])?;
+
+    // We update this last since doing it sooner would effectively cause an
+    // exclusive lock on incrementing download counts until the transaction
+    // commits, while we could potentially be doing the first 4 queries
+    // concurrently.
+    tx.execute("UPDATE metadata SET total_downloads = total_downloads + 1", &[])?;
+
     Ok(())
 }
 
