@@ -79,7 +79,7 @@ impl Category {
 
     pub fn encodable(self) -> EncodableCategory {
         let Category {
-            id: _, crates_cnt, category, slug, description, created_at
+            crates_cnt, category, slug, description, created_at, ..
         } = self;
         EncodableCategory {
             id: slug.clone(),
@@ -125,7 +125,7 @@ impl Category {
         // it out and don't add it. Return it to be able to warn about it.
         let mut invalid_categories = vec![];
         let new_categories: Vec<Category> = categories.iter().flat_map(|c| {
-            match Category::find_by_slug(conn, &c) {
+            match Category::find_by_slug(conn, c) {
                 Ok(cat) => Some(cat),
                 Err(_) => {
                     invalid_categories.push(c.to_string());
@@ -324,8 +324,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = req.tx()?;
-    let cat = Category::find_by_slug(&*conn, &slug)?;
-    let subcats = cat.subcategories(&*conn)?.into_iter().map(|s| {
+    let cat = Category::find_by_slug(conn, slug)?;
+    let subcats = cat.subcategories(conn)?.into_iter().map(|s| {
         s.encodable()
     }).collect();
     let cat = cat.encodable();

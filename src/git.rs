@@ -49,7 +49,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo = &*repo;
     let repo_path = repo.workdir().unwrap();
-    let dst = index_file(&repo_path, &krate.name);
+    let dst = index_file(repo_path, &krate.name);
 
     commit_and_push(repo, || {
         // Add the crate to its relevant file
@@ -72,11 +72,10 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
 pub fn yank(app: &App, krate: &str, version: &semver::Version,
             yanked: bool) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
-    let repo = &*repo;
     let repo_path = repo.workdir().unwrap();
-    let dst = index_file(&repo_path, krate);
+    let dst = index_file(repo_path, krate);
 
-    commit_and_push(repo, || {
+    commit_and_push(&repo, || {
         let mut prev = String::new();
         File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
         let new = prev.lines().map(|line| {
@@ -84,7 +83,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version,
                 internal(&format_args!("couldn't decode: `{}`", line))
             })?;
             if git_crate.name != krate ||
-               git_crate.vers.to_string() != version.to_string() {
+               git_crate.vers != version.to_string() {
                 return Ok(line.to_string())
             }
             git_crate.yanked = Some(yanked);

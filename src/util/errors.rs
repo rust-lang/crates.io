@@ -15,7 +15,7 @@ use util::json_response;
 
 pub trait CargoError: Send + fmt::Display + 'static {
     fn description(&self) -> &str;
-    fn cause<'a>(&'a self) -> Option<&'a (CargoError)> { None }
+    fn cause(&self) -> Option<&(CargoError)> { None }
 
     fn response(&self) -> Option<Response> {
         if self.human() {
@@ -150,9 +150,8 @@ struct ConcreteCargoError {
 impl fmt::Display for ConcreteCargoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.description)?;
-        match self.detail  {
-            Some(ref s) => write!(f, " ({})", s)?,
-            None => {}
+        if let Some(ref s) = self.detail {
+            write!(f, " ({})", s)?;
         }
         Ok(())
     }
@@ -174,7 +173,7 @@ impl CargoError for NotFound {
             errors: vec![StringError { detail: "Not Found".to_string() }],
         });
         response.status = (404, "Not Found");
-        return Some(response);
+        Some(response)
     }
 }
 
@@ -196,7 +195,7 @@ impl CargoError for Unauthorized {
             }],
         });
         response.status = (403, "Forbidden");
-        return Some(response);
+        Some(response)
     }
 }
 

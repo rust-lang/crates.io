@@ -9,7 +9,7 @@ use std::str;
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
-/// parse_github_response to handle the "common" processing of responses.
+/// `parse_github_response` to handle the "common" processing of responses.
 pub fn github(app: &App, url: &str, auth: &Token)
               -> Result<(Easy, Vec<u8>), curl::Error> {
     let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
@@ -38,7 +38,7 @@ pub fn github(app: &App, url: &str, auth: &Token)
 }
 
 /// Checks for normal responses
-pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: Vec<u8>)
+pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8])
                                             -> CargoResult<T> {
     match resp.response_code().unwrap() {
         200 => {} // Ok!
@@ -52,13 +52,13 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: Vec<u8>)
                               https://crates.io/login"));
         }
         n => {
-            let resp = String::from_utf8_lossy(&data);
+            let resp = String::from_utf8_lossy(data);
             return Err(internal(&format_args!("didn't get a 200 result from \
                                         github, got {} with: {}", n, resp)));
         }
     }
 
-    let json = str::from_utf8(&data).ok().chain_error(|| {
+    let json = str::from_utf8(data).ok().chain_error(|| {
         internal("github didn't send a utf8-response")
     })?;
 

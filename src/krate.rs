@@ -23,7 +23,7 @@ use app::{App, RequestApp};
 use badge::EncodableBadge;
 use category::EncodableCategory;
 use db::RequestTransaction;
-use dependency::{Dependency, EncodableDependency};
+use dependency::{ReverseDependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::EncodableKeyword;
@@ -53,7 +53,7 @@ pub struct Crate {
     pub max_upload_size: Option<i32>,
 }
 
-/// We literally never want to select textsearchable_index_col
+/// We literally never want to select `textsearchable_index_col`
 /// so we provide this type and constant to pass to `.select`
 type AllColumns = (crates::id, crates::name, crates::updated_at,
     crates::created_at, crates::downloads, crates::description,
@@ -168,8 +168,8 @@ impl<'a> NewCrate<'a> {
     }
 
     fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(ref license) = self.license {
-            for part in license.split("/") {
+        if let Some(license) = self.license {
+            for part in license.split('/') {
                license_exprs::validate_license_expr(part)
                    .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
                                                     for options, and http://spdx.org/licenses/ \
@@ -246,6 +246,8 @@ impl Crate {
         Ok(Model::from_row(&row))
     }
 
+    // This is cleaned up by the diesel port
+    #[cfg_attr(feature = "lint", allow(too_many_arguments))]
     pub fn find_or_insert(conn: &GenericConnection,
                           name: &str,
                           user_id: i32,
@@ -299,9 +301,8 @@ impl Crate {
             &description, &readme,
             &license, &repository,
             &name])?;
-        match rows.iter().next() {
-            Some(row) => return Ok(Model::from_row(&row)),
-            None => {}
+        if let Some(row) = rows.iter().next() {
+            return Ok(Model::from_row(&row));
         }
 
         let stmt = conn.prepare("SELECT 1 FROM reserved_crate_names
@@ -352,7 +353,7 @@ impl Crate {
         }
 
         fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            license.iter().flat_map(|s| s.split("/"))
+            license.iter().flat_map(|s| s.split('/'))
                    .map(license_exprs::validate_license_expr)
                    .collect::<Result<Vec<_>, _>>()
                    .map(|_| ())
@@ -364,7 +365,7 @@ impl Crate {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        if name.len() == 0 { return false }
+        if name.is_empty() { return false }
         name.chars().next().unwrap().is_alphabetic() &&
             name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
             name.chars().all(|c| c.is_ascii())
@@ -399,8 +400,7 @@ impl Crate {
                      -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, description,
-            homepage, documentation, license, repository,
-            readme: _, id: _, max_upload_size: _,
+            homepage, documentation, license, repository, ..
         } = self;
         let versions_link = match versions {
             Some(..) => None,
@@ -488,7 +488,7 @@ impl Crate {
                 return Err(human(&format_args!("only members of {} can add it as \
                                           an owner", login)));
             },
-            Err(err) => if login.contains(":") {
+            Err(err) => if login.contains(':') {
                 Owner::Team(Team::create(app, conn, login, req_user)?)
             } else {
                 return Err(err);
@@ -535,12 +535,8 @@ impl Crate {
                        features: &HashMap<String, Vec<String>>,
                        authors: &[String])
                        -> CargoResult<Version> {
-        match Version::find_by_num(conn, self.id, ver)? {
-            Some(..) => {
-                return Err(human(&format_args!("crate version `{}` is already uploaded",
-                                         ver)))
-            }
-            None => {}
+        if Version::find_by_num(conn, self.id, ver)?.is_some() {
+            return Err(human(&format_args!("crate version `{}` is already uploaded", ver)))
         }
         Version::insert(conn, self.id, ver, features, authors)
     }
@@ -576,7 +572,7 @@ impl Crate {
                                 conn: &GenericConnection,
                                 offset: i64,
                                 limit: i64)
-                                -> CargoResult<(Vec<(Dependency, String, i32)>, i64)> {
+                                -> CargoResult<(Vec<ReverseDependency>, i64)> {
         let stmt = conn.prepare(include_str!("krate_reverse_dependencies.sql"))?;
 
         let rows = stmt.query(&[&self.id, &offset, &limit])?;
@@ -587,7 +583,7 @@ impl Crate {
         };
         let vec: Vec<_> = rows
             .iter()
-            .map(|r| (Model::from_row(&r), r.get("crate_name"), r.get("crate_downloads")))
+            .map(|r| Model::from_row(&r))
             .collect();
 
         Ok((vec, cnt))
@@ -666,16 +662,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                         categories::slug.like(format!("{}::%", cat))))
         ));
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
-        query = query.filter(crates::id.eq_any((
+        query = query.filter(crates::id.eq_any(
             crate_owners::table.select(crate_owners::crate_id)
                 .filter(crate_owners::owner_id.eq(user_id))
                 .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
-        )));
+        ));
     } else if params.get("following").is_some() {
-        query = query.filter(crates::id.eq_any((
+        query = query.filter(crates::id.eq_any(
             follows::table.select(follows::crate_id)
                 .filter(follows::user_id.eq(req.user()?.id))
-        )));
+        ));
     }
 
     let data = query.load::<(Crate, i64)>(&*conn)?;
@@ -780,7 +776,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.tx()?;
-    let krate = Crate::find_by_name(conn, &name)?;
+    let krate = Crate::find_by_name(conn, name)?;
     let versions = krate.versions(conn)?;
     let ids = versions.iter().map(|v| v.id).collect();
     let kws = krate.keywords(conn)?;
@@ -860,11 +856,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
                                         &new_crate.authors)?;
 
     // Link this new version to all dependencies
-    let mut deps = Vec::new();
-    for dep in new_crate.deps.iter() {
+    let deps = new_crate.deps.iter().map(|dep| {
         let (dep, krate) = version.add_dependency(req.tx()?, dep)?;
-        deps.push(dep.git_encode(&krate.name));
-    }
+        Ok(dep.git_encode(&krate.name))
+    }).collect::<CargoResult<_>>()?;
 
     // Update all keywords for this crate
     Keyword::update_crate_old(req.tx()?, &krate, &keywords)?;
@@ -885,7 +880,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     // Upload the crate, return way to delete the crate from the server
     // If the git commands fail below, we shouldn't keep the crate on the
     // server.
-    let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, &vers)?;
+    let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, vers)?;
 
     // Register this crate in our local git repo.
     let git_crate = git::Crate {
@@ -947,10 +942,10 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
         missing.push("license");
     }
-    if new.authors.len() == 0 || new.authors.iter().all(|s| s.is_empty()) {
+    if new.authors.iter().all(|s| s.is_empty()) {
         missing.push("authors");
     }
-    if missing.len() > 0 {
+    if !missing.is_empty() {
         return Err(human(&format_args!("missing or empty metadata fields: {}. Please \
             see http://doc.crates.io/manifest.html#package-metadata for \
             how to upload metadata", missing.join(", "))));
@@ -1216,14 +1211,14 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.iter().any(|owner| owner.login() == *login) {
                 return Err(human(&format_args!("`{}` is already an owner", login)))
             }
-            krate.owner_add(req.app(), tx, &user, &login)?;
+            krate.owner_add(req.app(), tx, &user, login)?;
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
             if *login == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            krate.owner_remove(tx, &user, &login)?;
+            krate.owner_remove(tx, &user, login)?;
         }
     }
 
@@ -1236,11 +1231,11 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.tx()?;
-    let krate = Crate::find_by_name(conn, &name)?;
+    let krate = Crate::find_by_name(conn, name)?;
     let (offset, limit) = req.pagination(10, 100)?;
     let (rev_deps, total) = krate.reverse_dependencies(conn, offset, limit)?;
     let rev_deps = rev_deps.into_iter()
-        .map(|(dep, crate_name, downloads)| dep.encodable(&crate_name, Some(downloads)))
+        .map(ReverseDependency::encodable)
         .collect();
 
     #[derive(RustcEncodable)]

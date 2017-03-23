@@ -87,7 +87,7 @@ impl Team {
                   req_user: &User)
                   -> CargoResult<Self> {
         // must look like system:xxxxxxx
-        let mut chunks = login.split(":");
+        let mut chunks = login.split(':');
         match chunks.next().unwrap() {
             // github:rust-lang:owners
             "github" => {
@@ -140,7 +140,7 @@ impl Team {
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
         let token = http::token(req_user.gh_access_token.clone());
         let (handle, data) = http::github(app, &url, &token)?;
-        let teams: Vec<GithubTeam> = http::parse_github_response(handle, data)?;
+        let teams: Vec<GithubTeam> = http::parse_github_response(handle, &data)?;
 
         let team = teams.into_iter().find(|team| team.slug == team_name)
             .ok_or_else(|| {
@@ -159,7 +159,7 @@ impl Team {
 
         let url = format!("/orgs/{}", org_name);
         let (handle, resp) = http::github(app, &url, &token)?;
-        let org: Org = http::parse_github_response(handle, resp)?;
+        let org: Org = http::parse_github_response(handle, &resp)?;
 
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
@@ -210,7 +210,7 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User)
         return Ok(false)
     }
 
-    let membership: Membership = http::parse_github_response(handle, resp)?;
+    let membership: Membership = http::parse_github_response(handle, &resp)?;
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
@@ -237,7 +237,7 @@ impl Owner {
     /// sensitive.
     pub fn find_by_login(conn: &GenericConnection,
                          name: &str) -> CargoResult<Owner> {
-        let owner = if name.contains(":") {
+        let owner = if name.contains(':') {
             Owner::Team(Team::find_by_login(conn, name).map_err(|_|
                 human(&format_args!("could not find team with name {}", name))
             )?)
@@ -286,7 +286,7 @@ impl Owner {
             }
             Owner::Team(Team { id, name, login, avatar, .. }) => {
                 let url = {
-                    let mut parts = login.split(":");
+                    let mut parts = login.split(':');
                     parts.next(); // discard github
                     format!("https://github.com/orgs/{}/teams/{}",
                             parts.next().unwrap(), parts.next().unwrap())

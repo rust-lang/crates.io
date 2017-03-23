@@ -110,7 +110,7 @@ impl Decodable for KeywordList {
         if inner.len() > 5 {
             return Err(d.error("a maximum of 5 keywords per crate are allowed"))
         }
-        for val in inner.iter() {
+        for val in &inner {
             if val.len() > 20 {
                 return Err(d.error("keywords must contain less than 20 \
                                     characters"))
@@ -225,16 +225,12 @@ impl Deref for Feature {
 
 impl Deref for CrateVersion {
     type Target = semver::Version;
-    fn deref<'a>(&'a self) -> &'a semver::Version {
-        let CrateVersion(ref s) = *self; s
-    }
+    fn deref(&self) -> &semver::Version { &self.0 }
 }
 
 impl Deref for CrateVersionReq {
     type Target = semver::VersionReq;
-    fn deref<'a>(&'a self) -> &'a semver::VersionReq {
-        let CrateVersionReq(ref s) = *self; s
-    }
+    fn deref(&self) -> &semver::VersionReq { &self.0 }
 }
 
 impl Deref for KeywordList {
