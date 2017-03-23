@@ -8,7 +8,7 @@ cache:
     - $HOME/.yarn-cache
 
 before_install:
-  - nvm install 4.6.0
+  - nvm install 6.10.0
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
   - npm config set spin false
   - npm install -g yarn
