@@ -1,15 +1,20 @@
-use pg::GenericConnection;
+use diesel;
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use pg::rows::Row;
 
-use {Model, User};
-use util::{CargoResult, ChainError, human};
-use util::errors::NotFound;
-use http;
 use app::App;
-use schema::crate_owners;
+use http;
+use schema::*;
+use util::{CargoResult, human};
+use {Model, User, Crate};
 
-#[derive(Insertable)]
+#[derive(Insertable, Associations, Identifiable)]
+#[belongs_to(Crate)]
+#[belongs_to(User, foreign_key="owner_id")]
+#[belongs_to(Team, foreign_key="owner_id")]
 #[table_name="crate_owners"]
+#[primary_key(crate_id, owner_id, owner_kind)]
 pub struct CrateOwner {
     pub crate_id: i32,
     pub owner_id: i32,
@@ -31,9 +36,8 @@ pub enum Owner {
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
+#[derive(Queryable, Identifiable)]
 pub struct Team {
-    /// We're assuming these are stable
-    pub github_id: i32,
     /// Unique table id
     pub id: i32,
     /// "github:org:team"
@@ -41,6 +45,8 @@ pub struct Team {
     /// We only query membership with github using the github_id, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,
+    /// We're assuming these are stable
+    pub github_id: i32,
     /// Sugary goodness
     pub name: Option<String>,
     pub avatar: Option<String>,
@@ -68,21 +74,9 @@ pub enum Rights {
 }
 
 impl Team {
-    /// Just gets the Team from the database by name.
-    pub fn find_by_login(conn: &GenericConnection,
-                         login: &str) -> CargoResult<Self> {
-        let stmt = conn.prepare("SELECT * FROM teams
-                                      WHERE login = $1")?;
-        let rows = stmt.query(&[&login])?;
-        let row = rows.iter().next().chain_error(|| {
-            NotFound
-        })?;
-        Ok(Model::from_row(&row))
-    }
-
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
     pub fn create(app: &App,
-                  conn: &GenericConnection,
+                  conn: &PgConnection,
                   login: &str,
                   req_user: &User)
                   -> CargoResult<Self> {
@@ -109,7 +103,7 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &GenericConnection, login: &str,
+    pub fn create_github_team(app: &App, conn: &PgConnection, login: &str,
                               org_name: &str, team_name: &str, req_user: &User)
                               -> CargoResult<Self> {
         // GET orgs/:org/teams
@@ -164,21 +158,29 @@ impl Team {
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
 
-    pub fn insert(conn: &GenericConnection,
+    pub fn insert(conn: &PgConnection,
                   login: &str,
                   github_id: i32,
                   name: Option<String>,
                   avatar: Option<String>)
                   -> CargoResult<Self> {
-
-        let stmt = conn.prepare("INSERT INTO teams
-                                   (login, github_id, name, avatar)
-                                   VALUES ($1, $2, $3, $4)
-                                   RETURNING *")?;
-
-        let rows = stmt.query(&[&login, &github_id, &name, &avatar])?;
-        let row = rows.iter().next().unwrap();
-        Ok(Model::from_row(&row))
+        #[derive(Insertable)]
+        #[table_name="teams"]
+        struct NewTeam<'a> {
+            login: &'a str,
+            github_id: i32,
+            name: Option<String>,
+            avatar: Option<String>,
+        }
+        let new_team = NewTeam {
+            login: login,
+            github_id: github_id,
+            name: name,
+            avatar: avatar,
+        };
+        diesel::insert(&new_team).into(teams::table)
+            .get_result(conn)
+            .map_err(Into::into)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.
@@ -235,18 +237,23 @@ impl Owner {
     /// Finds the owner by name, failing out if it doesn't exist.
     /// May be a user's GH login, or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &GenericConnection,
+    pub fn find_by_login(conn: &PgConnection,
                          name: &str) -> CargoResult<Owner> {
-        let owner = if name.contains(':') {
-            Owner::Team(Team::find_by_login(conn, name).map_err(|_|
-                human(&format_args!("could not find team with name {}", name))
-            )?)
+        if name.contains(':') {
+            teams::table.filter(teams::login.eq(name))
+                .first(conn)
+                .map(Owner::Team)
+                .map_err(|_|
+                    human(&format_args!("could not find team with name {}", name))
+                )
         } else {
-            Owner::User(User::find_by_login(conn, name).map_err(|_|
-                human(&format_args!("could not find user with login `{}`", name))
-            )?)
-        };
-        Ok(owner)
+            users::table.filter(users::gh_login.eq(name))
+                .first(conn)
+                .map(Owner::User)
+                .map_err(|_|
+                    human(&format_args!("could not find user with login `{}`", name))
+                )
+        }
     }
 
     pub fn kind(&self) -> i32 {
@@ -272,13 +279,13 @@ impl Owner {
 
     pub fn encodable(self) -> EncodableOwner {
         match self {
-            Owner::User(User { id, email, name, gh_login, avatar, .. }) => {
+            Owner::User(User { id, email, name, gh_login, gh_avatar, .. }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
                     login: gh_login,
                     email: email,
-                    avatar: avatar,
+                    avatar: gh_avatar,
                     url: Some(url),
                     name: name,
                     kind: String::from("user"),

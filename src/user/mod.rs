@@ -1,4 +1,3 @@
-
 use conduit::{Request, Response};
 use conduit_cookie::{RequestSession};
 use conduit_router::RequestParams;
@@ -7,6 +6,7 @@ use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
+use std::borrow::Cow;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -30,7 +30,7 @@ pub struct User {
     pub api_token: String,
     pub gh_login: String,
     pub name: Option<String>,
-    pub avatar: Option<String>,
+    pub gh_avatar: Option<String>,
     pub gh_id: i32,
 }
 
@@ -42,7 +42,7 @@ pub struct NewUser<'a> {
     pub email: Option<&'a str>,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
-    pub gh_access_token: &'a str,
+    pub gh_access_token: Cow<'a, str>,
 }
 
 impl<'a> NewUser<'a> {
@@ -58,7 +58,7 @@ impl<'a> NewUser<'a> {
             email: email,
             name: name,
             gh_avatar: gh_avatar,
-            gh_access_token: gh_access_token,
+            gh_access_token: Cow::Borrowed(gh_access_token),
         }
     }
 
@@ -158,11 +158,11 @@ impl User {
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
-        let User { id, email, name, gh_login, avatar, .. } = self;
+        let User { id, email, name, gh_login, gh_avatar, .. } = self;
         EncodableUser {
             id: id,
             email: email,
-            avatar: avatar,
+            avatar: gh_avatar,
             login: gh_login,
             name: name,
         }
@@ -179,7 +179,7 @@ impl Model for User {
             gh_login: row.get("gh_login"),
             gh_id: row.get("gh_id"),
             name: row.get("name"),
-            avatar: row.get("gh_avatar"),
+            gh_avatar: row.get("gh_avatar"),
         }
     }
 

@@ -42,12 +42,13 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/versions");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/versions");
     let v = {
-        ::mock_user(&mut req, ::user("foo"));
-        let (krate, _) = ::mock_crate(&mut req, ::krate("foo_vers_show"));
-        let tx = req.tx().unwrap();
-        Version::insert(tx, krate.id, &sv("2.0.0"), &HashMap::new(), &[]).unwrap()
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        let krate = ::new_crate("foo_vers_show")
+            .create_or_update(&conn, None, user.id).unwrap();
+        ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));

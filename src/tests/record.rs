@@ -1,6 +1,8 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::env;
 use std::fs::File;
+use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 use std::net::{TcpListener, TcpStream};
@@ -9,10 +11,9 @@ use std::str;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
-use std::fs;
 
 use bufstream::BufStream;
-use cargo_registry::User;
+use cargo_registry::user::NewUser;
 use curl::easy::{Easy, List, ReadError};
 use rustc_serialize::json;
 
@@ -257,10 +258,10 @@ fn replay_http(socket: TcpStream, data: &mut BufStream<File>,
 }
 
 impl GhUser {
-    pub fn user(&'static self) -> User {
+    pub fn user(&'static self) -> NewUser {
         self.init.call_once(|| self.init());
-        let mut u = ::user(self.login);
-        u.gh_access_token = self.token();
+        let mut u = ::new_user(self.login);
+        u.gh_access_token = Cow::Owned(self.token());
         return u
     }
 

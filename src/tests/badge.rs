@@ -85,7 +85,7 @@ fn update_no_badges() {
     let badges = HashMap::new();
 
     // Updating with no badges has no effect
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
 }
 
@@ -99,7 +99,7 @@ fn update_add_appveyor() {
         String::from("appveyor"),
         test_badges.appveyor_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.appveyor]);
 }
 
@@ -113,7 +113,7 @@ fn update_add_travis_ci() {
         String::from("travis-ci"),
         test_badges.travis_ci_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.travis_ci]);
 }
 
@@ -127,7 +127,7 @@ fn update_add_gitlab() {
         String::from("gitlab"),
         test_badges.gitlab_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.gitlab]);
 }
 
@@ -142,7 +142,7 @@ fn replace_badge() {
         String::from("gitlab"),
         test_badges.gitlab_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges.clone()).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges.clone()).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.gitlab]);
 
     // Replace with another badge
@@ -151,7 +151,7 @@ fn replace_badge() {
         String::from("travis-ci"),
         test_badges.travis_ci_attributes.clone()
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.travis_ci]);
 }
 
@@ -166,7 +166,7 @@ fn update_attributes() {
         String::from("travis-ci"),
         test_badges.travis_ci_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     let current_badges = krate.badges(req.tx().unwrap()).unwrap();
     assert_eq!(current_badges.len(), 1);
     assert!(current_badges.contains(&test_badges.travis_ci));
@@ -186,7 +186,7 @@ fn update_attributes() {
         String::from("travis-ci"),
         badge_attributes_travis_ci2.clone()
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     let current_badges = krate.badges(req.tx().unwrap()).unwrap();
     assert_eq!(current_badges.len(), 1);
     assert!(current_badges.contains(&travis_ci2));
@@ -212,7 +212,7 @@ fn clear_badges() {
         String::from("gitlab"),
         test_badges.gitlab_attributes
     );
-    Badge::update_crate(req.tx().unwrap(), &krate, badges.clone()).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges.clone()).unwrap();
 
     let current_badges = krate.badges(req.tx().unwrap()).unwrap();
     assert_eq!(current_badges.len(), 3);
@@ -222,7 +222,7 @@ fn clear_badges() {
 
     // Removing all badges
     badges.clear();
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
 }
 
@@ -244,7 +244,7 @@ fn appveyor_extra_keys() {
         test_badges.appveyor_attributes
     );
 
-    Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.appveyor]);
 }
 
@@ -262,7 +262,7 @@ fn travis_ci_required_keys() {
         test_badges.travis_ci_attributes
     );
 
-    let invalid_badges = Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&String::from("travis-ci")));
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
@@ -282,7 +282,7 @@ fn gitlab_required_keys() {
         test_badges.gitlab_attributes
     );
 
-    let invalid_badges = Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&String::from("gitlab")));
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
@@ -306,7 +306,7 @@ fn unknown_badge() {
         invalid_attributes
     );
 
-    let invalid_badges = Badge::update_crate(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&String::from("not-a-badge")));
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);

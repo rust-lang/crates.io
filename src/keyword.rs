@@ -29,7 +29,7 @@ pub struct Keyword {
 #[belongs_to(Crate)]
 #[table_name="crates_keywords"]
 #[primary_key(crate_id, keyword_id)]
-struct CrateKeyword {
+pub struct CrateKeyword {
     crate_id: i32,
     keyword_id: i32,
 }
@@ -66,8 +66,11 @@ impl Keyword {
             .map(|s| (s.to_lowercase(), NewKeyword { keyword: *s }))
             .unzip();
 
-        diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
-            .execute(conn)?;
+        // https://github.com/diesel-rs/diesel/issues/797
+        if !new_keywords.is_empty() {
+            diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
+                .execute(conn)?;
+        }
         keywords::table.filter(lower(keywords::keyword).eq(any(lowercase_names)))
             .load(conn)
     }

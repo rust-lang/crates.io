@@ -3,7 +3,7 @@ use krate::Crate;
 use schema::badges;
 use util::CargoResult;
 
-use diesel::pg::Pg;
+use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
 use pg::GenericConnection;
 use pg::rows::Row;
@@ -67,7 +67,48 @@ impl Badge {
         }
     }
 
-    pub fn update_crate(conn: &GenericConnection,
+    pub fn update_crate<'a>(conn: &PgConnection,
+                            krate: &Crate,
+                            badges: Option<&'a HashMap<String, HashMap<String, String>>>)
+                            -> CargoResult<Vec<&'a str>> {
+        use diesel::{insert, delete};
+
+        #[derive(Insertable)]
+        #[table_name="badges"]
+        struct NewBadge<'a> {
+            crate_id: i32,
+            badge_type: &'a str,
+            attributes: serde_json::Value,
+        }
+
+        let mut invalid_badges = vec![];
+        let mut new_badges = vec![];
+
+        if let Some(badges) = badges {
+            for (k, v) in badges {
+                let attributes_json = serde_json::to_value(v).unwrap();
+
+                let json = json!({"badge_type": k, "attributes": attributes_json});
+                if serde_json::from_value::<Badge>(json).is_ok() {
+                    new_badges.push(NewBadge {
+                        crate_id: krate.id,
+                        badge_type: &**k,
+                        attributes: attributes_json,
+                    });
+                } else {
+                    invalid_badges.push(&**k);
+                }
+            }
+        }
+
+        conn.transaction(|| {
+            delete(badges::table.filter(badges::crate_id.eq(krate.id))).execute(conn)?;
+            insert(&new_badges).into(badges::table).execute(conn)?;
+            Ok(invalid_badges)
+        })
+    }
+
+    pub fn update_crate_old(conn: &GenericConnection,
                         krate: &Crate,
                         badges: HashMap<String, HashMap<String, String>>)
                         -> CargoResult<Vec<String>> {

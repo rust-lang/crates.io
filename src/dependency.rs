@@ -1,10 +1,14 @@
+use diesel::prelude::*;
+use diesel::pg::{Pg, PgConnection};
 use pg::GenericConnection;
 use pg::rows::Row;
 use semver;
 
 use Model;
 use git;
-use util::{CargoResult};
+use krate::{Crate, canon_crate_name};
+use schema::*;
+use util::{CargoResult, human};
 
 pub struct Dependency {
     pub id: i32,
@@ -45,6 +49,19 @@ pub enum Kind {
     Build = 1,
     Dev = 2,
     // if you add a kind here, be sure to update `from_row` below.
+}
+
+#[derive(Insertable)]
+#[table_name="dependencies"]
+struct NewDependency<'a> {
+    version_id: i32,
+    crate_id: i32,
+    req: String,
+    optional: bool,
+    default_features: bool,
+    features: Vec<&'a str>,
+    target: Option<&'a str>,
+    kind: i32,
 }
 
 impl Dependency {
@@ -99,6 +116,73 @@ impl Dependency {
 impl ReverseDependency {
     pub fn encodable(self) -> EncodableDependency {
         self.dependency.encodable(&self.crate_name, Some(self.crate_downloads))
+    }
+}
+
+pub fn add_dependencies(
+    conn: &PgConnection,
+    deps: &[::upload::CrateDependency],
+    version_id: i32,
+) -> CargoResult<Vec<Dependency>> {
+    use diesel::insert;
+    use diesel::expression::dsl::any;
+
+    let crate_names = deps.iter().map(|d| &*d.name).collect::<Vec<_>>();
+    let crates = Crate::all()
+        .filter(canon_crate_name(crates::name).eq(any(crate_names)))
+        .load::<Crate>(conn)?;
+
+    let new_dependencies = deps.iter().map(|dep| {
+        let krate = crates.iter().find(|c| dep.name == c.name)
+            .map(Ok)
+            .unwrap_or_else(|| {
+                Err(human(&format_args!("no known crate named `{}`", &*dep.name)))
+            })?;
+        if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+            return Err(human("wildcard (`*`) dependency constraints are not allowed \
+                              on crates.io. See http://doc.crates.io/faq.html#can-\
+                              libraries-use--as-a-version-for-their-dependencies for more \
+                              information"));
+        }
+        let features = dep.features.iter().map(|s| &**s).collect();
+        Ok(NewDependency {
+            version_id: version_id,
+            crate_id: krate.id,
+            req: dep.version_req.to_string(),
+            kind: dep.kind.unwrap_or(Kind::Normal) as i32,
+            optional: dep.optional,
+            default_features: dep.default_features,
+            features: features,
+            target: dep.target.as_ref().map(|s| &**s),
+        })
+    }).collect::<Result<Vec<_>, _>>()?;
+
+    insert(&new_dependencies).into(dependencies::table)
+        .get_results(conn)
+        .map_err(Into::into)
+}
+
+impl Queryable<dependencies::SqlType, Pg> for Dependency {
+    type Row = (i32, i32, i32, String, bool, bool, Vec<String>, Option<String>,
+                i32);
+
+    fn build(row: Self::Row) -> Self {
+        Dependency {
+            id: row.0,
+            version_id: row.1,
+            crate_id: row.2,
+            req: semver::VersionReq::parse(&row.3).unwrap(),
+            optional: row.4,
+            default_features: row.5,
+            features: row.6,
+            target: row.7,
+            kind: match row.8 {
+                0 => Kind::Normal,
+                1 => Kind::Build,
+                2 => Kind::Dev,
+                n => panic!("unknown kind: {}", n),
+            }
+        }
     }
 }
 
