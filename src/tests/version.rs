@@ -63,8 +63,9 @@ fn authors() {
     ::mock_user(&mut req, ::user("foo"));
     ::mock_crate(&mut req, ::krate("foo_authors"));
     let mut response = ok_resp!(middle.call(&mut req));
-    let mut s = String::new();
-    response.body.read_to_string(&mut s).unwrap();
+    let mut data = Vec::new();
+    response.body.write_body(&mut data).unwrap();
+    let s = ::std::str::from_utf8(&data).unwrap();
     let json = Json::from_str(&s).unwrap();
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));

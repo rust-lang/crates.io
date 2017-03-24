@@ -154,7 +154,7 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
 
 fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     let mut data = Vec::new();
-    r.body.read_to_end(&mut data).unwrap();
+    r.body.write_body(&mut data).unwrap();
     let s = std::str::from_utf8(&data).unwrap();
     let j = match Json::from_str(s) {
         Ok(t) => t,
