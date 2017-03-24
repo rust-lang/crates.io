@@ -239,7 +239,7 @@ impl Owner {
     /// sensitive.
     pub fn find_by_login(conn: &PgConnection,
                          name: &str) -> CargoResult<Owner> {
-        if name.contains(":") {
+        if name.contains(':') {
             teams::table.filter(teams::login.eq(name))
                 .first(conn)
                 .map(Owner::Team)

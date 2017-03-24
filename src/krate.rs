@@ -24,7 +24,7 @@ use app::{App, RequestApp};
 use badge::EncodableBadge;
 use category::{EncodableCategory, CrateCategory};
 use db::RequestTransaction;
-use dependency::{self, Dependency, ReverseDependency, EncodableDependency};
+use dependency::{self, ReverseDependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::{EncodableKeyword, CrateKeyword};
@@ -813,7 +813,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
-    let krate = Crate::by_name(&name).first::<Crate>(&*conn)?;
+    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
     let versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
     let ids = versions.iter().map(|v| v.id).collect();
     let kws = CrateKeyword::belonging_to(&krate)
@@ -870,7 +870,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     conn.transaction(|| {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
-            name: &name,
+            name: name,
             description: new_crate.description.as_ref().map(|s| &**s),
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
@@ -930,7 +930,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, &vers)?;
+        let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, vers)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -1228,7 +1228,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         .first::<Crate>(&*conn)?;
     let owners = krate.owners(&conn)?;
 
-    match rights(req.app(), &owners, &user)? {
+    match rights(req.app(), &owners, user)? {
         Rights::Full => {} // Yes!
         Rights::Publish => {
             return Err(human("team members don't have permission to modify owners"));
@@ -1258,14 +1258,14 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.iter().any(|owner| owner.login() == *login) {
                 return Err(human(&format_args!("`{}` is already an owner", login)))
             }
-            krate.owner_add(req.app(), &conn, &user, login)?;
+            krate.owner_add(req.app(), &conn, user, login)?;
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
             if *login == user.gh_login {
                 return Err(human("cannot remove yourself as an owner"))
             }
-            krate.owner_remove(&conn, &user, login)?;
+            krate.owner_remove(&conn, user, login)?;
         }
     }
 
