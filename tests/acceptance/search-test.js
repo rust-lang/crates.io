@@ -52,6 +52,9 @@ test('searching for "rust"', function(assert) {
 });
 
 test('pressing S key to focus the search bar', function(assert) {
+    const KEYCODE_S = 83;
+    const KEYCODE_A = 65;
+
     function assertSearchBarIsFocused() {
         const $searchBar = find('#cargo-desktop-search');
         assert.equal($searchBar[0], document.activeElement);
@@ -63,15 +66,15 @@ test('pressing S key to focus the search bar', function(assert) {
         findWithAssert('#cargo-desktop-search').blur();
     });
 
-    keyEvent(document, 'keypress', 65);
+    keyEvent(document, 'keypress', KEYCODE_A);
     andThen(function assertSearchBarIsNotFocused() {
         const $searchBar = find('#cargo-desktop-search');
         assert.notEqual($searchBar[0], document.activeElement);
         $searchBar.blur();
     });
 
-    keyEvent(document, 'keypress', 83);
+    keyEvent(document, 'keypress', KEYCODE_S);
     andThen(assertSearchBarIsFocused);
-    keyEvent(document, 'keydown', 83);
+    keyEvent(document, 'keydown', KEYCODE_S);
     andThen(assertSearchBarIsFocused);
 });
