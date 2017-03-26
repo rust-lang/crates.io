@@ -26,12 +26,12 @@ export default Ember.Controller.extend({
     //
     // So I guess you could say things are getting pretty interoperable.
     getVirtualKey(ev) {
-        if ("key" in ev && typeof ev.key !== "undefined") {
+        if ('key' in ev && typeof ev.key !== 'undefined') {
             return ev.key;
         }
         const c = ev.charCode || ev.keyCode;
         if (c === 27) {
-            return "Escape";
+            return 'Escape';
         }
         return String.fromCharCode(c);
     },
