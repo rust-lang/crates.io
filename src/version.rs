@@ -14,12 +14,11 @@ use url;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use dependency::{Dependency, EncodableDependency, Kind};
+use dependency::{Dependency, EncodableDependency};
 use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use owner::{rights, Rights};
 use schema::*;
-use upload;
 use user::RequestUser;
 use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
@@ -131,35 +130,6 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
         }
-    }
-
-    /// Add a dependency to this version, returning both the dependency and the
-    /// crate that the dependency points to
-    pub fn add_dependency(&mut self,
-                          conn: &GenericConnection,
-                          dep: &upload::CrateDependency)
-                          -> CargoResult<(Dependency, Crate)> {
-        let name = &dep.name;
-        let krate = Crate::find_by_name(conn, name).map_err(|_| {
-            human(&format_args!("no known crate named `{}`", &**name))
-        })?;
-        if dep.version_req.0 == semver::VersionReq::parse("*").unwrap() {
-            return Err(human("wildcard (`*`) dependency constraints are not allowed \
-                              on crates.io. See http://doc.crates.io/faq.html#can-\
-                              libraries-use--as-a-version-for-their-dependencies for more \
-                              information"));
-        }
-        let features: Vec<String> = dep.features.iter().map(|s| {
-            s[..].to_string()
-        }).collect();
-        let dep = Dependency::insert(conn, self.id, krate.id,
-                                     &*dep.version_req,
-                                     dep.kind.unwrap_or(Kind::Normal),
-                                     dep.optional,
-                                     dep.default_features,
-                                     &features,
-                                     &dep.target)?;
-        Ok((dep, krate))
     }
 
     /// Returns (dependency, crate dependency name)
