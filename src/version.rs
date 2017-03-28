@@ -423,7 +423,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
     let tx = req.tx()?;
     let stmt = tx.prepare("SELECT * FROM version_downloads
-                                WHERE date BETWEEN date($1) AND date($2) AND version_id = $3
+                                WHERE date BETWEEN $1 AND $2 AND version_id = $3
                                 ORDER BY date ASC")?;
     let downloads = stmt.query(&[&cutoff_start_date, &cutoff_end_date, &version.id])?
         .iter().map(|row| VersionDownload::from_row(&row).encodable()).collect();

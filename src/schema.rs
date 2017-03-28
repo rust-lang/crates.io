@@ -21,10 +21,11 @@ table! {
 }
 
 table! {
-    crate_downloads (crate_id, date) {
+    crate_downloads (id) {
+        id -> Int4,
         crate_id -> Int4,
         downloads -> Int4,
-        date -> Date,
+        date -> Timestamp,
     }
 }
 
@@ -155,7 +156,7 @@ table! {
         version_id -> Int4,
         downloads -> Int4,
         counted -> Int4,
-        date -> Date,
+        date -> Timestamp,
         processed -> Bool,
     }
 }
