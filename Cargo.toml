@@ -23,7 +23,7 @@ git2 = "0.6.4"
 flate2 = "0.2"
 semver = "0.5"
 url = "1.2.1"
-postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json"] }
+postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json", "with-chrono"] }
 r2d2 = "0.7.0"
 r2d2_postgres = "0.12.0"
 openssl = "0.9.9"
@@ -43,6 +43,7 @@ serde_json = "0.9.9"
 serde_derive = "0.9.11"
 serde = "0.9.11"
 clippy = { version = "=0.0.118", optional = true }
+chrono = "0.3.0"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
