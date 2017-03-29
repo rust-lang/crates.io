@@ -6,7 +6,7 @@ use semver;
 
 use Model;
 use git;
-use krate::{Crate, canon_crate_name};
+use krate::Crate;
 use schema::*;
 use util::{CargoResult, human};
 
@@ -125,18 +125,11 @@ pub fn add_dependencies(
     version_id: i32,
 ) -> CargoResult<Vec<Dependency>> {
     use diesel::insert;
-    use diesel::expression::dsl::any;
-
-    let crate_names = deps.iter().map(|d| &*d.name).collect::<Vec<_>>();
-    let crates = Crate::all()
-        .filter(canon_crate_name(crates::name).eq(any(crate_names)))
-        .load::<Crate>(conn)?;
 
     let new_dependencies = deps.iter().map(|dep| {
-        let krate = crates.iter().find(|c| dep.name == c.name)
-            .map(Ok)
-            .unwrap_or_else(|| {
-                Err(human(&format_args!("no known crate named `{}`", &*dep.name)))
+        let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn)
+            .map_err(|_| {
+                human(&format_args!("no known crate named `{}`", &*dep.name))
             })?;
         if dep.version_req == semver::VersionReq::parse("*").unwrap() {
             return Err(human("wildcard (`*`) dependency constraints are not allowed \
