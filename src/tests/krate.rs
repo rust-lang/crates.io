@@ -786,12 +786,20 @@ fn download() {
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
+    req.with_path("/api/v1/crates/foo_download/downloads");
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
 
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.0, 302);
 
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
+    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
@@ -802,6 +810,12 @@ fn download() {
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 0);
+    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
+    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()));
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    // crate/downloads always returns the last 90 days and ignores date params
+    assert_eq!(downloads.version_downloads.len(), 1);
 
     let tomorrow = now_utc() + Duration::days(1);
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
@@ -809,7 +823,11 @@ fn download() {
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
-
+    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
+    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()));
+    let mut resp = ok_resp!(middle.call(&mut req));
+    let downloads = ::json::<Downloads>(&mut resp);
+    assert_eq!(downloads.version_downloads.len(), 1);
 }
 
 #[test]
