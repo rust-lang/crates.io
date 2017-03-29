@@ -1088,7 +1088,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
     let cutoff_date = ::now() + Duration::days(-90);
     let stmt = tx.prepare("SELECT * FROM version_downloads
-                                 WHERE date > $1
+                                 WHERE date > date($1)
                                    AND version_id = ANY($2)
                                  ORDER BY date ASC")?;
     let downloads = stmt.query(&[&cutoff_date, &ids])?.iter().map(|row| {
@@ -1101,7 +1101,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
             FROM version_downloads
            INNER JOIN versions ON
                  version_id = versions.id
-           WHERE version_downloads.date > $1
+           WHERE version_downloads.date > date($1)
              AND versions.crate_id = $2
              AND versions.id != ALL($3)
         GROUP BY DATE(version_downloads.date)
