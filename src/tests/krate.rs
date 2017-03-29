@@ -424,6 +424,16 @@ fn new_krate_with_dependency() {
 
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
+
+    let path = ::git::checkout().join("ne/w_/new_dep");
+    assert!(path.exists());
+    let mut contents = String::new();
+    File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
+    let p: git::Crate = json::decode(&contents).unwrap();
+    assert_eq!(p.name, "new_dep");
+    assert_eq!(p.vers, "1.0.0");
+    assert_eq!(p.deps.len(), 1);
+    assert_eq!(p.deps[0].name, "foo_dep");
 }
 
 #[test]
