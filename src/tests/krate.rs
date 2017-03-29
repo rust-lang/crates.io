@@ -12,6 +12,7 @@ use semver;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
+use cargo_registry::git;
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 use cargo_registry::krate::{Crate, EncodableCrate};
 use cargo_registry::upload as u;
@@ -25,8 +26,6 @@ struct CrateList { crates: Vec<EncodableCrate>, meta: CrateMeta }
 struct VersionsList { versions: Vec<EncodableVersion> }
 #[derive(RustcDecodable)]
 struct CrateMeta { total: i32 }
-#[derive(RustcDecodable)]
-struct GitCrate { name: String, vers: String, deps: Vec<String>, cksum: String }
 #[derive(RustcDecodable)]
 struct Warnings { invalid_categories: Vec<String>, invalid_badges: Vec<String> }
 #[derive(RustcDecodable)]
@@ -689,7 +688,7 @@ fn new_krate_git_upload() {
     assert!(path.exists());
     let mut contents = String::new();
     File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
-    let p: GitCrate = json::decode(&contents).unwrap();
+    let p: git::Crate = json::decode(&contents).unwrap();
     assert_eq!(p.name, "fgt");
     assert_eq!(p.vers, "1.0.0");
     assert!(p.deps.is_empty());
@@ -703,7 +702,7 @@ fn new_krate_git_upload_appends() {
     let path = ::git::checkout().join("3/f/fpp");
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     File::create(&path).unwrap().write_all(
-        br#"{"name":"FPP","vers":"0.0.1","deps":[],"cksum":"3j3"}
+        br#"{"name":"FPP","vers":"0.0.1","deps":[],"features":{},"cksum":"3j3"}
 "#).unwrap();
 
     let mut req = ::new_req(app.clone(), "FPP", "1.0.0");
@@ -714,8 +713,8 @@ fn new_krate_git_upload_appends() {
     let mut contents = String::new();
     File::open(&path).unwrap().read_to_string(&mut contents).unwrap();
     let mut lines = contents.lines();
-    let p1: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
-    let p2: GitCrate = json::decode(lines.next().unwrap().trim()).unwrap();
+    let p1: git::Crate = json::decode(lines.next().unwrap().trim()).unwrap();
+    let p2: git::Crate = json::decode(lines.next().unwrap().trim()).unwrap();
     assert!(lines.next().is_none());
     assert_eq!(p1.name, "FPP");
     assert_eq!(p1.vers, "0.0.1");
