@@ -84,18 +84,6 @@ impl Dependency {
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
-    pub fn git_encode(self, crate_name: &str) -> git::Dependency {
-        git::Dependency {
-            name: crate_name.into(),
-            req: self.req.to_string(),
-            features: self.features,
-            optional: self.optional,
-            default_features: self.default_features,
-            target: self.target,
-            kind: Some(self.kind),
-        }
-    }
-
     // `downloads` need only be specified when generating a reverse dependency
     pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
         EncodableDependency {
@@ -123,10 +111,10 @@ pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[::upload::CrateDependency],
     version_id: i32,
-) -> CargoResult<Vec<Dependency>> {
+) -> CargoResult<Vec<git::Dependency>> {
     use diesel::insert;
 
-    let new_dependencies = deps.iter().map(|dep| {
+    let git_and_new_dependencies = deps.iter().map(|dep| {
         let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn)
             .map_err(|_| {
                 human(&format_args!("no known crate named `{}`", &*dep.name))
@@ -137,22 +125,38 @@ pub fn add_dependencies(
                               libraries-use--as-a-version-for-their-dependencies for more \
                               information"));
         }
-        let features = dep.features.iter().map(|s| &**s).collect();
-        Ok(NewDependency {
-            version_id: version_id,
-            crate_id: krate.id,
-            req: dep.version_req.to_string(),
-            kind: dep.kind.unwrap_or(Kind::Normal) as i32,
-            optional: dep.optional,
-            default_features: dep.default_features,
-            features: features,
-            target: dep.target.as_ref().map(|s| &**s),
-        })
+        let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
+
+        Ok((
+            git::Dependency {
+                name: dep.name.to_string(),
+                req: dep.version_req.to_string(),
+                features: features.iter().map(|s| s.to_string()).collect(),
+                optional: dep.optional,
+                default_features: dep.default_features,
+                target: dep.target.clone(),
+                kind: dep.kind.or(Some(Kind::Normal)),
+            },
+            NewDependency {
+                version_id: version_id,
+                crate_id: krate.id,
+                req: dep.version_req.to_string(),
+                kind: dep.kind.unwrap_or(Kind::Normal) as i32,
+                optional: dep.optional,
+                default_features: dep.default_features,
+                features: features,
+                target: dep.target.as_ref().map(|s| &**s),
+            }
+        ))
     }).collect::<Result<Vec<_>, _>>()?;
 
+    let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
+        git_and_new_dependencies.into_iter().unzip();
+
     insert(&new_dependencies).into(dependencies::table)
-        .get_results(conn)
-        .map_err(Into::into)
+        .execute(conn)?;
+
+    Ok(git_deps)
 }
 
 impl Queryable<dependencies::SqlType, Pg> for Dependency {
