@@ -906,10 +906,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
-        let deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?
-            .into_iter()
-            .map(|dep| dep.git_encode(&krate.name))
-            .collect();
+        let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
 
         // Update all keywords for this crate
         Keyword::update_crate(&conn, &krate, &keywords)?;
@@ -938,7 +935,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             vers: vers.to_string(),
             cksum: cksum.to_hex(),
             features: features,
-            deps: deps,
+            deps: git_deps,
             yanked: Some(false),
         };
         git::add_crate(&**req.app(), &git_crate).chain_error(|| {
