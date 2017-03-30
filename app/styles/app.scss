@@ -66,12 +66,14 @@ body {
 
     .sep { margin: 0 10px; color: darken($html-bg, 10%); }
     .nav, .menu {
-        @include flex-grow(2);
         text-align: right;
         margin-right: 5px;
     }
 
-    .menu { display: none; }
+    .menu {
+        @include flex-grow(2);
+        display: none;
+    }
     .menu ul.dropdown {
         right: 0;
         left: auto;
@@ -109,6 +111,10 @@ body {
 
         &.open { display: block; }
     }
+    form.search {
+        @include display-flex;
+        @include flex-grow(1);
+    }
     @media only screen and (max-width: 820px) {
         .menu { display: block; }
         .nav { display: none; }
@@ -128,6 +134,12 @@ body {
     background-position: 6px 6px;
     background-size: 14px 15px;
     @include border-radius(15px);
+}
+
+#header input.search {
+    width: 100%;
+    margin-left: 16px;
+    margin-right: 16px;
 }
 
 #mobile-search {
