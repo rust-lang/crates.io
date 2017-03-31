@@ -1047,27 +1047,15 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
         human("crate or version not found")
     })?;
     let version_id: i32 = row.get("version_id");
-    let now = ::now();
 
-    // Bump download counts.
-    //
-    // Note that this is *not* an atomic update, and that's somewhat
-    // intentional. It doesn't appear that postgres supports an atomic update of
-    // a counter, so we just do the hopefully "least racy" thing. This is
-    // largely ok because these download counters are just that, counters. No
-    // need to have super high-fidelity counter.
-    //
-    // Also, we only update the counter for *today*, nothing else. We have lots
-    // of other counters, but they're all updated later on via the
-    // update-downloads script.
-    let amt = tx.execute("UPDATE version_downloads
-                               SET downloads = downloads + 1
-                               WHERE version_id = $1 AND date($2) = date(date)",
-                         &[&version_id, &now])?;
-    if amt == 0 {
-        tx.execute("INSERT INTO version_downloads
-                         (version_id) VALUES ($1)", &[&version_id])?;
-    }
+    // We only update the counter for *today* (the default date),
+    // nothing else. We have lots of other counters, but they're
+    // all updated later on via the update-downloads script.
+    tx.execute("INSERT INTO version_downloads
+                (version_id) VALUES ($1)
+                ON CONFLICT (version_id, date) DO UPDATE
+                SET downloads = version_downloads.downloads + 1",
+                &[&version_id])?;
     Ok(())
 }
 
