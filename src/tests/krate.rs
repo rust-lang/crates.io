@@ -292,6 +292,8 @@ fn show() {
         new_krate.homepage = Some("http://example.com");
         krate = new_krate.create_or_update(&conn, None, user.id).unwrap();
         ::new_version(krate.id, "1.0.0").save(&conn, &[]).unwrap();
+        ::new_version(krate.id, "0.5.0").save(&conn, &[]).unwrap();
+        ::new_version(krate.id, "0.5.1").save(&conn, &[]).unwrap();
         Keyword::update_crate(&conn, &krate, &["kw1"]).unwrap();
     }
 
@@ -304,27 +306,44 @@ fn show() {
     assert_eq!(json.krate.documentation, krate.documentation);
     assert_eq!(json.krate.keywords, Some(vec!["kw1".into()]));
     let versions = json.krate.versions.as_ref().unwrap();
-    assert_eq!(versions.len(), 1);
-    assert_eq!(json.versions.len(), 1);
+    assert_eq!(versions.len(), 3);
+    assert_eq!(json.versions.len(), 3);
+
     assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
-    assert_eq!(json.versions[0].num, "1.0.0".to_string());
+    assert_eq!(json.versions[0].num, "1.0.0");
     let suffix = "/api/v1/crates/foo_show/1.0.0/download";
     assert!(json.versions[0].dl_path.ends_with(suffix),
             "bad suffix {}", json.versions[0].dl_path);
     assert_eq!(1, json.keywords.len());
-    assert_eq!("kw1".to_string(), json.keywords[0].id);
+    assert_eq!("kw1", json.keywords[0].id);
+
+    assert_eq!(json.versions[1].num, "0.5.1");
+    assert_eq!(json.versions[2].num, "0.5.0");
 }
 
 #[test]
 fn versions() {
     let (_b, app, middle) = ::app();
+
+    let v100 = semver::Version::parse("1.0.0").unwrap();
+    let v050 = semver::Version::parse("0.5.0").unwrap();
+    let v051 = semver::Version::parse("0.5.1").unwrap();
+
     let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_versions/versions");
     ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_versions"));
+
+    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v051);
+    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v100);
+    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v050);
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionsList = ::json(&mut response);
-    assert_eq!(json.versions.len(), 1);
+
+    assert_eq!(json.versions.len(), 3);
+    assert_eq!(json.versions[0].num, "1.0.0");
+    assert_eq!(json.versions[1].num, "0.5.1");
+    assert_eq!(json.versions[2].num, "0.5.0");
 }
 
 #[test]
