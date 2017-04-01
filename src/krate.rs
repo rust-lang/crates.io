@@ -1169,8 +1169,8 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
-/// FIXME: Not sure why this is necessary since /crates/:crate_id returns
-/// this information already, but ember is definitely requesting it
+// FIXME: Not sure why this is necessary since /crates/:crate_id returns
+// this information already, but ember is definitely requesting it
 pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let tx = req.tx()?;
