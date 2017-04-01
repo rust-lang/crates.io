@@ -278,6 +278,7 @@ impl Model for Version {
 }
 
 /// Handles the `GET /versions` route.
+// FIXME: where/how is this used?
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = req.tx()?;
 

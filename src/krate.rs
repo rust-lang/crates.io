@@ -814,8 +814,11 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
-    let versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+
+    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    versions.sort_by(|a, b| b.num.cmp(&a.num));
     let ids = versions.iter().map(|v| v.id).collect();
+
     let kws = CrateKeyword::belonging_to(&krate)
         .inner_join(keywords::table)
         .select(keywords::all_columns)
@@ -1166,6 +1169,8 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
+// FIXME: Not sure why this is necessary since /crates/:crate_id returns
+// this information already, but ember is definitely requesting it
 pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let tx = req.tx()?;
