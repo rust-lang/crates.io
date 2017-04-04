@@ -681,24 +681,25 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
         }
-    } else if let Some(letter) = params.get("letter") {
-        let pattern = format!("{}%", letter.chars().next().unwrap()
-                                       .to_lowercase().collect::<String>());
-        query = query.filter(canon_crate_name(crates::name).like(pattern));
-    } else if let Some(kw) = params.get("keyword") {
-        query = query.filter(crates::id.eq_any(
-            crates_keywords::table.select(crates_keywords::crate_id)
-                .inner_join(keywords::table)
-                .filter(lower(keywords::keyword).eq(lower(kw)))
-        ));
-    } else if let Some(cat) = params.get("category") {
+    } if let Some(cat) = params.get("category") {
         query = query.filter(crates::id.eq_any(
             crates_categories::table.select(crates_categories::crate_id)
                 .inner_join(categories::table)
                 .filter(categories::slug.eq(cat).or(
                         categories::slug.like(format!("{}::%", cat))))
         ));
-    } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+    } if let Some(kw) = params.get("keyword") {
+        query = query.filter(crates::id.eq_any(
+            crates_keywords::table.select(crates_keywords::crate_id)
+                .inner_join(keywords::table)
+                .filter(lower(keywords::keyword).eq(lower(kw)))
+        ));
+    } else if let Some(letter) = params.get("letter") {
+        let pattern = format!("{}%", letter.chars().next().unwrap()
+                                       .to_lowercase().collect::<String>());
+        query = query.filter(canon_crate_name(crates::name).like(pattern));
+    }
+    else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
         query = query.filter(crates::id.eq_any(
             crate_owners::table.select(crate_owners::crate_id)
                 .filter(crate_owners::owner_id.eq(user_id))
