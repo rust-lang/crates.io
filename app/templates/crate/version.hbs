@@ -31,7 +31,20 @@
                 </a>
             --}}
         </div>
+    </div>
+
+    <div class="quick-links">
+    <ul>
+        {{#if crate.homepage}}
+          <li><a href="{{crate.homepage}}">Homepage</a></li>
         {{/if}}
+        {{#if crate.documentation}}
+          <li><a href="{{crate.documentation}}">Documentation</a></li>
+        {{/if}}
+        {{#if crate.repository}}
+          <li><a href="{{crate.repository}}">Repository</a></li>
+        {{/if}}
+    </ul>
     </div>
 </div>
 

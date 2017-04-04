@@ -5,6 +5,7 @@
     margin-bottom: 20px;
     @include border-radius(5px);
     @include display-flex;
+    @include flex-wrap(wrap);
     @include align-items(center);
 
     .info {
