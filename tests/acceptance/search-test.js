@@ -50,3 +50,31 @@ test('searching for "rust"', function(assert) {
         findWithAssert('#crates .row:first .desc .info .vers img[alt="0.7.1"]');
     });
 });
+
+test('pressing S key to focus the search bar', function(assert) {
+    const KEYCODE_S = 83;
+    const KEYCODE_A = 65;
+
+    function assertSearchBarIsFocused() {
+        const $searchBar = find('#cargo-desktop-search');
+        assert.equal($searchBar[0], document.activeElement);
+        $searchBar.blur();
+    }
+
+    visit('/');
+    andThen(function() {
+        findWithAssert('#cargo-desktop-search').blur();
+    });
+
+    keyEvent(document, 'keypress', KEYCODE_A);
+    andThen(function assertSearchBarIsNotFocused() {
+        const $searchBar = find('#cargo-desktop-search');
+        assert.notEqual($searchBar[0], document.activeElement);
+        $searchBar.blur();
+    });
+
+    keyEvent(document, 'keypress', KEYCODE_S);
+    andThen(assertSearchBarIsFocused);
+    keyEvent(document, 'keydown', KEYCODE_S);
+    andThen(assertSearchBarIsFocused);
+});
