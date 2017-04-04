@@ -1,34 +1,37 @@
 {{title crate.name}}
 
 <div id='crates-heading'>
-    <div class='info'>
-        <img class='logo crate' src="/assets/crate.png"/>
-        <h1>{{ crate.name }}</h1>
-        <h2>{{ currentVersion.num }}</h2>
-    </div>
+    <div style="width: 100%">
+        <div class='info'>
+            <img class='logo crate' src="/assets/crate.png"/>
+            <h1>{{ crate.name }}</h1>
+            <h2>{{ currentVersion.num }}</h2>
+        </div>
 
-    <div class='right'>
-        {{#if session.currentUser}}
-            <button class='tan-button' {{action 'toggleFollow' this}}>
-                {{#if fetchingFollowing}}
-                    <img src="/assets/ajax-loader.gif"/>
-                {{else}}
-                    {{#if following}}
-                        Unfollow
+        <div class='right'>
+            {{#if session.currentUser}}
+                <button class='tan-button' {{action 'toggleFollow' this}}>
+                    {{#if fetchingFollowing}}
+                        <img src="/assets/ajax-loader.gif"/>
                     {{else}}
-                        Follow
+                        {{#if following}}
+                            Unfollow
+                        {{else}}
+                            Follow
+                        {{/if}}
                     {{/if}}
-                {{/if}}
-            </button>
+                </button>
+            {{/if}}
+            {{!--
+                <a class='yellow-button' download
+                   {{action 'download' currentVersion}}
+                   href='{{currentVersion.dl_path}}'>
+                    <img class="button-download" src="/assets/button-download.png"/>
+                    Download
+                </a>
+            --}}
+        </div>
         {{/if}}
-        {{!--
-            <a class='yellow-button' download
-               {{action 'download' currentVersion}}
-               href='{{currentVersion.dl_path}}'>
-                <img class="button-download" src="/assets/button-download.png"/>
-                Download
-            </a>
-        --}}
     </div>
 </div>
 
