@@ -8,6 +8,10 @@
     @include flex-wrap(wrap);
     @include align-items(center);
 
+    .wide {
+        width: 100%;
+    }
+
     .info {
         @include display-flex;
         @include flex-wrap(wrap);
