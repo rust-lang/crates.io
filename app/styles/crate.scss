@@ -9,6 +9,9 @@
     @include align-items(center);
 
     .wide {
+        @include display-flex;
+        @include flex-wrap(wrap);
+        @include align-items(center);
         width: 100%;
     }
 
