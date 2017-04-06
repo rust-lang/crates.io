@@ -5,7 +5,12 @@
     margin-bottom: 20px;
     @include border-radius(5px);
     @include display-flex;
+    @include flex-wrap(wrap);
     @include align-items(center);
+
+    .wide {
+        width: 100%;
+    }
 
     .info {
         @include display-flex;
@@ -129,21 +134,24 @@
     .downloads { @include display-flex; @include align-items(center); }
 
     .rev-dep-downloads {padding-left: 7px}
+}
 
-    .quick-links {
-        ul {
-            @include display-flex;
-            font-size: 80%;
-            list-style-type: none;
-            margin: 1em 0 0 0;
-            padding: 0;
+.quick-links {
+    ul {
+        @include display-flex;
+        @include flex-direction(row);
 
-            li {
-                margin-right: 1em;
+        font-size: 80%;
+        list-style-type: none;
+        margin: 1em 0 0 0;
+        padding: 0;
 
-                &:last-child {
-                    margin-right: 0;
-                }
+
+        li {
+            margin-right: 1em;
+
+            &:last-child {
+                margin-right: 0;
             }
         }
     }
