@@ -2,6 +2,9 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
+    refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {
+        this.refresh();
+    }),
 
     model(params) {
         const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
