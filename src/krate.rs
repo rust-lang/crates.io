@@ -392,8 +392,8 @@ impl Crate {
 
     pub fn minimal_encodable(self,
                              max_version: semver::Version,
-                             badges: Option<Vec<Badge>>) -> EncodableCrate {
-        self.encodable(max_version, None, None, None, badges, false)
+                             badges: Option<Vec<Badge>>, exact_match: bool) -> EncodableCrate {
+        self.encodable(max_version, None, None, None, badges, exact_match)
     }
 
     pub fn encodable(self,
@@ -729,7 +729,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         // this N+1
         let badges = badges::table.filter(badges::crate_id.eq(krate.id))
             .load::<Badge>(&*conn)?;
-        Ok(krate.minimal_encodable(max_version, Some(badges)))
+        Ok(krate.minimal_encodable(max_version, Some(badges), false))
     }).collect::<Result<_, ::diesel::result::Error>>()?;
 
     #[derive(RustcEncodable)]
@@ -761,7 +761,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                 Ok(krate.minimal_encodable(max_version, None))
+                 Ok(krate.minimal_encodable(max_version, None, false))
             }).collect()
     };
 
@@ -964,7 +964,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         #[derive(RustcEncodable)]
         struct R<'a> { krate: EncodableCrate, warnings: Warnings<'a> }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None),
+            krate: krate.minimal_encodable(max_version, None, false),
             warnings: warnings
         }))
     })
