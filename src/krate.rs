@@ -717,7 +717,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     let data = query.load::<(Crate, i64, bool)>(&*conn)?;
     let total = data.get(0).map(|&(_, t, _)| t).unwrap_or(0);
-    let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
+    let crates = data.iter().map(|&(ref c, _, _)| c.clone()).collect::<Vec<_>>();
     let perfect_matches = data.into_iter().map(|(_, _, b)| b).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
