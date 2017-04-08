@@ -87,6 +87,7 @@ pub struct EncodableCrate {
     pub license: Option<String>,
     pub repository: Option<String>,
     pub links: CrateLinks,
+    pub exact_match: bool,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -392,7 +393,7 @@ impl Crate {
     pub fn minimal_encodable(self,
                              max_version: semver::Version,
                              badges: Option<Vec<Badge>>) -> EncodableCrate {
-        self.encodable(max_version, None, None, None, badges)
+        self.encodable(max_version, None, None, None, badges, false)
     }
 
     pub fn encodable(self,
@@ -400,7 +401,8 @@ impl Crate {
                      versions: Option<Vec<i32>>,
                      keywords: Option<&[Keyword]>,
                      categories: Option<&[Category]>,
-                     badges: Option<Vec<Badge>>)
+                     badges: Option<Vec<Badge>>,
+                     exact_match: bool)
                      -> EncodableCrate {
         let Crate {
             name, created_at, updated_at, downloads, description,
@@ -428,6 +430,7 @@ impl Crate {
             max_version: max_version.to_string(),
             documentation: documentation,
             homepage: homepage,
+            exact_match: exact_match,
             description: description,
             license: license,
             repository: repository,
@@ -841,7 +844,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         krate: krate.clone().encodable(
-            max_version, Some(ids), Some(&kws), Some(&cats), Some(badges)
+            max_version, Some(ids), Some(&kws), Some(&cats), Some(badges), false
         ),
         versions: versions.into_iter().map(|v| {
             v.encodable(&krate.name)
