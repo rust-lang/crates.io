@@ -139,6 +139,18 @@
     .rev-dep-downloads {padding-left: 7px}
 }
 
+.exact-match {
+    margin-bottom: 40px;
+    border-bottom: solid beige;
+    padding-left: 40px;
+    div {
+        padding: 10px;
+    }
+    h1 {
+        color: green
+    }
+}
+
 .quick-links {
     ul {
         @include display-flex;

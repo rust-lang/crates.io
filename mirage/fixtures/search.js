@@ -5,6 +5,7 @@ export default {
         "description": "Yo dawg, use Rust to generate Rust, right in your Rust. (See\n`external_mixin` to use scripting languages.)\n",
         "documentation": "https://github.com/huonw/external_mixin#rust_mixin",
         "downloads": 477,
+        "exact_match": true,
         "homepage": "https://github.com/huonw/external_mixin",
         "id": "rust_mixin",
         "keywords": ["rust", "plugin", "code-generation"],
