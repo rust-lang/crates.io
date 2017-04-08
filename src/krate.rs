@@ -654,7 +654,7 @@ impl Model for Crate {
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::dsl::sql;
-    use diesel::types::BigInt;
+    use diesel::types::{BigInt, Bool};
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -662,7 +662,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
     let mut query = crates::table
-        .select((ALL_COLUMNS, sql::<BigInt>("COUNT(*) OVER ()")))
+        .select((ALL_COLUMNS, sql::<BigInt>("COUNT(*) OVER ()"), sql::<Bool>("false")))
         .limit(limit)
         .offset(offset)
         .into_boxed();
@@ -677,6 +677,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         let q = plainto_tsquery(q_string);
         query = query.filter(q.matches(crates::textsearchable_index_col));
 
+	query = query.select((ALL_COLUMNS, sql::<BigInt>("COUNT(*) OVER()"), crates::name.eq(q_string)));
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
@@ -714,9 +715,10 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let data = query.load::<(Crate, i64)>(&*conn)?;
-    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
-    let crates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
+    let data = query.load::<(Crate, i64, bool)>(&*conn)?;
+    let total = data.get(0).map(|&(_, t, _)| t).unwrap_or(0);
+    let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
+    let perfect_matches = data.into_iter().map(|(_, _, b)| b).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
@@ -724,12 +726,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .into_iter()
         .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
 
-    let crates = versions.zip(crates).map(|(max_version, krate)| {
+    let crates = versions.zip(crates).zip(perfect_matches).map(|((max_version, krate), perfect_match)| {
         // FIXME: If we add crate_id to the Badge enum we can eliminate
         // this N+1
         let badges = badges::table.filter(badges::crate_id.eq(krate.id))
             .load::<Badge>(&*conn)?;
-        Ok(krate.minimal_encodable(max_version, Some(badges), false))
+        Ok(krate.minimal_encodable(max_version, Some(badges), perfect_match))
     }).collect::<Result<_, ::diesel::result::Error>>()?;
 
     #[derive(RustcEncodable)]
