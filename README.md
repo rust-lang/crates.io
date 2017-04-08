@@ -31,7 +31,7 @@ This will run a local frontend using the staging backend (hosted on Heroku at
 [staging-crates-io.herokuapp.com](https://staging-crates-io.herokuapp.com)).
 
 If you want to set up a particular situation, you can edit the fixture data used
-for tests in `app/mirage/fixtures`. Note that the fixture data does not contain
+for tests in `mirage/fixtures`. Note that the fixture data does not contain
 JSON needed to support every page, so some pages might not load correctly. To
 run the frontend and use that data, don't specify any backend:
 
