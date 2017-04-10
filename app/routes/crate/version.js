@@ -68,6 +68,17 @@ export default Ember.Route.extend({
                 .finally(() => controller.set('fetchingFollowing', false));
         }
 
+        if (!crate.get('documentation')) {
+            let crateName = crate.get('name');
+            let crateVersion = params.version_num;
+            ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                .then((r) => {
+                    if (r.length > 0 && r[0].build_status === true) {
+                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/${crateName}/`);
+                    }
+                });
+        }
+
         // Find version model
         return crate.get('versions')
             .then(versions => {
