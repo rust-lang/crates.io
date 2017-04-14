@@ -685,14 +685,18 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
         }
-    } if let Some(cat) = params.get("category") {
+    }
+
+    if let Some(cat) = params.get("category") {
         query = query.filter(crates::id.eq_any(
             crates_categories::table.select(crates_categories::crate_id)
                 .inner_join(categories::table)
                 .filter(categories::slug.eq(cat).or(
                         categories::slug.like(format!("{}::%", cat))))
         ));
-    } if let Some(kw) = params.get("keyword") {
+    }
+
+    if let Some(kw) = params.get("keyword") {
         query = query.filter(crates::id.eq_any(
             crates_keywords::table.select(crates_keywords::crate_id)
                 .inner_join(keywords::table)
