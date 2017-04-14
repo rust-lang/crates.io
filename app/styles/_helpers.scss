@@ -50,6 +50,11 @@
     align-items: $how;
 }
 
+@mixin align-self($how) {
+    -webkit-align-self: $how;
+    align-self: $how;
+}
+
 @mixin flex-wrap($how) {
     -webkit-flex-wrap: $how;
     flex-wrap: $how;
