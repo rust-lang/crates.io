@@ -18,7 +18,10 @@
     .info {
         @include display-flex;
         @include flex-wrap(wrap);
-        @include align-items(center);
+        @include align-items(baseline);
+        img {
+            @include align-self(center);
+        }
     }
     h1 {
         padding-left: 10px;
