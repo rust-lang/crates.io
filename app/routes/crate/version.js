@@ -74,7 +74,7 @@ export default Ember.Route.extend({
             ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
                 .then((r) => {
                     if (r.length > 0 && r[0].build_status === true) {
-                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/${crateName}/`);
+                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
                     }
                 });
         }
