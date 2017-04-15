@@ -35,6 +35,19 @@ export default Ember.Route.extend({
             return result;
         };
 
+        const fetchCrateDocumentation = () => {
+            if (!crate.get('documentation')) {
+                let crateName = crate.get('name');
+                let crateVersion = params.version_num;
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                    .then((r) => {
+                        if (r.length > 0 && r[0].build_status === true) {
+                            crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
+                        }
+                    });
+            }
+        };
+
         // Fallback to the crate's last stable version
         // If `max_version` is `0.0.0` then all versions have been yanked
         if (!requestedVersion && maxVersion !== '0.0.0') {
@@ -52,10 +65,13 @@ export default Ember.Route.extend({
                     } else {
                         params.version_num = latestStableVersion.get('num');
                     }
-                });
+                }).then(fetchCrateDocumentation);
             } else {
                 params.version_num = maxVersion;
+                fetchCrateDocumentation();
             }
+        } else {
+            fetchCrateDocumentation();
         }
 
         controller.set('crate', crate);
@@ -66,17 +82,6 @@ export default Ember.Route.extend({
             ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
-        }
-
-        if (!crate.get('documentation')) {
-            let crateName = crate.get('name');
-            let crateVersion = params.version_num;
-            ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
-                .then((r) => {
-                    if (r.length > 0 && r[0].build_status === true) {
-                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
-                    }
-                });
         }
 
         // Find version model
