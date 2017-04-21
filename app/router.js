@@ -18,6 +18,7 @@ Router.map(function() {
         this.route('download');
         this.route('versions');
         this.route('version', { path: '/:version_num' });
+        this.route('build_info', { path: '/:version_num/build_info' });
 
         this.route('reverse_dependencies');
 

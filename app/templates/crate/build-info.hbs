@@ -1,0 +1,83 @@
+{{title name}}
+
+<div class='all-versions-back'>
+    {{#link-to 'crate' id}}&#11013; Back to {{ name }}{{/link-to}}
+</div>
+
+<div id='crates-heading'>
+    <div class="wide">
+        <div class='info'>
+            <img class='logo crate' src="/assets/crate.png"/>
+            <h1>Build info for {{ name }}</h1>
+            <h2>{{ version }}</h2>
+        </div>
+    </div>
+</div>
+
+<div id='crate-build-info'>
+    {{#if has_stable_builds}}
+        <h3>Stable channel</h3>
+        <table>
+            <tr>
+                <th>Rust Version</th>
+                <th>Linux 64 bit</th>
+                <th>macOS 64 bit</th>
+                <th>Windows (GNU) 64 bit</th>
+                <th>Windows (MSVC) 64 bit</th>
+            </tr>
+            {{#each stable_build as |build|}}
+                <tr>
+                    <td>{{ build.version }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-unknown-linux-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-apple-darwin }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-msvc }}</td>
+                </tr>
+            {{/each}}
+        </table>
+    {{/if}}
+
+    {{#if has_beta_builds}}
+        <h3>Beta channel</h3>
+        <table>
+            <tr>
+                <th>Rust Version</th>
+                <th>Linux 64 bit</th>
+                <th>macOS 64 bit</th>
+                <th>Windows (GNU) 64 bit</th>
+                <th>Windows (MSVC) 64 bit</th>
+            </tr>
+            {{#each beta_build as |build|}}
+                <tr>
+                    <td>{{ format-day build.version }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-unknown-linux-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-apple-darwin }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-msvc }}</td>
+                </tr>
+            {{/each}}
+        </table>
+    {{/if}}
+
+    {{#if has_nightly_builds}}
+        <h3>Nightly channel</h3>
+        <table>
+            <tr>
+                <th>Rust Version</th>
+                <th>Linux 64 bit</th>
+                <th>macOS 64 bit</th>
+                <th>Windows (GNU) 64 bit</th>
+                <th>Windows (MSVC) 64 bit</th>
+            </tr>
+            {{#each nightly_build as |build|}}
+                <tr>
+                    <td>{{ format-day build.version }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-unknown-linux-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-apple-darwin }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-gnu }}</td>
+                    <td>{{ build-info-pass-fail build.x86_64-pc-windows-msvc }}</td>
+                </tr>
+            {{/each}}
+        </table>
+    {{/if}}
+</div>

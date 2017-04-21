@@ -147,6 +147,10 @@
                             on {{ target-icons currentVersion.build_info.latest_positive_results.nightly.targets }}
                         </div>
                     {{/if}}
+
+                    {{#link-to 'crate.build_info' currentVersion.num}}
+                        More build info
+                    {{/link-to}}
                 </div>
             {{/if}}
 
