@@ -1,3 +1,5 @@
+//! Application-wide components in a struct accessible from each request
+
 use std::env;
 use std::error::Error;
 use std::path::PathBuf;
@@ -18,14 +20,19 @@ pub struct App {
     /// The database connection pool
     pub database: db::Pool,
 
-    /// The database connection pool
+    /// The diesel database connection pool
     pub diesel_database: db::DieselPool,
 
     /// The GitHub OAuth2 configuration
     pub github: oauth2::Config,
 
+    /// A unique key used with conduit_cookie to generate cookies
     pub session_key: String,
+
+    /// The crate index git repository
     pub git_repo: Mutex<git2::Repository>,
+
+    /// The location on disk of the checkout of the crate index git repository
     pub git_repo_checkout: PathBuf,
 
     /// The server configuration
@@ -38,6 +45,13 @@ pub struct AppMiddleware {
 }
 
 impl App {
+    /// Creates a new `App` with a given `Config`
+    ///
+    /// Configures and sets up:
+    ///
+    /// - GitHub OAuth
+    /// - Database connection pools
+    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: &Config) -> App {
         let mut github = oauth2::Config::new(
             &config.gh_client_id,
@@ -45,7 +59,6 @@ impl App {
             "https://github.com/login/oauth/authorize",
             "https://github.com/login/oauth/access_token",
         );
-
         github.scopes.push(String::from("read:org"));
 
         let db_pool_size = match (env::var("DB_POOL_SIZE"), config.env) {
@@ -66,6 +79,7 @@ impl App {
             _ => 1,
         };
 
+        // We need two connection pools until we finish transitioning everything to use diesel.
         let db_config = r2d2::Config::builder()
             .pool_size(db_pool_size)
             .min_idle(db_min_idle)
@@ -78,6 +92,7 @@ impl App {
             .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
+
         App {
             database: db::pool(&config.db_url, db_config),
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
@@ -89,6 +104,11 @@ impl App {
         }
     }
 
+    /// Returns a handle for making HTTP requests to upload crate files.
+    ///
+    /// The handle will go through a proxy if the uploader being used has specified one, which
+    /// is only done in test mode in order to be able to record and inspect the HTTP requests
+    /// that tests make.
     pub fn handle(&self) -> Easy {
         let mut handle = Easy::new();
         if let Some(proxy) = self.config.uploader.proxy() {
