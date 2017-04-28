@@ -85,6 +85,7 @@ pub mod krate;
 pub mod model;
 pub mod owner;
 pub mod schema;
+pub mod token;
 pub mod upload;
 pub mod uploaders;
 pub mod user;
@@ -161,8 +162,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/authorize", C(user::github_access_token));
     router.get("/logout", C(user::logout));
     router.get("/me", C(user::me));
-    router.put("/me/reset_token", C(user::reset_token));
     router.get("/me/updates", C(user::updates));
+    router.get("/me/tokens", C(token::list));
+    router.post("/me/tokens", C(token::new));
+    router.delete("/me/tokens/:id", C(token::revoke));
     router.get("/summary", C(krate::summary));
 
     let env = app.config.env;

@@ -1,6 +1,17 @@
 // This file can be regenerated with `diesel print-schema`
 
 table! {
+    api_tokens (id) {
+        id -> Int4,
+        user_id -> Int4,
+        token -> Varchar,
+        name -> Varchar,
+        created_at -> Timestamp,
+        last_used_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     badges (crate_id,
     badge_type) {
         crate_id -> Int4,
@@ -132,7 +143,6 @@ table! {
         id -> Int4,
         email -> Nullable<Varchar>,
         gh_access_token -> Varchar,
-        api_token -> Varchar,
         gh_login -> Varchar,
         name -> Nullable<Varchar>,
         gh_avatar -> Nullable<Varchar>,

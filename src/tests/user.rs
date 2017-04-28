@@ -1,7 +1,6 @@
 use conduit::{Handler, Method};
 
 use cargo_registry::Model;
-use cargo_registry::db::RequestTransaction;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
@@ -12,13 +11,8 @@ struct AuthResponse {
     state: String,
 }
 #[derive(RustcDecodable)]
-struct MeResponse {
-    user: EncodableUser,
-    api_token: String,
-}
-#[derive(RustcDecodable)]
-struct UserShowResponse {
-    user: EncodableUser,
+pub struct UserShowResponse {
+    pub user: EncodableUser,
 }
 
 #[test]
@@ -46,7 +40,6 @@ fn user_insert() {
     let tx = t!(conn.transaction());
 
     let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar"));
-    assert_eq!(t!(User::find_by_api_token(&tx, &user.api_token)), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
     assert_eq!(
@@ -72,10 +65,11 @@ fn me() {
     assert_eq!(response.status.0, 403);
 
     let user = ::mock_user(&mut req, ::user("foo"));
+
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: MeResponse = ::json(&mut response);
+    let json: UserShowResponse = ::json(&mut response);
+
     assert_eq!(json.user.email, user.email);
-    assert_eq!(json.api_token, user.api_token);
 }
 
 #[test]
@@ -99,18 +93,6 @@ fn show() {
     assert_eq!(Some("bar@baz.com".into()), json.user.email);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
-}
-
-#[test]
-fn reset_token() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Put, "/me/reset_token");
-    let user = User::find_or_insert(req.tx().unwrap(), 1, "foo", None, None, None, "bar").unwrap();
-    ::sign_in_as(&mut req, &user);
-    ok_resp!(middle.call(&mut req));
-
-    let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
-    assert!(u2.api_token != user.api_token);
 }
 
 #[test]

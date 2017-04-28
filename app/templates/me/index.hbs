@@ -9,33 +9,36 @@
     <h2>Profile Information</h2>
 
     <div class='info'>
-        {{#user-link user=model }} {{user-avatar user=model size='medium'}} {{/user-link}}
+        {{#user-link user=model.user }} {{user-avatar user=model.user size='medium'}} {{/user-link}}
 
         <dl>
             <dt>Name</dt>
-            <dd>{{ model.name }}</dd>
+            <dd>{{ model.user.name }}</dd>
             <dt>GitHub Account</dt>
-            <dd>{{ model.login }}</dd>
+            <dd>{{ model.user.login }}</dd>
             <dt>Email</dt>
-            <dd>{{ model.email }}</dd>
+            <dd>{{ model.user.email }}</dd>
         </dl>
     </div>
 </div>
 
 <div id='me-api'>
-    <h2>API Access</h2>
+    <div class='me-subheading'>
+        <h2>API Access</h2>
+        <div class='right'>
+            <button class='yellow-button' disabled={{disableCreate}} {{action "startNewToken"}}>New Token</button>
+        </div>
+    </div>
 
-    <p class='api'>Your API key is <strong>{{ model.api_token }}</strong></p>
     <p>
         If you want to use package commands from the command line, you'll need a
-        <code>~/.cargo/config</code> which can be generated with:
+        <code>~/.cargo/config</code>, the first step to creating this
+        is to generate a new token using the button above.
     </p>
-    <pre>cargo login {{ model.api_token }}</pre>
 
-    <button {{action "resetToken"}} class='yellow-button'>
-        Reset my API key
-    </button>
-
-    <img src="/assets/ajax-loader.gif"
-         class={{if isResetting "" "hidden"}} />
+    <div id='tokens'>
+        {{#each sortedTokens as |api_token|}}
+            {{api-token-row api_token=api_token}}
+        {{/each}}
+    </div>
 </div>

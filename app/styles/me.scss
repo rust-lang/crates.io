@@ -86,3 +86,66 @@
         &:hover { background-color: darken($bg, 10%); }
     }
 }
+
+.me-subheading {
+    @include display-flex;
+    .right {
+        @include flex(2);
+        @include display-flex;
+        @include justify-content(flex-end);
+        @include align-self(center);
+    }
+}
+
+#tokens {
+    background-color: $main-bg-dark;
+    @include display-flex;
+    @include flex-direction(column);
+    .row {
+        width: 100%;
+        border: 1px solid #d5d3cb;
+        border-bottom-width: 0px;
+        &:last-child { border-bottom-width: 1px; }
+        padding: 10px 20px;
+        @include display-flex;
+        @include align-items(center);
+        .name {
+            @include flex(1);
+            margin-right: 0.4em;
+            font-weight: bold;
+        }
+        .dates {
+            @include flex(content);
+            @include display-flex;
+            @include flex-direction(column);
+            @include align-items(flex-end);
+            margin-right: 0.4em;
+        }
+        .actions {
+            @include display-flex;
+            @include align-items(center);
+            img { margin-left: 10px }
+        }
+    }
+    .create-token {
+        .name {
+            input {
+                width: 100%;
+            }
+            padding-right: 20px;
+            margin-right: 0px;
+        }
+        background-color: $main-bg-dark;
+    }
+    .new-token {
+        border-top-width: 0px;
+        @include flex-direction(column);
+        @include justify-content(stretch);
+    }
+    .error {
+        border-top-width: 0px;
+        font-weight: bold;
+        color: rgb(216, 0, 41);
+        padding: 0px 10px 10px 20px;
+    }
+}

@@ -1,6 +1,9 @@
 @mixin button($start, $end) {
-    $s2: darken($start, 5%);
-    $e2: darken($end, 5%);
+    $start_dark: darken($start, 5%);
+    $end_dark: darken($end, 5%);
+    $start_light: lighten($start, 5%);
+    $end_light: lighten($end, 5%);
+
     padding: 15px 40px;
     display: inline-block;
     color: $main-color;
@@ -17,13 +20,22 @@
         margin-right: 10px;
     }
 
-    &:hover { @include vertical-gradient($s2, $e2); outline: 0; }
-    &.active { @include vertical-gradient($s2, $e2); outline: 0; }
+    &:hover { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &[disabled] {
+        @include vertical-gradient($start_light, $end_light);
+        color: $main-color-light;
+    }
 }
 
 .yellow-button {
     @include button(#fede9e, #fdc452);
     vertical-align: middle;
+}
+
+button.small {
+    padding: 10px 20px;
+    @include border-radius(30px);
 }
 
 .tan-button {
