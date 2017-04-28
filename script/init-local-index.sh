@@ -32,22 +32,5 @@ touch tmp/index-co/.git/git-daemon-export-ok
 cat - <<-EOF
 Your local git index is ready to go!
 
-You'll want to build crates.io by running:
-
-   cargo build
-
-Follow up by changing your HOME/.cargo/config: 
-
-   [source]
-
-   [source.local]
-   registry = "https://localhost:8888/crates.io-index"
-
-   [source.crates-io]
-   replace-with = "local"
-   registry = 'https://doesnt-matter-but-must-be-present'
-
-You will also need to generate a token from in the app itself
-
 Please refer to https://github.com/rust-lang/crates.io/blob/master/README.md for more info!
 EOF
