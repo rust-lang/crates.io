@@ -11,10 +11,13 @@ This project is built on ember-cli and cargo, visit
 
 ## Working on the Frontend
 
+Install [Yarn](https://yarnpkg.com), see
+[yarnpkg.com/en/docs/install](https://yarnpkg.com/en/docs/install) for
+instructions for your OS.
+
 ```bash
 git clone https://github.com/rust-lang/crates.io.git
 cd crates.io/
-npm install -g yarn # if you don't have yarn
 yarn
 yarn run bower install
 ```
