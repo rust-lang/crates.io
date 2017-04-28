@@ -26,6 +26,7 @@ html, body { margin: 0; }
 
 body {
   font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
+  font-size: 16px;
   @include display-flex;
   @include flex-direction(column);
   @include align-items(center);
