@@ -15,8 +15,8 @@ name = "all"
 path = "src/tests/all.rs"
 
 [dependencies]
-s3 = { path = "src/s3", version = "0.0.1" }
-migrate = { path = "src/migrate", version = "0.1.0" }
+cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
+cargo-registry-migrate = { path = "src/migrate", version = "0.1.0" }
 rand = "0.3"
 time = "0.1"
 git2 = "0.6.4"

@@ -1,5 +1,5 @@
 [project]
-name = "migrate"
+name = "cargo-registry-migrate"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.1.0"
 

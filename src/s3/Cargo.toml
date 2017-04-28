@@ -1,6 +1,6 @@
 [package]
 
-name = "s3"
+name = "cargo-registry-s3"
 version = "0.0.1"
 authors = []
 
