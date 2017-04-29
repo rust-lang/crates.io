@@ -2,6 +2,10 @@
 name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.1.0"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+
+[workspace]
 
 [profile.release]
 opt-level = 2
@@ -15,8 +19,8 @@ name = "all"
 path = "src/tests/all.rs"
 
 [dependencies]
-s3 = { path = "src/s3" }
-migrate = { path = "src/migrate" }
+cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
+cargo-registry-migrate = { path = "src/migrate", version = "0.1.0" }
 rand = "0.3"
 time = "0.1"
 git2 = "0.6.4"
