@@ -73,6 +73,10 @@ fn delete(tx: &postgres::transaction::Transaction) {
                        &[&krate.id]).unwrap();
     println!("  {} deleted", n);
 
+    println!("disabling reserved crate name trigger");
+    let _ = tx.execute("ALTER TABLE crates DISABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
+                       &[]).unwrap();
+
     println!("deleting crate keyword connections");
     let n = tx.execute("DELETE FROM crates_keywords WHERE crate_id = $1",
                        &[&krate.id]).unwrap();
@@ -82,6 +86,10 @@ fn delete(tx: &postgres::transaction::Transaction) {
     let n = tx.execute("DELETE FROM crates_categories WHERE crate_id = $1",
                        &[&krate.id]).unwrap();
     println!("  {} deleted", n);
+
+    println!("enabling reserved crate name trigger");
+    let _ = tx.execute("ALTER TABLE crates ENABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
+                       &[]).unwrap();
 
     println!("deleting crate badges");
     let n = tx.execute("DELETE FROM badges WHERE crate_id = $1",
