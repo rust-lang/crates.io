@@ -8,7 +8,6 @@ export default Ember.Route.extend({
 
     model(params) {
         const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
-
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
@@ -36,7 +35,8 @@ export default Ember.Route.extend({
         };
 
         const fetchCrateDocumentation = () => {
-            if (!crate.get('documentation')) {
+            if (!crate.get('documentation') ||
+                crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
                 ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
