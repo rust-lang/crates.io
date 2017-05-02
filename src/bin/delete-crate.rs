@@ -78,6 +78,16 @@ fn delete(tx: &postgres::transaction::Transaction) {
                        &[&krate.id]).unwrap();
     println!("  {} deleted", n);
 
+    println!("deleting crate category connections");
+    let n = tx.execute("DELETE FROM crates_categories WHERE crate_id = $1",
+                       &[&krate.id]).unwrap();
+    println!("  {} deleted", n);
+
+    println!("deleting crate badges");
+    let n = tx.execute("DELETE FROM badges WHERE crate_id = $1",
+                       &[&krate.id]).unwrap();
+    println!("  {} deleted", n);
+
     println!("deleting the crate");
     let n = tx.execute("DELETE FROM crates WHERE id = $1",
                        &[&krate.id]).unwrap();
