@@ -8,7 +8,6 @@ export default Ember.Route.extend({
 
     model(params) {
         const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
-
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
@@ -35,6 +34,20 @@ export default Ember.Route.extend({
             return result;
         };
 
+        const fetchCrateDocumentation = () => {
+            if (!crate.get('documentation') ||
+                crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
+                let crateName = crate.get('name');
+                let crateVersion = params.version_num;
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                    .then((r) => {
+                        if (r.length > 0 && r[0].build_status === true) {
+                            crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
+                        }
+                    });
+            }
+        };
+
         // Fallback to the crate's last stable version
         // If `max_version` is `0.0.0` then all versions have been yanked
         if (!requestedVersion && maxVersion !== '0.0.0') {
@@ -52,10 +65,13 @@ export default Ember.Route.extend({
                     } else {
                         params.version_num = latestStableVersion.get('num');
                     }
-                });
+                }).then(fetchCrateDocumentation);
             } else {
                 params.version_num = maxVersion;
+                fetchCrateDocumentation();
             }
+        } else {
+            fetchCrateDocumentation();
         }
 
         controller.set('crate', crate);
