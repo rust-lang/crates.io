@@ -99,6 +99,7 @@ dependencies = [
  "oauth2 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "postgres-shared 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2-diesel 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2_postgres 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
