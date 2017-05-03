@@ -16,7 +16,7 @@ impl<R: Read> HashingReader<R> {
     }
 
     pub fn finalize(mut self) -> Vec<u8> {
-        self.hasher.finish().unwrap()
+        self.hasher.finish2().unwrap().as_ref().to_owned()
     }
 }
 
