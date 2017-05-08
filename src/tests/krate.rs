@@ -397,7 +397,6 @@ fn new_bad_names() {
         let (_b, app, middle) = ::app();
         let mut req = ::new_req(app, name, "1.0.0");
         ::mock_user(&mut req, ::user("foo"));
-        ::logout(&mut req);
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains("invalid crate name"),
                 "{:?}", json.errors);
