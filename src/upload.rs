@@ -6,7 +6,7 @@ use semver;
 use dependency::Kind as DependencyKind;
 
 use keyword::Keyword as CrateKeyword;
-use krate::Crate;
+use krate::{Crate, MAX_NAME_LENGTH};
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct NewCrate {
@@ -52,7 +52,10 @@ impl Decodable for CrateName {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
         let s = d.read_str()?;
         if !Crate::valid_name(&s) {
-            return Err(d.error(&format!("invalid crate name specified: {}", s)))
+            return Err(d.error(&format!("invalid crate name specified: {}. \
+                Valid crate names must start with a letter; contain only \
+                letters, numbers, hyphens, or underscores; and have {} or \
+                fewer characters.", s, MAX_NAME_LENGTH)))
         }
         Ok(CrateName(s))
     }
