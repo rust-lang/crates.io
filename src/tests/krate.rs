@@ -14,7 +14,7 @@ use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
-use cargo_registry::krate::{Crate, EncodableCrate};
+use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
@@ -404,6 +404,7 @@ fn new_bad_names() {
 
     bad_name("");
     bad_name("foo bar");
+    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1));
 }
 
 #[test]

@@ -67,6 +67,8 @@ pub const ALL_COLUMNS: AllColumns = (crates::id, crates::name,
     crates::readme, crates::license, crates::repository,
     crates::max_upload_size);
 
+pub const MAX_NAME_LENGTH: usize = 64;
+
 type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -370,7 +372,10 @@ impl Crate {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        Crate::valid_ident(name)
+        let under_max_length = name.chars()
+            .take(MAX_NAME_LENGTH + 1)
+            .count() <= MAX_NAME_LENGTH;
+        Crate::valid_ident(name) && under_max_length
     }
 
     fn valid_ident(name: &str) -> bool {
