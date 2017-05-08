@@ -370,6 +370,10 @@ impl Crate {
     }
 
     pub fn valid_name(name: &str) -> bool {
+        Crate::valid_ident(name)
+    }
+
+    fn valid_ident(name: &str) -> bool {
         if name.is_empty() { return false }
         name.chars().next().unwrap().is_alphabetic() &&
             name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
@@ -379,12 +383,12 @@ impl Crate {
     pub fn valid_feature_name(name: &str) -> bool {
         let mut parts = name.split('/');
         match parts.next() {
-            Some(part) if !Crate::valid_name(part) => return false,
+            Some(part) if !Crate::valid_ident(part) => return false,
             None => return false,
             _ => {}
         }
         match parts.next() {
-            Some(part) if !Crate::valid_name(part) => return false,
+            Some(part) if !Crate::valid_ident(part) => return false,
             _ => {}
         }
         parts.next().is_none()
