@@ -30,9 +30,12 @@ fn main() {
             cb.credentials(cargo_registry::git::credentials);
             let mut opts = git2::FetchOptions::new();
             opts.remote_callbacks(cb);
-            git2::build::RepoBuilder::new()
+            let repo = git2::build::RepoBuilder::new()
                                      .fetch_options(opts)
-                                     .clone(&url, &checkout).unwrap()
+                                     .clone(&url, &checkout).unwrap();
+            let git_daemon_file = checkout.join(".git").join("git-daemon-export-ok");
+            File::create(git_daemon_file).unwrap();
+            repo
         }
     };
     let mut cfg = repo.config().unwrap();
