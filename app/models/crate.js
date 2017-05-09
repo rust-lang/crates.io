@@ -20,13 +20,9 @@ export default DS.Model.extend({
 
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),
-    enhanced_badges: Ember.computed.map('badges', badge => ({
-        // jshint ignore:start
-        // needed until https://github.com/jshint/jshint/issues/2991 is fixed
-        ...badge,
-        // jshint ignore:end
+    enhanced_badges: Ember.computed.map('badges', badge => Object.assign({
         component_name: `badge-${badge.badge_type}`
-    })),
+    }, badge)),
     badge_sort: ['badge_type'],
     annotated_badges: Ember.computed.sort('enhanced_badges', 'badge_sort'),
     owners: DS.hasMany('users', { async: true }),
