@@ -3,15 +3,15 @@ rust: stable
 sudo: false
 dist: trusty
 
-cache:
-  directories:
-    - $HOME/.yarn-cache
+cache: yarn
 
 before_install:
   - nvm install 6.10.0
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
-  - npm config set spin false
-  - npm install -g yarn
+  - sudo apt-key adv --keyserver pgp.mit.edu --recv D101F7899D41F3C3
+  - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  - sudo apt-get update -qq
+  - sudo apt-get install -y -qq yarn
 
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
