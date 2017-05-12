@@ -133,6 +133,12 @@ Crates that provide developer-facing features such as testing, debugging, \
 linting, performance profiling, autocompletion, formatting, and more.\
 """
 
+[development-tools.categories.build-utils]
+name = "Build Utils"
+description = """
+Utilities for build scripts and other build time steps.\
+"""
+
 [development-tools.categories.cargo-plugins]
 name = "Cargo plugins"
 description = """
