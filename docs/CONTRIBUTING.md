@@ -220,7 +220,7 @@ by typing `\q`) without any errors to connect to your running Postgres server.
   `pkg-config` as well. According to
   [rust-openssl](https://github.com/sfackler/rust-openssl),
   - Ubuntu: `sudo apt-get install libssl-dev pkg-config`
-  - Fedora: `sudo dnf install openssl-devel pkg-config`
+  - Fedora: `sudo dnf install openssl-devel pkgconfig`
   - Arch Linux: `sudo pacman -S openssl pkg-config`
 
 > If you have problems with OpenSSL, see [rust-openssl's
