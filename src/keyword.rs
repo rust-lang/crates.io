@@ -60,7 +60,6 @@ impl Keyword {
         struct NewKeyword<'a> {
             keyword: &'a str,
         }
-        sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);
 
         let (lowercase_names, new_keywords): (Vec<_>, Vec<_>) = names.iter()
             .map(|s| (s.to_lowercase(), NewKeyword { keyword: *s }))
@@ -71,7 +70,7 @@ impl Keyword {
             diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
                 .execute(conn)?;
         }
-        keywords::table.filter(lower(keywords::keyword).eq(any(lowercase_names)))
+        keywords::table.filter(::lower(keywords::keyword).eq(any(lowercase_names)))
             .load(conn)
     }
 

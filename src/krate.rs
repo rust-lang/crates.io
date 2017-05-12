@@ -706,7 +706,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query = query.filter(crates::id.eq_any(
             crates_keywords::table.select(crates_keywords::crate_id)
                 .inner_join(keywords::table)
-                .filter(lower(keywords::keyword).eq(lower(kw)))
+                .filter(::lower(keywords::keyword).eq(::lower(kw)))
         ));
     } else if let Some(letter) = params.get("letter") {
         let pattern = format!("{}%", letter.chars().next().unwrap()
@@ -1300,4 +1300,3 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
 
 use diesel::types::Text;
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
-sql_function!(lower, lower_t, (x: Text) -> Text);
