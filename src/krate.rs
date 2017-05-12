@@ -609,11 +609,8 @@ impl Crate {
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
 
-    pub fn badges(&self, conn: &GenericConnection) -> CargoResult<Vec<Badge>> {
-        let stmt = conn.prepare("SELECT badges.* from badges \
-                                      WHERE badges.crate_id = $1")?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
+        badges::table.filter(badges::crate_id.eq(self.id)).load(conn)
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
