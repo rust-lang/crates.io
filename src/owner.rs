@@ -164,7 +164,9 @@ impl Team {
                   name: Option<String>,
                   avatar: Option<String>)
                   -> CargoResult<Self> {
-        #[derive(Insertable)]
+        use diesel::pg::upsert::*;
+
+        #[derive(Insertable, AsChangeset)]
         #[table_name="teams"]
         struct NewTeam<'a> {
             login: &'a str,
@@ -178,7 +180,10 @@ impl Team {
             name: name,
             avatar: avatar,
         };
-        diesel::insert(&new_team).into(teams::table)
+
+        diesel::insert(
+            &new_team.on_conflict(teams::github_id, do_update().set(&new_team))
+        ).into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
     }
