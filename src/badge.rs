@@ -34,7 +34,7 @@ pub enum Badge {
         repository: String,
     },
     #[serde(rename = "codecov")]
-    CodeCov {
+    Codecov {
         repository: String, branch: Option<String>, service: Option<String>,
     },
     #[serde(rename = "coveralls")]
@@ -82,7 +82,7 @@ impl Badge {
             Badge::GitLab{..} => "gitlab",
             Badge::IsItMaintainedIssueResolution{..} => "is-it-maintained-issue-resolution",
             Badge::IsItMaintainedOpenIssues{..} => "is-it-maintained-open-issues",
-            Badge::CodeCov{..} => "codecov",
+            Badge::Codecov{..} => "codecov",
             Badge::Coveralls{..} => "coveralls",
         }
     }

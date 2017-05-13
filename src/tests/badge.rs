@@ -92,7 +92,8 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
         String::from("rust-lang/rust")
     );
 
-    let codecov = Badge::CodeCov {
+    let codecov = Badge::Codecov {
+        service: Some(String::from("github")),
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
     };
@@ -105,8 +106,13 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
         String::from("repository"),
         String::from("rust-lang/rust")
     );
+    badge_attributes_codecov.insert(
+        String::from("service"),
+        String::from("github")
+    );
 
     let coveralls = Badge::Coveralls {
+        service: Some(String::from("github")),
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
     };
@@ -118,6 +124,10 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
     badge_attributes_coveralls.insert(
         String::from("repository"),
         String::from("rust-lang/rust")
+    );
+    badge_attributes_coveralls.insert(
+        String::from("service"),
+        String::from("github")
     );
 
     let badges = BadgeRef {
@@ -403,6 +413,86 @@ fn gitlab_required_keys() {
     let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&String::from("gitlab")));
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+}
+
+#[test]
+fn isitmaintained_issue_resolution_required_keys() {
+    // Add a isitmaintained_issue_resolution badge missing a required field
+    let (req, krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.isitmaintained_issue_resolution_attributes.remove("repository");
+    badges.insert(
+        String::from("isitmaintained_issue_resolution"),
+        test_badges.isitmaintained_issue_resolution_attributes
+    );
+
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&String::from("isitmaintained_issue_resolution")));
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+}
+
+#[test]
+fn isitmaintained_open_issues_required_keys() {
+    // Add a isitmaintained_open_issues badge missing a required field
+    let (req, krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.isitmaintained_open_issues_attributes.remove("repository");
+    badges.insert(
+        String::from("isitmaintained_open_issues"),
+        test_badges.isitmaintained_open_issues_attributes
+    );
+
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&String::from("isitmaintained_open_issues")));
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+}
+
+#[test]
+fn codecov_required_keys() {
+    // Add a codecov badge missing a required field
+    let (req, krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.codecov_attributes.remove("repository");
+    badges.insert(
+        String::from("codecov"),
+        test_badges.codecov_attributes
+    );
+
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&String::from("codecov")));
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+}
+
+#[test]
+fn coveralls_required_keys() {
+    // Add a coveralls badge missing a required field
+    let (req, krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.coveralls_attributes.remove("repository");
+    badges.insert(
+        String::from("coveralls"),
+        test_badges.coveralls_attributes
+    );
+
+    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&String::from("coveralls")));
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
 }
 
