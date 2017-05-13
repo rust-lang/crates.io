@@ -1,5 +1,4 @@
 use std::ascii::AsciiExt;
-use std::collections::HashMap;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -7,13 +6,12 @@ use conduit_router::RequestParams;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel;
-use pg::GenericConnection;
 use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
 use schema::*;
-use util::{RequestUtils, CargoResult, ChainError, internal};
+use util::{RequestUtils, CargoResult};
 
 #[derive(Clone, Identifiable, Queryable)]
 pub struct Keyword {
@@ -78,23 +76,6 @@ impl Keyword {
             .load(conn)
     }
 
-    pub fn find_or_insert(conn: &GenericConnection, name: &str)
-                          -> CargoResult<Keyword> {
-        // TODO: racy (the select then insert is not atomic)
-        let stmt = conn.prepare("SELECT * FROM keywords
-                                      WHERE keyword = LOWER($1)")?;
-        for row in stmt.query(&[&name])?.iter() {
-            return Ok(Model::from_row(&row))
-        }
-
-        let stmt = conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
-                                      RETURNING *")?;
-        let rows = stmt.query(&[&name])?;
-        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
-            internal("no version returned")
-        })?))
-    }
-
     pub fn valid_name(name: &str) -> bool {
         if name.is_empty() { return false }
         name.chars().next().unwrap().is_alphanumeric() &&
@@ -126,47 +107,6 @@ impl Keyword {
                 .execute(conn)?;
             Ok(())
         })
-    }
-
-    pub fn update_crate_old(conn: &GenericConnection,
-                        krate: &Crate,
-                        keywords: &[String]) -> CargoResult<()> {
-        let old_kws = krate.keywords(conn)?;
-        let old_kws = old_kws.iter().map(|kw| {
-            (&kw.keyword[..], kw)
-        }).collect::<HashMap<_, _>>();
-        let new_kws = keywords.iter().map(|k| {
-            let kw = Keyword::find_or_insert(conn, k)?;
-            Ok((k.as_str(), kw))
-        }).collect::<CargoResult<HashMap<_, _>>>()?;
-
-        let to_rm = old_kws.iter().filter(|&(kw, _)| {
-            !new_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
-        let to_add = new_kws.iter().filter(|&(kw, _)| {
-            !old_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
-
-        if !to_rm.is_empty() {
-            conn.execute("DELETE FROM crates_keywords
-                                WHERE keyword_id = ANY($1)
-                                  AND crate_id = $2",
-                         &[&to_rm, &krate.id])?;
-        }
-
-        if !to_add.is_empty() {
-            let insert = to_add.iter().map(|id| {
-                let crate_id: i32 = krate.id;
-                let id: i32 = *id;
-                format!("({}, {})", crate_id,  id)
-            }).collect::<Vec<_>>().join(", ");
-            conn.execute(&format!("INSERT INTO crates_keywords
-                                        (crate_id, keyword_id) VALUES {}",
-                                  insert),
-                         &[])?;
-        }
-
-        Ok(())
     }
 }
 
