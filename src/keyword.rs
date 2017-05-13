@@ -59,16 +59,22 @@ impl Keyword {
             keyword: &'a str,
         }
 
-        let (lowercase_names, new_keywords): (Vec<_>, Vec<_>) = names.iter()
-            .map(|s| (s.to_lowercase(), NewKeyword { keyword: *s }))
-            .unzip();
+        let lowercase_names: Vec<_> = names.iter()
+            .map(|s| s.to_lowercase())
+            .collect();
+
+        let new_keywords: Vec<_> = lowercase_names.iter()
+            .map(|s| NewKeyword { keyword: s })
+            .collect();
 
         // https://github.com/diesel-rs/diesel/issues/797
         if !new_keywords.is_empty() {
-            diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
+            diesel::insert(&new_keywords.on_conflict_do_nothing())
+                .into(keywords::table)
                 .execute(conn)?;
         }
-        keywords::table.filter(::lower(keywords::keyword).eq(any(lowercase_names)))
+        keywords::table
+            .filter(::lower(keywords::keyword).eq(any(&lowercase_names)))
             .load(conn)
     }
 
