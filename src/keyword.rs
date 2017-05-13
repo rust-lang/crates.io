@@ -1,5 +1,4 @@
 use std::ascii::AsciiExt;
-use std::collections::HashMap;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -7,14 +6,12 @@ use conduit_router::RequestParams;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel;
-use pg::GenericConnection;
 use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
 use schema::*;
-use util::{RequestUtils, CargoResult, ChainError, internal};
-use util::errors::NotFound;
+use util::{RequestUtils, CargoResult};
 
 #[derive(Clone, Identifiable, Queryable)]
 pub struct Keyword {
@@ -43,12 +40,11 @@ pub struct EncodableKeyword {
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &GenericConnection, name: &str)
-                           -> CargoResult<Option<Keyword>> {
-        let stmt = conn.prepare("SELECT * FROM keywords \
-                                      WHERE keyword = LOWER($1)")?;
-        let rows = stmt.query(&[&name])?;
-        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
+    pub fn find_by_keyword(conn: &PgConnection, name: &str)
+                           -> QueryResult<Keyword> {
+        keywords::table
+            .filter(keywords::keyword.eq(::lower(name)))
+            .first(&*conn)
     }
 
     pub fn find_or_create_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
@@ -60,56 +56,24 @@ impl Keyword {
         struct NewKeyword<'a> {
             keyword: &'a str,
         }
-        sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);
 
-        let (lowercase_names, new_keywords): (Vec<_>, Vec<_>) = names.iter()
-            .map(|s| (s.to_lowercase(), NewKeyword { keyword: *s }))
-            .unzip();
+        let lowercase_names: Vec<_> = names.iter()
+            .map(|s| s.to_lowercase())
+            .collect();
+
+        let new_keywords: Vec<_> = lowercase_names.iter()
+            .map(|s| NewKeyword { keyword: s })
+            .collect();
 
         // https://github.com/diesel-rs/diesel/issues/797
         if !new_keywords.is_empty() {
-            diesel::insert(&new_keywords.on_conflict_do_nothing()).into(keywords::table)
+            diesel::insert(&new_keywords.on_conflict_do_nothing())
+                .into(keywords::table)
                 .execute(conn)?;
         }
-        keywords::table.filter(lower(keywords::keyword).eq(any(lowercase_names)))
+        keywords::table
+            .filter(::lower(keywords::keyword).eq(any(&lowercase_names)))
             .load(conn)
-    }
-
-    pub fn find_or_insert(conn: &GenericConnection, name: &str)
-                          -> CargoResult<Keyword> {
-        // TODO: racy (the select then insert is not atomic)
-        let stmt = conn.prepare("SELECT * FROM keywords
-                                      WHERE keyword = LOWER($1)")?;
-        for row in stmt.query(&[&name])?.iter() {
-            return Ok(Model::from_row(&row))
-        }
-
-        let stmt = conn.prepare("INSERT INTO keywords (keyword) VALUES (LOWER($1))
-                                      RETURNING *")?;
-        let rows = stmt.query(&[&name])?;
-        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
-            internal("no version returned")
-        })?))
-    }
-
-    pub fn all(conn: &GenericConnection, sort: &str, limit: i64, offset: i64)
-               -> CargoResult<Vec<Keyword>> {
-
-        let sort_sql = match sort {
-           "crates" => "ORDER BY crates_cnt DESC",
-           _ => "ORDER BY keyword ASC",
-        };
-
-        let stmt = conn.prepare(&format!("SELECT * FROM keywords {}
-                                               LIMIT $1 OFFSET $2",
-                                         sort_sql))?;
-
-        let keywords: Vec<_> = stmt.query(&[&limit, &offset])?
-            .iter()
-            .map(|row| Model::from_row(&row))
-            .collect();
-
-        Ok(keywords)
     }
 
     pub fn valid_name(name: &str) -> bool {
@@ -144,47 +108,6 @@ impl Keyword {
             Ok(())
         })
     }
-
-    pub fn update_crate_old(conn: &GenericConnection,
-                        krate: &Crate,
-                        keywords: &[String]) -> CargoResult<()> {
-        let old_kws = krate.keywords(conn)?;
-        let old_kws = old_kws.iter().map(|kw| {
-            (&kw.keyword[..], kw)
-        }).collect::<HashMap<_, _>>();
-        let new_kws = keywords.iter().map(|k| {
-            let kw = Keyword::find_or_insert(conn, k)?;
-            Ok((k.as_str(), kw))
-        }).collect::<CargoResult<HashMap<_, _>>>()?;
-
-        let to_rm = old_kws.iter().filter(|&(kw, _)| {
-            !new_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
-        let to_add = new_kws.iter().filter(|&(kw, _)| {
-            !old_kws.contains_key(kw)
-        }).map(|(_, v)| v.id).collect::<Vec<_>>();
-
-        if !to_rm.is_empty() {
-            conn.execute("DELETE FROM crates_keywords
-                                WHERE keyword_id = ANY($1)
-                                  AND crate_id = $2",
-                         &[&to_rm, &krate.id])?;
-        }
-
-        if !to_add.is_empty() {
-            let insert = to_add.iter().map(|id| {
-                let crate_id: i32 = krate.id;
-                let id: i32 = *id;
-                format!("({}, {})", crate_id,  id)
-            }).collect::<Vec<_>>().join(", ");
-            conn.execute(&format!("INSERT INTO crates_keywords
-                                        (crate_id, keyword_id) VALUES {}",
-                                  insert),
-                         &[])?;
-        }
-
-        Ok(())
-    }
 }
 
 impl Model for Keyword {
@@ -201,16 +124,31 @@ impl Model for Keyword {
 
 /// Handles the `GET /keywords` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.tx()?;
+    use diesel::expression::dsl::sql;
+    use diesel::types::BigInt;
+    use schema::keywords;
+
+    let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
-    let keywords = Keyword::all(conn, sort, limit, offset)?;
-    let keywords = keywords.into_iter().map(Keyword::encodable).collect();
+    let mut query = keywords::table
+        .select((keywords::all_columns, sql::<BigInt>("COUNT(*) OVER ()")))
+        .limit(limit)
+        .offset(offset)
+        .into_boxed();
 
-    // Query for the total count of keywords
-    let total = Keyword::count(conn)?;
+    if sort == "crates" {
+        query = query.order(keywords::crates_cnt.desc());
+    } else {
+        query = query.order(keywords::keyword.asc());
+    }
+
+    let data = query.load::<(Keyword, i64)>(&*conn)?;
+    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
+    let kws = data.into_iter()
+        .map(|(k, _)| k.encodable()).collect::<Vec<_>>();
 
     #[derive(RustcEncodable)]
     struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
@@ -218,7 +156,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     struct Meta { total: i64 }
 
     Ok(req.json(&R {
-        keywords: keywords,
+        keywords: kws,
         meta: Meta { total: total },
     }))
 }
@@ -226,9 +164,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /keywords/:keyword_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
-    let conn = req.tx()?;
-    let kw = Keyword::find_by_keyword(conn, name)?;
-    let kw = kw.chain_error(|| NotFound)?;
+    let conn = req.db_conn()?;
+
+    let kw = Keyword::find_by_keyword(&conn, name)?;
 
     #[derive(RustcEncodable)]
     struct R { keyword: EncodableKeyword }

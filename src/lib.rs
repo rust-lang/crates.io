@@ -227,3 +227,5 @@ pub fn env(s: &str) -> String {
         panic!("must have `{}` defined", s)
     })
 }
+
+sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);

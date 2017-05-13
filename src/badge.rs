@@ -1,12 +1,9 @@
-use Model;
 use krate::Crate;
 use schema::badges;
 use util::CargoResult;
 
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
-use pg::GenericConnection;
-use pg::rows::Row;
 use serde_json;
 use std::collections::HashMap;
 
@@ -41,17 +38,6 @@ impl Queryable<badges::SqlType, Pg> for Badge {
         serde_json::from_value(json)
             .expect("Invalid CI badge in the database")
     }
-}
-
-impl Model for Badge {
-    fn from_row(row: &Row) -> Badge {
-        let badge_type: String = row.get("badge_type");
-        let attributes: serde_json::Value = row.get("attributes");
-        let json = json!({"badge_type": badge_type, "attributes": attributes});
-        serde_json::from_value(json)
-            .expect("Invalid CI badge in the database")
-    }
-    fn table_name(_: Option<Badge>) -> &'static str { "badges" }
 }
 
 impl Badge {
@@ -106,38 +92,5 @@ impl Badge {
             insert(&new_badges).into(badges::table).execute(conn)?;
             Ok(invalid_badges)
         })
-    }
-
-    pub fn update_crate_old(conn: &GenericConnection,
-                        krate: &Crate,
-                        badges: HashMap<String, HashMap<String, String>>)
-                        -> CargoResult<Vec<String>> {
-
-        let mut invalid_badges = vec![];
-
-        let badges: Vec<Badge> = badges.into_iter().filter_map(|(k, v)| {
-            let json = json!({"badge_type": k, "attributes": v});
-            serde_json::from_value(json)
-                .map_err(|_| invalid_badges.push(k))
-                .ok()
-        }).collect();
-
-        conn.execute("\
-            DELETE FROM badges \
-            WHERE crate_id = $1;",
-            &[&krate.id]
-        )?;
-
-        for badge in badges {
-            let json = serde_json::to_value(badge)?;
-            conn.execute("\
-                INSERT INTO badges (crate_id, badge_type, attributes) \
-                VALUES ($1, $2, $3) \
-                ON CONFLICT (crate_id, badge_type) DO UPDATE \
-                    SET attributes = EXCLUDED.attributes;",
-                &[&krate.id, &json["badge_type"].as_str(), &json["attributes"]]
-            )?;
-        }
-        Ok(invalid_badges)
     }
 }

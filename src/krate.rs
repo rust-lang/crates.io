@@ -609,11 +609,8 @@ impl Crate {
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
     }
 
-    pub fn badges(&self, conn: &GenericConnection) -> CargoResult<Vec<Badge>> {
-        let stmt = conn.prepare("SELECT badges.* from badges \
-                                      WHERE badges.crate_id = $1")?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+    pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
+        badges::table.filter(badges::crate_id.eq(self.id)).load(conn)
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
@@ -709,7 +706,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query = query.filter(crates::id.eq_any(
             crates_keywords::table.select(crates_keywords::crate_id)
                 .inner_join(keywords::table)
-                .filter(lower(keywords::keyword).eq(lower(kw)))
+                .filter(::lower(keywords::keyword).eq(::lower(kw)))
         ));
     } else if let Some(letter) = params.get("letter") {
         let pattern = format!("{}%", letter.chars().next().unwrap()
@@ -1303,4 +1300,3 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
 
 use diesel::types::Text;
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
-sql_function!(lower, lower_t, (x: Text) -> Text);
