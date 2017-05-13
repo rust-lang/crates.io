@@ -40,6 +40,32 @@ export default {
                     "repository": "huonw/external_mixin"
                 },
                 "badge_type": "gitlab"
+            },
+            {
+                "attributes": {
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "is-it-maintained-issue-resolution"
+            },
+            {
+                "attributes": {
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "is-it-maintained-open-issues"
+            },
+            {
+                "attributes": {
+                    "branch": "master",
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "codecov"
+            },
+            {
+                "attributes": {
+                    "branch": "master",
+                    "repository": "huonw/external_mixin"
+                },
+                "badge_type": "coveralls"
             }
         ],
         "versions": null

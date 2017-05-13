@@ -14,6 +14,14 @@ struct BadgeRef {
     travis_ci_attributes: HashMap<String, String>,
     gitlab: Badge,
     gitlab_attributes: HashMap<String, String>,
+    isitmaintained_issue_resolution: Badge,
+    isitmaintained_issue_resolution_attributes: HashMap<String, String>,
+    isitmaintained_open_issues: Badge,
+    isitmaintained_open_issues_attributes: HashMap<String, String>,
+    codecov: Badge,
+    codecov_attributes: HashMap<String, String>,
+    coveralls: Badge,
+    coveralls_attributes: HashMap<String, String>,
 }
 
 fn set_up() -> (MockRequest, Crate, BadgeRef) {
@@ -66,6 +74,52 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
         String::from("rust-lang/rust")
     );
 
+    let isitmaintained_issue_resolution = Badge::IsItMaintainedIssueResolution {
+        repository: String::from("rust-lang/rust"),
+    };
+    let mut badge_attributes_isitmaintained_issue_resolution = HashMap::new();
+    badge_attributes_isitmaintained_issue_resolution.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+
+    let isitmaintained_open_issues = Badge::IsItMaintainedOpenIssues {
+        repository: String::from("rust-lang/rust"),
+    };
+    let mut badge_attributes_isitmaintained_open_issues = HashMap::new();
+    badge_attributes_isitmaintained_open_issues.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+
+    let codecov = Badge::CodeCov {
+        branch: Some(String::from("beta")),
+        repository: String::from("rust-lang/rust"),
+    };
+    let mut badge_attributes_codecov = HashMap::new();
+    badge_attributes_codecov.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_codecov.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+
+    let coveralls = Badge::Coveralls {
+        branch: Some(String::from("beta")),
+        repository: String::from("rust-lang/rust"),
+    };
+    let mut badge_attributes_coveralls = HashMap::new();
+    badge_attributes_coveralls.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_coveralls.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+
     let badges = BadgeRef {
         appveyor: appveyor,
         appveyor_attributes: badge_attributes_appveyor,
@@ -73,6 +127,14 @@ fn set_up() -> (MockRequest, Crate, BadgeRef) {
         travis_ci_attributes: badge_attributes_travis_ci,
         gitlab: gitlab,
         gitlab_attributes: badge_attributes_gitlab,
+        isitmaintained_issue_resolution: isitmaintained_issue_resolution,
+        isitmaintained_issue_resolution_attributes: badge_attributes_isitmaintained_issue_resolution,
+        isitmaintained_open_issues: isitmaintained_open_issues,
+        isitmaintained_open_issues_attributes: badge_attributes_isitmaintained_open_issues,
+        codecov: codecov,
+        codecov_attributes: badge_attributes_codecov,
+        coveralls: coveralls,
+        coveralls_attributes: badge_attributes_coveralls,
     };
     (req, krate, badges)
 }
@@ -129,6 +191,62 @@ fn update_add_gitlab() {
     );
     Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
     assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.gitlab]);
+}
+
+#[test]
+fn update_add_isitmaintained_issue_resolution() {
+    // Add a isitmaintained_issue_resolution badge
+    let (req, krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("is-it-maintained-issue-resolution"),
+        test_badges.isitmaintained_issue_resolution_attributes
+    );
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.isitmaintained_issue_resolution]);
+}
+
+#[test]
+fn update_add_isitmaintained_open_issues() {
+    // Add a isitmaintained_open_issues badge
+    let (req, krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("is-it-maintained-open-issues"),
+        test_badges.isitmaintained_open_issues_attributes
+    );
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.isitmaintained_open_issues]);
+}
+
+#[test]
+fn update_add_codecov() {
+    // Add a codecov badge
+    let (req, krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("codecov"),
+        test_badges.codecov_attributes
+    );
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.codecov]);
+}
+
+#[test]
+fn update_add_coveralls() {
+    // Add a coveralls badge
+    let (req, krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("coveralls"),
+        test_badges.coveralls_attributes
+    );
+    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.coveralls]);
 }
 
 #[test]
