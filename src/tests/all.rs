@@ -32,7 +32,7 @@ use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::version::NewVersion;
-use cargo_registry::{User, Crate, Version, Keyword, Dependency, Category, Model, Replica};
+use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
@@ -294,10 +294,6 @@ fn mock_dep(req: &mut Request, version: &Version, krate: &Crate,
                        Kind::Normal,
                        false, true, &[],
                        &target.map(|s| s.to_string())).unwrap()
-}
-
-fn mock_keyword(req: &mut Request, name: &str) -> Keyword {
-    Keyword::find_or_insert(req.tx().unwrap(), name).unwrap()
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
