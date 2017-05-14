@@ -212,57 +212,61 @@ fn update_add_gitlab() {
 #[test]
 fn update_add_isitmaintained_issue_resolution() {
     // Add a isitmaintained_issue_resolution badge
-    let (req, krate, test_badges) = set_up();
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("is-it-maintained-issue-resolution"),
         test_badges.isitmaintained_issue_resolution_attributes
     );
-    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.isitmaintained_issue_resolution]);
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.isitmaintained_issue_resolution]);
 }
 
 #[test]
 fn update_add_isitmaintained_open_issues() {
     // Add a isitmaintained_open_issues badge
-    let (req, krate, test_badges) = set_up();
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("is-it-maintained-open-issues"),
         test_badges.isitmaintained_open_issues_attributes
     );
-    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.isitmaintained_open_issues]);
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.isitmaintained_open_issues]);
 }
 
 #[test]
 fn update_add_codecov() {
     // Add a codecov badge
-    let (req, krate, test_badges) = set_up();
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("codecov"),
         test_badges.codecov_attributes
     );
-    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.codecov]);
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.codecov]);
 }
 
 #[test]
 fn update_add_coveralls() {
     // Add a coveralls badge
-    let (req, krate, test_badges) = set_up();
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("coveralls"),
         test_badges.coveralls_attributes
     );
-    Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![test_badges.coveralls]);
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.coveralls]);
 }
 
 #[test]
@@ -431,7 +435,8 @@ fn gitlab_required_keys() {
 #[test]
 fn isitmaintained_issue_resolution_required_keys() {
     // Add a isitmaintained_issue_resolution badge missing a required field
-    let (req, krate, mut test_badges) = set_up();
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
 
@@ -442,16 +447,17 @@ fn isitmaintained_issue_resolution_required_keys() {
         test_badges.isitmaintained_issue_resolution_attributes
     );
 
-    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&String::from("isitmaintained_issue_resolution")));
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+    assert!(invalid_badges.contains(&"isitmaintained_issue_resolution"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
 #[test]
 fn isitmaintained_open_issues_required_keys() {
     // Add a isitmaintained_open_issues badge missing a required field
-    let (req, krate, mut test_badges) = set_up();
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
 
@@ -462,16 +468,17 @@ fn isitmaintained_open_issues_required_keys() {
         test_badges.isitmaintained_open_issues_attributes
     );
 
-    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&String::from("isitmaintained_open_issues")));
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+    assert!(invalid_badges.contains(&"isitmaintained_open_issues"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
 #[test]
 fn codecov_required_keys() {
     // Add a codecov badge missing a required field
-    let (req, krate, mut test_badges) = set_up();
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
 
@@ -482,16 +489,17 @@ fn codecov_required_keys() {
         test_badges.codecov_attributes
     );
 
-    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&String::from("codecov")));
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+    assert!(invalid_badges.contains(&"codecov"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
 #[test]
 fn coveralls_required_keys() {
     // Add a coveralls badge missing a required field
-    let (req, krate, mut test_badges) = set_up();
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
 
@@ -502,10 +510,10 @@ fn coveralls_required_keys() {
         test_badges.coveralls_attributes
     );
 
-    let invalid_badges = Badge::update_crate_old(req.tx().unwrap(), &krate, badges).unwrap();
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&String::from("coveralls")));
-    assert_eq!(krate.badges(req.tx().unwrap()).unwrap(), vec![]);
+    assert!(invalid_badges.contains(&"coveralls"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
 #[test]
