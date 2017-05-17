@@ -49,7 +49,9 @@
     {{#each model as |crate|}}
         {{#if crate.exact_match}}
             <div class='exact-match'>
-                <h1>Exact Match</h1>
+                {{#link-to "crate" crate}}
+                    <h1>Exact Match</h1>
+                {{/link-to}}
                 {{crate-row crate=crate}}
             </div>
         {{else}}
