@@ -27,7 +27,7 @@ pub enum Badge {
 #[derive(RustcEncodable, RustcDecodable, PartialEq, Debug, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
-    pub attributes: HashMap<String, String>,
+    pub attributes: HashMap<String, Option<String>>,
 }
 
 impl Queryable<badges::SqlType, Pg> for Badge {
