@@ -23,6 +23,21 @@
           "value": "",
           "required": false
       },
+      "DB_POOL_SIZE": {
+          "value": "10",
+          "required": false,
+          "description": "The maximum number of database connections managed by the pool. Set so that this value times the number of dynos is less than your connection limit."
+      },
+      "DB_MIN_IDLE": {
+          "value": "5",
+          "required": false,
+          "description": "The pool will try to maintain at least this many idle connections at all times, while respecting the maximum size of the pool."
+      },
+      "DB_HELPER_THREADS": {
+          "value": "3",
+          "required": false,
+          "description": "The number of threads that the pool will use for asynchronous operations such as connection creation and health checks."
+      },
       "SESSION_KEY": {
           "generator": "secret"
       },
