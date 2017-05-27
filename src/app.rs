@@ -1,3 +1,4 @@
+use std::env;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -47,15 +48,33 @@ impl App {
 
         github.scopes.push(String::from("read:org"));
 
+        let db_pool_size = match (env::var("DB_POOL_SIZE"), config.env) {
+            (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
+            (_, ::Env::Production) => 10,
+            _ => 1,
+        };
+
+        let db_min_idle = match (env::var("DB_MIN_IDLE"), config.env) {
+            (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
+            (_, ::Env::Production) => Some(5),
+            _ => None,
+        };
+
+        let db_helper_threads = match (env::var("DB_HELPER_THREADS"), config.env) {
+            (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
+            (_, ::Env::Production) => 3,
+            _ => 1,
+        };
+
         let db_config = r2d2::Config::builder()
-            .pool_size(if config.env == ::Env::Production {10} else {1})
-            .min_idle(if config.env == ::Env::Production {Some(5)} else {None})
-            .helper_threads(if config.env == ::Env::Production {3} else {1})
+            .pool_size(db_pool_size)
+            .min_idle(db_min_idle)
+            .helper_threads(db_helper_threads)
             .build();
         let diesel_db_config = r2d2::Config::builder()
-            .pool_size(if config.env == ::Env::Production {30} else {1})
-            .min_idle(if config.env == ::Env::Production {Some(5)} else {None})
-            .helper_threads(if config.env == ::Env::Production {3} else {1})
+            .pool_size(db_pool_size)
+            .min_idle(db_min_idle)
+            .helper_threads(db_helper_threads)
             .build();
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
