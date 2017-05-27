@@ -15,4 +15,6 @@ export default Ember.Controller.extend(PaginationMixin, {
     currentSortBy: computed('sort', function() {
         return (this.get('sort') === 'downloads') ? 'Downloads' : 'Relevance';
     }),
+    
+    hasItems: computed.bool('totalItems'),
 });
