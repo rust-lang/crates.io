@@ -1315,7 +1315,7 @@ fn good_badges() {
     assert_eq!(badges[0].badge_type, "travis-ci");
     assert_eq!(
         badges[0].attributes.get("repository").unwrap(),
-        &String::from("rust-lang/crates.io")
+        &Some(String::from("rust-lang/crates.io"))
     );
 }
 
