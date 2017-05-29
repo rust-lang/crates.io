@@ -86,3 +86,18 @@
         &:hover { background-color: darken($bg, 10%); }
     }
 }
+
+#stats{
+    margin-left: auto;
+    padding: 10px;
+
+    span { margin-left: 10px; }
+    .num {
+        font-size: 30px;
+        font-weight: bold;
+    }
+    .downloads {
+        @include display-flex;
+        @include align-items(center);
+    }
+}

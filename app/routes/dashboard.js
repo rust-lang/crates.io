@@ -10,6 +10,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
         controller.set('fetchingFeed', true);
         controller.set('myCrates', this.get('data.myCrates'));
         controller.set('myFollowing', this.get('data.myFollowing'));
+        controller.set('myStats', this.get('data.myStats'));
 
         if (!controller.get('loadingMore')) {
             controller.set('myFeed', []);
@@ -30,9 +31,14 @@ export default Ember.Route.extend(AuthenticatedRoute, {
             following: 1
         });
 
+        let myStats = user.stats();
+
         return Ember.RSVP.hash({
             myCrates,
-            myFollowing
-        }).then((hash) => this.set('data', hash));
+            myFollowing,
+            myStats
+        }).then((hash) => {
+            this.set('data', hash);
+        });
     }
 });

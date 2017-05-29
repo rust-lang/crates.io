@@ -14,6 +14,7 @@ export default Ember.Controller.extend({
         this.myCrates = [];
         this.myFollowing = [];
         this.myFeed = [];
+        this.myStats = 0;
     },
 
     visibleCrates: computed('myCreates', function() {
@@ -22,6 +23,10 @@ export default Ember.Controller.extend({
 
     visibleFollowing: computed('myFollowing', function() {
         return this.get('myFollowing').slice(0, TO_SHOW);
+    }),
+
+    visibleStats: computed('myStats', function() {
+        return this.get('myStats');
     }),
 
     hasMoreCrates: computed('myCreates', function() {

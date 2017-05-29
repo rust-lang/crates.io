@@ -199,3 +199,43 @@ fn following() {
 
     bad_resp!(middle.call(req.with_query("page=0")));
 }
+
+#[test]
+fn user_total_downloads() {
+    use diesel::update;
+
+    let (_b, app, middle) = ::app();
+    let u;
+    {
+        let conn = app.diesel_database.get().unwrap();
+        
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        let mut krate = ::new_crate("foo_krate1")
+            .create_or_update(&conn, None, u.id).unwrap();
+        krate.downloads = 10;
+        update(&krate).set(&krate).execute(&*conn).unwrap();
+
+
+        let mut krate2 = ::new_crate("foo_krate2")
+            .create_or_update(&conn, None, u.id).unwrap();
+        krate2.downloads = 20;
+        update(&krate2).set(&krate2).execute(&*conn).unwrap();
+
+        let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
+        
+        let mut another_krate = ::new_crate("bar_krate1")
+            .create_or_update(&conn, None, another_user.id).unwrap();
+        another_krate.downloads = 2;
+        update(&another_krate).set(&another_krate).execute(&*conn).unwrap();
+    }
+
+    let mut req = ::req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(RustcDecodable)]
+    struct Response { total_downloads: i64 }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.total_downloads, 30);
+    assert!(response.total_downloads != 32);
+}
