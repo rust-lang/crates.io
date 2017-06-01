@@ -22,6 +22,22 @@ pub enum Badge {
     GitLab {
         repository: String, branch: Option<String>,
     },
+    #[serde(rename = "is-it-maintained-issue-resolution")]
+    IsItMaintainedIssueResolution {
+        repository: String,
+    },
+    #[serde(rename = "is-it-maintained-open-issues")]
+    IsItMaintainedOpenIssues {
+        repository: String,
+    },
+    #[serde(rename = "codecov")]
+    Codecov {
+        repository: String, branch: Option<String>, service: Option<String>,
+    },
+    #[serde(rename = "coveralls")]
+    Coveralls {
+        repository: String, branch: Option<String>, service: Option<String>,
+    },
 }
 
 #[derive(RustcEncodable, RustcDecodable, PartialEq, Debug, Deserialize)]
@@ -50,6 +66,10 @@ impl Badge {
             Badge::TravisCi {..} => "travis-ci",
             Badge::Appveyor {..} => "appveyor",
             Badge::GitLab{..} => "gitlab",
+            Badge::IsItMaintainedIssueResolution{..} => "is-it-maintained-issue-resolution",
+            Badge::IsItMaintainedOpenIssues{..} => "is-it-maintained-open-issues",
+            Badge::Codecov{..} => "codecov",
+            Badge::Coveralls{..} => "coveralls",
         }
     }
 
