@@ -30,9 +30,8 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         let u = ::new_user("foo")
             .create_or_update(&conn)
             .unwrap();
-        ::new_crate("badged_crate")
-            .create_or_update(&conn, None, u.id)
-            .unwrap()
+        ::CrateBuilder::new("badged_crate", u.id)
+            .expect_build(&conn)
     };
 
     let appveyor = Badge::Appveyor {

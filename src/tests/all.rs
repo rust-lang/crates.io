@@ -1,7 +1,6 @@
 #![deny(warnings)]
 
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_codegen;
+extern crate diesel;
 extern crate bufstream;
 extern crate cargo_registry;
 extern crate conduit;
@@ -28,6 +27,7 @@ use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::Kind;
+use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
@@ -214,10 +214,106 @@ fn user(login: &str) -> User {
     }
 }
 
-fn new_crate(name: &str) -> NewCrate {
-    NewCrate {
-        name: name,
-        ..NewCrate::default()
+use cargo_registry::util::CargoResult;
+
+struct CrateBuilder<'a> {
+    owner_id: i32,
+    krate: NewCrate<'a>,
+    license_file: Option<&'a str>,
+    downloads: Option<i32>,
+    versions: Vec<semver::Version>,
+    keywords: Vec<&'a str>,
+}
+
+impl<'a> CrateBuilder<'a> {
+    fn new(name: &str, owner_id: i32) -> CrateBuilder {
+        CrateBuilder {
+            owner_id: owner_id,
+            krate: NewCrate {
+                name: name,
+                ..NewCrate::default()
+            },
+            license_file: None,
+            downloads: None,
+            versions: Vec::new(),
+            keywords: Vec::new(),
+        }
+    }
+
+    fn description(mut self, description: &'a str) -> Self {
+        self.krate.description = Some(description);
+        self
+    }
+
+    fn documentation(mut self, documentation: &'a str) -> Self {
+        self.krate.documentation = Some(documentation);
+        self
+    }
+
+    fn homepage(mut self, homepage: &'a str) -> Self {
+        self.krate.homepage = Some(homepage);
+        self
+    }
+
+    fn readme(mut self, readme: &'a str) -> Self {
+        self.krate.readme = Some(readme);
+        self
+    }
+
+    fn max_upload_size(mut self, max_upload_size: i32) -> Self {
+        self.krate.max_upload_size = Some(max_upload_size);
+        self
+    }
+
+    fn downloads(mut self, downloads: i32) -> Self {
+        self.downloads = Some(downloads);
+        self
+    }
+
+    fn version(mut self, version: &str) -> Self {
+        let version = semver::Version::parse(version).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", version, e);
+        });
+        self.versions.push(version);
+        self
+    }
+
+    fn keyword(mut self, keyword: &'a str) -> Self {
+        self.keywords.push(keyword);
+        self
+    }
+
+    fn build(self, connection: &PgConnection) -> CargoResult<Crate> {
+        use diesel::update;
+
+        let mut krate = self.krate
+            .create_or_update(connection, self.license_file, self.owner_id)?;
+
+        // Since we are using `NewCrate`, we can't set all the
+        // crate properties in a single DB call.
+        if let Some(downloads) = self.downloads {
+            krate.downloads = downloads;
+            update(&krate).set(&krate).execute(connection)?;
+        }
+
+        for version_num in &self.versions {
+            NewVersion::new(krate.id, version_num, &HashMap::new())?
+              .save(connection, &[])?;
+        }
+
+        if !self.keywords.is_empty() {
+            Keyword::update_crate(connection, &krate, &self.keywords)?;
+        }
+
+        Ok(krate)
+    }
+
+    fn expect_build(self, connection: &PgConnection) -> Crate {
+        let name = self.krate.name;
+        self.build(connection)
+            .unwrap_or_else(|e| {
+                panic!("Unable to create crate {}: {:?}", name, e);
+            })
     }
 }
 
@@ -324,7 +420,7 @@ fn request_with_user_and_mock_crate(
         let conn = app.diesel_database.get().unwrap();
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
-        ::new_crate(krate).create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new(krate, user.id).expect_build(&conn);
     }
     req
 }

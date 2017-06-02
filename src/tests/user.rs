@@ -1,11 +1,8 @@
 use conduit::{Handler, Method};
-use diesel::prelude::*;
-use diesel::insert;
 
 use cargo_registry::Model;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::schema::versions;
 use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
 
@@ -117,9 +114,8 @@ fn crates_by_user_id() {
         u = ::new_user("foo")
             .create_or_update(&conn)
             .unwrap();
-        ::new_crate("foo_my_packages")
-            .create_or_update(&conn, None, u.id)
-            .unwrap();
+        ::CrateBuilder::new("foo_my_packages", u.id)
+            .expect_build(&conn);
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
@@ -147,21 +143,14 @@ fn following() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        #[derive(Insertable)]
-        #[table_name="versions"]
-        struct NewVersion<'a> {
-            crate_id: i32,
-            num: &'a str,
-        }
-        let id1 = ::new_crate("foo_fighters").create_or_update(&conn, None, user.id)
-            .unwrap().id;
-        let id2 = ::new_crate("bar_fighters").create_or_update(&conn, None, user.id)
-            .unwrap().id;
-        let new_versions = vec![
-            NewVersion { crate_id: id1, num: "1.0.0" },
-            NewVersion { crate_id: id2, num: "1.0.0" },
-        ];
-        insert(&new_versions).into(versions::table).execute(&*conn).unwrap();
+
+        ::CrateBuilder::new("foo_fighters", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("bar_fighters", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/me/updates")

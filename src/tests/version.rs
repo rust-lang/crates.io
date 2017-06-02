@@ -46,8 +46,8 @@ fn show() {
     let v = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::new_crate("foo_vers_show")
-            .create_or_update(&conn, None, user.id).unwrap();
+        let krate = ::CrateBuilder::new("foo_vers_show", user.id)
+            .expect_build(&conn);
         ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));

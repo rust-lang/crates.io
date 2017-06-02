@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::fs::{self, File};
 
 use conduit::{Handler, Method};
-use diesel::prelude::*;
 
 use git2;
 use rustc_serialize::json;
@@ -13,7 +12,7 @@ use cargo_registry::db::RequestTransaction;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
-use cargo_registry::keyword::{Keyword, EncodableKeyword};
+use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
@@ -73,9 +72,8 @@ fn index() {
         let u = ::new_user("foo")
             .create_or_update(&conn)
             .unwrap();
-        ::new_crate("fooindex")
-            .create_or_update(&conn, None, u.id)
-            .unwrap()
+        ::CrateBuilder::new("fooindex", u.id)
+            .expect_build(&conn)
     };
 
     let mut response = ok_resp!(middle.call(&mut req));
@@ -98,20 +96,20 @@ fn index_queries() {
         u = ::new_user("foo")
             .create_or_update(&conn)
             .unwrap();
-        let mut new_crate = ::new_crate("foo_index_queries");
-        new_crate.readme = Some("readme");
-        new_crate.description = Some("description");
-        krate = new_crate.create_or_update(&conn, None, u.id).unwrap();
-        krate2 = ::new_crate("BAR_INDEX_QUERIES")
-            .create_or_update(&conn, None, u.id)
-            .unwrap();
-        Keyword::update_crate(&conn, &krate, &["kw1"]).unwrap();
-        Keyword::update_crate(&conn, &krate2, &["KW1"]).unwrap();
 
-        let krate3 = ::new_crate("foo")
-            .create_or_update(&conn, None, u.id)
-            .unwrap();
-        Keyword::update_crate(&conn, &krate3, &["kw3"]).unwrap();
+        krate = ::CrateBuilder::new("foo_index_queries", u.id)
+            .readme("readme")
+            .description("description")
+            .keyword("kw1")
+            .expect_build(&conn);
+
+        krate2 = ::CrateBuilder::new("BAR_INDEX_QUERIES", u.id)
+            .keyword("KW1")
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("foo", u.id)
+            .keyword("kw3")
+            .expect_build(&conn);
     }
 
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
@@ -198,18 +196,22 @@ fn exact_match_first_on_queries() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let mut krate = ::new_crate("foo_exact");
-        krate.description = Some("bar_exact baz_exact");
-        krate.create_or_update(&conn, None, user.id).unwrap();
-        let mut krate2 = ::new_crate("bar_exact");
-        krate2.description = Some("foo_exact baz_exact foo_exact baz_exact");
-        krate2.create_or_update(&conn, None, user.id).unwrap();
-        let mut krate3 = ::new_crate("baz_exact");
-        krate3.description = Some("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact");
-        krate3.create_or_update(&conn, None, user.id).unwrap();
-        let mut krate4 = ::new_crate("other_exact");
-        krate4.description = Some("other_exact");
-        krate4.create_or_update(&conn, None, user.id).unwrap();
+
+        ::CrateBuilder::new("foo_exact", user.id)
+            .description("bar_exact baz_exact")
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("bar_exact", user.id)
+            .description("foo_exact baz_exact foo_exact baz_exact")
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("baz_exact", user.id)
+            .description("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact")
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("other_exact", user.id)
+            .description("other_exact")
+            .expect_build(&conn);
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
@@ -238,37 +240,31 @@ fn exact_match_first_on_queries() {
 
 #[test]
 fn exact_match_on_queries_with_sort() {
-    use diesel::update;
-
     let (_b, app, middle) = ::app();
 
     {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
 
-        let mut krate = ::new_crate("foo_sort");
-        krate.description = Some("bar_sort baz_sort const");
-        let mut krate = krate.create_or_update(&conn, None, user.id).unwrap();
-        krate.downloads = 50;
-        update(&krate).set(&krate).execute(&*conn).unwrap();
+        ::CrateBuilder::new("foo_sort", user.id)
+            .description("bar_sort baz_sort const")
+            .downloads(50)
+            .expect_build(&conn);
 
-        let mut krate2 = ::new_crate("bar_sort");
-        krate2.description = Some("foo_sort baz_sort foo_sort baz_sort const");
-        let mut krate2 = krate2.create_or_update(&conn, None, user.id).unwrap();
-        krate2.downloads = 3333;
-        update(&krate2).set(&krate2).execute(&*conn).unwrap();
+        ::CrateBuilder::new("bar_sort", user.id)
+            .description("foo_sort baz_sort foo_sort baz_sort const")
+            .downloads(3333)
+            .expect_build(&conn);
 
-        let mut krate3 = ::new_crate("baz_sort");
-        krate3.description = Some("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const");
-        let mut krate3 = krate3.create_or_update(&conn, None, user.id).unwrap();
-        krate3.downloads = 100000;
-        update(&krate3).set(&krate3).execute(&*conn).unwrap();
+        ::CrateBuilder::new("baz_sort", user.id)
+            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+            .downloads(100000)
+            .expect_build(&conn);
 
-        let mut krate4 = ::new_crate("other_sort");
-        krate4.description = Some("other_sort const");
-        let mut krate4 = krate4.create_or_update(&conn, None, user.id).unwrap();
-        krate4.downloads = 999999;
-        update(&krate4).set(&krate4).execute(&*conn).unwrap();
+        ::CrateBuilder::new("other_sort", user.id)
+            .description("other_sort const")
+            .downloads(999999)
+            .expect_build(&conn);
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
@@ -311,15 +307,15 @@ fn show() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        let mut new_krate = ::new_crate("foo_show");
-        new_krate.description = Some("description");
-        new_krate.documentation = Some("https://example.com");
-        new_krate.homepage = Some("http://example.com");
-        krate = new_krate.create_or_update(&conn, None, user.id).unwrap();
-        ::new_version(krate.id, "1.0.0").save(&conn, &[]).unwrap();
-        ::new_version(krate.id, "0.5.0").save(&conn, &[]).unwrap();
-        ::new_version(krate.id, "0.5.1").save(&conn, &[]).unwrap();
-        Keyword::update_crate(&conn, &krate, &["kw1"]).unwrap();
+        krate = ::CrateBuilder::new("foo_show", user.id)
+            .description("description")
+            .documentation("https://example.com")
+            .homepage("http://example.com")
+            .version("1.0.0")
+            .version("0.5.0")
+            .version("0.5.1")
+            .keyword("kw1")
+            .expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));
@@ -463,7 +459,7 @@ fn new_krate_with_dependency() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo_dep").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_dep", user.id).expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));
@@ -499,7 +495,7 @@ fn new_krate_non_canon_crate_name_dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo-dep").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo-dep", user.id).expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));
@@ -524,7 +520,7 @@ fn new_krate_with_wildcard_dependency() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo_wild").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_wild", user.id).expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("dependency constraints"), "{:?}", json.errors);
@@ -540,7 +536,7 @@ fn new_krate_twice() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo_twice").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_twice", user.id).expect_build(&conn);
     }
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
@@ -558,7 +554,7 @@ fn new_krate_wrong_user() {
         // Create the 'foo' crate with one user
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::new_crate("foo_wrong").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_wrong", user.id).expect_build(&conn);
 
         // But log in another
         let user = ::new_user("bar").create_or_update(&conn).unwrap();
@@ -659,9 +655,9 @@ fn new_krate_too_big_but_whitelisted() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        let mut krate = ::new_crate("foo_whitelist");
-        krate.max_upload_size = Some(2_000_000);
-        krate.create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_whitelist", user.id)
+            .max_upload_size(2_000_000)
+            .expect_build(&conn);
     }
     let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &[b'a'; 2000]);
     let mut response = ok_resp!(middle.call(req.with_body(&body)));
@@ -676,9 +672,10 @@ fn new_krate_duplicate_version() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        let krate = ::new_crate("foo_dupe").create_or_update(&conn, None, user.id)
-            .unwrap();
-        ::new_version(krate.id, "1.0.0").save(&conn, &[]).unwrap();
+
+        ::CrateBuilder::new("foo_dupe", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("already uploaded"),
@@ -693,7 +690,7 @@ fn new_crate_similar_name() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &u);
-        ::new_crate("Foo_similar").create_or_update(&conn, None, u.id).unwrap();
+        ::CrateBuilder::new("Foo_similar", u.id).expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("previously named"),
@@ -708,7 +705,7 @@ fn new_crate_similar_name_hyphen() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &u);
-        ::new_crate("foo_bar_hyphen").create_or_update(&conn, None, u.id).unwrap();
+        ::CrateBuilder::new("foo_bar_hyphen", u.id).expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("previously named"),
@@ -723,7 +720,7 @@ fn new_crate_similar_name_underscore() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &u);
-        ::new_crate("foo-bar-underscore").create_or_update(&conn, None, u.id).unwrap();
+        ::CrateBuilder::new("foo-bar-underscore", u.id).expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
     assert!(json.errors[0].detail.contains("previously named"),
@@ -940,7 +937,7 @@ fn following() {
         let conn = app.diesel_database.get().unwrap();
         user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo_following").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_following", user.id).expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));
@@ -996,7 +993,7 @@ fn owners() {
         ::new_user("foobar").create_or_update(&conn).unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        ::new_crate("foo_owners").create_or_update(&conn, None, user.id).unwrap();
+        ::CrateBuilder::new("foo_owners", user.id).expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));
