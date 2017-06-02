@@ -283,7 +283,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn build(self, connection: &PgConnection) -> CargoResult<Crate> {
+    fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::update;
 
         let mut krate = self.krate
@@ -294,6 +294,10 @@ impl<'a> CrateBuilder<'a> {
         if let Some(downloads) = self.downloads {
             krate.downloads = downloads;
             update(&krate).set(&krate).execute(connection)?;
+        }
+
+        if self.versions.is_empty() {
+            self.versions.push("0.99.0".parse().expect("invalid version number"));
         }
 
         for version_num in &self.versions {
