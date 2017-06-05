@@ -11,6 +11,7 @@ use std::borrow::Cow;
 use app::RequestApp;
 use db::RequestTransaction;
 use krate::Follow;
+use pagination::Paginate;
 use schema::*;
 use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
@@ -377,8 +378,7 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::{any, sql};
-    use diesel::types::BigInt;
+    use diesel::expression::dsl::any;
 
     let user = req.user()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -389,21 +389,16 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         .inner_join(crates::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
-        .limit(limit)
-        .offset(offset)
-        .select((
-            versions::all_columns,
-            crates::name,
-            sql::<BigInt>("COUNT(*) OVER ()"),
-        ))
-        .load::<(Version, String, i64)>(&*conn)?;
+        .select((versions::all_columns, crates::name))
+        .paginate(limit, offset)
+        .load::<((Version, String), i64)>(&*conn)?;
 
     let more = data.get(0)
-        .map(|&(_, _, count)| count > offset + limit)
+        .map(|&(_, count)| count > offset + limit)
         .unwrap_or(false);
 
     let versions = data.into_iter()
-        .map(|(version, crate_name, _)| version.encodable(&crate_name))
+        .map(|((version, crate_name), _)| version.encodable(&crate_name))
         .collect();
 
     #[derive(RustcEncodable)]

@@ -29,6 +29,7 @@ use download::{VersionDownload, EncodableVersionDownload};
 use git;
 use keyword::{EncodableKeyword, CrateKeyword};
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
+use pagination::Paginate;
 use schema::*;
 use upload;
 use user::RequestUser;
@@ -781,8 +782,8 @@ impl Model for Crate {
 /// Handles the `GET /crates` route.
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::sql;
-    use diesel::types::{BigInt, Bool};
+    use diesel::expression::AsExpression;
+    use diesel::types::Bool;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -790,13 +791,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
     let mut query = crates::table
-        .select((
-            ALL_COLUMNS,
-            sql::<BigInt>("COUNT(*) OVER ()"),
-            sql::<Bool>("false"),
-        ))
-        .limit(limit)
-        .offset(offset)
+        .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false)))
         .into_boxed();
 
     if sort == "downloads" {
@@ -813,11 +808,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         ));
 
-        query = query.select((
-            ALL_COLUMNS,
-            sql::<BigInt>("COUNT(*) OVER()"),
-            crates::name.eq(q_string),
-        ));
+        query = query.select((ALL_COLUMNS, crates::name.eq(q_string)));
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
@@ -887,12 +878,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let data = query.load::<(Crate, i64, bool)>(&*conn)?;
-    let total = data.get(0).map(|&(_, t, _)| t).unwrap_or(0);
+    let data = query.paginate(limit, offset).load::<((Crate, bool), i64)>(
+        &*conn,
+    )?;
+    let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let crates = data.iter()
-        .map(|&(ref c, _, _)| c.clone())
+        .map(|&((ref c, _), _)| c.clone())
         .collect::<Vec<_>>();
-    let perfect_matches = data.into_iter().map(|(_, _, b)| b).collect::<Vec<_>>();
+    let perfect_matches = data.into_iter().map(|((_, b), _)| b).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?

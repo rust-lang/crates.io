@@ -92,6 +92,8 @@ pub mod user;
 pub mod util;
 pub mod version;
 
+mod pagination;
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
