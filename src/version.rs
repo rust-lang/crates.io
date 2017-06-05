@@ -133,19 +133,13 @@ impl Version {
     }
 
     /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &GenericConnection)
-                        -> CargoResult<Vec<(Dependency, String)>> {
-        let stmt = conn.prepare("SELECT dependencies.*,
-                                             crates.name AS crate_name
-                                      FROM dependencies
-                                      LEFT JOIN crates
-                                        ON crates.id = dependencies.crate_id
-                                      WHERE dependencies.version_id = $1
-                                      ORDER BY optional, name")?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| {
-            (Model::from_row(&r), r.get("crate_name"))
-        }).collect())
+    pub fn dependencies(&self, conn: &PgConnection)
+                        -> QueryResult<Vec<(Dependency, String)>> {
+        Dependency::belonging_to(self)
+            .inner_join(crates::table)
+            .select((dependencies::all_columns, crates::name))
+            .order((dependencies::optional, crates::name))
+            .load(conn)
     }
 
     pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
@@ -372,9 +366,9 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
 
 /// Handles the `GET /crates/:crate_id/:version/dependencies` route.
 pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate_old(req)?;
-    let tx = req.tx()?;
-    let deps = version.dependencies(tx)?;
+    let (version, _) = version_and_crate(req)?;
+    let conn = req.db_conn()?;
+    let deps = version.dependencies(&*conn)?;
     let deps = deps.into_iter().map(|(dep, crate_name)| {
         dep.encodable(&crate_name, None)
     }).collect();
