@@ -160,6 +160,8 @@ table! {
     }
 }
 
+numeric_expr!(version_downloads::downloads);
+
 table! {
     versions (id) {
         id -> Int4,

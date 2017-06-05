@@ -829,9 +829,13 @@ fn summary_doesnt_die() {
 fn download() {
     use ::time::{Duration, now_utc, strftime};
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_download"));
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let krate = ::new_crate("foo_download").create_or_update(&conn, None, u.id).unwrap();
+        ::new_version(krate.id, "1.0.0").save(&conn, &[]).unwrap();
+    }
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.0, 302);
 
@@ -886,11 +890,14 @@ fn download() {
 #[test]
 fn download_bad() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_bad/0.1.0/download");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_bad"));
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<::Bad>(&mut response);
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_bad/0.1.0/download");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::new_crate("foo_basd").create_or_update(&conn, None, u.id).unwrap();
+    }
+    let response = t_resp!(middle.call(&mut req));
+    assert_eq!(404, response.status.0)
 }
 
 #[test]
