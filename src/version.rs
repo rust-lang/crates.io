@@ -48,11 +48,6 @@ pub struct NewVersion {
     license: Option<String>,
 }
 
-#[derive(Debug)]
-pub struct Author {
-    pub name: String,
-}
-
 #[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
@@ -158,20 +153,6 @@ impl Version {
             .select((dependencies::all_columns, crates::name))
             .order((dependencies::optional, crates::name))
             .load(conn)
-    }
-
-    pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM version_authors
-                                       WHERE version_id = $1
-                                       ORDER BY name ASC",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(
-            rows.into_iter()
-                .map(|row| Author { name: row.get("name") })
-                .collect(),
-        )
     }
 
     pub fn add_author(&self, conn: &GenericConnection, name: &str) -> CargoResult<()> {
@@ -394,25 +375,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { version: version.encodable(&krate.name) }))
 }
 
-fn version_and_crate_old(req: &mut Request) -> CargoResult<(Version, Crate)> {
-    let crate_name = &req.params()["crate_id"];
-    let semver = &req.params()["version"];
-    let semver = semver::Version::parse(semver).map_err(|_| {
-        human(&format_args!("invalid semver: {}", semver))
-    })?;
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    let version = Version::find_by_num(tx, krate.id, &semver)?;
-    let version = version.chain_error(|| {
-        human(&format_args!(
-            "crate `{}` does not have a version `{}`",
-            crate_name,
-            semver
-        ))
-    })?;
-    Ok((version, krate))
-}
-
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
@@ -482,9 +444,13 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate_old(req)?;
-    let tx = req.tx()?;
-    let names = version.authors(tx)?.into_iter().map(|a| a.name).collect();
+    let (version, _) = version_and_crate(req)?;
+    let conn = req.db_conn()?;
+    let names = version_authors::table
+        .filter(version_authors::version_id.eq(version.id))
+        .select(version_authors::name)
+        .order(version_authors::name)
+        .load(&*conn)?;
 
     // It was imagined that we wold associate authors with users.
     // This was never implemented. This complicated return struct
