@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel::pg::{Pg, PgConnection};
+use diesel::types::{Integer, Text};
 use pg::GenericConnection;
 use pg::rows::Row;
 use semver;
@@ -51,17 +52,17 @@ pub enum Kind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
-#[derive(Insertable)]
+#[derive(Default, Insertable)]
 #[table_name="dependencies"]
-struct NewDependency<'a> {
-    version_id: i32,
-    crate_id: i32,
-    req: String,
-    optional: bool,
-    default_features: bool,
-    features: Vec<&'a str>,
-    target: Option<&'a str>,
-    kind: i32,
+pub struct NewDependency<'a> {
+    pub version_id: i32,
+    pub crate_id: i32,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: Vec<&'a str>,
+    pub target: Option<&'a str>,
+    pub kind: i32,
 }
 
 impl Dependency {
@@ -183,6 +184,19 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
     }
 }
 
+// FIXME: We can derive this in the next release of Diesel
+impl Queryable<(dependencies::SqlType, Integer, Text), Pg> for ReverseDependency {
+    type Row = (<Dependency as Queryable<dependencies::SqlType, Pg>>::Row, i32, String);
+
+    fn build((dep_row, downloads, name): Self::Row) -> Self {
+        ReverseDependency {
+            dependency: Dependency::build(dep_row),
+            crate_downloads: downloads,
+            crate_name: name,
+        }
+    }
+}
+
 impl Model for Dependency {
     fn from_row(row: &Row) -> Dependency {
         let req: String = row.get("req");
@@ -205,16 +219,4 @@ impl Model for Dependency {
     }
 
     fn table_name(_: Option<Dependency>) -> &'static str { "dependencies" }
-}
-
-impl Model for ReverseDependency {
-    fn from_row(row: &Row) -> Self {
-        ReverseDependency {
-            dependency: Model::from_row(row),
-            crate_name: row.get("crate_name"),
-            crate_downloads: row.get("crate_downloads"),
-        }
-    }
-
-    fn table_name(_: Option<Self>) -> &'static str { panic!("no table") }
 }

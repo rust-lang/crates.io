@@ -2,7 +2,15 @@
 SELECT *, COUNT(*) OVER () as total FROM (
     -- Multple dependencies can exist, make it distinct
     SELECT DISTINCT ON (crate_downloads, crate_name)
-    dependencies.*,
+    dependencies.id,
+    dependencies.version_id,
+    dependencies.crate_id,
+    dependencies.req,
+    dependencies.optional,
+    dependencies.default_features,
+    dependencies.features,
+    dependencies.target,
+    dependencies.kind,
     crates.downloads AS crate_downloads,
     crates.name AS crate_name
     FROM dependencies

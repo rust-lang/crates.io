@@ -26,9 +26,10 @@ use std::sync::{Once, ONCE_INIT, Arc};
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
-use cargo_registry::dependency::Kind;
+use cargo_registry::dependency::{Kind, NewDependency};
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
+use cargo_registry::schema::dependencies;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::version::NewVersion;
@@ -221,7 +222,7 @@ struct CrateBuilder<'a> {
     krate: NewCrate<'a>,
     license_file: Option<&'a str>,
     downloads: Option<i32>,
-    versions: Vec<semver::Version>,
+    versions: Vec<VersionBuilder>,
     keywords: Vec<&'a str>,
 }
 
@@ -270,11 +271,8 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn version(mut self, version: &str) -> Self {
-        let version = semver::Version::parse(version).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", version, e);
-        });
-        self.versions.push(version);
+    fn version<T: Into<VersionBuilder>>(mut self, version: T) -> Self {
+        self.versions.push(version.into());
         self
     }
 
@@ -297,12 +295,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions.push("0.99.0".parse().expect("invalid version number"));
+            self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
-        for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new())?
-              .save(connection, &[])?;
+        for version_builder in self.versions {
+            version_builder.build(krate.id, connection)?;
         }
 
         if !self.keywords.is_empty() {
@@ -318,6 +315,52 @@ impl<'a> CrateBuilder<'a> {
             .unwrap_or_else(|e| {
                 panic!("Unable to create crate {}: {:?}", name, e);
             })
+    }
+}
+
+pub struct VersionBuilder {
+    num: semver::Version,
+    dependencies: Vec<(i32, Option<&'static str>)>,
+}
+
+impl VersionBuilder {
+    pub fn new(num: &str) -> Self {
+        let num = semver::Version::parse(num).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", num, e);
+        });
+        VersionBuilder {
+            num,
+            dependencies: Vec::new(),
+        }
+    }
+
+    pub fn dependency(mut self, dependency: &Crate, target: Option<&'static str>) -> Self {
+        self.dependencies.push((dependency.id, target));
+        self
+    }
+
+    pub fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+        use diesel::insert;
+
+        let vers = NewVersion::new(crate_id, &self.num, &HashMap::new())?
+          .save(connection, &[])?;
+        let new_deps = self.dependencies.into_iter()
+            .map(|(crate_id, target)| NewDependency {
+                version_id: vers.id,
+                req: ">= 0".into(),
+                crate_id,
+                target,
+                ..Default::default()
+            })
+            .collect::<Vec<_>>();
+        insert(&new_deps).into(dependencies::table).execute(connection)?;
+        Ok(vers)
+    }
+}
+
+impl<'a> From<&'a str> for VersionBuilder {
+    fn from(num: &'a str) -> Self {
+        VersionBuilder::new(num)
     }
 }
 

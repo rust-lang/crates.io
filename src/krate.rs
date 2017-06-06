@@ -615,23 +615,22 @@ impl Crate {
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
     pub fn reverse_dependencies(&self,
-                                conn: &GenericConnection,
+                                conn: &PgConnection,
                                 offset: i64,
                                 limit: i64)
                                 -> CargoResult<(Vec<ReverseDependency>, i64)> {
-        let stmt = conn.prepare(include_str!("krate_reverse_dependencies.sql"))?;
+        use diesel::expression::dsl::sql;
+        use diesel::types::{Integer, Text, BigInt};
 
-        let rows = stmt.query(&[&self.id, &offset, &limit])?;
-        let cnt = if rows.is_empty() {
-            0i64
-        } else {
-            rows.get(0).get("total")
-        };
-        let vec: Vec<_> = rows
-            .iter()
-            .map(|r| Model::from_row(&r))
-            .collect();
+        type SqlType = ((dependencies::SqlType, Integer, Text), BigInt);
+        let rows = sql::<SqlType>(include_str!("krate_reverse_dependencies.sql"))
+            .bind::<Integer, _>(self.id)
+            .bind::<BigInt, _>(offset)
+            .bind::<BigInt, _>(limit)
+            .load::<(ReverseDependency, i64)>(conn)?;
 
+        let (vec, counts): (_, Vec<_>) = rows.into_iter().unzip();
+        let cnt = counts.into_iter().nth(0).unwrap_or(0i64);
         Ok((vec, cnt))
     }
 }
@@ -1283,10 +1282,10 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
-    let conn = req.tx()?;
-    let krate = Crate::find_by_name(conn, name)?;
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
     let (offset, limit) = req.pagination(10, 100)?;
-    let (rev_deps, total) = krate.reverse_dependencies(conn, offset, limit)?;
+    let (rev_deps, total) = krate.reverse_dependencies(&*conn, offset, limit)?;
     let rev_deps = rev_deps.into_iter()
         .map(ReverseDependency::encodable)
         .collect();
