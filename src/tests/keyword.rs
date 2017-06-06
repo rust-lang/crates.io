@@ -76,9 +76,8 @@ fn update_crate() {
             .create_or_update(&conn)
             .unwrap();
         Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).unwrap();
-        ::new_crate("fookey")
-            .create_or_update(&conn, None, u.id)
-            .unwrap()
+        ::CrateBuilder::new("fookey", u.id)
+            .expect_build(&conn)
     };
 
     {
