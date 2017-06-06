@@ -1406,9 +1406,10 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
 // this information already, but ember is definitely requesting it
 pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    let versions = krate.versions(tx)?;
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    versions.sort_by(|a, b| b.num.cmp(&a.num));
     let versions = versions
         .into_iter()
         .map(|v| v.encodable(crate_name))

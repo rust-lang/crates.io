@@ -410,16 +410,20 @@ fn show() {
 fn versions() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v050 = semver::Version::parse("0.5.0").unwrap();
-    let v051 = semver::Version::parse("0.5.1").unwrap();
-
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_versions/versions");
-    ::mock_user(&mut req, ::user("foo"));
-
-    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v051);
-    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v100);
-    ::mock_crate_vers(&mut req, ::krate("foo_versions"), &v050);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/foo_versions/versions",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_versions", u.id)
+            .version("0.5.1")
+            .version("1.0.0")
+            .version("0.5.0")
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionsList = ::json(&mut response);
