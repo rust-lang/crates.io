@@ -166,3 +166,41 @@ fn update_crate() {
     assert_eq!(cnt!(&mut req, "cat1::bar"), 1);
     assert_eq!(cnt!(&mut req, "category-2"), 0);
 }
+
+#[test]
+fn category_slugs_returns_all_slugs_in_alphabetical_order() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_category("Foo", "foo").find_or_create(&conn).unwrap();
+        ::new_category("Bar", "bar").find_or_create(&conn).unwrap();
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/category_slugs");
+
+    #[derive(RustcDecodable, Debug, PartialEq)]
+    struct Slug {
+        id: String,
+        slug: String,
+    }
+
+    #[derive(RustcDecodable, Debug, PartialEq)]
+    struct Slugs {
+        category_slugs: Vec<Slug>,
+    }
+
+    let response = ::json(&mut ok_resp!(middle.call(&mut req)));
+    let expected_response = Slugs {
+        category_slugs: vec![
+            Slug {
+                id: "bar".into(),
+                slug: "bar".into(),
+            },
+            Slug {
+                id: "foo".into(),
+                slug: "foo".into(),
+            },
+        ],
+    };
+    assert_eq!(expected_response, response);
+}
