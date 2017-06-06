@@ -35,7 +35,7 @@ use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
+use cargo_registry::{User, Crate, Version, Dependency, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
@@ -513,18 +513,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
         slug: slug,
         ..NewCategory::default()
     }
-}
-
-fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
-    let conn = req.tx().unwrap();
-    let stmt = conn.prepare(
-        " \
-         INSERT INTO categories (category, slug) \
-         VALUES ($1, $2) \
-         RETURNING *",
-    ).unwrap();
-    let rows = stmt.query(&[&name, &slug]).unwrap();
-    Model::from_row(&rows.iter().next().unwrap())
 }
 
 fn logout(req: &mut Request) {
