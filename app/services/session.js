@@ -22,7 +22,9 @@ export default Ember.Service.extend({
         this.set('currentUser', user);
         try {
             localStorage.setItem('isLoggedIn', '1');
-        } catch (e) {}
+        } catch (e) {
+            // TODO: handle exception
+        }
     },
 
     logoutUser() {
@@ -32,6 +34,8 @@ export default Ember.Service.extend({
 
         try {
             localStorage.removeItem('isLoggedIn');
-        } catch (e) {}
+        } catch (e) {
+            // TODO: handle exception
+        }
     }
 });
