@@ -7,4 +7,5 @@ export default DS.Model.extend({
     api_token: DS.attr('string'),
     avatar: DS.attr('string'),
     url: DS.attr('string'),
+    kind: DS.attr('string'),
 });

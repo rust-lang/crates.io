@@ -150,9 +150,9 @@
                 <ul class='owners'>
                     {{#each crate.owners as |owner|}}
                         <li>
-                          {{#link-to 'user' owner.login}}
-                              {{user-avatar user=owner size='medium-small'}}
-                          {{/link-to}}
+                            {{#link-to owner.kind owner.login}}
+                                {{user-avatar user=owner size='medium-small'}}
+                            {{/link-to}}
                         </li>
                     {{/each}}
                 </ul>
