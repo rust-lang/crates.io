@@ -85,6 +85,7 @@ pub struct EncodableUser {
     pub email: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
+    pub url: Option<String>,
 }
 
 impl User {
@@ -159,12 +160,14 @@ impl User {
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
     pub fn encodable(self) -> EncodableUser {
         let User { id, email, name, gh_login, gh_avatar, .. } = self;
+        let url = format!("https://github.com/{}", gh_login);
         EncodableUser {
             id: id,
             email: email,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
+            url: Some(url),
         }
     }
 }
