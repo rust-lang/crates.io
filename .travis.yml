@@ -21,9 +21,6 @@ install:
 before_script:
   - diesel database setup
 
-after_success:
-  - travis-cargo coveralls --no-sudo
-
 addons:
   postgresql: "9.5"
   apt:
