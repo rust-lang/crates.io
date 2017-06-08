@@ -90,6 +90,7 @@ fn show() {
     let json: UserShowResponse = ::json(&mut response);
     assert_eq!(Some("bar@baz.com".into()), json.user.email);
     assert_eq!("bar", json.user.login);
+    assert_eq!(Some("https://github.com/bar".into()), json.user.url);
 }
 
 #[test]
