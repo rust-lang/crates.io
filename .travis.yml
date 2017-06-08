@@ -1,5 +1,4 @@
 language: rust
-rust: stable
 sudo: false
 dist: trusty
 
@@ -22,14 +21,6 @@ install:
 before_script:
   - diesel database setup
 
-script:
-  - cargo build
-  - cargo test
-  - yarn run test
-
-after_success:
-  - travis-cargo coveralls --no-sudo
-
 addons:
   postgresql: "9.5"
   apt:
@@ -43,6 +34,11 @@ addons:
 
 matrix:
   include:
+  - rust: stable
+    script:
+    - cargo build
+    - cargo test
+    - yarn run test
   - rust: nightly-2017-03-04
     env: CLIPPY=YESPLEASE
     script:
