@@ -20,7 +20,7 @@ export default DS.Model.extend({
 
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),
-    enhanced_badges: Ember.computed.map('badges', badge => Object.assign({
+    enhanced_badges: Ember.computed.map('badges', badge => Ember.assign({
         component_name: `badge-${badge.badge_type}`
     }, badge)),
     badge_sort: ['badge_type'],
