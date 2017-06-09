@@ -155,6 +155,22 @@
                             {{/link-to}}
                         </li>
                     {{/each}}
+
+                   {{#each crate.owner_team as |team|}}
+                        <li>
+                            {{#link-to team.kind team.login}}
+                                {{user-avatar user=team size='medium-small'}}
+                            {{/link-to}}
+                        </li>
+                    {{/each}}
+
+                    {{#each crate.owner_user as |user|}}
+                        <li>
+                            {{#link-to user.kind user.login}}
+                                {{user-avatar user=user size='medium-small'}}
+                            {{/link-to}}
+                        </li>
+                    {{/each}}
                 </ul>
             </div>
         </div>

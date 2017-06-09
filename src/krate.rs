@@ -114,6 +114,8 @@ pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
     pub owners: Option<String>,
+    pub owner_team: Option<String>,
+    pub owner_user: Option<String>,
     pub reverse_dependencies: String,
 }
 
@@ -535,6 +537,8 @@ impl Crate {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
+                owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
+                owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
             },
         }
@@ -596,6 +600,32 @@ impl Crate {
             .map(Owner::Team);
 
         Ok(users.chain(teams).collect())
+    }
+
+    pub fn owner_team(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+        let base_query = CrateOwner::belonging_to(self)
+            .filter(crate_owners::deleted.eq(false));
+        let teams = base_query.inner_join(teams::table)
+            .select(teams::all_columns)
+            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
+            .load(conn)?
+            .into_iter()
+            .map(Owner::Team);
+
+        Ok(teams.collect())
+    }
+
+    pub fn owner_user(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+        let base_query = CrateOwner::belonging_to(self)
+            .filter(crate_owners::deleted.eq(false));
+        let users = base_query.inner_join(users::table)
+            .select(users::all_columns)
+            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+            .load(conn)?
+            .into_iter()
+            .map(Owner::User);
+
+        Ok(users.collect())
     }
 
     pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
@@ -1421,6 +1451,36 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
         users: Vec<EncodableOwner>,
     }
     Ok(req.json(&R { users: owners }))
+}
+
+/// Handles the `GET /crates/:crate_id/owner_team` route.
+pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let owners = krate.owner_team(&conn)?
+        .into_iter()
+        .map(Owner::encodable)
+        .collect();
+
+    #[derive(RustcEncodable)]
+    struct R { teams: Vec<EncodableOwner> }
+    Ok(req.json(&R{ teams: owners }))
+}
+
+/// Handles the `GET /crates/:crate_id/owner_user` route.
+pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let owners = krate.owner_user(&conn)?
+        .into_iter()
+        .map(Owner::encodable)
+        .collect();
+
+    #[derive(RustcEncodable)]
+    struct R { users: Vec<EncodableOwner> }
+    Ok(req.json(&R{ users: owners }))
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
