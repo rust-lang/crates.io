@@ -65,6 +65,10 @@ civet = "0.9"
 conduit-test = "0.8"
 bufstream = "0.1"
 
+[build-dependencies]
+dotenv = "0.10"
+diesel = { version = "0.13", features = ["postgres"] }
+
 [features]
 unstable = []
 lint = ["clippy"]
