@@ -17,7 +17,7 @@ use pg::rows::Row;
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 use semver;
-use time::{Timespec, Duration};
+use time::Timespec;
 use url::Url;
 
 use app::{App, RequestApp};
@@ -38,7 +38,7 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Clone, Queryable, Identifiable, AsChangeset)]
+#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -1052,72 +1052,48 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
 }
 
 fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
-    let tx = req.tx()?;
-    let stmt = tx.prepare("SELECT versions.id as version_id
-                                FROM crates
-                                INNER JOIN versions ON
-                                    crates.id = versions.crate_id
-                                WHERE canon_crate_name(crates.name) =
-                                      canon_crate_name($1)
-                                  AND versions.num = $2
-                                LIMIT 1")?;
-    let rows = stmt.query(&[&crate_name, &version])?;
-    let row = rows.iter().next().chain_error(|| {
-        human("crate or version not found")
-    })?;
-    let version_id: i32 = row.get("version_id");
+    use self::versions::dsl::*;
 
-    // We only update the counter for *today* (the default date),
-    // nothing else. We have lots of other counters, but they're
-    // all updated later on via the update-downloads script.
-    tx.execute("INSERT INTO version_downloads
-                (version_id) VALUES ($1)
-                ON CONFLICT (version_id, date) DO UPDATE
-                SET downloads = version_downloads.downloads + 1",
-                &[&version_id])?;
+    let conn = req.db_conn()?;
+    let version_id = versions.select(id)
+        .filter(crate_id.eq_any(Crate::by_name(crate_name).select(crates::id)))
+        .filter(num.eq(version))
+        .first(&*conn)?;
+
+    VersionDownload::create_or_increment(version_id, &conn)?;
     Ok(())
 }
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::*;
+    use diesel::types::BigInt;
+
     let crate_name = &req.params()["crate_id"];
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    let mut versions = krate.versions(tx)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
 
+    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    versions.sort_by(|a, b| a.num.cmp(&b.num));
+    let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
-    let to_show = &versions[..cmp::min(5, versions.len())];
-    let ids = to_show.iter().map(|i| i.id).collect::<Vec<_>>();
+    let downloads = VersionDownload::belonging_to(latest_five)
+        .filter(version_downloads::date.gt(date(now - 90.days())))
+        .order(version_downloads::date.desc())
+        .load(&*conn)?
+        .into_iter()
+        .map(VersionDownload::encodable)
+        .collect::<Vec<_>>();
 
-    let cutoff_date = ::now() + Duration::days(-90);
-    let stmt = tx.prepare("SELECT * FROM version_downloads
-                                 WHERE date > date($1)
-                                   AND version_id = ANY($2)
-                                 ORDER BY date ASC")?;
-    let downloads = stmt.query(&[&cutoff_date, &ids])?.iter().map(|row| {
-        VersionDownload::from_row(&row).encodable()
-    }).collect::<Vec<_>>();
+    let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
+    let extra = VersionDownload::belonging_to(rest)
+        .select((to_char(version_downloads::date, "YYYY-MM-DD"), sum_downloads))
+        .filter(version_downloads::date.gt(date(now - 90.days())))
+        .group_by(version_downloads::date)
+        .order(version_downloads::date.asc())
+        .load::<ExtraDownload>(&*conn)?;
 
-    let stmt = tx.prepare("\
-          SELECT COALESCE(to_char(DATE(version_downloads.date), 'YYYY-MM-DD'), '') AS date,
-                 SUM(version_downloads.downloads) AS downloads
-            FROM version_downloads
-           INNER JOIN versions ON
-                 version_id = versions.id
-           WHERE version_downloads.date > date($1)
-             AND versions.crate_id = $2
-             AND versions.id != ALL($3)
-        GROUP BY DATE(version_downloads.date)
-        ORDER BY DATE(version_downloads.date) ASC")?;
-    let extra = stmt.query(&[&cutoff_date, &krate.id, &ids])?.iter().map(|row| {
-        ExtraDownload {
-            downloads: row.get("downloads"),
-            date: row.get("date")
-        }
-    }).collect::<Vec<_>>();
-
-    #[derive(RustcEncodable)]
+    #[derive(RustcEncodable, Queryable)]
     struct ExtraDownload { date: String, downloads: i64 }
     #[derive(RustcEncodable)]
     struct R { version_downloads: Vec<EncodableVersionDownload>, meta: Meta }
@@ -1298,5 +1274,6 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R{ dependencies: rev_deps, meta: Meta { total: total } }))
 }
 
-use diesel::types::Text;
+use diesel::types::{Text, Date};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
+sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
