@@ -908,7 +908,7 @@ fn dependencies() {
         let c1 = ::new_crate("foo_deps").create_or_update(&conn, None, u.id).unwrap();
         let v = ::new_version(c1.id, "1.0.0").save(&conn, &[]).unwrap();
         let c2 = ::new_crate("bar_deps").create_or_update(&conn, None, u.id).unwrap();
-        ::create_dependency(&conn, &v, &c2);
+        ::new_dependency(&conn, &v, &c2);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));

@@ -385,7 +385,7 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
     (krate, v.unwrap())
 }
 
-fn create_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
+fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use diesel::insert;
     use cargo_registry::schema::dependencies;
 
