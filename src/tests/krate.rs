@@ -829,9 +829,10 @@ fn download() {
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
     {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::new_crate("foo_download").create_or_update(&conn, None, u.id).unwrap();
-        ::new_version(krate.id, "1.0.0").save(&conn, &[]).unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_download", user.id)
+            .version("1.0.0")
+            .expect_build(&conn);
     }
     let resp = t_resp!(middle.call(&mut req));
     assert_eq!(resp.status.0, 302);
@@ -890,8 +891,9 @@ fn download_bad() {
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_bad/0.1.0/download");
     {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::new_crate("foo_basd").create_or_update(&conn, None, u.id).unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_bad", user.id)
+            .expect_build(&conn);
     }
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(404, response.status.0)
@@ -904,10 +906,12 @@ fn dependencies() {
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_deps/1.0.0/dependencies");
     {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = ::new_crate("foo_deps").create_or_update(&conn, None, u.id).unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("foo_deps", user.id)
+            .expect_build(&conn);
         let v = ::new_version(c1.id, "1.0.0").save(&conn, &[]).unwrap();
-        let c2 = ::new_crate("bar_deps").create_or_update(&conn, None, u.id).unwrap();
+        let c2 = ::CrateBuilder::new("bar_deps", user.id)
+            .expect_build(&conn);
         ::new_dependency(&conn, &v, &c2);
     }
 
