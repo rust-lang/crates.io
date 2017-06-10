@@ -26,7 +26,7 @@ use std::sync::{Once, ONCE_INIT, Arc};
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
-use cargo_registry::dependency::Kind;
+use cargo_registry::dependency::{Kind, NewDependency};
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
@@ -383,6 +383,20 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version)
                                           krate.max_upload_size).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
+}
+
+fn create_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
+    use diesel::insert;
+    use cargo_registry::schema::dependencies;
+
+    let dep = NewDependency {
+        version_id: version.id,
+        crate_id: krate.id,
+        req: ">= 0".into(),
+        optional: false,
+        ..Default::default()
+    };
+    insert(&dep).into(dependencies::table).get_result(conn).unwrap()
 }
 
 fn mock_dep(req: &mut Request, version: &Version, krate: &Crate,

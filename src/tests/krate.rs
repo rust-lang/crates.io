@@ -901,11 +901,15 @@ fn download_bad() {
 fn dependencies() {
     let (_b, app, middle) = ::app();
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_deps/1.0.0/dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (_, v) = ::mock_crate(&mut req, ::krate("foo_deps"));
-    let (c, _) = ::mock_crate(&mut req, ::krate("bar_deps"));
-    ::mock_dep(&mut req, &v, &c, None);
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_deps/1.0.0/dependencies");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::new_crate("foo_deps").create_or_update(&conn, None, u.id).unwrap();
+        let v = ::new_version(c1.id, "1.0.0").save(&conn, &[]).unwrap();
+        let c2 = ::new_crate("bar_deps").create_or_update(&conn, None, u.id).unwrap();
+        ::create_dependency(&conn, &v, &c2);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<Deps>(&mut response);

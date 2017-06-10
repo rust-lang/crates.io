@@ -9,7 +9,12 @@ use git;
 use krate::Crate;
 use schema::*;
 use util::{CargoResult, human};
+use version::Version;
 
+#[derive(Identifiable, Associations)]
+#[belongs_to(Version)]
+#[belongs_to(Crate)]
+#[table_name="dependencies"]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
@@ -51,17 +56,17 @@ pub enum Kind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
-#[derive(Insertable)]
+#[derive(Default, Insertable)]
 #[table_name="dependencies"]
-struct NewDependency<'a> {
-    version_id: i32,
-    crate_id: i32,
-    req: String,
-    optional: bool,
-    default_features: bool,
-    features: Vec<&'a str>,
-    target: Option<&'a str>,
-    kind: i32,
+pub struct NewDependency<'a> {
+    pub version_id: i32,
+    pub crate_id: i32,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: Vec<&'a str>,
+    pub target: Option<&'a str>,
+    pub kind: i32,
 }
 
 impl Dependency {
