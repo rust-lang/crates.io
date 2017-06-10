@@ -1072,7 +1072,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    println!("Crate found");
+
     let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
     versions.sort_by(|a, b| a.num.cmp(&b.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
