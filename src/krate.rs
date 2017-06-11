@@ -1079,7 +1079,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
     let downloads = VersionDownload::belonging_to(latest_five)
         .filter(version_downloads::date.gt(date(now - 90.days())))
-        .order(version_downloads::date.desc())
+        .order(version_downloads::date.asc())
         .load(&*conn)?
         .into_iter()
         .map(VersionDownload::encodable)
