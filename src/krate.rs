@@ -1074,7 +1074,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
 
     let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| a.num.cmp(&b.num));
+    versions.sort_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
     let downloads = VersionDownload::belonging_to(latest_five)
