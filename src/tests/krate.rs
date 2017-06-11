@@ -213,6 +213,25 @@ fn index_queries() {
 }
 
 #[test]
+fn search_includes_crates_where_name_is_stopword() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        ::CrateBuilder::new("which", u.id).expect_build(&conn);
+        ::CrateBuilder::new("should_be_excluded", u.id)
+            .readme("crate which does things")
+            .expect_build(&conn);
+    }
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("q=which")));
+    let json = ::json::<CrateList>(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.meta.total, 1);
+}
+
+#[test]
 fn exact_match_first_on_queries() {
     let (_b, app, middle) = ::app();
 
