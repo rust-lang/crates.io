@@ -1,4 +1,3 @@
-/*global hasText, wait*/
 import { test } from 'qunit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
