@@ -40,8 +40,7 @@ pub struct EncodableKeyword {
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &PgConnection, name: &str)
-                           -> QueryResult<Keyword> {
+    pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
             .filter(keywords::keyword.eq(::lower(name)))
             .first(&*conn)
@@ -57,11 +56,10 @@ impl Keyword {
             keyword: &'a str,
         }
 
-        let lowercase_names: Vec<_> = names.iter()
-            .map(|s| s.to_lowercase())
-            .collect();
+        let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
-        let new_keywords: Vec<_> = lowercase_names.iter()
+        let new_keywords: Vec<_> = lowercase_names
+            .iter()
             .map(|s| NewKeyword { keyword: s })
             .collect();
 
@@ -77,14 +75,22 @@ impl Keyword {
     }
 
     pub fn valid_name(name: &str) -> bool {
-        if name.is_empty() { return false }
+        if name.is_empty() {
+            return false;
+        }
         name.chars().next().unwrap().is_alphanumeric() &&
-            name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
-            name.chars().all(|c| c.is_ascii())
+        name.chars()
+            .all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
+        name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {
-        let Keyword { crates_cnt, keyword, created_at, .. } = self;
+        let Keyword {
+            crates_cnt,
+            keyword,
+            created_at,
+            ..
+        } = self;
         EncodableKeyword {
             id: keyword.clone(),
             created_at: ::encode_time(created_at),
@@ -93,17 +99,22 @@ impl Keyword {
         }
     }
 
-    pub fn update_crate(conn: &PgConnection,
-                        krate: &Crate,
-                        keywords: &[&str]) -> QueryResult<()> {
+    pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
         conn.transaction(|| {
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
             diesel::delete(CrateKeyword::belonging_to(krate))
                 .execute(conn)?;
-            let crate_keywords = keywords.into_iter().map(|kw| {
-                CrateKeyword { crate_id: krate.id, keyword_id: kw.id }
-            }).collect::<Vec<_>>();
-            diesel::insert(&crate_keywords).into(crates_keywords::table)
+            let crate_keywords = keywords
+                .into_iter()
+                .map(|kw| {
+                         CrateKeyword {
+                             crate_id: krate.id,
+                             keyword_id: kw.id,
+                         }
+                     })
+                .collect::<Vec<_>>();
+            diesel::insert(&crate_keywords)
+                .into(crates_keywords::table)
                 .execute(conn)?;
             Ok(())
         })
@@ -119,7 +130,9 @@ impl Model for Keyword {
             keyword: row.get("keyword"),
         }
     }
-    fn table_name(_: Option<Keyword>) -> &'static str { "keywords" }
+    fn table_name(_: Option<Keyword>) -> &'static str {
+        "keywords"
+    }
 }
 
 /// Handles the `GET /keywords` route.
@@ -148,17 +161,23 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let data = query.load::<(Keyword, i64)>(&*conn)?;
     let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
     let kws = data.into_iter()
-        .map(|(k, _)| k.encodable()).collect::<Vec<_>>();
+        .map(|(k, _)| k.encodable())
+        .collect::<Vec<_>>();
 
     #[derive(RustcEncodable)]
-    struct R { keywords: Vec<EncodableKeyword>, meta: Meta }
+    struct R {
+        keywords: Vec<EncodableKeyword>,
+        meta: Meta,
+    }
     #[derive(RustcEncodable)]
-    struct Meta { total: i64 }
+    struct Meta {
+        total: i64,
+    }
 
     Ok(req.json(&R {
-        keywords: kws,
-        meta: Meta { total: total },
-    }))
+                    keywords: kws,
+                    meta: Meta { total: total },
+                }))
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
@@ -169,6 +188,8 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let kw = Keyword::find_by_keyword(&conn, name)?;
 
     #[derive(RustcEncodable)]
-    struct R { keyword: EncodableKeyword }
+    struct R {
+        keyword: EncodableKeyword,
+    }
     Ok(req.json(&R { keyword: kw.encodable() }))
 }

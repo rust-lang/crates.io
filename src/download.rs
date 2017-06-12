@@ -21,7 +21,8 @@ pub struct VersionDownload {
 
 #[derive(Insertable)]
 #[table_name="version_downloads"]
-struct NewVersionDownload(#[column_name(version_id)] i32);
+struct NewVersionDownload(#[column_name(version_id)]
+                          i32);
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct EncodableVersionDownload {
@@ -40,11 +41,12 @@ impl VersionDownload {
         // nothing else. We have lots of other counters, but they're
         // all updated later on via the update-downloads script.
         let new_download = NewVersionDownload(version);
-        let downloads_row = new_download
-            .on_conflict((version_id, date), do_update().set(
-                downloads.eq(downloads + 1)
-            ));
-        diesel::insert(&downloads_row).into(version_downloads).execute(conn)?;
+        let downloads_row =
+            new_download.on_conflict((version_id, date),
+                                     do_update().set(downloads.eq(downloads + 1)));
+        diesel::insert(&downloads_row)
+            .into(version_downloads)
+            .execute(conn)?;
         Ok(())
     }
 
@@ -70,5 +72,7 @@ impl Model for VersionDownload {
         }
     }
 
-    fn table_name(_: Option<VersionDownload>) -> &'static str { "version_downloads" }
+    fn table_name(_: Option<VersionDownload>) -> &'static str {
+        "version_downloads"
+    }
 }

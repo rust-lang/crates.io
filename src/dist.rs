@@ -11,7 +11,7 @@ pub struct Middleware {
     dist: Static,
 }
 
-impl Default for  Middleware {
+impl Default for Middleware {
     fn default() -> Middleware {
         Middleware {
             handler: None,
@@ -27,7 +27,7 @@ impl AroundMiddleware for Middleware {
 }
 
 impl Handler for Middleware {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         // First, attempt to serve a static file. If we're missing a static
         // file, then keep going.
         match self.dist.call(req) {
@@ -37,15 +37,17 @@ impl Handler for Middleware {
 
         // Second, if we're requesting html, then we've only got one page so
         // serve up that page. Otherwise proxy on to the rest of the app.
-        let wants_html = req.headers().find("Accept").map(|accept| {
-            accept.iter().any(|s| s.contains("html"))
-        }).unwrap_or(false);
+        let wants_html = req.headers()
+            .find("Accept")
+            .map(|accept| accept.iter().any(|s| s.contains("html")))
+            .unwrap_or(false);
         if wants_html {
-            self.dist.call(&mut RequestProxy {
-                other: req,
-                path: Some("/index.html"),
-                method: None,
-            })
+            self.dist
+                .call(&mut RequestProxy {
+                               other: req,
+                               path: Some("/index.html"),
+                               method: None,
+                           })
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

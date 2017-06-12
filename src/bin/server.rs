@@ -31,8 +31,9 @@ fn main() {
             let mut opts = git2::FetchOptions::new();
             opts.remote_callbacks(cb);
             git2::build::RepoBuilder::new()
-                                     .fetch_options(opts)
-                                     .clone(&url, &checkout).unwrap()
+                .fetch_options(opts)
+                .clone(&url, &checkout)
+                .unwrap()
         }
     };
     let mut cfg = repo.config().unwrap();
@@ -64,7 +65,7 @@ fn main() {
                                         &api_protocol),
                 proxy: None,
             }
-        },
+        }
         (Env::Production, Replica::ReadOnlyMirror) => {
             // Read-only mirrors don't need access key or secret key,
             // but they might have them. Definitely need bucket though.
@@ -76,7 +77,7 @@ fn main() {
                                         &api_protocol),
                 proxy: None,
             }
-        },
+        }
         _ => {
             if env::var("S3_BUCKET").is_ok() {
                 println!("Using S3 uploader");
@@ -92,7 +93,7 @@ fn main() {
                 println!("Using local uploader, crate files will be in the dist directory");
                 Uploader::Local
             }
-        },
+        }
     };
 
     let config = cargo_registry::Config {
@@ -115,9 +116,12 @@ fn main() {
     let port = if heroku {
         8888
     } else {
-        env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8888)
+        env::var("PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8888)
     };
-    let threads = if cargo_env == Env::Development {1} else {50};
+    let threads = if cargo_env == Env::Development { 1 } else { 50 };
     let mut cfg = civet::Config::new();
     cfg.port(port).threads(threads).keep_alive(true);
     let _a = Server::start(cfg, app);

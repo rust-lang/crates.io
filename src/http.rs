@@ -10,15 +10,18 @@ use std::str;
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
 /// `parse_github_response` to handle the "common" processing of responses.
-pub fn github(app: &App, url: &str, auth: &Token)
-              -> Result<(Easy, Vec<u8>), curl::Error> {
+pub fn github(app: &App, url: &str, auth: &Token) -> Result<(Easy, Vec<u8>), curl::Error> {
     let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
     info!("GITHUB HTTP: {}", url);
 
     let mut headers = List::new();
-    headers.append("Accept: application/vnd.github.v3+json").unwrap();
+    headers
+        .append("Accept: application/vnd.github.v3+json")
+        .unwrap();
     headers.append("User-Agent: hello!").unwrap();
-    headers.append(&format!("Authorization: token {}", auth.access_token)).unwrap();
+    headers
+        .append(&format!("Authorization: token {}", auth.access_token))
+        .unwrap();
 
     let mut handle = app.handle();
     handle.url(&url).unwrap();
@@ -28,18 +31,19 @@ pub fn github(app: &App, url: &str, auth: &Token)
     let mut data = Vec::new();
     {
         let mut transfer = handle.transfer();
-        transfer.write_function(|buf| {
-            data.extend_from_slice(buf);
-            Ok(buf.len())
-        }).unwrap();
+        transfer
+            .write_function(|buf| {
+                                data.extend_from_slice(buf);
+                                Ok(buf.len())
+                            })
+            .unwrap();
         transfer.perform()?;
     }
     Ok((handle, data))
 }
 
 /// Checks for normal responses
-pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8])
-                                            -> CargoResult<T> {
+pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> CargoResult<T> {
     match resp.response_code().unwrap() {
         200 => {} // Ok!
         403 => {
@@ -58,13 +62,11 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8])
         }
     }
 
-    let json = str::from_utf8(data).ok().chain_error(|| {
-        internal("github didn't send a utf8-response")
-    })?;
+    let json = str::from_utf8(data)
+        .ok()
+        .chain_error(|| internal("github didn't send a utf8-response"))?;
 
-    json::decode(json).chain_error(|| {
-        internal("github didn't send a valid json response")
-    })
+    json::decode(json).chain_error(|| internal("github didn't send a valid json response"))
 }
 
 /// Gets a token with the given string as the access token, but all

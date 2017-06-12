@@ -31,40 +31,56 @@ fn main() {
 
 fn delete(tx: &postgres::transaction::Transaction) {
     let name = match env::args().nth(1) {
-        None => { println!("needs a crate-name argument"); return }
+        None => {
+            println!("needs a crate-name argument");
+            return;
+        }
         Some(s) => s,
     };
     let version = match env::args().nth(2) {
-        None => { println!("needs a version argument"); return }
+        None => {
+            println!("needs a version argument");
+            return;
+        }
         Some(s) => s,
     };
     let version = semver::Version::parse(&version).unwrap();
 
     let krate = Crate::find_by_name(tx, &name).unwrap();
-    let v = Version::find_by_num(tx, krate.id, &version).unwrap().unwrap();
-    print!("Are you sure you want to delete {}#{} ({}) [y/N]: ", name, version,
+    let v = Version::find_by_num(tx, krate.id, &version)
+        .unwrap()
+        .unwrap();
+    print!("Are you sure you want to delete {}#{} ({}) [y/N]: ",
+           name,
+           version,
            v.id);
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") { return }
+    if !line.starts_with("y") {
+        return;
+    }
 
     println!("deleting version {} ({})", v.num, v.id);
     let n = tx.execute("DELETE FROM version_downloads WHERE version_id = $1",
-                       &[&v.id]).unwrap();
+                       &[&v.id])
+        .unwrap();
     println!("  {} download records deleted", n);
     let n = tx.execute("DELETE FROM version_authors WHERE version_id = $1",
-                       &[&v.id]).unwrap();
+                       &[&v.id])
+        .unwrap();
     println!("  {} author records deleted", n);
-    let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1",
-                       &[&v.id]).unwrap();
+    let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1", &[&v.id])
+        .unwrap();
     println!("  {} dependencies deleted", n);
-    tx.execute("DELETE FROM versions WHERE id = $1",
-               &[&v.id]).unwrap();
+    tx.execute("DELETE FROM versions WHERE id = $1", &[&v.id])
+        .unwrap();
 
     print!("commit? [y/N]: ");
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") { panic!("aborting transaction"); }
+    if !line.starts_with("y") {
+        panic!("aborting transaction");
+    }
 }
