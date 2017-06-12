@@ -58,6 +58,7 @@ pub struct EncodableTeam {
     pub login: String,
     pub name: Option<String>,
     pub avatar: Option<String>,
+    pub url: Option<String>,
 }
 
 #[derive(RustcEncodable)]
@@ -225,12 +226,29 @@ impl Team {
 
     pub fn encodable(self) -> EncodableTeam {
         let Team { id, name, login, avatar, .. } = self;
+        let org_name = Team::get_org(&login);
+        let team_name = Team::get_team(&login);
+        let url = format!("https://github.com/orgs/{}/teams/{}", org_name, team_name);
+
         EncodableTeam {
             id: id,
             login: login,
             name: name,
             avatar: avatar,
+            url: Some(url),
         }
+    }
+
+    fn get_org(login: &str) -> String {
+        let login_string = login.to_string();
+        let org: Vec<&str> = login_string.split(':').collect();
+        org[1].to_string()
+    }
+
+    fn get_team(login: &str) -> String {
+        let login_string = login.to_string();
+        let org: Vec<&str> = login_string.split(':').collect();
+        org[2].to_string()
     }
 }
 

@@ -1,11 +1,20 @@
 <div id='crates-heading'>
-    {{user-avatar user=model.team size='medium'}}
-    <h1>
-        {{ model.team.login }}
-    </h1>
-    {{#user-link user=model.team}}
-      <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
-    {{/user-link}}
+    <div class="wide">
+        <div class='info'>
+            {{user-avatar user=model.team size='medium'}}
+            <div class='team-info'>
+                <h1>
+                    {{ model.team.org_name }}
+                </h1>
+                <h2>
+                    {{ model.team.name }}
+                </h2>
+            </div>
+            {{#user-link user=model.team}}
+                <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
+            {{/user-link}}
+        </div>
+    </div>
 </div>
 
 <div id='user-profile'>
