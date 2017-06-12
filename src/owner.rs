@@ -53,6 +53,14 @@ pub struct Team {
 }
 
 #[derive(RustcEncodable)]
+pub struct EncodableTeam {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+}
+
+#[derive(RustcEncodable)]
 pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
@@ -213,6 +221,16 @@ impl Team {
     /// private membership information here.
     pub fn contains_user(&self, app: &App, user: &User) -> CargoResult<bool> {
         team_with_gh_id_contains_user(app, self.github_id, user)
+    }
+
+    pub fn encodable(self) -> EncodableTeam {
+        let Team { id, name, login, avatar, .. } = self;
+        EncodableTeam {
+            id: id,
+            login: login,
+            name: name,
+            avatar: avatar,
+        }
     }
 }
 

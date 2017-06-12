@@ -373,6 +373,23 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { user: user.encodable() }))
 }
 
+/// Handles the `GET /teams/:team_id` route.
+pub fn show_team(req: &mut Request) -> CargoResult<Response> {
+    use self::teams::dsl::{teams, login};
+    use owner::Team;
+    use owner::EncodableTeam;
+
+    let name = &req.params()["team_id"];
+    let conn = req.db_conn()?;
+    let team = teams.filter(login.eq(name))
+        .first::<Team>(&*conn)?;
+
+    #[derive(RustcEncodable)]
+    struct R {
+        team: EncodableTeam,
+    }
+    Ok(req.json(&R{ team: team.encodable() }))
+}
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
