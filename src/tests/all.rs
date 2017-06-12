@@ -21,7 +21,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
-use std::sync::{Once, ONCE_INIT, Arc};
+use std::sync::Arc;
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
@@ -84,7 +84,6 @@ mod version;
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     dotenv::dotenv().ok();
-    static INIT: Once = ONCE_INIT;
     git::init();
 
     let (proxy, bomb) = record::proxy();
@@ -114,19 +113,11 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         mirror: Replica::Primary,
         api_protocol: api_protocol,
     };
-    INIT.call_once(|| db_setup(&config.db_url));
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let middleware = cargo_registry::middleware(app.clone());
     return (bomb, app, middleware);
-
-    fn db_setup(db: &str) {
-        use diesel::migrations::run_pending_migrations;
-
-        let connection = PgConnection::establish(db).unwrap();
-        run_pending_migrations(&connection).unwrap();
-    }
 }
 
 fn env(s: &str) -> String {
