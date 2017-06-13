@@ -201,7 +201,11 @@ impl Version {
 }
 
 impl NewVersion {
-    pub fn new(crate_id: i32, num: &semver::Version, features: &HashMap<String, Vec<String>>) -> CargoResult<Self> {
+    pub fn new(
+        crate_id: i32,
+        num: &semver::Version,
+        features: &HashMap<String, Vec<String>>,
+    ) -> CargoResult<Self> {
         let features = json::encode(features)?;
         Ok(NewVersion {
             crate_id: crate_id,

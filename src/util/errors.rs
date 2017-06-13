@@ -255,7 +255,9 @@ impl CargoError for Unauthorized {
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![
-                StringError { detail: "must be logged in to perform that action".to_string() },
+                StringError {
+                    detail: "must be logged in to perform that action".to_string(),
+                },
             ],
         });
         response.status = (403, "Forbidden");

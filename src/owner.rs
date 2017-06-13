@@ -74,7 +74,12 @@ pub enum Rights {
 
 impl Team {
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(app: &App, conn: &PgConnection, login: &str, req_user: &User) -> CargoResult<Self> {
+    pub fn create(
+        app: &App,
+        conn: &PgConnection,
+        login: &str,
+        req_user: &User,
+    ) -> CargoResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = login.split(':');
         match chunks.next().unwrap() {

@@ -6,4 +6,5 @@ generics_indent = "Block"
 fn_call_style = "Block"
 combine_control_expr = true
 fn_args_paren_newline = false
-max_width = 118
+max_width = 100
+error_on_line_overflow = false

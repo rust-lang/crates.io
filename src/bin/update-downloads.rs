@@ -161,7 +161,8 @@ mod test {
     use cargo_registry::{Version, Crate, User, Model, env};
 
     fn conn() -> postgres::Connection {
-        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..], postgres::TlsMode::None).unwrap()
+        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..], postgres::TlsMode::None)
+            .unwrap()
     }
 
     fn user(conn: &postgres::transaction::Transaction) -> User {

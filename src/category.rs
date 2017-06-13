@@ -98,7 +98,11 @@ impl Category {
         }
     }
 
-    pub fn update_crate<'a>(conn: &PgConnection, krate: &Crate, slugs: &[&'a str]) -> QueryResult<Vec<&'a str>> {
+    pub fn update_crate<'a>(
+        conn: &PgConnection,
+        krate: &Crate,
+        slugs: &[&'a str],
+    ) -> QueryResult<Vec<&'a str>> {
         use diesel::expression::dsl::any;
 
         conn.transaction(|| {
@@ -202,7 +206,12 @@ impl Category {
         Ok(rows.iter().next().unwrap().get("count"))
     }
 
-    pub fn toplevel(conn: &PgConnection, sort: &str, limit: i64, offset: i64) -> QueryResult<Vec<Category>> {
+    pub fn toplevel(
+        conn: &PgConnection,
+        sort: &str,
+        limit: i64,
+        offset: i64,
+    ) -> QueryResult<Vec<Category>> {
         use diesel::select;
         use diesel::expression::dsl::*;
 
@@ -227,7 +236,12 @@ impl Category {
         ))).load(conn)
     }
 
-    pub fn toplevel_old(conn: &GenericConnection, sort: &str, limit: i64, offset: i64) -> CargoResult<Vec<Category>> {
+    pub fn toplevel_old(
+        conn: &GenericConnection,
+        sort: &str,
+        limit: i64,
+        offset: i64,
+    ) -> CargoResult<Vec<Category>> {
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -413,7 +427,8 @@ mod tests {
 
     fn pg_connection() -> PgConnection {
         let _ = dotenv();
-        let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         let conn = PgConnection::establish(&database_url).unwrap();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE")

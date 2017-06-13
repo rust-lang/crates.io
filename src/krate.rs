@@ -625,7 +625,13 @@ impl Crate {
         Ok(owners)
     }
 
-    pub fn owner_add(&self, app: &App, conn: &PgConnection, req_user: &User, login: &str) -> CargoResult<()> {
+    pub fn owner_add(
+        &self,
+        app: &App,
+        conn: &PgConnection,
+        req_user: &User,
+        login: &str,
+    ) -> CargoResult<()> {
         let owner = match Owner::find_by_login(conn, login) {
             Ok(owner @ Owner::User(_)) => owner,
             Ok(Owner::Team(team)) => {
@@ -663,7 +669,12 @@ impl Crate {
         Ok(())
     }
 
-    pub fn owner_remove(&self, conn: &PgConnection, _req_user: &User, login: &str) -> CargoResult<()> {
+    pub fn owner_remove(
+        &self,
+        conn: &PgConnection,
+        _req_user: &User,
+        login: &str,
+    ) -> CargoResult<()> {
         let owner = Owner::find_by_login(conn, login).map_err(|_| {
             human(&format_args!("could not find owner with login `{}`", login))
         })?;

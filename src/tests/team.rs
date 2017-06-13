@@ -37,7 +37,8 @@ fn body_for_team_x() -> &'static str {
 #[test]
 fn not_github() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_not_github");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_not_github");
 
     let body = r#"{"users":["dropbox:foo:foo"]}"#;
     let json = bad_resp!(
@@ -57,7 +58,8 @@ fn not_github() {
 #[test]
 fn weird_name() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_weird_name");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_weird_name");
 
     let body = r#"{"users":["github:foo/../bar:wut"]}"#;
     let json = bad_resp!(
@@ -100,7 +102,8 @@ fn one_colon() {
 #[test]
 fn nonexistent_team() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_nonexistent");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_nonexistent");
 
     let body = r#"{"users":["github:crates-test-org:this-does-not-exist"]}"#;
     let json = bad_resp!(
@@ -123,7 +126,8 @@ fn nonexistent_team() {
 #[test]
 fn add_team_as_member() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_team_member");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_team_member");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -139,7 +143,8 @@ fn add_team_as_member() {
 #[test]
 fn add_team_as_non_member() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_only_x(), "foo_team_non_member");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_only_x(), "foo_team_non_member");
 
     let body = body_for_team_y();
     let json = bad_resp!(
@@ -159,7 +164,8 @@ fn add_team_as_non_member() {
 #[test]
 fn remove_team_as_named_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_remove_team");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_remove_team");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -202,7 +208,8 @@ fn remove_team_as_named_owner() {
 #[test]
 fn remove_team_as_team_owner() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_remove_team_owner");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_remove_team_owner");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -283,7 +290,8 @@ fn publish_not_owned() {
 #[test]
 fn publish_owned() {
     let (_b, app, middle) = ::app();
-    let mut req = ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_team_owned");
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_team_owned");
 
     let body = body_for_team_x();
     ok_resp!(

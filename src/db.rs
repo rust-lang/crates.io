@@ -59,7 +59,11 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
     // better solution in the future for certificate verification...
 
     impl TlsHandshake for MyHandshake {
-        fn tls_handshake(&self, _domain: &str, stream: Stream) -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
+        fn tls_handshake(
+            &self,
+            _domain: &str,
+            stream: Stream,
+        ) -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
             let stream = self.0
                 .danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(
                     stream,
@@ -102,7 +106,10 @@ pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres:
     r2d2::Pool::new(config, mgr).unwrap()
 }
 
-pub fn diesel_pool(url: &str, config: r2d2::Config<PgConnection, r2d2_diesel::Error>) -> DieselPool {
+pub fn diesel_pool(
+    url: &str,
+    config: r2d2::Config<PgConnection, r2d2_diesel::Error>,
+) -> DieselPool {
     let mut url = Url::parse(url).expect("Invalid database URL");
     if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
@@ -142,7 +149,9 @@ impl Transaction {
         }
     }
 
-    pub fn conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
+    pub fn conn(
+        &self,
+    ) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
             let conn = self.app.database.get().map_err(|e| {
                 internal(&format_args!("failed to get a database connection: {}", e))

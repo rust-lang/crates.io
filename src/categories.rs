@@ -13,7 +13,12 @@ struct Category {
 }
 
 impl Category {
-    fn from_parent(slug: &str, name: &str, description: &str, parent: Option<&Category>) -> Category {
+    fn from_parent(
+        slug: &str,
+        name: &str,
+        description: &str,
+        parent: Option<&Category>,
+    ) -> Category {
         match parent {
             Some(parent) => {
                 Category {
@@ -46,7 +51,10 @@ fn optional_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> &'a str {
     toml.get(key).and_then(toml::Value::as_str).unwrap_or("")
 }
 
-fn categories_from_toml(categories: &toml::Table, parent: Option<&Category>) -> CargoResult<Vec<Category>> {
+fn categories_from_toml(
+    categories: &toml::Table,
+    parent: Option<&Category>,
+) -> CargoResult<Vec<Category>> {
     let mut result = vec![];
 
     for (slug, details) in categories {
@@ -87,7 +95,8 @@ pub fn sync() -> CargoResult<()> {
         "Could not parse categories.toml",
     );
 
-    let categories = categories_from_toml(&toml, None).expect("Could not convert categories from TOML");
+    let categories =
+        categories_from_toml(&toml, None).expect("Could not convert categories from TOML");
 
     for category in &categories {
         tx.execute(

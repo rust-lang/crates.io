@@ -409,7 +409,12 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .unwrap()
 }
 
-fn mock_dep(req: &mut Request, version: &Version, krate: &Crate, target: Option<&str>) -> Dependency {
+fn mock_dep(
+    req: &mut Request,
+    version: &Version,
+    krate: &Crate,
+    target: Option<&str>,
+) -> Dependency {
     Dependency::insert(
         req.tx().unwrap(),
         version.id,
@@ -462,7 +467,12 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
     new_req_full(app, ::krate(krate), version, Vec::new())
 }
 
-fn new_req_full(app: Arc<App>, krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
+fn new_req_full(
+    app: Arc<App>,
+    krate: Crate,
+    version: &str,
+    deps: Vec<u::CrateDependency>,
+) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
@@ -475,7 +485,12 @@ fn new_req_full(app: Arc<App>, krate: Crate, version: &str, deps: Vec<u::CrateDe
     return req;
 }
 
-fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
+fn new_req_with_keywords(
+    app: Arc<App>,
+    krate: Crate,
+    version: &str,
+    kws: Vec<String>,
+) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
@@ -488,7 +503,12 @@ fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str, kws: Vec<St
     return req;
 }
 
-fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
+fn new_req_with_categories(
+    app: Arc<App>,
+    krate: Crate,
+    version: &str,
+    cats: Vec<String>,
+) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,

@@ -180,7 +180,8 @@ pub fn add_dependencies(
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let (git_deps, new_dependencies): (Vec<_>, Vec<_>) = git_and_new_dependencies.into_iter().unzip();
+    let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
+        git_and_new_dependencies.into_iter().unzip();
 
     insert(&new_dependencies)
         .into(dependencies::table)
