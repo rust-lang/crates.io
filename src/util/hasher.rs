@@ -20,7 +20,7 @@ impl<R: Read> HashingReader<R> {
             rustfmt wanted to merge the lines together so had to use this
             to stop this from occurring
         */
-        #[rustfmt_skip]
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         #[allow(deprecated)]
         self.hasher.finish().unwrap()
     }
