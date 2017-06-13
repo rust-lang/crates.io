@@ -8,13 +8,9 @@ use cargo_registry::db::RequestTransaction;
 use cargo_registry::version::{EncodableVersion, Version};
 
 #[derive(RustcDecodable)]
-struct VersionList {
-    versions: Vec<EncodableVersion>,
-}
+struct VersionList { versions: Vec<EncodableVersion> }
 #[derive(RustcDecodable)]
-struct VersionResponse {
-    version: EncodableVersion,
-}
+struct VersionResponse { version: EncodableVersion }
 
 fn sv(s: &str) -> semver::Version {
     semver::Version::parse(s).unwrap()
@@ -50,7 +46,8 @@ fn show() {
     let v = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
+        let krate = ::CrateBuilder::new("foo_vers_show", user.id)
+            .expect_build(&conn);
         ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));

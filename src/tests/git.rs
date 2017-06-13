@@ -8,25 +8,20 @@ use git2;
 use url::Url;
 
 fn root() -> PathBuf {
-    env::current_dir()
-        .unwrap()
-        .join("tmp")
-        .join(thread::current().name().unwrap())
+    env::current_dir().unwrap().join("tmp").join(thread::current().name().unwrap())
 }
 
-pub fn checkout() -> PathBuf {
-    root().join("checkout")
-}
-pub fn bare() -> PathBuf {
-    root().join("bare")
-}
+pub fn checkout() -> PathBuf { root().join("checkout") }
+pub fn bare() -> PathBuf { root().join("bare") }
 
 pub fn init() {
     static INIT: Once = ONCE_INIT;
     let _ = fs::remove_dir_all(&checkout());
     let _ = fs::remove_dir_all(&bare());
 
-    INIT.call_once(|| { fs::create_dir_all(root().parent().unwrap()).unwrap(); });
+    INIT.call_once(|| {
+        fs::create_dir_all(root().parent().unwrap()).unwrap();
+    });
 
     // Prepare a bare remote repo
     {
@@ -43,9 +38,7 @@ pub fn init() {
     // Setup the `origin` remote
     checkout.remote_set_url("origin", &url).unwrap();
     checkout.remote_set_pushurl("origin", Some(&url)).unwrap();
-    checkout
-        .remote_add_push("origin", "refs/heads/master")
-        .unwrap();
+    checkout.remote_add_push("origin", "refs/heads/master").unwrap();
 
     // Create an empty initial commit
     let mut config = checkout.config().unwrap();
@@ -55,9 +48,9 @@ pub fn init() {
     let id = index.write_tree().unwrap();
     let tree = checkout.find_tree(id).unwrap();
     let sig = checkout.signature().unwrap();
-    checkout
-        .commit(Some("HEAD"), &sig, &sig, "Initial Commit", &tree, &[])
-        .unwrap();
+    checkout.commit(Some("HEAD"), &sig, &sig,
+                    "Initial Commit",
+                    &tree, &[]).unwrap();
 
     // Push the commit to the remote repo
     let mut origin = checkout.find_remote("origin").unwrap();

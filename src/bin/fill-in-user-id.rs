@@ -53,17 +53,13 @@ struct GithubUser {
 fn update(app: &App, tx: &postgres::transaction::Transaction) {
     let query = "SELECT id, gh_login, gh_access_token, gh_avatar FROM users
                  WHERE gh_id IS NULL";
-    let rows = tx.query(query, &[])
-        .unwrap()
-        .into_iter()
-        .map(|row| {
-                 let id: i32 = row.get("id");
-                 let login: String = row.get("gh_login");
-                 let token: String = row.get("gh_access_token");
-                 let avatar: Option<String> = row.get("gh_avatar");
-                 (id, login, http::token(token), avatar)
-             })
-        .collect::<Vec<_>>();
+    let rows = tx.query(query, &[]).unwrap().into_iter().map(|row| {
+        let id: i32 = row.get("id");
+        let login: String = row.get("gh_login");
+        let token: String = row.get("gh_access_token");
+        let avatar: Option<String> = row.get("gh_avatar");
+        (id, login, http::token(token), avatar)
+    }).collect::<Vec<_>>();
 
     for (id, login, token, avatar) in rows {
         println!("attempt: {}/{}", id, login);
@@ -73,12 +69,12 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
             let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
             if let Some(ref avatar) = avatar {
                 if !avatar.contains(&ghuser.id.to_string()) {
-                    return Err(human(&format_args!("avatar: {}", avatar)));
+                    return Err(human(&format_args!("avatar: {}", avatar)))
                 }
             }
             if ghuser.login == login {
                 tx.execute("UPDATE users SET gh_id = $1 WHERE id = $2",
-                             &[&ghuser.id, &id])?;
+                           &[&ghuser.id, &id])?;
                 Ok(())
             } else {
                 Err(human(&format_args!("different login: {}", ghuser.login)))
@@ -89,3 +85,4 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
         }
     }
 }
+

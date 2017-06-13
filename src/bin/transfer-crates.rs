@@ -31,17 +31,11 @@ fn main() {
 
 fn transfer(tx: &postgres::transaction::Transaction) {
     let from = match env::args().nth(1) {
-        None => {
-            println!("needs a from-user argument");
-            return;
-        }
+        None => { println!("needs a from-user argument"); return }
         Some(s) => s,
     };
     let to = match env::args().nth(2) {
-        None => {
-            println!("needs a to-user argument");
-            return;
-        }
+        None => { println!("needs a to-user argument"); return }
         Some(s) => s,
     };
 
@@ -61,15 +55,14 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     }
 
     println!("Are you sure you want to transfer crates from {} to {}",
-             from.gh_login,
-             to.gh_login);
+             from.gh_login, to.gh_login);
     get_confirm("continue");
 
 
     let stmt = tx.prepare("SELECT * FROM crate_owners
                                    WHERE owner_id = $1
                                      AND owner_kind = $2")
-        .unwrap();
+                 .unwrap();
     let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
     for row in rows.iter() {
         let id: i32 = row.get("id");
@@ -81,8 +74,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         }
         let n = tx.execute("UPDATE crate_owners SET owner_id = $1
                              WHERE id $2",
-                           &[&to.id, &id])
-            .unwrap();
+                           &[&to.id, &id]).unwrap();
         assert_eq!(n, 1);
     }
 

@@ -34,14 +34,14 @@ pub struct Dependency {
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {
-    let name = name.chars()
-        .flat_map(|c| c.to_lowercase())
-        .collect::<String>();
+    let name = name.chars().flat_map(|c| c.to_lowercase()).collect::<String>();
     match name.len() {
         1 => base.join("1").join(&name),
         2 => base.join("2").join(&name),
         3 => base.join("3").join(&name[..1]).join(&name),
-        _ => base.join(&name[0..2]).join(&name[2..4]).join(&name),
+        _ => base.join(&name[0..2])
+                 .join(&name[2..4])
+                 .join(&name),
     }
 }
 
@@ -56,8 +56,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
         fs::create_dir_all(dst.parent().unwrap())?;
         let mut prev = String::new();
         if fs::metadata(&dst).is_ok() {
-            File::open(&dst)
-                .and_then(|mut f| f.read_to_string(&mut prev))?;
+            File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
         }
         let s = json::encode(krate).unwrap();
         let new = prev + &s;
@@ -65,31 +64,31 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
         f.write_all(new.as_bytes())?;
         f.write_all(b"\n")?;
 
-        Ok((format!("Updating crate `{}#{}`", krate.name, krate.vers), dst.clone()))
+        Ok((format!("Updating crate `{}#{}`", krate.name, krate.vers),
+            dst.clone()))
     })
 }
 
-pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> CargoResult<()> {
+pub fn yank(app: &App, krate: &str, version: &semver::Version,
+            yanked: bool) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo_path = repo.workdir().unwrap();
     let dst = index_file(repo_path, krate);
 
     commit_and_push(&repo, || {
         let mut prev = String::new();
-        File::open(&dst)
-            .and_then(|mut f| f.read_to_string(&mut prev))?;
-        let new = prev.lines()
-            .map(|line| {
-                let mut git_crate =
-                    json::decode::<Crate>(line)
-                        .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
-                if git_crate.name != krate || git_crate.vers != version.to_string() {
-                    return Ok(line.to_string());
-                }
-                git_crate.yanked = Some(yanked);
-                Ok(json::encode(&git_crate).unwrap())
-            })
-            .collect::<CargoResult<Vec<String>>>();
+        File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
+        let new = prev.lines().map(|line| {
+            let mut git_crate = json::decode::<Crate>(line).map_err(|_| {
+                internal(&format_args!("couldn't decode: `{}`", line))
+            })?;
+            if git_crate.name != krate ||
+               git_crate.vers != version.to_string() {
+                return Ok(line.to_string())
+            }
+            git_crate.yanked = Some(yanked);
+            Ok(json::encode(&git_crate).unwrap())
+        }).collect::<CargoResult<Vec<String>>>();
         let new = new?.join("\n");
         let mut f = File::create(&dst)?;
         f.write_all(new.as_bytes())?;
@@ -117,9 +116,8 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
         // git add $file
         let mut index = repo.index()?;
         let mut repo_path = repo_path.iter();
-        let dst = dst.iter()
-            .skip_while(|s| Some(*s) == repo_path.next())
-            .collect::<PathBuf>();
+        let dst = dst.iter().skip_while(|s| Some(*s) == repo_path.next())
+                     .collect::<PathBuf>();
         index.add_path(&dst)?;
         index.write()?;
         let tree_id = index.write_tree()?;
@@ -154,11 +152,9 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(credentials);
-        origin
-            .update_tips(Some(&mut callbacks),
-                         true,
-                         git2::AutotagOption::Unspecified,
-                         None)?;
+        origin.update_tips(Some(&mut callbacks), true,
+                           git2::AutotagOption::Unspecified,
+                           None)?;
 
         // Ok, we need to update, so fetch and reset --hard
         origin.fetch(&["refs/heads/*:refs/heads/*"], None, None)?;
@@ -170,12 +166,13 @@ fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
     Err(internal("Too many rebase failures"))
 }
 
-pub fn credentials(_user: &str,
-                   _user_from_url: Option<&str>,
+pub fn credentials(_user: &str, _user_from_url: Option<&str>,
                    _cred: git2::CredentialType)
                    -> Result<git2::Cred, git2::Error> {
     match (env::var("GIT_HTTP_USER"), env::var("GIT_HTTP_PWD")) {
-        (Ok(u), Ok(p)) => git2::Cred::userpass_plaintext(&u, &p),
-        _ => Err(git2::Error::from_str("no authentication set")),
+        (Ok(u), Ok(p)) => {
+            git2::Cred::userpass_plaintext(&u, &p)
+        }
+        _ => Err(git2::Error::from_str("no authentication set"))
     }
 }

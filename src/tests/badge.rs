@@ -27,8 +27,11 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
 
     let krate = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
+        let u = ::new_user("foo")
+            .create_or_update(&conn)
+            .unwrap();
+        ::CrateBuilder::new("badged_crate", u.id)
+            .expect_build(&conn)
     };
 
     let appveyor = Badge::Appveyor {
@@ -37,36 +40,60 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         repository: String::from("rust-lang/cargo"),
     };
     let mut badge_attributes_appveyor = HashMap::new();
-    badge_attributes_appveyor.insert(String::from("service"), String::from("github"));
-    badge_attributes_appveyor.insert(String::from("repository"), String::from("rust-lang/cargo"));
+    badge_attributes_appveyor.insert(
+        String::from("service"),
+        String::from("github")
+    );
+    badge_attributes_appveyor.insert(
+        String::from("repository"),
+        String::from("rust-lang/cargo")
+    );
 
     let travis_ci = Badge::TravisCi {
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
     };
     let mut badge_attributes_travis_ci = HashMap::new();
-    badge_attributes_travis_ci.insert(String::from("branch"), String::from("beta"));
-    badge_attributes_travis_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_travis_ci.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_travis_ci.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
 
     let gitlab = Badge::GitLab {
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
     };
     let mut badge_attributes_gitlab = HashMap::new();
-    badge_attributes_gitlab.insert(String::from("branch"), String::from("beta"));
-    badge_attributes_gitlab.insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_gitlab.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_gitlab.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
 
-    let isitmaintained_issue_resolution =
-        Badge::IsItMaintainedIssueResolution { repository: String::from("rust-lang/rust") };
+    let isitmaintained_issue_resolution = Badge::IsItMaintainedIssueResolution {
+        repository: String::from("rust-lang/rust"),
+    };
     let mut badge_attributes_isitmaintained_issue_resolution = HashMap::new();
-    badge_attributes_isitmaintained_issue_resolution
-        .insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_isitmaintained_issue_resolution.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
 
-    let isitmaintained_open_issues =
-        Badge::IsItMaintainedOpenIssues { repository: String::from("rust-lang/rust") };
+    let isitmaintained_open_issues = Badge::IsItMaintainedOpenIssues {
+        repository: String::from("rust-lang/rust"),
+    };
     let mut badge_attributes_isitmaintained_open_issues = HashMap::new();
-    badge_attributes_isitmaintained_open_issues
-        .insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_isitmaintained_open_issues.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
 
     let codecov = Badge::Codecov {
         service: Some(String::from("github")),
@@ -74,9 +101,18 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         repository: String::from("rust-lang/rust"),
     };
     let mut badge_attributes_codecov = HashMap::new();
-    badge_attributes_codecov.insert(String::from("branch"), String::from("beta"));
-    badge_attributes_codecov.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badge_attributes_codecov.insert(String::from("service"), String::from("github"));
+    badge_attributes_codecov.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_codecov.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+    badge_attributes_codecov.insert(
+        String::from("service"),
+        String::from("github")
+    );
 
     let coveralls = Badge::Coveralls {
         service: Some(String::from("github")),
@@ -84,9 +120,18 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         repository: String::from("rust-lang/rust"),
     };
     let mut badge_attributes_coveralls = HashMap::new();
-    badge_attributes_coveralls.insert(String::from("branch"), String::from("beta"));
-    badge_attributes_coveralls.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badge_attributes_coveralls.insert(String::from("service"), String::from("github"));
+    badge_attributes_coveralls.insert(
+        String::from("branch"),
+        String::from("beta")
+    );
+    badge_attributes_coveralls.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+    badge_attributes_coveralls.insert(
+        String::from("service"),
+        String::from("github")
+    );
 
     let badges = BadgeRef {
         appveyor: appveyor,
@@ -96,8 +141,7 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         gitlab: gitlab,
         gitlab_attributes: badge_attributes_gitlab,
         isitmaintained_issue_resolution: isitmaintained_issue_resolution,
-        isitmaintained_issue_resolution_attributes:
-            badge_attributes_isitmaintained_issue_resolution,
+        isitmaintained_issue_resolution_attributes: badge_attributes_isitmaintained_issue_resolution,
         isitmaintained_open_issues: isitmaintained_open_issues,
         isitmaintained_open_issues_attributes: badge_attributes_isitmaintained_open_issues,
         codecov: codecov,
@@ -126,7 +170,10 @@ fn update_add_appveyor() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
+    badges.insert(
+        String::from("appveyor"),
+        test_badges.appveyor_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.appveyor]);
 }
@@ -138,7 +185,10 @@ fn update_add_travis_ci() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
+    badges.insert(
+        String::from("travis-ci"),
+        test_badges.travis_ci_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.travis_ci]);
 }
@@ -150,7 +200,10 @@ fn update_add_gitlab() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(
+        String::from("gitlab"),
+        test_badges.gitlab_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
 }
@@ -162,11 +215,12 @@ fn update_add_isitmaintained_issue_resolution() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("is-it-maintained-issue-resolution"),
-                  test_badges.isitmaintained_issue_resolution_attributes);
+    badges.insert(
+        String::from("is-it-maintained-issue-resolution"),
+        test_badges.isitmaintained_issue_resolution_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(),
-               vec![test_badges.isitmaintained_issue_resolution]);
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.isitmaintained_issue_resolution]);
 }
 
 #[test]
@@ -176,11 +230,12 @@ fn update_add_isitmaintained_open_issues() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("is-it-maintained-open-issues"),
-                  test_badges.isitmaintained_open_issues_attributes);
+    badges.insert(
+        String::from("is-it-maintained-open-issues"),
+        test_badges.isitmaintained_open_issues_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(),
-               vec![test_badges.isitmaintained_open_issues]);
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.isitmaintained_open_issues]);
 }
 
 #[test]
@@ -190,7 +245,10 @@ fn update_add_codecov() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("codecov"), test_badges.codecov_attributes);
+    badges.insert(
+        String::from("codecov"),
+        test_badges.codecov_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.codecov]);
 }
@@ -202,7 +260,10 @@ fn update_add_coveralls() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
+    badges.insert(
+        String::from("coveralls"),
+        test_badges.coveralls_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.coveralls]);
 }
@@ -215,14 +276,19 @@ fn replace_badge() {
 
     // Add a badge
     let mut badges = HashMap::new();
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(
+        String::from("gitlab"),
+        test_badges.gitlab_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
 
     // Replace with another badge
     badges.clear();
-    badges.insert(String::from("travis-ci"),
-                  test_badges.travis_ci_attributes.clone());
+    badges.insert(
+        String::from("travis-ci"),
+        test_badges.travis_ci_attributes.clone()
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.travis_ci]);
 }
@@ -235,7 +301,10 @@ fn update_attributes() {
 
     // Add a travis-ci badge
     let mut badges = HashMap::new();
-    badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
+    badges.insert(
+        String::from("travis-ci"),
+        test_badges.travis_ci_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     let current_badges = krate.badges(&conn).unwrap();
     assert_eq!(current_badges.len(), 1);
@@ -248,9 +317,14 @@ fn update_attributes() {
         repository: String::from("rust-lang/rust"),
     };
     let mut badge_attributes_travis_ci2 = HashMap::new();
-    badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badges.insert(String::from("travis-ci"),
-                  badge_attributes_travis_ci2.clone());
+    badge_attributes_travis_ci2.insert(
+        String::from("repository"),
+        String::from("rust-lang/rust")
+    );
+    badges.insert(
+        String::from("travis-ci"),
+        badge_attributes_travis_ci2.clone()
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     let current_badges = krate.badges(&conn).unwrap();
     assert_eq!(current_badges.len(), 1);
@@ -266,9 +340,18 @@ fn clear_badges() {
     let mut badges = HashMap::new();
 
     // Adding 3 badges
-    badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
-    badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(
+        String::from("appveyor"),
+        test_badges.appveyor_attributes
+    );
+    badges.insert(
+        String::from("travis-ci"),
+        test_badges.travis_ci_attributes
+    );
+    badges.insert(
+        String::from("gitlab"),
+        test_badges.gitlab_attributes
+    );
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
 
     let current_badges = krate.badges(&conn).unwrap();
@@ -293,8 +376,14 @@ fn appveyor_extra_keys() {
 
     // Extra invalid keys are fine, they just get ignored
     let mut appveyor_attributes = test_badges.appveyor_attributes.clone();
-    appveyor_attributes.insert(String::from("extra"), String::from("info"));
-    badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
+    appveyor_attributes.insert(
+        String::from("extra"),
+        String::from("info")
+    );
+    badges.insert(
+        String::from("appveyor"),
+        test_badges.appveyor_attributes
+    );
 
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.appveyor]);
@@ -310,7 +399,10 @@ fn travis_ci_required_keys() {
 
     // Repository is a required key
     test_badges.travis_ci_attributes.remove("repository");
-    badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
+    badges.insert(
+        String::from("travis-ci"),
+        test_badges.travis_ci_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -328,7 +420,10 @@ fn gitlab_required_keys() {
 
     // Repository is a required key
     test_badges.gitlab_attributes.remove("repository");
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(
+        String::from("gitlab"),
+        test_badges.gitlab_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -345,11 +440,11 @@ fn isitmaintained_issue_resolution_required_keys() {
     let mut badges = HashMap::new();
 
     // Repository is a required key
-    test_badges
-        .isitmaintained_issue_resolution_attributes
-        .remove("repository");
-    badges.insert(String::from("isitmaintained_issue_resolution"),
-                  test_badges.isitmaintained_issue_resolution_attributes);
+    test_badges.isitmaintained_issue_resolution_attributes.remove("repository");
+    badges.insert(
+        String::from("isitmaintained_issue_resolution"),
+        test_badges.isitmaintained_issue_resolution_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -366,11 +461,11 @@ fn isitmaintained_open_issues_required_keys() {
     let mut badges = HashMap::new();
 
     // Repository is a required key
-    test_badges
-        .isitmaintained_open_issues_attributes
-        .remove("repository");
-    badges.insert(String::from("isitmaintained_open_issues"),
-                  test_badges.isitmaintained_open_issues_attributes);
+    test_badges.isitmaintained_open_issues_attributes.remove("repository");
+    badges.insert(
+        String::from("isitmaintained_open_issues"),
+        test_badges.isitmaintained_open_issues_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -388,7 +483,10 @@ fn codecov_required_keys() {
 
     // Repository is a required key
     test_badges.codecov_attributes.remove("repository");
-    badges.insert(String::from("codecov"), test_badges.codecov_attributes);
+    badges.insert(
+        String::from("codecov"),
+        test_badges.codecov_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -406,7 +504,10 @@ fn coveralls_required_keys() {
 
     // Repository is a required key
     test_badges.coveralls_attributes.remove("repository");
-    badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
+    badges.insert(
+        String::from("coveralls"),
+        test_badges.coveralls_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
@@ -424,9 +525,14 @@ fn unknown_badge() {
 
     // This is not a badge that crates.io knows about
     let mut invalid_attributes = HashMap::new();
-    invalid_attributes.insert(String::from("not-a-badge-attribute"),
-                              String::from("not-a-badge-value"));
-    badges.insert(String::from("not-a-badge"), invalid_attributes);
+    invalid_attributes.insert(
+        String::from("not-a-badge-attribute"),
+        String::from("not-a-badge-value")
+    );
+    badges.insert(
+        String::from("not-a-badge"),
+        invalid_attributes
+    );
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);

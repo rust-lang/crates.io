@@ -12,11 +12,9 @@ use util::errors::{CargoResult, Unauthorized, ChainError, std_error};
 pub struct Middleware;
 
 impl conduit_middleware::Middleware for Middleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
+    fn before(&self, req: &mut Request) -> Result<(), Box<Error+Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
-        let id = {
-            req.session().get("user_id").and_then(|s| s.parse().ok())
-        };
+        let id = { req.session().get("user_id").and_then(|s| s.parse().ok()) };
 
         let user = match id {
 
@@ -41,10 +39,10 @@ impl conduit_middleware::Middleware for Middleware {
                         let tx = req.tx().map_err(std_error)?;
                         match User::find_by_api_token(tx, headers[0]) {
                             Ok(user) => user,
-                            Err(..) => return Ok(()),
+                            Err(..) => return Ok(())
                         }
                     }
-                    None => return Ok(()),
+                    None => return Ok(())
                 }
             }
         };
@@ -61,8 +59,6 @@ pub trait RequestUser {
 
 impl<'a> RequestUser for Request + 'a {
     fn user(&self) -> CargoResult<&User> {
-        self.extensions()
-            .find::<User>()
-            .chain_error(|| Unauthorized)
+        self.extensions().find::<User>().chain_error(|| Unauthorized)
     }
 }
