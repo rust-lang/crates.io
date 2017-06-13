@@ -40,6 +40,8 @@ matrix:
   - rust: stable
     script:
     - cargo fmt -- --write-mode=diff
+  - rust: stable
+    script:
     - cargo build
     - cargo test
     - yarn run test
