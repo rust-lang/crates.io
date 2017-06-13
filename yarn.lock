@@ -1858,7 +1858,7 @@ ember-load-initializers@0.6.3:
   dependencies:
     ember-cli-babel "^5.1.6"
 
-ember-lodash@4.17.1, ember-lodash@^4.0:
+ember-lodash@^4.0:
   version "4.17.1"
   resolved "https://registry.yarnpkg.com/ember-lodash/-/ember-lodash-4.17.1.tgz#4f140ad0c1e0275f80bef28378dc66adee673c2d"
   dependencies:
@@ -4444,13 +4444,13 @@ route-recognizer@^0.2.3:
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/route-recognizer/-/route-recognizer-0.2.9.tgz#fbe06d7b7a52185d85c945a4782a18361f886d15"
 
-rsvp@^3.0.14, rsvp@^3.0.16, rsvp@^3.0.17, rsvp@^3.0.18, rsvp@^3.0.21, rsvp@^3.0.6, rsvp@^3.1.0, rsvp@^3.2.1, rsvp@^3.3.3:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.3.3.tgz#34633caaf8bc66ceff4be3c2e1dffd032538a813"
-
-rsvp@^3.4.0:
+rsvp@^3.0.14, rsvp@^3.0.16, rsvp@^3.0.18, rsvp@^3.0.21, rsvp@^3.1.0, rsvp@^3.2.1, rsvp@^3.4.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.5.0.tgz#a62c573a4ae4e1dfd0697ebc6242e79c681eaa34"
+
+rsvp@^3.0.17, rsvp@^3.0.6, rsvp@^3.3.3:
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.3.3.tgz#34633caaf8bc66ceff4be3c2e1dffd032538a813"
 
 rsvp@~3.0.6:
   version "3.0.21"
