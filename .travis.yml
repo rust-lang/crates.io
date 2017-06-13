@@ -17,6 +17,7 @@ install:
   - yarn
   - yarn run bower install
   - cargo install diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - which rustfmt || cargo install rustfmt
 
 before_script:
   - diesel database setup
@@ -36,6 +37,7 @@ matrix:
   include:
   - rust: stable
     script:
+    - cargo fmt -- --write-mode=diff
     - cargo build
     - cargo test
     - yarn run test
