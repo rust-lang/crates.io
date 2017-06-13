@@ -1928,6 +1928,24 @@ ember-runtime-enumerable-includes-polyfill@^1.0.0, ember-runtime-enumerable-incl
     ember-cli-babel "^5.1.6"
     ember-cli-version-checker "^1.1.6"
 
+ember-source@2.12.0:
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-2.12.0.tgz#5c7d09765a5c2c071382f3c02cf28b34d450e4ef"
+  dependencies:
+    broccoli-funnel "^1.0.6"
+    broccoli-merge-trees "^1.1.4"
+    ember-cli-get-component-path-option "^1.0.0"
+    ember-cli-normalize-entity-name "^1.0.0"
+    ember-cli-path-utils "^1.0.0"
+    ember-cli-string-utils "^1.0.0"
+    ember-cli-test-info "^1.0.0"
+    ember-cli-valid-component-name "^1.0.0"
+    ember-cli-version-checker "^1.1.7"
+    jquery "^3.1.1"
+    resolve "^1.1.7"
+    rsvp "^3.4.0"
+    simple-dom "^0.3.0"
+
 ember-suave@4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/ember-suave/-/ember-suave-4.0.1.tgz#d99f2e62f377060782b88943b268caa66b968f24"
@@ -3012,6 +3030,10 @@ jodid25519@^1.0.0:
   resolved "https://registry.yarnpkg.com/jodid25519/-/jodid25519-1.0.2.tgz#06d4912255093419477d425633606e0e90782967"
   dependencies:
     jsbn "~0.1.0"
+
+jquery@^3.1.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.2.1.tgz#5c4d9de652af6cd0a770154a631bba12b015c787"
 
 js-string-escape@^1.0.0:
   version "1.0.1"
@@ -4426,6 +4448,10 @@ rsvp@^3.0.14, rsvp@^3.0.16, rsvp@^3.0.17, rsvp@^3.0.18, rsvp@^3.0.21, rsvp@^3.0.
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.3.3.tgz#34633caaf8bc66ceff4be3c2e1dffd032538a813"
 
+rsvp@^3.4.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.5.0.tgz#a62c573a4ae4e1dfd0697ebc6242e79c681eaa34"
+
 rsvp@~3.0.6:
   version "3.0.21"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.0.21.tgz#49c588fe18ef293bcd0ab9f4e6756e6ac433359f"
@@ -4538,6 +4564,10 @@ silent-error@^1.0.0, silent-error@^1.0.1:
   resolved "https://registry.yarnpkg.com/silent-error/-/silent-error-1.0.1.tgz#71b7d503d1c6f94882b51b56be879b113cb4822c"
   dependencies:
     debug "^2.2.0"
+
+simple-dom@^0.3.0:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/simple-dom/-/simple-dom-0.3.2.tgz#0663d10f1556f1500551d518f56e3aba0871371d"
 
 simple-fmt@~0.1.0:
   version "0.1.0"

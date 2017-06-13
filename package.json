@@ -53,6 +53,7 @@
     "ember-resolver": "3.0.0",
     "ember-route-alias": "0.1.5",
     "ember-router-scroll": "0.1.1",
+    "ember-source": "2.12.0",
     "ember-suave": "4.0.1",
     "emberx-select": "^3.0.1",
     "loader.js": "4.2.3"
