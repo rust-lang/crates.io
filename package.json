@@ -36,7 +36,7 @@
     "ember-cli-jshint": "2.0.1",
     "ember-cli-meta-tags": "3.0.4",
     "ember-cli-mirage": "0.2.9",
-    "ember-cli-moment-shim": "3.0.1",
+    "ember-cli-moment-shim": "^3.3.1",
     "ember-cli-qunit": "^4.0.0",
     "ember-cli-release": "0.2.9",
     "ember-cli-sass": "6.1.2",
