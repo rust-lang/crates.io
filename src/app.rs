@@ -110,7 +110,11 @@ impl Middleware for AppMiddleware {
         Ok(())
     }
 
-    fn after(&self, req: &mut Request, res: Result<Response, Box<Error + Send>>) -> Result<Response, Box<Error + Send>> {
+    fn after(
+        &self,
+        req: &mut Request,
+        res: Result<Response, Box<Error + Send>>,
+    ) -> Result<Response, Box<Error + Send>> {
         req.mut_extensions().pop::<Arc<App>>().unwrap();
         res
     }

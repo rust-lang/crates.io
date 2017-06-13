@@ -132,7 +132,11 @@ impl ReverseDependency {
     }
 }
 
-pub fn add_dependencies(conn: &PgConnection, deps: &[::upload::CrateDependency], version_id: i32) -> CargoResult<Vec<git::Dependency>> {
+pub fn add_dependencies(
+    conn: &PgConnection,
+    deps: &[::upload::CrateDependency],
+    version_id: i32,
+) -> CargoResult<Vec<git::Dependency>> {
     use diesel::insert;
 
     let git_and_new_dependencies = deps.iter()

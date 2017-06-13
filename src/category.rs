@@ -128,7 +128,11 @@ impl Category {
         })
     }
 
-    pub fn update_crate_old(conn: &GenericConnection, krate: &Crate, categories: &[String]) -> CargoResult<Vec<String>> {
+    pub fn update_crate_old(
+        conn: &GenericConnection,
+        krate: &Crate,
+        categories: &[String],
+    ) -> CargoResult<Vec<String>> {
         let old_categories = krate.categories(conn)?;
         let old_categories_ids: HashSet<_> = old_categories.iter().map(|cat| cat.id).collect();
 

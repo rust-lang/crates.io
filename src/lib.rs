@@ -214,7 +214,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             }
             Ok(())
         }
-        fn after(&self, _req: &mut conduit::Request, res: Result<conduit::Response, Box<Error + Send>>) -> Result<conduit::Response, Box<Error + Send>> {
+        fn after(
+            &self,
+            _req: &mut conduit::Request,
+            res: Result<conduit::Response, Box<Error + Send>>,
+        ) -> Result<conduit::Response, Box<Error + Send>> {
             res.map(|res| {
                 println!("  <- {:?}", res.status);
                 for (k, v) in &res.headers {

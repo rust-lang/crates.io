@@ -57,7 +57,10 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     Ok(())
 }
 
-fn collect(tx: &postgres::transaction::Transaction, rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
+fn collect(
+    tx: &postgres::transaction::Transaction,
+    rows: &mut postgres::rows::Rows,
+) -> postgres::Result<Option<i32>> {
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
     let now = chrono::UTC::now();

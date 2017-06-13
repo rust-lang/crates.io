@@ -59,7 +59,13 @@ impl Uploader {
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
-    pub fn upload(&self, req: &mut Request, krate: &Crate, max: u64, vers: &semver::Version) -> CargoResult<(Vec<u8>, Bomb)> {
+    pub fn upload(
+        &self,
+        req: &mut Request,
+        krate: &Crate,
+        max: u64,
+        vers: &semver::Version,
+    ) -> CargoResult<(Vec<u8>, Bomb)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = req.app().handle();

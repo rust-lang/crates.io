@@ -71,7 +71,11 @@ pub struct VersionLinks {
 }
 
 impl Version {
-    pub fn find_by_num(conn: &GenericConnection, crate_id: i32, num: &semver::Version) -> CargoResult<Option<Version>> {
+    pub fn find_by_num(
+        conn: &GenericConnection,
+        crate_id: i32,
+        num: &semver::Version,
+    ) -> CargoResult<Option<Version>> {
         let num = num.to_string();
         let stmt = conn.prepare(
             "SELECT * FROM versions \

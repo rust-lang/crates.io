@@ -61,7 +61,9 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
     impl TlsHandshake for MyHandshake {
         fn tls_handshake(&self, _domain: &str, stream: Stream) -> Result<Box<TlsStream>, Box<Error + Send + Sync>> {
             let stream = self.0
-                .danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(stream)?;
+                .danger_connect_without_providing_domain_for_certificate_verification_and_server_name_indication(
+                    stream,
+                )?;
             Ok(Box::new(stream))
         }
     }
@@ -186,7 +188,11 @@ impl Middleware for TransactionMiddleware {
         Ok(())
     }
 
-    fn after(&self, req: &mut Request, res: Result<Response, Box<Error + Send>>) -> Result<Response, Box<Error + Send>> {
+    fn after(
+        &self,
+        req: &mut Request,
+        res: Result<Response, Box<Error + Send>>,
+    ) -> Result<Response, Box<Error + Send>> {
         let tx = req.mut_extensions().pop::<Transaction>().expect(
             "Transaction not present in request",
         );

@@ -76,7 +76,11 @@ impl Badge {
         }
     }
 
-    pub fn update_crate<'a>(conn: &PgConnection, krate: &Crate, badges: Option<&'a HashMap<String, HashMap<String, String>>>) -> CargoResult<Vec<&'a str>> {
+    pub fn update_crate<'a>(
+        conn: &PgConnection,
+        krate: &Crate,
+        badges: Option<&'a HashMap<String, HashMap<String, String>>>,
+    ) -> CargoResult<Vec<&'a str>> {
         use diesel::{insert, delete};
 
         #[derive(Insertable)]

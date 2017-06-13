@@ -102,7 +102,14 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(app: &App, conn: &PgConnection, login: &str, org_name: &str, team_name: &str, req_user: &User) -> CargoResult<Self> {
+    pub fn create_github_team(
+        app: &App,
+        conn: &PgConnection,
+        login: &str,
+        org_name: &str,
+        team_name: &str,
+        req_user: &User,
+    ) -> CargoResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its data
 
@@ -163,7 +170,13 @@ impl Team {
         Team::insert(conn, login, team.id, team.name, org.avatar_url)
     }
 
-    pub fn insert(conn: &PgConnection, login: &str, github_id: i32, name: Option<String>, avatar: Option<String>) -> CargoResult<Self> {
+    pub fn insert(
+        conn: &PgConnection,
+        login: &str,
+        github_id: i32,
+        name: Option<String>,
+        avatar: Option<String>,
+    ) -> CargoResult<Self> {
         use diesel::pg::upsert::*;
 
         #[derive(Insertable, AsChangeset)]

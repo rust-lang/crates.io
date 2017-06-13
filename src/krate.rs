@@ -132,7 +132,12 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn create_or_update(mut self, conn: &PgConnection, license_file: Option<&str>, uploader: i32) -> CargoResult<Crate> {
+    pub fn create_or_update(
+        mut self,
+        conn: &PgConnection,
+        license_file: Option<&str>,
+        uploader: i32,
+    ) -> CargoResult<Crate> {
         use diesel::update;
 
         self.validate(license_file)?;
@@ -472,7 +477,12 @@ impl Crate {
         parts.next().is_none()
     }
 
-    pub fn minimal_encodable(self, max_version: semver::Version, badges: Option<Vec<Badge>>, exact_match: bool) -> EncodableCrate {
+    pub fn minimal_encodable(
+        self,
+        max_version: semver::Version,
+        badges: Option<Vec<Badge>>,
+        exact_match: bool,
+    ) -> EncodableCrate {
         self.encodable(max_version, None, None, None, badges, exact_match)
     }
 
@@ -709,7 +719,12 @@ impl Crate {
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
-    pub fn reverse_dependencies(&self, conn: &GenericConnection, offset: i64, limit: i64) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+    pub fn reverse_dependencies(
+        &self,
+        conn: &GenericConnection,
+        offset: i64,
+        limit: i64,
+    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
         let stmt = conn.prepare(include_str!("krate_reverse_dependencies.sql"))?;
 
         let rows = stmt.query(&[&self.id, &offset, &limit])?;

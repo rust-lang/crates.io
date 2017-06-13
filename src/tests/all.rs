@@ -501,7 +501,12 @@ fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str, cats: Vec
     return req;
 }
 
-fn new_req_with_badges(app: Arc<App>, krate: Crate, version: &str, badges: HashMap<String, HashMap<String, String>>) -> MockRequest {
+fn new_req_with_badges(
+    app: Arc<App>,
+    krate: Crate,
+    version: &str,
+    badges: HashMap<String, HashMap<String, String>>,
+) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
