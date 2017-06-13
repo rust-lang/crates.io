@@ -1942,7 +1942,7 @@ ember-cli-app-version@^3.0.0:
     ember-cli-htmlbars "^1.0.0"
     git-repo-version "0.4.1"
 
-ember-cli-babel@5.2.4, ember-cli-babel@^5.1.3, ember-cli-babel@^5.1.5, ember-cli-babel@^5.1.6, ember-cli-babel@^5.1.7, ember-cli-babel@^5.1.9, ember-cli-babel@^5.2.1:
+ember-cli-babel@5.2.4, ember-cli-babel@^5.1.3, ember-cli-babel@^5.1.5, ember-cli-babel@^5.1.6, ember-cli-babel@^5.1.7, ember-cli-babel@^5.1.9:
   version "5.2.4"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-5.2.4.tgz#5ce4f46b08ed6f6d21e878619fb689719d6e8e13"
   dependencies:
@@ -2184,11 +2184,11 @@ ember-cli-sass@^6.2.0:
     ember-cli-version-checker "^1.0.2"
     merge "^1.2.0"
 
-ember-cli-shims@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/ember-cli-shims/-/ember-cli-shims-1.0.2.tgz#e2ec1b6687f94df1b68cc0aa66c1d690d9ded02c"
+ember-cli-shims@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ember-cli-shims/-/ember-cli-shims-1.1.0.tgz#0e3b8a048be865b4f81cc81d397ff1eeb13f75b6"
   dependencies:
-    ember-cli-babel "^5.2.1"
+    ember-cli-babel "^6.0.0-beta.7"
     ember-cli-version-checker "^1.2.0"
     silent-error "^1.0.1"
 
