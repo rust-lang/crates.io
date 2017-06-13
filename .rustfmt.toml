@@ -8,3 +8,5 @@ combine_control_expr = true
 fn_args_paren_newline = false
 max_width = 100
 error_on_line_overflow = false
+write_mode = "Overwrite"
+
