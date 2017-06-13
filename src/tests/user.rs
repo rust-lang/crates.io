@@ -163,7 +163,9 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/me/updates").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
@@ -171,17 +173,19 @@ fn following() {
     ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/foo_fighters/follow")
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
     ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/me/updates").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
@@ -190,7 +194,7 @@ fn following() {
         middle.call(
             req.with_path("/me/updates")
                 .with_method(Method::Get)
-                .with_query("per_page=1")
+                .with_query("per_page=1"),
         )
     );
     let r = ::json::<R>(&mut response);
@@ -200,14 +204,14 @@ fn following() {
     ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Delete)
+                .with_method(Method::Delete),
         )
     );
     let mut response = ok_resp!(
         middle.call(
             req.with_path("/me/updates")
                 .with_method(Method::Get)
-                .with_query("page=2&per_page=1")
+                .with_query("page=2&per_page=1"),
         )
     );
     let r = ::json::<R>(&mut response);

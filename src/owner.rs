@@ -11,9 +11,9 @@ use {Model, User, Crate};
 
 #[derive(Insertable, Associations, Identifiable)]
 #[belongs_to(Crate)]
-#[belongs_to(User, foreign_key="owner_id")]
-#[belongs_to(Team, foreign_key="owner_id")]
-#[table_name="crate_owners"]
+#[belongs_to(User, foreign_key = "owner_id")]
+#[belongs_to(Team, foreign_key = "owner_id")]
+#[table_name = "crate_owners"]
 #[primary_key(crate_id, owner_id, owner_kind)]
 pub struct CrateOwner {
     pub crate_id: i32,
@@ -82,25 +82,19 @@ impl Team {
             "github" => {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
-                let team = chunks
-                    .next()
-                    .ok_or_else(
-                        || {
-                            human(
-                                "missing github team argument; \
-                            format is github:org:team"
-                            )
-                        }
-                    )?;
+                let team = chunks.next().ok_or_else(|| {
+                    human(
+                        "missing github team argument; \
+                            format is github:org:team",
+                    )
+                })?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
             }
             _ => {
-                Err(
-                    human(
-                        "unknown organization handler, \
-                            only 'github:org:team' is supported"
-                    )
-                )
+                Err(human(
+                    "unknown organization handler, \
+                            only 'github:org:team' is supported",
+                ))
             }
         }
     }
@@ -108,14 +102,7 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(
-        app: &App,
-        conn: &PgConnection,
-        login: &str,
-        org_name: &str,
-        team_name: &str,
-        req_user: &User,
-    ) -> CargoResult<Self> {
+    pub fn create_github_team(app: &App, conn: &PgConnection, login: &str, org_name: &str, team_name: &str, req_user: &User) -> CargoResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its data
 
@@ -128,12 +115,11 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(whitelist) {
-            return Err(
-                human(
-                    &format_args!("organization cannot contain special \
-                                        characters like {}", c)
-                )
-            );
+            return Err(human(&format_args!(
+                "organization cannot contain special \
+                                        characters like {}",
+                c
+            )));
         }
 
         #[derive(RustcDecodable)]
@@ -153,14 +139,13 @@ impl Team {
         let team = teams
             .into_iter()
             .find(|team| team.slug == team_name)
-            .ok_or_else(
-                || {
-                    human(
-                        &format_args!("could not find the github team {}/{}",
-                              org_name, team_name)
-                    )
-                }
-            )?;
+            .ok_or_else(|| {
+                human(&format_args!(
+                    "could not find the github team {}/{}",
+                    org_name,
+                    team_name
+                ))
+            })?;
 
         if !team_with_gh_id_contains_user(app, team.id, req_user)? {
             return Err(human("only members of a team can add it as an owner"));
@@ -182,7 +167,7 @@ impl Team {
         use diesel::pg::upsert::*;
 
         #[derive(Insertable, AsChangeset)]
-        #[table_name="teams"]
+        #[table_name = "teams"]
         struct NewTeam<'a> {
             login: &'a str,
             github_id: i32,
@@ -196,8 +181,10 @@ impl Team {
             avatar: avatar,
         };
 
-        diesel::insert(&new_team.on_conflict(teams::github_id, do_update().set(&new_team)))
-            .into(teams::table)
+        diesel::insert(&new_team.on_conflict(
+            teams::github_id,
+            do_update().set(&new_team),
+        )).into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
     }
@@ -220,8 +207,7 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
         state: String,
     }
 
-    let url = format!("/teams/{}/memberships/{}",
-                        &github_id, &user.gh_login);
+    let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
     let token = http::token(user.gh_access_token.clone());
     let (mut handle, resp) = http::github(app, &url, &token)?;
 
@@ -263,13 +249,17 @@ impl Owner {
                 .filter(teams::login.eq(name))
                 .first(conn)
                 .map(Owner::Team)
-                .map_err(|_| human(&format_args!("could not find team with name {}", name)))
+                .map_err(|_| {
+                    human(&format_args!("could not find team with name {}", name))
+                })
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
                 .first(conn)
                 .map(Owner::User)
-                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)))
+                .map_err(|_| {
+                    human(&format_args!("could not find user with login `{}`", name))
+                })
         }
     }
 
@@ -325,8 +315,11 @@ impl Owner {
                 let url = {
                     let mut parts = login.split(':');
                     parts.next(); // discard github
-                    format!("https://github.com/orgs/{}/teams/{}",
-                            parts.next().unwrap(), parts.next().unwrap())
+                    format!(
+                        "https://github.com/orgs/{}/teams/{}",
+                        parts.next().unwrap(),
+                        parts.next().unwrap()
+                    )
                 };
                 EncodableOwner {
                     id: id,

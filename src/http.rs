@@ -32,12 +32,10 @@ pub fn github(app: &App, url: &str, auth: &Token) -> Result<(Easy, Vec<u8>), cur
     {
         let mut transfer = handle.transfer();
         transfer
-            .write_function(
-                |buf| {
-                    data.extend_from_slice(buf);
-                    Ok(buf.len())
-                }
-            )
+            .write_function(|buf| {
+                data.extend_from_slice(buf);
+                Ok(buf.len())
+            })
             .unwrap();
         transfer.perform()?;
     }
@@ -49,32 +47,30 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> Cargo
     match resp.response_code().unwrap() {
         200 => {} // Ok!
         403 => {
-            return Err(
-                human(
-                    "It looks like you don't have permission \
+            return Err(human(
+                "It looks like you don't have permission \
                               to query a necessary property from Github \
                               to complete this request. \
                               You may need to re-authenticate on \
                               crates.io to grant permission to read \
                               github org memberships. Just go to \
-                              https://crates.io/login"
-                )
-            );
+                              https://crates.io/login",
+            ));
         }
         n => {
             let resp = String::from_utf8_lossy(data);
-            return Err(
-                internal(
-                    &format_args!("didn't get a 200 result from \
-                                        github, got {} with: {}", n, resp)
-                )
-            );
+            return Err(internal(&format_args!(
+                "didn't get a 200 result from \
+                                        github, got {} with: {}",
+                n,
+                resp
+            )));
         }
     }
 
-    let json = str::from_utf8(data)
-        .ok()
-        .chain_error(|| internal("github didn't send a utf8-response"))?;
+    let json = str::from_utf8(data).ok().chain_error(|| {
+        internal("github didn't send a utf8-response")
+    })?;
 
     json::decode(json).chain_error(|| internal("github didn't send a valid json response"))
 }

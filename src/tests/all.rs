@@ -162,9 +162,9 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
     let j = fixup(j);
     let s = j.to_string();
     return match json::decode(&s) {
-               Ok(t) => t,
-               Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
-           };
+        Ok(t) => t,
+        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
+    };
 
 
     fn fixup(json: Json) -> Json {
@@ -173,13 +173,11 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
                 Json::Object(
                     object
                         .into_iter()
-                        .map(
-                            |(k, v)| {
-                                let k = if k == "crate" { "krate".to_string() } else { k };
-                                (k, fixup(v))
-                            }
-                        )
-                        .collect()
+                        .map(|(k, v)| {
+                            let k = if k == "crate" { "krate".to_string() } else { k };
+                            (k, fixup(v))
+                        })
+                        .collect(),
                 )
             }
             Json::Array(list) => Json::Array(list.into_iter().map(fixup).collect()),
@@ -271,11 +269,9 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn version(mut self, version: &str) -> Self {
-        let version = semver::Version::parse(version).unwrap_or_else(
-            |e| {
-                panic!("The version {} is not valid: {}", version, e);
-            }
-        );
+        let version = semver::Version::parse(version).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", version, e);
+        });
         self.versions.push(version);
         self
     }
@@ -288,8 +284,11 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::update;
 
-        let mut krate = self.krate
-            .create_or_update(connection, self.license_file, self.owner_id)?;
+        let mut krate = self.krate.create_or_update(
+            connection,
+            self.license_file,
+            self.owner_id,
+        )?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -299,8 +298,9 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions
-                .push("0.99.0".parse().expect("invalid version number"));
+            self.versions.push("0.99.0".parse().expect(
+                "invalid version number",
+            ));
         }
 
         for version_num in &self.versions {
@@ -317,12 +317,9 @@ impl<'a> CrateBuilder<'a> {
 
     fn expect_build(self, connection: &PgConnection) -> Crate {
         let name = self.krate.name;
-        self.build(connection)
-            .unwrap_or_else(
-                |e| {
-                    panic!("Unable to create crate {}: {:?}", name, e);
-                }
-            )
+        self.build(connection).unwrap_or_else(|e| {
+            panic!("Unable to create crate {}: {:?}", name, e);
+        })
     }
 }
 
@@ -357,8 +354,7 @@ fn mock_user(req: &mut Request, u: User) -> User {
         u.name.as_ref().map(|s| &s[..]),
         u.gh_avatar.as_ref().map(|s| &s[..]),
         &u.gh_access_token,
-    )
-            .unwrap();
+    ).unwrap();
     sign_in_as(req, &u);
     return u;
 }
@@ -391,8 +387,7 @@ fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version) -> (Cra
         &krate.license,
         &None,
         krate.max_upload_size,
-    )
-            .unwrap();
+    ).unwrap();
     let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
     (krate, v.unwrap())
 }
@@ -425,8 +420,7 @@ fn mock_dep(req: &mut Request, version: &Version, krate: &Crate, target: Option<
         true,
         &[],
         &target.map(|s| s.to_string()),
-    )
-            .unwrap()
+    ).unwrap()
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
@@ -440,12 +434,11 @@ fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
 fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
     let conn = req.tx().unwrap();
     let stmt = conn.prepare(
-            " \
+        " \
         INSERT INTO categories (category, slug) \
         VALUES ($1, $2) \
-        RETURNING *"
-        )
-        .unwrap();
+        RETURNING *",
+    ).unwrap();
     let rows = stmt.query(&[&name, &slug]).unwrap();
     Model::from_row(&rows.iter().next().unwrap())
 }
@@ -471,25 +464,53 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
 
 fn new_req_full(app: Arc<App>, krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, deps, Vec::new(), Vec::new(), HashMap::new()));
+    req.with_body(&new_req_body(
+        krate,
+        version,
+        deps,
+        Vec::new(),
+        Vec::new(),
+        HashMap::new(),
+    ));
     return req;
 }
 
 fn new_req_with_keywords(app: Arc<App>, krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), kws, Vec::new(), HashMap::new()));
+    req.with_body(&new_req_body(
+        krate,
+        version,
+        Vec::new(),
+        kws,
+        Vec::new(),
+        HashMap::new(),
+    ));
     return req;
 }
 
 fn new_req_with_categories(app: Arc<App>, krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), Vec::new(), cats, HashMap::new()));
+    req.with_body(&new_req_body(
+        krate,
+        version,
+        Vec::new(),
+        Vec::new(),
+        cats,
+        HashMap::new(),
+    ));
     return req;
 }
 
 fn new_req_with_badges(app: Arc<App>, krate: Crate, version: &str, badges: HashMap<String, HashMap<String, String>>) -> MockRequest {
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(krate, version, Vec::new(), Vec::new(), Vec::new(), badges));
+    req.with_body(&new_req_body(
+        krate,
+        version,
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+        badges,
+    ));
     return req;
 }
 
@@ -545,9 +566,8 @@ fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
             (json.len() >> 8) as u8,
             (json.len() >> 16) as u8,
             (json.len() >> 24) as u8,
-        ]
-                .iter()
-                .cloned()
+        ].iter()
+            .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());
     body.extend(
@@ -556,7 +576,7 @@ fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
             (krate.len() >> 8) as u8,
             (krate.len() >> 16) as u8,
             (krate.len() >> 24) as u8,
-        ]
+        ],
     );
     body.extend(krate);
     body

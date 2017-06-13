@@ -69,11 +69,10 @@ fn transfer(tx: &postgres::transaction::Transaction) {
 
 
     let stmt = tx.prepare(
-            "SELECT * FROM crate_owners
+        "SELECT * FROM crate_owners
                                    WHERE owner_id = $1
-                                     AND owner_kind = $2"
-        )
-        .unwrap();
+                                     AND owner_kind = $2",
+    ).unwrap();
     let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
     for row in rows.iter() {
         let id: i32 = row.get("id");
@@ -84,11 +83,10 @@ fn transfer(tx: &postgres::transaction::Transaction) {
             println!("warning: not exactly one owner for {}", krate.name);
         }
         let n = tx.execute(
-                "UPDATE crate_owners SET owner_id = $1
+            "UPDATE crate_owners SET owner_id = $1
                              WHERE id $2",
-                &[&to.id, &id],
-            )
-            .unwrap();
+            &[&to.id, &id],
+        ).unwrap();
         assert_eq!(n, 1);
     }
 

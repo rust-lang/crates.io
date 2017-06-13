@@ -27,9 +27,9 @@ fn main() {
 }
 
 fn update(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
-    let ids = env::args()
-        .skip(1)
-        .filter_map(|arg| arg.parse::<i32>().ok());
+    let ids = env::args().skip(1).filter_map(
+        |arg| arg.parse::<i32>().ok(),
+    );
     for id in ids {
         let now = time::now_utc().to_timespec();
         let mut rng = StdRng::new().unwrap();
@@ -39,11 +39,11 @@ fn update(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
             let moment = now + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
             tx.execute(
-                    "INSERT INTO version_downloads \
+                "INSERT INTO version_downloads \
                               (version_id, downloads, date) \
                               VALUES ($1, $2, $3)",
-                    &[&id, &dls, &moment],
-                )?;
+                &[&id, &dls, &moment],
+            )?;
         }
     }
     Ok(())

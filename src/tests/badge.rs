@@ -375,9 +375,9 @@ fn isitmaintained_open_issues_required_keys() {
     let mut badges = HashMap::new();
 
     // Repository is a required key
-    test_badges
-        .isitmaintained_open_issues_attributes
-        .remove("repository");
+    test_badges.isitmaintained_open_issues_attributes.remove(
+        "repository",
+    );
     badges.insert(
         String::from("isitmaintained_open_issues"),
         test_badges.isitmaintained_open_issues_attributes,

@@ -17,7 +17,8 @@ impl<R: Read> HashingReader<R> {
 
     pub fn finalize(mut self) -> Vec<u8> {
         #[allow(deprecated)]
-        self.hasher.finish().unwrap()
+#[allow(deprecated)]        #[allow(deprecated)]
+        #[allow(deprecated)] self.hasher.finish().unwrap()
     }
 }
 

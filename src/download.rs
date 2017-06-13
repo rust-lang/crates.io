@@ -20,7 +20,7 @@ pub struct VersionDownload {
 }
 
 #[derive(Insertable)]
-#[table_name="version_downloads"]
+#[table_name = "version_downloads"]
 struct NewVersionDownload(
     #[column_name(version_id)]
     i32

@@ -65,16 +65,14 @@ fn delete(tx: &postgres::transaction::Transaction) {
 
     println!("deleting version {} ({})", v.num, v.id);
     let n = tx.execute(
-            "DELETE FROM version_downloads WHERE version_id = $1",
-            &[&v.id],
-        )
-        .unwrap();
+        "DELETE FROM version_downloads WHERE version_id = $1",
+        &[&v.id],
+    ).unwrap();
     println!("  {} download records deleted", n);
     let n = tx.execute(
-            "DELETE FROM version_authors WHERE version_id = $1",
-            &[&v.id],
-        )
-        .unwrap();
+        "DELETE FROM version_authors WHERE version_id = $1",
+        &[&v.id],
+    ).unwrap();
     println!("  {} author records deleted", n);
     let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1", &[&v.id])
         .unwrap();

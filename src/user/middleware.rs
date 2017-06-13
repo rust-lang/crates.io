@@ -61,8 +61,8 @@ pub trait RequestUser {
 
 impl<'a> RequestUser for Request + 'a {
     fn user(&self) -> CargoResult<&User> {
-        self.extensions()
-            .find::<User>()
-            .chain_error(|| Unauthorized)
+        self.extensions().find::<User>().chain_error(
+            || Unauthorized,
+        )
     }
 }

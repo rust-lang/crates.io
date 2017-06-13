@@ -44,7 +44,7 @@ fn not_github() {
         middle.call(
             req.with_path("/api/v1/crates/foo_not_github/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(
@@ -64,13 +64,13 @@ fn weird_name() {
         middle.call(
             req.with_path("/api/v1/crates/foo_weird_name/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(
-        json.errors[0]
-            .detail
-            .contains("organization cannot contain"),
+        json.errors[0].detail.contains(
+            "organization cannot contain",
+        ),
         "{:?}",
         json.errors
     );
@@ -87,7 +87,7 @@ fn one_colon() {
         middle.call(
             req.with_path("/api/v1/crates/foo_one_colon/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(
@@ -107,13 +107,13 @@ fn nonexistent_team() {
         middle.call(
             req.with_path("/api/v1/crates/foo_nonexistent/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(
-        json.errors[0]
-            .detail
-            .contains("could not find the github team"),
+        json.errors[0].detail.contains(
+            "could not find the github team",
+        ),
         "{:?}",
         json.errors
     );
@@ -130,7 +130,7 @@ fn add_team_as_member() {
         middle.call(
             req.with_path("/api/v1/crates/foo_team_member/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 }
@@ -146,7 +146,7 @@ fn add_team_as_non_member() {
         middle.call(
             req.with_path("/api/v1/crates/foo_team_non_member/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(
@@ -166,7 +166,7 @@ fn remove_team_as_named_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_remove_team/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -175,7 +175,7 @@ fn remove_team_as_named_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_remove_team/owners")
                 .with_method(Method::Delete)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -189,7 +189,7 @@ fn remove_team_as_named_owner() {
         middle.call(
             req.with_path("/api/v1/crates/new")
                 .with_body(&body)
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
     assert!(
@@ -209,7 +209,7 @@ fn remove_team_as_team_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -223,7 +223,7 @@ fn remove_team_as_team_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
                 .with_method(Method::Delete)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -238,7 +238,7 @@ fn remove_team_as_team_owner() {
         middle.call(
             req.with_path("/api/v1/crates/new")
                 .with_body(&body)
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
 }
@@ -255,7 +255,7 @@ fn publish_not_owned() {
         middle.call(
             req.with_path("/api/v1/crates/foo_not_owned/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -269,7 +269,7 @@ fn publish_not_owned() {
         middle.call(
             req.with_path("/api/v1/crates/new")
                 .with_body(&body)
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
     assert!(
@@ -290,7 +290,7 @@ fn publish_owned() {
         middle.call(
             req.with_path("/api/v1/crates/foo_team_owned/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -304,7 +304,7 @@ fn publish_owned() {
         middle.call(
             req.with_path("/api/v1/crates/new")
                 .with_body(&body)
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
 }
@@ -320,7 +320,7 @@ fn add_owners_as_team_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_add_owner/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
 
@@ -334,7 +334,7 @@ fn add_owners_as_team_owner() {
         middle.call(
             req.with_path("/api/v1/crates/foo_add_owner/owners")
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(

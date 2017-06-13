@@ -14,7 +14,7 @@ use version::Version;
 #[derive(Identifiable, Associations)]
 #[belongs_to(Version)]
 #[belongs_to(Crate)]
-#[table_name="dependencies"]
+#[table_name = "dependencies"]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
@@ -57,7 +57,7 @@ pub enum Kind {
 }
 
 #[derive(Default, Insertable)]
-#[table_name="dependencies"]
+#[table_name = "dependencies"]
 pub struct NewDependency<'a> {
     pub version_id: i32,
     pub crate_id: i32,
@@ -85,24 +85,24 @@ impl Dependency {
     ) -> CargoResult<Dependency> {
         let req = req.to_string();
         let stmt = conn.prepare(
-                "INSERT INTO dependencies
+            "INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *"
-            )?;
+                                      RETURNING *",
+        )?;
         let rows = stmt.query(
-                &[
-                    &version_id,
-                    &crate_id,
-                    &req,
-                    &optional,
-                    &default_features,
-                    &features,
-                    target,
-                    &(kind as i32),
-                ]
-            )?;
+            &[
+                &version_id,
+                &crate_id,
+                &req,
+                &optional,
+                &default_features,
+                &features,
+                target,
+                &(kind as i32),
+            ],
+        )?;
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
@@ -125,8 +125,10 @@ impl Dependency {
 
 impl ReverseDependency {
     pub fn encodable(self) -> EncodableDependency {
-        self.dependency
-            .encodable(&self.crate_name, Some(self.crate_downloads))
+        self.dependency.encodable(
+            &self.crate_name,
+            Some(self.crate_downloads),
+        )
     }
 }
 
@@ -134,46 +136,44 @@ pub fn add_dependencies(conn: &PgConnection, deps: &[::upload::CrateDependency],
     use diesel::insert;
 
     let git_and_new_dependencies = deps.iter()
-        .map(
-            |dep| {
-                let krate = Crate::by_name(&dep.name)
-                    .first::<Crate>(&*conn)
-                    .map_err(|_| human(&format_args!("no known crate named `{}`", &*dep.name)))?;
-                if dep.version_req == semver::VersionReq::parse("*").unwrap() {
-                    return Err(
-                        human(
-                            "wildcard (`*`) dependency constraints are not allowed \
+        .map(|dep| {
+            let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn).map_err(
+                |_| {
+                    human(&format_args!("no known crate named `{}`", &*dep.name))
+                },
+            )?;
+            if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+                return Err(human(
+                    "wildcard (`*`) dependency constraints are not allowed \
                               on crates.io. See http://doc.crates.io/faq.html#can-\
                               libraries-use--as-a-version-for-their-dependencies for more \
-                              information"
-                        )
-                    );
-                }
-                let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
-
-                Ok(
-                    (git::Dependency {
-                         name: dep.name.to_string(),
-                         req: dep.version_req.to_string(),
-                         features: features.iter().map(|s| s.to_string()).collect(),
-                         optional: dep.optional,
-                         default_features: dep.default_features,
-                         target: dep.target.clone(),
-                         kind: dep.kind.or(Some(Kind::Normal)),
-                     },
-                     NewDependency {
-                         version_id: version_id,
-                         crate_id: krate.id,
-                         req: dep.version_req.to_string(),
-                         kind: dep.kind.unwrap_or(Kind::Normal) as i32,
-                         optional: dep.optional,
-                         default_features: dep.default_features,
-                         features: features,
-                         target: dep.target.as_ref().map(|s| &**s),
-                     })
-                )
+                              information",
+                ));
             }
-        )
+            let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
+
+            Ok((
+                git::Dependency {
+                    name: dep.name.to_string(),
+                    req: dep.version_req.to_string(),
+                    features: features.iter().map(|s| s.to_string()).collect(),
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    target: dep.target.clone(),
+                    kind: dep.kind.or(Some(Kind::Normal)),
+                },
+                NewDependency {
+                    version_id: version_id,
+                    crate_id: krate.id,
+                    req: dep.version_req.to_string(),
+                    kind: dep.kind.unwrap_or(Kind::Normal) as i32,
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    features: features,
+                    target: dep.target.as_ref().map(|s| &**s),
+                },
+            ))
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) = git_and_new_dependencies.into_iter().unzip();

@@ -142,10 +142,9 @@ impl Transaction {
 
     pub fn conn(&self) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
-            let conn = self.app
-                .database
-                .get()
-                .map_err(|e| internal(&format_args!("failed to get a database connection: {}", e)))?;
+            let conn = self.app.database.get().map_err(|e| {
+                internal(&format_args!("failed to get a database connection: {}", e))
+            })?;
             self.slot.fill(Box::new(conn));
         }
         Ok(&**self.slot.borrow().unwrap())
@@ -188,16 +187,16 @@ impl Middleware for TransactionMiddleware {
     }
 
     fn after(&self, req: &mut Request, res: Result<Response, Box<Error + Send>>) -> Result<Response, Box<Error + Send>> {
-        let tx = req.mut_extensions()
-            .pop::<Transaction>()
-            .expect("Transaction not present in request");
+        let tx = req.mut_extensions().pop::<Transaction>().expect(
+            "Transaction not present in request",
+        );
         if let Some(transaction) = tx.tx.into_inner() {
             if res.is_ok() && tx.commit.get() == Some(true) {
                 transaction.set_commit();
             }
-            transaction
-                .finish()
-                .map_err(|e| Box::new(e) as Box<Error + Send>)?;
+            transaction.finish().map_err(
+                |e| Box::new(e) as Box<Error + Send>,
+            )?;
         }
         res
     }

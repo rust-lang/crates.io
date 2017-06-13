@@ -86,50 +86,48 @@ pub fn proxy() -> (String, Bomb) {
 
     let (quittx, quitrx) = channel();
 
-    thread::spawn(
-        move || {
-            let mut file = None;
-            for socket in a.incoming() {
-                if quitrx.try_recv().is_ok() {
-                    break;
-                }
-                let socket = t!(socket);
+    thread::spawn(move || {
+        let mut file = None;
+        for socket in a.incoming() {
+            if quitrx.try_recv().is_ok() {
+                break;
+            }
+            let socket = t!(socket);
 
-                if file.is_none() {
-                    let io = t!(
-                        if record {
-                            File::create(&data)
-                        } else {
-                            File::open(&data)
-                        }
-                    );
-                    file = Some(BufStream::new(io));
-                }
-
-                if record {
-                    record_http(socket, file.as_mut().unwrap());
+            if file.is_none() {
+                let io = t!(if record {
+                    File::create(&data)
                 } else {
-                    replay_http(socket, file.as_mut().unwrap(), &mut sink2);
-                }
+                    File::open(&data)
+                });
+                file = Some(BufStream::new(io));
             }
-            if !record {
-                if let Some(mut f) = file {
-                    let mut s = String::new();
-                    t!(f.read_line(&mut s));
-                    assert_eq!(s, "");
-                }
-            }
-            tx.send(()).unwrap();
-        }
-    );
 
-    (ret,
-     Bomb {
-         accept: a2,
-         rx: rx,
-         iorx: Sink(sink),
-         quit: quittx,
-     })
+            if record {
+                record_http(socket, file.as_mut().unwrap());
+            } else {
+                replay_http(socket, file.as_mut().unwrap(), &mut sink2);
+            }
+        }
+        if !record {
+            if let Some(mut f) = file {
+                let mut s = String::new();
+                t!(f.read_line(&mut s));
+                assert_eq!(s, "");
+            }
+        }
+        tx.send(()).unwrap();
+    });
+
+    (
+        ret,
+        Bomb {
+            accept: a2,
+            rx: rx,
+            iorx: Sink(sink),
+            quit: quittx,
+        },
+    )
 }
 
 fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
@@ -141,16 +139,14 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
     respond(handle, headers, body, &mut response);
     t!(socket.write_all(&response));
 
-    t!(
-        write!(
-            data,
-            "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
-            request.len(),
-            str::from_utf8(&request).unwrap(),
-            response.len(),
-            str::from_utf8(&response).unwrap()
-        )
-    );
+    t!(write!(
+        data,
+        "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
+        request.len(),
+        str::from_utf8(&request).unwrap(),
+        response.len(),
+        str::from_utf8(&response).unwrap()
+    ));
 
     fn send<R: Read>(rdr: R) -> (Easy, Vec<Vec<u8>>, Vec<u8>) {
         let mut socket = BufReader::new(rdr);
@@ -187,23 +183,17 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
         let mut response = Vec::new();
         {
             let mut transfer = handle.transfer();
-            t!(
-                transfer.header_function(
-                    |header| {
-                        headers.push(header.to_owned());
-                        true
-                    }
-                )
-            );
-            t!(
-                transfer.write_function(
-                    |data| {
-                        response.extend(data);
-                        Ok(data.len())
-                    }
-                )
-            );
-            t!(transfer.read_function(|buf| socket.read(buf).map_err(|_| ReadError::Abort)));
+            t!(transfer.header_function(|header| {
+                headers.push(header.to_owned());
+                true
+            }));
+            t!(transfer.write_function(|data| {
+                response.extend(data);
+                Ok(data.len())
+            }));
+            t!(transfer.read_function(
+                |buf| socket.read(buf).map_err(|_| ReadError::Abort),
+            ));
 
             t!(transfer.perform());
         }
@@ -212,7 +202,9 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
     }
 
     fn respond<W: Write>(mut handle: Easy, headers: Vec<Vec<u8>>, body: Vec<u8>, mut socket: W) {
-        t!(socket.write_all(format!("HTTP/1.1 {}\r\n", t!(handle.response_code())).as_bytes()));
+        t!(socket.write_all(
+            format!("HTTP/1.1 {}\r\n", t!(handle.response_code())).as_bytes(),
+        ));
         for header in headers {
             if header.starts_with(b"Transfer-Encoding: ") {
                 continue;
@@ -334,15 +326,12 @@ impl GhUser {
             self.login,
             password
         );
-        let body = json::encode(
-            &Authorization {
-                scopes: vec!["read:org".to_string()],
-                note: "crates.io test".to_string(),
-                client_id: ::env("GH_CLIENT_ID"),
-                client_secret: ::env("GH_CLIENT_SECRET"),
-            }
-        )
-                .unwrap();
+        let body = json::encode(&Authorization {
+            scopes: vec!["read:org".to_string()],
+            note: "crates.io test".to_string(),
+            client_id: ::env("GH_CLIENT_ID"),
+            client_secret: ::env("GH_CLIENT_SECRET"),
+        }).unwrap();
 
         t!(handle.url(&url));
         t!(handle.post(true));
@@ -355,15 +344,13 @@ impl GhUser {
         let mut response = Vec::new();
         {
             let mut transfer = handle.transfer();
-            t!(transfer.read_function(|buf| body.read(buf).map_err(|_| ReadError::Abort)));
-            t!(
-                transfer.write_function(
-                    |data| {
-                        response.extend(data);
-                        Ok(data.len())
-                    }
-                )
-            );
+            t!(transfer.read_function(
+                |buf| body.read(buf).map_err(|_| ReadError::Abort),
+            ));
+            t!(transfer.write_function(|data| {
+                response.extend(data);
+                Ok(data.len())
+            }));
             t!(transfer.perform())
         }
 

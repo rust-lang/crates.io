@@ -38,17 +38,17 @@ impl Uploader {
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                Some(
-                    format!("https://{}/{}",
-                        bucket.host(),
-                        Uploader::crate_path(crate_name, version))
-                )
+                Some(format!(
+                    "https://{}/{}",
+                    bucket.host(),
+                    Uploader::crate_path(crate_name, version)
+                ))
             }
             Uploader::Local => {
-                Some(
-                    format!("/local_uploads/{}",
-                        Uploader::crate_path(crate_name, version))
-                )
+                Some(format!(
+                    "/local_uploads/{}",
+                    Uploader::crate_path(crate_name, version)
+                ))
             }
             Uploader::NoOp => None,
         }
@@ -78,36 +78,32 @@ impl Uploader {
                             length as u64,
                         );
                         s3req
-                            .write_function(
-                                |data| {
-                                    response.extend(data);
-                                    Ok(data.len())
-                                }
-                            )
+                            .write_function(|data| {
+                                response.extend(data);
+                                Ok(data.len())
+                            })
                             .unwrap();
-                        s3req
-                            .perform()
-                            .chain_error(|| internal(&format_args!("failed to upload to S3: `{}`", path)))?;
+                        s3req.perform().chain_error(|| {
+                            internal(&format_args!("failed to upload to S3: `{}`", path))
+                        })?;
                     }
                     (response, body.finalize())
                 };
                 if handle.response_code().unwrap() != 200 {
                     let response = String::from_utf8_lossy(&response);
-                    return Err(
-                        internal(
-                            &format_args!("failed to get a 200 response from S3: {}",
-                                                response)
-                        )
-                    );
+                    return Err(internal(&format_args!(
+                        "failed to get a 200 response from S3: {}",
+                        response
+                    )));
                 }
 
-                Ok(
-                    (cksum,
-                     Bomb {
-                         app: req.app().clone(),
-                         path: Some(path),
-                     })
-                )
+                Ok((
+                    cksum,
+                    Bomb {
+                        app: req.app().clone(),
+                        path: Some(path),
+                    },
+                ))
             }
             Uploader::Local => {
                 let path = Uploader::crate_path(&krate.name, &vers.to_string());
@@ -131,22 +127,22 @@ impl Uploader {
                     body.finalize()
                 };
 
-                Ok(
-                    (cksum,
-                     Bomb {
-                         app: req.app().clone(),
-                         path: crate_filename.to_str().map(String::from),
-                     })
-                )
+                Ok((
+                    cksum,
+                    Bomb {
+                        app: req.app().clone(),
+                        path: crate_filename.to_str().map(String::from),
+                    },
+                ))
             }
             Uploader::NoOp => {
-                Ok(
-                    (vec![],
-                     Bomb {
-                         app: req.app().clone(),
-                         path: None,
-                     })
-                )
+                Ok((
+                    vec![],
+                    Bomb {
+                        app: req.app().clone(),
+                        path: None,
+                    },
+                ))
             }
         }
     }
