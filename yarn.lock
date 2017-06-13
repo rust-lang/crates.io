@@ -2174,20 +2174,6 @@ ember-cli-qunit@^4.0.0:
     resolve "^1.1.6"
     silent-error "^1.0.0"
 
-ember-cli-release@0.2.9:
-  version "0.2.9"
-  resolved "https://registry.yarnpkg.com/ember-cli-release/-/ember-cli-release-0.2.9.tgz#5e8de3d034c65597933748023058470ec1231adb"
-  dependencies:
-    chalk "^1.0.0"
-    git-tools "^0.1.4"
-    make-array "^0.1.2"
-    merge "^1.2.0"
-    moment-timezone "^0.3.0"
-    nopt "^3.0.3"
-    rsvp "^3.0.17"
-    semver "^4.3.1"
-    silent-error "^1.0.0"
-
 ember-cli-sass@6.1.2:
   version "6.1.2"
   resolved "https://registry.yarnpkg.com/ember-cli-sass/-/ember-cli-sass-6.1.2.tgz#537217511b3d57d3f0e0073fb2ccbca4e07fce34"
@@ -3105,12 +3091,6 @@ git-repo-version@0.4.1:
   resolved "https://registry.yarnpkg.com/git-repo-version/-/git-repo-version-0.4.1.tgz#75fab9a0a4ec8470755b0eea7fdaa6f9d41453bf"
   dependencies:
     git-repo-info "~1.2.0"
-
-git-tools@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/git-tools/-/git-tools-0.1.4.tgz#5e43e59443b8a5dedb39dba663da49e79f943978"
-  dependencies:
-    spawnback "~1.0.0"
 
 glob-base@^0.3.0:
   version "0.3.0"
@@ -4081,10 +4061,6 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.1"
     yallist "^2.0.0"
 
-make-array@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/make-array/-/make-array-0.1.2.tgz#335e36ebb0c5a43154d21213a1ecaeae2a1bb3ef"
-
 makeerror@1.0.x:
   version "1.0.11"
   resolved "https://registry.yarnpkg.com/makeerror/-/makeerror-1.0.11.tgz#e01a5c9109f2af79660e4e8b9587790184f5a96c"
@@ -4265,19 +4241,13 @@ mktemp@~0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/mktemp/-/mktemp-0.4.0.tgz#6d0515611c8a8c84e484aa2000129b98e981ff0b"
 
-moment-timezone@^0.3.0:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.3.1.tgz#3ef47856b02d53b718a10a5ec2023aa299e07bf5"
-  dependencies:
-    moment ">= 2.6.0"
-
 moment-timezone@~0.5.11:
   version "0.5.13"
   resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.13.tgz#99ce5c7d827262eb0f1f702044177f60745d7b90"
   dependencies:
     moment ">= 2.9.0"
 
-"moment@>= 2.6.0", "moment@>= 2.9.0", moment@^2.18.1:
+"moment@>= 2.9.0", moment@^2.18.1:
   version "2.18.1"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
 
@@ -4408,7 +4378,7 @@ node-uuid@~1.4.7:
     chalk "~0.4.0"
     underscore "~1.6.0"
 
-"nopt@2 || 3", nopt@^3.0.3:
+"nopt@2 || 3":
   version "3.0.6"
   resolved "https://registry.yarnpkg.com/nopt/-/nopt-3.0.6.tgz#c6465dbf08abcd4db359317f79ac68a646b28ff9"
   dependencies:
@@ -5069,11 +5039,11 @@ route-recognizer@^0.2.3:
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/route-recognizer/-/route-recognizer-0.2.9.tgz#fbe06d7b7a52185d85c945a4782a18361f886d15"
 
-rsvp@^3.0.14, rsvp@^3.0.16, rsvp@^3.0.18, rsvp@^3.0.21, rsvp@^3.1.0, rsvp@^3.2.1, rsvp@^3.4.0:
+rsvp@^3.0.14, rsvp@^3.0.16, rsvp@^3.0.17, rsvp@^3.0.18, rsvp@^3.0.21, rsvp@^3.1.0, rsvp@^3.2.1, rsvp@^3.4.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.5.0.tgz#a62c573a4ae4e1dfd0697ebc6242e79c681eaa34"
 
-rsvp@^3.0.17, rsvp@^3.0.6, rsvp@^3.3.3:
+rsvp@^3.0.6, rsvp@^3.3.3:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.3.3.tgz#34633caaf8bc66ceff4be3c2e1dffd032538a813"
 
@@ -5123,7 +5093,7 @@ sass-graph@^2.1.1:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f"
 
-semver@^4.1.0, semver@^4.3.1:
+semver@^4.1.0:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/semver/-/semver-4.3.6.tgz#300bc6e0e86374f7ba61068b5b1ecd57fc6532da"
 
@@ -5312,10 +5282,6 @@ spawn-sync@^1.0.15:
   dependencies:
     concat-stream "^1.4.7"
     os-shim "^0.1.2"
-
-spawnback@~1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/spawnback/-/spawnback-1.0.0.tgz#f73662f7e54d95367eca74d6426c677dd7ea686f"
 
 spdx-correct@~1.0.0:
   version "1.0.2"
