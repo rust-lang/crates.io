@@ -23,7 +23,11 @@ A volunteer will get back to you as soon as possible.
 
 Welcome! We love contributions! Crates.io is an [Ember](https://emberjs.com/)
 frontend with a Rust backend, and there are many tasks appropriate for a
-variety of skill levels.
+variety of skill levels. 
+
+The Rust backend uses rustfmt for code formatting, so ensure that you run it prior
+to submitting a pull request. More information on setting up and running rustfmt can
+be found [here](https://github.com/rust-lang-nursery/rustfmt/blob/master/README.md).
 
 Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
 environment.
