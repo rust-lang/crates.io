@@ -17,10 +17,10 @@
         {{/link-to}}
     {{/each}}
 
-    {{#x-select value=letter}}
+    {{#x-select value=letter action=(action (mut letter)) as |xs|}}
         <option>Filter by the letter...</option>
         {{#each alphabet as |letter|}}
-            {{#x-option value=letter}}{{ letter }}{{/x-option}}
+            {{#xs.option value=letter}}{{ letter }}{{/xs.option}}
         {{/each}}
     {{/x-select}}
 </div>
