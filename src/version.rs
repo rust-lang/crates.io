@@ -46,7 +46,7 @@ pub struct NewVersion {
 }
 
 pub struct Author {
-    pub name: String
+    pub name: String,
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -71,33 +71,37 @@ pub struct VersionLinks {
 }
 
 impl Version {
-    pub fn find_by_num(conn: &GenericConnection,
-                       crate_id: i32,
-                       num: &semver::Version)
-                       -> CargoResult<Option<Version>> {
+    pub fn find_by_num(conn: &GenericConnection, crate_id: i32, num: &semver::Version) -> CargoResult<Option<Version>> {
         let num = num.to_string();
-        let stmt = conn.prepare("SELECT * FROM versions \
-                                      WHERE crate_id = $1 AND num = $2")?;
+        let stmt = conn.prepare(
+                "SELECT * FROM versions \
+                                      WHERE crate_id = $1 AND num = $2"
+            )?;
         let rows = stmt.query(&[&crate_id, &num])?;
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
     }
 
-    pub fn insert(conn: &GenericConnection,
-                  crate_id: i32,
-                  num: &semver::Version,
-                  features: &HashMap<String, Vec<String>>,
-                  authors: &[String])
-                  -> CargoResult<Version> {
+    pub fn insert(
+        conn: &GenericConnection,
+        crate_id: i32,
+        num: &semver::Version,
+        features: &HashMap<String, Vec<String>>,
+        authors: &[String],
+    ) -> CargoResult<Version> {
         let num = num.to_string();
         let features = json::encode(features).unwrap();
-        let stmt = conn.prepare("INSERT INTO versions \
+        let stmt = conn.prepare(
+                "INSERT INTO versions \
                                       (crate_id, num, features) \
                                       VALUES ($1, $2, $3) \
-                                      RETURNING *")?;
+                                      RETURNING *"
+            )?;
         let rows = stmt.query(&[&crate_id, &num, &features])?;
-        let ret: Version = Model::from_row(&rows.iter().next().chain_error(|| {
-            internal("no version returned")
-        })?);
+        let ret: Version = Model::from_row(
+            &rows.iter()
+                .next()
+                .chain_error(|| internal("no version returned"))?
+        );
         for author in authors {
             ret.add_author(conn, author)?;
         }
@@ -109,8 +113,16 @@ impl Version {
     }
 
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
-        let Version { id, num, updated_at, created_at,
-                      downloads, features, yanked, .. } = self;
+        let Version {
+            id,
+            num,
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            ..
+        } = self;
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
@@ -133,8 +145,7 @@ impl Version {
     }
 
     /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &PgConnection)
-                        -> QueryResult<Vec<(Dependency, String)>> {
+    pub fn dependencies(&self, conn: &PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
         Dependency::belonging_to(self)
             .inner_join(crates::table)
             .select((dependencies::all_columns, crates::name))
@@ -143,56 +154,67 @@ impl Version {
     }
 
     pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
-        let stmt = conn.prepare("SELECT * FROM version_authors
+        let stmt = conn.prepare(
+                "SELECT * FROM version_authors
                                        WHERE version_id = $1
-                                       ORDER BY name ASC")?;
+                                       ORDER BY name ASC"
+            )?;
         let rows = stmt.query(&[&self.id])?;
-        Ok(rows.into_iter().map(|row| {
-            Author { name: row.get("name") }
-        }).collect())
+        Ok(
+            rows.into_iter()
+                .map(|row| Author { name: row.get("name") })
+                .collect()
+        )
     }
 
-    pub fn add_author(&self,
-                      conn: &GenericConnection,
-                      name: &str) -> CargoResult<()> {
-        conn.execute("INSERT INTO version_authors (version_id, name)
-                           VALUES ($1, $2)", &[&self.id, &name])?;
+    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> CargoResult<()> {
+        conn.execute(
+                "INSERT INTO version_authors (version_id, name)
+                           VALUES ($1, $2)",
+                &[&self.id, &name],
+            )?;
         Ok(())
     }
 
     pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
-        conn.execute("UPDATE versions SET yanked = $1 WHERE id = $2",
-                     &[&yanked, &self.id])?;
+        conn.execute(
+                "UPDATE versions SET yanked = $1 WHERE id = $2",
+                &[&yanked, &self.id],
+            )?;
         Ok(())
     }
 
-    pub fn max<T>(versions: T) -> semver::Version where
-        T: IntoIterator<Item=semver::Version>,
+    pub fn max<T>(versions: T) -> semver::Version
+    where
+        T: IntoIterator<Item = semver::Version>,
     {
-        versions.into_iter()
+        versions
+            .into_iter()
             .max()
-            .unwrap_or_else(|| semver::Version {
-                major: 0,
-                minor: 0,
-                patch: 0,
-                pre: vec![],
-                build: vec![],
-            })
+            .unwrap_or_else(
+                || {
+                    semver::Version {
+                        major: 0,
+                        minor: 0,
+                        patch: 0,
+                        pre: vec![],
+                        build: vec![],
+                    }
+                }
+            )
     }
 }
 
 impl NewVersion {
-    pub fn new(
-        crate_id: i32,
-        num: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
-    ) -> CargoResult<Self> {
+    pub fn new(crate_id: i32, num: &semver::Version, features: &HashMap<String, Vec<String>>) -> CargoResult<Self> {
         let features = json::encode(features)?;
-        Ok(NewVersion {
-            crate_id: crate_id,
-            num: num.to_string(),
-            features: features,
-        })
+        Ok(
+            NewVersion {
+                crate_id: crate_id,
+                num: num.to_string(),
+                features: features,
+            }
+        )
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
@@ -200,26 +222,40 @@ impl NewVersion {
         use diesel::expression::dsl::exists;
         use schema::versions::dsl::*;
 
-        let already_uploaded = versions.filter(crate_id.eq(self.crate_id))
+        let already_uploaded = versions
+            .filter(crate_id.eq(self.crate_id))
             .filter(num.eq(&self.num));
         if select(exists(already_uploaded)).get_result(conn)? {
-            return Err(human(&format_args!("crate version `{}` is already \
-                                           uploaded", self.num)));
+            return Err(
+                human(
+                    &format_args!("crate version `{}` is already \
+                                           uploaded", self.num)
+                )
+            );
         }
 
-        conn.transaction(|| {
-            let version = insert(self).into(versions)
-                .get_result::<Version>(conn)?;
+        conn.transaction(
+            || {
+                let version = insert(self).into(versions).get_result::<Version>(conn)?;
 
-            let new_authors = authors.iter().map(|s| NewAuthor {
-                version_id: version.id,
-                name: &*s,
-            }).collect::<Vec<_>>();
+                let new_authors = authors
+                    .iter()
+                    .map(
+                        |s| {
+                            NewAuthor {
+                                version_id: version.id,
+                                name: &*s,
+                            }
+                        }
+                    )
+                    .collect::<Vec<_>>();
 
-            insert(&new_authors).into(version_authors::table)
-                .execute(conn)?;
-            Ok(version)
-        })
+                insert(&new_authors)
+                    .into(version_authors::table)
+                    .execute(conn)?;
+                Ok(version)
+            }
+        )
     }
 }
 
@@ -234,9 +270,9 @@ impl Queryable<versions::SqlType, Pg> for Version {
     type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool);
 
     fn build(row: Self::Row) -> Self {
-        let features = row.6.map(|s| {
-            json::decode(&s).unwrap()
-        }).unwrap_or_else(HashMap::new);
+        let features = row.6
+            .map(|s| json::decode(&s).unwrap())
+            .unwrap_or_else(HashMap::new);
         Version {
             id: row.0,
             crate_id: row.1,
@@ -254,9 +290,9 @@ impl Model for Version {
     fn from_row(row: &Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
-        let features = features.map(|s| {
-            json::decode(&s).unwrap()
-        }).unwrap_or_else(HashMap::new);
+        let features = features
+            .map(|s| json::decode(&s).unwrap())
+            .unwrap_or_else(HashMap::new);
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
@@ -268,7 +304,9 @@ impl Model for Version {
             yanked: row.get("yanked"),
         }
     }
-    fn table_name(_: Option<Version>) -> &'static str { "versions" }
+    fn table_name(_: Option<Version>) -> &'static str {
+        "versions"
+    }
 }
 
 /// Handles the `GET /versions` route.
@@ -277,27 +315,24 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = req.tx()?;
 
     // Extract all ids requested.
-    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("")
-                                               .as_bytes());
-    let ids = query.filter_map(|(ref a, ref b)| {
-        if *a == "ids[]" {
-            b.parse().ok()
-        } else {
-            None
-        }
-    }).collect::<Vec<i32>>();
+    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
+    let ids = query
+        .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
+        .collect::<Vec<i32>>();
 
     // Load all versions
     //
     // TODO: can rust-postgres do this for us?
     let mut versions = Vec::new();
     if !ids.is_empty() {
-        let stmt = conn.prepare("\
+        let stmt = conn.prepare(
+                "\
             SELECT versions.*, crates.name AS crate_name
               FROM versions
             LEFT JOIN crates ON crates.id = versions.crate_id
             WHERE versions.id = ANY($1)
-        ")?;
+        "
+            )?;
         for row in stmt.query(&[&ids])?.iter() {
             let v: Version = Model::from_row(&row);
             let crate_name: String = row.get("crate_name");
@@ -306,7 +341,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     #[derive(RustcEncodable)]
-    struct R { versions: Vec<EncodableVersion> }
+    struct R {
+        versions: Vec<EncodableVersion>,
+    }
     Ok(req.json(&R { versions: versions }))
 }
 
@@ -318,7 +355,8 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
             let id = &req.params()["version_id"];
             let id = id.parse().unwrap_or(0);
             let conn = req.db_conn()?;
-            versions::table.find(id)
+            versions::table
+                .find(id)
                 .inner_join(crates::table)
                 .select((versions::all_columns, ::krate::ALL_COLUMNS))
                 .first(&*conn)?
@@ -326,23 +364,29 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     };
 
     #[derive(RustcEncodable)]
-    struct R { version: EncodableVersion }
+    struct R {
+        version: EncodableVersion,
+    }
     Ok(req.json(&R { version: version.encodable(&krate.name) }))
 }
 
 fn version_and_crate_old(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
-    let semver = semver::Version::parse(semver).map_err(|_| {
-        human(&format_args!("invalid semver: {}", semver))
-    })?;
+    let semver = semver::Version::parse(semver)
+        .map_err(|_| human(&format_args!("invalid semver: {}", semver)))?;
     let tx = req.tx()?;
     let krate = Crate::find_by_name(tx, crate_name)?;
     let version = Version::find_by_num(tx, krate.id, &semver)?;
-    let version = version.chain_error(|| {
-        human(&format_args!("crate `{}` does not have a version `{}`",
-                      crate_name, semver))
-    })?;
+    let version = version
+        .chain_error(
+            || {
+                human(
+                    &format_args!("crate `{}` does not have a version `{}`",
+                      crate_name, semver)
+                )
+            }
+        )?;
     Ok((version, krate))
 }
 
@@ -357,10 +401,14 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let version = Version::belonging_to(&krate)
         .filter(versions::num.eq(semver))
         .first(&*conn)
-        .map_err(|_| {
-            human(&format_args!("crate `{}` does not have a version `{}`",
-                          crate_name, semver))
-        })?;
+        .map_err(
+            |_| {
+                human(
+                    &format_args!("crate `{}` does not have a version `{}`",
+                          crate_name, semver)
+                )
+            }
+        )?;
     Ok((version, krate))
 }
 
@@ -369,13 +417,15 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let deps = version.dependencies(&*conn)?;
-    let deps = deps.into_iter().map(|(dep, crate_name)| {
-        dep.encodable(&crate_name, None)
-    }).collect();
+    let deps = deps.into_iter()
+        .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
+        .collect();
 
     #[derive(RustcEncodable)]
-    struct R { dependencies: Vec<EncodableDependency> }
-    Ok(req.json(&R{ dependencies: deps }))
+    struct R {
+        dependencies: Vec<EncodableDependency>,
+    }
+    Ok(req.json(&R { dependencies: deps }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
@@ -383,9 +433,11 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::dsl::date;
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
-    let cutoff_end_date = req.query().get("before_date")
+    let cutoff_end_date = req.query()
+        .get("before_date")
         .and_then(|d| strptime(d, "%Y-%m-%d").ok())
-        .unwrap_or_else(now_utc).to_timespec();
+        .unwrap_or_else(now_utc)
+        .to_timespec();
     let cutoff_start_date = cutoff_end_date + Duration::days(-89);
 
     let downloads = VersionDownload::belonging_to(&version)
@@ -397,8 +449,10 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         .collect();
 
     #[derive(RustcEncodable)]
-    struct R { version_downloads: Vec<EncodableVersionDownload> }
-    Ok(req.json(&R{ version_downloads: downloads }))
+    struct R {
+        version_downloads: Vec<EncodableVersionDownload>,
+    }
+    Ok(req.json(&R { version_downloads: downloads }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -411,10 +465,22 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     // This was never implemented. This complicated return struct
     // is all that is left, hear for backwards compatibility.
     #[derive(RustcEncodable)]
-    struct R { users: Vec<::user::EncodableUser>, meta: Meta }
+    struct R {
+        users: Vec<::user::EncodableUser>,
+        meta: Meta,
+    }
     #[derive(RustcEncodable)]
-    struct Meta { names: Vec<String> }
-    Ok(req.json(&R{ users: vec![], meta: Meta { names: names } }))
+    struct Meta {
+        names: Vec<String>,
+    }
+    Ok(
+        req.json(
+            &R {
+                users: vec![],
+                meta: Meta { names: names },
+            }
+        )
+    )
 }
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -433,19 +499,24 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let owners = krate.owners(&conn)?;
     if rights(req.app(), &owners, user)? < Rights::Publish {
-        return Err(human("must already be an owner to yank or unyank"))
+        return Err(human("must already be an owner to yank or unyank"));
     }
 
     if version.yanked != yanked {
-        conn.transaction::<_, Box<CargoError>, _>(|| {
-            diesel::update(&version).set(versions::yanked.eq(yanked))
-                .execute(&*conn)?;
-            git::yank(&**req.app(), &krate.name, &version.num, yanked)?;
-            Ok(())
-        })?;
+        conn.transaction::<_, Box<CargoError>, _>(
+                || {
+                    diesel::update(&version)
+                        .set(versions::yanked.eq(yanked))
+                        .execute(&*conn)?;
+                    git::yank(&**req.app(), &krate.name, &version.num, yanked)?;
+                    Ok(())
+                }
+            )?;
     }
 
     #[derive(RustcEncodable)]
-    struct R { ok: bool }
-    Ok(req.json(&R{ ok: true }))
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
 }

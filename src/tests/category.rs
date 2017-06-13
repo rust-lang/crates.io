@@ -5,14 +5,21 @@ use cargo_registry::db::RequestTransaction;
 use cargo_registry::category::{Category, EncodableCategory, EncodableCategoryWithSubcategories};
 
 #[derive(RustcDecodable)]
-struct CategoryList { categories: Vec<EncodableCategory>, meta: CategoryMeta }
+struct CategoryList {
+    categories: Vec<EncodableCategory>,
+    meta: CategoryMeta,
+}
 #[derive(RustcDecodable)]
-struct CategoryMeta { total: i32 }
+struct CategoryMeta {
+    total: i32,
+}
 #[derive(RustcDecodable)]
-struct GoodCategory { category: EncodableCategory }
+struct GoodCategory {
+    category: EncodableCategory,
+}
 #[derive(RustcDecodable)]
 struct CategoryWithSubcategories {
-    category: EncodableCategoryWithSubcategories
+    category: EncodableCategoryWithSubcategories,
 }
 
 #[test]
@@ -86,9 +93,7 @@ fn update_crate() {
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Replacing one category with another
-    Category::update_crate_old(
-        req.tx().unwrap(), &krate, &["category-2".to_string()]
-    ).unwrap();
+    Category::update_crate_old(req.tx().unwrap(), &krate, &["category-2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 1);
 
@@ -99,8 +104,11 @@ fn update_crate() {
 
     // Adding 2 categories
     Category::update_crate_old(
-        req.tx().unwrap(), &krate, &["cat1".to_string(),
-                            "category-2".to_string()]).unwrap();
+        req.tx().unwrap(),
+        &krate,
+        &["cat1".to_string(), "category-2".to_string()],
+    )
+            .unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 1);
 
@@ -111,9 +119,11 @@ fn update_crate() {
 
     // Attempting to add one valid category and one invalid category
     let invalid_categories = Category::update_crate_old(
-        req.tx().unwrap(), &krate, &["cat1".to_string(),
-                            "catnope".to_string()]
-    ).unwrap();
+        req.tx().unwrap(),
+        &krate,
+        &["cat1".to_string(), "catnope".to_string()],
+    )
+            .unwrap();
     assert_eq!(invalid_categories, vec!["catnope".to_string()]);
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);
@@ -127,17 +137,18 @@ fn update_crate() {
     assert_eq!(json.meta.total, 2);
 
     // Attempting to add a category by display text; must use slug
-    Category::update_crate_old(
-        req.tx().unwrap(), &krate, &["Category 2".to_string()]
-    ).unwrap();
+    Category::update_crate_old(req.tx().unwrap(), &krate, &["Category 2".to_string()]).unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 0);
     assert_eq!(cnt(&mut req, "category-2"), 0);
 
     // Add a category and its subcategory
     ::mock_category(&mut req, "cat1::bar", "cat1::bar");
     Category::update_crate_old(
-        req.tx().unwrap(), &krate, &["cat1".to_string(),
-                            "cat1::bar".to_string()]).unwrap();
+        req.tx().unwrap(),
+        &krate,
+        &["cat1".to_string(), "cat1::bar".to_string()],
+    )
+            .unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "cat1::bar"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);

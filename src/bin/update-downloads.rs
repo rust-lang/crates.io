@@ -17,8 +17,7 @@ static LIMIT: i64 = 1000;
 
 #[allow(dead_code)] // dead in tests
 fn main() {
-    let daemon = env::args().nth(1).as_ref().map(|s| &s[..])
-                    == Some("daemon");
+    let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
         let conn = cargo_registry::db::connect_now();
@@ -27,7 +26,7 @@ fn main() {
         if daemon {
             std::thread::sleep(Duration::new(sleep.unwrap(), 0));
         } else {
-            break
+            break;
         }
     }
 }
@@ -37,12 +36,15 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     loop {
         // FIXME(rust-lang/rust#27401): weird declaration to make sure this
         // variable gets dropped.
-        let tx; tx = conn.transaction()?;
+        let tx;
+        tx = conn.transaction()?;
         {
-            let stmt = tx.prepare("SELECT * FROM version_downloads \
+            let stmt = tx.prepare(
+                    "SELECT * FROM version_downloads \
                                         WHERE processed = FALSE AND id > $1
                                         ORDER BY id ASC
-                                        LIMIT $2")?;
+                                        LIMIT $2"
+                )?;
             let mut rows = stmt.query(&[&max, &LIMIT])?;
             match collect(&tx, &mut rows)? {
                 None => break,
@@ -55,8 +57,7 @@ fn update(conn: &postgres::GenericConnection) -> postgres::Result<()> {
     Ok(())
 }
 
-fn collect(tx: &postgres::transaction::Transaction,
-           rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
+fn collect(tx: &postgres::transaction::Transaction, rows: &mut postgres::rows::Rows) -> postgres::Result<Option<i32>> {
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
     let now = chrono::UTC::now();
@@ -67,9 +68,13 @@ fn collect(tx: &postgres::transaction::Transaction,
         let download: VersionDownload = Model::from_row(&row);
         assert!(map.insert(download.id, download).is_none());
     }
-    println!("updating {} versions (cutoff {})", map.len(), now.to_rfc2822());
+    println!(
+        "updating {} versions (cutoff {})",
+        map.len(),
+        now.to_rfc2822()
+    );
     if map.len() == 0 {
-        return Ok(None)
+        return Ok(None);
     }
 
     let mut max = 0;
@@ -79,50 +84,63 @@ fn collect(tx: &postgres::transaction::Transaction,
             max = *id;
         }
         if download.date > cutoff && download.counted == download.downloads {
-            continue
+            continue;
         }
         let amt = download.downloads - download.counted;
 
         // Flag this row as having been processed if we're passed the cutoff,
         // and unconditionally increment the number of counted downloads.
-        tx.execute("UPDATE version_downloads
+        tx.execute(
+                "UPDATE version_downloads
                          SET processed = $2, counted = counted + $3
                          WHERE id = $1",
-                   &[id, &(download.date < cutoff), &amt])?;
+                &[id, &(download.date < cutoff), &amt],
+            )?;
         total += amt as i64;
 
         if amt == 0 {
-            continue
+            continue;
         }
 
         let crate_id = Version::find(tx, download.version_id).unwrap().crate_id;
 
         // Update the total number of version downloads
-        tx.execute("UPDATE versions
+        tx.execute(
+                "UPDATE versions
                          SET downloads = downloads + $1
                          WHERE id = $2",
-                   &[&amt, &download.version_id])?;
+                &[&amt, &download.version_id],
+            )?;
         // Update the total number of crate downloads
-        tx.execute("UPDATE crates SET downloads = downloads + $1
-                         WHERE id = $2", &[&amt, &crate_id])?;
+        tx.execute(
+                "UPDATE crates SET downloads = downloads + $1
+                         WHERE id = $2",
+                &[&amt, &crate_id],
+            )?;
 
         // Update the total number of crate downloads for today
-        let cnt = tx.execute("UPDATE crate_downloads
+        let cnt = tx.execute(
+                "UPDATE crate_downloads
                                    SET downloads = downloads + $2
                                    WHERE crate_id = $1 AND date = $3",
-                             &[&crate_id, &amt, &download.date])?;
+                &[&crate_id, &amt, &download.date],
+            )?;
         if cnt == 0 {
-            tx.execute("INSERT INTO crate_downloads
+            tx.execute(
+                    "INSERT INTO crate_downloads
                              (crate_id, downloads, date)
                              VALUES ($1, $2, $3)",
-                       &[&crate_id, &amt, &download.date])?;
+                    &[&crate_id, &amt, &download.date],
+                )?;
         }
     }
 
     // After everything else is done, update the global counter of total
     // downloads.
-    tx.execute("UPDATE metadata SET total_downloads = total_downloads + $1",
-               &[&total])?;
+    tx.execute(
+            "UPDATE metadata SET total_downloads = total_downloads + $1",
+            &[&total],
+        )?;
 
     Ok(Some(max))
 }
@@ -140,20 +158,25 @@ mod test {
     use cargo_registry::{Version, Crate, User, Model, env};
 
     fn conn() -> postgres::Connection {
-        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..],
-                                      postgres::TlsMode::None).unwrap()
+        postgres::Connection::connect(&env("TEST_DATABASE_URL")[..], postgres::TlsMode::None).unwrap()
     }
 
-    fn user(conn: &postgres::transaction::Transaction) -> User{
-        User::find_or_insert(conn, 2, "login", None, None, None,
-                             "access_token").unwrap()
+    fn user(conn: &postgres::transaction::Transaction) -> User {
+        User::find_or_insert(conn, 2, "login", None, None, None, "access_token").unwrap()
     }
 
     fn crate_downloads(tx: &postgres::transaction::Transaction, id: i32, expected: usize) {
-        let stmt = tx.prepare("SELECT * FROM crate_downloads
-                               WHERE crate_id = $1").unwrap();
-        let dl: i32 = stmt.query(&[&id]).unwrap().iter()
-                          .next().unwrap().get("downloads");
+        let stmt = tx.prepare(
+                "SELECT * FROM crate_downloads
+                               WHERE crate_id = $1"
+            )
+            .unwrap();
+        let dl: i32 = stmt.query(&[&id])
+            .unwrap()
+            .iter()
+            .next()
+            .unwrap()
+            .get("downloads");
         assert_eq!(dl, expected as i32);
     }
 
@@ -162,20 +185,42 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
-        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None, &None,
-                                          &None, &None, &None, &None,
-                                          &None, None).unwrap();
-        let version = Version::insert(&tx, krate.id,
-                                      &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), &[]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+        let krate = Crate::find_or_insert(
+            &tx,
+            "foo",
+            user.id,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            None,
+        )
+                .unwrap();
+        let version = Version::insert(
+            &tx,
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            &[],
+        )
+                .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id)
                     VALUES ($1)",
-                   &[&version.id]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+                &[&version.id],
+            )
+            .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, date, processed)
                     VALUES ($1, current_date - interval '1 day', true)",
-                   &[&version.id]).unwrap();
+                &[&version.id],
+            )
+            .unwrap();
         ::update(&tx).unwrap();
         assert_eq!(Version::find(&tx, version.id).unwrap().downloads, 1);
         assert_eq!(Crate::find(&tx, krate.id).unwrap().downloads, 1);
@@ -189,21 +234,47 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
-        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
-                                          &None, &None, &None, &None,
-                                          &None, &None, None).unwrap();
-        let version = Version::insert(&tx, krate.id,
-                                      &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), &[]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+        let krate = Crate::find_or_insert(
+            &tx,
+            "foo",
+            user.id,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            None,
+        )
+                .unwrap();
+        let version = Version::insert(
+            &tx,
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            &[],
+        )
+                .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 2, current_date - interval '2 days', false)",
-                   &[&version.id]).unwrap();
+                &[&version.id],
+            )
+            .unwrap();
         ::update(&tx).unwrap();
-        let stmt = tx.prepare("SELECT processed FROM version_downloads
-                               WHERE version_id = $1").unwrap();
-        let processed: bool = stmt.query(&[&version.id]).unwrap().iter()
-                                  .next().unwrap().get("processed");
+        let stmt = tx.prepare(
+                "SELECT processed FROM version_downloads
+                               WHERE version_id = $1"
+            )
+            .unwrap();
+        let processed: bool = stmt.query(&[&version.id])
+            .unwrap()
+            .iter()
+            .next()
+            .unwrap()
+            .get("processed");
         assert!(processed);
     }
 
@@ -212,22 +283,48 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
-        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
-                                          &None, &None, &None, &None,
-                                          &None, &None, None).unwrap();
-        let version = Version::insert(&tx, krate.id,
-                                      &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), &[]).unwrap();
+        let krate = Crate::find_or_insert(
+            &tx,
+            "foo",
+            user.id,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            None,
+        )
+                .unwrap();
+        let version = Version::insert(
+            &tx,
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            &[],
+        )
+                .unwrap();
         let time = time::now_utc().to_timespec() - Duration::hours(2);
-        tx.execute("INSERT INTO version_downloads \
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 2, date($2), false)",
-                   &[&version.id, &time]).unwrap();
+                &[&version.id, &time],
+            )
+            .unwrap();
         ::update(&tx).unwrap();
-        let stmt = tx.prepare("SELECT processed FROM version_downloads
-                               WHERE version_id = $1").unwrap();
-        let processed: bool = stmt.query(&[&version.id]).unwrap().iter()
-                                  .next().unwrap().get("processed");
+        let stmt = tx.prepare(
+                "SELECT processed FROM version_downloads
+                               WHERE version_id = $1"
+            )
+            .unwrap();
+        let processed: bool = stmt.query(&[&version.id])
+            .unwrap()
+            .iter()
+            .next()
+            .unwrap()
+            .get("processed");
         assert!(!processed);
     }
 
@@ -236,26 +333,54 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
-        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
-                                          &None, &None, &None, &None,
-                                          &None, &None, None).unwrap();
-        let version = Version::insert(&tx, krate.id,
-                                      &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), &[]).unwrap();
-        tx.execute("UPDATE versions
+        let krate = Crate::find_or_insert(
+            &tx,
+            "foo",
+            user.id,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            None,
+        )
+                .unwrap();
+        let version = Version::insert(
+            &tx,
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            &[],
+        )
+                .unwrap();
+        tx.execute(
+                "UPDATE versions
                        SET updated_at = current_date - interval '2 hours'",
-                   &[]).unwrap();
-        tx.execute("UPDATE crates
+                &[],
+            )
+            .unwrap();
+        tx.execute(
+                "UPDATE crates
                        SET updated_at = current_date - interval '2 hours'",
-                   &[]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+                &[],
+            )
+            .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 1, current_date, false)",
-                   &[&version.id]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+                &[&version.id],
+            )
+            .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, date)
                     VALUES ($1, current_date - interval '1 day')",
-                   &[&version.id]).unwrap();
+                &[&version.id],
+            )
+            .unwrap();
 
         let version_before = Version::find(&tx, version.id).unwrap();
         let krate_before = Crate::find(&tx, krate.id).unwrap();
@@ -276,22 +401,47 @@ mod test {
         let conn = conn();
         let tx = conn.transaction().unwrap();
         let user = user(&tx);
-        let krate = Crate::find_or_insert(&tx, "foo", user.id, &None,
-                                          &None, &None, &None, &None,
-                                          &None, &None, None).unwrap();
-        let version = Version::insert(&tx, krate.id,
-                                      &semver::Version::parse("1.0.0").unwrap(),
-                                      &HashMap::new(), &[]).unwrap();
-        tx.execute("UPDATE versions
+        let krate = Crate::find_or_insert(
+            &tx,
+            "foo",
+            user.id,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            None,
+        )
+                .unwrap();
+        let version = Version::insert(
+            &tx,
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            &[],
+        )
+                .unwrap();
+        tx.execute(
+                "UPDATE versions
                        SET updated_at = current_date - interval '2 days'",
-                   &[]).unwrap();
-        tx.execute("UPDATE crates
+                &[],
+            )
+            .unwrap();
+        tx.execute(
+                "UPDATE crates
                        SET updated_at = current_date - interval '2 days'",
-                   &[]).unwrap();
-        tx.execute("INSERT INTO version_downloads \
+                &[],
+            )
+            .unwrap();
+        tx.execute(
+                "INSERT INTO version_downloads \
                     (version_id, downloads, counted, date, processed)
                     VALUES ($1, 2, 2, current_date - interval '2 days', false)",
-                   &[&version.id]).unwrap();
+                &[&version.id],
+            )
+            .unwrap();
 
         let version_before = Version::find(&tx, version.id).unwrap();
         let krate_before = Crate::find(&tx, krate.id).unwrap();

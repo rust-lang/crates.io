@@ -18,19 +18,25 @@ impl AroundMiddleware for Head {
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,
                 path: None,
                 method: Some(Method::Get),
             };
-            self.handler.as_ref().unwrap().call(&mut req).map(|r| {
-                Response {
-                    body: Box::new(io::empty()),
-                    ..r
-                }
-            })
+            self.handler
+                .as_ref()
+                .unwrap()
+                .call(&mut req)
+                .map(
+                    |r| {
+                        Response {
+                            body: Box::new(io::empty()),
+                            ..r
+                        }
+                    }
+                )
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

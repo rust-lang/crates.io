@@ -7,11 +7,19 @@ use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
 
 #[derive(RustcDecodable)]
-struct AuthResponse { url: String, state: String }
+struct AuthResponse {
+    url: String,
+    state: String,
+}
 #[derive(RustcDecodable)]
-struct MeResponse { user: EncodableUser, api_token: String }
+struct MeResponse {
+    user: EncodableUser,
+    api_token: String,
+}
 #[derive(RustcDecodable)]
-struct UserShowResponse { user: EncodableUser }
+struct UserShowResponse {
+    user: EncodableUser,
+}
 
 #[test]
 fn auth_gives_a_token() {
@@ -41,16 +49,16 @@ fn user_insert() {
     assert_eq!(t!(User::find_by_api_token(&tx, &user.api_token)), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
-    assert_eq!(t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
-                                       "bar")), user);
-    let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None,
-                                        "baz"));
+    assert_eq!(
+        t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar")),
+        user
+    );
+    let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "baz"));
     assert!(user != user2);
     assert_eq!(user.id, user2.id);
     assert_eq!(user2.gh_access_token, "baz");
 
-    let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None,
-                                        "baz"));
+    let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None, "baz"));
     assert!(user != user3);
     assert_eq!(user.id, user3.id);
     assert_eq!(user3.gh_login, "bar");
@@ -97,8 +105,7 @@ fn show() {
 fn reset_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Put, "/me/reset_token");
-    let user = User::find_or_insert(req.tx().unwrap(), 1, "foo", None,
-                                    None, None, "bar").unwrap();
+    let user = User::find_or_insert(req.tx().unwrap(), 1, "foo", None, None, None, "bar").unwrap();
     ::sign_in_as(&mut req, &user);
     ok_resp!(middle.call(&mut req));
 
@@ -112,11 +119,8 @@ fn crates_by_user_id() {
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
-        u = ::new_user("foo")
-            .create_or_update(&conn)
-            .unwrap();
-        ::CrateBuilder::new("foo_my_packages", u.id)
-            .expect_build(&conn);
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
@@ -124,7 +128,9 @@ fn crates_by_user_id() {
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[derive(RustcDecodable)]
-    struct Response { crates: Vec<EncodableCrate> }
+    struct Response {
+        crates: Vec<EncodableCrate>,
+    }
     let response: Response = ::json(&mut response);
     assert_eq!(response.crates.len(), 1);
 }
@@ -136,7 +142,10 @@ fn following() {
         versions: Vec<EncodableVersion>,
         meta: Meta,
     }
-    #[derive(RustcDecodable)] struct Meta { more: bool }
+    #[derive(RustcDecodable)]
+    struct Meta {
+        more: bool,
+    }
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Get, "/");
@@ -154,35 +163,53 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/foo_fighters/follow")
-                            .with_method(Method::Put)));
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar_fighters/follow")
-                            .with_method(Method::Put)));
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/foo_fighters/follow")
+                .with_method(Method::Put)
+        )
+    );
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/bar_fighters/follow")
+                .with_method(Method::Put)
+        )
+    );
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(Method::Get)
-                                               .with_query("per_page=1")));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/me/updates")
+                .with_method(Method::Get)
+                .with_query("per_page=1")
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
-    ok_resp!(middle.call(req.with_path("/api/v1/crates/bar_fighters/follow")
-                            .with_method(Method::Delete)));
-    let mut response = ok_resp!(middle.call(req.with_path("/me/updates")
-                                               .with_method(Method::Get)
-                                               .with_query("page=2&per_page=1")));
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/bar_fighters/follow")
+                .with_method(Method::Delete)
+        )
+    );
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/me/updates")
+                .with_method(Method::Get)
+                .with_query("page=2&per_page=1")
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
