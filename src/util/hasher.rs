@@ -16,12 +16,13 @@ impl<R: Read> HashingReader<R> {
     }
 
     pub fn finalize(mut self) -> Vec<u8> {
+        /*
+            rustfmt wanted to merge the lines together so had to use this
+            to stop this from occurring
+        */
+        #[rustfmt_skip]
         #[allow(deprecated)]
-#[allow(deprecated)]        #[allow(deprecated)]
-#[allow(deprecated)]        #[allow(deprecated)]
-        #[allow(deprecated)]
-        #[allow(deprecated)]
-        #[allow(deprecated)] self.hasher.finish().unwrap()
+        self.hasher.finish().unwrap()
     }
 }
 
