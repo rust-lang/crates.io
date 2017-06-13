@@ -3,6 +3,7 @@ sudo: false
 dist: trusty
 
 cache:
+  cargo: true
   directories:
     - $HOME/.yarn-cache
 
