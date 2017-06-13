@@ -26,8 +26,9 @@ frontend with a Rust backend, and there are many tasks appropriate for a
 variety of skill levels. 
 
 The Rust backend uses rustfmt for code formatting, so ensure that you run it prior
-to submitting a pull request. More information on setting up and running rustfmt can
-be found [here](https://github.com/rust-lang-nursery/rustfmt/blob/master/README.md).
+to submitting a pull request, and that your version of rustfmt is the latst version.
+More information on setting up and running rustfmt can be found 
+[here](https://github.com/rust-lang-nursery/rustfmt/blob/master/README.md).
 
 Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
 environment.
