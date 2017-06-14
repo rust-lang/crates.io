@@ -501,7 +501,6 @@ impl Crate {
             description,
             homepage,
             documentation,
-            license,
             repository,
             ..
         } = self;
