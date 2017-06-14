@@ -286,7 +286,6 @@ impl<'a> CrateBuilder<'a> {
 
         let mut krate = self.krate.create_or_update(
             connection,
-            self.license_file,
             self.owner_id,
         )?;
 
