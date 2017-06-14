@@ -63,6 +63,7 @@ pub struct EncodableVersion {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    pub license: Option<String>,
     pub links: VersionLinks,
 }
 
@@ -126,6 +127,7 @@ impl Version {
             downloads,
             features,
             yanked,
+            license,
             ..
         } = self;
         let num = num.to_string();
@@ -139,6 +141,7 @@ impl Version {
             downloads: downloads,
             features: features,
             yanked: yanked,
+            license: license,
             links: VersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
