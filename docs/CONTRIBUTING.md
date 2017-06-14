@@ -3,14 +3,14 @@
 ## Finding an issue to work on
 
 We try to keep a variety of issues tagged with
-[E-mentor](https://github.com/rust-lang/crates.io/issues?q=is%3Aopen+is%3Aissue+
- label%3AE-mentor). These issues should contain, somewhere within the body or
-the comments, clear instructions on what needs to be done and where the changes
-will need to be made. If any E-mentor issues do not contain this information or
-the information isn't clear, we consider this a bug, please comment and ask for
-clarification! Please don't hesitate to ask any questions on these issues,
-we're paying special attention to them and someone will get back to you with
-help as soon as possible.
+[E-mentor](https://github.com/rust-lang/crates.io/issues?q=is%3Aopen+is%3Aissue+label%3AE-mentor).
+These issues should contain, somewhere within the body or the comments, clear
+instructions on what needs to be done and where the changes will need to be
+made. If any E-mentor issues do not contain this information or the information
+isn't clear, we consider this a bug, please comment and ask for clarification!
+Please don't hesitate to ask any questions on these issues, we're paying special
+attention to them and someone will get back to you with help as soon as
+possible.
 
 We'd also love contributions for issues not tagged E-mentor, they just might
 not be as well specified. You may want to browse through the labels that start
