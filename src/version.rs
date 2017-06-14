@@ -304,7 +304,8 @@ impl Model for Version {
 /// Handles the `GET /versions` route.
 // FIXME: where/how is this used?
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.tx()?;
+    use diesel::expression::dsl::any;
+    let conn = req.db_conn()?;
 
     // Extract all ids requested.
     let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
@@ -316,25 +317,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         })
         .collect::<Vec<i32>>();
 
-    // Load all versions
-    //
-    // TODO: can rust-postgres do this for us?
-    let mut versions = Vec::new();
-    if !ids.is_empty() {
-        let stmt = conn.prepare(
-            "\
-            SELECT versions.*, crates.name AS crate_name
-              FROM versions
-            LEFT JOIN crates ON crates.id = versions.crate_id
-            WHERE versions.id = ANY($1)
-        ",
-        )?;
-        for row in stmt.query(&[&ids])?.iter() {
-            let v: Version = Model::from_row(&row);
-            let crate_name: String = row.get("crate_name");
-            versions.push(v.encodable(&crate_name));
-        }
-    }
+    let versions = versions::table
+        .inner_join(crates::table)
+        .select((versions::all_columns, crates::name))
+        .filter(versions::id.eq(any(ids)))
+        .load::<(Version, String)>(&*conn)?
+        .into_iter()
+        .map(|(version, crate_name)| version.encodable(&crate_name))
+        .collect();
 
     #[derive(RustcEncodable)]
     struct R {

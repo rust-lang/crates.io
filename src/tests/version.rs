@@ -1,11 +1,12 @@
-use std::collections::HashMap;
+extern crate diesel;
+
 use rustc_serialize::json::Json;
 
 use conduit::{Handler, Method};
-use semver;
+use self::diesel::prelude::*;
 
-use cargo_registry::db::RequestTransaction;
-use cargo_registry::version::{EncodableVersion, Version};
+use cargo_registry::version::EncodableVersion;
+use cargo_registry::schema::versions;
 
 #[derive(RustcDecodable)]
 struct VersionList {
@@ -16,28 +17,28 @@ struct VersionResponse {
     version: EncodableVersion,
 }
 
-fn sv(s: &str) -> semver::Version {
-    semver::Version::parse(s).unwrap()
-}
-
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/versions");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
 
     let (v1, v2) = {
-        ::mock_user(&mut req, ::user("foo"));
-        let (c, _) = ::mock_crate(&mut req, ::krate("foo_vers_index"));
-        let tx = req.tx().unwrap();
-        let m = HashMap::new();
-        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, &[]).unwrap();
-        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, &[]).unwrap();
-        (v1, v2)
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_vers_index", u.id)
+            .version("2.0.0")
+            .version("2.0.1")
+            .expect_build(&conn);
+        let ids = versions::table
+            .select(versions::id)
+            .load::<i32>(&*conn)
+            .unwrap();
+        (ids[0], ids[1])
     };
-    req.with_query(&format!("ids[]={}&ids[]={}", v1.id, v2.id));
+    req.with_query(&format!("ids[]={}&ids[]={}", v1, v2));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);
