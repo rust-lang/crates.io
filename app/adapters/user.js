@@ -25,4 +25,8 @@ export default ApplicationAdapter.extend({
     urlForFavoriteAction(id) {
         return `${this.buildURL('user', id)}/favorite`;
     },
+
+    favorite_users(id) {
+        return this.ajax(`${this.buildURL('user', id)}/favorite_users`, 'GET');
+    },
 });

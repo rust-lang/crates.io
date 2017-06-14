@@ -45,6 +45,15 @@
             </div>
             {{crate-downloads-list crates=visibleFollowing}}
         </div>
+        <div id='my-favorite-users'>
+            <div class='header'>
+                <h2>
+                    <img class="favorites" src="/assets/following.png"/>
+                    Favorite Users
+                </h2>
+            </div>
+            {{users-list users=favoriteUsers}}
+        </div>
     </div>
 
     <div id='my-feed'>

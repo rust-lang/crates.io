@@ -18,6 +18,7 @@ export default Controller.extend({
         this.myFollowing = [];
         this.myFeed = [];
         this.myStats = 0;
+        this.favoriteUsers = [];
     },
 
     visibleCrates: computed('myCrates.[]', function() {
@@ -36,8 +37,16 @@ export default Controller.extend({
         return this.get('myCrates.length') > TO_SHOW;
     }),
 
+    visibleFavorites: computed('favoriteUsers', function() {
+        return this.get('favoriteUsers').slice(0, TO_SHOW);
+    }),
+
     hasMoreFollowing: computed('myFollowing.[]', function() {
         return this.get('myFollowing.length') > TO_SHOW;
+    }),
+
+    hasMoreFavorites: computed('favoriteUsers', function() {
+        return this.get('favoriteUsers.length') > TO_SHOW;
     }),
 
     actions: {

@@ -13,6 +13,7 @@ export default Route.extend(AuthenticatedRoute, {
         controller.set('myCrates', this.get('data.myCrates'));
         controller.set('myFollowing', this.get('data.myFollowing'));
         controller.set('myStats', this.get('data.myStats'));
+        controller.set('favoriteUsers', this.get('data.favoriteUsers'));
 
         if (!controller.get('loadingMore')) {
             controller.set('myFeed', []);
@@ -34,6 +35,10 @@ export default Route.extend(AuthenticatedRoute, {
         });
 
         let myStats = user.stats();
+
+        let favoriteUsers = this.store.query('crate', {
+            following: 1
+        });
 
         return RSVP.hash({
             myCrates,
