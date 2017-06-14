@@ -304,8 +304,8 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new(), None, self.license_file))?
-                .save(connection, &[])?;
+            NewVersion::new(krate.id, version_num, &HashMap::new(), None, self.license_file)?
+              .save(connection, &[])?;
         }
 
         if !self.keywords.is_empty() {
