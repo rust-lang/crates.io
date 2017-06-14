@@ -183,3 +183,11 @@ table! {
         license -> Nullable<Varchar>,
     }
 }
+
+table! {
+    favorite_users (user_id,
+    target_id) {
+        user_id -> Int4,
+        target_id -> Int4,
+    }
+}

@@ -1,0 +1,1 @@
+CREATE INDEX index_favorites_user_id ON favorite_users (user_id);

@@ -1,11 +1,30 @@
 <div id='crates-heading'>
-    {{user-avatar user=model.user size='medium'}}
-    <h1>
-        {{ model.user.login }}
-    </h1>
-    {{#user-link user=model.user}}
-      <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
-    {{/user-link}}
+    <div class="wide">
+        <div class='info'>
+            {{user-avatar user=model.user size='medium'}}
+            <h1>
+                {{ model.user.login }}
+            </h1>
+            {{#user-link user=model.user}}
+              <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
+            {{/user-link}}
+        </div>
+        <div class='right'>
+            {{#if allowFavorting}}
+                <button class='tan-button' {{action 'toggleFavorite' this}}>
+                    {{#if fetchingFavorite}}
+                        <img src="/assets/ajax-loader.gif"/>
+                    {{else}}
+                        {{#if favorited}}
+                            Unfavorite
+                        {{else}}
+                            Favorite
+                        {{/if}}
+                    {{/if}}
+                </button>
+            {{/if}}
+        </div>
+    </div>
 </div>
 
 <div id='user-profile'>

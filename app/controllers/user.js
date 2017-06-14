@@ -21,4 +21,20 @@ export default Controller.extend(PaginationMixin, {
             return 'Alphabetical';
         }
     }),
+
+    fetchingFavorite: false,
+    favorited: false,
+
+    actions: {
+        toggleFavorite() {
+            this.set('fetchingFavorite', true);
+
+            let owner = this.get('user');
+            let op = this.toggleProperty('favorited') ?
+                owner.favorite() : owner.unfavorite();
+
+            return op.finally(() => this.set('fetchingFavorite', false));
+        },
+    },
+
 });

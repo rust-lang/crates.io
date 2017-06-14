@@ -2,6 +2,8 @@ use conduit::{Request, Response};
 use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
 use diesel::prelude::*;
+use diesel;
+
 use diesel::pg::PgConnection;
 use pg::GenericConnection;
 use pg::rows::Row;
@@ -373,6 +375,61 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
         team: EncodableTeam,
     }
     Ok(req.json(&R { team: team.encodable() }))
+}
+
+#[derive(Insertable, Queryable, Identifiable, Associations)]
+#[belongs_to(User)]
+#[primary_key(user_id, target_id)]
+#[table_name="favorite_users"]
+pub struct FavoriteUser {
+    user_id: i32,
+    target_id: i32,
+}
+
+fn favorite_target(req: &mut Request) -> CargoResult<FavoriteUser> {
+    let user = req.user()?;
+    let target_user_id: i32 = req.params()["user_id"].parse().expect("User ID not found");
+    Ok(FavoriteUser {
+        user_id: user.id,
+        target_id: target_user_id,
+    })
+}
+
+/// Handles the `PUT /users/:user_id/favorite` route.
+pub fn favorite(req: &mut Request) -> CargoResult<Response> {
+    use diesel::pg::upsert::OnConflictExtension;
+
+    let favorite = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::insert(&favorite.on_conflict_do_nothing())
+        .into(favorite_users::table)
+        .execute(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles the `DELETE /users/:user_id/favorite` route.
+pub fn unfavorite(req: &mut Request) -> CargoResult<Response> {
+    let favorite = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::delete(&favorite).execute(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles the `GET /users/:user_id/favorited` route.
+pub fn favorited(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::exists;
+
+    let fav = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    let favorited = diesel::select(exists(favorite_users::table.find(fav.id())))
+        .get_result(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { favorited: bool }
+    Ok(req.json(&R { favorited: favorited }))
 }
 
 /// Handles the `GET /me/updates` route.
