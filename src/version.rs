@@ -63,6 +63,7 @@ pub struct EncodableVersion {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    pub license: Option<String>,
     pub links: VersionLinks,
 }
 
@@ -113,7 +114,7 @@ impl Version {
 
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version { id, num, updated_at, created_at,
-                      downloads, features, yanked, .. } = self;
+                      downloads, features, yanked, license, .. } = self;
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
@@ -125,6 +126,7 @@ impl Version {
             downloads: downloads,
             features: features,
             yanked: yanked,
+            license: license,
             links: VersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies",
                                       crate_name, num),
