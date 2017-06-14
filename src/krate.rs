@@ -134,6 +134,7 @@ impl<'a> NewCrate<'a> {
         self,
         conn: &PgConnection,
         uploader: i32,
+        license_file: Option<&str>,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
@@ -1076,10 +1077,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
             repository: new_crate.repository.as_ref().map(|s| &**s),
+            license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
-
-        let krate = persist.create_or_update(&conn, user.id)?;
+        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
+        let krate = persist.create_or_update(&conn, user.id, license_file)?;
 
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {
@@ -1106,14 +1108,14 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             return Err(human(&format_args!("max upload size is: {}", max)));
         }
 
+        // This is only redundant for now. Eventually the duplication will be removed.
         let license = new_crate.license.clone();
-        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
 
         // Persist the new version of this crate
         let version = NewVersion::new(krate.id, vers, &features, license, license_file)?.save(
             &conn,
             &new_crate
-                .authors,
+                .authors
         )?;
 
         // Link this new version to all dependencies
