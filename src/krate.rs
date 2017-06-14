@@ -110,20 +110,18 @@ pub struct NewCrate<'a> {
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
-    pub license: Option<&'a str>,
     pub max_upload_size: Option<i32>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        mut self,
+        self,
         conn: &PgConnection,
-        license_file: Option<&str>,
         uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate(license_file)?;
+        self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
@@ -143,7 +141,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+    fn validate(&self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -167,24 +165,6 @@ impl<'a> NewCrate<'a> {
         validate_url(self.homepage, "homepage")?;
         validate_url(self.documentation, "documentation")?;
         validate_url(self.repository, "repository")?;
-        self.validate_license(license_file)?;
-        Ok(())
-    }
-
-    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(license) = self.license {
-            for part in license.split('/') {
-               license_exprs::validate_license_expr(part)
-                   .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
-                                                    for options, and http://spdx.org/licenses/ \
-                                                    for their identifiers", e)))?;
-            }
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            self.license = Some("non-standard");
-        }
         Ok(())
     }
 
@@ -894,12 +874,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
-            repository: new_crate.repository.as_ref().map(|s| &**s),
-            license: new_crate.license.as_ref().map(|s| &**s),
+            repository: new_crate.repository.as_ref().map(|s| &**s),    
             max_upload_size: None,
         };
-        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
-        let krate = persist.create_or_update(&conn, license_file, user.id)?;
+
+        let krate = persist.create_or_update(&conn, user.id)?;
 
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {
@@ -920,8 +899,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             return Err(human(&format_args!("max upload size is: {}", max)))
         }
 
+        let license = new_crate.license.clone();
+        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
+
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features)?
+        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?
             .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies

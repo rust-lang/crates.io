@@ -23,6 +23,7 @@ use user::RequestUser;
 use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
 use {Model, Crate};
+use license_exprs;
 
 #[derive(Clone, Identifiable, Associations)]
 #[belongs_to(Crate)]
@@ -35,6 +36,7 @@ pub struct Version {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    pub license: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -43,6 +45,7 @@ pub struct NewVersion {
     crate_id: i32,
     num: String,
     features: String,
+    license: Option<String>,
 }
 
 pub struct Author {
@@ -186,13 +189,21 @@ impl NewVersion {
         crate_id: i32,
         num: &semver::Version,
         features: &HashMap<String, Vec<String>>,
+        license: Option<String>,
+        license_file: Option<&str>,
     ) -> CargoResult<Self> {
         let features = json::encode(features)?;
-        Ok(NewVersion {
+
+        let mut new_version = NewVersion {
             crate_id: crate_id,
             num: num.to_string(),
             features: features,
-        })
+            license: license,
+        };
+        
+        new_version.validate_license(license_file)?;
+
+        Ok(new_version)
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
@@ -221,6 +232,23 @@ impl NewVersion {
             Ok(version)
         })
     }
+
+    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+        if let Some(ref license) = self.license {
+            for part in license.split('/') {
+               license_exprs::validate_license_expr(part)
+                   .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
+                                                    for options, and http://spdx.org/licenses/ \
+                                                    for their identifiers", e)))?;
+            }
+        } else if license_file.is_some() {
+            // If no license is given, but a license file is given, flag this
+            // crate as having a nonstandard license. Note that we don't
+            // actually do anything else with license_file currently.
+            self.license = Some(String::from("non-standard"));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Insertable)]
@@ -231,7 +259,7 @@ struct NewAuthor<'a> {
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
-    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool);
+    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool, Option<String>);
 
     fn build(row: Self::Row) -> Self {
         let features = row.6.map(|s| {
@@ -246,6 +274,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             downloads: row.5,
             features: features,
             yanked: row.7,
+            license: row.8,
         }
     }
 }
@@ -266,6 +295,7 @@ impl Model for Version {
             downloads: row.get("downloads"),
             features: features,
             yanked: row.get("yanked"),
+            license: row.get("license"),
         }
     }
     fn table_name(_: Option<Version>) -> &'static str { "versions" }
