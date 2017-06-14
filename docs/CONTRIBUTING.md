@@ -19,6 +19,27 @@ with A-, which stands for "area", to find issues that match with your interests.
 If you'd like to work on something that isn't in a current issue, especially if
 it would be a big change, please open a new issue for discussion!
 
+## Submitting a Pull Request
+
+When you submit a pull request, it will be automatically tested on TravisCI. In
+addition to running both the frontend and the backend tests described below,
+Travis runs [jslint], [clippy], and [rustfmt] on each PR.
+
+If you don't want to run these tools locally, please watch the Travis results
+and submit additional commits to your pull request to fix any issues they find!
+
+If you do want to run these tools locally in order to fix issues before
+submitting, that would be great too! Please consult each tool's installation
+instructions and the .travis.yml file in this repository for the latest
+installation and running instructions. The logs for recent builds in Travis
+may also be helpful to see which versions of these tools we're currently using.
+
+[jslint]: http://jslint.com/
+[clippy]: https://github.com/Manishearth/rust-clippy
+[rustfmt]: https://github.com/rust-lang-nursery/rustfmt
+
+We will try to review your pull requests as soon as possible!
+
 ## Setting up a development environment
 
 First, you'll need git to clone the repo. [GitHub has help pages about setting

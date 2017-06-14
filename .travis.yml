@@ -3,6 +3,7 @@ sudo: false
 dist: trusty
 
 cache:
+  cargo: true
   directories:
     - $HOME/.yarn-cache
 
@@ -17,6 +18,8 @@ install:
   - yarn
   - yarn run bower install
   - cargo install diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install rustfmt
+  - rustfmt --version
 
 before_script:
   - diesel database setup
@@ -34,6 +37,9 @@ addons:
 
 matrix:
   include:
+  - rust: stable
+    script:
+    - cargo fmt -- --write-mode=diff
   - rust: stable
     script:
     - cargo build

@@ -14,7 +14,10 @@ use std::io;
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
     /// For test usage with a proxy.
-    S3 { bucket: s3::Bucket, proxy: Option<String> },
+    S3 {
+        bucket: s3::Bucket,
+        proxy: Option<String>,
+    },
 
     /// For development usage only: "uploads" crate files to `dist` and serves them
     /// from there as well to enable local publishing and download
@@ -32,17 +35,20 @@ impl Uploader {
         }
     }
 
-    pub fn crate_location(&self, crate_name: &str, version: &str)
-                          -> Option<String> {
+    pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                Some(format!("https://{}/{}",
-                        bucket.host(),
-                        Uploader::crate_path(crate_name, version)))
-            },
+                Some(format!(
+                    "https://{}/{}",
+                    bucket.host(),
+                    Uploader::crate_path(crate_name, version)
+                ))
+            }
             Uploader::Local => {
-                Some(format!("/local_uploads/{}",
-                        Uploader::crate_path(crate_name, version)))
+                Some(format!(
+                    "/local_uploads/{}",
+                    Uploader::crate_path(crate_name, version)
+                ))
             }
             Uploader::NoOp => None,
         }
@@ -53,7 +59,13 @@ impl Uploader {
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
-    pub fn upload(&self, req: &mut Request, krate: &Crate, max: u64, vers: &semver::Version) -> CargoResult<(Vec<u8>, Bomb)> {
+    pub fn upload(
+        &self,
+        req: &mut Request,
+        krate: &Crate,
+        max: u64,
+        vers: &semver::Version,
+    ) -> CargoResult<(Vec<u8>, Bomb)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = req.app().handle();
@@ -64,13 +76,19 @@ impl Uploader {
                     let mut body = HashingReader::new(body);
                     let mut response = Vec::new();
                     {
-                        let mut s3req = bucket.put(&mut handle, &path, &mut body,
-                                                       "application/x-tar",
-                                                       length as u64);
-                        s3req.write_function(|data| {
-                            response.extend(data);
-                            Ok(data.len())
-                        }).unwrap();
+                        let mut s3req = bucket.put(
+                            &mut handle,
+                            &path,
+                            &mut body,
+                            "application/x-tar",
+                            length as u64,
+                        );
+                        s3req
+                            .write_function(|data| {
+                                response.extend(data);
+                                Ok(data.len())
+                            })
+                            .unwrap();
                         s3req.perform().chain_error(|| {
                             internal(&format_args!("failed to upload to S3: `{}`", path))
                         })?;
@@ -79,21 +97,27 @@ impl Uploader {
                 };
                 if handle.response_code().unwrap() != 200 {
                     let response = String::from_utf8_lossy(&response);
-                    return Err(internal(&format_args!("failed to get a 200 response from S3: {}",
-                                                response)))
+                    return Err(internal(&format_args!(
+                        "failed to get a 200 response from S3: {}",
+                        response
+                    )));
                 }
 
-                Ok((cksum, Bomb {
-                    app: req.app().clone(),
-                    path: Some(path),
-                }))
-            },
+                Ok((
+                    cksum,
+                    Bomb {
+                        app: req.app().clone(),
+                        path: Some(path),
+                    },
+                ))
+            }
             Uploader::Local => {
                 let path = Uploader::crate_path(&krate.name, &vers.to_string());
-                let crate_filename = env::current_dir().unwrap()
-                                                       .join("dist")
-                                                       .join("local_uploads")
-                                                       .join(path);
+                let crate_filename = env::current_dir()
+                    .unwrap()
+                    .join("dist")
+                    .join("local_uploads")
+                    .join(path);
 
                 let crate_dir = crate_filename.parent().unwrap();
                 fs::create_dir_all(crate_dir)?;
@@ -109,12 +133,23 @@ impl Uploader {
                     body.finalize()
                 };
 
-                Ok((cksum, Bomb {
-                    app: req.app().clone(),
-                    path: crate_filename.to_str().map(String::from)
-                }))
-            },
-            Uploader::NoOp => Ok((vec![], Bomb { app: req.app().clone(), path: None })),
+                Ok((
+                    cksum,
+                    Bomb {
+                        app: req.app().clone(),
+                        path: crate_filename.to_str().map(String::from),
+                    },
+                ))
+            }
+            Uploader::NoOp => {
+                Ok((
+                    vec![],
+                    Bomb {
+                        app: req.app().clone(),
+                        path: None,
+                    },
+                ))
+            }
         }
     }
 
@@ -124,7 +159,7 @@ impl Uploader {
                 let mut handle = app.handle();
                 bucket.delete(&mut handle, path).perform()?;
                 Ok(())
-            },
+            }
             Uploader::Local => {
                 fs::remove_file(path)?;
                 Ok(())

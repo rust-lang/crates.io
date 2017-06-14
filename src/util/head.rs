@@ -18,7 +18,7 @@ impl AroundMiddleware for Head {
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error+Send>> {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,
