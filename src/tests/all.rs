@@ -287,7 +287,7 @@ impl<'a> CrateBuilder<'a> {
         use diesel::update;
 
         let mut krate = self.krate
-            .create_or_update(connection, self.license_file, self.owner_id)?;
+            .create_or_update(connection, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -301,7 +301,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new())?
+            NewVersion::new(krate.id, version_num, &HashMap::new(), None, self.license_file)?
               .save(connection, &[])?;
         }
 
@@ -323,7 +323,7 @@ impl<'a> CrateBuilder<'a> {
 
 fn new_version(crate_id: i32, num: &str) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new()).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
