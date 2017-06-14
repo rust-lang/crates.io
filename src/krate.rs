@@ -134,8 +134,8 @@ impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        uploader: i32,
         license_file: Option<&str>,
+        uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
@@ -1077,7 +1077,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             max_upload_size: None,
         };
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
-        let krate = persist.create_or_update(&conn, user.id, license_file)?;
+        let krate = persist.create_or_update(&conn, license_file, user.id)?;
 
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {

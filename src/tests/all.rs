@@ -304,8 +304,8 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new())?
-                .save(connection, &[])?;
+            NewVersion::new(krate.id, version_num, &HashMap::new(), None, self.license_file)?
+              .save(connection, &[])?;
         }
 
         if !self.keywords.is_empty() {
@@ -325,7 +325,7 @@ impl<'a> CrateBuilder<'a> {
 
 fn new_version(crate_id: i32, num: &str) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new()).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
