@@ -127,20 +127,18 @@ pub struct NewCrate<'a> {
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
-    pub license: Option<&'a str>,
     pub max_upload_size: Option<i32>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        mut self,
+        self,
         conn: &PgConnection,
-        license_file: Option<&str>,
         uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate(license_file)?;
+        self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
@@ -161,7 +159,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+    fn validate(&self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -1080,11 +1078,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
             repository: new_crate.repository.as_ref().map(|s| &**s),
-            license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
-        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
-        let krate = persist.create_or_update(&conn, license_file, user.id)?;
+
+        let krate = persist.create_or_update(&conn, user.id)?;
 
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {
@@ -1111,8 +1108,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             return Err(human(&format_args!("max upload size is: {}", max)));
         }
 
+        let license = new_crate.license.clone();
+        let license_file = new_crate.license_file.as_ref().map(|s| &**s);
+
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features)?.save(
+        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?.save(
             &conn,
             &new_crate
                 .authors,
