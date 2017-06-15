@@ -10,7 +10,7 @@ CREATE TABLE api_tokens (
 CREATE INDEX ON api_tokens (token);
 
 INSERT INTO api_tokens (user_id, token, name)
-  SELECT id, api_token, '' FROM users;
+  SELECT id, api_token, 'Initial token' FROM users;
 
 -- To be done in a cleanup migration later.
 -- ALTER TABLE users DROP COLUMN api_token;
