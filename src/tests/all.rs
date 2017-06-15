@@ -214,12 +214,50 @@ fn user(login: &str) -> User {
 
 use cargo_registry::util::CargoResult;
 
+struct VersionBuilder<'a> {
+    version: semver::Version,
+    license: Option<&'a str>,
+    license_file: Option<&'a str>,
+    features: HashMap<String, Vec<String>>,
+}
+
+impl<'a> VersionBuilder<'a> {
+    fn new(version: &str) -> VersionBuilder {
+        let version = semver::Version::parse(version).unwrap_or_else(
+            |e| {
+                panic!("The version {} is not valid: {}", version, e);
+            },
+        );
+
+        VersionBuilder {
+            version: version,
+            license: None,
+            license_file: None,
+            features: HashMap::new(),
+        }
+    }
+
+    fn build(self, connection: &PgConnection, crate_id: i32) -> CargoResult<Version> {
+        let license = match self.license {
+            Some(license) => Some(license.to_owned()),
+            None => None,
+        };
+
+        NewVersion::new(
+            crate_id,
+            &self.version,
+            &self.features,
+            license,
+            self.license_file,
+        )?.save(connection, &[])
+    }
+}
+
 struct CrateBuilder<'a> {
     owner_id: i32,
     krate: NewCrate<'a>,
-    license_file: Option<&'a str>,
     downloads: Option<i32>,
-    versions: Vec<semver::Version>,
+    versions: Vec<VersionBuilder<'a>>,
     keywords: Vec<&'a str>,
 }
 
@@ -231,7 +269,6 @@ impl<'a> CrateBuilder<'a> {
                 name: name,
                 ..NewCrate::default()
             },
-            license_file: None,
             downloads: None,
             versions: Vec::new(),
             keywords: Vec::new(),
@@ -268,10 +305,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn version(mut self, version: &str) -> Self {
-        let version = semver::Version::parse(version).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", version, e);
-        });
+    fn version(mut self, version: VersionBuilder<'a>) -> Self {
         self.versions.push(version);
         self
     }
@@ -297,14 +331,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions.push("0.99.0".parse().expect(
-                "invalid version number",
-            ));
+            self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
-        for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new(), None, self.license_file)?
-              .save(connection, &[])?;
+        for version in self.versions {
+            version.build(&connection, krate.id)?;
         }
 
         if !self.keywords.is_empty() {

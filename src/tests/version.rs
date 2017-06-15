@@ -29,8 +29,8 @@ fn index() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_vers_index", u.id)
-            .version("2.0.0")
-            .version("2.0.1")
+            .version(::VersionBuilder::new("2.0.0"))
+            .version(::VersionBuilder::new("2.0.1"))
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)

@@ -155,11 +155,11 @@ fn following() {
         ::sign_in_as(&mut req, &user);
 
         ::CrateBuilder::new("foo_fighters", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
 
         ::CrateBuilder::new("bar_fighters", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
 
