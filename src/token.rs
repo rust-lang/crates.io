@@ -36,25 +36,27 @@ pub struct EncodableApiToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &PgConnection,
-                  user_id: i32,
-                  name: &str) -> CargoResult<ApiToken> {
-        #[table_name="api_tokens"]
+    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> CargoResult<ApiToken> {
+        #[table_name = "api_tokens"]
         #[derive(Insertable, AsChangeset)]
-        struct NewApiToken<'a> { user_id: i32, name: &'a str }
+        struct NewApiToken<'a> {
+            user_id: i32,
+            name: &'a str,
+        }
 
-        diesel::insert(&NewApiToken { user_id: user_id, name: name })
-            .into(api_tokens::table)
+        diesel::insert(&NewApiToken {
+            user_id: user_id,
+            name: name,
+        }).into(api_tokens::table)
             .get_result::<ApiToken>(conn)
             .map_err(From::from)
     }
 
     /// Deletes the provided API token if it belongs to the provided user
     pub fn delete(conn: &PgConnection, user_id: i32, id: i32) -> CargoResult<()> {
-        diesel::delete(api_tokens::table
-            .find(id)
-            .filter(api_tokens::user_id.eq(user_id)))
-            .execute(conn)?;
+        diesel::delete(api_tokens::table.find(id).filter(
+            api_tokens::user_id.eq(user_id),
+        )).execute(conn)?;
         Ok(())
     }
 
@@ -103,7 +105,9 @@ impl ApiToken {
 struct BadRequest<T: CargoError>(T);
 
 impl<T: CargoError> CargoError for BadRequest<T> {
-    fn description(&self) -> &str { self.0.description() }
+    fn description(&self) -> &str {
+        self.0.description()
+    }
     fn response(&self) -> Option<Response> {
         self.0.response().map(|mut response| {
             response.status = (400, "Bad Request");
@@ -129,8 +133,10 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
         .map(ApiToken::encodable)
         .collect();
     #[derive(RustcEncodable)]
-    struct R { api_tokens: Vec<EncodableApiToken> }
-    Ok(req.json(&R{ api_tokens: tokens }))
+    struct R {
+        api_tokens: Vec<EncodableApiToken>,
+    }
+    Ok(req.json(&R { api_tokens: tokens }))
 }
 
 /// Handles the `POST /me/tokens` route.
@@ -148,7 +154,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     if req.authentication_source()? != AuthenticationSource::SessionCookie {
-        return Err(bad_request(human("cannot use an API token to create a new API token")));
+        return Err(bad_request(
+            human("cannot use an API token to create a new API token"),
+        ));
     }
 
     let max_post_size = 2000;
@@ -157,7 +165,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     })?;
 
     if length > max_post_size {
-        return Err(bad_request(human(&format_args!("max post size is: {}", max_post_size))));
+        return Err(bad_request(
+            human(&format_args!("max post size is: {}", max_post_size)),
+        ));
     }
 
     let mut json = vec![0; length as usize];
@@ -181,13 +191,18 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let max_token_per_user = 500;
     let count = ApiToken::count_for_user(&*req.db_conn()?, user.id)?;
     if count >= max_token_per_user {
-        return Err(bad_request(human(&format_args!("maximum tokens per user is: {}", max_token_per_user))));
+        return Err(bad_request(human(&format_args!(
+            "maximum tokens per user is: {}",
+            max_token_per_user
+        ))));
     }
 
     let api_token = ApiToken::insert(&*req.db_conn()?, user.id, name)?;
 
     #[derive(RustcEncodable)]
-    struct R { api_token: EncodableApiToken }
+    struct R {
+        api_token: EncodableApiToken,
+    }
     Ok(req.json(&R { api_token: api_token.encodable_with_token() }))
 }
 

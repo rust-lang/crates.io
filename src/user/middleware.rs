@@ -29,7 +29,9 @@ impl conduit_middleware::Middleware for Middleware {
             if let Ok(user) = User::find(req.tx().map_err(std_error)?, id) {
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
-                req.mut_extensions().insert(AuthenticationSource::SessionCookie);
+                req.mut_extensions().insert(
+                    AuthenticationSource::SessionCookie,
+                );
             }
         } else {
             // Otherwise, look for an `Authorization` header on the request

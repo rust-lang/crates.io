@@ -5,11 +5,15 @@ use conduit::{Handler, Method};
 use cargo_registry::token::{ApiToken, EncodableApiToken};
 
 #[derive(RustcDecodable)]
-struct ListResponse { api_tokens: Vec<EncodableApiToken> }
+struct ListResponse {
+    api_tokens: Vec<EncodableApiToken>,
+}
 #[derive(RustcDecodable)]
-struct NewResponse { api_token: EncodableApiToken }
+struct NewResponse {
+    api_token: EncodableApiToken,
+}
 #[derive(RustcDecodable)]
-struct RevokedResponse { }
+struct RevokedResponse {}
 
 macro_rules! assert_contains {
     ($e:expr, $f:expr) => {
@@ -66,8 +70,12 @@ fn list_tokens() {
 
     assert_eq!(json.api_tokens.len(), tokens.len());
     assert_eq!(
-        json.api_tokens.into_iter().map(|t| t.name).collect::<HashSet<_>>(),
-        tokens.into_iter().map(|t| t.name).collect::<HashSet<_>>());
+        json.api_tokens
+            .into_iter()
+            .map(|t| t.name)
+            .collect::<HashSet<_>>(),
+        tokens.into_iter().map(|t| t.name).collect::<HashSet<_>>()
+    );
 }
 
 #[test]
@@ -231,7 +239,10 @@ fn create_token_with_token() {
     let json: ::Bad = ::json(&mut response);
 
     assert_eq!(response.status.0, 400);
-    assert_contains!(json.errors[0].detail, "cannot use an API token to create a new API token");
+    assert_contains!(
+        json.errors[0].detail,
+        "cannot use an API token to create a new API token"
+    );
 }
 
 #[test]

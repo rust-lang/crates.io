@@ -102,8 +102,7 @@ impl User {
     }
 
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &PgConnection,
-                             token_: &str) -> CargoResult<User> {
+    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
         // TODO: This should be doable as a single query, but I can't figure
         // out how to do that with diesel...
         use diesel::update;
@@ -326,9 +325,9 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     #[derive(RustcEncodable)]
     struct R {
-        user: EncodableUser
+        user: EncodableUser,
     }
-    Ok(req.json(&R{ user: req.user()?.clone().encodable() }))
+    Ok(req.json(&R { user: req.user()?.clone().encodable() }))
 }
 
 /// Handles the `GET /users/:user_id` route.

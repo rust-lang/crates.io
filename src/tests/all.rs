@@ -362,7 +362,9 @@ fn mock_user(req: &mut Request, u: User) -> User {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
-    req.mut_extensions().insert(AuthenticationSource::SessionCookie);
+    req.mut_extensions().insert(
+        AuthenticationSource::SessionCookie,
+    );
 }
 
 fn sign_in(req: &mut Request, app: &App) {

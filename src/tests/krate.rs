@@ -1733,7 +1733,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        !json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description") &&
+        !json.errors[0].detail.contains("author") &&
+            json.errors[0].detail.contains("description") &&
             !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
