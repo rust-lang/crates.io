@@ -237,6 +237,11 @@ impl<'a> VersionBuilder<'a> {
         }
     }
 
+    fn license(mut self, license: Option<&'a str>) -> Self {
+        self.license = license;
+        self
+    }
+
     fn build(self, connection: &PgConnection, crate_id: i32) -> CargoResult<Version> {
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
