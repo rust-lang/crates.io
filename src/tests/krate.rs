@@ -357,9 +357,9 @@ fn show() {
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
-            .version("1.0.0")
-            .version("0.5.0")
-            .version("0.5.1")
+            .version(::VersionBuilder::new("1.0.0"))
+            .version(::VersionBuilder::new("0.5.0"))
+            .version(::VersionBuilder::new("0.5.1"))
             .keyword("kw1")
             .expect_build(&conn);
     }
@@ -763,7 +763,7 @@ fn new_krate_duplicate_version() {
         ::sign_in_as(&mut req, &user);
 
         ::CrateBuilder::new("foo_dupe", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
@@ -949,7 +949,7 @@ fn download() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_download", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
     let resp = t_resp!(middle.call(&mut req));
