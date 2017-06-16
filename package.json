@@ -54,5 +54,8 @@
     "ember-suave": "4.0.1",
     "emberx-select": "^3.0.1",
     "loader.js": "4.2.3"
+  },
+  "dependencies": {
+    "normalize.css": "^5.0.0"
   }
 }
