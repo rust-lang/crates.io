@@ -1,5 +1,6 @@
 import { test } from 'qunit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | team page');
 

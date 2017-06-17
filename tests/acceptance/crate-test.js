@@ -1,5 +1,7 @@
 import { test } from 'qunit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import matchesText from 'cargo/tests/helpers/matches-text';
+import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | crate page');
 
