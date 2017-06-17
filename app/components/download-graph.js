@@ -1,5 +1,17 @@
 import Ember from 'ember';
 
+// Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
+const COLORS = [
+    '#67001f',
+    '#b2182b',
+    '#d6604d',
+    '#f4a582',
+    '#92c5de',
+    '#4393c3',
+    '#2166ac',
+    '#053061'
+];
+
 export default Ember.Component.extend({
     classNames: 'graph-data',
 
@@ -104,9 +116,6 @@ export default Ember.Component.extend({
 
         var columns = [0]; // 0 = datetime
         var seriesOption = {};
-        // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
-        var colors = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de',
-                      '#4393c3', '#2166ac', '#053061'];
         var [headers, ] = data;
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
@@ -122,13 +131,13 @@ export default Ember.Component.extend({
             // axis), the series configuration starts with index 0.
             seriesOption[i * 2] = {
                 type: 'scatter',
-                color: colors[i % colors.length],
+                color: COLORS[i % COLORS.length],
                 pointSize: 3,
                 pointShape: 'square'
             };
             seriesOption[i * 2 + 1] = {
                 type: 'line',
-                color: colors[i % colors.length],
+                color: COLORS[i % COLORS.length],
                 lineWidth: 2,
                 curveType: 'function',
                 visibleInLegend: false
