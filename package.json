@@ -1,13 +1,20 @@
 {
   "name": "cargo",
   "version": "0.0.0",
+  "homepage": "https://github.com/rust-lang/crates.io#readme",
+  "bugs": {
+    "url": "https://github.com/rust-lang/crates.io/issues"
+  },
   "license": "MIT",
   "author": "",
   "directories": {
-    "doc": "doc",
+    "doc": "docs",
     "test": "tests"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-lang/crates.io.git"
+  },
   "scripts": {
     "build": "ember build",
     "start": "ember server",
