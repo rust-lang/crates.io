@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "ember build",
+    "lint": "eslint app addon blueprints config server test-support tests *.js",
     "start": "ember server",
     "start:live": "ember server --proxy https://crates.io",
     "start:local": "ember server --proxy http://127.0.0.1:8888",
