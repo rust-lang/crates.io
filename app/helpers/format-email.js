@@ -1,10 +1,10 @@
 import Ember from 'ember';
 
-var escape = Ember.Handlebars.Utils.escapeExpression;
+const escape = Ember.Handlebars.Utils.escapeExpression;
 
 export function formatEmail(email) {
-    var formatted = email.match(/^(.*?)\s*(?:<(.*)>)?$/);
-    var ret = '';
+    let formatted = email.match(/^(.*?)\s*(?:<(.*)>)?$/);
+    let ret = '';
 
     ret += escape(formatted[1]);
 

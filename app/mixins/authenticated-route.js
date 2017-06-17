@@ -2,7 +2,7 @@ import Ember from 'ember';
 
 export default Ember.Mixin.create({
     beforeModel(transition) {
-        var user = this.session.get('currentUser');
+        let user = this.session.get('currentUser');
         if (user !== null) {
             return;
         }

@@ -35,10 +35,10 @@ export default Ember.Controller.extend({
     actions: {
         loadMore() {
             this.set('loadingMore', true);
-            var page = (this.get('myFeed').length / 10) + 1;
+            let page = (this.get('myFeed').length / 10) + 1;
 
             ajax(`/me/updates?page=${page}`).then((data) => {
-                var versions = data.versions.map(version =>
+                let versions = data.versions.map(version =>
                     this.store.push(this.store.normalize('version', version)));
 
                 this.get('myFeed').pushObjects(versions);

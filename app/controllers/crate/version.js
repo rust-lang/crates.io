@@ -40,9 +40,9 @@ export default Ember.Controller.extend({
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return DS.PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
-                var ret = authors.slice();
-                var others = authors.get('meta');
-                for (var i = 0; i < others.names.length; i++) {
+                let ret = authors.slice();
+                let others = authors.get('meta');
+                for (let i = 0; i < others.names.length; i++) {
                     ret.push({ name: others.names[i] });
                 }
                 return ret;
@@ -54,7 +54,7 @@ export default Ember.Controller.extend({
     anyCategories: computed.gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
-        var deps = this.get('currentVersion.dependencies');
+        let deps = this.get('currentVersion.dependencies');
 
         if (deps === null) {
             return [];
@@ -62,9 +62,9 @@ export default Ember.Controller.extend({
 
         return DS.PromiseArray.create({
             promise: deps.then((deps) => {
-                var non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
-                var map = {};
-                var ret = [];
+                let non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
+                let map = {};
+                let ret = [];
 
                 non_dev.forEach((dep) => {
                     if (!(dep.get('crate_id') in map)) {
@@ -79,7 +79,7 @@ export default Ember.Controller.extend({
     }),
 
     currentDevDependencies: computed('currentVersion.dependencies', function() {
-        var deps = this.get('currentVersion.dependencies');
+        let deps = this.get('currentVersion.dependencies');
         if (deps === null) {
             return [];
         }
@@ -120,26 +120,26 @@ export default Ember.Controller.extend({
 
         let extra = this.get('extraDownloads') || [];
 
-        var dates = {};
-        var versions = [];
-        for (var i = 0; i < 90; i++) {
-            var now = moment().subtract(i, 'days');
+        let dates = {};
+        let versions = [];
+        for (let i = 0; i < 90; i++) {
+            let now = moment().subtract(i, 'days');
             dates[now.format('MMM D')] = { date: now, cnt: {} };
         }
 
         downloads.forEach((d) => {
-            var version_id = d.get('version.id');
-            var key = moment(d.get('date')).utc().format('MMM D');
+            let version_id = d.get('version.id');
+            let key = moment(d.get('date')).utc().format('MMM D');
             if (dates[key]) {
-                var prev = dates[key].cnt[version_id] || 0;
+                let prev = dates[key].cnt[version_id] || 0;
                 dates[key].cnt[version_id] = prev + d.get('downloads');
             }
         });
 
         extra.forEach((d) => {
-            var key = moment(d.date).utc().format('MMM D');
+            let key = moment(d.date).utc().format('MMM D');
             if (dates[key]) {
-                var prev = dates[key].cnt[null] || 0;
+                let prev = dates[key].cnt[null] || 0;
                 dates[key].cnt[null] = prev + d.downloads;
             }
         });
@@ -157,15 +157,15 @@ export default Ember.Controller.extend({
             });
         }
 
-        var headers = ['Date'];
+        let headers = ['Date'];
         versions.sort((b) => b.num).reverse();
-        for (i = 0; i < versions.length; i++) {
+        for (let i = 0; i < versions.length; i++) {
             headers.push(versions[i].num);
         }
-        var data = [headers];
-        for (var date in dates) {
-            var row = [dates[date].date.toDate()];
-            for (i = 0; i < versions.length; i++) {
+        let data = [headers];
+        for (let date in dates) {
+            let row = [dates[date].date.toDate()];
+            for (let i = 0; i < versions.length; i++) {
                 row.push(dates[date].cnt[versions[i].id] || 0);
             }
             data.push(row);

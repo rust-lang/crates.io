@@ -7,11 +7,11 @@ export default Ember.Mixin.create({
 
     // Gives page numbers to the surrounding 9 pages.
     pages: computed('currentPage', 'availablePages', function() {
-        var pages = [];
-        var currentPage = this.get('currentPage');
-        var availablePages = this.get('availablePages');
-        var lowerBound = 0;
-        var upperBound = 0;
+        let pages = [];
+        let currentPage = this.get('currentPage');
+        let availablePages = this.get('availablePages');
+        let lowerBound = 0;
+        let upperBound = 0;
 
         // Always show the same number of pages even if we're
         // at the beginning or at the end of the list.
@@ -25,7 +25,7 @@ export default Ember.Mixin.create({
             lowerBound = currentPage - Math.ceil(VIEWABLE_PAGES / 2);
             upperBound = currentPage + Math.floor(VIEWABLE_PAGES / 2);
         }
-        for (var i = lowerBound; i < upperBound; i++) {
+        for (let i = lowerBound; i < upperBound; i++) {
             pages.push(i + 1);
         }
         return pages;
@@ -48,8 +48,8 @@ export default Ember.Mixin.create({
     }),
 
     nextPage: computed('currentPage', 'availablePages', function() {
-        var nextPage = this.get('currentPage') + 1;
-        var availablePages = this.get('availablePages');
+        let nextPage = this.get('currentPage') + 1;
+        let availablePages = this.get('availablePages');
         if (nextPage <= availablePages) {
             return nextPage;
         } else {
@@ -58,7 +58,7 @@ export default Ember.Mixin.create({
     }),
 
     prevPage: computed('currentPage', function() {
-        var prevPage = this.get('currentPage') - 1;
+        let prevPage = this.get('currentPage') - 1;
         if (prevPage > 0) {
             return prevPage;
         } else {

@@ -7,7 +7,7 @@ export default Ember.Service.extend({
 
     init() {
         this._super(...arguments);
-        var isLoggedIn;
+        let isLoggedIn;
         try {
             isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
         } catch(e) {

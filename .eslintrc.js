@@ -21,7 +21,6 @@ module.exports = {
         'comma-dangle': 'off',
         'dot-notation': 'off',
         'indent': ['error', 4],
-        'no-var': 'off',
         'operator-linebreak': 'off',
         'quotes': ['error', 'single', {
             'allowTemplateLiterals': true,

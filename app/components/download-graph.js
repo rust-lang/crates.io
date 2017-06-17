@@ -84,17 +84,17 @@ export default Ember.Component.extend({
             this.$().show();
         }
 
-        var myData = window.google.visualization.arrayToDataTable(data);
+        let myData = window.google.visualization.arrayToDataTable(data);
 
-        var fmt = new window.google.visualization.DateFormat({
+        let fmt = new window.google.visualization.DateFormat({
             pattern: 'LLL d, yyyy',
         });
         fmt.format(myData, 0);
 
         // use a DataView to calculate an x-day moving average
-        var days = 7;
-        var view = new window.google.visualization.DataView(myData);
-        var moving_avg_func_for_col = function(col) {
+        let days = 7;
+        let view = new window.google.visualization.DataView(myData);
+        let moving_avg_func_for_col = function(col) {
             return function(dt, row) {
                 // For the last rows (the *first* days, remember, the dataset is
                 // backwards), we cannot calculate the avg. of previous days.
@@ -102,11 +102,11 @@ export default Ember.Component.extend({
                     return null;
                 }
 
-                var total = 0;
-                for (var i = days; i > 0; i--) {
+                let total = 0;
+                for (let i = days; i > 0; i--) {
                     total += dt.getValue(row + i, col);
                 }
-                var avg = total / days;
+                let avg = total / days;
                 return {
                     v: avg,
                     f: avg.toFixed(2)
@@ -114,9 +114,9 @@ export default Ember.Component.extend({
             };
         };
 
-        var columns = [0]; // 0 = datetime
-        var seriesOption = {};
-        var [headers] = data;
+        let columns = [0]; // 0 = datetime
+        let seriesOption = {};
+        let [headers] = data;
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
 
@@ -145,7 +145,7 @@ export default Ember.Component.extend({
         });
         view.setColumns(columns);
 
-        var chart = new window.google.visualization.ComboChart(this.get('element'));
+        let chart = new window.google.visualization.ComboChart(this.get('element'));
         chart.draw(view, {
             chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
             hAxis: {

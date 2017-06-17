@@ -3,7 +3,7 @@
 /* eslint-env node */
 
 module.exports = function(environment) {
-    var ENV = {
+    let ENV = {
         modulePrefix: 'cargo',
         environment,
         rootURL: '/',

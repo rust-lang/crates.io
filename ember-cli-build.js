@@ -5,7 +5,7 @@
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = function(defaults) {
-    var app = new EmberApp(defaults, {
+    let app = new EmberApp(defaults, {
         babel6: {
             plugins: ['transform-object-rest-spread'],
         },
