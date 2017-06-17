@@ -801,7 +801,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if let Some(q_string) = params.get("q") {
         let q = plainto_tsquery(q_string);
-        query = query.filter(q.matches(crates::textsearchable_index_col));
+        query = query.filter(q.matches(crates::textsearchable_index_col).or(
+            crates::name.eq(
+                q_string,
+            ),
+        ));
 
         query = query.select((
             ALL_COLUMNS,
