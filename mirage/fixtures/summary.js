@@ -1,4 +1,4 @@
-// jscs:disable validateQuoteMarks
+/* eslint-disable quotes */
 export default {
     "just_updated": [{
         "created_at": "2014-12-08T02:08:06Z",

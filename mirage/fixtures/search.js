@@ -1,4 +1,4 @@
-// jscs:disable validateQuoteMarks
+/* eslint-disable quotes */
 export default {
     "crates": [{
         "created_at": "2015-02-27T11:52:13Z",

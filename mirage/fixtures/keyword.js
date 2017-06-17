@@ -1,4 +1,4 @@
-// jscs:disable validateQuoteMarks
+/* eslint-disable quotes */
 export default {
     "keyword": {
         "crates_cnt": 38,

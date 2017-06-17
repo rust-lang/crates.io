@@ -35,20 +35,14 @@ export default Ember.Mixin.create({
         return parseInt(this.get('selectedPage'), 10) || 1;
     }),
 
-    currentPageStart: computed('currentPage',
-                               'itemsPerPage',
-                               'totalItems',
-                               function() {
+    currentPageStart: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
         if (this.get('totalItems') === 0) {
             return 0;
         }
         return (this.get('currentPage') - 1) * this.get('itemsPerPage') + 1;
     }),
 
-    currentPageEnd: computed('currentPage',
-                             'itemsPerPage',
-                             'totalItems',
-                             function() {
+    currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
         return Math.min(this.get('currentPage') * this.get('itemsPerPage'),
                         this.get('totalItems'));
     }),

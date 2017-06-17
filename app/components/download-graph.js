@@ -116,7 +116,7 @@ export default Ember.Component.extend({
 
         var columns = [0]; // 0 = datetime
         var seriesOption = {};
-        var [headers, ] = data;
+        var [headers] = data;
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
 

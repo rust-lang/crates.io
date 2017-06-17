@@ -11,7 +11,9 @@ export default Ember.Route.extend({
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
-        } catch (e) {}
+        } catch(e) {
+            // ignore error
+        }
 
         delete window.github_response;
         var win = window.open('/github_login', 'Authorization',
