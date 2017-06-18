@@ -222,6 +222,37 @@ fn create_token_multiple_have_different_values() {
 }
 
 #[test]
+fn create_token_multiple_users_have_different_values() {
+    let (_b, app, middle) = ::app();
+
+    let first_user = {
+        let conn = t!(app.clone().diesel_database.get());
+        t!(::new_user("foo").create_or_update(&conn))
+    };
+
+    let second_user = {
+        let conn = t!(app.clone().diesel_database.get());
+        t!(::new_user("bar").create_or_update(&conn))
+    };
+
+    let first_token = {
+        let mut req = ::req(app.clone(), Method::Post, "/me/tokens");
+        ::sign_in_as(&mut req, &first_user);
+        req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
+        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
+    };
+
+    let second_token = {
+        let mut req = ::req(app.clone(), Method::Post, "/me/tokens");
+        ::sign_in_as(&mut req, &second_user);
+        req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
+        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
+    };
+
+    assert_ne!(first_token.api_token.token, second_token.api_token.token);
+}
+
+#[test]
 fn create_token_with_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Post, "/me/tokens");
