@@ -5,6 +5,12 @@ export default Ember.Component.extend({
     disableCreate: Ember.computed.or('api_token.isSaving', 'emptyName'),
     serverError: null,
 
+    didInsertElement() {
+        if (this.get('api_token.isNew')) {
+            this.$('input').focus();
+        }
+    },
+
     actions: {
         saveToken() {
             this.get('api_token')
