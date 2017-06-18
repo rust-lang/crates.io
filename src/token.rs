@@ -1,5 +1,3 @@
-use std::fmt;
-
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -10,7 +8,7 @@ use rustc_serialize::json;
 
 use db::RequestTransaction;
 use user::{RequestUser, AuthenticationSource};
-use util::{RequestUtils, CargoError, CargoResult, ChainError, human, read_fill};
+use util::{RequestUtils, CargoResult, ChainError, bad_request, read_fill};
 use schema::api_tokens;
 
 /// The model representing a row in the `api_tokens` database table.
@@ -114,30 +112,6 @@ impl ApiToken {
     }
 }
 
-struct BadRequest<T: CargoError>(T);
-
-impl<T: CargoError> CargoError for BadRequest<T> {
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-    fn response(&self) -> Option<Response> {
-        self.0.response().map(|mut response| {
-            response.status = (400, "Bad Request");
-            response
-        })
-    }
-}
-
-impl<T: CargoError> fmt::Display for BadRequest<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Bad Request: {}", self.0)
-    }
-}
-
-fn bad_request<T: CargoError>(error: T) -> Box<CargoError> {
-    Box::new(BadRequest(error))
-}
-
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut Request) -> CargoResult<Response> {
     let tokens = ApiToken::find_for_user(&*req.db_conn()?, req.user()?.id)?
@@ -166,36 +140,32 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     if req.authentication_source()? != AuthenticationSource::SessionCookie {
-        return Err(bad_request(
-            human("cannot use an API token to create a new API token"),
-        ));
+        return Err(bad_request("cannot use an API token to create a new API token"));
     }
 
     let max_post_size = 2000;
     let length = req.content_length().chain_error(|| {
-        human("missing header: Content-Length")
+        bad_request("missing header: Content-Length")
     })?;
 
     if length > max_post_size {
-        return Err(bad_request(
-            human(&format_args!("max post size is: {}", max_post_size)),
-        ));
+        return Err(bad_request(format!("max post size is: {}", max_post_size)));
     }
 
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
 
     let json = String::from_utf8(json).map_err(|_| {
-        bad_request(human("json body was not valid utf-8"))
+        bad_request("json body was not valid utf-8")
     })?;
 
     let new: NewApiTokenRequest = json::decode(&json).map_err(|e| {
-        bad_request(human(&format_args!("invalid new token request: {:?}", e)))
+        bad_request(format!("invalid new token request: {:?}", e))
     })?;
 
     let name = &new.api_token.name;
     if name.len() < 1 {
-        return Err(bad_request(human("name must have a value")));
+        return Err(bad_request("name must have a value"));
     }
 
     let user = req.user()?;
@@ -203,10 +173,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let max_token_per_user = 500;
     let count = ApiToken::count_for_user(&*req.db_conn()?, user.id)?;
     if count >= max_token_per_user {
-        return Err(bad_request(human(&format_args!(
+        return Err(bad_request(format!(
             "maximum tokens per user is: {}",
             max_token_per_user
-        ))));
+        )));
     }
 
     let api_token = ApiToken::insert(&*req.db_conn()?, user.id, name)?;
@@ -222,7 +192,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 pub fn revoke(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
     let id = req.params()["id"].parse().map_err(|e| {
-        bad_request(human(&format_args!("invalid token id: {:?}", e)))
+        bad_request(format!("invalid token id: {:?}", e))
     })?;
 
     ApiToken::delete(&*req.db_conn()?, user.id, id)?;
