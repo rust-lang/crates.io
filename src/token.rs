@@ -114,7 +114,9 @@ impl ApiToken {
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut Request) -> CargoResult<Response> {
-    let tokens = ApiToken::find_for_user(&*req.db_conn()?, req.user()?.id)?
+    let db_conn = &*req.db_conn()?;
+    let user_id = req.user()?.id;
+    let tokens = ApiToken::find_for_user(db_conn, user_id)?
         .into_iter()
         .map(ApiToken::encodable)
         .collect();
@@ -130,13 +132,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(RustcDecodable, RustcEncodable)]
     struct NewApiToken {
-        pub name: String,
+        name: String,
     }
 
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(RustcDecodable, RustcEncodable)]
     struct NewApiTokenRequest {
-        pub api_token: NewApiToken,
+        api_token: NewApiToken,
     }
 
     if req.authentication_source()? != AuthenticationSource::SessionCookie {
