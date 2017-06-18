@@ -1,6 +1,9 @@
+use std::sync::atomic::Ordering;
+
 use conduit::{Handler, Method};
 
 use cargo_registry::Model;
+use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
@@ -201,4 +204,21 @@ fn following() {
     assert_eq!(r.meta.more, false);
 
     bad_resp!(middle.call(req.with_query("page=0")));
+}
+
+#[test]
+fn updating_existing_user_doesnt_change_api_token() {
+    let (_b, app, _middle) = ::app();
+    let conn = t!(app.diesel_database.get());
+
+    let gh_user_id = ::NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
+
+    let original_user = t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
+    let token = t!(ApiToken::insert(&conn, original_user.id, "foo"));
+
+    t!(NewUser::new(gh_user_id, "bar", None, None, None, "bar_token").create_or_update(&conn));
+    let user = t!(User::find_by_api_token(&conn, &token.token));
+
+    assert_eq!("bar", user.gh_login);
+    assert_eq!("bar_token", user.gh_access_token);
 }
