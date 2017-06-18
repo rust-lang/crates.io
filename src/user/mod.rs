@@ -103,8 +103,6 @@ impl User {
 
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
-        // TODO: This should be doable as a single query, but I can't figure
-        // out how to do that with diesel...
         use diesel::update;
         use diesel::expression::now;
         use schema::api_tokens::dsl::{api_tokens, token, user_id, last_used_at};
