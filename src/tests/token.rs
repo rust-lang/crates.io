@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use conduit::{Handler, Method};
 
-use cargo_registry::token::{ApiToken, EncodableApiToken};
+use cargo_registry::token::{ApiToken, EncodableApiToken, EncodableApiTokenWithToken};
 
 #[derive(RustcDecodable)]
 struct ListResponse {
@@ -10,7 +10,7 @@ struct ListResponse {
 }
 #[derive(RustcDecodable)]
 struct NewResponse {
-    api_token: EncodableApiToken,
+    api_token: EncodableApiTokenWithToken,
 }
 #[derive(RustcDecodable)]
 struct RevokedResponse {}
@@ -185,13 +185,13 @@ fn create_token_success() {
     let json: NewResponse = ::json(&mut response);
 
     assert_eq!(json.api_token.name, "bar");
-    assert!(json.api_token.token.is_some());
+    assert!(!json.api_token.token.is_empty());
 
     let conn = t!(app.diesel_database.get());
     let tokens = t!(ApiToken::find_for_user(&conn, user.id));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
-    assert_eq!(tokens[0].token, json.api_token.token.unwrap());
+    assert_eq!(tokens[0].token, json.api_token.token);
     assert_eq!(tokens[0].last_used_at, None);
 }
 

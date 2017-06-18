@@ -24,12 +24,23 @@ pub struct ApiToken {
     pub last_used_at: Option<Timespec>,
 }
 
-/// The serialization format for the `ApiToken` model.
+/// The serialization format for the `ApiToken` model without its token value.
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct EncodableApiToken {
     pub id: i32,
     pub name: String,
-    pub token: Option<String>,
+    pub created_at: String,
+    pub last_used_at: Option<String>,
+}
+
+/// The serialization format for the `ApiToken` model with its token value.
+/// This should only be used when initially creating a new token to minimize
+/// the chance of token leaks.
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct EncodableApiTokenWithToken {
+    pub id: i32,
+    pub name: String,
+    pub token: String,
     pub created_at: String,
     pub last_used_at: Option<String>,
 }
@@ -83,19 +94,20 @@ impl ApiToken {
         EncodableApiToken {
             id: self.id,
             name: self.name,
-            token: None,
             created_at: ::encode_time(self.created_at),
             last_used_at: self.last_used_at.map(::encode_time),
         }
     }
 
     /// Converts this `ApiToken` model into an `EncodableApiToken` including
-    /// the actual token value for JSON serialization.
-    pub fn encodable_with_token(self) -> EncodableApiToken {
-        EncodableApiToken {
+    /// the actual token value for JSON serialization.  This should only be
+    /// used when initially creating a new token to minimize the chance of
+    /// token leaks.
+    pub fn encodable_with_token(self) -> EncodableApiTokenWithToken {
+        EncodableApiTokenWithToken {
             id: self.id,
             name: self.name,
-            token: Some(self.token),
+            token: self.token,
             created_at: ::encode_time(self.created_at),
             last_used_at: self.last_used_at.map(::encode_time),
         }
@@ -201,7 +213,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(RustcEncodable)]
     struct R {
-        api_token: EncodableApiToken,
+        api_token: EncodableApiTokenWithToken,
     }
     Ok(req.json(&R { api_token: api_token.encodable_with_token() }))
 }
