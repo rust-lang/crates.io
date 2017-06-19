@@ -1,5 +1,4 @@
 import Ember from 'ember';
-import PaginationMixin from '../mixins/pagination';
 
 const { computed } = Ember;
 

@@ -3,7 +3,7 @@ import Ember from 'ember';
 export default Ember.Route.extend({
     queryParams: {
         page: { refreshedModel: true },
-        sort: { refreshedModel: true }, 
+        sort: { refreshedModel: true },
     },
     data: {},
 
