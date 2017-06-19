@@ -371,8 +371,8 @@ impl Owner {
                     parts.next(); // discard github
                     format!(
                         "https://github.com/orgs/{}/teams/{}",
-                        parts.next().unwrap(),
-                        parts.next().unwrap()
+                        parts.next().expect("org failed"), 
+                        parts.next().expect("team failed")
                     )
                 };
                 EncodableOwner {
