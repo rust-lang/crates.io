@@ -100,26 +100,22 @@ impl Badge {
 
                 let json = json!({"badge_type": k, "attributes": attributes_json});
                 if serde_json::from_value::<Badge>(json).is_ok() {
-                    new_badges.push(
-                        NewBadge {
-                            crate_id: krate.id,
-                            badge_type: &**k,
-                            attributes: attributes_json,
-                        },
-                    );
+                    new_badges.push(NewBadge {
+                        crate_id: krate.id,
+                        badge_type: &**k,
+                        attributes: attributes_json,
+                    });
                 } else {
                     invalid_badges.push(&**k);
                 }
             }
         }
 
-        conn.transaction(
-            || {
-                delete(badges::table.filter(badges::crate_id.eq(krate.id)))
-                    .execute(conn)?;
-                insert(&new_badges).into(badges::table).execute(conn)?;
-                Ok(invalid_badges)
-            },
-        )
+        conn.transaction(|| {
+            delete(badges::table.filter(badges::crate_id.eq(krate.id)))
+                .execute(conn)?;
+            insert(&new_badges).into(badges::table).execute(conn)?;
+            Ok(invalid_badges)
+        })
     }
 }

@@ -56,15 +56,13 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
     let rows = tx.query(query, &[])
         .unwrap()
         .into_iter()
-        .map(
-            |row| {
-                let id: i32 = row.get("id");
-                let login: String = row.get("gh_login");
-                let token: String = row.get("gh_access_token");
-                let avatar: Option<String> = row.get("gh_avatar");
-                (id, login, http::token(token), avatar)
-            },
-        )
+        .map(|row| {
+            let id: i32 = row.get("id");
+            let login: String = row.get("gh_login");
+            let token: String = row.get("gh_access_token");
+            let avatar: Option<String> = row.get("gh_avatar");
+            (id, login, http::token(token), avatar)
+        })
         .collect::<Vec<_>>();
 
     for (id, login, token, avatar) in rows {
@@ -80,9 +78,9 @@ fn update(app: &App, tx: &postgres::transaction::Transaction) {
             }
             if ghuser.login == login {
                 tx.execute(
-                        "UPDATE users SET gh_id = $1 WHERE id = $2",
-                        &[&ghuser.id, &id],
-                    )?;
+                    "UPDATE users SET gh_id = $1 WHERE id = $2",
+                    &[&ghuser.id, &id],
+                )?;
                 Ok(())
             } else {
                 Err(human(&format_args!("different login: {}", ghuser.login)))

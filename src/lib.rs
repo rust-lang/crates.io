@@ -183,7 +183,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.around(util::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
-    m.add(conduit_cookie::SessionMiddleware::new("cargo_session", env == Env::Production),);
+    m.add(conduit_cookie::SessionMiddleware::new(
+        "cargo_session",
+        env == Env::Production,
+    ));
     m.add(app::AppMiddleware::new(app));
     if env != Env::Test {
         m.add(db::TransactionMiddleware);
@@ -216,15 +219,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             _req: &mut conduit::Request,
             res: Result<conduit::Response, Box<Error + Send>>,
         ) -> Result<conduit::Response, Box<Error + Send>> {
-            res.map(
-                |res| {
-                    println!("  <- {:?}", res.status);
-                    for (k, v) in &res.headers {
-                        println!("  <- {} {:?}", k, v);
-                    }
-                    res
-                },
-            )
+            res.map(|res| {
+                println!("  <- {:?}", res.status);
+                for (k, v) in &res.headers {
+                    println!("  <- {} {:?}", k, v);
+                }
+                res
+            })
         }
     }
 }

@@ -42,14 +42,11 @@ impl Handler for Middleware {
             .map(|accept| accept.iter().any(|s| s.contains("html")))
             .unwrap_or(false);
         if wants_html {
-            self.dist
-                .call(
-                    &mut RequestProxy {
-                             other: req,
-                             path: Some("/index.html"),
-                             method: None,
-                         },
-                )
+            self.dist.call(&mut RequestProxy {
+                other: req,
+                path: Some("/index.html"),
+                method: None,
+            })
         } else {
             self.handler.as_ref().unwrap().call(req)
         }

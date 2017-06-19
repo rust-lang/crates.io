@@ -248,7 +248,9 @@ fn exact_match_first_on_queries() {
             .expect_build(&conn);
 
         ::CrateBuilder::new("baz_exact", user.id)
-            .description("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact",)
+            .description(
+                "foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact",
+            )
             .expect_build(&conn);
 
         ::CrateBuilder::new("other_exact", user.id)
@@ -299,7 +301,9 @@ fn exact_match_on_queries_with_sort() {
             .expect_build(&conn);
 
         ::CrateBuilder::new("baz_sort", user.id)
-            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const",)
+            .description(
+                "foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const",
+            )
             .downloads(100000)
             .expect_build(&conn);
 
@@ -979,12 +983,16 @@ fn download() {
 
     let yesterday = now_utc() + Duration::days(-1);
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()),);
+    req.with_query(
+        &("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()),
+    );
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 0);
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()),);
+    req.with_query(
+        &("before_date=".to_string() + &strftime("%Y-%m-%d", &yesterday).unwrap()),
+    );
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     // crate/downloads always returns the last 90 days and ignores date params
@@ -992,12 +1000,16 @@ fn download() {
 
     let tomorrow = now_utc() + Duration::days(1);
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()),);
+    req.with_query(
+        &("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()),
+    );
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()),);
+    req.with_query(
+        &("before_date=".to_string() + &strftime("%Y-%m-%d", &tomorrow).unwrap()),
+    );
     let mut resp = ok_resp!(middle.call(&mut req));
     let downloads = ::json::<Downloads>(&mut resp);
     assert_eq!(downloads.version_downloads.len(), 1);
@@ -1163,7 +1175,8 @@ fn owners() {
     assert_eq!(r.users.len(), 1);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(body.as_bytes())));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Put).with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -1171,12 +1184,8 @@ fn owners() {
     assert_eq!(r.users.len(), 2);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete).with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -1184,16 +1193,13 @@ fn owners() {
     assert_eq!(r.users.len(), 1);
 
     let body = r#"{"users":["foo"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete).with_body(body.as_bytes())));
     ::json::<::Bad>(&mut response);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(body.as_bytes())));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Put).with_body(body.as_bytes())));
     assert!(::json::<O>(&mut response).ok);
 }
 
@@ -1777,7 +1783,7 @@ fn author_license_and_description_required() {
     let json = bad_resp!(middle.call(&mut req));
     assert!(
         json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description") &&
-        json.errors[0].detail.contains("license"),
+            json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
     );
@@ -1788,7 +1794,7 @@ fn author_license_and_description_required() {
     let json = bad_resp!(middle.call(&mut req));
     assert!(
         json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description") &&
-        !json.errors[0].detail.contains("license"),
+            !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
     );
@@ -1800,8 +1806,8 @@ fn author_license_and_description_required() {
     let json = bad_resp!(middle.call(&mut req));
     assert!(
         !json.errors[0].detail.contains("author") &&
-        json.errors[0].detail.contains("description") &&
-        !json.errors[0].detail.contains("license"),
+            json.errors[0].detail.contains("description") &&
+            !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
     );

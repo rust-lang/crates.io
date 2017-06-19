@@ -59,18 +59,14 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     let isitmaintained_issue_resolution =
         Badge::IsItMaintainedIssueResolution { repository: String::from("rust-lang/rust") };
     let mut badge_attributes_isitmaintained_issue_resolution = HashMap::new();
-    badge_attributes_isitmaintained_issue_resolution.insert(
-        String::from("repository"),
-        String::from("rust-lang/rust"),
-    );
+    badge_attributes_isitmaintained_issue_resolution
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
 
     let isitmaintained_open_issues =
         Badge::IsItMaintainedOpenIssues { repository: String::from("rust-lang/rust") };
     let mut badge_attributes_isitmaintained_open_issues = HashMap::new();
-    badge_attributes_isitmaintained_open_issues.insert(
-        String::from("repository"),
-        String::from("rust-lang/rust"),
-    );
+    badge_attributes_isitmaintained_open_issues
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
 
     let codecov = Badge::Codecov {
         service: Some(String::from("github")),

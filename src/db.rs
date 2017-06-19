@@ -150,12 +150,15 @@ impl Transaction {
     }
 
     pub fn conn(
-        &self,)
-        -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
+        &self,
+    ) -> CargoResult<&r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>> {
         if !self.slot.filled() {
-            let conn = self.app.database.get().map_err(|e| {
-                internal(&format_args!("failed to get a database connection: {}", e))
-            })?;
+            let conn = self.app
+                .database
+                .get()
+                .map_err(|e| {
+                    internal(&format_args!("failed to get a database connection: {}", e))
+                })?;
             self.slot.fill(Box::new(conn));
         }
         Ok(&**self.slot.borrow().unwrap())

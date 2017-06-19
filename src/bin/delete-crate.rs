@@ -55,16 +55,14 @@ fn delete(tx: &postgres::transaction::Transaction) {
     for v in versions.iter() {
         println!("deleting version {} ({})", v.num, v.id);
         let n = tx.execute(
-                "DELETE FROM version_downloads WHERE version_id = $1",
-                &[&v.id],
-            )
-            .unwrap();
+            "DELETE FROM version_downloads WHERE version_id = $1",
+            &[&v.id],
+        ).unwrap();
         println!("  {} download records deleted", n);
         let n = tx.execute(
-                "DELETE FROM version_authors WHERE version_id = $1",
-                &[&v.id],
-            )
-            .unwrap();
+            "DELETE FROM version_authors WHERE version_id = $1",
+            &[&v.id],
+        ).unwrap();
         println!("  {} author records deleted", n);
         let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1", &[&v.id])
             .unwrap();
@@ -80,10 +78,9 @@ fn delete(tx: &postgres::transaction::Transaction) {
 
     println!("deleting crate download records");
     let n = tx.execute(
-            "DELETE FROM crate_downloads WHERE crate_id = $1",
-            &[&krate.id],
-        )
-        .unwrap();
+        "DELETE FROM crate_downloads WHERE crate_id = $1",
+        &[&krate.id],
+    ).unwrap();
     println!("  {} deleted", n);
 
     println!("deleting crate owners");
@@ -93,33 +90,29 @@ fn delete(tx: &postgres::transaction::Transaction) {
 
     println!("disabling reserved crate name trigger");
     let _ = tx.execute(
-            "ALTER TABLE crates DISABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
-            &[],
-        )
-        .unwrap();
+        "ALTER TABLE crates DISABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
+        &[],
+    ).unwrap();
 
     println!("deleting crate keyword connections");
     let n = tx.execute(
-            "DELETE FROM crates_keywords WHERE crate_id = $1",
-            &[&krate.id],
-        )
-        .unwrap();
+        "DELETE FROM crates_keywords WHERE crate_id = $1",
+        &[&krate.id],
+    ).unwrap();
     println!("  {} deleted", n);
 
     println!("deleting crate category connections");
     let n = tx.execute(
-            "DELETE FROM crates_categories WHERE crate_id = $1",
-            &[&krate.id],
-        )
-        .unwrap();
+        "DELETE FROM crates_categories WHERE crate_id = $1",
+        &[&krate.id],
+    ).unwrap();
     println!("  {} deleted", n);
 
     println!("enabling reserved crate name trigger");
     let _ = tx.execute(
-            "ALTER TABLE crates ENABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
-            &[],
-        )
-        .unwrap();
+        "ALTER TABLE crates ENABLE TRIGGER trigger_ensure_crate_name_not_reserved;",
+        &[],
+    ).unwrap();
 
     println!("deleting crate badges");
     let n = tx.execute("DELETE FROM badges WHERE crate_id = $1", &[&krate.id])

@@ -21,8 +21,7 @@ fn main() {
 }
 
 fn transfer(tx: &postgres::transaction::Transaction) {
-    let stmt = tx.prepare("SELECT id, name, license FROM crates")
-        .unwrap();
+    let stmt = tx.prepare("SELECT id, name, license FROM crates").unwrap();
     let rows = stmt.query(&[]).unwrap();
 
     for row in rows.iter() {
@@ -37,10 +36,9 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         );
 
         let num_updated = tx.execute(
-                "UPDATE versions SET license = $1 WHERE crate_id = $2",
-                &[&license, &id],
-            )
-            .unwrap();
+            "UPDATE versions SET license = $1 WHERE crate_id = $2",
+            &[&license, &id],
+        ).unwrap();
         assert!(num_updated > 0);
     }
 

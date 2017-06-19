@@ -85,24 +85,24 @@ impl Dependency {
     ) -> CargoResult<Dependency> {
         let req = req.to_string();
         let stmt = conn.prepare(
-                "INSERT INTO dependencies
+            "INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                                       RETURNING *",
-            )?;
+        )?;
         let rows = stmt.query(
-                &[
-                    &version_id,
-                    &crate_id,
-                    &req,
-                    &optional,
-                    &default_features,
-                    &features,
-                    target,
-                    &(kind as i32),
-                ],
-            )?;
+            &[
+                &version_id,
+                &crate_id,
+                &req,
+                &optional,
+                &default_features,
+                &features,
+                target,
+                &(kind as i32),
+            ],
+        )?;
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
@@ -138,48 +138,44 @@ pub fn add_dependencies(
     use diesel::insert;
 
     let git_and_new_dependencies = deps.iter()
-        .map(
-            |dep| {
-                let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn).map_err(
-                |_| {
+        .map(|dep| {
+            let krate = Crate::by_name(&dep.name)
+                .first::<Crate>(&*conn)
+                .map_err(|_| {
                     human(&format_args!("no known crate named `{}`", &*dep.name))
-                },
-            )?;
-                if dep.version_req == semver::VersionReq::parse("*").unwrap() {
-                    return Err(
-                        human(
-                            "wildcard (`*`) dependency constraints are not allowed \
-                              on crates.io. See http://doc.crates.io/faq.html#can-\
-                              libraries-use--as-a-version-for-their-dependencies for more \
-                              information",
-                        ),
-                    );
-                }
-                let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
+                })?;
+            if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+                return Err(human(
+                    "wildcard (`*`) dependency constraints are not allowed \
+                     on crates.io. See http://doc.crates.io/faq.html#can-\
+                     libraries-use--as-a-version-for-their-dependencies for more \
+                     information",
+                ));
+            }
+            let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
 
-                Ok(
-                    (git::Dependency {
-                         name: dep.name.to_string(),
-                         req: dep.version_req.to_string(),
-                         features: features.iter().map(|s| s.to_string()).collect(),
-                         optional: dep.optional,
-                         default_features: dep.default_features,
-                         target: dep.target.clone(),
-                         kind: dep.kind.or(Some(Kind::Normal)),
-                     },
-                     NewDependency {
-                         version_id: version_id,
-                         crate_id: krate.id,
-                         req: dep.version_req.to_string(),
-                         kind: dep.kind.unwrap_or(Kind::Normal) as i32,
-                         optional: dep.optional,
-                         default_features: dep.default_features,
-                         features: features,
-                         target: dep.target.as_ref().map(|s| &**s),
-                     }),
-                )
-            },
-        )
+            Ok((
+                git::Dependency {
+                    name: dep.name.to_string(),
+                    req: dep.version_req.to_string(),
+                    features: features.iter().map(|s| s.to_string()).collect(),
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    target: dep.target.clone(),
+                    kind: dep.kind.or(Some(Kind::Normal)),
+                },
+                NewDependency {
+                    version_id: version_id,
+                    crate_id: krate.id,
+                    req: dep.version_req.to_string(),
+                    kind: dep.kind.unwrap_or(Kind::Normal) as i32,
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    features: features,
+                    target: dep.target.as_ref().map(|s| &**s),
+                },
+            ))
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
@@ -193,7 +189,17 @@ pub fn add_dependencies(
 }
 
 impl Queryable<dependencies::SqlType, Pg> for Dependency {
-    type Row = (i32, i32, i32, String, bool, bool, Vec<String>, Option<String>, i32);
+    type Row = (
+        i32,
+        i32,
+        i32,
+        String,
+        bool,
+        bool,
+        Vec<String>,
+        Option<String>,
+        i32,
+    );
 
     fn build(row: Self::Row) -> Self {
         Dependency {

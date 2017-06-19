@@ -87,25 +87,19 @@ impl Team {
             "github" => {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
-                let team = chunks
-                    .next()
-                    .ok_or_else(
-                        || {
-                            human(
-                                "missing github team argument; \
-                            format is github:org:team",
-                            )
-                        },
-                    )?;
+                let team = chunks.next().ok_or_else(|| {
+                    human(
+                        "missing github team argument; \
+                         format is github:org:team",
+                    )
+                })?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
             }
             _ => {
-                Err(
-                    human(
-                        "unknown organization handler, \
-                            only 'github:org:team' is supported",
-                    ),
-                )
+                Err(human(
+                    "unknown organization handler, \
+                     only 'github:org:team' is supported",
+                ))
             }
         }
     }
@@ -133,15 +127,11 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(whitelist) {
-            return Err(
-                human(
-                    &format_args!(
+            return Err(human(&format_args!(
                 "organization cannot contain special \
-                                        characters like {}",
+                 characters like {}",
                 c
-            ),
-                ),
-            );
+            )));
         }
 
         #[derive(RustcDecodable)]
@@ -161,17 +151,13 @@ impl Team {
         let team = teams
             .into_iter()
             .find(|team| team.slug == team_name)
-            .ok_or_else(
-                || {
-                    human(
-                        &format_args!(
+            .ok_or_else(|| {
+                human(&format_args!(
                     "could not find the github team {}/{}",
                     org_name,
                     team_name
-                ),
-                    )
-                },
-            )?;
+                ))
+            })?;
 
         if !team_with_gh_id_contains_user(app, team.id, req_user)? {
             return Err(human("only members of a team can add it as an owner"));
@@ -213,8 +199,9 @@ impl Team {
             avatar: avatar,
         };
 
-        diesel::insert(&new_team.on_conflict(teams::github_id, do_update().set(&new_team)),)
-            .into(teams::table)
+        diesel::insert(
+            &new_team.on_conflict(teams::github_id, do_update().set(&new_team)),
+        ).into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
     }
@@ -279,13 +266,17 @@ impl Owner {
                 .filter(teams::login.eq(name))
                 .first(conn)
                 .map(Owner::Team)
-                .map_err(|_| human(&format_args!("could not find team with name {}", name)),)
+                .map_err(|_| {
+                    human(&format_args!("could not find team with name {}", name))
+                })
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
                 .first(conn)
                 .map(Owner::User)
-                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)),)
+                .map_err(|_| {
+                    human(&format_args!("could not find user with login `{}`", name))
+                })
         }
     }
 
@@ -313,13 +304,13 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User {
-                            id,
-                            email,
-                            name,
-                            gh_login,
-                            gh_avatar,
-                            ..
-                        }) => {
+                id,
+                email,
+                name,
+                gh_login,
+                gh_avatar,
+                ..
+            }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
@@ -332,12 +323,12 @@ impl Owner {
                 }
             }
             Owner::Team(Team {
-                            id,
-                            name,
-                            login,
-                            avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                login,
+                avatar,
+                ..
+            }) => {
                 let url = {
                     let mut parts = login.split(':');
                     parts.next(); // discard github

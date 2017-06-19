@@ -27,7 +27,9 @@ pub trait CargoError: Send + fmt::Display + 'static {
 
     fn response(&self) -> Option<Response> {
         if self.human() {
-            Some(json_response(&Bad { errors: vec![StringError { detail: self.description().to_string() }] },),)
+            Some(json_response(&Bad {
+                errors: vec![StringError { detail: self.description().to_string() }],
+            }))
         } else {
             self.cause().and_then(|cause| cause.response())
         }
@@ -109,16 +111,12 @@ impl<T, E: CargoError> ChainError<T> for Result<T, E> {
         E2: CargoError,
         C: FnOnce() -> E2,
     {
-        self.map_err(
-            move |err| {
-                Box::new(
-                    ChainedError {
-                        error: callback(),
-                        cause: Box::new(err),
-                    },
-                ) as Box<CargoError>
-            },
-        )
+        self.map_err(move |err| {
+            Box::new(ChainedError {
+                error: callback(),
+                cause: Box::new(err),
+            }) as Box<CargoError>
+        })
     }
 }
 
@@ -233,8 +231,9 @@ impl CargoError for NotFound {
     }
 
     fn response(&self) -> Option<Response> {
-        let mut response =
-            json_response(&Bad { errors: vec![StringError { detail: "Not Found".to_string() }] },);
+        let mut response = json_response(&Bad {
+            errors: vec![StringError { detail: "Not Found".to_string() }],
+        });
         response.status = (404, "Not Found");
         Some(response)
     }
@@ -254,15 +253,13 @@ impl CargoError for Unauthorized {
     }
 
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(
-            &Bad {
-                 errors: vec![
+        let mut response = json_response(&Bad {
+            errors: vec![
                 StringError {
                     detail: "must be logged in to perform that action".to_string(),
                 },
             ],
-             },
-        );
+        });
         response.status = (403, "Forbidden");
         Some(response)
     }
@@ -275,36 +272,30 @@ impl fmt::Display for Unauthorized {
 }
 
 pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
-    Box::new(
-        ConcreteCargoError {
-            description: error.to_string(),
-            detail: Some(detail.to_string()),
-            cause: None,
-            human: false,
-        },
-    )
+    Box::new(ConcreteCargoError {
+        description: error.to_string(),
+        detail: Some(detail.to_string()),
+        cause: None,
+        human: false,
+    })
 }
 
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
-    Box::new(
-        ConcreteCargoError {
-            description: error.to_string(),
-            detail: None,
-            cause: None,
-            human: false,
-        },
-    )
+    Box::new(ConcreteCargoError {
+        description: error.to_string(),
+        detail: None,
+        cause: None,
+        human: false,
+    })
 }
 
 pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
-    Box::new(
-        ConcreteCargoError {
-            description: error.to_string(),
-            detail: None,
-            cause: None,
-            human: true,
-        },
-    )
+    Box::new(ConcreteCargoError {
+        description: error.to_string(),
+        detail: None,
+        cause: None,
+        human: true,
+    })
 }
 
 pub fn std_error(e: Box<CargoError>) -> Box<Error + Send> {

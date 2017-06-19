@@ -46,10 +46,10 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
     );
     headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
     return Response {
-               status: (200, "OK"),
-               headers: headers,
-               body: Box::new(Cursor::new(json.into_bytes())),
-           };
+        status: (200, "OK"),
+        headers: headers,
+        body: Box::new(Cursor::new(json.into_bytes())),
+    };
 
     fn fixup(json: Json) -> Json {
         match json {
@@ -57,12 +57,10 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
                 Json::Object(
                     object
                         .into_iter()
-                        .map(
-                            |(k, v)| {
-                                let k = if k == "krate" { "crate".to_string() } else { k };
-                                (k, fixup(v))
-                            },
-                        )
+                        .map(|(k, v)| {
+                            let k = if k == "krate" { "crate".to_string() } else { k };
+                            (k, fixup(v))
+                        })
                         .collect(),
                 )
             }
@@ -112,7 +110,9 @@ impl<'a> RequestUtils for Request + 'a {
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(default);
         if limit > max {
-            return Err(human(&format_args!("cannot request more than {} items", max)),);
+            return Err(human(
+                &format_args!("cannot request more than {} items", max),
+            ));
         }
         if page == 0 {
             return Err(human("page indexing starts from 1, page 0 is invalid"));
@@ -147,13 +147,11 @@ impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
-        sub_router.call(
-            &mut RequestProxy {
-                     other: req,
-                     path: Some(&path),
-                     method: None,
-                 },
-        )
+        sub_router.call(&mut RequestProxy {
+            other: req,
+            path: Some(&path),
+            method: None,
+        })
     }
 }
 
