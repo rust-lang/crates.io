@@ -68,12 +68,8 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         Badge::IsItMaintainedOpenIssues { repository: String::from("rust-lang/rust") };
     let mut badge_attributes_isitmaintained_open_issues = HashMap::new();
     badge_attributes_isitmaintained_open_issues.insert(
-        String::from(
-            "repository",
-        ),
-        String::from(
-            "rust-lang/rust",
-        ),
+        String::from("repository"),
+        String::from("rust-lang/rust"),
     );
 
     let codecov = Badge::Codecov {
@@ -388,9 +384,9 @@ fn isitmaintained_open_issues_required_keys() {
     let mut badges = HashMap::new();
 
     // Repository is a required key
-    test_badges.isitmaintained_open_issues_attributes.remove(
-        "repository",
-    );
+    test_badges
+        .isitmaintained_open_issues_attributes
+        .remove("repository");
     badges.insert(
         String::from("isitmaintained_open_issues"),
         test_badges.isitmaintained_open_issues_attributes,

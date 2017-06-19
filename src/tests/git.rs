@@ -8,11 +8,10 @@ use git2;
 use url::Url;
 
 fn root() -> PathBuf {
-    env::current_dir().unwrap().join("tmp").join(
-        thread::current()
-            .name()
-            .unwrap(),
-    )
+    env::current_dir()
+        .unwrap()
+        .join("tmp")
+        .join(thread::current().name().unwrap())
 }
 
 pub fn checkout() -> PathBuf {
@@ -27,9 +26,7 @@ pub fn init() {
     let _ = fs::remove_dir_all(&checkout());
     let _ = fs::remove_dir_all(&bare());
 
-    INIT.call_once(|| {
-        fs::create_dir_all(root().parent().unwrap()).unwrap();
-    });
+    INIT.call_once(|| { fs::create_dir_all(root().parent().unwrap()).unwrap(); },);
 
     // Prepare a bare remote repo
     {
@@ -45,7 +42,9 @@ pub fn init() {
 
     // Setup the `origin` remote
     checkout.remote_set_url("origin", &url).unwrap();
-    checkout.remote_set_pushurl("origin", Some(&url)).unwrap();
+    checkout
+        .remote_set_pushurl("origin", Some(&url))
+        .unwrap();
     checkout
         .remote_add_push("origin", "refs/heads/master")
         .unwrap();

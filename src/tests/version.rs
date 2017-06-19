@@ -29,10 +29,8 @@ fn index() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_vers_index", u.id)
-            .version(::VersionBuilder::new("2.0.0")
-                        .license(Some("MIT")))
-            .version(::VersionBuilder::new("2.0.1")
-                        .license(Some("MIT/Apache-2.0")))
+            .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
+            .version(::VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")),)
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)
@@ -49,7 +47,7 @@ fn index() {
         match v.num.as_ref() {
             "2.0.0" => assert_eq!(v.license, Some(String::from("MIT"))),
             "2.0.1" => assert_eq!(v.license, Some(String::from("MIT/Apache-2.0"))),
-            _ => panic!("unexpected version")
+            _ => panic!("unexpected version"),
         }
     }
 }
@@ -62,7 +60,9 @@ fn show() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
-        ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
+        ::new_version(krate.id, "2.0.0")
+            .save(&conn, &[])
+            .unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));

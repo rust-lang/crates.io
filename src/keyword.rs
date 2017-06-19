@@ -79,9 +79,9 @@ impl Keyword {
             return false;
         }
         name.chars().next().unwrap().is_alphanumeric() &&
-            name.chars().all(
-                |c| c.is_alphanumeric() || c == '_' || c == '-',
-            ) && name.chars().all(|c| c.is_ascii())
+        name.chars()
+            .all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
+        name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {
@@ -100,25 +100,28 @@ impl Keyword {
     }
 
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
-        conn.transaction(|| {
-            let keywords = Keyword::find_or_create_all(conn, keywords)?;
-            diesel::delete(CrateKeyword::belonging_to(krate)).execute(
-                conn,
-            )?;
-            let crate_keywords = keywords
-                .into_iter()
-                .map(|kw| {
-                    CrateKeyword {
-                        crate_id: krate.id,
-                        keyword_id: kw.id,
-                    }
-                })
-                .collect::<Vec<_>>();
-            diesel::insert(&crate_keywords)
-                .into(crates_keywords::table)
-                .execute(conn)?;
-            Ok(())
-        })
+        conn.transaction(
+            || {
+                let keywords = Keyword::find_or_create_all(conn, keywords)?;
+                diesel::delete(CrateKeyword::belonging_to(krate))
+                    .execute(conn)?;
+                let crate_keywords = keywords
+                    .into_iter()
+                    .map(
+                        |kw| {
+                            CrateKeyword {
+                                crate_id: krate.id,
+                                keyword_id: kw.id,
+                            }
+                        },
+                    )
+                    .collect::<Vec<_>>();
+                diesel::insert(&crate_keywords)
+                    .into(crates_keywords::table)
+                    .execute(conn)?;
+                Ok(())
+            },
+        )
     }
 }
 
@@ -175,10 +178,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         total: i64,
     }
 
-    Ok(req.json(&R {
-        keywords: kws,
-        meta: Meta { total: total },
-    }))
+    Ok(
+        req.json(
+            &R {
+                 keywords: kws,
+                 meta: Meta { total: total },
+             },
+        ),
+    )
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.

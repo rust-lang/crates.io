@@ -19,9 +19,9 @@ impl<'a> Request for RequestProxy<'a> {
         self.other.conduit_version()
     }
     fn method(&self) -> conduit::Method {
-        self.method.clone().unwrap_or_else(
-            || self.other.method().clone(),
-        )
+        self.method
+            .clone()
+            .unwrap_or_else(|| self.other.method().clone())
     }
     fn scheme(&self) -> conduit::Scheme {
         self.other.scheme()
@@ -33,7 +33,9 @@ impl<'a> Request for RequestProxy<'a> {
         self.other.virtual_root()
     }
     fn path(&self) -> &str {
-        self.path.map(|s| &*s).unwrap_or_else(|| self.other.path())
+        self.path
+            .map(|s| &*s)
+            .unwrap_or_else(|| self.other.path())
     }
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()

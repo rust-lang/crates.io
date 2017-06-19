@@ -21,7 +21,8 @@ fn main() {
 }
 
 fn transfer(tx: &postgres::transaction::Transaction) {
-    let stmt = tx.prepare("SELECT id, name, license FROM crates").unwrap();
+    let stmt = tx.prepare("SELECT id, name, license FROM crates")
+        .unwrap();
     let rows = stmt.query(&[]).unwrap();
 
     for row in rows.iter() {
@@ -29,9 +30,17 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         let name: String = row.get("name");
         let license: String = row.get("license");
 
-        println!("Setting the license for all versions of {} to {}.", name, license);
+        println!(
+            "Setting the license for all versions of {} to {}.",
+            name,
+            license
+        );
 
-        let num_updated = tx.execute("UPDATE versions SET license = $1 WHERE crate_id = $2", &[&license, &id]).unwrap();
+        let num_updated = tx.execute(
+                "UPDATE versions SET license = $1 WHERE crate_id = $2",
+                &[&license, &id],
+            )
+            .unwrap();
         assert!(num_updated > 0);
     }
 
@@ -41,7 +50,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
 fn get_confirm(msg: &str) {
     print!("{} [y/N]: ", msg);
     std::io::stdout().flush().unwrap();
-    
+
     let mut line = String::new();
     std::io::stdin().read_line(&mut line).unwrap();
 

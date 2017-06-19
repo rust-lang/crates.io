@@ -107,7 +107,8 @@ fn update_crate() {
         req.tx().unwrap(),
         &krate,
         &["cat1".to_string(), "category-2".to_string()],
-    ).unwrap();
+    )
+            .unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 1);
 
@@ -121,7 +122,8 @@ fn update_crate() {
         req.tx().unwrap(),
         &krate,
         &["cat1".to_string(), "catnope".to_string()],
-    ).unwrap();
+    )
+            .unwrap();
     assert_eq!(invalid_categories, vec!["catnope".to_string()]);
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);
@@ -145,7 +147,8 @@ fn update_crate() {
         req.tx().unwrap(),
         &krate,
         &["cat1".to_string(), "cat1::bar".to_string()],
-    ).unwrap();
+    )
+            .unwrap();
     assert_eq!(cnt(&mut req, "cat1"), 1);
     assert_eq!(cnt(&mut req, "cat1::bar"), 1);
     assert_eq!(cnt(&mut req, "category-2"), 0);

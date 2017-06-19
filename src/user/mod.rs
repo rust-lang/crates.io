@@ -94,9 +94,9 @@ impl User {
     /// Queries the database for a user with a certain `gh_login` value.
     pub fn find_by_login(conn: &GenericConnection, login: &str) -> CargoResult<User> {
         let stmt = conn.prepare(
-            "SELECT * FROM users
+                "SELECT * FROM users
                                       WHERE gh_login = $1",
-        )?;
+            )?;
         let rows = stmt.query(&[&login])?;
         let row = rows.iter().next().chain_error(|| NotFound)?;
         Ok(Model::from_row(&row))
@@ -105,9 +105,9 @@ impl User {
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &GenericConnection, token: &str) -> CargoResult<User> {
         let stmt = conn.prepare(
-            "SELECT * FROM users \
+                "SELECT * FROM users \
                                       WHERE api_token = $1 LIMIT 1",
-        )?;
+            )?;
         let rows = stmt.query(&[&token])?;
         rows.iter()
             .next()
@@ -130,7 +130,7 @@ impl User {
         //       more errors than it needs to.
 
         let stmt = conn.prepare(
-            "UPDATE users
+                "UPDATE users
                                       SET gh_access_token = $1,
                                           email = $2,
                                           name = $3,
@@ -138,26 +138,26 @@ impl User {
                                           gh_login = $5
                                       WHERE gh_id = $6
                                       RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[&access_token, &email, &name, &avatar, &login, &id],
-        )?;
+            )?;
+        let rows = stmt.query(&[&access_token, &email, &name, &avatar, &login, &id])?;
         if let Some(ref row) = rows.iter().next() {
             return Ok(Model::from_row(row));
         }
         let stmt = conn.prepare(
-            "INSERT INTO users
+                "INSERT INTO users
                                       (email, gh_access_token,
                                        gh_login, name, gh_avatar, gh_id)
                                       VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[&email, &access_token, &login, &name, &avatar, &id],
-        )?;
-        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
-            internal("no user with email we just found")
-        })?))
+            )?;
+        let rows = stmt.query(&[&email, &access_token, &login, &name, &avatar, &id])?;
+        Ok(
+            Model::from_row(
+                &rows.iter()
+                     .next()
+                     .chain_error(|| internal("no user with email we just found"))?,
+            ),
+        )
     }
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
@@ -219,10 +219,8 @@ impl Model for User {
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
-    req.session().insert(
-        "github_oauth_state".to_string(),
-        state.clone(),
-    );
+    req.session()
+        .insert("github_oauth_state".to_string(), state.clone());
 
     let url = req.app().github.authorize_url(state.clone());
 
@@ -231,10 +229,14 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
         url: String,
         state: String,
     }
-    Ok(req.json(&R {
-        url: url.to_string(),
-        state: state,
-    }))
+    Ok(
+        req.json(
+            &R {
+                 url: url.to_string(),
+                 state: state,
+             },
+        ),
+    )
 }
 
 /// Handles the `GET /authorize` route.
@@ -291,9 +293,10 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req.app().github.exchange(code.clone()).map_err(
-        |s| human(&s),
-    )?;
+    let token = req.app()
+        .github
+        .exchange(code.clone())
+        .map_err(|s| human(&s))?;
 
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
@@ -307,10 +310,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
     )?;
-    req.session().insert(
-        "user_id".to_string(),
-        user.id.to_string(),
-    );
+    req.session()
+        .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     me(req)
 }
@@ -327,13 +328,14 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
 
     let conn = req.tx()?;
     let rows = conn.query(
-        "UPDATE users SET api_token = DEFAULT \
+            "UPDATE users SET api_token = DEFAULT \
                            WHERE id = $1 RETURNING api_token",
-        &[&user.id],
-    )?;
-    let token = rows.iter().next().map(|r| r.get("api_token")).chain_error(
-        || NotFound,
-    )?;
+            &[&user.id],
+        )?;
+    let token = rows.iter()
+        .next()
+        .map(|r| r.get("api_token"))
+        .chain_error(|| NotFound)?;
 
     #[derive(RustcEncodable)]
     struct R {
@@ -352,10 +354,14 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
         api_token: String,
     }
     let token = user.api_token.clone();
-    Ok(req.json(&R {
-        user: user.clone().encodable(),
-        api_token: token,
-    }))
+    Ok(
+        req.json(
+            &R {
+                 user: user.clone().encodable(),
+                 api_token: token,
+             },
+        ),
+    )
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -390,11 +396,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         .order(versions::created_at.desc())
         .limit(limit)
         .offset(offset)
-        .select((
-            versions::all_columns,
-            crates::name,
-            sql::<BigInt>("COUNT(*) OVER ()"),
-        ))
+        .select((versions::all_columns, crates::name, sql::<BigInt>("COUNT(*) OVER ()")),)
         .load::<(Version, String, i64)>(&*conn)?;
 
     let more = data.get(0)
@@ -414,10 +416,14 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
     struct Meta {
         more: bool,
     }
-    Ok(req.json(&R {
-        versions: versions,
-        meta: Meta { more: more },
-    }))
+    Ok(
+        req.json(
+            &R {
+                 versions: versions,
+                 meta: Meta { more: more },
+             },
+        ),
+    )
 }
 
 #[cfg(test)]

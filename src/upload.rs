@@ -52,14 +52,18 @@ impl Decodable for CrateName {
     fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
         let s = d.read_str()?;
         if !Crate::valid_name(&s) {
-            return Err(d.error(&format!(
+            return Err(
+                d.error(
+                    &format!(
                 "invalid crate name specified: {}. \
                 Valid crate names must start with a letter; contain only \
                 letters, numbers, hyphens, or underscores; and have {} or \
                 fewer characters.",
                 s,
                 MAX_NAME_LENGTH
-            )));
+            ),
+                ),
+            );
         }
         Ok(CrateName(s))
     }
@@ -137,10 +141,12 @@ impl Decodable for KeywordList {
         }
         for val in &inner {
             if val.len() > 20 {
-                return Err(d.error(
-                    "keywords must contain less than 20 \
+                return Err(
+                    d.error(
+                        "keywords must contain less than 20 \
                                     characters",
-                ));
+                    ),
+                );
             }
         }
         Ok(KeywordList(inner))
@@ -165,11 +171,15 @@ impl Decodable for DependencyKind {
             "build" => Ok(DependencyKind::Build),
             "normal" => Ok(DependencyKind::Normal),
             s => {
-                Err(d.error(&format!(
+                Err(
+                    d.error(
+                        &format!(
                     "invalid dependency kind `{}`, must be \
                                        one of dev, build, or normal",
                     s
-                )))
+                ),
+                    ),
+                )
             }
         }
     }

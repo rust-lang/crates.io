@@ -59,24 +59,26 @@ pub struct EncodableCategoryWithSubcategories {
 impl Category {
     pub fn find_by_category(conn: &GenericConnection, name: &str) -> CargoResult<Category> {
         let stmt = conn.prepare(
-            "SELECT * FROM categories \
+                "SELECT * FROM categories \
                                       WHERE category = $1",
-        )?;
+            )?;
         let rows = stmt.query(&[&name])?;
-        rows.iter().next().chain_error(|| NotFound).map(|row| {
-            Model::from_row(&row)
-        })
+        rows.iter()
+            .next()
+            .chain_error(|| NotFound)
+            .map(|row| Model::from_row(&row))
     }
 
     pub fn find_by_slug(conn: &GenericConnection, slug: &str) -> CargoResult<Category> {
         let stmt = conn.prepare(
-            "SELECT * FROM categories \
+                "SELECT * FROM categories \
                                       WHERE slug = LOWER($1)",
-        )?;
+            )?;
         let rows = stmt.query(&[&slug])?;
-        rows.iter().next().chain_error(|| NotFound).map(|row| {
-            Model::from_row(&row)
-        })
+        rows.iter()
+            .next()
+            .chain_error(|| NotFound)
+            .map(|row| Model::from_row(&row))
     }
 
     pub fn encodable(self) -> EncodableCategory {
@@ -105,31 +107,35 @@ impl Category {
     ) -> QueryResult<Vec<&'a str>> {
         use diesel::expression::dsl::any;
 
-        conn.transaction(|| {
-            let categories = categories::table
-                .filter(categories::slug.eq(any(slugs)))
-                .load::<Category>(conn)?;
-            let invalid_categories = slugs
-                .iter()
-                .cloned()
-                .filter(|s| !categories.iter().any(|c| c.slug == *s))
-                .collect();
-            let crate_categories = categories
-                .iter()
-                .map(|c| {
-                    CrateCategory {
-                        category_id: c.id,
-                        crate_id: krate.id,
-                    }
-                })
-                .collect::<Vec<_>>();
+        conn.transaction(
+            || {
+                let categories = categories::table
+                    .filter(categories::slug.eq(any(slugs)))
+                    .load::<Category>(conn)?;
+                let invalid_categories = slugs
+                    .iter()
+                    .cloned()
+                    .filter(|s| !categories.iter().any(|c| c.slug == *s))
+                    .collect();
+                let crate_categories = categories
+                    .iter()
+                    .map(
+                        |c| {
+                            CrateCategory {
+                                category_id: c.id,
+                                crate_id: krate.id,
+                            }
+                        },
+                    )
+                    .collect::<Vec<_>>();
 
-            delete(CrateCategory::belonging_to(krate)).execute(conn)?;
-            insert(&crate_categories)
-                .into(crates_categories::table)
-                .execute(conn)?;
-            Ok(invalid_categories)
-        })
+                delete(CrateCategory::belonging_to(krate)).execute(conn)?;
+                insert(&crate_categories)
+                    .into(crates_categories::table)
+                    .execute(conn)?;
+                Ok(invalid_categories)
+            },
+        )
     }
 
     pub fn update_crate_old(
@@ -145,13 +151,15 @@ impl Category {
         let mut invalid_categories = vec![];
         let new_categories: Vec<Category> = categories
             .iter()
-            .flat_map(|c| match Category::find_by_slug(conn, c) {
-                Ok(cat) => Some(cat),
-                Err(_) => {
-                    invalid_categories.push(c.to_string());
-                    None
-                }
-            })
+            .flat_map(
+                |c| match Category::find_by_slug(conn, c) {
+                    Ok(cat) => Some(cat),
+                    Err(_) => {
+                        invalid_categories.push(c.to_string());
+                        None
+                    }
+                },
+            )
             .collect();
 
         let new_categories_ids: HashSet<_> = new_categories.iter().map(|cat| cat.id).collect();
@@ -167,11 +175,11 @@ impl Category {
 
         if !to_rm.is_empty() {
             conn.execute(
-                "DELETE FROM crates_categories \
+                    "DELETE FROM crates_categories \
                                 WHERE category_id = ANY($1) \
                                   AND crate_id = $2",
-                &[&to_rm, &krate.id],
-            )?;
+                    &[&to_rm, &krate.id],
+                )?;
         }
 
         if !to_add.is_empty() {
@@ -181,13 +189,13 @@ impl Category {
                 .collect();
             let insert = insert.join(", ");
             conn.execute(
-                &format!(
+                    &format!(
                     "INSERT INTO crates_categories \
                                         (crate_id, category_id) VALUES {}",
                     insert
                 ),
-                &[],
-            )?;
+                    &[],
+                )?;
         }
 
         Ok(invalid_categories)
@@ -222,7 +230,9 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        select(sql::<categories::SqlType>(&format!(
+        select(
+            sql::<categories::SqlType>(
+                &format!(
             "c.id, c.category, c.slug, c.description,
                 sum(c2.crates_cnt)::int as crates_cnt, c.created_at
              FROM categories as c
@@ -233,7 +243,10 @@ impl Category {
             sort_sql,
             limit,
             offset
-        ))).load(conn)
+        ),
+            ),
+        )
+                .load(conn)
     }
 
     pub fn toplevel_old(
@@ -250,7 +263,8 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        let stmt = conn.prepare(&format!(
+        let stmt = conn.prepare(
+                &format!(
             "SELECT c.id, c.category, c.slug, c.description, c.created_at,
                 sum(c2.crates_cnt)::int as crates_cnt
              FROM categories as c
@@ -259,7 +273,8 @@ impl Category {
              GROUP BY c.id
              {} LIMIT $1 OFFSET $2",
             sort_sql
-        ))?;
+        ),
+            )?;
 
         let categories: Vec<_> = stmt.query(&[&limit, &offset])?
             .iter()
@@ -271,7 +286,7 @@ impl Category {
 
     pub fn subcategories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
         let stmt = conn.prepare(
-            "\
+                "\
             SELECT c.id, c.category, c.slug, c.description, c.created_at, \
             COALESCE (( \
                 SELECT sum(c2.crates_cnt)::int \
@@ -282,7 +297,7 @@ impl Category {
             FROM categories as c \
             WHERE c.category ILIKE $1 || '::%' \
             AND c.category NOT ILIKE $1 || '::%::%'",
-        )?;
+            )?;
 
         let rows = stmt.query(&[&self.category])?;
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
@@ -338,7 +353,10 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
     let categories = Category::toplevel_old(conn, sort, limit, offset)?;
-    let categories = categories.into_iter().map(Category::encodable).collect();
+    let categories = categories
+        .into_iter()
+        .map(Category::encodable)
+        .collect();
 
     // Query for the total count of categories
     let total = Category::count_toplevel(conn)?;
@@ -353,10 +371,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         total: i64,
     }
 
-    Ok(req.json(&R {
-        categories: categories,
-        meta: Meta { total: total },
-    }))
+    Ok(
+        req.json(
+            &R {
+                 categories: categories,
+                 meta: Meta { total: total },
+             },
+        ),
+    )
 }
 
 /// Handles the `GET /categories/:category_id` route.
@@ -390,9 +412,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     let conn = req.tx()?;
     let stmt = conn.prepare(
-        "SELECT slug FROM categories \
+            "SELECT slug FROM categories \
                                   ORDER BY slug",
-    )?;
+        )?;
     let rows = stmt.query(&[])?;
 
     #[derive(RustcEncodable)]
@@ -402,13 +424,15 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     }
 
     let slugs: Vec<Slug> = rows.iter()
-        .map(|r| {
-            let slug: String = r.get("slug");
-            Slug {
-                id: slug.clone(),
-                slug: slug,
-            }
-        })
+        .map(
+            |r| {
+                let slug: String = r.get("slug");
+                Slug {
+                    id: slug.clone(),
+                    slug: slug,
+                }
+            },
+        )
         .collect();
 
     #[derive(RustcEncodable)]
@@ -440,10 +464,11 @@ mod tests {
     fn category_toplevel_excludes_subcategories() {
         let conn = pg_connection();
         conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
+                "INSERT INTO categories (category, slug) VALUES
             ('Cat 2', 'cat2'), ('Cat 1', 'cat1'), ('Cat 1::sub', 'cat1::sub')
             ",
-        ).unwrap();
+            )
+            .unwrap();
 
         let categories = Category::toplevel(&conn, "", 10, 0)
             .unwrap()
@@ -458,10 +483,11 @@ mod tests {
     fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
         let conn = pg_connection();
         conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
+                "INSERT INTO categories (category, slug, crates_cnt) VALUES
             ('Cat 1', 'cat1', 0), ('Cat 2', 'cat2', 2), ('Cat 3', 'cat3', 1)
             ",
-        ).unwrap();
+            )
+            .unwrap();
 
         let categories = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
@@ -480,10 +506,11 @@ mod tests {
     fn category_toplevel_applies_limit_and_offset() {
         let conn = pg_connection();
         conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
+                "INSERT INTO categories (category, slug) VALUES
             ('Cat 1', 'cat1'), ('Cat 2', 'cat2')
             ",
-        ).unwrap();
+            )
+            .unwrap();
 
         let categories = Category::toplevel(&conn, "", 1, 0)
             .unwrap()
@@ -506,12 +533,13 @@ mod tests {
     fn category_toplevel_includes_subcategories_in_crate_cnt() {
         let conn = pg_connection();
         conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
+                "INSERT INTO categories (category, slug, crates_cnt) VALUES
             ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
             ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
             ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
             ",
-        ).unwrap();
+            )
+            .unwrap();
 
         let categories = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
@@ -530,12 +558,13 @@ mod tests {
     fn category_toplevel_applies_limit_and_offset_after_grouping() {
         let conn = pg_connection();
         conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
+                "INSERT INTO categories (category, slug, crates_cnt) VALUES
             ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
             ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
             ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
             ",
-        ).unwrap();
+            )
+            .unwrap();
 
         let categories = Category::toplevel(&conn, "crates", 2, 0)
             .unwrap()

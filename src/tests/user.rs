@@ -163,9 +163,7 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
@@ -183,9 +181,7 @@ fn following() {
         )
     );
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/me/updates").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
