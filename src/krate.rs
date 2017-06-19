@@ -894,6 +894,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                     .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
             ),
         );
+    } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
+        query = query.filter(crates::id.eq_any(
+            crate_owners::table.select(crate_owners::crate_id)
+                .filter(crate_owners::owner_id.eq(team_id))
+                .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
+        ));
     } else if params.get("following").is_some() {
         query = query.filter(crates::id.eq_any(
             follows::table.select(follows::crate_id).filter(
