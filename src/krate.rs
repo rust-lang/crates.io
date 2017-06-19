@@ -200,7 +200,7 @@ impl<'a> NewCrate<'a> {
     }
 
     fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(ref license) = self.license {
+        if let Some(license) = self.license {
             for part in license.split('/') {
                license_exprs::validate_license_expr(part)
                    .map_err(|e| human(&format_args!("{}; see http://opensource.org/licenses \
