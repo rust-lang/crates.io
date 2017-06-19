@@ -103,6 +103,7 @@ pub struct EncodableCrate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
+    pub license: Option<String>,
     pub repository: Option<String>,
     pub links: CrateLinks,
     pub exact_match: bool,
@@ -127,18 +128,19 @@ pub struct NewCrate<'a> {
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
+    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        self,
+        mut self,
         conn: &PgConnection,
         license_file: Option<&str>,
         uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate()?;
+        self.validate(license_file)?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
@@ -159,7 +161,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&self) -> CargoResult<()> {
+    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -501,6 +503,7 @@ impl Crate {
             description,
             homepage,
             documentation,
+            license,
             repository,
             ..
         } = self;
@@ -526,6 +529,7 @@ impl Crate {
             homepage: homepage,
             exact_match: exact_match,
             description: description,
+            license: license,
             repository: repository,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
