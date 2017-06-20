@@ -234,9 +234,7 @@ impl Team {
             avatar,
             ..
         } = self;
-        let org_name = Team::get_org(&login);
-        let team_name = Team::get_team(&login);
-        let url = format!("https://github.com/orgs/{}/teams/{}", org_name, team_name);
+        let url = Team::github_url(&login);
 
         EncodableTeam {
             id: id,
@@ -247,16 +245,15 @@ impl Team {
         }
     }
 
-    fn get_org(login: &str) -> String {
-        let login_string = login.to_string();
-        let org: Vec<&str> = login_string.split(':').collect();
-        org[1].to_string()
-    }
+    fn github_url(login: &str) -> String {
+        let mut login_pieces = login.split(':');
+        login_pieces.next();
 
-    fn get_team(login: &str) -> String {
-        let login_string = login.to_string();
-        let org: Vec<&str> = login_string.split(':').collect();
-        org[2].to_string()
+        format!(
+            "https://github.com/orgs/{}/teams/{}",
+            login_pieces.next().expect("org failed"),
+            login_pieces.next().expect("team failed")
+        )
     }
 }
 
@@ -374,15 +371,7 @@ impl Owner {
                             avatar,
                             ..
                         }) => {
-                let url = {
-                    let mut parts = login.split(':');
-                    parts.next(); // discard github
-                    format!(
-                        "https://github.com/orgs/{}/teams/{}",
-                        parts.next().expect("org failed"),
-                        parts.next().expect("team failed")
-                    )
-                };
+                let url = Team::github_url(&login);
                 EncodableOwner {
                     id: id,
                     login: login,
