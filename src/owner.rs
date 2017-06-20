@@ -215,7 +215,7 @@ impl Team {
         let (handle, resp) = http::github(app, &url, &token)?;
         let org: Org = http::parse_github_response(handle, &resp)?;
 
-        NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(&conn)
+        NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(conn)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.
@@ -224,6 +224,19 @@ impl Team {
     /// private membership information here.
     pub fn contains_user(&self, app: &App, user: &User) -> CargoResult<bool> {
         team_with_gh_id_contains_user(app, self.github_id, user)
+    }
+
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
+        let teams = base_query
+            .inner_join(teams::table)
+            .select(teams::all_columns)
+            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
+            .load(conn)?
+            .into_iter()
+            .map(Owner::Team);
+
+        Ok(teams.collect())
     }
 
     pub fn encodable(self) -> EncodableTeam {

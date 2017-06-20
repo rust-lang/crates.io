@@ -602,32 +602,6 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    pub fn owner_team(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
-        let teams = base_query
-            .inner_join(teams::table)
-            .select(teams::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
-            .load(conn)?
-            .into_iter()
-            .map(Owner::Team);
-
-        Ok(teams.collect())
-    }
-
-    pub fn owner_user(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
-        let users = base_query
-            .inner_join(users::table)
-            .select(users::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
-            .load(conn)?
-            .into_iter()
-            .map(Owner::User);
-
-        Ok(users.collect())
-    }
-
     pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
         let stmt = conn.prepare(
             "SELECT * FROM users
@@ -1467,8 +1441,7 @@ pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let owners = krate
-        .owner_team(&conn)?
+    let owners = Team::owning(&krate, &conn)?
         .into_iter()
         .map(Owner::encodable)
         .collect();
@@ -1485,8 +1458,7 @@ pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let owners = krate
-        .owner_user(&conn)?
+    let owners = User::owning(&krate, &conn)?
         .into_iter()
         .map(Owner::encodable)
         .collect();
