@@ -174,7 +174,7 @@
             }
             .user-options {
                 padding-left: 5px;
-                display: none;
+                opacity: 0;
                 .unfavorite-user {
                     width: 10px;
                     height: 10px;
@@ -182,7 +182,7 @@
             }
 
             &:hover .user-options{
-                display: block;
+                opacity: 1;
             }
         }
     }
