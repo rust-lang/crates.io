@@ -1,0 +1,16 @@
+<ul class="users">
+    {{#each users as |user|}}
+        <li>
+            {{#link-to 'user' user.login class="user-item"}}
+                <span>
+                    {{user-avatar user=user size='medium-small'}} 
+                    <span class="user-name">{{user.name}}</span>
+                </span>
+
+                <div class='right user-options'>
+                    <img class="unfavorite-user" src="/assets/delete.png" {{ action (action unfavoriteUser user) on="click" bubbles=false}}/>
+                </div>
+            {{/link-to}} 
+        </li>
+    {{/each}}
+</ul>

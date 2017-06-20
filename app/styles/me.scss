@@ -52,7 +52,7 @@
             @include order(1);
             margin-right: 0;
         }
-        #my-crates, #my-following { margin: 0; }
+        #my-crates, #my-following, #my-favorite-users { margin: 0; }
     }
 }
 #my-feed {
@@ -162,5 +162,28 @@
         font-weight: bold;
         color: rgb(216, 0, 41);
         padding: 0px 10px 10px 20px;
+    }
+}
+
+#my-favorite-users {
+    .users {
+        .user-item {
+            padding: 13px 10px;
+            .user-name {
+                margin-left: 5px;
+            }
+            .user-options {
+                padding-left: 5px;
+                display: none;
+                .unfavorite-user {
+                    width: 10px;
+                    height: 10px;
+                }
+            }
+
+            &:hover .user-options{
+                display: block;
+            }
+        }
     }
 }

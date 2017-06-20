@@ -20,8 +20,8 @@ export default DS.Model.extend({
         return this.store.adapterFor('user').unfavorite(this.get('id'));
     },
 
-    favorite_users() {
-        return this.store.adapterFor('user').favorite_users(this.get('id'));
+    favoriteUsers() {
+        return this.store.adapterFor('user').favoriteUsers(this.get('id'));
     },
 
 });

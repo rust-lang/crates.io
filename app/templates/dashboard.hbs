@@ -48,11 +48,11 @@
         <div id='my-favorite-users'>
             <div class='header'>
                 <h2>
-                    <img class="favorites" src="/assets/following.png"/>
+                    <img class="favorite" src="/assets/favorite.png"/>
                     Favorite Users
                 </h2>
             </div>
-            {{users-list users=favoriteUsers}}
+            {{favorite-users users=favoriteUsers.users unfavoriteUser=(action "unfavoriteUser")}}
         </div>
     </div>
 

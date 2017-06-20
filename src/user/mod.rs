@@ -387,6 +387,7 @@ pub struct FavoriteUser {
     target_id: i32,
 }
 
+
 fn favorite_target(req: &mut Request) -> CargoResult<FavoriteUser> {
     let user = req.user()?;
     let target_user_id: i32 = req.params()["user_id"].parse().expect("User ID not found");
