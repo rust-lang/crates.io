@@ -26,7 +26,6 @@ export default Ember.Route.extend({
             },
             (e) => {
                 if (e.errors.any(e => e.detail === 'Not Found')) {
-                    console.log(params);
                     this
                         .controllerFor('application')
                         .set('nextFlashError', `User '${params.team_id}' does not exist`);
