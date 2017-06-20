@@ -63,9 +63,13 @@ struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
 }
 #[derive(RustcDecodable)]
-struct TeamResponse { teams: Vec<EncodableOwner> }
+struct TeamResponse {
+    teams: Vec<EncodableOwner>,
+}
 #[derive(RustcDecodable)]
-struct UserResponse { users: Vec<EncodableOwner> }
+struct UserResponse {
+    users: Vec<EncodableOwner>,
+}
 
 fn new_crate(name: &str) -> u::NewCrate {
     u::NewCrate {
@@ -1759,25 +1763,17 @@ fn check_ownership_two_crates() {
 
     let (krate_owned_by_team, team) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_foo")
-            .create_or_update(&conn)
-            .unwrap();
-        let t = ::new_team("team_foo")
-            .create_or_update(&conn)
-            .unwrap();
-        let krate = ::CrateBuilder::new("foo", u.id)
-            .expect_build(&conn);
+        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
         ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         (krate, t)
     };
 
     let (krate_not_owned_by_team, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_bar")
-            .create_or_update(&conn)
-            .unwrap();
-        (::CrateBuilder::new("bar", u.id)
-            .expect_build(&conn), u)
+        let u = ::new_user("user_bar").create_or_update(&conn).unwrap();
+        (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
     };
 
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
@@ -1811,26 +1807,31 @@ fn check_ownership_one_crate() {
 
     let (team, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_cat")
-            .create_or_update(&conn)
-            .unwrap();
+        let u = ::new_user("user_cat").create_or_update(&conn).unwrap();
         let t = ::new_team("github:test_org:team_sloth")
             .create_or_update(&conn)
             .unwrap();
-        let krate = ::CrateBuilder::new("best_crate", u.id)
-            .expect_build(&conn);
+        let krate = ::CrateBuilder::new("best_crate", u.id).expect_build(&conn);
         ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         (t, u)
     };
 
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/best_crate/owner_team");
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_team",
+    );
     let mut response = ok_resp!(middle.call(&mut req));
     let json: TeamResponse = ::json(&mut response);
 
     assert_eq!(json.teams[0].kind, "team");
     assert_eq!(json.teams[0].name, team.name);
 
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/best_crate/owner_user");
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_user",
+    );
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserResponse = ::json(&mut response);
 

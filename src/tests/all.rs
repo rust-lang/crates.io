@@ -224,23 +224,19 @@ fn new_team(login: &str) -> NewTeam {
     }
 }
 
-fn add_team_to_crate(
-        t: &Team,
-        krate: &Crate,
-        u: &User,
-        conn: &PgConnection) -> CargoResult<()> {
+fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> CargoResult<()> {
 
     let crate_owner = CrateOwner {
         crate_id: krate.id,
         owner_id: t.id,
         created_by: u.id,
-        owner_kind: 1,      // Team owner kind is 1 according to owner.rs
+        owner_kind: 1, // Team owner kind is 1 according to owner.rs
     };
 
     diesel::insert(&crate_owner.on_conflict(
-            crate_owners::table.primary_key(),
-            do_update().set(crate_owners::deleted.eq(false)),
-        )).into(crate_owners::table)
+        crate_owners::table.primary_key(),
+        do_update().set(crate_owners::deleted.eq(false)),
+    )).into(crate_owners::table)
         .execute(conn)?;
 
     Ok(())

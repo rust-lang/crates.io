@@ -603,9 +603,9 @@ impl Crate {
     }
 
     pub fn owner_team(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self)
-            .filter(crate_owners::deleted.eq(false));
-        let teams = base_query.inner_join(teams::table)
+        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
+        let teams = base_query
+            .inner_join(teams::table)
             .select(teams::all_columns)
             .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
             .load(conn)?
@@ -616,9 +616,9 @@ impl Crate {
     }
 
     pub fn owner_user(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self)
-            .filter(crate_owners::deleted.eq(false));
-        let users = base_query.inner_join(users::table)
+        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
+        let users = base_query
+            .inner_join(users::table)
             .select(users::all_columns)
             .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
             .load(conn)?
@@ -895,11 +895,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         );
     } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
-        query = query.filter(crates::id.eq_any(
-            crate_owners::table.select(crate_owners::crate_id)
-                .filter(crate_owners::owner_id.eq(team_id))
-                .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
-        ));
+        query = query.filter(
+            crates::id.eq_any(
+                crate_owners::table
+                    .select(crate_owners::crate_id)
+                    .filter(crate_owners::owner_id.eq(team_id))
+                    .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32)),
+            ),
+        );
     } else if params.get("following").is_some() {
         query = query.filter(crates::id.eq_any(
             follows::table.select(follows::crate_id).filter(
@@ -1464,14 +1467,17 @@ pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let owners = krate.owner_team(&conn)?
+    let owners = krate
+        .owner_team(&conn)?
         .into_iter()
         .map(Owner::encodable)
         .collect();
 
     #[derive(RustcEncodable)]
-    struct R { teams: Vec<EncodableOwner> }
-    Ok(req.json(&R{ teams: owners }))
+    struct R {
+        teams: Vec<EncodableOwner>,
+    }
+    Ok(req.json(&R { teams: owners }))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
@@ -1479,14 +1485,17 @@ pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let owners = krate.owner_user(&conn)?
+    let owners = krate
+        .owner_user(&conn)?
         .into_iter()
         .map(Owner::encodable)
         .collect();
 
     #[derive(RustcEncodable)]
-    struct R { users: Vec<EncodableOwner> }
-    Ok(req.json(&R{ users: owners }))
+    struct R {
+        users: Vec<EncodableOwner>,
+    }
+    Ok(req.json(&R { users: owners }))
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.

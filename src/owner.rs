@@ -81,7 +81,7 @@ pub enum Rights {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[table_name="teams"]
+#[table_name = "teams"]
 pub struct NewTeam<'a> {
     pub login: &'a str,
     pub github_id: i32,
@@ -90,10 +90,12 @@ pub struct NewTeam<'a> {
 }
 
 impl<'a> NewTeam<'a> {
-    pub fn new(login: &'a str,
-                github_id: i32,
-                name: Option<String>,
-                avatar: Option<String>) -> Self {
+    pub fn new(
+        login: &'a str,
+        github_id: i32,
+        name: Option<String>,
+        avatar: Option<String>,
+    ) -> Self {
         NewTeam {
             login: login,
             github_id: github_id,
@@ -102,7 +104,7 @@ impl<'a> NewTeam<'a> {
         }
     }
 
-    pub fn create_or_update(&self, conn:&PgConnection) -> CargoResult<Team> {
+    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Team> {
         use diesel::insert;
         use diesel::pg::upsert::*;
 
@@ -225,7 +227,13 @@ impl Team {
     }
 
     pub fn encodable(self) -> EncodableTeam {
-        let Team { id, name, login, avatar, .. } = self;
+        let Team {
+            id,
+            name,
+            login,
+            avatar,
+            ..
+        } = self;
         let org_name = Team::get_org(&login);
         let team_name = Team::get_team(&login);
         let url = format!("https://github.com/orgs/{}/teams/{}", org_name, team_name);
@@ -371,7 +379,7 @@ impl Owner {
                     parts.next(); // discard github
                     format!(
                         "https://github.com/orgs/{}/teams/{}",
-                        parts.next().expect("org failed"), 
+                        parts.next().expect("org failed"),
                         parts.next().expect("team failed")
                     )
                 };
