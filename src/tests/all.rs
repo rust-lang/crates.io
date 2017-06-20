@@ -225,7 +225,6 @@ fn new_team(login: &str) -> NewTeam {
 }
 
 fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> CargoResult<()> {
-
     let crate_owner = CrateOwner {
         crate_id: krate.id,
         owner_id: t.id,
