@@ -5,6 +5,7 @@ export default {
         "email": "someone@example.com",
         "id": 1,
         "login": "thehydroimpulse",
-        "name": "Daniel Fagnan"
+        "name": "Daniel Fagnan",
+        "url": "https://github.com/thehydroimpulse"
     }
 };
