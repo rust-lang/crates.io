@@ -27,19 +27,26 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     for row in rows.iter() {
         let id: i32 = row.get("id");
         let name: String = row.get("name");
-        let license: String = row.get("license");
+        let license: Option<String> = row.get("license");
 
-        println!(
-            "Setting the license for all versions of {} to {}.",
-            name,
-            license
-        );
+        if let Some(license) = license {
+            println!(
+                "Setting the license for all versions of {} to {}.",
+                name,
+                license
+            );
 
-        let num_updated = tx.execute(
-            "UPDATE versions SET license = $1 WHERE crate_id = $2",
-            &[&license, &id],
-        ).unwrap();
-        assert!(num_updated > 0);
+            let num_updated = tx.execute(
+                "UPDATE versions SET license = $1 WHERE crate_id = $2",
+                &[&license, &id],
+            ).unwrap();
+            assert!(num_updated > 0);
+        } else {
+            println!(
+                "Ignoring crate `{}` because it doesn't have a license.",
+                name
+            );
+        }
     }
 
     get_confirm("Finish committing?");
