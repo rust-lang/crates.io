@@ -263,9 +263,8 @@ impl Team {
         login_pieces.next();
 
         format!(
-            "https://github.com/orgs/{}/teams/{}",
+            "https://github.com/{}",
             login_pieces.next().expect("org failed"),
-            login_pieces.next().expect("team failed")
         )
     }
 }
