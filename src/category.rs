@@ -193,17 +193,18 @@ impl Category {
         Ok(invalid_categories)
     }
 
-    pub fn count_toplevel(conn: &GenericConnection) -> CargoResult<i64> {
-        let sql = format!(
+    pub fn count_toplevel(conn: &PgConnection) -> CargoResult<i64> {
+        use diesel::expression::*;
+        use diesel::types::*;
+
+        let query = sql::<BigInt>(
             "\
-             SELECT COUNT(*) \
-             FROM {} \
-             WHERE category NOT LIKE '%::%'",
-            Model::table_name(None::<Self>)
+            SELECT COUNT(*) \
+            FROM categories \
+            WHERE category NOT LIKE '%::%'"
         );
-        let stmt = conn.prepare(&sql)?;
-        let rows = stmt.query(&[])?;
-        Ok(rows.iter().next().unwrap().get("count"))
+        let count = query.get_result(&*conn)?;
+        Ok(count)
     }
 
     pub fn toplevel(
@@ -269,27 +270,31 @@ impl Category {
         Ok(categories)
     }
 
-    pub fn subcategories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
-        let stmt = conn.prepare(
-            "\
-             SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-             COALESCE (( \
-             SELECT sum(c2.crates_cnt)::int \
-             FROM categories as c2 \
-             WHERE c2.slug = c.slug \
-             OR c2.slug LIKE c.slug || '::%' \
-             ), 0) as crates_cnt \
-             FROM categories as c \
-             WHERE c.category ILIKE $1 || '::%' \
-             AND c.category NOT ILIKE $1 || '::%::%'",
-        )?;
+    pub fn subcategories(&self, conn: &PgConnection) -> CargoResult<Vec<Category>> {
+        use diesel::expression::*;
+        use diesel::types::*;
 
-        let rows = stmt.query(&[&self.category])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
+        let query = sql::<(Integer, Text, Text, Text, Integer, Timestamp)>(
+            "\
+            SELECT c.id, c.category, c.slug, c.description, \
+            COALESCE (( \
+                SELECT sum(c2.crates_cnt)::int \
+                FROM categories as c2 \
+                WHERE c2.slug = c.slug \
+                OR c2.slug LIKE c.slug || '::%' \
+            ), 0) as crates_cnt, \
+            c.created_at \
+            FROM categories as c \
+            WHERE c.category ILIKE $1 || '::%' \
+            AND c.category NOT ILIKE $1 || '::%::%'",
+        ).bind::<Text, _>(&self.category);
+
+        let rows = query.get_results(conn)?;
+        Ok(rows)
     }
 }
 
-#[derive(Insertable, Default, Debug)]
+#[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "categories"]
 pub struct NewCategory<'a> {
     pub category: &'a str,
@@ -297,20 +302,15 @@ pub struct NewCategory<'a> {
 }
 
 impl<'a> NewCategory<'a> {
-    pub fn find_or_create(&self, conn: &PgConnection) -> QueryResult<Category> {
-        use schema::categories::dsl::*;
+    /// Inserts the category into the database, or updates an existing one.
+    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Category> {
+        use diesel::insert;
         use diesel::pg::upsert::*;
 
-        let maybe_inserted = insert(&self.on_conflict_do_nothing())
-            .into(categories)
+        insert(&self.on_conflict(categories::slug, do_update().set(self)))
+            .into(categories::table)
             .get_result(conn)
-            .optional()?;
-
-        if let Some(c) = maybe_inserted {
-            return Ok(c);
-        }
-
-        categories.filter(slug.eq(self.slug)).first(conn)
+            .map_err(Into::into)
     }
 }
 
@@ -332,16 +332,16 @@ impl Model for Category {
 
 /// Handles the `GET /categories` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.tx()?;
+    let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let categories = Category::toplevel_old(conn, sort, limit, offset)?;
+    let categories = Category::toplevel(&conn, sort, limit, offset)?;
     let categories = categories.into_iter().map(Category::encodable).collect();
 
     // Query for the total count of categories
-    let total = Category::count_toplevel(conn)?;
+    let total = Category::count_toplevel(&conn)?;
 
     #[derive(RustcEncodable)]
     struct R {
@@ -361,13 +361,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let slug = &req.params()["category_id"];
-    let conn = req.tx()?;
-    let cat = Category::find_by_slug(conn, slug)?;
-    let subcats = cat.subcategories(conn)?
-        .into_iter()
-        .map(|s| s.encodable())
-        .collect();
+    use self::categories::dsl::{categories, slug};
+
+    let id = &req.params()["category_id"];
+    let conn = req.db_conn()?;
+    let cat = categories.filter(slug.eq(id)).first::<Category>(&*conn)?;
+    let subcats = cat.subcategories(&*conn)?.into_iter().map(|s| {
+        s.encodable()
+    }).collect();
+
     let cat = cat.encodable();
     let cat_with_subcats = EncodableCategoryWithSubcategories {
         id: cat.id,

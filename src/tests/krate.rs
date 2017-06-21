@@ -189,10 +189,10 @@ fn index_queries() {
     {
         let conn = app.diesel_database.get().unwrap();
         ::new_category("Category 1", "cat1")
-            .find_or_create(&conn)
+            .create_or_update(&conn)
             .unwrap();
         ::new_category("Category 1::Ba'r", "cat1::bar")
-            .find_or_create(&conn)
+            .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
         Category::update_crate(&conn, &krate2, &["cat1::bar"]).unwrap();
@@ -1510,7 +1510,7 @@ fn good_categories() {
     {
         let conn = app.diesel_database.get().unwrap();
         ::new_category("Category 1", "cat1")
-            .find_or_create(&conn)
+            .create_or_update(&conn)
             .unwrap();
     }
     let mut response = ok_resp!(middle.call(&mut req));

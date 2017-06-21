@@ -35,7 +35,7 @@ use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
+use cargo_registry::{User, Crate, Version, Dependency, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
@@ -467,29 +467,6 @@ fn sign_in(req: &mut Request, app: &App) {
     sign_in_as(req, &user);
 }
 
-fn mock_crate(req: &mut Request, krate: Crate) -> (Crate, Version) {
-    mock_crate_vers(req, krate, &semver::Version::parse("1.0.0").unwrap())
-}
-
-fn mock_crate_vers(req: &mut Request, krate: Crate, v: &semver::Version) -> (Crate, Version) {
-    let user = req.extensions().find::<User>().unwrap();
-    let mut krate = Crate::find_or_insert(
-        req.tx().unwrap(),
-        &krate.name,
-        user.id,
-        &krate.description,
-        &krate.homepage,
-        &krate.documentation,
-        &krate.readme,
-        &krate.repository,
-        &krate.license,
-        &None,
-        krate.max_upload_size,
-    ).unwrap();
-    let v = krate.add_version(req.tx().unwrap(), v, &HashMap::new(), &[]);
-    (krate, v.unwrap())
-}
-
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use diesel::insert;
     use cargo_registry::schema::dependencies;
@@ -513,18 +490,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
         slug: slug,
         ..NewCategory::default()
     }
-}
-
-fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
-    let conn = req.tx().unwrap();
-    let stmt = conn.prepare(
-        " \
-         INSERT INTO categories (category, slug) \
-         VALUES ($1, $2) \
-         RETURNING *",
-    ).unwrap();
-    let rows = stmt.query(&[&name, &slug]).unwrap();
-    Model::from_row(&rows.iter().next().unwrap())
 }
 
 fn logout(req: &mut Request) {
