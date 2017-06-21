@@ -7,10 +7,10 @@ export default Ember.Service.extend({
 
     init() {
         this._super(...arguments);
-        var isLoggedIn;
+        let isLoggedIn;
         try {
             isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
-        } catch (e) {
+        } catch(e) {
             isLoggedIn = false;
         }
         this.set('isLoggedIn', isLoggedIn);
@@ -22,7 +22,9 @@ export default Ember.Service.extend({
         this.set('currentUser', user);
         try {
             localStorage.setItem('isLoggedIn', '1');
-        } catch (e) {}
+        } catch(e) {
+            // ignore error
+        }
     },
 
     logoutUser() {
@@ -32,6 +34,8 @@ export default Ember.Service.extend({
 
         try {
             localStorage.removeItem('isLoggedIn');
-        } catch (e) {}
+        } catch(e) {
+            // ignore error
+        }
     }
 });

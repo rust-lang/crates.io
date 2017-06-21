@@ -6,7 +6,7 @@ export default Ember.Route.extend({
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null) {
             ajax('/me').then((response) => {
-                var user = this.store.push(this.store.normalize('user', response.user));
+                let user = this.store.push(this.store.normalize('user', response.user));
                 user.set('api_token', response.api_token);
                 this.session.set('currentUser', user);
             }).catch(() => this.session.logoutUser()).finally(() => {

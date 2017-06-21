@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "ember build",
+    "lint": "eslint app addon blueprints config server test-support tests *.js",
     "start": "ember server",
     "start:live": "ember server --proxy https://crates.io",
     "start:local": "ember server --proxy http://127.0.0.1:8888",
@@ -32,11 +33,11 @@
     "ember-cli-app-version": "^3.0.0",
     "ember-cli-babel": "^6.4.1",
     "ember-cli-dependency-checker": "^2.0.0",
+    "ember-cli-eslint": "^3.1.0",
     "ember-cli-htmlbars": "^2.0.2",
     "ember-cli-htmlbars-inline-precompile": "^0.4.3",
     "ember-cli-ic-ajax": "1.0.0",
     "ember-cli-inject-live-reload": "1.6.1",
-    "ember-cli-jshint": "2.0.1",
     "ember-cli-meta-tags": "3.0.4",
     "ember-cli-mirage": "0.2.9",
     "ember-cli-moment-shim": "^3.3.1",
@@ -54,8 +55,8 @@
     "ember-route-alias": "0.1.5",
     "ember-router-scroll": "0.1.1",
     "ember-source": "2.12.0",
-    "ember-suave": "4.0.1",
     "emberx-select": "^3.0.1",
+    "eslint-plugin-ember-suave": "^1.0.0",
     "loader.js": "4.2.3"
   },
   "engines": {
