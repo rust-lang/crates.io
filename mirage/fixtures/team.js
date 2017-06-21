@@ -5,6 +5,6 @@ export default {
         "id": 1,
         "login": "github:org_test:thehydroimpulseteam",
         "name": "thehydroimpulseteam",
-        "url": "https://github.com/thehydroimpulse",
+        "url": "https://github.com/org_test",
     }
 };

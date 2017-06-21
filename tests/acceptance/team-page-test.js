@@ -17,7 +17,7 @@ test('has link to github in team header', function(assert) {
 
     andThen(function() {
         const $githubLink = findWithAssert('.info a');
-        assert.equal($githubLink.attr('href').trim(), 'https://github.com/thehydroimpulse');
+        assert.equal($githubLink.attr('href').trim(), 'https://github.com/org_test');
     });
 
 });
