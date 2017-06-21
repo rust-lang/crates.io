@@ -174,12 +174,9 @@ mod test {
             "SELECT * FROM crate_downloads
                                WHERE crate_id = $1",
         ).unwrap();
-        let dl: i32 = stmt.query(&[&id])
-            .unwrap()
-            .iter()
-            .next()
-            .unwrap()
-            .get("downloads");
+        let dl: i32 = stmt.query(&[&id]).unwrap().iter().next().unwrap().get(
+            "downloads",
+        );
         assert_eq!(dl, expected as i32);
     }
 

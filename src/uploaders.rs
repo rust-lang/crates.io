@@ -89,11 +89,9 @@ impl Uploader {
                                 Ok(data.len())
                             })
                             .unwrap();
-                        s3req
-                            .perform()
-                            .chain_error(|| {
-                                internal(&format_args!("failed to upload to S3: `{}`", path))
-                            })?;
+                        s3req.perform().chain_error(|| {
+                            internal(&format_args!("failed to upload to S3: `{}`", path))
+                        })?;
                     }
                     (response, body.finalize())
                 };

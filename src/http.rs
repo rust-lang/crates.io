@@ -68,9 +68,9 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> Cargo
         }
     }
 
-    let json = str::from_utf8(data)
-        .ok()
-        .chain_error(|| internal("github didn't send a utf8-response"))?;
+    let json = str::from_utf8(data).ok().chain_error(|| {
+        internal("github didn't send a utf8-response")
+    })?;
 
     json::decode(json).chain_error(|| internal("github didn't send a valid json response"))
 }

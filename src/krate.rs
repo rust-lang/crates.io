@@ -56,20 +56,18 @@ pub struct Crate {
 
 /// We literally never want to select `textsearchable_index_col`
 /// so we provide this type and constant to pass to `.select`
-type AllColumns = (
-    crates::id,
-    crates::name,
-    crates::updated_at,
-    crates::created_at,
-    crates::downloads,
-    crates::description,
-    crates::homepage,
-    crates::documentation,
-    crates::readme,
-    crates::license,
-    crates::repository,
-    crates::max_upload_size,
-);
+type AllColumns = (crates::id,
+                   crates::name,
+                   crates::updated_at,
+                   crates::created_at,
+                   crates::downloads,
+                   crates::description,
+                   crates::homepage,
+                   crates::documentation,
+                   crates::readme,
+                   crates::license,
+                   crates::repository,
+                   crates::max_upload_size);
 
 pub const ALL_COLUMNS: AllColumns = (
     crates::id,
@@ -152,9 +150,9 @@ impl<'a> NewCrate<'a> {
                 return Ok(krate);
             }
 
-            let target = crates::table.filter(
-                canon_crate_name(crates::name).eq(canon_crate_name(self.name)),
-            );
+            let target = crates::table.filter(canon_crate_name(crates::name).eq(
+                canon_crate_name(self.name),
+            ));
             update(target)
                 .set(&self)
                 .returning(ALL_COLUMNS)
@@ -169,10 +167,9 @@ impl<'a> NewCrate<'a> {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url)
-                .map_err(|_| {
-                    human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-                })?;
+            let url = Url::parse(url).map_err(|_| {
+                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
+            })?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
                 s => {
@@ -229,7 +226,11 @@ impl<'a> NewCrate<'a> {
         use diesel::expression::dsl::exists;
 
         let reserved_name = select(exists(
-            reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
+            reserved_crate_names.filter(canon_crate_name(name).eq(
+                canon_crate_name(
+                    self.name,
+                ),
+            )),
         )).get_result::<bool>(conn)?;
         if reserved_name {
             Err(human("cannot upload a crate with a reserved name"))
@@ -386,9 +387,9 @@ impl Crate {
                 &max_upload_size,
             ],
         )?;
-        let ret: Crate = Model::from_row(&rows.iter()
-            .next()
-            .chain_error(|| internal("no crate returned"))?);
+        let ret: Crate = Model::from_row(&rows.iter().next().chain_error(
+            || internal("no crate returned"),
+        )?);
 
         conn.execute(
             "INSERT INTO crate_owners
@@ -403,10 +404,9 @@ impl Crate {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url)
-                .map_err(|_| {
-                    human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-                })?;
+            let url = Url::parse(url).map_err(|_| {
+                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
+            })?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
                 s => {
@@ -458,9 +458,9 @@ impl Crate {
             return false;
         }
         name.chars().next().unwrap().is_alphabetic() &&
-            name.chars()
-                .all(|c| c.is_alphanumeric() || c == '_' || c == '-') &&
-            name.chars().all(|c| c.is_ascii())
+            name.chars().all(
+                |c| c.is_alphanumeric() || c == '_' || c == '-',
+            ) && name.chars().all(|c| c.is_ascii())
     }
 
     pub fn valid_feature_name(name: &str) -> bool {
@@ -559,9 +559,9 @@ impl Crate {
         )?;
         let rows = stmt.query(&[&self.id])?;
         Ok(Version::max(
-            rows.iter()
-                .map(|r| r.get::<_, String>("num"))
-                .map(|s| semver::Version::parse(&s).unwrap()),
+            rows.iter().map(|r| r.get::<_, String>("num")).map(|s| {
+                semver::Version::parse(&s).unwrap()
+            }),
         ))
     }
 
@@ -675,10 +675,9 @@ impl Crate {
         _req_user: &User,
         login: &str,
     ) -> CargoResult<()> {
-        let owner = Owner::find_by_login(conn, login)
-            .map_err(|_| {
-                human(&format_args!("could not find owner with login `{}`", login))
-            })?;
+        let owner = Owner::find_by_login(conn, login).map_err(|_| {
+            human(&format_args!("could not find owner with login `{}`", login))
+        })?;
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind() as i32));
         diesel::update(target)
             .set(crate_owners::deleted.eq(true))
@@ -725,9 +724,9 @@ impl Crate {
     }
 
     pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
-        badges::table
-            .filter(badges::crate_id.eq(self.id))
-            .load(conn)
+        badges::table.filter(badges::crate_id.eq(self.id)).load(
+            conn,
+        )
     }
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
@@ -802,10 +801,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if let Some(q_string) = params.get("q") {
         let q = plainto_tsquery(q_string);
-        query = query.filter(
-            q.matches(crates::textsearchable_index_col)
-                .or(crates::name.eq(q_string)),
-        );
+        query = query.filter(q.matches(crates::textsearchable_index_col).or(
+            crates::name.eq(
+                q_string,
+            ),
+        ));
 
         query = query.select((
             ALL_COLUMNS,
@@ -827,11 +827,10 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 crates_categories::table
                     .select(crates_categories::crate_id)
                     .inner_join(categories::table)
-                    .filter(
-                        categories::slug
-                            .eq(cat)
-                            .or(categories::slug.like(format!("{}::%", cat))),
-                    ),
+                    .filter(categories::slug.eq(cat).or(categories::slug.like(format!(
+                        "{}::%",
+                        cat
+                    )))),
             ),
         );
     }
@@ -866,13 +865,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
-        query = query.filter(
-            crates::id.eq_any(
-                follows::table
-                    .select(follows::crate_id)
-                    .filter(follows::user_id.eq(req.user()?.id)),
+        query = query.filter(crates::id.eq_any(
+            follows::table.select(follows::crate_id).filter(
+                follows::user_id.eq(req.user()?.id),
             ),
-        );
+        ));
     }
 
     let data = query.load::<(Crate, i64, bool)>(&*conn)?;
@@ -897,9 +894,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             let badges = badges::table
                 .filter(badges::crate_id.eq(krate.id))
                 .load::<Badge>(&*conn)?;
-            Ok(
-                krate.minimal_encodable(max_version, Some(badges), perfect_match),
-            )
+            Ok(krate.minimal_encodable(
+                max_version,
+                Some(badges),
+                perfect_match,
+            ))
         })
         .collect::<Result<_, ::diesel::result::Error>>()?;
 
@@ -1013,9 +1012,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         .select(categories::all_columns)
         .load(&*conn)?;
 
-    let badges = badges::table
-        .filter(badges::crate_id.eq(krate.id))
-        .load(&*conn)?;
+    let badges = badges::table.filter(badges::crate_id.eq(krate.id)).load(
+        &*conn,
+    )?;
     let max_version = krate.max_version(&conn)?;
 
     #[derive(RustcEncodable)]
@@ -1102,12 +1101,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             ));
         }
 
-        let length = req.content_length()
-            .chain_error(|| human("missing header: Content-Length"))?;
-        let max = krate
-            .max_upload_size
-            .map(|m| m as u64)
-            .unwrap_or(app.config.max_upload_size);
+        let length = req.content_length().chain_error(|| {
+            human("missing header: Content-Length")
+        })?;
+        let max = krate.max_upload_size.map(|m| m as u64).unwrap_or(
+            app.config
+                .max_upload_size,
+        );
         if length > max {
             return Err(human(&format_args!("max upload size is: {}", max)));
         }
@@ -1189,10 +1189,12 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     }
     let mut json = vec![0; amt as usize];
     read_fill(req.body(), &mut json)?;
-    let json = String::from_utf8(json)
-        .map_err(|_| human("json body was not valid utf-8"))?;
-    let new: upload::NewCrate = json::decode(&json)
-        .map_err(|e| human(&format_args!("invalid upload request: {:?}", e)))?;
+    let json = String::from_utf8(json).map_err(|_| {
+        human("json body was not valid utf-8")
+    })?;
+    let new: upload::NewCrate = json::decode(&json).map_err(|e| {
+        human(&format_args!("invalid upload request: {:?}", e))
+    })?;
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
@@ -1260,9 +1262,9 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
     let conn = req.db_conn()?;
     let version_id = versions
         .select(id)
-        .filter(
-            crate_id.eq_any(Crate::by_name(crate_name).select(crates::id)),
-        )
+        .filter(crate_id.eq_any(
+            Crate::by_name(crate_name).select(crates::id),
+        ))
         .filter(num.eq(version))
         .first(&*conn)?;
 
@@ -1437,8 +1439,9 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     req.body().read_to_string(&mut body)?;
     let user = req.user()?;
     let conn = req.db_conn()?;
-    let krate = Crate::by_name(&req.params()["crate_id"])
-        .first::<Crate>(&*conn)?;
+    let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(
+        &*conn,
+    )?;
     let owners = krate.owners(&conn)?;
 
     match rights(req.app(), &owners, user)? {
@@ -1458,13 +1461,13 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         owners: Option<Vec<String>>,
     }
 
-    let request: Request = json::decode(&body)
-        .map_err(|_| human("invalid json request"))?;
+    let request: Request = json::decode(&body).map_err(
+        |_| human("invalid json request"),
+    )?;
 
-    let logins = request
-        .owners
-        .or(request.users)
-        .ok_or_else(|| human("invalid json request"))?;
+    let logins = request.owners.or(request.users).ok_or_else(|| {
+        human("invalid json request")
+    })?;
 
     for login in &logins {
         if add {

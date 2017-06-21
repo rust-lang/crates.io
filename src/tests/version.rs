@@ -30,9 +30,9 @@ fn index() {
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_vers_index", u.id)
             .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
-            .version(
-                ::VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")),
-            )
+            .version(::VersionBuilder::new("2.0.1").license(
+                Some("MIT/Apache-2.0"),
+            ))
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)

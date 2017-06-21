@@ -191,7 +191,9 @@ fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
                 response.extend(data);
                 Ok(data.len())
             }));
-            t!(transfer.read_function(|buf| socket.read(buf).map_err(|_| ReadError::Abort)));
+            t!(transfer.read_function(
+                |buf| socket.read(buf).map_err(|_| ReadError::Abort),
+            ));
 
             t!(transfer.perform());
         }
@@ -342,7 +344,9 @@ impl GhUser {
         let mut response = Vec::new();
         {
             let mut transfer = handle.transfer();
-            t!(transfer.read_function(|buf| body.read(buf).map_err(|_| ReadError::Abort)));
+            t!(transfer.read_function(
+                |buf| body.read(buf).map_err(|_| ReadError::Abort),
+            ));
             t!(transfer.write_function(|data| {
                 response.extend(data);
                 Ok(data.len())

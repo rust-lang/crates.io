@@ -125,8 +125,10 @@ impl Dependency {
 
 impl ReverseDependency {
     pub fn encodable(self) -> EncodableDependency {
-        self.dependency
-            .encodable(&self.crate_name, Some(self.crate_downloads))
+        self.dependency.encodable(
+            &self.crate_name,
+            Some(self.crate_downloads),
+        )
     }
 }
 
@@ -139,11 +141,11 @@ pub fn add_dependencies(
 
     let git_and_new_dependencies = deps.iter()
         .map(|dep| {
-            let krate = Crate::by_name(&dep.name)
-                .first::<Crate>(&*conn)
-                .map_err(|_| {
+            let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn).map_err(
+                |_| {
                     human(&format_args!("no known crate named `{}`", &*dep.name))
-                })?;
+                },
+            )?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
                 return Err(human(
                     "wildcard (`*`) dependency constraints are not allowed \
@@ -189,17 +191,7 @@ pub fn add_dependencies(
 }
 
 impl Queryable<dependencies::SqlType, Pg> for Dependency {
-    type Row = (
-        i32,
-        i32,
-        i32,
-        String,
-        bool,
-        bool,
-        Vec<String>,
-        Option<String>,
-        i32,
-    );
+    type Row = (i32, i32, i32, String, bool, bool, Vec<String>, Option<String>, i32);
 
     fn build(row: Self::Row) -> Self {
         Dependency {

@@ -70,9 +70,9 @@ fn weird_name() {
         )
     );
     assert!(
-        json.errors[0]
-            .detail
-            .contains("organization cannot contain"),
+        json.errors[0].detail.contains(
+            "organization cannot contain",
+        ),
         "{:?}",
         json.errors
     );
@@ -114,9 +114,9 @@ fn nonexistent_team() {
         )
     );
     assert!(
-        json.errors[0]
-            .detail
-            .contains("could not find the github team"),
+        json.errors[0].detail.contains(
+            "could not find the github team",
+        ),
         "{:?}",
         json.errors
     );

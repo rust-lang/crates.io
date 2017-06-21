@@ -105,9 +105,9 @@ impl Version {
              RETURNING *",
         )?;
         let rows = stmt.query(&[&crate_id, &num, &features])?;
-        let ret: Version = Model::from_row(&rows.iter()
-            .next()
-            .chain_error(|| internal("no version returned"))?);
+        let ret: Version = Model::from_row(&rows.iter().next().chain_error(
+            || internal("no version returned"),
+        )?);
         for author in authors {
             ret.add_author(conn, author)?;
         }
@@ -233,9 +233,9 @@ impl NewVersion {
         use diesel::expression::dsl::exists;
         use schema::versions::dsl::*;
 
-        let already_uploaded = versions
-            .filter(crate_id.eq(self.crate_id))
-            .filter(num.eq(&self.num));
+        let already_uploaded = versions.filter(crate_id.eq(self.crate_id)).filter(
+            num.eq(&self.num),
+        );
         if select(exists(already_uploaded)).get_result(conn)? {
             return Err(human(&format_args!(
                 "crate version `{}` is already \
@@ -257,9 +257,9 @@ impl NewVersion {
                 })
                 .collect::<Vec<_>>();
 
-            insert(&new_authors)
-                .into(version_authors::table)
-                .execute(conn)?;
+            insert(&new_authors).into(version_authors::table).execute(
+                conn,
+            )?;
             Ok(version)
         })
     }
@@ -294,22 +294,12 @@ struct NewAuthor<'a> {
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
-    type Row = (
-        i32,
-        i32,
-        String,
-        Timespec,
-        Timespec,
-        i32,
-        Option<String>,
-        bool,
-        Option<String>,
-    );
+    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool, Option<String>);
 
     fn build(row: Self::Row) -> Self {
-        let features = row.6
-            .map(|s| json::decode(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
+        let features = row.6.map(|s| json::decode(&s).unwrap()).unwrap_or_else(
+            HashMap::new,
+        );
         Version {
             id: row.0,
             crate_id: row.1,
@@ -328,9 +318,9 @@ impl Model for Version {
     fn from_row(row: &Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
-        let features = features
-            .map(|s| json::decode(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
+        let features = features.map(|s| json::decode(&s).unwrap()).unwrap_or_else(
+            HashMap::new,
+        );
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
@@ -406,8 +396,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 fn version_and_crate_old(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
-    let semver = semver::Version::parse(semver)
-        .map_err(|_| human(&format_args!("invalid semver: {}", semver)))?;
+    let semver = semver::Version::parse(semver).map_err(|_| {
+        human(&format_args!("invalid semver: {}", semver))
+    })?;
     let tx = req.tx()?;
     let krate = Crate::find_by_name(tx, crate_name)?;
     let version = Version::find_by_num(tx, krate.id, &semver)?;
@@ -471,9 +462,10 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let cutoff_start_date = cutoff_end_date + Duration::days(-89);
 
     let downloads = VersionDownload::belonging_to(&version)
-        .filter(
-            version_downloads::date.between(date(cutoff_start_date)..date(cutoff_end_date)),
-        )
+        .filter(version_downloads::date.between(
+            date(cutoff_start_date)..
+                date(cutoff_end_date),
+        ))
         .order(version_downloads::date)
         .load(&*conn)?
         .into_iter()

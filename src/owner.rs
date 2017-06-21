@@ -199,9 +199,10 @@ impl Team {
             avatar: avatar,
         };
 
-        diesel::insert(
-            &new_team.on_conflict(teams::github_id, do_update().set(&new_team)),
-        ).into(teams::table)
+        diesel::insert(&new_team.on_conflict(
+            teams::github_id,
+            do_update().set(&new_team),
+        )).into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
     }
@@ -304,13 +305,13 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User {
-                id,
-                email,
-                name,
-                gh_login,
-                gh_avatar,
-                ..
-            }) => {
+                            id,
+                            email,
+                            name,
+                            gh_login,
+                            gh_avatar,
+                            ..
+                        }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
@@ -323,12 +324,12 @@ impl Owner {
                 }
             }
             Owner::Team(Team {
-                id,
-                name,
-                login,
-                avatar,
-                ..
-            }) => {
+                            id,
+                            name,
+                            login,
+                            avatar,
+                            ..
+                        }) => {
                 let url = {
                     let mut parts = login.split(':');
                     parts.next(); // discard github

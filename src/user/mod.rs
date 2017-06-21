@@ -139,7 +139,9 @@ impl User {
                                       WHERE gh_id = $6
                                       RETURNING *",
         )?;
-        let rows = stmt.query(&[&access_token, &email, &name, &avatar, &login, &id])?;
+        let rows = stmt.query(
+            &[&access_token, &email, &name, &avatar, &login, &id],
+        )?;
         if let Some(ref row) = rows.iter().next() {
             return Ok(Model::from_row(row));
         }
@@ -150,12 +152,12 @@ impl User {
                                       VALUES ($1, $2, $3, $4, $5, $6)
                                       RETURNING *",
         )?;
-        let rows = stmt.query(&[&email, &access_token, &login, &name, &avatar, &id])?;
-        Ok(Model::from_row(
-            &rows.iter()
-                .next()
-                .chain_error(|| internal("no user with email we just found"))?,
-        ))
+        let rows = stmt.query(
+            &[&email, &access_token, &login, &name, &avatar, &id],
+        )?;
+        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
+            internal("no user with email we just found")
+        })?))
     }
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
@@ -217,8 +219,10 @@ impl Model for User {
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
-    req.session()
-        .insert("github_oauth_state".to_string(), state.clone());
+    req.session().insert(
+        "github_oauth_state".to_string(),
+        state.clone(),
+    );
 
     let url = req.app().github.authorize_url(state.clone());
 
@@ -287,10 +291,9 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req.app()
-        .github
-        .exchange(code.clone())
-        .map_err(|s| human(&s))?;
+    let token = req.app().github.exchange(code.clone()).map_err(
+        |s| human(&s),
+    )?;
 
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
@@ -304,8 +307,10 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
     )?;
-    req.session()
-        .insert("user_id".to_string(), user.id.to_string());
+    req.session().insert(
+        "user_id".to_string(),
+        user.id.to_string(),
+    );
     req.mut_extensions().insert(user);
     me(req)
 }
@@ -326,10 +331,9 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
          WHERE id = $1 RETURNING api_token",
         &[&user.id],
     )?;
-    let token = rows.iter()
-        .next()
-        .map(|r| r.get("api_token"))
-        .chain_error(|| NotFound)?;
+    let token = rows.iter().next().map(|r| r.get("api_token")).chain_error(
+        || NotFound,
+    )?;
 
     #[derive(RustcEncodable)]
     struct R {
@@ -425,8 +429,8 @@ mod tests {
 
     fn connection() -> PgConnection {
         let _ = dotenv();
-        let database_url = env::var("TEST_DATABASE_URL")
-            .expect("TEST_DATABASE_URL must be set to run tests");
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         let conn = PgConnection::establish(&database_url).unwrap();
         conn.begin_test_transaction().unwrap();
         conn

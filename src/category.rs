@@ -63,10 +63,9 @@ impl Category {
              WHERE category = $1",
         )?;
         let rows = stmt.query(&[&name])?;
-        rows.iter()
-            .next()
-            .chain_error(|| NotFound)
-            .map(|row| Model::from_row(&row))
+        rows.iter().next().chain_error(|| NotFound).map(|row| {
+            Model::from_row(&row)
+        })
     }
 
     pub fn find_by_slug(conn: &GenericConnection, slug: &str) -> CargoResult<Category> {
@@ -75,10 +74,9 @@ impl Category {
              WHERE slug = LOWER($1)",
         )?;
         let rows = stmt.query(&[&slug])?;
-        rows.iter()
-            .next()
-            .chain_error(|| NotFound)
-            .map(|row| Model::from_row(&row))
+        rows.iter().next().chain_error(|| NotFound).map(|row| {
+            Model::from_row(&row)
+        })
     }
 
     pub fn encodable(self) -> EncodableCategory {
@@ -429,8 +427,8 @@ mod tests {
 
     fn pg_connection() -> PgConnection {
         let _ = dotenv();
-        let database_url = env::var("TEST_DATABASE_URL")
-            .expect("TEST_DATABASE_URL must be set to run tests");
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         let conn = PgConnection::establish(&database_url).unwrap();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE")
