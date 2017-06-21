@@ -1,4 +1,4 @@
-// jscs:disable validateQuoteMarks
+/* eslint-disable quotes */
 export default {
     "user": {
         "avatar": "https://avatars.githubusercontent.com/u/565790?v=3",
