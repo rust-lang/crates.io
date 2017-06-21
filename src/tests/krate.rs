@@ -18,6 +18,7 @@ use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::category::Category;
+use cargo_registry::owner::EncodableOwner;
 
 #[derive(RustcDecodable)]
 struct CrateList {
@@ -60,6 +61,14 @@ struct RevDeps {
 #[derive(RustcDecodable)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
+}
+#[derive(RustcDecodable)]
+struct TeamResponse {
+    teams: Vec<EncodableOwner>,
+}
+#[derive(RustcDecodable)]
+struct UserResponse {
+    users: Vec<EncodableOwner>,
 }
 
 fn new_crate(name: &str) -> u::NewCrate {
@@ -1739,4 +1748,93 @@ fn author_license_and_description_required() {
         "{:?}",
         json.errors
     );
+}
+
+/*  Testing the crate ownership between two crates and one team.
+    Given two crates, one crate owned by both a team and a user,
+    one only owned by a user, check that the CrateList returned
+    for the user_id contains only the crates owned by that user,
+    and that the CrateList returned for the team_id contains
+    only crates owned by that team.
+*/
+#[test]
+fn check_ownership_two_crates() {
+    let (_b, app, middle) = ::app();
+
+    let (krate_owned_by_team, team) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        (krate, t)
+    };
+
+    let (krate_not_owned_by_team, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_bar").create_or_update(&conn).unwrap();
+        (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
+    };
+
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+
+    let query = format!("user_id={}", user.id);
+    let mut response = ok_resp!(middle.call(req.with_query(&query)));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
+    assert_eq!(json.crates.len(), 1);
+
+    let query = format!("team_id={}", team.id);
+    let mut response = ok_resp!(middle.call(req.with_query(&query)));
+
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.crates[0].name, krate_owned_by_team.name);
+}
+
+/*  Given a crate owned by both a team and a user, check that the
+    JSON returned by the /owner_team route and /owner_user route
+    contains the correct kind of owner
+
+    Note that in this case function new_team must take a team name
+    of form github:org_name:team_name as that is the format
+    EncodableOwner::encodable is expecting
+*/
+#[test]
+fn check_ownership_one_crate() {
+    let (_b, app, middle) = ::app();
+
+    let (team, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_cat").create_or_update(&conn).unwrap();
+        let t = ::new_team("github:test_org:team_sloth")
+            .create_or_update(&conn)
+            .unwrap();
+        let krate = ::CrateBuilder::new("best_crate", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        (t, u)
+    };
+
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_team",
+    );
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: TeamResponse = ::json(&mut response);
+
+    assert_eq!(json.teams[0].kind, "team");
+    assert_eq!(json.teams[0].name, team.name);
+
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_user",
+    );
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: UserResponse = ::json(&mut response);
+
+    assert_eq!(json.users[0].kind, "user");
+    assert_eq!(json.users[0].name, user.name);
 }

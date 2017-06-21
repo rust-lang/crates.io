@@ -30,6 +30,8 @@ export default DS.Model.extend({
     badge_sort: ['badge_type'],
     annotated_badges: Ember.computed.sort('enhanced_badges', 'badge_sort'),
     owners: DS.hasMany('users', { async: true }),
+    owner_team: DS.hasMany('teams', { async: true }),
+    owner_user: DS.hasMany('users', { async: true }),
     version_downloads: DS.hasMany('version-download', { async: true }),
     keywords: DS.hasMany('keywords', { async: true }),
     categories: DS.hasMany('categories', { async: true }),

@@ -22,6 +22,9 @@
         img {
             @include align-self(center);
         }
+        .team-info {
+            @include flex-direction(column);
+        }
     }
     h1 {
         padding-left: 10px;
