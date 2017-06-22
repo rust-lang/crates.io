@@ -16,6 +16,7 @@ export default Ember.Route.extend({
 
     model(params) {
         const { team_id } = params;
+
         return this.store.find('team', team_id).then(
             (team) => {
                 params.team_id = team.get('id');
