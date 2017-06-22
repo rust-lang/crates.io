@@ -11,6 +11,9 @@ export default Ember.Controller.extend(PaginationMixin, {
 
     totalItems: computed.readOnly('model.meta.total'),
 
+    categoryController: Ember.inject.controller('category'),
+    category: computed.alias('categoryController.model'),
+
     currentSortBy: computed('sort', function() {
         return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
     }),
