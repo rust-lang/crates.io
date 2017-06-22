@@ -17,27 +17,19 @@ export default function() {
     this.get('/summary', () => summaryFixture);
 
     this.get('/api/v1/crates', (db, request) => {
-        if (request.queryParams.q) {
-            const { start, end } = pageParams(request);
-            return {
-                crates: searchFixture.crates.slice(start, end),
-                meta: searchFixture.meta,
-            };
-        } else if (request.queryParams.team_id) {
-            const { start, end } = pageParams(request);
-            return {
-                team: teamFixture.team,
-                crates: searchFixture.crates.slice(start, end),
-                meta: searchFixture.meta,
-            };
+        const { start, end } = pageParams(request);
+        const payload = {
+            crates: searchFixture.crates.slice(start, end),
+            meta: searchFixture.meta,
+        };
+
+        if (request.queryParams.team_id) {
+            payload.team = teamFixture.team;
         } else if (request.queryParams.user_id) {
-            const { start, end } = pageParams(request);
-            return {
-                user: userFixture.user,
-                crates: searchFixture.crates.slice(start, end),
-                meta: searchFixture.meta,
-            };
+            payload.user = userFixture.user;
         }
+
+        return payload;
     });
 
     this.get('/api/v1/categories', () => categoriesFixture);
