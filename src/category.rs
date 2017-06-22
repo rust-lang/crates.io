@@ -201,7 +201,7 @@ impl Category {
             "\
             SELECT COUNT(*) \
             FROM categories \
-            WHERE category NOT LIKE '%::%'"
+            WHERE category NOT LIKE '%::%'",
         );
         let count = query.get_result(&*conn)?;
         Ok(count)
@@ -366,9 +366,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let id = &req.params()["category_id"];
     let conn = req.db_conn()?;
     let cat = categories.filter(slug.eq(id)).first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&*conn)?.into_iter().map(|s| {
-        s.encodable()
-    }).collect();
+    let subcats = cat.subcategories(&*conn)?
+        .into_iter()
+        .map(|s| s.encodable())
+        .collect();
 
     let cat = cat.encodable();
     let cat_with_subcats = EncodableCategoryWithSubcategories {
