@@ -10,10 +10,5 @@ export default Ember.Route.extend({
         params.crate = this.modelFor('crate');
 
         return this.store.query('dependency', params);
-    },
-
-    setupController(controller, model) {
-        controller.set('crate', this.modelFor('crate'));
-        this._super(controller, model);
-    },
+    }
 });
