@@ -153,18 +153,18 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     })?;
 
     if length > max_post_size {
-        return Err(bad_request(format!("max post size is: {}", max_post_size)));
+        return Err(bad_request(&format!("max post size is: {}", max_post_size)));
     }
 
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
 
     let json = String::from_utf8(json).map_err(|_| {
-        bad_request("json body was not valid utf-8")
+        bad_request(&"json body was not valid utf-8")
     })?;
 
     let new: NewApiTokenRequest = json::decode(&json).map_err(|e| {
-        bad_request(format!("invalid new token request: {:?}", e))
+        bad_request(&format!("invalid new token request: {:?}", e))
     })?;
 
     let name = &new.api_token.name;
@@ -177,7 +177,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let max_token_per_user = 500;
     let count = ApiToken::count_for_user(&*req.db_conn()?, user.id)?;
     if count >= max_token_per_user {
-        return Err(bad_request(format!(
+        return Err(bad_request(&format!(
             "maximum tokens per user is: {}",
             max_token_per_user
         )));
@@ -196,7 +196,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 pub fn revoke(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
     let id = req.params()["id"].parse().map_err(|e| {
-        bad_request(format!("invalid token id: {:?}", e))
+        bad_request(&format!("invalid token id: {:?}", e))
     })?;
 
     ApiToken::delete(&*req.db_conn()?, user.id, id)?;

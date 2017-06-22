@@ -327,7 +327,7 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
 ///
 /// Since this is going back to the UI these errors are treated the same as
 /// `human` errors, other than the HTTP status code.
-pub fn bad_request<S: ToString>(error: S) -> Box<CargoError> {
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
     Box::new(BadRequest(error.to_string()))
 }
 
