@@ -213,7 +213,8 @@ fn updating_existing_user_doesnt_change_api_token() {
 
     let gh_user_id = ::NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
 
-    let original_user = t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
+    let original_user =
+        t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
     let token = t!(ApiToken::insert(&conn, original_user.id, "foo"));
 
     t!(NewUser::new(gh_user_id, "bar", None, None, None, "bar_token").create_or_update(&conn));

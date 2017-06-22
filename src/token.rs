@@ -142,7 +142,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     if req.authentication_source()? != AuthenticationSource::SessionCookie {
-        return Err(bad_request("cannot use an API token to create a new API token"));
+        return Err(bad_request(
+            "cannot use an API token to create a new API token",
+        ));
     }
 
     let max_post_size = 2000;

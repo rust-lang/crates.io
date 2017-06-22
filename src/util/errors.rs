@@ -280,11 +280,7 @@ impl CargoError for BadRequest {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: self.0.clone(),
-                },
-            ],
+            errors: vec![StringError { detail: self.0.clone() }],
         });
         response.status = (400, "Bad Request");
         Some(response)
