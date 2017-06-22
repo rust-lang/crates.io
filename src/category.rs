@@ -60,7 +60,7 @@ impl Category {
     pub fn find_by_category(conn: &GenericConnection, name: &str) -> CargoResult<Category> {
         let stmt = conn.prepare(
             "SELECT * FROM categories \
-                                      WHERE category = $1",
+             WHERE category = $1",
         )?;
         let rows = stmt.query(&[&name])?;
         rows.iter().next().chain_error(|| NotFound).map(|row| {
@@ -71,7 +71,7 @@ impl Category {
     pub fn find_by_slug(conn: &GenericConnection, slug: &str) -> CargoResult<Category> {
         let stmt = conn.prepare(
             "SELECT * FROM categories \
-                                      WHERE slug = LOWER($1)",
+             WHERE slug = LOWER($1)",
         )?;
         let rows = stmt.query(&[&slug])?;
         rows.iter().next().chain_error(|| NotFound).map(|row| {
@@ -168,8 +168,8 @@ impl Category {
         if !to_rm.is_empty() {
             conn.execute(
                 "DELETE FROM crates_categories \
-                                WHERE category_id = ANY($1) \
-                                  AND crate_id = $2",
+                 WHERE category_id = ANY($1) \
+                 AND crate_id = $2",
                 &[&to_rm, &krate.id],
             )?;
         }
@@ -183,7 +183,7 @@ impl Category {
             conn.execute(
                 &format!(
                     "INSERT INTO crates_categories \
-                                        (crate_id, category_id) VALUES {}",
+                     (crate_id, category_id) VALUES {}",
                     insert
                 ),
                 &[],
@@ -196,9 +196,9 @@ impl Category {
     pub fn count_toplevel(conn: &GenericConnection) -> CargoResult<i64> {
         let sql = format!(
             "\
-            SELECT COUNT(*) \
-            FROM {} \
-            WHERE category NOT LIKE '%::%'",
+             SELECT COUNT(*) \
+             FROM {} \
+             WHERE category NOT LIKE '%::%'",
             Model::table_name(None::<Self>)
         );
         let stmt = conn.prepare(&sql)?;
@@ -272,16 +272,16 @@ impl Category {
     pub fn subcategories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
         let stmt = conn.prepare(
             "\
-            SELECT c.id, c.category, c.slug, c.description, c.created_at, \
-            COALESCE (( \
-                SELECT sum(c2.crates_cnt)::int \
-                FROM categories as c2 \
-                WHERE c2.slug = c.slug \
-                OR c2.slug LIKE c.slug || '::%' \
-            ), 0) as crates_cnt \
-            FROM categories as c \
-            WHERE c.category ILIKE $1 || '::%' \
-            AND c.category NOT ILIKE $1 || '::%::%'",
+             SELECT c.id, c.category, c.slug, c.description, c.created_at, \
+             COALESCE (( \
+             SELECT sum(c2.crates_cnt)::int \
+             FROM categories as c2 \
+             WHERE c2.slug = c.slug \
+             OR c2.slug LIKE c.slug || '::%' \
+             ), 0) as crates_cnt \
+             FROM categories as c \
+             WHERE c.category ILIKE $1 || '::%' \
+             AND c.category NOT ILIKE $1 || '::%::%'",
         )?;
 
         let rows = stmt.query(&[&self.category])?;
@@ -391,7 +391,7 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     let conn = req.tx()?;
     let stmt = conn.prepare(
         "SELECT slug FROM categories \
-                                  ORDER BY slug",
+         ORDER BY slug",
     )?;
     let rows = stmt.query(&[])?;
 

@@ -149,9 +149,9 @@ pub fn add_dependencies(
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
                 return Err(human(
                     "wildcard (`*`) dependency constraints are not allowed \
-                              on crates.io. See http://doc.crates.io/faq.html#can-\
-                              libraries-use--as-a-version-for-their-dependencies for more \
-                              information",
+                     on crates.io. See http://doc.crates.io/faq.html#can-\
+                     libraries-use--as-a-version-for-their-dependencies for more \
+                     information",
                 ));
             }
             let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();

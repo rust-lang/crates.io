@@ -54,9 +54,9 @@ impl Decodable for CrateName {
         if !Crate::valid_name(&s) {
             return Err(d.error(&format!(
                 "invalid crate name specified: {}. \
-                Valid crate names must start with a letter; contain only \
-                letters, numbers, hyphens, or underscores; and have {} or \
-                fewer characters.",
+                 Valid crate names must start with a letter; contain only \
+                 letters, numbers, hyphens, or underscores; and have {} or \
+                 fewer characters.",
                 s,
                 MAX_NAME_LENGTH
             )));
@@ -139,7 +139,7 @@ impl Decodable for KeywordList {
             if val.len() > 20 {
                 return Err(d.error(
                     "keywords must contain less than 20 \
-                                    characters",
+                     characters",
                 ));
             }
         }
@@ -167,7 +167,7 @@ impl Decodable for DependencyKind {
             s => {
                 Err(d.error(&format!(
                     "invalid dependency kind `{}`, must be \
-                                       one of dev, build, or normal",
+                     one of dev, build, or normal",
                     s
                 )))
             }

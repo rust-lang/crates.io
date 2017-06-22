@@ -129,15 +129,15 @@ pub struct NewCrate<'a> {
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
-    pub license: Option<&'a str>,
     pub max_upload_size: Option<i32>,
+    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        license_file: Option<&str>,
+        license_file: Option<&'a str>,
         uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
@@ -163,7 +163,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+    fn validate(&mut self, license_file: Option<&'a str>) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -177,7 +177,7 @@ impl<'a> NewCrate<'a> {
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
-                                                    scheme: `{}`",
+                         scheme: `{}`",
                         field,
                         s
                     )))
@@ -186,7 +186,7 @@ impl<'a> NewCrate<'a> {
             if url.cannot_be_a_base() {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
-                                               data: {}",
+                     data: {}",
                     field,
                     url
                 )));
@@ -207,8 +207,8 @@ impl<'a> NewCrate<'a> {
                 license_exprs::validate_license_expr(part).map_err(|e| {
                     human(&format_args!(
                         "{}; see http://opensource.org/licenses \
-                                                    for options, and http://spdx.org/licenses/ \
-                                                    for their identifiers",
+                         for options, and http://spdx.org/licenses/ \
+                         for their identifiers",
                         e
                     ))
                 })?;
@@ -414,7 +414,7 @@ impl Crate {
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
-                                               scheme: `{}`",
+                         scheme: `{}`",
                         field,
                         s
                     )))
@@ -423,7 +423,7 @@ impl Crate {
             if url.cannot_be_a_base() {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
-                                                        data: {}",
+                     data: {}",
                     field,
                     url
                 )));
@@ -441,8 +441,8 @@ impl Crate {
                 .map_err(|e| {
                     human(&format_args!(
                         "{}; see http://opensource.org/licenses \
-                                                  for options, and http://spdx.org/licenses/ \
-                                                  for their identifiers",
+                         for options, and http://spdx.org/licenses/ \
+                         for their identifiers",
                         e
                     ))
                 })
@@ -505,8 +505,8 @@ impl Crate {
             description,
             homepage,
             documentation,
-            license,
             repository,
+            license,
             ..
         } = self;
         let versions_link = match versions {
@@ -531,8 +531,8 @@ impl Crate {
             homepage: homepage,
             exact_match: exact_match,
             description: description,
-            license: license,
             repository: repository,
+            license: license,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
@@ -572,7 +572,7 @@ impl Crate {
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
         let stmt = conn.prepare(
             "SELECT * FROM versions \
-                                      WHERE crate_id = $1",
+             WHERE crate_id = $1",
         )?;
         let rows = stmt.query(&[&self.id])?;
         let mut ret = rows.iter()
@@ -644,7 +644,7 @@ impl Crate {
                 } else {
                     return Err(human(&format_args!(
                         "only members of {} can add it as \
-                                          an owner",
+                         an owner",
                         login
                     )));
                 }
@@ -718,10 +718,10 @@ impl Crate {
     pub fn categories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
         let stmt = conn.prepare(
             "SELECT categories.* FROM categories \
-                                      LEFT JOIN crates_categories \
-                                      ON categories.id = \
-                                         crates_categories.category_id \
-                                      WHERE crates_categories.crate_id = $1",
+             LEFT JOIN crates_categories \
+             ON categories.id = \
+             crates_categories.category_id \
+             WHERE crates_categories.crate_id = $1",
         )?;
         let rows = stmt.query(&[&self.id])?;
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
@@ -1096,6 +1096,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
+
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
         let krate = persist.create_or_update(&conn, license_file, user.id)?;
 
@@ -1103,7 +1104,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         if rights(req.app(), &owners, &user)? < Rights::Publish {
             return Err(human(
                 "crate name has already been claimed by \
-                              another user",
+                 another user",
             ));
         }
 
@@ -1124,12 +1125,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             return Err(human(&format_args!("max upload size is: {}", max)));
         }
 
+        // This is only redundant for now. Eventually the duplication will be removed.
+        let license = new_crate.license.clone();
+
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features)?.save(
-            &conn,
-            &new_crate
-                .authors,
-        )?;
+        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?
+            .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -1226,8 +1227,8 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     if !missing.is_empty() {
         return Err(human(&format_args!(
             "missing or empty metadata fields: {}. Please \
-            see http://doc.crates.io/manifest.html#package-metadata for \
-            how to upload metadata",
+             see http://doc.crates.io/manifest.html#package-metadata for \
+             how to upload metadata",
             missing.join(", ")
         )));
     }

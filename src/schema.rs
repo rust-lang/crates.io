@@ -182,5 +182,6 @@ table! {
         downloads -> Int4,
         features -> Nullable<Varchar>,
         yanked -> Bool,
+        license -> Nullable<Varchar>,
     }
 }

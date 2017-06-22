@@ -133,7 +133,7 @@ impl Team {
                 let team = chunks.next().ok_or_else(|| {
                     human(
                         "missing github team argument; \
-                            format is github:org:team",
+                         format is github:org:team",
                     )
                 })?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
@@ -141,7 +141,7 @@ impl Team {
             _ => {
                 Err(human(
                     "unknown organization handler, \
-                            only 'github:org:team' is supported",
+                     only 'github:org:team' is supported",
                 ))
             }
         }
@@ -172,7 +172,7 @@ impl Team {
         if let Some(c) = org_name.chars().find(whitelist) {
             return Err(human(&format_args!(
                 "organization cannot contain special \
-                                        characters like {}",
+                 characters like {}",
                 c
             )));
         }
