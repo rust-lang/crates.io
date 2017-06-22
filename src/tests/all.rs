@@ -31,6 +31,7 @@ use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
+use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
 use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
@@ -38,6 +39,8 @@ use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::pg::upsert::*;
+use cargo_registry::schema::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -211,6 +214,32 @@ fn user(login: &str) -> User {
         gh_avatar: None,
         gh_access_token: "some random token".into(),
     }
+}
+
+fn new_team(login: &str) -> NewTeam {
+    NewTeam {
+        github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        login: login,
+        name: None,
+        avatar: None,
+    }
+}
+
+fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> CargoResult<()> {
+    let crate_owner = CrateOwner {
+        crate_id: krate.id,
+        owner_id: t.id,
+        created_by: u.id,
+        owner_kind: 1, // Team owner kind is 1 according to owner.rs
+    };
+
+    diesel::insert(&crate_owner.on_conflict(
+        crate_owners::table.primary_key(),
+        do_update().set(crate_owners::deleted.eq(false)),
+    )).into(crate_owners::table)
+        .execute(conn)?;
+
+    Ok(())
 }
 
 use cargo_registry::util::CargoResult;

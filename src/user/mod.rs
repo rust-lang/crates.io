@@ -16,6 +16,8 @@ use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::EncodableVersion;
 use {http, Model, Version};
+use owner::{Owner, OwnerKind, CrateOwner};
+use krate::Crate;
 
 pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 
@@ -157,6 +159,19 @@ impl User {
         Ok(Model::from_row(&rows.iter().next().chain_error(|| {
             internal("no user with email we just found")
         })?))
+    }
+
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
+        let users = base_query
+            .inner_join(users::table)
+            .select(users::all_columns)
+            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+            .load(conn)?
+            .into_iter()
+            .map(Owner::User);
+
+        Ok(users.collect())
     }
 
     /// Converts this `User` model into an `EncodableUser` for JSON serialization.
@@ -343,6 +358,22 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { user: user.encodable() }))
 }
 
+/// Handles the `GET /teams/:team_id` route.
+pub fn show_team(req: &mut Request) -> CargoResult<Response> {
+    use self::teams::dsl::{teams, login};
+    use owner::Team;
+    use owner::EncodableTeam;
+
+    let name = &req.params()["team_id"];
+    let conn = req.db_conn()?;
+    let team = teams.filter(login.eq(name)).first::<Team>(&*conn)?;
+
+    #[derive(RustcEncodable)]
+    struct R {
+        team: EncodableTeam,
+    }
+    Ok(req.json(&R { team: team.encodable() }))
+}
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {

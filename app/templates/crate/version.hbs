@@ -148,11 +148,19 @@
             <div>
                 <h3>Owners</h3>
                 <ul class='owners'>
-                    {{#each crate.owners as |owner|}}
+                   {{#each crate.owner_team as |team|}}
                         <li>
-                          {{#link-to 'user' owner.login}}
-                              {{user-avatar user=owner size='medium-small'}}
-                          {{/link-to}}
+                            {{#link-to team.kind team.login}}
+                                {{user-avatar user=team size='medium-small'}}
+                            {{/link-to}}
+                        </li>
+                    {{/each}}
+
+                    {{#each crate.owner_user as |user|}}
+                        <li>
+                            {{#link-to user.kind user.login}}
+                                {{user-avatar user=user size='medium-small'}}
+                            {{/link-to}}
                         </li>
                     {{/each}}
                 </ul>

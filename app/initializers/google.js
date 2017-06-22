@@ -1,6 +1,6 @@
 import Ember from 'ember';
 
-export var initialize = function() {
+export function initialize() {
     Ember.$.getScript('https://www.google.com/jsapi', function() {
         window.google.load('visualization', '1.0', {
             packages: ['corechart'],
@@ -10,7 +10,7 @@ export var initialize = function() {
             }
         });
     });
-};
+}
 
 export default {
     name: 'google',

@@ -1,8 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Mixin.create({
-    init(...args) {
-        this._super.apply(this, args);
+    init() {
+        this._super(...arguments);
 
         this.set('boundClickoutHandler', Ember.run.bind(this, this.clickoutHandler));
         this.set('boundEscapeHandler', Ember.run.bind(this, this.escapeHandler));
