@@ -108,7 +108,7 @@ impl User {
     pub fn find_by_api_token(conn: &GenericConnection, token: &str) -> CargoResult<User> {
         let stmt = conn.prepare(
             "SELECT * FROM users \
-                                      WHERE api_token = $1 LIMIT 1",
+             WHERE api_token = $1 LIMIT 1",
         )?;
         let rows = stmt.query(&[&token])?;
         rows.iter()
@@ -343,7 +343,7 @@ pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
     let conn = req.tx()?;
     let rows = conn.query(
         "UPDATE users SET api_token = DEFAULT \
-                           WHERE id = $1 RETURNING api_token",
+         WHERE id = $1 RETURNING api_token",
         &[&user.id],
     )?;
     let token = rows.iter().next().map(|r| r.get("api_token")).chain_error(

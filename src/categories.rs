@@ -101,11 +101,11 @@ pub fn sync() -> CargoResult<()> {
     for category in &categories {
         tx.execute(
             "\
-            INSERT INTO categories (slug, category, description) \
-            VALUES (LOWER($1), $2, $3) \
-            ON CONFLICT (slug) DO UPDATE \
-                SET category = EXCLUDED.category, \
-                    description = EXCLUDED.description;",
+             INSERT INTO categories (slug, category, description) \
+             VALUES (LOWER($1), $2, $3) \
+             ON CONFLICT (slug) DO UPDATE \
+             SET category = EXCLUDED.category, \
+             description = EXCLUDED.description;",
             &[&category.slug, &category.name, &category.description],
         )?;
     }
@@ -119,8 +119,8 @@ pub fn sync() -> CargoResult<()> {
     tx.execute(
         &format!(
             "\
-        DELETE FROM categories \
-        WHERE slug NOT IN ({});",
+             DELETE FROM categories \
+             WHERE slug NOT IN ({});",
             in_clause
         ),
         &[],

@@ -243,12 +243,54 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
 
 use cargo_registry::util::CargoResult;
 
+struct VersionBuilder<'a> {
+    version: semver::Version,
+    license: Option<&'a str>,
+    license_file: Option<&'a str>,
+    features: HashMap<String, Vec<String>>,
+}
+
+impl<'a> VersionBuilder<'a> {
+    fn new(version: &str) -> VersionBuilder {
+        let version = semver::Version::parse(version).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", version, e);
+        });
+
+        VersionBuilder {
+            version: version,
+            license: None,
+            license_file: None,
+            features: HashMap::new(),
+        }
+    }
+
+    fn license(mut self, license: Option<&'a str>) -> Self {
+        self.license = license;
+        self
+    }
+
+    fn build(self, connection: &PgConnection, crate_id: i32) -> CargoResult<Version> {
+        let license = match self.license {
+            Some(license) => Some(license.to_owned()),
+            None => None,
+        };
+
+        NewVersion::new(
+            crate_id,
+            &self.version,
+            &self.features,
+            license,
+            self.license_file,
+        )?
+            .save(connection, &[])
+    }
+}
+
 struct CrateBuilder<'a> {
     owner_id: i32,
     krate: NewCrate<'a>,
-    license_file: Option<&'a str>,
     downloads: Option<i32>,
-    versions: Vec<semver::Version>,
+    versions: Vec<VersionBuilder<'a>>,
     keywords: Vec<&'a str>,
 }
 
@@ -260,7 +302,6 @@ impl<'a> CrateBuilder<'a> {
                 name: name,
                 ..NewCrate::default()
             },
-            license_file: None,
             downloads: None,
             versions: Vec::new(),
             keywords: Vec::new(),
@@ -297,10 +338,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn version(mut self, version: &str) -> Self {
-        let version = semver::Version::parse(version).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", version, e);
-        });
+    fn version(mut self, version: VersionBuilder<'a>) -> Self {
         self.versions.push(version);
         self
     }
@@ -313,11 +351,7 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::update;
 
-        let mut krate = self.krate.create_or_update(
-            connection,
-            self.license_file,
-            self.owner_id,
-        )?;
+        let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -327,14 +361,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions.push("0.99.0".parse().expect(
-                "invalid version number",
-            ));
+            self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
-        for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new())?
-                .save(connection, &[])?;
+        for version in self.versions {
+            version.build(&connection, krate.id)?;
         }
 
         if !self.keywords.is_empty() {
@@ -354,7 +385,7 @@ impl<'a> CrateBuilder<'a> {
 
 fn new_version(crate_id: i32, num: &str) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new()).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -469,9 +500,9 @@ fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
     let conn = req.tx().unwrap();
     let stmt = conn.prepare(
         " \
-        INSERT INTO categories (category, slug) \
-        VALUES ($1, $2) \
-        RETURNING *",
+         INSERT INTO categories (category, slug) \
+         VALUES ($1, $2) \
+         RETURNING *",
     ).unwrap();
     let rows = stmt.query(&[&name, &slug]).unwrap();
     Model::from_row(&rows.iter().next().unwrap())
