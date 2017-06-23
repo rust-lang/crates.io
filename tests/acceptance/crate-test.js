@@ -13,11 +13,37 @@ test('visiting a crate page from the front page', async function(assert) {
     assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
 });
 
-test('visiting a crate page directly', async function(assert) {
+test('visiting /crates/nanomsg', async function(assert) {
     await visit('/crates/nanomsg');
 
     assert.equal(currentURL(), '/crates/nanomsg');
+    assert.equal(currentRouteName(), 'crate.index');
     assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+
+    assert.equal(find('#crates-heading .info h1').text(), 'nanomsg');
+    assert.equal(find('#crates-heading .info h2').text(), '0.6.1');
+});
+
+test('visiting /crates/nanomsg/', async function(assert) {
+    await visit('/crates/nanomsg/');
+
+    assert.equal(currentURL(), '/crates/nanomsg/');
+    assert.equal(currentRouteName(), 'crate.index');
+    assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+
+    assert.equal(find('#crates-heading .info h1').text(), 'nanomsg');
+    assert.equal(find('#crates-heading .info h2').text(), '0.6.1');
+});
+
+test('visiting /crates/nanomsg/0.6.0', async function(assert) {
+    await visit('/crates/nanomsg/0.6.0');
+
+    assert.equal(currentURL(), '/crates/nanomsg/0.6.0');
+    assert.equal(currentRouteName(), 'crate.version');
+    assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+
+    assert.equal(find('#crates-heading .info h1').text(), 'nanomsg');
+    assert.equal(find('#crates-heading .info h2').text(), '0.6.0');
 });
 
 test('navigating to the all versions page', async function(assert) {
