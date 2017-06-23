@@ -18,7 +18,6 @@ Router.map(function() {
         this.route('download');
         this.route('versions');
         this.route('version', { path: '/:version_num' });
-        this.alias('index', '/', 'version');
 
         this.route('reverse_dependencies');
 

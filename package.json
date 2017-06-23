@@ -53,7 +53,6 @@
     "ember-moment": "^7.3.1",
     "ember-page-title": "3.1.5",
     "ember-resolver": "3.0.0",
-    "ember-route-alias": "0.1.5",
     "ember-router-scroll": "0.1.1",
     "ember-source": "2.12.0",
     "emberx-select": "^3.0.1",
