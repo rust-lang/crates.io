@@ -42,6 +42,7 @@ export default function() {
     this.get('/api/v1/crates/nanomsg/reverse_dependencies', () => crateReverseDependenciesFixture);
     this.get('/api/v1/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
     this.get('/api/v1/crates/nanomsg/downloads', () => crateDownloadsFixture);
+    this.get('/api/v1/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
     this.get('/api/v1/keywords/network', () => keywordFixture);
     this.get('/api/v1/teams/:team_id', () => teamFixture);
     this.get('/api/v1/users/:user_id', () => userFixture);
