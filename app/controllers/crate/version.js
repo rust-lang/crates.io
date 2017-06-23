@@ -57,18 +57,9 @@ export default Ember.Controller.extend({
 
         return DS.PromiseArray.create({
             promise: deps.then((deps) => {
-                let non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
-                let map = {};
-                let ret = [];
-
-                non_dev.forEach((dep) => {
-                    if (!(dep.get('crate_id') in map)) {
-                        map[dep.get('crate_id')] = 1;
-                        ret.push(dep);
-                    }
-                });
-
-                return ret;
+                return deps
+                    .filter((dep) => dep.get('kind') !== 'dev')
+                    .uniqBy('crate_id');
             })
         });
     }),
