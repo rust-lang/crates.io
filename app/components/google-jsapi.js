@@ -1,6 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    tagName: '',
+
     didInsertElement() {
         Ember.$.getScript('https://www.google.com/jsapi', function() {
             window.google.load('visualization', '1.0', {
