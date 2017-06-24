@@ -52,10 +52,10 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         println!("====================================================");
         println!("WARNING");
         println!("");
-        println!("this may not be the same github user, different avatar urls");
+        println!("this may not be the same github user, different github IDs");
         println!("");
-        println!("from: {:?}", from.gh_avatar);
-        println!("to:   {:?}", to.gh_avatar);
+        println!("from: {:?}", from.gh_id);
+        println!("to:   {:?}", to.gh_id);
 
         get_confirm("continue?");
     }
@@ -75,7 +75,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     ).unwrap();
     let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
     for row in rows.iter() {
-        let id: i32 = row.get("id");
+        let owner_id: i32 = row.get("owner_id");
         let krate = Crate::find(tx, row.get("crate_id")).unwrap();
         println!("transferring {}", krate.name);
         let owners = krate.owners_old(tx).unwrap();
@@ -84,8 +84,8 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         }
         let n = tx.execute(
             "UPDATE crate_owners SET owner_id = $1
-                             WHERE id $2",
-            &[&to.id, &id],
+                             WHERE owner_id = $2",
+            &[&to.id, &owner_id],
         ).unwrap();
         assert_eq!(n, 1);
     }
