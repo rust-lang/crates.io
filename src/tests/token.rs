@@ -4,15 +4,15 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::{ApiToken, EncodableApiToken, EncodableApiTokenWithToken};
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct ListResponse {
     api_tokens: Vec<EncodableApiToken>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct NewResponse {
     api_token: EncodableApiTokenWithToken,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct RevokedResponse {}
 
 macro_rules! assert_contains {

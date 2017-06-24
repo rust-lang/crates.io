@@ -1,6 +1,7 @@
 extern crate diesel;
+extern crate serde_json;
 
-use rustc_serialize::json::Json;
+use serde_json::Value;
 
 use conduit::{Handler, Method};
 use self::diesel::prelude::*;
@@ -8,11 +9,11 @@ use self::diesel::prelude::*;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::schema::versions;
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct VersionList {
     versions: Vec<EncodableVersion>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct VersionResponse {
     version: EncodableVersion,
 }
@@ -80,7 +81,7 @@ fn authors() {
     let mut data = Vec::new();
     response.body.write_body(&mut data).unwrap();
     let s = ::std::str::from_utf8(&data).unwrap();
-    let json = Json::from_str(&s).unwrap();
+    let json: Value = serde_json::from_str(&s).unwrap();
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
 }

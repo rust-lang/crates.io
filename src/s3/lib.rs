@@ -1,8 +1,8 @@
 #![deny(warnings)]
 
+extern crate base64;
 extern crate time;
 extern crate curl;
-extern crate rustc_serialize;
 extern crate openssl;
 
 use std::io::prelude::*;
@@ -11,7 +11,7 @@ use curl::easy::{Easy, Transfer, List, ReadError};
 use openssl::hash::MessageDigest;
 use openssl::sign::Signer;
 use openssl::pkey::PKey;
-use rustc_serialize::base64::{ToBase64, STANDARD};
+use base64::{encode};
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -119,7 +119,7 @@ impl Bucket {
             let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
             let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
             signer.update(string.as_bytes()).unwrap();
-            signer.finish().unwrap().to_base64(STANDARD)
+            encode(&signer.finish().unwrap()[..])
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

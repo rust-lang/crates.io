@@ -35,7 +35,7 @@ pub struct CrateCategory {
     category_id: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategory {
     pub id: String,
     pub category: String,
@@ -45,7 +45,7 @@ pub struct EncodableCategory {
     pub crates_cnt: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategoryWithSubcategories {
     pub id: String,
     pub category: String,
@@ -343,12 +343,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Query for the total count of categories
     let total = Category::count_toplevel(conn)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         categories: Vec<EncodableCategory>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         total: i64,
     }
@@ -379,7 +379,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         subcategories: subcats,
     };
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         category: EncodableCategoryWithSubcategories,
     }
@@ -395,7 +395,7 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     )?;
     let rows = stmt.query(&[])?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Slug {
         id: String,
         slug: String,
@@ -411,7 +411,7 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
         })
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         category_slugs: Vec<Slug>,
     }

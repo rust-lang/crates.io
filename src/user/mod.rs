@@ -81,7 +81,7 @@ impl<'a> NewUser<'a> {
 }
 
 /// The serialization format for the `User` model.
-#[derive(RustcDecodable, RustcEncodable, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableUser {
     pub id: i32,
     pub login: String,
@@ -239,7 +239,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 
     let url = req.app().github.authorize_url(state.clone());
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         url: String,
         state: String,
@@ -294,7 +294,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct GithubUser {
         email: Option<String>,
         name: Option<String>,
@@ -336,7 +336,7 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         user: EncodableUser,
     }
@@ -351,7 +351,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let user = users.filter(gh_login.eq(name)).first::<User>(&*conn)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         user: EncodableUser,
     }
@@ -368,7 +368,7 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let team = teams.filter(login.eq(name)).first::<Team>(&*conn)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         team: EncodableTeam,
     }
@@ -406,12 +406,12 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         .map(|(version, crate_name, _)| version.encodable(&crate_name))
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         versions: Vec<EncodableVersion>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         more: bool,
     }
@@ -437,7 +437,7 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
         .select(sum(crates::downloads))
         .first::<i64>(&*conn)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         total_downloads: i64,
     }

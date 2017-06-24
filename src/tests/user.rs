@@ -10,12 +10,13 @@ use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct AuthResponse {
     url: String,
     state: String,
 }
-#[derive(RustcDecodable)]
+
+#[derive(Deserialize)]
 pub struct UserShowResponse {
     pub user: EncodableUser,
 }
@@ -114,7 +115,7 @@ fn crates_by_user_id() {
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct Response {
         crates: Vec<EncodableCrate>,
     }
@@ -124,12 +125,12 @@ fn crates_by_user_id() {
 
 #[test]
 fn following() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct R {
         versions: Vec<EncodableVersion>,
         meta: Meta,
     }
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct Meta {
         more: bool,
     }
@@ -241,7 +242,7 @@ fn user_total_downloads() {
     let mut req = ::req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct Response {
         total_downloads: i64,
     }

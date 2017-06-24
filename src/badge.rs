@@ -44,7 +44,7 @@ pub enum Badge {
     },
 }
 
-#[derive(RustcEncodable, RustcDecodable, PartialEq, Debug, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
     pub attributes: HashMap<String, Option<String>>,

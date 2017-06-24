@@ -26,7 +26,7 @@ struct NewVersionDownload(
     i32
 );
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersionDownload {
     pub id: i32,
     pub version: i32,

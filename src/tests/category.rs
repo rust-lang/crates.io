@@ -4,20 +4,20 @@ use conduit_test::MockRequest;
 use cargo_registry::db::RequestTransaction;
 use cargo_registry::category::{Category, EncodableCategory, EncodableCategoryWithSubcategories};
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CategoryList {
     categories: Vec<EncodableCategory>,
     meta: CategoryMeta,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CategoryMeta {
     total: i32,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct GoodCategory {
     category: EncodableCategory,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CategoryWithSubcategories {
     category: EncodableCategoryWithSubcategories,
 }

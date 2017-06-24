@@ -6,13 +6,13 @@ use std::path::{Path, PathBuf};
 
 use semver;
 use git2;
-use rustc_serialize::json;
+use serde_json;
 
 use app::App;
 use dependency::Kind;
 use util::{CargoResult, internal};
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
     pub name: String,
     pub vers: String,
@@ -22,7 +22,7 @@ pub struct Crate {
     pub yanked: Option<bool>,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Dependency {
     pub name: String,
     pub req: String,
@@ -60,7 +60,7 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
                 |mut f| f.read_to_string(&mut prev),
             )?;
         }
-        let s = json::encode(krate).unwrap();
+        let s = serde_json::to_string(krate).unwrap();
         let new = prev + &s;
         let mut f = File::create(&dst)?;
         f.write_all(new.as_bytes())?;
@@ -85,14 +85,14 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
         )?;
         let new = prev.lines()
             .map(|line| {
-                let mut git_crate = json::decode::<Crate>(line).map_err(|_| {
+                let mut git_crate = serde_json::from_str::<Crate>(line).map_err(|_| {
                     internal(&format_args!("couldn't decode: `{}`", line))
                 })?;
                 if git_crate.name != krate || git_crate.vers != version.to_string() {
                     return Ok(line.to_string());
                 }
                 git_crate.yanked = Some(yanked);
-                Ok(json::encode(&git_crate).unwrap())
+                Ok(serde_json::to_string(&git_crate).unwrap())
             })
             .collect::<CargoResult<Vec<String>>>();
         let new = new?.join("\n");

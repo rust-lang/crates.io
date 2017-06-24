@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::ops::Deref;
 
-use rustc_serialize::{Decodable, Decoder, Encoder, Encodable};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use semver;
 use dependency::Kind as DependencyKind;
 
 use keyword::Keyword as CrateKeyword;
 use krate::{Crate, MAX_NAME_LENGTH};
 
-#[derive(RustcDecodable, RustcEncodable, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
@@ -44,7 +44,7 @@ pub struct Category(pub String);
 #[derive(Debug)]
 pub struct Feature(pub String);
 
-#[derive(RustcDecodable, RustcEncodable, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,
@@ -55,20 +55,20 @@ pub struct CrateDependency {
     pub kind: Option<DependencyKind>,
 }
 
-impl Decodable for CrateName {
-    fn decode<D: Decoder>(d: &mut D) -> Result<CrateName, D::Error> {
-        let s = d.read_str()?;
+impl<'de> Deserialize<'de> for CrateName {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateName, D::Error> {
+        let s = String::deserialize(d)?;
         if !Crate::valid_name(&s) {
-            return Err(d.error(&format!(
-                "invalid crate name specified: {}. \
-                 Valid crate names must start with a letter; contain only \
-                 letters, numbers, hyphens, or underscores; and have {} or \
-                 fewer characters.",
-                s,
+            let value = de::Unexpected::Str(&s);
+            let expected = format!(
+                "a valid crate name to start with a letter, contain only letters, \
+                 numbers, hyphens, or underscores and have at most {} characters",
                 MAX_NAME_LENGTH
-            )));
+            );
+            Err(de::Error::invalid_value(value, &expected.as_ref()))
+        } else {
+            Ok(CrateName(s))
         }
-        Ok(CrateName(s))
     }
 }
 
@@ -81,48 +81,62 @@ where
     }
 }
 
-impl Decodable for Keyword {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Keyword, D::Error> {
-        let s = d.read_str()?;
+impl<'de> Deserialize<'de> for Keyword {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Keyword, D::Error> {
+        let s = String::deserialize(d)?;
         if !CrateKeyword::valid_name(&s) {
-            return Err(d.error(&format!("invalid keyword specified: {}", s)));
+            let value = de::Unexpected::Str(&s);
+            let expected = "a valid keyword specifier";
+            Err(de::Error::invalid_value(value, &expected))
+        } else {
+            Ok(Keyword(s))
         }
-        Ok(Keyword(s))
     }
 }
 
-impl Decodable for Category {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Category, D::Error> {
-        d.read_str().map(Category)
+impl<'de> Deserialize<'de> for Category {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Category, D::Error> {
+        String::deserialize(d).map(Category)
     }
 }
 
-impl Decodable for Feature {
-    fn decode<D: Decoder>(d: &mut D) -> Result<Feature, D::Error> {
-        let s = d.read_str()?;
+impl<'de> Deserialize<'de> for Feature {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Feature, D::Error> {
+        let s = String::deserialize(d)?;
         if !Crate::valid_feature_name(&s) {
-            return Err(d.error(&format!("invalid feature name specified: {}", s)));
+            let value = de::Unexpected::Str(&s);
+            let expected = "a valid feature name";
+            Err(de::Error::invalid_value(value, &expected))
+        } else {
+            Ok(Feature(s))
         }
-        Ok(Feature(s))
     }
 }
 
-impl Decodable for CrateVersion {
-    fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersion, D::Error> {
-        let s = d.read_str()?;
+impl<'de> Deserialize<'de> for CrateVersion {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateVersion, D::Error> {
+        let s = String::deserialize(d)?;
         match semver::Version::parse(&s) {
             Ok(v) => Ok(CrateVersion(v)),
-            Err(..) => Err(d.error(&format!("invalid semver: {}", s))),
+            Err(..) => {
+                let value = de::Unexpected::Str(&s);
+                let expected = "a valid semver";
+                Err(de::Error::invalid_value(value, &expected))
+            }
         }
     }
 }
 
-impl Decodable for CrateVersionReq {
-    fn decode<D: Decoder>(d: &mut D) -> Result<CrateVersionReq, D::Error> {
-        let s = d.read_str()?;
+impl<'de> Deserialize<'de> for CrateVersionReq {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateVersionReq, D::Error> {
+        let s = String::deserialize(d)?;
         match semver::VersionReq::parse(&s) {
             Ok(v) => Ok(CrateVersionReq(v)),
-            Err(..) => Err(d.error(&format!("invalid version req: {}", s))),
+            Err(..) => {
+                let value = de::Unexpected::Str(&s);
+                let expected = "a valid version req";
+                Err(de::Error::invalid_value(value, &expected))
+            }
         }
     }
 }
@@ -136,108 +150,115 @@ where
     }
 }
 
-impl Decodable for KeywordList {
-    fn decode<D: Decoder>(d: &mut D) -> Result<KeywordList, D::Error> {
-        let inner: Vec<Keyword> = Decodable::decode(d)?;
+impl<'de> Deserialize<'de> for KeywordList {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<KeywordList, D::Error> {
+        let inner = <Vec<Keyword> as Deserialize<'de>>::deserialize(d)?;
         if inner.len() > 5 {
-            return Err(d.error("a maximum of 5 keywords per crate are allowed"));
+            let expected = "at most 5 keywords per crate";
+            return Err(de::Error::invalid_length(inner.len(), &expected));
         }
         for val in &inner {
             if val.len() > 20 {
-                return Err(d.error(
-                    "keywords must contain less than 20 \
-                     characters",
-                ));
+                let expected = "a keyword with less than 20 characters";
+                return Err(de::Error::invalid_length(val.len(), &expected));
             }
         }
         Ok(KeywordList(inner))
     }
 }
 
-impl Decodable for CategoryList {
-    fn decode<D: Decoder>(d: &mut D) -> Result<CategoryList, D::Error> {
-        let inner: Vec<Category> = Decodable::decode(d)?;
+impl<'de> Deserialize<'de> for CategoryList {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CategoryList, D::Error> {
+        let inner = <Vec<Category> as Deserialize<'de>>::deserialize(d)?;
         if inner.len() > 5 {
-            return Err(d.error("a maximum of 5 categories per crate are allowed"));
+            let expected = "at most 5 categories per crate";
+            Err(de::Error::invalid_length(inner.len(), &expected))
+        } else {
+            Ok(CategoryList(inner))
         }
-        Ok(CategoryList(inner))
     }
 }
 
-impl Decodable for DependencyKind {
-    fn decode<D: Decoder>(d: &mut D) -> Result<DependencyKind, D::Error> {
-        let s: String = Decodable::decode(d)?;
+impl<'de> Deserialize<'de> for DependencyKind {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<DependencyKind, D::Error> {
+        let s = String::deserialize(d)?;
         match &s[..] {
             "dev" => Ok(DependencyKind::Dev),
             "build" => Ok(DependencyKind::Build),
             "normal" => Ok(DependencyKind::Normal),
-            s => {
-                Err(d.error(&format!(
-                    "invalid dependency kind `{}`, must be \
-                     one of dev, build, or normal",
-                    s
-                )))
+            _ => {
+                const KINDS: &'static [&'static str] = &["dev", "build", "normal"];
+                Err(de::Error::unknown_variant(&s, KINDS))
             }
         }
     }
 }
 
-impl Encodable for CrateName {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(self)
+macro_rules! serialize_string {
+    ($name:ty) => (
+        impl Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where S: Serializer
+            {
+                serializer.serialize_str(self.deref())
+            }
+        }
+    )
+}
+
+serialize_string!(CrateName);
+serialize_string!(Keyword);
+serialize_string!(Category);
+serialize_string!(Feature);
+
+
+impl Serialize for CrateVersion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&(**self).to_string())
     }
 }
 
-impl Encodable for Keyword {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(self)
+impl Serialize for CrateVersionReq {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&(**self).to_string())
     }
 }
 
-impl Encodable for Category {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(self)
-    }
-}
-
-impl Encodable for Feature {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(self)
-    }
-}
-
-impl Encodable for CrateVersion {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(&(**self).to_string())
-    }
-}
-
-impl Encodable for CrateVersionReq {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
-        d.emit_str(&(**self).to_string())
-    }
-}
-
-impl Encodable for KeywordList {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
+impl Serialize for KeywordList {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let KeywordList(ref inner) = *self;
-        inner.encode(d)
+        inner.serialize(serializer)
     }
 }
 
-impl Encodable for CategoryList {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
+impl Serialize for CategoryList {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let CategoryList(ref inner) = *self;
-        inner.encode(d)
+        inner.serialize(serializer)
     }
 }
 
-impl Encodable for DependencyKind {
-    fn encode<E: Encoder>(&self, d: &mut E) -> Result<(), E::Error> {
+impl Serialize for DependencyKind {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         match *self {
-            DependencyKind::Normal => "normal".encode(d),
-            DependencyKind::Build => "build".encode(d),
-            DependencyKind::Dev => "dev".encode(d),
+            DependencyKind::Normal => "normal".serialize(serializer),
+            DependencyKind::Build => "build".serialize(serializer),
+            DependencyKind::Dev => "dev".serialize(serializer),
         }
     }
 }

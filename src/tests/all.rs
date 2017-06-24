@@ -1,5 +1,7 @@
 #![deny(warnings)]
 
+#[macro_use]
+extern crate serde_derive;
 extern crate diesel;
 extern crate bufstream;
 extern crate cargo_registry;
@@ -10,13 +12,14 @@ extern crate curl;
 extern crate dotenv;
 extern crate git2;
 extern crate postgres;
-extern crate rustc_serialize;
 extern crate semver;
+extern crate serde;
+extern crate serde_json;
 extern crate time;
 extern crate url;
 extern crate s3;
 
-use rustc_serialize::json::{self, Json};
+use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
@@ -72,11 +75,11 @@ macro_rules! bad_resp {
     })
 }
 
-#[derive(RustcDecodable, Debug)]
+#[derive(Deserialize, Debug)]
 struct Error {
     detail: String,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct Bad {
     errors: Vec<Error>,
 }
@@ -157,26 +160,28 @@ fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
     Some(bad)
 }
 
-fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
+fn json<T>(r: &mut conduit::Response) -> T
+where
+    for<'de> T: serde::Deserialize<'de>,
+{
     let mut data = Vec::new();
     r.body.write_body(&mut data).unwrap();
     let s = std::str::from_utf8(&data).unwrap();
-    let j = match Json::from_str(s) {
+    let j = match serde_json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
     let j = fixup(j);
-    let s = j.to_string();
-    return match json::decode(&s) {
+    return match serde_json::from_value::<T>(j) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
     };
 
 
-    fn fixup(json: Json) -> Json {
+    fn fixup(json: Value) -> Value {
         match json {
-            Json::Object(object) => {
-                Json::Object(
+            Value::Object(object) => {
+                Value::Object(
                     object
                         .into_iter()
                         .map(|(k, v)| {
@@ -186,7 +191,7 @@ fn json<T: rustc_serialize::Decodable>(r: &mut conduit::Response) -> T {
                         .collect(),
                 )
             }
-            Json::Array(list) => Json::Array(list.into_iter().map(fixup).collect()),
+            Value::Array(list) => Value::Array(list.into_iter().map(fixup).collect()),
             j => j,
         }
     }
@@ -662,7 +667,7 @@ fn new_req_body(
 }
 
 fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
-    let json = json::encode(&new_crate).unwrap();
+    let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
         [

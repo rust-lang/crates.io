@@ -3,8 +3,8 @@ use std::error::Error;
 use std::io::{self, Cursor};
 use std::sync::Arc;
 
-use rustc_serialize::{json, Encodable};
-use rustc_serialize::json::Json;
+use serde_json::{self, Value};
+use serde::Serialize;
 use url;
 
 use conduit::{Request, Response, Handler};
@@ -30,14 +30,14 @@ mod request_proxy;
 pub trait RequestUtils {
     fn redirect(&self, url: String) -> Response;
 
-    fn json<T: Encodable>(&self, t: &T) -> Response;
+    fn json<T: Serialize>(&self, t: &T) -> Response;
     fn query(&self) -> HashMap<String, String>;
     fn wants_json(&self) -> bool;
     fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
 }
 
-pub fn json_response<T: Encodable>(t: &T) -> Response {
-    let s = json::encode(t).unwrap();
+pub fn json_response<T: Serialize>(t: &T) -> Response {
+    let s = serde_json::to_string(t).unwrap();
     let json = fixup(s.parse().unwrap()).to_string();
     let mut headers = HashMap::new();
     headers.insert(
@@ -51,10 +51,10 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
         body: Box::new(Cursor::new(json.into_bytes())),
     };
 
-    fn fixup(json: Json) -> Json {
+    fn fixup(json: Value) -> Value {
         match json {
-            Json::Object(object) => {
-                Json::Object(
+            Value::Object(object) => {
+                Value::Object(
                     object
                         .into_iter()
                         .map(|(k, v)| {
@@ -64,7 +64,7 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
                         .collect(),
                 )
             }
-            Json::Array(list) => Json::Array(list.into_iter().map(fixup).collect()),
+            Value::Array(list) => Value::Array(list.into_iter().map(fixup).collect()),
             j => j,
         }
     }
@@ -72,7 +72,7 @@ pub fn json_response<T: Encodable>(t: &T) -> Response {
 
 
 impl<'a> RequestUtils for Request + 'a {
-    fn json<T: Encodable>(&self, t: &T) -> Response {
+    fn json<T: Serialize>(&self, t: &T) -> Response {
         json_response(t)
     }
 
