@@ -20,6 +20,8 @@ struct BadgeRef {
     codecov_attributes: HashMap<String, String>,
     coveralls: Badge,
     coveralls_attributes: HashMap<String, String>,
+    circle_ci: Badge,
+    circle_ci_attributes: HashMap<String, String>,
 }
 
 fn set_up() -> (Arc<App>, Crate, BadgeRef) {
@@ -96,6 +98,14 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     badge_attributes_coveralls.insert(String::from("repository"), String::from("rust-lang/rust"));
     badge_attributes_coveralls.insert(String::from("service"), String::from("github"));
 
+    let circle_ci = Badge::CircleCi {
+        repository: String::from("rust-lang/rust"),
+        branch: Some(String::from("beta")),
+    };
+    let mut badge_attributes_circle_ci = HashMap::new();
+    badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
+    badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+
     let badges = BadgeRef {
         appveyor: appveyor,
         appveyor_attributes: badge_attributes_appveyor,
@@ -112,6 +122,8 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         codecov_attributes: badge_attributes_codecov,
         coveralls: coveralls,
         coveralls_attributes: badge_attributes_coveralls,
+        circle_ci: circle_ci,
+        circle_ci_attributes: badge_attributes_circle_ci,
     };
     (app, krate, badges)
 }
@@ -221,6 +233,18 @@ fn update_add_coveralls() {
     badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.coveralls]);
+}
+
+#[test]
+fn update_add_circle_ci() {
+    // Add a CircleCI badge
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
+
+    let mut badges = HashMap::new();
+    badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.circle_ci]);
 }
 
 #[test]
@@ -435,6 +459,24 @@ fn coveralls_required_keys() {
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&"coveralls"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+}
+
+#[test]
+fn circle_ci_required_keys() {
+    // Add a CircleCI badge missing a required field
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.circle_ci_attributes.remove("repository");
+    badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
+
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&"circle-ci"));
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
