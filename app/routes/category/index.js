@@ -7,12 +7,7 @@ export default Ember.Route.extend({
     },
 
     model(params) {
-        params.category = this.modelFor('category').id;
+        params.category = this.paramsFor('category').category_id;
         return this.store.query('crate', params);
-    },
-
-    setupController(controller, model) {
-        controller.set('category', this.modelFor('category'));
-        this._super(controller, model);
-    },
+    }
 });

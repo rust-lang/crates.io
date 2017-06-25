@@ -5,14 +5,8 @@ export default Ember.Route.extend({
         page: { refreshModel: true },
         sort: { refreshModel: true },
     },
+
     data: {},
-
-    setupController(controller, model) {
-        this._super(controller, model);
-
-        controller.set('fetchingFeed', true);
-        controller.set('crates', this.get('data.crates'));
-    },
 
     model(params) {
         const { user_id } = params;
@@ -33,5 +27,12 @@ export default Ember.Route.extend({
                 }
             }
         );
+    },
+
+    setupController(controller, model) {
+        this._super(controller, model);
+
+        controller.set('fetchingFeed', true);
+        controller.set('crates', this.get('data.crates'));
     },
 });
