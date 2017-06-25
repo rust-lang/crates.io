@@ -38,6 +38,7 @@ addons:
 matrix:
   include:
   - rust: stable
+    env: RUSTFMT=YESPLEASE
     script:
     - cargo fmt -- --write-mode=diff
   - rust: stable
