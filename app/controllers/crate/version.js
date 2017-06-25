@@ -3,7 +3,7 @@ import DS from 'ember-data';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
-const { computed } = Ember;
+const { computed, run: { later } } = Ember;
 
 export default Ember.Controller.extend({
     isDownloading: false,
@@ -92,28 +92,6 @@ export default Ember.Controller.extend({
         });
     }),
 
-    actions: {
-        download(version) {
-            this.set('isDownloading', true);
-
-            version.getDownloadUrl().then(url => {
-                this.incrementProperty('crate.downloads');
-                this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', url);
-            }).finally(() => this.set('isDownloading', false));
-        },
-
-        toggleFollow() {
-            this.set('fetchingFollowing', true);
-
-            let crate = this.get('crate');
-            let op = this.toggleProperty('following') ?
-                crate.follow() : crate.unfollow();
-
-            return op.finally(() => this.set('fetchingFollowing', false));
-        },
-    },
-
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let downloads = this.get('downloads');
         if (!downloads) {
@@ -175,4 +153,46 @@ export default Ember.Controller.extend({
 
         return data;
     }),
+
+    toggleClipboardProps(isSuccess) {
+        this.setProperties({
+            showSuccess: isSuccess,
+            showNotification: true
+        });
+        later(this, () => {
+            this.set('showNotification', false);
+        }, 2000);
+    },
+
+    actions: {
+        copySuccess(event) {
+            event.clearSelection();
+            this.toggleClipboardProps(true);
+        },
+
+        copyError() {
+            this.toggleClipboardProps(false);
+        },
+
+        download(version) {
+            this.set('isDownloading', true);
+
+            version.getDownloadUrl().then(url => {
+                this.incrementProperty('crate.downloads');
+                this.incrementProperty('currentVersion.downloads');
+                Ember.$('#download-frame').attr('src', url);
+            }).finally(() => this.set('isDownloading', false));
+        },
+
+        toggleFollow() {
+            this.set('fetchingFollowing', true);
+
+            let crate = this.get('crate');
+            let op = this.toggleProperty('following') ?
+                crate.follow() : crate.unfollow();
+
+            return op.finally(() => this.set('fetchingFollowing', false));
+        },
+    },
+
 });
