@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+import ajax from 'ember-fetch/ajax';
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
