@@ -43,8 +43,10 @@ export default Ember.Mixin.create({
     }),
 
     currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
-        return Math.min(this.get('currentPage') * this.get('itemsPerPage'),
-                        this.get('totalItems'));
+        return Math.min(
+            this.get('currentPage') * this.get('itemsPerPage'),
+            this.get('totalItems')
+        );
     }),
 
     nextPage: computed('currentPage', 'availablePages', function() {

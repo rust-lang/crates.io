@@ -19,8 +19,8 @@ export default Ember.Mixin.create({
             });
         } else {
             this.session.set('savedTransition', transition);
-            this.controllerFor('application').set('nextFlashError',
-                                                  'Please log in to proceed');
+            this.controllerFor('application')
+                .set('nextFlashError', 'Please log in to proceed');
             return this.transitionTo('index');
         }
     },

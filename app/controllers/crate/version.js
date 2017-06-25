@@ -30,12 +30,14 @@ export default Ember.Controller.extend({
 
     hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed.or('crate.homepage',
-                          'crate.wiki',
-                          'crate.mailing_list',
-                          'crate.documentation',
-                          'crate.repository',
-                          'crate.reverse_dependencies'),
+    anyLinks: computed.or(
+        'crate.homepage',
+        'crate.wiki',
+        'crate.mailing_list',
+        'crate.documentation',
+        'crate.repository',
+        'crate.reverse_dependencies'
+    ),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return DS.PromiseArray.create({
