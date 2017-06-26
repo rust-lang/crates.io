@@ -33,7 +33,9 @@ impl<T> LazyCell<T> {
     }
 
     /// Test whether this cell has been previously filled.
-    pub fn filled(&self) -> bool { self.inner.borrow().is_some() }
+    pub fn filled(&self) -> bool {
+        self.inner.borrow().is_some()
+    }
 
     /// Borrows the contents of this lazy cell for the duration of the cell
     /// itself.
@@ -43,7 +45,7 @@ impl<T> LazyCell<T> {
     pub fn borrow(&self) -> Option<&T> {
         match *self.inner.borrow() {
             Some(ref inner) => unsafe { Some(mem::transmute(inner)) },
-            None => None
+            None => None,
         }
     }
 

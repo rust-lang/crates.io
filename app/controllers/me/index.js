@@ -15,7 +15,7 @@ export default Ember.Controller.extend({
             }).then((d) => {
                 this.get('model').set('api_token', d.api_token);
             }).catch((reason) => {
-                var msg;
+                let msg;
                 if (reason.status === 403) {
                     msg = 'A login is required to perform this action';
                 } else {

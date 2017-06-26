@@ -1,42 +1,57 @@
-use std::collections::HashMap;
+extern crate diesel;
+
 use rustc_serialize::json::Json;
 
 use conduit::{Handler, Method};
-use semver;
+use self::diesel::prelude::*;
 
-use cargo_registry::db::RequestTransaction;
-use cargo_registry::version::{EncodableVersion, Version};
+use cargo_registry::version::EncodableVersion;
+use cargo_registry::schema::versions;
 
 #[derive(RustcDecodable)]
-struct VersionList { versions: Vec<EncodableVersion> }
+struct VersionList {
+    versions: Vec<EncodableVersion>,
+}
 #[derive(RustcDecodable)]
-struct VersionResponse { version: EncodableVersion }
-
-fn sv(s: &str) -> semver::Version {
-    semver::Version::parse(s).unwrap()
+struct VersionResponse {
+    version: EncodableVersion,
 }
 
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/versions");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
 
     let (v1, v2) = {
-        ::mock_user(&mut req, ::user("foo"));
-        let (c, _) = ::mock_crate(&mut req, ::krate("foo_vers_index"));
-        let tx = req.tx().unwrap();
-        let m = HashMap::new();
-        let v1 = Version::insert(tx, c.id, &sv("2.0.0"), &m, &[]).unwrap();
-        let v2 = Version::insert(tx, c.id, &sv("2.0.1"), &m, &[]).unwrap();
-        (v1, v2)
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_vers_index", u.id)
+            .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
+            .version(::VersionBuilder::new("2.0.1").license(
+                Some("MIT/Apache-2.0"),
+            ))
+            .expect_build(&conn);
+        let ids = versions::table
+            .select(versions::id)
+            .load::<i32>(&*conn)
+            .unwrap();
+        (ids[0], ids[1])
     };
-    req.with_query(&format!("ids[]={}&ids[]={}", v1.id, v2.id));
+    req.with_query(&format!("ids[]={}&ids[]={}", v1, v2));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);
+
+    for v in &json.versions {
+        match v.num.as_ref() {
+            "2.0.0" => assert_eq!(v.license, Some(String::from("MIT"))),
+            "2.0.1" => assert_eq!(v.license, Some(String::from("MIT/Apache-2.0"))),
+            _ => panic!("unexpected version"),
+        }
+    }
 }
 
 #[test]
@@ -46,8 +61,7 @@ fn show() {
     let v = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo_vers_show", user.id)
-            .expect_build(&conn);
+        let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
         ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));

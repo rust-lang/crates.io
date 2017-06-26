@@ -9,8 +9,10 @@ pub trait Model: Sized {
     fn table_name(_: Option<Self>) -> &'static str;
 
     fn find(conn: &GenericConnection, id: i32) -> CargoResult<Self> {
-        let sql = format!("SELECT * FROM {} WHERE id = $1",
-                          Model::table_name(None::<Self>));
+        let sql = format!(
+            "SELECT * FROM {} WHERE id = $1",
+            Model::table_name(None::<Self>)
+        );
         let stmt = conn.prepare(&sql)?;
         let rows = stmt.query(&[&id])?;
         let row = rows.into_iter().next().chain_error(|| NotFound)?;

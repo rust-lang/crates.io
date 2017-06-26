@@ -1,9 +1,9 @@
 language: rust
-rust: stable
 sudo: false
 dist: trusty
 
 cache:
+  cargo: true
   directories:
     - $HOME/.yarn-cache
 
@@ -17,18 +17,12 @@ install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - yarn
   - yarn run bower install
-  - cargo install diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force rustfmt
+  - rustfmt --version
 
 before_script:
   - diesel database setup
-
-script:
-  - cargo build
-  - cargo test
-  - yarn run test
-
-after_success:
-  - travis-cargo coveralls --no-sudo
 
 addons:
   postgresql: "9.5"
@@ -43,6 +37,14 @@ addons:
 
 matrix:
   include:
+  - rust: stable
+    script:
+    - cargo fmt -- --write-mode=diff
+  - rust: stable
+    script:
+    - cargo build
+    - cargo test
+    - yarn run test
   - rust: nightly-2017-03-04
     env: CLIPPY=YESPLEASE
     script:

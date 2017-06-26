@@ -1,4 +1,4 @@
-// jscs:disable validateQuoteMarks
+/* eslint-disable quotes */
 export default {
     "categories": [],
     "crate": {
@@ -15,7 +15,8 @@ export default {
         ],
         "license": "MIT",
         "links": {
-            "owners": "/api/v1/crates/nanomsg/owners",
+            "owner_user": "/api/v1/crates/nanomsg/owner_user",
+            "owner_team": "/api/v1/crates/nanomsg/owner_team",
             "reverse_dependencies": "/api/v1/crates/nanomsg/reverse_dependencies",
             "version_downloads": "/api/v1/crates/nanomsg/downloads",
             "versions": null

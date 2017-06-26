@@ -100,7 +100,7 @@ export default Ember.Route.extend({
     },
 
     serialize(model) {
-        let version_num = model ? model.get('num') : '';
+        let version_num = model.get('num');
         return { version_num };
     },
 });

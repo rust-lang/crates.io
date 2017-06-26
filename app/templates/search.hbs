@@ -10,64 +10,72 @@
     {{/if}}
 </div>
 
-<div id='results'>
-    <div class='nav'>
-        <span class='amt'>
-            Displaying
-            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-            of <span class='total'>{{ totalItems }}</span> total results
-        </span>
+{{#if hasItems}}
+    <div id='results'>
+        <div class='nav'>
+            <span class='amt'>
+                Displaying
+                <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+                of <span class='total'>{{ totalItems }}</span> total results
+            </span>
+        </div>
+
+        <div class='sort'>
+            <span class='small'>Sort by </span>
+
+            {{#rl-dropdown-container class="dropdown-container"}}
+                {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+                    <img class="sort" src="/assets/sort.png"/>
+                    {{ currentSortBy }}
+                    <span class='arrow'></span>
+                {{/rl-dropdown-toggle}}
+
+                {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
+                    <li>
+                        {{#link-to (query-params page=1 sort="")}}
+                            Relevance
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="downloads")}}
+                            Downloads
+                        {{/link-to}}
+                    </li>
+                {{/rl-dropdown}}
+            {{/rl-dropdown-container}}
+        </div>
     </div>
 
-	<div class='sort'>
-		<span class='small'>Sort by </span>
-		
-		{{#rl-dropdown-container class="dropdown-container"}}
-			{{#rl-dropdown-toggle tagName="a" class="dropdown"}}
-				<img class="sort" src="/assets/sort.png"/>
-				{{ currentSortBy }}
-				<span class='arrow'></span>
-			{{/rl-dropdown-toggle}}
+    <div id='crates' class='white-rows'>
+        {{#each model as |crate|}}
+            {{#if crate.exact_match}}
+                <div class='exact-match'>
+                    {{#link-to "crate" crate}}
+                        <h1>Exact Match</h1>
+                    {{/link-to}}
+                    {{crate-row crate=crate}}
+                </div>
+            {{else}}
+                <div>
+                    {{crate-row crate=crate}}
+                </div>
+            {{/if}}
+        {{/each}}
+    </div>
 
-			{{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
-				<li>
-					{{#link-to (query-params page=1 sort="")}}
-						Relevance
-					{{/link-to}}
-				</li>
-				<li>
-					{{#link-to (query-params page=1 sort="downloads")}}
-						Downloads
-					{{/link-to}}
-				</li>
-			{{/rl-dropdown}}
-		{{/rl-dropdown-container}}
-	</div>
-</div>
-
-<div id='crates' class='white-rows'>
-    {{#each model as |crate|}}
-        {{#if crate.exact_match}}
-            <div class='exact-match'>
-                <h1>Exact Match</h1>
-                {{crate-row crate=crate}}
-            </div>
-        {{else}}
-            <div>
-                {{crate-row crate=crate}}
-            </div>
-        {{/if}}
-    {{/each}}
-</div>
-
-<div class='pagination'>
-    {{#link-to (query-params page=prevPage) class='prev'}}
-        <img class="left-pag" src="/assets/left-pag.png"/>
-    {{/link-to}}
-    {{#each pages as |page|}}
-        {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-    {{/each}}
-    {{#link-to (query-params page=nextPage) class='next'}}
-        <img class="right-pag" src="/assets/right-pag.png"/>
-    {{/link-to}}
-</div>
+    <div class='pagination'>
+        {{#link-to (query-params page=prevPage) class='prev'}}
+            <img class="left-pag" src="/assets/left-pag.png"/>
+        {{/link-to}}
+        {{#each pages as |page|}}
+            {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
+        {{/each}}
+        {{#link-to (query-params page=nextPage) class='next'}}
+            <img class="right-pag" src="/assets/right-pag.png"/>
+        {{/link-to}}
+    </div>
+{{else}}
+    <div id="no-results">
+        <h2>0 crates found. <a href='http://doc.crates.io/index.html'>Get started</a> and create your own.</h2>
+    </div>
+{{/if}}
