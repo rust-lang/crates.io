@@ -48,7 +48,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     let from = User::find_by_login(tx, &from).unwrap();
     let to = User::find_by_login(tx, &to).unwrap();
 
-    if from.gh_avatar != to.gh_avatar {
+    if from.gh_id != to.gh_id {
         println!("====================================================");
         println!("WARNING");
         println!("");
