@@ -4,20 +4,19 @@ dist: trusty
 
 cache:
   cargo: true
-  directories:
-    - $HOME/.yarn-cache
+  yarn: true
 
 addons:
   chrome: stable
 
 before_install:
   - nvm install 6.10.0
-  - npm config set spin false
-  - npm install -g yarn
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH=$HOME/.yarn/bin:$PATH
 
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - yarn
+  - yarn install
   - cargo install --force diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
   - cargo install --force rustfmt
   - rustfmt --version
@@ -49,7 +48,7 @@ matrix:
     script:
     - cargo build
     - cargo test
-    - yarn run test
+    - yarn test
   - rust: nightly-2017-03-04
     env: CLIPPY=YESPLEASE
     script:
