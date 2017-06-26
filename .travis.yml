@@ -36,8 +36,12 @@ addons:
       - libdw-dev
 
 matrix:
+  fast_finish: true
+  allow_failures:
+    - rust: nightly
   include:
   - rust: stable
+    env: RUSTFMT=YESPLEASE
     script:
     - cargo fmt -- --write-mode=diff
   - rust: stable
@@ -49,6 +53,14 @@ matrix:
     env: CLIPPY=YESPLEASE
     script:
     - cargo rustc --lib --features "lint" -- -Zno-trans
+  - rust: beta
+    script:
+    - cargo build
+    - cargo test
+  - rust: nightly
+    script:
+    - cargo build
+    - cargo test
 
 env:
   global:
