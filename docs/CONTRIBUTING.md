@@ -117,19 +117,10 @@ talk to:
 
 #### Running the frontend tests
 
-In order to run the frontend tests, you will need to have installed:
-
-- [phantomjs](http://phantomjs.org/) >= 2.1.1
-
-`npm install phantomjs-prebuilt` is an easy way to install phantomjs; see its
-website for other installation methods or use your preferred method of
-installing dependencies.
-
-Once phantomjs is installed, run the frontend tests with:
+You can run the frontend tests with:
 
 ```
-yarn run ember test
-yarn run ember test --server
+yarn test
 ```
 
 ### Working on the Backend
