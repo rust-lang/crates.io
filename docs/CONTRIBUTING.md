@@ -87,11 +87,10 @@ preferred method of installing packages like these, that should work fine.
 
 #### Building and serving the frontend
 
-To install the npm and bower libraries that crates.io uses, run:
+To install the npm libraries that crates.io uses, run:
 
 ```
 yarn
-yarn run bower install
 ```
 
 You'll need to run these commands any time the libraries or versions of these

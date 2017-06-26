@@ -16,7 +16,6 @@ before_install:
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - yarn
-  - yarn run bower install
   - cargo install --force diesel_cli --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
   - cargo install --force rustfmt
   - rustfmt --version
