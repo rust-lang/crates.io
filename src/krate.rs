@@ -970,6 +970,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         &*conn,
     )?;
     let max_version = krate.max_version(&conn)?;
+    let documentation_link = check_bad_documentation_link(krate.documentation);
 
     #[derive(Serialize)]
     struct R {
@@ -997,6 +998,16 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
             categories: cats.into_iter().map(|k| k.encodable()).collect(),
         }),
     )
+}
+
+fn check_bad_documentation_link(url: Option<String>) -> Option<String> {
+    let blocked_doc_link = "rust-ci.org";
+
+    match url {
+        Nome => return None,
+        Some(url) => return url.contains(blocked_doc_link),
+    }
+
 }
 
 /// Handles the `PUT /crates/new` route.
