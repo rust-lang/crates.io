@@ -46,6 +46,7 @@
     "ember-cli-sass": "^7.1.7",
     "ember-cli-shims": "^1.2.0",
     "ember-cli-sri": "2.1.1",
+    "ember-cli-template-lint": "^0.7.0",
     "ember-cli-uglify": "^2.0.0",
     "ember-concurrency": "^0.8.12",
     "ember-data": "~2.12.1",
