@@ -76,7 +76,7 @@
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
 
             {{#if (is-clipboard-supported)}}
-              {{#copy-button clipboardTarget="#crate-toml" success=(action copySuccess) error=(action copyError)}}
+              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
                     <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
                 {{/copy-button}}
             {{/if}}
