@@ -2096,7 +2096,7 @@ ember-cli-babel@6.1.0:
     clone "^2.0.0"
     ember-cli-version-checker "^1.2.0"
 
-ember-cli-babel@^5.1.6, ember-cli-babel@^5.1.7:
+ember-cli-babel@^5.1.6, ember-cli-babel@^5.1.7, ember-cli-babel@^5.2.4:
   version "5.2.4"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-5.2.4.tgz#5ce4f46b08ed6f6d21e878619fb689719d6e8e13"
   dependencies:
@@ -2547,7 +2547,7 @@ ember-fetch@^3.1.2:
     node-fetch "^2.0.0-alpha.3"
     whatwg-fetch "^2.0.3"
 
-ember-getowner-polyfill@^1.2.2:
+ember-getowner-polyfill@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/ember-getowner-polyfill/-/ember-getowner-polyfill-1.2.3.tgz#ea70f4a48b1c05b91056371d1878bbafe018222e"
   dependencies:
@@ -2643,12 +2643,12 @@ ember-router-generator@^1.0.0:
   dependencies:
     recast "^0.11.3"
 
-ember-router-scroll@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-0.1.1.tgz#c5a75d5072f32aa5aec278c4716e766fbe117761"
+ember-router-scroll@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/ember-router-scroll/-/ember-router-scroll-0.2.0.tgz#aec5bb06cf7c1e6a0e5a43c8d53886c1ce18de54"
   dependencies:
-    ember-cli-babel "^5.1.6"
-    ember-getowner-polyfill "^1.2.2"
+    ember-cli-babel "^5.2.4"
+    ember-getowner-polyfill "^1.2.3"
 
 ember-runtime-enumerable-includes-polyfill@^1.0.0:
   version "1.0.4"
@@ -4102,9 +4102,9 @@ load-json-file@^1.0.0:
     pinkie-promise "^2.0.0"
     strip-bom "^2.0.0"
 
-loader.js@4.2.3:
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/loader.js/-/loader.js-4.2.3.tgz#845228877aa5317209e41f6c00d9bab36a6a4808"
+loader.js@^4.5.1:
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/loader.js/-/loader.js-4.5.1.tgz#c15ab15a6b8376bd4fbf7ea56f8d76cc557331da"
 
 locate-path@^2.0.0:
   version "2.0.0"
