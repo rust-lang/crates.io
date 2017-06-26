@@ -87,7 +87,7 @@ preferred method of installing packages like these, that should work fine.
 
 #### Building and serving the frontend
 
-To install the npm libraries that crates.io uses, run:
+To install the npm packages that crates.io uses, run:
 
 ```
 yarn
