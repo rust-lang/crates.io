@@ -1920,3 +1920,22 @@ fn check_ownership_one_crate() {
     assert_eq!(json.users[0].kind, "user");
     assert_eq!(json.users[0].name, user.name);
 }
+
+#[test]
+fn blocked_documentation() {
+    let (_b, app, middle) = ::app();
+
+    let _ = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_bad_doc_url", u.id)
+            .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
+            .expect_build(&conn)
+    };
+    
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_bad_doc_url");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateResponse = ::json(&mut response);
+
+    assert_eq!(json.krate.documentation, None);
+}
