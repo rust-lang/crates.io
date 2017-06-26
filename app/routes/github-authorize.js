@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+import ajax from 'ember-fetch/ajax';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
