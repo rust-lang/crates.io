@@ -33,6 +33,7 @@
     "ember-cli-clipboard": "^0.7.0",
     "ember-cli-dependency-checker": "^2.0.1",
     "ember-cli-eslint": "^4.0.0",
+    "ember-cli-fastboot": "^1.0.0-rc.5",
     "ember-cli-htmlbars": "^2.0.2",
     "ember-cli-htmlbars-inline-precompile": "^0.4.3",
     "ember-cli-inject-live-reload": "1.6.1",

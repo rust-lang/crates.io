@@ -1,8 +1,11 @@
 import Ember from 'ember';
 
-const { observer } = Ember;
+const { observer, inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
+
+    fastboot: service(),
+
     searchController: Ember.inject.controller('search'),
 
     flashError: null,
@@ -11,8 +14,10 @@ export default Ember.Controller.extend({
 
     init() {
         this._super(...arguments);
-        Ember.$(document).on('keypress', this.handleKeyPress.bind(this));
-        Ember.$(document).on('keydown', this.handleKeyPress.bind(this));
+        if (!this.get('fastboot.isFastBoot')) {
+            Ember.$(window.document).on('keypress', this.handleKeyPress.bind(this));
+            Ember.$(window.document).on('keydown', this.handleKeyPress.bind(this));
+        }
     },
 
     // Gets the human-readable string for the virtual-key code of the
@@ -52,17 +57,23 @@ export default Ember.Controller.extend({
     },
 
     willDestroy() {
-        Ember.$(document).off('keypress');
-        Ember.$(document).off('keydown');
+        if (!this.get('fastboot.isFastBoot')) {
+            Ember.$(window.document).off('keypress');
+            Ember.$(window.document).off('keydown');
+        }
     },
 
     stepFlash() {
-        this.set('flashError', this.get('nextFlashError'));
-        this.set('nextFlashError', null);
+        this.setProperties({
+            'flashError': this.get('nextFlashError'),
+            'nextFlashError': null
+        });
     },
 
     _scrollToTop() {
-        window.scrollTo(0, 0);
+        if (!this.get('fastboot.isFastBoot')) {
+            window.scrollTo(0, 0);
+        }
     },
 
     // TODO: remove observer & DOM mutation in controller..
