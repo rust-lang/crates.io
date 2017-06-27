@@ -77,7 +77,7 @@
 
             {{#if (is-clipboard-supported)}}
               {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
-                    <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
+                    {{svg-jar "copy" alt="Copy to clipboard"}}
                 {{/copy-button}}
             {{/if}}
 
