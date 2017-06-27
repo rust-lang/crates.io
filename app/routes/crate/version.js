@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import ajax from 'ember-fetch/ajax';
+import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
     refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {

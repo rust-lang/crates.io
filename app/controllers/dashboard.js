@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import ajax from 'ember-fetch/ajax';
+import ajax from 'ic-ajax';
 
 const TO_SHOW = 5;
 const { computed } = Ember;
