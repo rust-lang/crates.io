@@ -1009,8 +1009,8 @@ fn documentation_blacklist(url: Option<String>) -> Option<String> {
 
     match url {
         Some(ref url) if url.contains(blacklisted_url) => None,
-        Some(_) => return url,
-        None => return None,
+        Some(_) => url,
+        None => None,
     }
 
 }
