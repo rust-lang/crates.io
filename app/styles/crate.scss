@@ -43,10 +43,6 @@
 
     &.crate-index, &.crate-search {
         @include flex-wrap(wrap);
-        .magnifier {
-            width: 32px;
-            height: 32px;
-        }
     }
 }
 
