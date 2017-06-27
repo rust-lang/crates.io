@@ -1,6 +1,7 @@
 use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
+use std::mem;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -951,7 +952,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
-    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
+    let mut krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
     let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
@@ -970,7 +971,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         &*conn,
     )?;
     let max_version = krate.max_version(&conn)?;
-    let documentation_link = check_bad_documentation_link(krate.documentation);
+
+    // Cheaper than cloning the value to the function
+    let doc_url = mem::replace(&mut krate.documentation, None);
+    krate.documentation = documentation_blacklist(doc_url);
 
     #[derive(Serialize)]
     struct R {
@@ -1000,12 +1004,13 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     )
 }
 
-fn check_bad_documentation_link(url: Option<String>) -> Option<String> {
-    let blocked_doc_link = "rust-ci.org";
+fn documentation_blacklist(url: Option<String>) -> Option<String> {
+    let blacklisted_url = "rust-ci.org";
 
     match url {
-        Nome => return None,
-        Some(url) => return url.contains(blocked_doc_link),
+        Some(ref url) if url.contains(blacklisted_url) => None,
+        Some(_) => return url,
+        None => return None,
     }
 
 }
