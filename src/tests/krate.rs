@@ -1739,6 +1739,7 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c2");
 
+    // TODO: have this test call `version.yank()` once the yank method is converted to diesel
     diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
         .set(versions::yanked.eq(true))
         .execute(&*app.diesel_database.get().unwrap())
