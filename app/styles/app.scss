@@ -248,8 +248,14 @@ pre {
 }
 
 .pagination {
-    img { vertical-align: middle; }
-    .next.active, .prev.active { background: none; }
+    img, svg { vertical-align: middle; }
+
+    .next.active,
+    .prev.active,
+    .next:hover,
+    .prev:hover {
+        background: none;
+    }
 }
 
 button.dropdown, a.dropdown {
@@ -334,11 +340,6 @@ h1 {
 
 
 img {
-    &.right-pag, &.left-pag {
-        width: 29px;
-        height: 29px;
-    }
-
     &.right-arrow, &.right-arrow-all-versions {
         width: 20px;
         height: 20px;

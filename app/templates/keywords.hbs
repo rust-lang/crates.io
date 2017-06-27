@@ -54,12 +54,12 @@
 
 <div class='pagination'>
     {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-        <img class="left-pag" src="/assets/left-pag.png"/>
+        {{svg-jar "left-pag"}}
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
     {{/each}}
     {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-        <img class="right-pag" src="/assets/right-pag.png"/>
+        {{svg-jar "right-pag"}}
     {{/link-to}}
 </div>
