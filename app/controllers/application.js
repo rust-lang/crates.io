@@ -1,10 +1,9 @@
 import Ember from 'ember';
+import FastbootUtils from '../mixins/fastboot-utils';
 
-const { observer, inject: { service } } = Ember;
+const { observer } = Ember;
 
-export default Ember.Controller.extend({
-
-    fastboot: service(),
+export default Ember.Controller.extend(FastbootUtils, {
 
     searchController: Ember.inject.controller('search'),
 
@@ -14,7 +13,7 @@ export default Ember.Controller.extend({
 
     init() {
         this._super(...arguments);
-        if (!this.get('fastboot.isFastBoot')) {
+        if (this.get('isNotFastBoot')) {
             Ember.$(window.document).on('keypress', this.handleKeyPress.bind(this));
             Ember.$(window.document).on('keydown', this.handleKeyPress.bind(this));
         }
@@ -57,7 +56,7 @@ export default Ember.Controller.extend({
     },
 
     willDestroy() {
-        if (!this.get('fastboot.isFastBoot')) {
+        if (this.get('isNotFastBoot')) {
             Ember.$(window.document).off('keypress');
             Ember.$(window.document).off('keydown');
         }
@@ -71,7 +70,7 @@ export default Ember.Controller.extend({
     },
 
     _scrollToTop() {
-        if (!this.get('fastboot.isFastBoot')) {
+        if (this.get('isNotFastBoot')) {
             window.scrollTo(0, 0);
         }
     },

@@ -1,8 +1,11 @@
 import Ember from 'ember';
+import fetch from 'fetch';
+import FastbootUtils from '../mixins/fastboot-utils';
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(FastbootUtils, {
+
     activate() {
-        Ember.$.getJSON('/logout', () => {
+        fetch(`${this.get('appURL')}/logout`, () => {
             Ember.run(() => {
                 this.session.logoutUser();
                 this.transitionTo('index');

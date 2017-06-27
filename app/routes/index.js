@@ -1,11 +1,8 @@
 import Ember from 'ember';
 import ajax from 'ember-fetch/ajax';
+import FastbootUtils from '../mixins/fastboot-utils';
 
-const { inject: { service } } = Ember;
-
-export default Ember.Route.extend({
-
-    fastboot: service(),
+export default Ember.Route.extend(FastbootUtils, {
 
     headTags: [{
         type: 'meta',
@@ -22,12 +19,7 @@ export default Ember.Route.extend({
             }
         }
 
-        let summaryURL = `/summary`;
-        if (this.get('fastboot.isFastBoot')) {
-            let protocol = this.get('fastboot.request.protocol');
-            let host = this.get('fastboot.request.host');
-            summaryURL = `${protocol}://${host}/summary`;
-        }
+        let summaryURL = `${this.get('appURL')}/summary`;
 
         return ajax(summaryURL).then((data) => {
             addCrates(this.store, data.new_crates);
