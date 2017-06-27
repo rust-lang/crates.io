@@ -3,7 +3,7 @@
 <div id='crates-heading'>
     <div class="wide">
         <div class='info'>
-            <img class='logo crate' src="/assets/crate.png"/>
+            {{svg-jar "crate"}}
             <h1>{{ crate.name }}</h1>
             <h2>{{ currentVersion.num }}</h2>
         </div>
@@ -273,7 +273,7 @@
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
-                <img class="package" src="/assets/crate.png"/>
+                {{svg-jar "crate"}}
                 {{ crate.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
