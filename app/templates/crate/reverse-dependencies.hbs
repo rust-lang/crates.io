@@ -20,7 +20,7 @@
             {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
             </div>
             <div class='stats downloads'>
-                <img class='download-clear-back' src="/assets/download-clear-back.png"/>
+                {{svg-jar "download-clear-back"}}
                 <span class='num rev-dep-downloads'>{{ format-num dependency.downloads }}</span>
             </div>
         </div>
