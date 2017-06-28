@@ -6,8 +6,6 @@ export default Ember.Controller.extend({
     searchController: Ember.inject.controller('search'),
 
     flashMessages: Ember.inject.service(),
-    flashError: Ember.computed.alias('flashMessages.flashError'),
-    nextFlashError: Ember.computed.alias('flashMessages.nextFlashError'),
 
     init() {
         this._super(...arguments);

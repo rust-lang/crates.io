@@ -1,6 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
+    flashMessages: Ember.inject.service(),
+
     queryParams: {
         page: { refreshModel: true },
         sort: { refreshModel: true },
@@ -20,9 +22,7 @@ export default Ember.Route.extend({
             },
             (e) => {
                 if (e.errors.any(e => e.detail === 'Not Found')) {
-                    this
-                        .controllerFor('application')
-                        .set('nextFlashError', `User '${params.user_id}' does not exist`);
+                    this.get('flashMessages').queue(`User '${params.user_id}' does not exist`);
                     return this.replaceWith('index');
                 }
             }

@@ -22,7 +22,7 @@ export default Ember.Route.extend({
 
     actions: {
         didTransition() {
-            this.get('flashMessages').stepFlash();
+            this.get('flashMessages').step();
         },
     },
 });
