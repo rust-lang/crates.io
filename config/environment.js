@@ -26,7 +26,7 @@ module.exports = function(environment) {
         },
 
         fastboot: {
-            hostWhitelist: ['crates.io', /^localhost:\d+$/]
+            hostWhitelist: ['crates.io', /^[\w\-]+\.herokuapp\.com$/]
         }
     };
 
@@ -36,6 +36,7 @@ module.exports = function(environment) {
         // ENV.APP.LOG_TRANSITIONS = true;
         // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
         // ENV.APP.LOG_VIEW_LOOKUPS = true;
+        ENV.fastboot.hostWhitelist = ['crates.io', /^[\w\-]+\.herokuapp\.com$/, /^localhost:\d+$/];
     }
 
     if (environment === 'test') {
