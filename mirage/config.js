@@ -1,3 +1,5 @@
+import Response from 'ember-cli-mirage/response';
+
 import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
 import categoriesFixture from '../mirage/fixtures/categories';
@@ -48,6 +50,12 @@ export default function() {
     this.get('/keywords/network', () => keywordFixture);
     this.get('/teams/:team_id', () => teamFixture);
     this.get('/users/:user_id', () => userFixture);
+}
+
+function notFound() {
+    return new Response(404, { 'Content-Type': 'application/json' }, {
+        'errors': [{ 'detail': 'Not Found' }]
+    });
 }
 
 function pageParams(request) {
