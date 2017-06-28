@@ -1550,7 +1550,7 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, offset, limit)?;
     let rev_deps = rev_deps
         .into_iter()
-        .map(ReverseDependency::encodable)
+        .map(|dep| dep.encodable(&krate.name))
         .collect();
 
     #[derive(RustcEncodable)]

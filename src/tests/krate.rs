@@ -1616,7 +1616,7 @@ fn reverse_dependencies() {
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 
     // c1 has no dependent crates.
     req.with_path("/api/v1/crates/c2/reverse_dependencies");
@@ -1651,7 +1651,7 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 }
 
 #[test]
@@ -1709,7 +1709,7 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c3");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 }
 
 #[test]
@@ -1737,7 +1737,7 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 
     // TODO: have this test call `version.yank()` once the yank method is converted to diesel
     diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
