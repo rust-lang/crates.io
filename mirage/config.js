@@ -2,7 +2,6 @@ import Response from 'ember-cli-mirage/response';
 
 import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
-import categoriesFixture from '../mirage/fixtures/categories';
 import crateFixture from '../mirage/fixtures/crate';
 import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 import crateTeamsFixture from '../mirage/fixtures/crate_teams';
@@ -34,8 +33,6 @@ export default function() {
         return payload;
     });
 
-    this.get('/categories', () => categoriesFixture);
-
     this.get('/crates/:crate_id', () => crateFixture);
 
     this.get('/crates/:crate_id/versions', (schema, request) => {
@@ -56,6 +53,16 @@ export default function() {
     this.get('/crates/:crate_id/:version_num/dependencies', () => crateDependenciesFixture);
     this.get('/crates/:crate_id/downloads', () => crateDownloadsFixture);
     this.get('/crates/:crate_id/:version_num/downloads', () => crateDownloadsFixture);
+
+    this.get('/categories', function(schema, request) {
+        let { start, end } = pageParams(request);
+
+        let allCategories = schema.categories.all().sort((a, b) => compareStrings(a.category, b.category));
+        let categories = allCategories.slice(start, end);
+        let total = allCategories.length;
+
+        return withMeta(this.serialize(categories), { total });
+    });
 
     this.get('/keywords', function(schema, request) {
         let { start, end } = pageParams(request);
@@ -107,4 +114,8 @@ function pageParams(request) {
 function withMeta(response, meta) {
     response.meta = meta;
     return response;
+}
+
+function compareStrings(a, b) {
+    return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
