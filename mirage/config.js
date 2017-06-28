@@ -2,7 +2,6 @@ import Response from 'ember-cli-mirage/response';
 
 import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
-import crateFixture from '../mirage/fixtures/crate';
 import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 import crateTeamsFixture from '../mirage/fixtures/crate_teams';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
@@ -31,7 +30,23 @@ export default function() {
         return payload;
     });
 
-    this.get('/crates/:crate_id', () => crateFixture);
+    this.get('/crates/:crate_id', function(schema, request) {
+        let crateId = request.params.crate_id;
+        let crate = schema.crates.find(crateId);
+        let categories = schema.categories.all()
+            .filter(category => (crate.categories || []).indexOf(category.id) !== -1);
+        let keywords = schema.keywords.all()
+            .filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
+        let versions = schema.versions.all()
+            .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
+
+        return {
+            ...this.serialize(crate),
+            ...this.serialize(categories),
+            ...this.serialize(keywords),
+            ...this.serialize(versions),
+        };
+    });
 
     this.get('/crates/:crate_id/versions', (schema, request) => {
         let crate = request.params.crate_id;

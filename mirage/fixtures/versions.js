@@ -2,6 +2,35 @@
 export default [{
     "crate": "nanomsg",
     "created_at": "2016-12-27T08:40:00Z",
+    "dl_path": "/api/v1/crates/nanomsg/0.7.0-alpha.1/download",
+    "downloads": 260,
+    "features": {
+        "bundled": [
+            "nanomsg-sys/bundled"
+        ]
+    },
+    "id": 40906,
+    "links": {
+        "authors": "/api/v1/crates/nanomsg/0.7.0-alpha.1/authors",
+        "dependencies": "/api/v1/crates/nanomsg/0.7.0-alpha.1/dependencies",
+        "version_downloads": "/api/v1/crates/nanomsg/0.7.0-alpha.1/downloads"
+    },
+    "num": "0.7.0-alpha.1",
+    "updated_at": "2016-12-27T08:40:00Z",
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
+}, {
+    "crate": "nanomsg",
+    "created_at": "2016-12-27T08:40:00Z",
     "dl_path": "/api/v1/crates/nanomsg/0.6.1/download",
     "downloads": 260,
     "features": {
