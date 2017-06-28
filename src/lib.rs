@@ -91,7 +91,7 @@ pub mod user;
 pub mod util;
 pub mod version;
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
     Test,
@@ -100,7 +100,7 @@ pub enum Env {
 
 // There may be more ways to run crates.io servers in the future, such as a
 // mirror that also has private crates that crates.io does not have.
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Replica {
     Primary,
     ReadOnlyMirror,

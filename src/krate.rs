@@ -88,7 +88,7 @@ pub const MAX_NAME_LENGTH: usize = 64;
 
 type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
@@ -109,7 +109,7 @@ pub struct EncodableCrate {
     pub exact_match: bool,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
@@ -119,7 +119,7 @@ pub struct CrateLinks {
     pub reverse_dependencies: String,
 }
 
-#[derive(Insertable, AsChangeset, Default)]
+#[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
 #[primary_key(name, max_upload_size)] // This is actually just to skip updating them
 pub struct NewCrate<'a> {

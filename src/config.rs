@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use {Uploader, Replica};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,

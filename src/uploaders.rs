@@ -10,7 +10,7 @@ use std::fs::{self, File};
 use std::env;
 use std::io;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
     /// For test usage with a proxy.

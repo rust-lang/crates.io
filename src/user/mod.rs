@@ -36,7 +36,7 @@ pub struct User {
     pub gh_id: i32,
 }
 
-#[derive(Insertable, AsChangeset)]
+#[derive(Insertable, AsChangeset, Debug)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
@@ -82,7 +82,7 @@ impl<'a> NewUser<'a> {
 }
 
 /// The serialization format for the `User` model.
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Debug)]
 pub struct EncodableUser {
     pub id: i32,
     pub login: String,

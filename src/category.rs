@@ -14,7 +14,7 @@ use util::errors::NotFound;
 use util::{RequestUtils, CargoResult, ChainError};
 use {Model, Crate};
 
-#[derive(Clone, Identifiable, Queryable)]
+#[derive(Clone, Identifiable, Queryable, Debug)]
 #[table_name = "categories"]
 pub struct Category {
     pub id: i32,
@@ -25,7 +25,7 @@ pub struct Category {
     pub created_at: Timespec,
 }
 
-#[derive(Associations, Insertable, Identifiable)]
+#[derive(Associations, Insertable, Identifiable, Debug)]
 #[belongs_to(Category)]
 #[belongs_to(Crate)]
 #[table_name = "crates_categories"]
@@ -35,7 +35,7 @@ pub struct CrateCategory {
     category_id: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableCategory {
     pub id: String,
     pub category: String,
@@ -45,7 +45,7 @@ pub struct EncodableCategory {
     pub crates_cnt: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableCategoryWithSubcategories {
     pub id: String,
     pub category: String,
@@ -289,7 +289,7 @@ impl Category {
     }
 }
 
-#[derive(Insertable, Default)]
+#[derive(Insertable, Default, Debug)]
 #[table_name = "categories"]
 pub struct NewCategory<'a> {
     pub category: &'a str,
