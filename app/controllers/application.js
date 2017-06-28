@@ -2,9 +2,6 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
     searchController: Ember.inject.controller('search'),
-
-    flashError: null,
-    nextFlashError: null,
     search: Ember.computed.oneWay('searchController.q'),
 
     init() {
@@ -52,11 +49,6 @@ export default Ember.Controller.extend({
     willDestroy() {
         Ember.$(document).off('keypress');
         Ember.$(document).off('keydown');
-    },
-
-    stepFlash() {
-        this.set('flashError', this.get('nextFlashError'));
-        this.set('nextFlashError', null);
     },
 
     actions: {

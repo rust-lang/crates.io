@@ -109,7 +109,7 @@
 </form>
 
 <div id="main" class='inner-content'>
-    <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
+    {{flash-message}}
 
     {{outlet}}
 </div>
