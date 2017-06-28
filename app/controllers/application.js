@@ -1,11 +1,13 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
+    crateSearch: Ember.inject.service(),
+    search: Ember.computed.oneWay('searchController.q'),
     searchController: Ember.inject.controller('search'),
 
-    flashError: null,
-    nextFlashError: null,
-    search: Ember.computed.oneWay('searchController.q'),
+    flashMessages: Ember.inject.service(),
+    flashError: Ember.computed.alias('flashMessages.flashError'),
+    nextFlashError: Ember.computed.alias('flashMessages.nextFlashError'),
 
     init() {
         this._super(...arguments);
@@ -52,11 +54,6 @@ export default Ember.Controller.extend({
     willDestroy() {
         Ember.$(document).off('keypress');
         Ember.$(document).off('keydown');
-    },
-
-    stepFlash() {
-        this.set('flashError', this.get('nextFlashError'));
-        this.set('nextFlashError', null);
     },
 
     actions: {
