@@ -37,5 +37,15 @@ export default [{
         4944,
         940,
         924
+    ],
+    "_extra_downloads": [
+        {
+            "date": "2017-02-02",
+            "downloads": 41
+        },
+        {
+            "date": "2017-02-07",
+            "downloads": 14
+        }
     ]
 }];

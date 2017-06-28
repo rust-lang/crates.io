@@ -4,7 +4,6 @@ import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
 import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 import crateTeamsFixture from '../mirage/fixtures/crate_teams';
-import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
@@ -67,6 +66,13 @@ export default function() {
         return schema.dependencies.where({ version_id });
     });
 
+    this.get('/crates/:crate_id/:version_num/downloads', function(schema, request) {
+        let crateId = request.params.crate_id;
+        let versionNum = request.params.version_num;
+        let versionId = schema.versions.findBy({ crate: crateId, num: versionNum }).id;
+        return schema.versionDownloads.where({ version: versionId });
+    });
+
     this.get('/crates/:crate_id/owner_user', () => crateOwnersFixture);
     this.get('/crates/:crate_id/owner_team', () => crateTeamsFixture);
 
@@ -89,8 +95,14 @@ export default function() {
         return withMeta(serialized, { total });
     });
 
-    this.get('/crates/:crate_id/downloads', () => crateDownloadsFixture);
-    this.get('/crates/:crate_id/:version_num/downloads', () => crateDownloadsFixture);
+    this.get('/crates/:crate_id/downloads', function(schema, request) {
+        let crateId = request.params.crate_id;
+        let crate = schema.crates.find(crateId);
+        let versionDownloads = schema.versionDownloads.all()
+            .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
+
+        return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
+    });
 
     this.get('/categories', function(schema, request) {
         let { start, end } = pageParams(request);
