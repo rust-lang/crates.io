@@ -13,14 +13,13 @@ import crateDependenciesFixture from '../mirage/fixtures/crate_dependencies';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
 import keywordFixture from '../mirage/fixtures/keyword';
 import teamFixture from '../mirage/fixtures/team';
-import userFixture from '../mirage/fixtures/user';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
 
     this.namespace = '/api/v1';
 
-    this.get('/crates', (db, request) => {
+    this.get('/crates', (schema, request) => {
         const { start, end } = pageParams(request);
         const payload = {
             crates: searchFixture.crates.slice(start, end),
@@ -30,7 +29,8 @@ export default function() {
         if (request.queryParams.team_id) {
             payload.team = teamFixture.team;
         } else if (request.queryParams.user_id) {
-            payload.user = userFixture.user;
+            let userId = request.queryParams.user_id;
+            payload.user = schema.users.find(userId);
         }
 
         return payload;
@@ -49,7 +49,12 @@ export default function() {
     this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
     this.get('/keywords/network', () => keywordFixture);
     this.get('/teams/:team_id', () => teamFixture);
-    this.get('/users/:user_id', () => userFixture);
+
+    this.get('/users/:user_id', (schema, request) => {
+        let login = request.params.user_id;
+        let user = schema.users.findBy({ login });
+        return user ? user : notFound();
+    });
 }
 
 function notFound() {
