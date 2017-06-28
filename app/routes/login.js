@@ -8,6 +8,8 @@ import Ember from 'ember';
  * @see `/github_authorize` route
  */
 export default Ember.Route.extend({
+    flashMessages: Ember.inject.service(),
+
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
@@ -54,14 +56,13 @@ export default Ember.Route.extend({
                 return;
             }
             if (!response.ok) {
-                this.controllerFor('application')
-                    .set('flashError', 'Failed to log in');
+                this.get('flashMessages').show('Failed to log in');
                 return;
             }
             let { data } = response;
             if (data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
-                this.controllerFor('application').set('flashError', error);
+                this.get('flashMessages').show(error);
                 return;
             }
 

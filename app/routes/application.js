@@ -2,6 +2,8 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
+    flashMessages: Ember.inject.service(),
+
     beforeModel() {
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null) {
@@ -20,7 +22,7 @@ export default Ember.Route.extend({
 
     actions: {
         didTransition() {
-            this.controllerFor('application').stepFlash();
+            this.get('flashMessages').step();
         },
     },
 });

@@ -2,6 +2,8 @@ import Ember from 'ember';
 import ajax from 'ic-ajax';
 
 export default Ember.Route.extend({
+    flashMessages: Ember.inject.service(),
+
     refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {
         this.refresh();
     }),
@@ -89,7 +91,7 @@ export default Ember.Route.extend({
             .then(versions => {
                 const version = versions.find(version => version.get('num') === params.version_num);
                 if (params.version_num && !version) {
-                    this.controllerFor('application').set('nextFlashError',
+                    this.get('flashMessages').queue(
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }
 
