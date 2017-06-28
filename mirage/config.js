@@ -48,6 +48,16 @@ export default function() {
     this.get('/crates/nanomsg/downloads', () => crateDownloadsFixture);
     this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
 
+    this.get('/keywords', function(schema, request) {
+        let { start, end } = pageParams(request);
+
+        let allKeywords = schema.keywords.all().sort((a, b) => a.crates_cnt - b.crates_cnt);
+        let keywords = allKeywords.slice(start, end);
+        let total = allKeywords.length;
+
+        return withMeta(this.serialize(keywords), { total });
+    });
+
     this.get('/keywords/:keyword_id', (schema, request) => {
         let keywordId = request.params.keyword_id;
         let keyword = schema.keywords.find(keywordId);
@@ -83,4 +93,9 @@ function pageParams(request) {
     const end = start + perPage;
 
     return { page, perPage, start, end };
+}
+
+function withMeta(response, meta) {
+    response.meta = meta;
+    return response;
 }
