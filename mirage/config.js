@@ -1,30 +1,42 @@
 import Response from 'ember-cli-mirage/response';
 
 import summaryFixture from '../mirage/fixtures/summary';
-import searchFixture from '../mirage/fixtures/search';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
 
     this.namespace = '/api/v1';
 
-    this.get('/crates', (schema, request) => {
+    this.get('/crates', function(schema, request) {
         const { start, end } = pageParams(request);
-        const payload = {
-            crates: searchFixture.crates.slice(start, end),
-            meta: searchFixture.meta,
-        };
 
-        if (request.queryParams.team_id) {
-            let teamId = request.queryParams.team_id;
-            payload.user = schema.teams.find(teamId);
+        let crates = schema.crates.all();
 
-        } else if (request.queryParams.user_id) {
-            let userId = request.queryParams.user_id;
-            payload.user = schema.users.find(userId);
+        if (request.queryParams.letter) {
+            let letter = request.queryParams.letter.toLowerCase();
+            crates = crates.filter(crate => crate.id[0].toLowerCase() === letter);
         }
 
-        return payload;
+        if (request.queryParams.q) {
+            let q = request.queryParams.q.toLowerCase();
+            crates = crates.filter(crate => crate.id.toLowerCase().indexOf(q) !== -1);
+        }
+
+        if (request.queryParams.user_id) {
+            let userId = parseInt(request.queryParams.user_id, 10);
+            crates = crates.filter(crate => (crate._owner_users || []).indexOf(userId) !== -1);
+        }
+
+        if (request.queryParams.team_id) {
+            let teamId = parseInt(request.queryParams.team_id, 10);
+            crates = crates.filter(crate => (crate._owner_teams || []).indexOf(teamId) !== -1);
+        }
+
+        if (request.queryParams.sort === 'alpha') {
+            crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
+        }
+
+        return withMeta(this.serialize(crates.slice(start, end)), { total: crates.length });
     });
 
     this.get('/crates/:crate_id', function(schema, request) {

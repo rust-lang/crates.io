@@ -24,7 +24,7 @@ test('listing crates', async function(assert) {
     await visit('/crates');
 
     hasText(assert, '.amt.small .cur', '1-10');
-    hasText(assert, '.amt.small .total', '18');
+    hasText(assert, '.amt.small .total', '19');
 });
 
 test('navigating to next page of crates', async function(assert) {
@@ -32,6 +32,6 @@ test('navigating to next page of crates', async function(assert) {
     await click('.pagination .next');
 
     assert.equal(currentURL(), '/crates?page=2');
-    hasText(assert, '.amt.small .cur', '11-18');
-    hasText(assert, '.amt.small .total', '18');
+    hasText(assert, '.amt.small .cur', '11-19');
+    hasText(assert, '.amt.small .total', '19');
 });
