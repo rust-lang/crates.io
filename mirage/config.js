@@ -16,7 +16,9 @@ import userFixture from '../mirage/fixtures/user';
 export default function() {
     this.get('/summary', () => summaryFixture);
 
-    this.get('/api/v1/crates', (db, request) => {
+    this.namespace = '/api/v1';
+
+    this.get('/crates', (db, request) => {
         const { start, end } = pageParams(request);
         const payload = {
             crates: searchFixture.crates.slice(start, end),
@@ -32,20 +34,20 @@ export default function() {
         return payload;
     });
 
-    this.get('/api/v1/categories', () => categoriesFixture);
+    this.get('/categories', () => categoriesFixture);
 
-    this.get('/api/v1/crates/nanomsg', () => crateFixture);
-    this.get('/api/v1/crates/nanomsg/versions', () => crateVersionsFixture);
-    this.get('/api/v1/crates/nanomsg/:version_num/authors', () => crateAuthorsFixture);
-    this.get('/api/v1/crates/nanomsg/owner_user', () => crateOwnersFixture);
-    this.get('/api/v1/crates/nanomsg/owner_team', () => crateTeamsFixture);
-    this.get('/api/v1/crates/nanomsg/reverse_dependencies', () => crateReverseDependenciesFixture);
-    this.get('/api/v1/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
-    this.get('/api/v1/crates/nanomsg/downloads', () => crateDownloadsFixture);
-    this.get('/api/v1/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
-    this.get('/api/v1/keywords/network', () => keywordFixture);
-    this.get('/api/v1/teams/:team_id', () => teamFixture);
-    this.get('/api/v1/users/:user_id', () => userFixture);
+    this.get('/crates/nanomsg', () => crateFixture);
+    this.get('/crates/nanomsg/versions', () => crateVersionsFixture);
+    this.get('/crates/nanomsg/:version_num/authors', () => crateAuthorsFixture);
+    this.get('/crates/nanomsg/owner_user', () => crateOwnersFixture);
+    this.get('/crates/nanomsg/owner_team', () => crateTeamsFixture);
+    this.get('/crates/nanomsg/reverse_dependencies', () => crateReverseDependenciesFixture);
+    this.get('/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
+    this.get('/crates/nanomsg/downloads', () => crateDownloadsFixture);
+    this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
+    this.get('/keywords/network', () => keywordFixture);
+    this.get('/teams/:team_id', () => teamFixture);
+    this.get('/users/:user_id', () => userFixture);
 }
 
 function pageParams(request) {
