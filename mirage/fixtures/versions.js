@@ -314,4 +314,23 @@ export default [{
         "Benoît Labaere <someoneelse@example.com>",
         "Chip Collier"
     ]
+}, {
+    "crate": "unicorn-rpc",
+    "created_at": "2014-12-08T02:08:06Z",
+    "dl_path": "/api/v1/crates/unicorn-rpc/0.2.0/download",
+    "downloads": 79,
+    "features": {
+    },
+    "id": 28674,
+    "links": {
+        "authors": "/api/v1/crates/unicorn-rpc/0.2.0/authors",
+        "dependencies": "/api/v1/crates/unicorn-rpc/0.2.0/dependencies",
+        "version_downloads": "/api/v1/crates/unicorn-rpc/0.2.0/downloads"
+    },
+    "num": "0.2.0",
+    "updated_at": "2015-12-11T23:54:29Z",
+    "yanked": false,
+    "_authors": [
+        "David C. Bishop",
+    ]
 }];

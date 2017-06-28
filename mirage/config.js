@@ -5,7 +5,6 @@ import searchFixture from '../mirage/fixtures/search';
 import crateFixture from '../mirage/fixtures/crate';
 import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 import crateTeamsFixture from '../mirage/fixtures/crate_teams';
-import crateReverseDependenciesFixture from '../mirage/fixtures/crate_reverse_dependencies';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
 
 export default function() {
@@ -55,7 +54,26 @@ export default function() {
 
     this.get('/crates/:crate_id/owner_user', () => crateOwnersFixture);
     this.get('/crates/:crate_id/owner_team', () => crateTeamsFixture);
-    this.get('/crates/:crate_id/reverse_dependencies', () => crateReverseDependenciesFixture);
+
+    this.get('/crates/:crate_id/reverse_dependencies', function(schema, request) {
+        let { start, end } = pageParams(request);
+
+        let crate = request.params.crate_id;
+        let allDependencies = schema.dependencies.where({ crate_id: crate });
+        let dependencies = allDependencies.slice(start, end);
+        let total = allDependencies.length;
+
+        let serialized = this.serialize(dependencies);
+
+        // TODO https://github.com/rust-lang/crates.io/pull/810
+        serialized.dependencies.forEach(dep => {
+            let version = schema.versions.find(dep.version_id);
+            dep.crate_id = version.crate;
+        });
+
+        return withMeta(serialized, { total });
+    });
+
     this.get('/crates/:crate_id/downloads', () => crateDownloadsFixture);
     this.get('/crates/:crate_id/:version_num/downloads', () => crateDownloadsFixture);
 
@@ -107,8 +125,8 @@ function notFound() {
 function pageParams(request) {
     const { queryParams } = request;
 
-    const page = parseInt(queryParams.page);
-    const perPage = parseInt(queryParams.per_page);
+    const page = parseInt(queryParams.page || '1');
+    const perPage = parseInt(queryParams.per_page || '10');
 
     const start = (page - 1) * perPage;
     const end = start + perPage;

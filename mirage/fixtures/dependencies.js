@@ -19,4 +19,14 @@ export default [{
     "req": "^0.6.1",
     "target": null,
     "version_id": 40905
+}, {
+    "crate_id": "nanomsg",
+    "default_features": true,
+    "features": "",
+    "id": 90880,
+    "kind": "normal",
+    "optional": false,
+    "req": "^0.5.0",
+    "target": null,
+    "version_id": 28674
 }];
