@@ -1,10 +1,7 @@
 import Ember from 'ember';
 import FastbootUtils from '../mixins/fastboot-utils';
 
-const { observer } = Ember;
-
 export default Ember.Controller.extend(FastbootUtils, {
-
     searchController: Ember.inject.controller('search'),
 
     flashError: null,
@@ -68,17 +65,6 @@ export default Ember.Controller.extend(FastbootUtils, {
             'nextFlashError': null
         });
     },
-
-    _scrollToTop() {
-        if (this.get('isNotFastBoot')) {
-            window.scrollTo(0, 0);
-        }
-    },
-
-    // TODO: remove observer & DOM mutation in controller..
-    currentPathChanged: observer('currentPath', function() {
-        Ember.run.scheduleOnce('afterRender', this, this._scrollToTop);
-    }),
 
     actions: {
         search() {
