@@ -47,5 +47,6 @@ export default [{
             "date": "2017-02-07",
             "downloads": 14
         }
-    ]
+    ],
+    "_owner_teams": [1, 303],
 }];
