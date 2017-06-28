@@ -38,15 +38,15 @@ export default function() {
 
     this.get('/categories', () => categoriesFixture);
 
-    this.get('/crates/nanomsg', () => crateFixture);
-    this.get('/crates/nanomsg/versions', () => crateVersionsFixture);
-    this.get('/crates/nanomsg/:version_num/authors', () => crateAuthorsFixture);
-    this.get('/crates/nanomsg/owner_user', () => crateOwnersFixture);
-    this.get('/crates/nanomsg/owner_team', () => crateTeamsFixture);
-    this.get('/crates/nanomsg/reverse_dependencies', () => crateReverseDependenciesFixture);
-    this.get('/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
-    this.get('/crates/nanomsg/downloads', () => crateDownloadsFixture);
-    this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
+    this.get('/crates/:crate_id', () => crateFixture);
+    this.get('/crates/:crate_id/versions', () => crateVersionsFixture);
+    this.get('/crates/:crate_id/:version_num/authors', () => crateAuthorsFixture);
+    this.get('/crates/:crate_id/owner_user', () => crateOwnersFixture);
+    this.get('/crates/:crate_id/owner_team', () => crateTeamsFixture);
+    this.get('/crates/:crate_id/reverse_dependencies', () => crateReverseDependenciesFixture);
+    this.get('/crates/:crate_id/:version_num/dependencies', () => crateDependenciesFixture);
+    this.get('/crates/:crate_id/downloads', () => crateDownloadsFixture);
+    this.get('/crates/:crate_id/:version_num/downloads', () => crateDownloadsFixture);
 
     this.get('/keywords', function(schema, request) {
         let { start, end } = pageParams(request);
