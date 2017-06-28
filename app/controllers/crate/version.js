@@ -1,9 +1,10 @@
 import Ember from 'ember';
-import DS from 'ember-data';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
 const { computed, run: { later } } = Ember;
+
+const PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
 
 export default Ember.Controller.extend({
     isDownloading: false,
@@ -33,7 +34,7 @@ export default Ember.Controller.extend({
     anyLinks: computed.or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
                 let ret = authors.slice();
                 let others = authors.get('meta');
@@ -55,7 +56,7 @@ export default Ember.Controller.extend({
             return [];
         }
 
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
                 return deps
                     .filter((dep) => dep.get('kind') !== 'dev')
@@ -69,7 +70,7 @@ export default Ember.Controller.extend({
         if (deps === null) {
             return [];
         }
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
                 return deps.filterBy('kind', 'dev');
             }),
