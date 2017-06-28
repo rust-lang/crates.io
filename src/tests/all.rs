@@ -26,9 +26,10 @@ use std::sync::Arc;
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
-use cargo_registry::dependency::{Kind, NewDependency};
+use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
+use cargo_registry::schema::dependencies;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
@@ -244,23 +245,25 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
 use cargo_registry::util::CargoResult;
 
 struct VersionBuilder<'a> {
-    version: semver::Version,
+    num: semver::Version,
     license: Option<&'a str>,
     license_file: Option<&'a str>,
     features: HashMap<String, Vec<String>>,
+    dependencies: Vec<(i32, Option<&'static str>)>,
 }
 
 impl<'a> VersionBuilder<'a> {
-    fn new(version: &str) -> VersionBuilder {
-        let version = semver::Version::parse(version).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", version, e);
+    fn new(num: &str) -> Self {
+        let num = semver::Version::parse(num).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", num, e);
         });
 
         VersionBuilder {
-            version: version,
+            num,
             license: None,
             license_file: None,
             features: HashMap::new(),
+            dependencies: Vec::new(),
         }
     }
 
@@ -269,20 +272,51 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
-    fn build(self, connection: &PgConnection, crate_id: i32) -> CargoResult<Version> {
+    fn dependency(mut self, dependency: &Crate, target: Option<&'static str>) -> Self {
+        self.dependencies.push((dependency.id, target));
+        self
+    }
+
+    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+        use diesel::insert;
+
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
             None => None,
         };
 
-        NewVersion::new(
+        let vers = NewVersion::new(
             crate_id,
-            &self.version,
+            &self.num,
             &self.features,
             license,
             self.license_file,
         )?
-            .save(connection, &[])
+            .save(connection, &[])?;
+
+        let new_deps = self.dependencies
+            .into_iter()
+            .map(|(crate_id, target)| {
+                NewDependency {
+                    version_id: vers.id,
+                    req: ">= 0".into(),
+                    crate_id,
+                    target,
+                    ..Default::default()
+                }
+            })
+            .collect::<Vec<_>>();
+        insert(&new_deps).into(dependencies::table).execute(
+            connection,
+        )?;
+
+        Ok(vers)
+    }
+}
+
+impl<'a> From<&'a str> for VersionBuilder<'a> {
+    fn from(num: &'a str) -> Self {
+        VersionBuilder::new(num)
     }
 }
 
@@ -338,8 +372,8 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn version(mut self, version: VersionBuilder<'a>) -> Self {
-        self.versions.push(version);
+    fn version<T: Into<VersionBuilder<'a>>>(mut self, version: T) -> Self {
+        self.versions.push(version.into());
         self
     }
 
@@ -364,8 +398,8 @@ impl<'a> CrateBuilder<'a> {
             self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
-        for version in self.versions {
-            version.build(&connection, krate.id)?;
+        for version_builder in self.versions {
+            version_builder.build(krate.id, connection)?;
         }
 
         if !self.keywords.is_empty() {
@@ -467,25 +501,6 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .into(dependencies::table)
         .get_result(conn)
         .unwrap()
-}
-
-fn mock_dep(
-    req: &mut Request,
-    version: &Version,
-    krate: &Crate,
-    target: Option<&str>,
-) -> Dependency {
-    Dependency::insert(
-        req.tx().unwrap(),
-        version.id,
-        krate.id,
-        &semver::VersionReq::parse(">= 0").unwrap(),
-        Kind::Normal,
-        false,
-        true,
-        &[],
-        &target.map(|s| s.to_string()),
-    ).unwrap()
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {

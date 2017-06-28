@@ -1,3 +1,5 @@
+extern crate diesel;
+
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::fs::{self, File};
@@ -6,19 +8,20 @@ use conduit::{Handler, Method};
 
 use git2;
 use rustc_serialize::json;
+use self::diesel::prelude::*;
 use semver;
 
-use cargo_registry::db::RequestTransaction;
+use cargo_registry::category::Category;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
+use cargo_registry::owner::EncodableOwner;
+use cargo_registry::schema::versions;
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::Category;
-use cargo_registry::owner::EncodableOwner;
 
 #[derive(RustcDecodable)]
 struct CrateList {
@@ -1588,17 +1591,26 @@ fn ignored_badges() {
 fn reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110 = semver::Version::parse("1.1.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v110);
-
-    ::mock_dep(&mut req, &c2v1, &c1, None);
-    ::mock_dep(&mut req, &c2v2, &c1, None);
-    ::mock_dep(&mut req, &c2v2, &c1, Some("foo"));
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version(
+                ::VersionBuilder::new("1.1.0")
+                    .dependency(&c1, None)
+                    .dependency(&c1, Some("foo")),
+            )
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1618,16 +1630,22 @@ fn reverse_dependencies() {
 fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110 = semver::Version::parse("1.1.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v110);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v2, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.1.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.0.0")
+            .version(::VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1640,15 +1658,22 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
 fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v1, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version("2.0.0")
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1660,16 +1685,25 @@ fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
 fn prerelease_versions_not_included_in_reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110_pre = semver::Version::parse("1.1.0-pre").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v110_pre);
-    let (_, c3v1) = ::mock_crate_vers(&mut req, ::krate("c3"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c3"), &v110_pre);
-
-    ::mock_dep(&mut req, &c3v1, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.1.0-pre")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c3", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version("1.1.0-pre")
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1682,15 +1716,22 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
 fn yanked_versions_not_included_in_reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v2, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.0.0")
+            .version(::VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1698,7 +1739,11 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c2");
 
-    t!(c2v2.yank(req.tx().unwrap(), true));
+    // TODO: have this test call `version.yank()` once the yank method is converted to diesel
+    diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
+        .set(versions::yanked.eq(true))
+        .execute(&*app.diesel_database.get().unwrap())
+        .unwrap();
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);

@@ -1,9 +1,8 @@
 import Ember from 'ember';
-import ajax from 'ember-fetch/ajax';
+import ajax from 'ic-ajax';
 import FastbootUtils from '../mixins/fastboot-utils';
 
 export default Ember.Route.extend(FastbootUtils, {
-
     headTags: [{
         type: 'meta',
         attrs: {
