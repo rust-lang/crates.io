@@ -1,5 +1,6 @@
 {{title "Cargo: packages for Rust" separator=' - ' prepend=true}}
 {{google-jsapi}}
+{{scroll-to-top currentPath=currentPath}}
 
 <a href='https://github.com/rust-lang/crates.io' class='fork-me'>
   <img src='/assets/forkme.png'/>
@@ -109,7 +110,7 @@
 </form>
 
 <div id="main" class='inner-content'>
-    <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
+    {{flash-message}}
 
     {{outlet}}
 </div>

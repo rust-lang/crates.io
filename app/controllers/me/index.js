@@ -21,7 +21,7 @@ export default Ember.Controller.extend({
                 } else {
                     msg = 'An unknown error occurred';
                 }
-                this.controllerFor('application').set('nextFlashError', msg);
+                this.get('flashMessages').queue(msg);
                 // TODO: this should be an action, the route state machine
                 // should recieve signals not external transitions
                 this.transitionToRoute('index');

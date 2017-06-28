@@ -1,13 +1,11 @@
 import Ember from 'ember';
 
-const { observer } = Ember;
-
 export default Ember.Controller.extend({
+    crateSearch: Ember.inject.service(),
+    search: Ember.computed.oneWay('searchController.q'),
     searchController: Ember.inject.controller('search'),
 
-    flashError: null,
-    nextFlashError: null,
-    search: Ember.computed.oneWay('searchController.q'),
+    flashMessages: Ember.inject.service(),
 
     init() {
         this._super(...arguments);
@@ -55,20 +53,6 @@ export default Ember.Controller.extend({
         Ember.$(document).off('keypress');
         Ember.$(document).off('keydown');
     },
-
-    stepFlash() {
-        this.set('flashError', this.get('nextFlashError'));
-        this.set('nextFlashError', null);
-    },
-
-    _scrollToTop() {
-        window.scrollTo(0, 0);
-    },
-
-    // TODO: remove observer & DOM mutation in controller..
-    currentPathChanged: observer('currentPath', function() {
-        Ember.run.scheduleOnce('afterRender', this, this._scrollToTop);
-    }),
 
     actions: {
         search() {
