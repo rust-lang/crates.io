@@ -11,7 +11,6 @@ import crateTeamsFixture from '../mirage/fixtures/crate_teams';
 import crateReverseDependenciesFixture from '../mirage/fixtures/crate_reverse_dependencies';
 import crateDependenciesFixture from '../mirage/fixtures/crate_dependencies';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
-import keywordFixture from '../mirage/fixtures/keyword';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
@@ -48,7 +47,12 @@ export default function() {
     this.get('/crates/nanomsg/:version_num/dependencies', () => crateDependenciesFixture);
     this.get('/crates/nanomsg/downloads', () => crateDownloadsFixture);
     this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
-    this.get('/keywords/network', () => keywordFixture);
+
+    this.get('/keywords/:keyword_id', (schema, request) => {
+        let keywordId = request.params.keyword_id;
+        let keyword = schema.keywords.find(keywordId);
+        return keyword ? keyword : notFound();
+    });
 
     this.get('/teams/:team_id', (schema, request) => {
         let login = request.params.team_id;
