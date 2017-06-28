@@ -12,7 +12,6 @@ import crateReverseDependenciesFixture from '../mirage/fixtures/crate_reverse_de
 import crateDependenciesFixture from '../mirage/fixtures/crate_dependencies';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
 import keywordFixture from '../mirage/fixtures/keyword';
-import teamFixture from '../mirage/fixtures/team';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
@@ -27,7 +26,9 @@ export default function() {
         };
 
         if (request.queryParams.team_id) {
-            payload.team = teamFixture.team;
+            let teamId = request.queryParams.team_id;
+            payload.user = schema.teams.find(teamId);
+
         } else if (request.queryParams.user_id) {
             let userId = request.queryParams.user_id;
             payload.user = schema.users.find(userId);
@@ -48,7 +49,12 @@ export default function() {
     this.get('/crates/nanomsg/downloads', () => crateDownloadsFixture);
     this.get('/crates/nanomsg/:version_num/downloads', () => crateDownloadsFixture);
     this.get('/keywords/network', () => keywordFixture);
-    this.get('/teams/:team_id', () => teamFixture);
+
+    this.get('/teams/:team_id', (schema, request) => {
+        let login = request.params.team_id;
+        let team = schema.teams.findBy({ login });
+        return team ? team : notFound();
+    });
 
     this.get('/users/:user_id', (schema, request) => {
         let login = request.params.user_id;
