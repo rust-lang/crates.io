@@ -17,7 +17,17 @@ export default [{
     },
     "num": "0.6.1",
     "updated_at": "2016-12-27T08:40:00Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2016-06-10T20:03:55Z",
@@ -33,7 +43,17 @@ export default [{
     },
     "num": "0.6.0",
     "updated_at": "2016-06-10T20:03:55Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2016-01-24T22:07:58Z",
@@ -49,7 +69,17 @@ export default [{
     },
     "num": "0.5.0",
     "updated_at": "2016-01-24T22:07:58Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-11-23T12:10:09Z",
@@ -65,7 +95,17 @@ export default [{
     },
     "num": "0.4.2",
     "updated_at": "2015-12-16T00:01:56Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-10-29T22:13:45Z",
@@ -81,7 +121,17 @@ export default [{
     },
     "num": "0.4.1",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-07-23T05:54:44Z",
@@ -97,7 +147,17 @@ export default [{
     },
     "num": "0.4.0",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-04-18T20:45:03Z",
@@ -113,7 +173,17 @@ export default [{
     },
     "num": "0.3.4",
     "updated_at": "2015-12-15T00:03:39Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-04-06T18:57:47Z",
@@ -129,7 +199,17 @@ export default [{
     },
     "num": "0.3.3",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-03-26T06:51:10Z",
@@ -145,7 +225,17 @@ export default [{
     },
     "num": "0.3.2",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2015-02-12T20:20:32Z",
@@ -161,7 +251,17 @@ export default [{
     },
     "num": "0.3.1",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2014-12-08T16:21:01Z",
@@ -177,7 +277,17 @@ export default [{
     },
     "num": "0.3.0",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }, {
     "crate": "nanomsg",
     "created_at": "2014-12-08T02:08:06Z",
@@ -193,5 +303,15 @@ export default [{
     },
     "num": "0.2.0",
     "updated_at": "2015-12-11T23:54:29Z",
-    "yanked": false
+    "yanked": false,
+    "_authors": [
+        "Daniel Fagnan <someone@example.com>",
+        "Jason E. Aten",
+        "David C. Bishop",
+        "Dennis Lawler",
+        "Zachary Tong",
+        "Dan Burkert",
+        "Benoît Labaere <someoneelse@example.com>",
+        "Chip Collier"
+    ]
 }];
