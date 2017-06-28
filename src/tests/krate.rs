@@ -60,6 +60,7 @@ struct Deps {
 #[derive(RustcDecodable)]
 struct RevDeps {
     dependencies: Vec<EncodableDependency>,
+    versions: Vec<EncodableVersion>,
     meta: CrateMeta,
 }
 #[derive(RustcDecodable)]
@@ -1636,6 +1637,9 @@ fn reverse_dependencies() {
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c1");
+    assert_eq!(deps.versions.len(), 1);
+    assert_eq!(deps.versions[0].krate, "c2");
+    assert_eq!(deps.versions[0].num, "1.1.0");
 
     // c1 has no dependent crates.
     req.with_path("/api/v1/crates/c2/reverse_dependencies");
