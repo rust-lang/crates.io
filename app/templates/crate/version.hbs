@@ -3,7 +3,7 @@
 <div id='crates-heading'>
     <div class="wide">
         <div class='info'>
-            <img class='logo crate' src="/assets/crate.png"/>
+            {{svg-jar "crate"}}
             <h1>{{ crate.name }}</h1>
             <h2>{{ currentVersion.num }}</h2>
         </div>
@@ -77,7 +77,7 @@
 
             {{#if (is-clipboard-supported)}}
               {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
-                    <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
+                    {{svg-jar "copy" alt="Copy to clipboard"}}
                 {{/copy-button}}
             {{/if}}
 
@@ -266,14 +266,14 @@
         <h3>Stats Overview</h3>
         <div class='stat'>
             <span class='num'>
-                <img class="download" src="/assets/download.png"/>
+                {{svg-jar "download"}}
                 {{ format-num downloadsContext.downloads }}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
-                <img class="package" src="/assets/package.png"/>
+                {{svg-jar "crate"}}
                 {{ crate.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
