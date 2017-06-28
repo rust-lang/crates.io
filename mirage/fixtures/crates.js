@@ -49,4 +49,5 @@ export default [{
         }
     ],
     "_owner_teams": [1, 303],
+    "_owner_users": [2, 303],
 }];

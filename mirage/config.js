@@ -2,7 +2,6 @@ import Response from 'ember-cli-mirage/response';
 
 import summaryFixture from '../mirage/fixtures/summary';
 import searchFixture from '../mirage/fixtures/search';
-import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 
 export default function() {
     this.get('/summary', () => summaryFixture);
@@ -72,7 +71,19 @@ export default function() {
         return schema.versionDownloads.where({ version: versionId });
     });
 
-    this.get('/crates/:crate_id/owner_user', () => crateOwnersFixture);
+    this.get('/crates/:crate_id/owner_user', function(schema, request) {
+        let crateId = request.params.crate_id;
+        let crate = schema.crates.find(crateId);
+        let users = schema.users.find(crate._owner_users);
+
+        let response = this.serialize(users);
+
+        response.users.forEach(user => {
+            user.kind = 'user';
+        });
+
+        return response;
+    });
 
     this.get('/crates/:crate_id/owner_team', function(schema, request) {
         let crateId = request.params.crate_id;
