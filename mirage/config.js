@@ -6,7 +6,6 @@ import crateFixture from '../mirage/fixtures/crate';
 import crateOwnersFixture from '../mirage/fixtures/crate_owners';
 import crateTeamsFixture from '../mirage/fixtures/crate_teams';
 import crateReverseDependenciesFixture from '../mirage/fixtures/crate_reverse_dependencies';
-import crateDependenciesFixture from '../mirage/fixtures/crate_dependencies';
 import crateDownloadsFixture from '../mirage/fixtures/crate_downloads';
 
 export default function() {
@@ -47,10 +46,16 @@ export default function() {
         return { meta: { names: version._authors }, users: [] };
     });
 
+    this.get('/crates/:crate_id/:version_num/dependencies', (schema, request) => {
+        let crate = request.params.crate_id;
+        let num = request.params.version_num;
+        let version_id = schema.versions.findBy({ crate, num }).id;
+        return schema.dependencies.where({ version_id });
+    });
+
     this.get('/crates/:crate_id/owner_user', () => crateOwnersFixture);
     this.get('/crates/:crate_id/owner_team', () => crateTeamsFixture);
     this.get('/crates/:crate_id/reverse_dependencies', () => crateReverseDependenciesFixture);
-    this.get('/crates/:crate_id/:version_num/dependencies', () => crateDependenciesFixture);
     this.get('/crates/:crate_id/downloads', () => crateDownloadsFixture);
     this.get('/crates/:crate_id/:version_num/downloads', () => crateDownloadsFixture);
 
