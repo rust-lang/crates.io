@@ -9,7 +9,7 @@ export default Ember.Controller.extend(PaginationMixin, {
     per_page: 10,
 
     crateController: Ember.inject.controller('crate'),
-    category: computed.alias('crateController.model'),
+    crate: computed.alias('crateController.model'),
 
     totalItems: computed.readOnly('model.meta.total'),
 });
