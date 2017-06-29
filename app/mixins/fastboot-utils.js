@@ -8,6 +8,12 @@ export default Ember.Mixin.create({
 
     isNotFastBoot: computed.not('fastboot.isFastBoot'),
 
+    /**
+     * When there's a need to raise network requests from the server
+     * during Server Side Rendering(SSR) via FastBoot,
+     * the JS Fetch API doesn't work with absolute urls.
+     * This property gives the URL prefix for those network calls.
+     * */
     appURL: computed(function() {
         let url = '';
         if (this.get('fastboot.isFastBoot')) {
