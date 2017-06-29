@@ -64,40 +64,32 @@ test('navigating to the reverse dependencies page', async function(assert) {
     hasText(assert, $revDep, 'unicorn-rpc');
 });
 
-test('navigating to a user page', function(assert) {
-    visit('/crates/nanomsg');
-    click('.owners li:last a');
+test('navigating to a user page', async function(assert) {
+    await visit('/crates/nanomsg');
+    await click('.owners li:last a');
 
-    andThen(function() {
-        assert.equal(currentURL(), '/users/blabaere');
-        hasText(assert, '#crates-heading h1', 'thehydroimpulse');
-    });
+    assert.equal(currentURL(), '/users/blabaere');
+    hasText(assert, '#crates-heading h1', 'thehydroimpulse');
 });
 
-test('navigating to a team page', function(assert) {
-    visit('/crates/nanomsg');
-    click('.owners li:first a ');
+test('navigating to a team page', async function(assert) {
+    await visit('/crates/nanomsg');
+    await click('.owners li:first a ');
 
-    andThen(function() {
-        assert.equal(currentURL(), '/teams/github:org:thehydroimpulse');
-        hasText(assert, '.team-info h2', 'thehydroimpulseteam');
-    });
+    assert.equal(currentURL(), '/teams/github:org:thehydroimpulse');
+    hasText(assert, '.team-info h2', 'thehydroimpulseteam');
 });
 
-test('crates having user-owners', function(assert) {
-    visit('/crates/nanomsg');
+test('crates having user-owners', async function(assert) {
+    await visit('/crates/nanomsg');
 
-    andThen(function() {
-        findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"] img[src="https://avatars.githubusercontent.com/u/565790?v=3&s=64"]');
-        assert.equal(find('ul.owners li').length, 4);
-    });
+    findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"] img[src="https://avatars.githubusercontent.com/u/565790?v=3&s=64"]');
+    assert.equal(find('ul.owners li').length, 4);
 });
 
-test('crates having team-owners', function(assert) {
-    visit('/crates/nanomsg');
+test('crates having team-owners', async function(assert) {
+    await visit('/crates/nanomsg');
 
-    andThen(function() {
-        findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"]');
-        assert.equal(find('ul.owners li').length, 4);
-    });
+    findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"]');
+    assert.equal(find('ul.owners li').length, 4);
 });

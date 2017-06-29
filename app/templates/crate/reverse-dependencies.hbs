@@ -20,7 +20,7 @@
             {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
             </div>
             <div class='stats downloads'>
-                <img class='download-clear-back' src="/assets/download-clear-back.png"/>
+                {{svg-jar "download-clear-back"}}
                 <span class='num rev-dep-downloads'>{{ format-num dependency.downloads }}</span>
             </div>
         </div>
@@ -29,7 +29,7 @@
 
 <div class='pagination'>
     {{#link-to (query-params page=prevPage) class='prev'}}
-        <img class="left-pag" src="/assets/left-pag.png"/>
+        {{svg-jar "left-pag"}}
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}
@@ -37,6 +37,6 @@
         {{/link-to}}
     {{/each}}
     {{#link-to (query-params page=nextPage) class='next'}}
-        <img class="right-pag" src="/assets/right-pag.png"/>
+        {{svg-jar "right-pag"}}
     {{/link-to}}
 </div>

@@ -3,9 +3,6 @@ import FastbootUtils from '../mixins/fastboot-utils';
 
 export default Ember.Controller.extend(FastbootUtils, {
     searchController: Ember.inject.controller('search'),
-
-    flashError: null,
-    nextFlashError: null,
     search: Ember.computed.oneWay('searchController.q'),
 
     init() {
@@ -57,13 +54,6 @@ export default Ember.Controller.extend(FastbootUtils, {
             Ember.$(window.document).off('keypress');
             Ember.$(window.document).off('keydown');
         }
-    },
-
-    stepFlash() {
-        this.setProperties({
-            'flashError': this.get('nextFlashError'),
-            'nextFlashError': null
-        });
     },
 
     actions: {
