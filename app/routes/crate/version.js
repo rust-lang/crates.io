@@ -1,8 +1,12 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Route.extend({
-    flashMessages: Ember.inject.service(),
+
+    ajax: service(),
+
+    flashMessages: service(),
 
     refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {
         this.refresh();
@@ -41,7 +45,7 @@ export default Ember.Route.extend({
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
                     .then((r) => {
                         if (r.length > 0 && r[0].build_status === true) {
                             crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
@@ -81,7 +85,7 @@ export default Ember.Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.session.get('currentUser')) {
-            ajax(`/api/v1/crates/${crate.get('name')}/following`)
+            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }

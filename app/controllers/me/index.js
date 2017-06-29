@@ -1,8 +1,12 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
-    flashMessages: Ember.inject.service(),
+
+    ajax: service(),
+
+    flashMessages: service(),
 
     isResetting: false,
 
@@ -10,11 +14,7 @@ export default Ember.Controller.extend({
         resetToken() {
             this.set('isResetting', true);
 
-            ajax({
-                dataType: 'json',
-                url: '/me/reset_token',
-                method: 'put',
-            }).then((d) => {
+            this.get('ajax').put('/me/reset_token').then((d) => {
                 this.get('model').set('api_token', d.api_token);
             }).catch((reason) => {
                 let msg;
@@ -25,7 +25,7 @@ export default Ember.Controller.extend({
                 }
                 this.get('flashMessages').queue(msg);
                 // TODO: this should be an action, the route state machine
-                // should recieve signals not external transitions
+                // should receive signals not external transitions
                 this.transitionToRoute('index');
             }).finally(() => {
                 this.set('isResetting', false);
