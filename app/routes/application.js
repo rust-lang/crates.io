@@ -1,13 +1,18 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
 
-export default Ember.Route.extend({
-    flashMessages: Ember.inject.service(),
+const { inject: { service } } = Ember;
+
+export default Ember.Route.extend(FastBootUtils, {
+
+    ajax: service(),
+
+    flashMessages: service(),
 
     beforeModel() {
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null) {
-            ajax('/me').then((response) => {
+            this.get('ajax').request(`${this.get('appURL')}/me`).then((response) => {
                 let user = this.store.push(this.store.normalize('user', response.user));
                 user.set('api_token', response.api_token);
                 this.session.set('currentUser', user);

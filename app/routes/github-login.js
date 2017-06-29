@@ -1,5 +1,7 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
+
+const { inject: { service } } = Ember;
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
@@ -14,9 +16,12 @@ import ajax from 'ic-ajax';
  * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
  * @see `/github_authorize` route
  */
-export default Ember.Route.extend({
+export default Ember.Route.extend(FastBootUtils, {
+
+    ajax: service(),
+
     beforeModel() {
-        return ajax('/authorize_url').then((url) => {
+        return this.get('ajax').request(`${this.get('appURL')}/authorize_url`).then((url) => {
             window.location = url.url;
         });
     },
