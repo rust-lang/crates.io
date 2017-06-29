@@ -17,7 +17,7 @@ export default [{
         "owner_team": "/api/v1/crates/nanomsg/owner_team",
         "reverse_dependencies": "/api/v1/crates/nanomsg/reverse_dependencies",
         "version_downloads": "/api/v1/crates/nanomsg/downloads",
-        "versions": null
+        "versions": "/api/v1/crates/nanomsg/versions",
     },
     "max_version": "0.7.0-alpha",
     "name": "nanomsg",

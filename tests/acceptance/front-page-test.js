@@ -14,18 +14,18 @@ test('visiting /', async function(assert) {
     findWithAssert('a[href="/crates"]');
     findWithAssert('a[href="/login"]');
 
-    hasText(assert, '.downloads .num', '13,534,453');
-    hasText(assert, '.crates .num', '3,430');
+    hasText(assert, '.downloads .num', '122,669');
+    hasText(assert, '.crates .num', '19');
 
     const $newCrate = findWithAssert('#new-crates ul > li:first a');
-    hasText(assert, $newCrate, 'mkstemp (0.2.0)');
-    assert.equal($newCrate.attr('href').trim(), '/crates/mkstemp');
+    hasText(assert, $newCrate, 'Inflector (0.1.6)');
+    assert.equal($newCrate.attr('href').trim(), '/crates/Inflector');
 
     const $mostDownloaded = findWithAssert('#most-downloaded ul > li:first a');
-    hasText(assert, $mostDownloaded, 'libc (0.2.2)');
-    assert.equal($mostDownloaded.attr('href').trim(), '/crates/libc');
+    hasText(assert, $mostDownloaded, 'serde (0.6.1)');
+    assert.equal($mostDownloaded.attr('href').trim(), '/crates/serde');
 
     const $justUpdated = findWithAssert('#just-updated ul > li:first a');
-    hasText(assert, $justUpdated, 'nanomsg (0.4.2)');
+    hasText(assert, $justUpdated, 'nanomsg (0.7.0-alpha)');
     assert.equal($justUpdated.attr('href').trim(), '/crates/nanomsg');
 });
