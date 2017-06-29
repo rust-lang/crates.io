@@ -19,7 +19,7 @@ export default Ember.Route.extend({
     model(params) {
         const { team_id } = params;
 
-        return this.store.find('team', team_id).then(
+        return this.store.queryRecord('team', { team_id }).then(
             (team) => {
                 params.team_id = team.get('id');
                 return Ember.RSVP.hash({
