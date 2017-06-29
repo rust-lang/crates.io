@@ -1543,33 +1543,19 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
-
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
     let (offset, limit) = req.pagination(10, 100)?;
     let (rev_deps, total) = krate.reverse_dependencies(&*conn, offset, limit)?;
-    let rev_deps: Vec<_> = rev_deps
+    let rev_deps = rev_deps
         .into_iter()
-        .map(|dep| dep.encodable(&krate.name))
-        .collect();
-
-    let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
-
-    let versions = versions::table
-        .filter(versions::id.eq(any(version_ids)))
-        .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
-        .load::<(Version, String)>(&*conn)?
-        .into_iter()
-        .map(|(version, krate_name)| version.encodable(&krate_name))
+        .map(ReverseDependency::encodable)
         .collect();
 
     #[derive(RustcEncodable)]
     struct R {
         dependencies: Vec<EncodableDependency>,
-        versions: Vec<EncodableVersion>,
         meta: Meta,
     }
     #[derive(RustcEncodable)]
@@ -1578,7 +1564,6 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         dependencies: rev_deps,
-        versions,
         meta: Meta { total: total },
     }))
 }
