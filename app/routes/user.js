@@ -12,7 +12,7 @@ export default Ember.Route.extend({
 
     model(params) {
         const { user_id } = params;
-        return this.store.find('user', user_id).then(
+        return this.store.queryRecord('user', { user_id }).then(
             (user) => {
                 params.user_id = user.get('id');
                 return Ember.RSVP.hash({
