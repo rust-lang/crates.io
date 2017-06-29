@@ -9,6 +9,13 @@ module.exports = function(defaults) {
         babel6: {
             plugins: ['transform-object-rest-spread'],
         },
+        'esw-cache-fallback': {
+            patterns: [
+                'docs.rs/crate/(.+)',
+                '/summary',
+                '/api/v1/(.+)'
+            ],
+        }
     });
 
     // Use `app.import` to add additional libraries to the generated
