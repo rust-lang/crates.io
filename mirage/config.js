@@ -82,7 +82,7 @@ export default function() {
 
     this.get('/crates/:crate_id/versions', (schema, request) => {
         let crate = request.params.crate_id;
-        return schema.versions.where({ crate });
+        return schema.versions.where({ crate }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
     });
 
     this.get('/crates/:crate_id/:version_num/authors', (schema, request) => {
