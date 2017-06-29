@@ -11,7 +11,7 @@ export default Ember.Mixin.create({
     /**
      * When there's a need to raise network requests from the server
      * during Server Side Rendering(SSR) via FastBoot,
-     * the JS Fetch API doesn't work with absolute urls.
+     * the JS Fetch API doesn't work with relative urls.
      * This property gives the URL prefix for those network calls.
      * */
     appURL: computed(function() {
