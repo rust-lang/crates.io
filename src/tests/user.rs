@@ -6,6 +6,8 @@ use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
 
+use diesel::prelude::*;
+
 #[derive(RustcDecodable)]
 struct AuthResponse {
     url: String,
@@ -232,21 +234,20 @@ fn user_total_downloads() {
 
         u = ::new_user("foo").create_or_update(&conn).unwrap();
 
-        let mut krate = ::new_crate("foo_krate1")
-            .create_or_update(&conn, None, u.id).unwrap();
+        let mut krate = ::CrateBuilder::new("foo_krate1", u.id)
+                .expect_build(&conn);
         krate.downloads = 10;
         update(&krate).set(&krate).execute(&*conn).unwrap();
 
-
-        let mut krate2 = ::new_crate("foo_krate2")
-            .create_or_update(&conn, None, u.id).unwrap();
+        let mut krate2 = ::CrateBuilder::new("foo_krate2", u.id)
+                .expect_build(&conn);
         krate2.downloads = 20;
         update(&krate2).set(&krate2).execute(&*conn).unwrap();
 
         let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
 
-        let mut another_krate = ::new_crate("bar_krate1")
-            .create_or_update(&conn, None, another_user.id).unwrap();
+        let mut another_krate = ::CrateBuilder::new("bar_krate1", another_user.id)
+                .expect_build(&conn);
         another_krate.downloads = 2;
         update(&another_krate).set(&another_krate).execute(&*conn).unwrap();
     }
