@@ -27,24 +27,24 @@ pub struct NewCrate {
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct CrateName(pub String);
 #[derive(Debug)]
 pub struct CrateVersion(pub semver::Version);
 #[derive(Debug)]
 pub struct CrateVersionReq(pub semver::VersionReq);
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct KeywordList(pub Vec<Keyword>);
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct Keyword(pub String);
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct CategoryList(pub Vec<Category>);
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Category(pub String);
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct Feature(pub String);
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,
@@ -91,12 +91,6 @@ impl<'de> Deserialize<'de> for Keyword {
         } else {
             Ok(Keyword(s))
         }
-    }
-}
-
-impl<'de> Deserialize<'de> for Category {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Category, D::Error> {
-        String::deserialize(d).map(Category)
     }
 }
 
@@ -178,40 +172,6 @@ impl<'de> Deserialize<'de> for CategoryList {
         }
     }
 }
-
-impl<'de> Deserialize<'de> for DependencyKind {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<DependencyKind, D::Error> {
-        let s = String::deserialize(d)?;
-        match &s[..] {
-            "dev" => Ok(DependencyKind::Dev),
-            "build" => Ok(DependencyKind::Build),
-            "normal" => Ok(DependencyKind::Normal),
-            _ => {
-                const KINDS: &'static [&'static str] = &["dev", "build", "normal"];
-                Err(de::Error::unknown_variant(&s, KINDS))
-            }
-        }
-    }
-}
-
-macro_rules! serialize_string {
-    ($name:ty) => (
-        impl Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-                where S: Serializer
-            {
-                serializer.serialize_str(self.deref())
-            }
-        }
-    )
-}
-
-serialize_string!(CrateName);
-serialize_string!(Keyword);
-serialize_string!(Category);
-serialize_string!(Feature);
-
-
 impl Serialize for CrateVersion {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -227,39 +187,6 @@ impl Serialize for CrateVersionReq {
         S: Serializer,
     {
         serializer.serialize_str(&(**self).to_string())
-    }
-}
-
-impl Serialize for KeywordList {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let KeywordList(ref inner) = *self;
-        inner.serialize(serializer)
-    }
-}
-
-impl Serialize for CategoryList {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let CategoryList(ref inner) = *self;
-        inner.serialize(serializer)
-    }
-}
-
-impl Serialize for DependencyKind {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match *self {
-            DependencyKind::Normal => "normal".serialize(serializer),
-            DependencyKind::Build => "build".serialize(serializer),
-            DependencyKind::Dev => "dev".serialize(serializer),
-        }
     }
 }
 

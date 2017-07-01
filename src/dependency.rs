@@ -48,7 +48,8 @@ pub struct EncodableDependency {
     pub downloads: i32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
 #[repr(u32)]
 pub enum Kind {
     Normal = 0,

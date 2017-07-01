@@ -1034,6 +1034,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
+        #[serde(rename = "crate")]
         krate: EncodableCrate,
         versions: Vec<EncodableVersion>,
         keywords: Vec<EncodableKeyword>,
@@ -1185,6 +1186,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
         #[derive(Serialize)]
         struct R<'a> {
+            #[serde(rename = "crate")]
             krate: EncodableCrate,
             warnings: Warnings<'a>,
         }

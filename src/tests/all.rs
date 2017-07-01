@@ -19,7 +19,6 @@ extern crate time;
 extern crate url;
 extern crate s3;
 
-use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
@@ -167,33 +166,9 @@ where
     let mut data = Vec::new();
     r.body.write_body(&mut data).unwrap();
     let s = std::str::from_utf8(&data).unwrap();
-    let j = match serde_json::from_str(s) {
+    match serde_json::from_str(s) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
-    };
-    let j = fixup(j);
-    return match serde_json::from_value::<T>(j) {
-        Ok(t) => t,
-        Err(e) => panic!("failed to decode: {:?}\n{}", e, s),
-    };
-
-
-    fn fixup(json: Value) -> Value {
-        match json {
-            Value::Object(object) => {
-                Value::Object(
-                    object
-                        .into_iter()
-                        .map(|(k, v)| {
-                            let k = if k == "crate" { "krate".to_string() } else { k };
-                            (k, fixup(v))
-                        })
-                        .collect(),
-                )
-            }
-            Value::Array(list) => Value::Array(list.into_iter().map(fixup).collect()),
-            j => j,
-        }
     }
 }
 

@@ -23,8 +23,8 @@ pub struct ApiToken {
 }
 
 /// The serialization format for the `ApiToken` model without its token value.
-pub struct EncodableApiToken {
 #[derive(Deserialize, Serialize)]
+pub struct EncodableApiToken {
     pub id: i32,
     pub name: String,
     pub created_at: String,
@@ -34,8 +34,8 @@ pub struct EncodableApiToken {
 /// The serialization format for the `ApiToken` model with its token value.
 /// This should only be used when initially creating a new token to minimize
 /// the chance of token leaks.
-pub struct EncodableApiTokenWithToken {
 #[derive(Deserialize, Serialize)]
+pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,

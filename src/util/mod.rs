@@ -3,7 +3,7 @@ use std::error::Error;
 use std::io::{self, Cursor};
 use std::sync::Arc;
 
-use serde_json::{self, Value};
+use serde_json;
 use serde::Serialize;
 use url;
 
@@ -37,36 +37,17 @@ pub trait RequestUtils {
 }
 
 pub fn json_response<T: Serialize>(t: &T) -> Response {
-    let s = serde_json::to_string(t).unwrap();
-    let json = fixup(s.parse().unwrap()).to_string();
+    let json = serde_json::to_string(t).unwrap();
     let mut headers = HashMap::new();
     headers.insert(
         "Content-Type".to_string(),
         vec!["application/json; charset=utf-8".to_string()],
     );
     headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
-    return Response {
+    Response {
         status: (200, "OK"),
         headers: headers,
         body: Box::new(Cursor::new(json.into_bytes())),
-    };
-
-    fn fixup(json: Value) -> Value {
-        match json {
-            Value::Object(object) => {
-                Value::Object(
-                    object
-                        .into_iter()
-                        .map(|(k, v)| {
-                            let k = if k == "krate" { "crate".to_string() } else { k };
-                            (k, fixup(v))
-                        })
-                        .collect(),
-                )
-            }
-            Value::Array(list) => Value::Array(list.into_iter().map(fixup).collect()),
-            j => j,
-        }
     }
 }
 

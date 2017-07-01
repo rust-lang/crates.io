@@ -46,11 +46,13 @@ struct Warnings {
 }
 #[derive(Deserialize)]
 struct GoodCrate {
+    #[serde(rename = "crate")]
     krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
 struct CrateResponse {
+    #[serde(rename = "crate")]
     krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
