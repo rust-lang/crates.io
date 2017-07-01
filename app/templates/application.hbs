@@ -1,4 +1,5 @@
 {{title "Cargo: packages for Rust" separator=' - ' prepend=true}}
+{{google-jsapi}}
 
 <a href='https://github.com/rust-lang/crates.io' class='fork-me'>
   <img src='/assets/forkme.png'/>
@@ -69,7 +70,7 @@
             {{/rl-dropdown-container}}
         {{else}}
             {{#link-to "login"}}
-                    <img class="lock" src="/assets/lock.png"/>
+                    {{svg-jar "lock"}}
                     Log in with GitHub
             {{/link-to}}
         {{/if}}
@@ -108,7 +109,7 @@
 </form>
 
 <div id="main" class='inner-content'>
-    <p id='flash' class={{if flashError "shown"}}>{{flashError}}</p>
+    {{flash-message}}
 
     {{outlet}}
 </div>
@@ -121,4 +122,6 @@
     <a href='http://doc.crates.io/guide.html'>Guide</a>
     <span class="sep">|</span>
     <a href='mailto:help@crates.io'>Send us an email</a>
+    <span class="sep">|</span>
+    <a href='http://doc.crates.io/policies.html'>Policies</a>
 </div>

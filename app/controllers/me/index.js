@@ -1,29 +1,31 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
+
+    ajax: service(),
+
+    flashMessages: service(),
+
     isResetting: false,
 
     actions: {
         resetToken() {
             this.set('isResetting', true);
 
-            ajax({
-                dataType: 'json',
-                url: '/me/reset_token',
-                method: 'put',
-            }).then((d) => {
+            this.get('ajax').put('/me/reset_token').then((d) => {
                 this.get('model').set('api_token', d.api_token);
             }).catch((reason) => {
-                var msg;
+                let msg;
                 if (reason.status === 403) {
                     msg = 'A login is required to perform this action';
                 } else {
                     msg = 'An unknown error occurred';
                 }
-                this.controllerFor('application').set('nextFlashError', msg);
+                this.get('flashMessages').queue(msg);
                 // TODO: this should be an action, the route state machine
-                // should recieve signals not external transitions
+                // should receive signals not external transitions
                 this.transitionToRoute('index');
             }).finally(() => {
                 this.set('isResetting', false);

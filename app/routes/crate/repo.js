@@ -1,17 +1,19 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-    redirect() {
-        var crate = this.modelFor('crate');
+    flashMessages: Ember.inject.service(),
 
-        var repository = crate.get('repository');
+    redirect() {
+        let crate = this.modelFor('crate');
+
+        let repository = crate.get('repository');
         if (repository) {
             window.location = repository;
         } else {
             // Redirect to the crate's main page and show a flash error if
             // no repository is found
-            var message = 'Crate does not supply a repository URL';
-            this.controllerFor('application').set('nextFlashError', message);
+            let message = 'Crate does not supply a repository URL';
+            this.get('flashMessages').queue(message);
             this.replaceWith('crate', crate);
         }
     },

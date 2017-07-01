@@ -3,7 +3,7 @@
         <li>
             {{#link-to 'crate' crate.id class='name'}}
                 <span>{{ crate.name }} ({{ crate.max_version }})</span>
-                <img class="right-arrow" src="/assets/right-arrow.png"/>
+                {{svg-jar "right-arrow"}}
             {{/link-to}}
         </li>
     {{/each}}

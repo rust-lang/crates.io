@@ -2,7 +2,7 @@
 
 <div id='crates-heading' class='crate-index'>
     <div class='info'>
-        <img class='logo crate' src="/assets/crate.png"/>
+        {{svg-jar "crate"}}
         <h1>All Crates</h1>
     </div>
     {{#if letter}}
@@ -17,10 +17,10 @@
         {{/link-to}}
     {{/each}}
 
-    {{#x-select value=letter}}
+    {{#x-select value=letter action=(action (mut letter)) as |xs|}}
         <option>Filter by the letter...</option>
         {{#each alphabet as |letter|}}
-            {{#x-option value=letter}}{{ letter }}{{/x-option}}
+            {{#xs.option value=letter}}{{ letter }}{{/xs.option}}
         {{/each}}
     {{/x-select}}
 </div>
@@ -39,7 +39,7 @@
 
         {{#rl-dropdown-container class="dropdown-container"}}
             {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
-                <img class="sort" src="/assets/sort.png"/>
+                {{svg-jar "sort"}}
                 {{ currentSortBy }}
                 <span class='arrow'></span>
             {{/rl-dropdown-toggle}}
@@ -68,7 +68,7 @@
 
 <div class='pagination'>
     {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-        <img class="left-pag" src="/assets/left-pag.png"/>
+        {{svg-jar "left-pag"}}
     {{/link-to}}
     {{#each pages as |page|}}
         {{#link-to (query-params page=page)}}
@@ -76,6 +76,6 @@
         {{/link-to}}
     {{/each}}
     {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-        <img class="right-pag" src="/assets/right-pag.png"/>
+        {{svg-jar "right-pag"}}
     {{/link-to}}
 </div>

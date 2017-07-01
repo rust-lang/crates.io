@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel::pg::{Pg, PgConnection};
+use diesel::types::{Integer, Text};
 use pg::GenericConnection;
 use pg::rows::Row;
 use semver;
@@ -9,7 +10,12 @@ use git;
 use krate::Crate;
 use schema::*;
 use util::{CargoResult, human};
+use version::Version;
 
+#[derive(Identifiable, Associations)]
+#[belongs_to(Version)]
+#[belongs_to(Crate)]
+#[table_name = "dependencies"]
 pub struct Dependency {
     pub id: i32,
     pub version_id: i32,
@@ -51,36 +57,53 @@ pub enum Kind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
-#[derive(Insertable)]
-#[table_name="dependencies"]
-struct NewDependency<'a> {
-    version_id: i32,
-    crate_id: i32,
-    req: String,
-    optional: bool,
-    default_features: bool,
-    features: Vec<&'a str>,
-    target: Option<&'a str>,
-    kind: i32,
+#[derive(Default, Insertable)]
+#[table_name = "dependencies"]
+pub struct NewDependency<'a> {
+    pub version_id: i32,
+    pub crate_id: i32,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: Vec<&'a str>,
+    pub target: Option<&'a str>,
+    pub kind: i32,
 }
 
 impl Dependency {
     // FIXME: Encapsulate this in a `NewDependency` struct
     #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
-    pub fn insert(conn: &GenericConnection, version_id: i32, crate_id: i32,
-                  req: &semver::VersionReq, kind: Kind,
-                  optional: bool, default_features: bool,
-                  features: &[String], target: &Option<String>)
-                  -> CargoResult<Dependency> {
+    pub fn insert(
+        conn: &GenericConnection,
+        version_id: i32,
+        crate_id: i32,
+        req: &semver::VersionReq,
+        kind: Kind,
+        optional: bool,
+        default_features: bool,
+        features: &[String],
+        target: &Option<String>,
+    ) -> CargoResult<Dependency> {
         let req = req.to_string();
-        let stmt = conn.prepare("INSERT INTO dependencies
+        let stmt = conn.prepare(
+            "INSERT INTO dependencies
                                       (version_id, crate_id, req, optional,
                                        default_features, features, target, kind)
                                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *")?;
-        let rows = stmt.query(&[&version_id, &crate_id, &req,
-            &optional, &default_features,
-            &features, target, &(kind as i32)])?;
+                                      RETURNING *",
+        )?;
+        let rows = stmt.query(
+            &[
+                &version_id,
+                &crate_id,
+                &req,
+                &optional,
+                &default_features,
+                &features,
+                target,
+                &(kind as i32),
+            ],
+        )?;
         Ok(Model::from_row(&rows.iter().next().unwrap()))
     }
 
@@ -103,7 +126,10 @@ impl Dependency {
 
 impl ReverseDependency {
     pub fn encodable(self) -> EncodableDependency {
-        self.dependency.encodable(&self.crate_name, Some(self.crate_downloads))
+        self.dependency.encodable(
+            &self.crate_name,
+            Some(self.crate_downloads),
+        )
     }
 }
 
@@ -114,54 +140,59 @@ pub fn add_dependencies(
 ) -> CargoResult<Vec<git::Dependency>> {
     use diesel::insert;
 
-    let git_and_new_dependencies = deps.iter().map(|dep| {
-        let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn)
-            .map_err(|_| {
-                human(&format_args!("no known crate named `{}`", &*dep.name))
-            })?;
-        if dep.version_req == semver::VersionReq::parse("*").unwrap() {
-            return Err(human("wildcard (`*`) dependency constraints are not allowed \
-                              on crates.io. See http://doc.crates.io/faq.html#can-\
-                              libraries-use--as-a-version-for-their-dependencies for more \
-                              information"));
-        }
-        let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
-
-        Ok((
-            git::Dependency {
-                name: dep.name.to_string(),
-                req: dep.version_req.to_string(),
-                features: features.iter().map(|s| s.to_string()).collect(),
-                optional: dep.optional,
-                default_features: dep.default_features,
-                target: dep.target.clone(),
-                kind: dep.kind.or(Some(Kind::Normal)),
-            },
-            NewDependency {
-                version_id: version_id,
-                crate_id: krate.id,
-                req: dep.version_req.to_string(),
-                kind: dep.kind.unwrap_or(Kind::Normal) as i32,
-                optional: dep.optional,
-                default_features: dep.default_features,
-                features: features,
-                target: dep.target.as_ref().map(|s| &**s),
+    let git_and_new_dependencies = deps.iter()
+        .map(|dep| {
+            let krate = Crate::by_name(&dep.name).first::<Crate>(&*conn).map_err(
+                |_| {
+                    human(&format_args!("no known crate named `{}`", &*dep.name))
+                },
+            )?;
+            if dep.version_req == semver::VersionReq::parse("*").unwrap() {
+                return Err(human(
+                    "wildcard (`*`) dependency constraints are not allowed \
+                     on crates.io. See http://doc.crates.io/faq.html#can-\
+                     libraries-use--as-a-version-for-their-dependencies for more \
+                     information",
+                ));
             }
-        ))
-    }).collect::<Result<Vec<_>, _>>()?;
+            let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
+
+            Ok((
+                git::Dependency {
+                    name: dep.name.to_string(),
+                    req: dep.version_req.to_string(),
+                    features: features.iter().map(|s| s.to_string()).collect(),
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    target: dep.target.clone(),
+                    kind: dep.kind.or(Some(Kind::Normal)),
+                },
+                NewDependency {
+                    version_id: version_id,
+                    crate_id: krate.id,
+                    req: dep.version_req.to_string(),
+                    kind: dep.kind.unwrap_or(Kind::Normal) as i32,
+                    optional: dep.optional,
+                    default_features: dep.default_features,
+                    features: features,
+                    target: dep.target.as_ref().map(|s| &**s),
+                },
+            ))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();
 
-    insert(&new_dependencies).into(dependencies::table)
+    insert(&new_dependencies)
+        .into(dependencies::table)
         .execute(conn)?;
 
     Ok(git_deps)
 }
 
 impl Queryable<dependencies::SqlType, Pg> for Dependency {
-    type Row = (i32, i32, i32, String, bool, bool, Vec<String>, Option<String>,
-                i32);
+    type Row = (i32, i32, i32, String, bool, bool, Vec<String>, Option<String>, i32);
 
     fn build(row: Self::Row) -> Self {
         Dependency {
@@ -178,7 +209,20 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
                 1 => Kind::Build,
                 2 => Kind::Dev,
                 n => panic!("unknown kind: {}", n),
-            }
+            },
+        }
+    }
+}
+
+// FIXME: We can derive this in the next release of Diesel
+impl Queryable<(dependencies::SqlType, Integer, Text), Pg> for ReverseDependency {
+    type Row = (<Dependency as Queryable<dependencies::SqlType, Pg>>::Row, i32, String);
+
+    fn build((dep_row, downloads, name): Self::Row) -> Self {
+        ReverseDependency {
+            dependency: Dependency::build(dep_row),
+            crate_downloads: downloads,
+            crate_name: name,
         }
     }
 }
@@ -200,21 +244,11 @@ impl Model for Dependency {
                 1 => Kind::Build,
                 2 => Kind::Dev,
                 n => panic!("unknown kind: {}", n),
-            }
+            },
         }
     }
 
-    fn table_name(_: Option<Dependency>) -> &'static str { "dependencies" }
-}
-
-impl Model for ReverseDependency {
-    fn from_row(row: &Row) -> Self {
-        ReverseDependency {
-            dependency: Model::from_row(row),
-            crate_name: row.get("crate_name"),
-            crate_downloads: row.get("crate_downloads"),
-        }
+    fn table_name(_: Option<Dependency>) -> &'static str {
+        "dependencies"
     }
-
-    fn table_name(_: Option<Self>) -> &'static str { panic!("no table") }
 }

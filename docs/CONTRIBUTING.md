@@ -3,14 +3,14 @@
 ## Finding an issue to work on
 
 We try to keep a variety of issues tagged with
-[E-mentor](https://github.com/rust-lang/crates.io/issues?q=is%3Aopen+is%3Aissue+
- label%3AE-mentor). These issues should contain, somewhere within the body or
-the comments, clear instructions on what needs to be done and where the changes
-will need to be made. If any E-mentor issues do not contain this information or
-the information isn't clear, we consider this a bug, please comment and ask for
-clarification! Please don't hesitate to ask any questions on these issues,
-we're paying special attention to them and someone will get back to you with
-help as soon as possible.
+[E-mentor](https://github.com/rust-lang/crates.io/issues?q=is%3Aopen+is%3Aissue+label%3AE-mentor).
+These issues should contain, somewhere within the body or the comments, clear
+instructions on what needs to be done and where the changes will need to be
+made. If any E-mentor issues do not contain this information or the information
+isn't clear, we consider this a bug, please comment and ask for clarification!
+Please don't hesitate to ask any questions on these issues, we're paying special
+attention to them and someone will get back to you with help as soon as
+possible.
 
 We'd also love contributions for issues not tagged E-mentor, they just might
 not be as well specified. You may want to browse through the labels that start
@@ -18,6 +18,27 @@ with A-, which stands for "area", to find issues that match with your interests.
 
 If you'd like to work on something that isn't in a current issue, especially if
 it would be a big change, please open a new issue for discussion!
+
+## Submitting a Pull Request
+
+When you submit a pull request, it will be automatically tested on TravisCI. In
+addition to running both the frontend and the backend tests described below,
+Travis runs [jslint], [clippy], and [rustfmt] on each PR.
+
+If you don't want to run these tools locally, please watch the Travis results
+and submit additional commits to your pull request to fix any issues they find!
+
+If you do want to run these tools locally in order to fix issues before
+submitting, that would be great too! Please consult each tool's installation
+instructions and the .travis.yml file in this repository for the latest
+installation and running instructions. The logs for recent builds in Travis
+may also be helpful to see which versions of these tools we're currently using.
+
+[jslint]: http://jslint.com/
+[clippy]: https://github.com/Manishearth/rust-clippy
+[rustfmt]: https://github.com/rust-lang-nursery/rustfmt
+
+We will try to review your pull requests as soon as possible!
 
 ## Setting up a development environment
 
@@ -66,11 +87,10 @@ preferred method of installing packages like these, that should work fine.
 
 #### Building and serving the frontend
 
-To install the npm and bower libraries that crates.io uses, run:
+To install the npm packages that crates.io uses, run:
 
 ```
 yarn
-yarn run bower install
 ```
 
 You'll need to run these commands any time the libraries or versions of these
@@ -97,19 +117,10 @@ talk to:
 
 #### Running the frontend tests
 
-In order to run the frontend tests, you will need to have installed:
-
-- [phantomjs](http://phantomjs.org/) >= 2.1.1
-
-`npm install phantomjs-prebuilt` is an easy way to install phantomjs; see its
-website for other installation methods or use your preferred method of
-installing dependencies.
-
-Once phantomjs is installed, run the frontend tests with:
+You can run the frontend tests with:
 
 ```
-yarn run ember test
-yarn run ember test --server
+yarn test
 ```
 
 ### Working on the Backend

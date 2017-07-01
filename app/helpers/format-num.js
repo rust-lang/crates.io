@@ -5,8 +5,8 @@ export function formatNum(value) {
         return '0';
     }
 
-    var ret = '';
-    var cnt = 0;
+    let ret = '';
+    let cnt = 0;
     while (value > 0) {
         if (cnt > 0 && cnt % 3 === 0) {
             ret = `,${ret}`;

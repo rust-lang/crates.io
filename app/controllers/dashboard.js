@@ -1,10 +1,12 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
 
 const TO_SHOW = 5;
-const { computed } = Ember;
+const { computed, inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
+
+    ajax: service(),
+
     init() {
         this._super(...arguments);
 
@@ -40,10 +42,10 @@ export default Ember.Controller.extend({
     actions: {
         loadMore() {
             this.set('loadingMore', true);
-            var page = (this.get('myFeed').length / 10) + 1;
+            let page = (this.get('myFeed').length / 10) + 1;
 
-            ajax(`/me/updates?page=${page}`).then((data) => {
-                var versions = data.versions.map(version =>
+            this.get('ajax').request(`/me/updates?page=${page}`).then((data) => {
+                let versions = data.versions.map(version =>
                     this.store.push(this.store.normalize('version', version)));
 
                 this.get('myFeed').pushObjects(versions);

@@ -1,5 +1,6 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
@@ -15,8 +16,11 @@ import ajax from 'ic-ajax';
  * @see `/github_authorize` route
  */
 export default Ember.Route.extend({
+
+    ajax: service(),
+
     beforeModel() {
-        return ajax('/authorize_url').then((url) => {
+        return this.get('ajax').request(`/authorize_url`).then((url) => {
             window.location = url.url;
         });
     },

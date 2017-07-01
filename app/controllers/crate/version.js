@@ -1,9 +1,10 @@
 import Ember from 'ember';
-import DS from 'ember-data';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
-const { computed } = Ember;
+const { computed, run: { later } } = Ember;
+
+const PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
 
 export default Ember.Controller.extend({
     isDownloading: false,
@@ -30,19 +31,14 @@ export default Ember.Controller.extend({
 
     hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed.or('crate.homepage',
-                          'crate.wiki',
-                          'crate.mailing_list',
-                          'crate.documentation',
-                          'crate.repository',
-                          'crate.reverse_dependencies'),
+    anyLinks: computed.or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
-                var ret = authors.slice();
-                var others = authors.get('meta');
-                for (var i = 0; i < others.names.length; i++) {
+                let ret = authors.slice();
+                let others = authors.get('meta');
+                for (let i = 0; i < others.names.length; i++) {
                     ret.push({ name: others.names[i] });
                 }
                 return ret;
@@ -54,43 +50,115 @@ export default Ember.Controller.extend({
     anyCategories: computed.gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
-        var deps = this.get('currentVersion.dependencies');
+        let deps = this.get('currentVersion.dependencies');
 
         if (deps === null) {
             return [];
         }
 
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
-                var non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
-                var map = {};
-                var ret = [];
-
-                non_dev.forEach((dep) => {
-                    if (!(dep.get('crate_id') in map)) {
-                        map[dep.get('crate_id')] = 1;
-                        ret.push(dep);
-                    }
-                });
-
-                return ret;
+                return deps
+                    .filter((dep) => dep.get('kind') !== 'dev')
+                    .uniqBy('crate_id');
             })
         });
     }),
 
     currentDevDependencies: computed('currentVersion.dependencies', function() {
-        var deps = this.get('currentVersion.dependencies');
+        let deps = this.get('currentVersion.dependencies');
         if (deps === null) {
             return [];
         }
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
                 return deps.filterBy('kind', 'dev');
             }),
         });
     }),
 
+    downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
+        let downloads = this.get('downloads');
+        if (!downloads) {
+            return;
+        }
+
+        let extra = this.get('extraDownloads') || [];
+
+        let dates = {};
+        let versions = [];
+        for (let i = 0; i < 90; i++) {
+            let now = moment().subtract(i, 'days');
+            dates[now.format('MMM D')] = { date: now, cnt: {} };
+        }
+
+        downloads.forEach((d) => {
+            let version_id = d.get('version.id');
+            let key = moment(d.get('date')).utc().format('MMM D');
+            if (dates[key]) {
+                let prev = dates[key].cnt[version_id] || 0;
+                dates[key].cnt[version_id] = prev + d.get('downloads');
+            }
+        });
+
+        extra.forEach((d) => {
+            let key = moment(d.date).utc().format('MMM D');
+            if (dates[key]) {
+                let prev = dates[key].cnt[null] || 0;
+                dates[key].cnt[null] = prev + d.downloads;
+            }
+        });
+        if (this.get('requestedVersion')) {
+            versions.push(this.get('model').getProperties('id', 'num'));
+        } else {
+            this.get('smallSortedVersions').forEach(version => {
+                versions.push(version.getProperties('id', 'num'));
+            });
+        }
+        if (extra.length > 0) {
+            versions.push({
+                id: null,
+                num: 'Other'
+            });
+        }
+
+        let headers = ['Date'];
+        versions.sort((b) => b.num).reverse();
+        for (let i = 0; i < versions.length; i++) {
+            headers.push(versions[i].num);
+        }
+        let data = [headers];
+        for (let date in dates) {
+            let row = [dates[date].date.toDate()];
+            for (let i = 0; i < versions.length; i++) {
+                row.push(dates[date].cnt[versions[i].id] || 0);
+            }
+            data.push(row);
+        }
+
+        return data;
+    }),
+
+    toggleClipboardProps(isSuccess) {
+        this.setProperties({
+            showSuccess: isSuccess,
+            showNotification: true
+        });
+        later(this, () => {
+            this.set('showNotification', false);
+        }, 2000);
+    },
+
     actions: {
+        copySuccess(event) {
+            event.clearSelection();
+            this.toggleClipboardProps(true);
+        },
+
+        copyError() {
+            this.toggleClipboardProps(false);
+        },
+
         download(version) {
             this.set('isDownloading', true);
 
@@ -112,65 +180,4 @@ export default Ember.Controller.extend({
         },
     },
 
-    downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
-        let downloads = this.get('downloads');
-        if (!downloads) {
-            return;
-        }
-
-        let extra = this.get('extraDownloads') || [];
-
-        var dates = {};
-        var versions = [];
-        for (var i = 0; i < 90; i++) {
-            var now = moment().subtract(i, 'days');
-            dates[now.format('MMM D')] = { date: now, cnt: {} };
-        }
-
-        downloads.forEach((d) => {
-            var version_id = d.get('version.id');
-            var key = moment(d.get('date')).utc().format('MMM D');
-            if (dates[key]) {
-                var prev = dates[key].cnt[version_id] || 0;
-                dates[key].cnt[version_id] = prev + d.get('downloads');
-            }
-        });
-
-        extra.forEach((d) => {
-            var key = moment(d.date).utc().format('MMM D');
-            if (dates[key]) {
-                var prev = dates[key].cnt[null] || 0;
-                dates[key].cnt[null] = prev + d.downloads;
-            }
-        });
-        if (this.get('requestedVersion')) {
-            versions.push(this.get('model').getProperties('id', 'num'));
-        } else {
-            this.get('smallSortedVersions').forEach(version => {
-                versions.push(version.getProperties('id', 'num'));
-            });
-        }
-        if (extra.length > 0) {
-            versions.push({
-                id: null,
-                num: 'Other'
-            });
-        }
-
-        var headers = ['Date'];
-        versions.sort((b) => b.num).reverse();
-        for (i = 0; i < versions.length; i++) {
-            headers.push(versions[i].num);
-        }
-        var data = [headers];
-        for (var date in dates) {
-            var row = [dates[date].date.toDate()];
-            for (i = 0; i < versions.length; i++) {
-                row.push(dates[date].cnt[versions[i].id] || 0);
-            }
-            data.push(row);
-        }
-
-        return data;
-    }),
 });

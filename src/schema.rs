@@ -160,6 +160,8 @@ table! {
     }
 }
 
+numeric_expr!(version_downloads::downloads);
+
 table! {
     versions (id) {
         id -> Int4,
@@ -170,5 +172,6 @@ table! {
         downloads -> Int4,
         features -> Nullable<Varchar>,
         yanked -> Bool,
+        license -> Nullable<Varchar>,
     }
 }

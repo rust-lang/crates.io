@@ -1,3 +1,4 @@
+@import "normalize";
 @import "helpers";
 
 $html-bg: #3b6837;
@@ -132,6 +133,7 @@ body {
     outline: 0;
     margin-left: 30px;
     padding: 5px 5px 5px 25px;
+    background-color: white;
     background-image: url('/assets/search.png');
     background-repeat: no-repeat;
     background-position: 6px 6px;
@@ -246,8 +248,14 @@ pre {
 }
 
 .pagination {
-    img { vertical-align: middle; }
-    .next.active, .prev.active { background: none; }
+    img, svg { vertical-align: middle; }
+
+    .next.active,
+    .prev.active,
+    .next:hover,
+    .prev:hover {
+        background: none;
+    }
 }
 
 button.dropdown, a.dropdown {
@@ -327,83 +335,5 @@ h1 {
     input {
         width: 100%;
         padding: 5px;
-    }
-}
-
-
-img {
-    &.right-pag, &.left-pag {
-        width: 29px;
-        height: 29px;
-    }
-
-    &.right-arrow, &.right-arrow-all-versions {
-        width: 20px;
-        height: 20px;
-    }
-
-    &.package, &.crate {
-        width: 32px;
-        height: 33px;
-    }
-
-    &.my-packages {
-        width:15px;
-        height: 17px;
-    }
-
-    &.sort {
-        width: 11px;
-        height: 12px;
-    }
-
-    &.flag {
-        width: 13px;
-        height: 15px;
-    }
-
-    &.dashboard {
-        width: 33px;
-        height: 33px;
-    }
-
-    &.lock {
-        width: 10px;
-        height: 13px;
-    }
-
-    &.download-clear-back {
-        width: 14px;
-        height: 17px;
-    }
-
-    &.button-download {
-        width: 14px;
-        height: 17px;
-    }
-
-    &.download {
-        width: 32px;
-        height: 33px;
-    }
-
-    &.following {
-        width: 15px;
-        height: 15px;
-    }
-
-    &.gear {
-        width: 32px;
-        height: 32px;
-    }
-
-    &.circle-with-i {
-        width: 32px;
-        height: 32px;
-    }
-
-    &.latest-updates {
-        width: 14px;
-        height: 14px;
     }
 }

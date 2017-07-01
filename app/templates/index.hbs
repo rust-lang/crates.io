@@ -3,12 +3,12 @@
 
     <div class='links'>
         {{#link-to "install" class='yellow-button'}}
-            <img class="button-download" src="/assets/button-download.png"/>
+            {{svg-jar "button-download"}}
             Install Cargo
         {{/link-to}}
 
         <a href='http://doc.crates.io/guide.html' class='yellow-button'>
-            <img class="flag" src="/assets/flag.png"/>
+            {{svg-jar "flag"}}
             Getting Started
         </a>
     </div>
@@ -23,12 +23,12 @@
 
     <div id='stats'>
         <div class='downloads'>
-            <img class="download" src="/assets/download.png"/>
+            {{svg-jar "download"}}
             <span class='num'>{{format-num model.num_downloads}}</span>
             <span class='desc small'>Downloads</span>
         </div>
         <div class='crates'>
-            <img class="crate" src="/assets/crate.png"/>
+            {{svg-jar "crate"}}
             <span class='num'>{{format-num model.num_crates}}</span>
             <span class='desc small'>Crates in stock</span>
         </div>

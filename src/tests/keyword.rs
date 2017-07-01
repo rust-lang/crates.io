@@ -4,11 +4,18 @@ use conduit_test::MockRequest;
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 
 #[derive(RustcDecodable)]
-struct KeywordList { keywords: Vec<EncodableKeyword>, meta: KeywordMeta }
+struct KeywordList {
+    keywords: Vec<EncodableKeyword>,
+    meta: KeywordMeta,
+}
 #[derive(RustcDecodable)]
-struct KeywordMeta { total: i32 }
+struct KeywordMeta {
+    total: i32,
+}
 #[derive(RustcDecodable)]
-struct GoodKeyword { keyword: EncodableKeyword }
+struct GoodKeyword {
+    keyword: EncodableKeyword,
+}
 
 #[test]
 fn index() {
@@ -72,13 +79,9 @@ fn update_crate() {
 
     let krate = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo")
-            .create_or_update(&conn)
-            .unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
         Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).unwrap();
-        ::new_crate("fookey")
-            .create_or_update(&conn, None, u.id)
-            .unwrap()
+        ::CrateBuilder::new("fookey", u.id).expect_build(&conn)
     };
 
     {

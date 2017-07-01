@@ -22,6 +22,9 @@
         img {
             @include align-self(center);
         }
+        .team-info {
+            @include flex-direction(column);
+        }
     }
     h1 {
         padding-left: 10px;
@@ -40,10 +43,6 @@
 
     &.crate-index, &.crate-search {
         @include flex-wrap(wrap);
-        .magnifier {
-            width: 32px;
-            height: 32px;
-        }
     }
 }
 
