@@ -67,7 +67,6 @@ export default Ember.Route.extend({
             }
 
             let user = this.store.push(this.store.normalize('user', data.user));
-            user.set('api_token', data.api_token);
             let transition = this.session.get('savedTransition');
             this.session.loginUser(user);
             if (transition) {
