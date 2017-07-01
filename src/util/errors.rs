@@ -271,6 +271,28 @@ impl fmt::Display for Unauthorized {
     }
 }
 
+struct BadRequest(String);
+
+impl CargoError for BadRequest {
+    fn description(&self) -> &str {
+        self.0.as_ref()
+    }
+
+    fn response(&self) -> Option<Response> {
+        let mut response = json_response(&Bad {
+            errors: vec![StringError { detail: self.0.clone() }],
+        });
+        response.status = (400, "Bad Request");
+        Some(response)
+    }
+}
+
+impl fmt::Display for BadRequest {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
@@ -296,6 +318,17 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
         cause: None,
         human: true,
     })
+}
+
+/// This is intended to be used for errors being sent back to the Ember
+/// frontend, not to cargo as cargo does not handle non-200 response codes well
+/// (see https://github.com/rust-lang/cargo/issues/3995), but Ember requires
+/// non-200 response codes for its stores to work properly.
+///
+/// Since this is going back to the UI these errors are treated the same as
+/// `human` errors, other than the HTTP status code.
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
+    Box::new(BadRequest(error.to_string()))
 }
 
 pub fn std_error(e: Box<CargoError>) -> Box<Error + Send> {

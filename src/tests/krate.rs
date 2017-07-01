@@ -17,6 +17,7 @@ use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
+use cargo_registry::token::ApiToken;
 use cargo_registry::owner::EncodableOwner;
 use cargo_registry::schema::versions;
 use cargo_registry::upload as u;
@@ -472,6 +473,24 @@ fn new_krate() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
     ::sign_in(&mut req, &app);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_new");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
+fn new_krate_with_token() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
+
+    {
+        let conn = t!(app.diesel_database.get());
+        let user = t!(::new_user("foo").create_or_update(&conn));
+        let token = t!(ApiToken::insert(&conn, user.id, "bar"));
+        req.header("Authorization", &token.token);
+    }
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");

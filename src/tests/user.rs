@@ -1,7 +1,9 @@
+use std::sync::atomic::Ordering;
+
 use conduit::{Handler, Method};
 
 use cargo_registry::Model;
-use cargo_registry::db::RequestTransaction;
+use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodableUser};
 use cargo_registry::version::EncodableVersion;
@@ -12,13 +14,8 @@ struct AuthResponse {
     state: String,
 }
 #[derive(RustcDecodable)]
-struct MeResponse {
-    user: EncodableUser,
-    api_token: String,
-}
-#[derive(RustcDecodable)]
-struct UserShowResponse {
-    user: EncodableUser,
+pub struct UserShowResponse {
+    pub user: EncodableUser,
 }
 
 #[test]
@@ -46,7 +43,6 @@ fn user_insert() {
     let tx = t!(conn.transaction());
 
     let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar"));
-    assert_eq!(t!(User::find_by_api_token(&tx, &user.api_token)), user);
     assert_eq!(t!(User::find(&tx, user.id)), user);
 
     assert_eq!(
@@ -72,10 +68,11 @@ fn me() {
     assert_eq!(response.status.0, 403);
 
     let user = ::mock_user(&mut req, ::user("foo"));
+
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: MeResponse = ::json(&mut response);
+    let json: UserShowResponse = ::json(&mut response);
+
     assert_eq!(json.user.email, user.email);
-    assert_eq!(json.api_token, user.api_token);
 }
 
 #[test]
@@ -99,18 +96,6 @@ fn show() {
     assert_eq!(Some("bar@baz.com".into()), json.user.email);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
-}
-
-#[test]
-fn reset_token() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Put, "/me/reset_token");
-    let user = User::find_or_insert(req.tx().unwrap(), 1, "foo", None, None, None, "bar").unwrap();
-    ::sign_in_as(&mut req, &user);
-    ok_resp!(middle.call(&mut req));
-
-    let u2 = User::find(req.tx().unwrap(), user.id).unwrap();
-    assert!(u2.api_token != user.api_token);
 }
 
 #[test]
@@ -219,4 +204,22 @@ fn following() {
     assert_eq!(r.meta.more, false);
 
     bad_resp!(middle.call(req.with_query("page=0")));
+}
+
+#[test]
+fn updating_existing_user_doesnt_change_api_token() {
+    let (_b, app, _middle) = ::app();
+    let conn = t!(app.diesel_database.get());
+
+    let gh_user_id = ::NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
+
+    let original_user =
+        t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
+    let token = t!(ApiToken::insert(&conn, original_user.id, "foo"));
+
+    t!(NewUser::new(gh_user_id, "bar", None, None, None, "bar_token").create_or_update(&conn));
+    let user = t!(User::find_by_api_token(&conn, &token.token));
+
+    assert_eq!("bar", user.gh_login);
+    assert_eq!("bar_token", user.gh_access_token);
 }

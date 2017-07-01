@@ -19,7 +19,7 @@ use {http, Model, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
 use krate::Crate;
 
-pub use self::middleware::{Middleware, RequestUser};
+pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 
 pub mod middleware;
 
@@ -29,7 +29,6 @@ pub struct User {
     pub id: i32,
     pub email: Option<String>,
     pub gh_access_token: String,
-    pub api_token: String,
     pub gh_login: String,
     pub name: Option<String>,
     pub gh_avatar: Option<String>,
@@ -105,16 +104,16 @@ impl User {
     }
 
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &GenericConnection, token: &str) -> CargoResult<User> {
-        let stmt = conn.prepare(
-            "SELECT * FROM users \
-             WHERE api_token = $1 LIMIT 1",
-        )?;
-        let rows = stmt.query(&[&token])?;
-        rows.iter()
-            .next()
-            .map(|r| Model::from_row(&r))
-            .chain_error(|| NotFound)
+    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
+        use diesel::update;
+        use diesel::expression::now;
+        use schema::api_tokens::dsl::{api_tokens, token, user_id, last_used_at};
+        use schema::users::dsl::{users, id};
+        let user_id_ = update(api_tokens.filter(token.eq(token_)))
+            .set(last_used_at.eq(now.nullable()))
+            .returning(user_id)
+            .get_result::<i32>(conn)?;
+        Ok(users.filter(id.eq(user_id_)).get_result(conn)?)
     }
 
     /// Updates a user or inserts a new user into the database.
@@ -203,7 +202,6 @@ impl Model for User {
             id: row.get("id"),
             email: row.get("email"),
             gh_access_token: row.get("gh_access_token"),
-            api_token: row.get("api_token"),
             gh_login: row.get("gh_login"),
             gh_id: row.get("gh_id"),
             name: row.get("name"),
@@ -336,41 +334,13 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&true))
 }
 
-/// Handles the `GET /me/reset_token` route.
-pub fn reset_token(req: &mut Request) -> CargoResult<Response> {
-    let user = req.user()?;
-
-    let conn = req.tx()?;
-    let rows = conn.query(
-        "UPDATE users SET api_token = DEFAULT \
-         WHERE id = $1 RETURNING api_token",
-        &[&user.id],
-    )?;
-    let token = rows.iter().next().map(|r| r.get("api_token")).chain_error(
-        || NotFound,
-    )?;
-
-    #[derive(RustcEncodable)]
-    struct R {
-        api_token: String,
-    }
-    Ok(req.json(&R { api_token: token }))
-}
-
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
-    let user = req.user()?;
-
     #[derive(RustcEncodable)]
     struct R {
         user: EncodableUser,
-        api_token: String,
     }
-    let token = user.api_token.clone();
-    Ok(req.json(&R {
-        user: user.clone().encodable(),
-        api_token: token,
-    }))
+    Ok(req.json(&R { user: req.user()?.clone().encodable() }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -449,55 +419,4 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         versions: versions,
         meta: Meta { more: more },
     }))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use diesel::pg::PgConnection;
-    use dotenv::dotenv;
-    use std::env;
-
-    fn connection() -> PgConnection {
-        let _ = dotenv();
-        let database_url =
-            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        let conn = PgConnection::establish(&database_url).unwrap();
-        conn.begin_test_transaction().unwrap();
-        conn
-    }
-
-    #[test]
-    fn new_users_have_different_api_tokens() {
-        let conn = connection();
-        let user1 = NewUser::new(1, "foo", None, None, None, "foo")
-            .create_or_update(&conn)
-            .unwrap();
-        let user2 = NewUser::new(2, "bar", None, None, None, "bar")
-            .create_or_update(&conn)
-            .unwrap();
-
-        assert_ne!(user1.id, user2.id);
-        assert_ne!(user1.api_token, user2.api_token);
-        assert_eq!(32, user1.api_token.len());
-    }
-
-    #[test]
-    fn updating_existing_user_doesnt_change_api_token() {
-        let conn = connection();
-        let user_after_insert = NewUser::new(1, "foo", None, None, None, "foo")
-            .create_or_update(&conn)
-            .unwrap();
-        let original_token = user_after_insert.api_token;
-        NewUser::new(1, "bar", None, None, None, "bar_token")
-            .create_or_update(&conn)
-            .unwrap();
-        let mut users = users::table.load::<User>(&conn).unwrap();
-        assert_eq!(1, users.len());
-        let user = users.pop().unwrap();
-
-        assert_eq!("bar", user.gh_login);
-        assert_eq!("bar_token", user.gh_access_token);
-        assert_eq!(original_token, user.api_token);
-    }
 }

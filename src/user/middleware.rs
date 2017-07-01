@@ -11,6 +11,12 @@ use util::errors::{CargoResult, Unauthorized, ChainError, std_error};
 
 pub struct Middleware;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum AuthenticationSource {
+    SessionCookie,
+    ApiToken,
+}
+
 impl conduit_middleware::Middleware for Middleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
@@ -18,45 +24,37 @@ impl conduit_middleware::Middleware for Middleware {
             req.session().get("user_id").and_then(|s| s.parse().ok())
         };
 
-        let user = match id {
-
-            // `user_id` was found on the session
-            Some(id) => {
-
-                // Look for a user in the database with the given `user_id`
-                match User::find(req.tx().map_err(std_error)?, id) {
-                    Ok(user) => user,
-                    Err(..) => return Ok(()),
-                }
+        if let Some(id) = id {
+            // If it did, look for a user in the database with the given `user_id`
+            if let Ok(user) = User::find(req.tx().map_err(std_error)?, id) {
+                // Attach the `User` model from the database to the request
+                req.mut_extensions().insert(user);
+                req.mut_extensions().insert(
+                    AuthenticationSource::SessionCookie,
+                );
             }
-
-            // `user_id` was *not* found on the session
-            None => {
-
-                // Look for an `Authorization` header on the request
-                match req.headers().find("Authorization") {
-                    Some(headers) => {
-
-                        // Look for a user in the database with a matching API token
-                        let tx = req.tx().map_err(std_error)?;
-                        match User::find_by_api_token(tx, headers[0]) {
-                            Ok(user) => user,
-                            Err(..) => return Ok(()),
-                        }
-                    }
-                    None => return Ok(()),
-                }
+        } else {
+            // Otherwise, look for an `Authorization` header on the request
+            // and try to find a user in the database with a matching API token
+            let user = if let Some(headers) = req.headers().find("Authorization") {
+                User::find_by_api_token(&*req.db_conn().map_err(std_error)?, headers[0]).ok()
+            } else {
+                None
+            };
+            if let Some(user) = user {
+                // Attach the `User` model from the database to the request
+                req.mut_extensions().insert(user);
+                req.mut_extensions().insert(AuthenticationSource::ApiToken);
             }
-        };
+        }
 
-        // Attach the `User` model from the database to the request
-        req.mut_extensions().insert(user);
         Ok(())
     }
 }
 
 pub trait RequestUser {
     fn user(&self) -> CargoResult<&User>;
+    fn authentication_source(&self) -> CargoResult<AuthenticationSource>;
 }
 
 impl<'a> RequestUser for Request + 'a {
@@ -64,5 +62,12 @@ impl<'a> RequestUser for Request + 'a {
         self.extensions().find::<User>().chain_error(
             || Unauthorized,
         )
+    }
+
+    fn authentication_source(&self) -> CargoResult<AuthenticationSource> {
+        self.extensions()
+            .find::<AuthenticationSource>()
+            .cloned()
+            .chain_error(|| Unauthorized)
     }
 }
