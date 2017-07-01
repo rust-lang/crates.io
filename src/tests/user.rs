@@ -229,7 +229,7 @@ fn user_total_downloads() {
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
-        
+
         u = ::new_user("foo").create_or_update(&conn).unwrap();
 
         let mut krate = ::new_crate("foo_krate1")
@@ -244,7 +244,7 @@ fn user_total_downloads() {
         update(&krate2).set(&krate2).execute(&*conn).unwrap();
 
         let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
-        
+
         let mut another_krate = ::new_crate("bar_krate1")
             .create_or_update(&conn, None, another_user.id).unwrap();
         another_krate.downloads = 2;

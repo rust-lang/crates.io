@@ -458,11 +458,11 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
-    
+
     let data = crate_owners::table.inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id).and(crate_owners::owner_kind.eq(OwnerKind::User as i32)))
-        .select(sum(crates::downloads)).first::<i64>(&*conn)?; 
-    
+        .select(sum(crates::downloads)).first::<i64>(&*conn)?;
+
     #[derive(RustcEncodable)]
     struct R {
         total_downloads: i64
