@@ -1,6 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Mixin.create({
+    flashMessages: Ember.inject.service(),
+
     beforeModel(transition) {
         let user = this.session.get('currentUser');
         if (user !== null) {
@@ -19,8 +21,7 @@ export default Ember.Mixin.create({
             });
         } else {
             this.session.set('savedTransition', transition);
-            this.controllerFor('application').set('nextFlashError',
-                                                  'Please log in to proceed');
+            this.get('flashMessages').queue('Please log in to proceed');
             return this.transitionTo('index');
         }
     },

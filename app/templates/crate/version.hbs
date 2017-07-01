@@ -3,7 +3,7 @@
 <div id='crates-heading'>
     <div class="wide">
         <div class='info'>
-            <img class='logo crate' src="/assets/crate.png"/>
+            {{svg-jar "crate"}}
             <h1>{{ crate.name }}</h1>
             <h2>{{ currentVersion.num }}</h2>
         </div>
@@ -74,12 +74,24 @@
         <div class='install'>
             <div class='action'>Cargo.toml</div>
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
-            <button id="crate-download-button" data-clipboard-action="copy" data-clipboard-target="#crate-toml">
-                <img src="/assets/copy.svg" alt="Copy to clipboard" height="25px" />
-            </button>
+
+            {{#if (is-clipboard-supported)}}
+              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
+                    {{svg-jar "copy" alt="Copy to clipboard"}}
+                {{/copy-button}}
+            {{/if}}
+
         </div>
         <div class="copy-result">
-            <span id="copy-notification"></span>
+            <span id="copy-notification" class="{{if showSuccess "copy-success" "copy-failure"}}">
+                {{#if showNotification}}
+                    {{#if showSuccess}}
+                        Copied!
+                    {{else}}
+                        An error occured. Please use CTRL+C.
+                    {{/if}}
+                {{/if}}
+            </span>
         </div>
     </div>
     <div class='authorship'>
@@ -254,14 +266,14 @@
         <h3>Stats Overview</h3>
         <div class='stat'>
             <span class='num'>
-                <img class="download" src="/assets/download.png"/>
+                {{svg-jar "download"}}
                 {{ format-num downloadsContext.downloads }}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
-                <img class="package" src="/assets/package.png"/>
+                {{svg-jar "crate"}}
                 {{ crate.versions.length }}
             </span>
             <span class='desc small'>Versions published</span>
@@ -302,39 +314,3 @@
 </div>
 {{/if}}
 
-<script type="text/javascript">
-    if (!Clipboard.isSupported()) {
-        document.getElementById('crate-download-button').classList.add('hidden');
-    }
-
-    var clipboard = new Clipboard('#crate-download-button');
-    var notificationElement = document.getElementById('copy-notification');
-
-    clipboard.on('success', function(e) {
-        var successText = 'Copied !';
-
-        e.clearSelection();
-        notificationElement.classList.add('copy-success')
-        notificationElement.textContent = successText;
-        fadeOffElement(notificationElement, 2000);
-    });
-
-    clipboard.on('error', function(e) {
-        var failureText = 'An error occured. Please use CTRL+C.';
-
-        notificationElement.classList.add('copy-failure')
-        notificationElement.textContent = failureText;
-        fadeOffElement(notificationElement, 2000);
-    });
-
-    function fadeOffElement(element, delay) {
-        setTimeout(function() {
-            resetElement(element);
-        }, delay);
-    }
-
-    function resetElement(element) {
-        element.innerHTML = '';
-        element.className = '';
-    }
-</script>

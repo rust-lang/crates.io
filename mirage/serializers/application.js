@@ -1,4 +1,11 @@
-import { JSONAPISerializer } from 'ember-cli-mirage';
+import { Serializer } from 'ember-cli-mirage';
 
-export default JSONAPISerializer.extend({
+export default Serializer.extend({
+    keyForCollection(modelName) {
+        if (modelName === 'version-download') {
+            return 'version_downloads';
+        }
+
+        return Serializer.prototype.keyForCollection.apply(this, arguments);
+    }
 });

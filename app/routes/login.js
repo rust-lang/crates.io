@@ -8,6 +8,8 @@ import Ember from 'ember';
  * @see `/github_authorize` route
  */
 export default Ember.Route.extend({
+    flashMessages: Ember.inject.service(),
+
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
@@ -16,10 +18,22 @@ export default Ember.Route.extend({
         }
 
         delete window.github_response;
-        let win = window.open('/github_login', 'Authorization',
-                              'width=1000,height=450,' +
-                              'toolbar=0,scrollbars=1,status=1,resizable=1,' +
-                              'location=1,menuBar=0');
+        let windowDimensions = [
+            'width=1000',
+            'height=450',
+            'toolbar=0',
+            'scrollbars=1',
+            'status=1',
+            'resizable=1',
+            'location=1',
+            'menuBar=0'
+        ].join(',');
+
+        let win = window.open(
+            '/github_login',
+            'Authorization',
+            windowDimensions
+        );
         if (!win) {
             return;
         }
@@ -42,14 +56,13 @@ export default Ember.Route.extend({
                 return;
             }
             if (!response.ok) {
-                this.controllerFor('application').set('flashError',
-                                                      'Failed to log in');
+                this.get('flashMessages').show('Failed to log in');
                 return;
             }
             let { data } = response;
             if (data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
-                this.controllerFor('application').set('flashError', error);
+                this.get('flashMessages').show(error);
                 return;
             }
 

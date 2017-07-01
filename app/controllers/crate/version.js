@@ -1,9 +1,10 @@
 import Ember from 'ember';
-import DS from 'ember-data';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
-const { computed } = Ember;
+const { computed, run: { later } } = Ember;
+
+const PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
 
 export default Ember.Controller.extend({
     isDownloading: false,
@@ -30,15 +31,10 @@ export default Ember.Controller.extend({
 
     hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed.or('crate.homepage',
-                          'crate.wiki',
-                          'crate.mailing_list',
-                          'crate.documentation',
-                          'crate.repository',
-                          'crate.reverse_dependencies'),
+    anyLinks: computed.or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: this.get('currentVersion.authors').then((authors) => {
                 let ret = authors.slice();
                 let others = authors.get('meta');
@@ -60,20 +56,11 @@ export default Ember.Controller.extend({
             return [];
         }
 
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
-                let non_dev = deps.filter((dep) => dep.get('kind') !== 'dev');
-                let map = {};
-                let ret = [];
-
-                non_dev.forEach((dep) => {
-                    if (!(dep.get('crate_id') in map)) {
-                        map[dep.get('crate_id')] = 1;
-                        ret.push(dep);
-                    }
-                });
-
-                return ret;
+                return deps
+                    .filter((dep) => dep.get('kind') !== 'dev')
+                    .uniqBy('crate_id');
             })
         });
     }),
@@ -83,34 +70,12 @@ export default Ember.Controller.extend({
         if (deps === null) {
             return [];
         }
-        return DS.PromiseArray.create({
+        return PromiseArray.create({
             promise: deps.then((deps) => {
                 return deps.filterBy('kind', 'dev');
             }),
         });
     }),
-
-    actions: {
-        download(version) {
-            this.set('isDownloading', true);
-
-            version.getDownloadUrl().then(url => {
-                this.incrementProperty('crate.downloads');
-                this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', url);
-            }).finally(() => this.set('isDownloading', false));
-        },
-
-        toggleFollow() {
-            this.set('fetchingFollowing', true);
-
-            let crate = this.get('crate');
-            let op = this.toggleProperty('following') ?
-                crate.follow() : crate.unfollow();
-
-            return op.finally(() => this.set('fetchingFollowing', false));
-        },
-    },
 
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let downloads = this.get('downloads');
@@ -173,4 +138,46 @@ export default Ember.Controller.extend({
 
         return data;
     }),
+
+    toggleClipboardProps(isSuccess) {
+        this.setProperties({
+            showSuccess: isSuccess,
+            showNotification: true
+        });
+        later(this, () => {
+            this.set('showNotification', false);
+        }, 2000);
+    },
+
+    actions: {
+        copySuccess(event) {
+            event.clearSelection();
+            this.toggleClipboardProps(true);
+        },
+
+        copyError() {
+            this.toggleClipboardProps(false);
+        },
+
+        download(version) {
+            this.set('isDownloading', true);
+
+            version.getDownloadUrl().then(url => {
+                this.incrementProperty('crate.downloads');
+                this.incrementProperty('currentVersion.downloads');
+                Ember.$('#download-frame').attr('src', url);
+            }).finally(() => this.set('isDownloading', false));
+        },
+
+        toggleFollow() {
+            this.set('fetchingFollowing', true);
+
+            let crate = this.get('crate');
+            let op = this.toggleProperty('following') ?
+                crate.follow() : crate.unfollow();
+
+            return op.finally(() => this.set('fetchingFollowing', false));
+        },
+    },
+
 });

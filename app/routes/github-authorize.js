@@ -1,5 +1,6 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
@@ -15,8 +16,11 @@ import ajax from 'ic-ajax';
  * @see `/login` route
  */
 export default Ember.Route.extend({
+
+    ajax: service(),
+
     beforeModel(transition) {
-        return ajax('/authorize', { data: transition.queryParams }).then((d) => {
+        return this.get('ajax').request(`/authorize`, { data: transition.queryParams }).then((d) => {
             let item = JSON.stringify({ ok: true, data: d });
             if (window.opener) {
                 window.opener.github_response = item;

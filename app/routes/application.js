@@ -1,11 +1,17 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Route.extend({
+
+    ajax: service(),
+
+    flashMessages: service(),
+
     beforeModel() {
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null) {
-            ajax('/me').then((response) => {
+            this.get('ajax').request('/me').then((response) => {
                 this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
             }).catch(() => this.session.logoutUser()).finally(() => {
                 window.currentUserDetected = true;
@@ -18,7 +24,7 @@ export default Ember.Route.extend({
 
     actions: {
         didTransition() {
-            this.controllerFor('application').stepFlash();
+            this.get('flashMessages').step();
         },
     },
 });

@@ -14,7 +14,7 @@
     @include border-radius(30px);
     @include vertical-gradient($start, $end);
 
-    img {
+    img, svg {
         float: left;
         display: inline-block;
         margin-right: 10px;

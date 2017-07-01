@@ -1,7 +1,13 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Route.extend({
+
+    ajax: service(),
+
+    flashMessages: service(),
+
     refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {
         this.refresh();
     }),
@@ -39,7 +45,7 @@ export default Ember.Route.extend({
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
                     .then((r) => {
                         if (r.length > 0 && r[0].build_status === true) {
                             crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
@@ -79,7 +85,7 @@ export default Ember.Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.session.get('currentUser')) {
-            ajax(`/api/v1/crates/${crate.get('name')}/following`)
+            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
@@ -89,7 +95,7 @@ export default Ember.Route.extend({
             .then(versions => {
                 const version = versions.find(version => version.get('num') === params.version_num);
                 if (params.version_num && !version) {
-                    this.controllerFor('application').set('nextFlashError',
+                    this.get('flashMessages').queue(
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }
 
@@ -100,7 +106,7 @@ export default Ember.Route.extend({
     },
 
     serialize(model) {
-        let version_num = model ? model.get('num') : '';
+        let version_num = model.get('num');
         return { version_num };
     },
 });
