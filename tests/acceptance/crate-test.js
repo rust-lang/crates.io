@@ -69,7 +69,7 @@ test('navigating to a user page', async function(assert) {
     await click('.owners li:last a');
 
     assert.equal(currentURL(), '/users/blabaere');
-    hasText(assert, '#crates-heading h1', 'thehydroimpulse');
+    hasText(assert, '#crates-heading h1', 'blabaere');
 });
 
 test('navigating to a team page', async function(assert) {

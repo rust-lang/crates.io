@@ -7,7 +7,7 @@ moduleForAcceptance('Acceptance | team page');
 test('has team organization display', async function(assert) {
     await visit('/teams/github:org:thehydroimpulse');
 
-    hasText(assert, '.team-info h1', 'org_test');
+    hasText(assert, '.team-info h1', 'org');
     hasText(assert, '.team-info h2', 'thehydroimpulseteam');
 });
 

@@ -27,7 +27,15 @@ module.exports = function(environment) {
 
         fastboot: {
             hostWhitelist: ['crates.io', /^[\w\-]+\.herokuapp\.com$/]
-        }
+        },
+
+        metricsAdapters: [{
+            name: 'GoogleAnalytics',
+            environments: ['production'],
+            config: {
+                id: 'UA-58390457-3'
+            }
+        }]
     };
 
     if (environment === 'development') {

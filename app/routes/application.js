@@ -13,9 +13,7 @@ export default Ember.Route.extend(FastBootUtils, {
         if (this.session.get('isLoggedIn') &&
             this.session.get('currentUser') === null) {
             this.get('ajax').request(`${this.get('appURL')}/me`).then((response) => {
-                let user = this.store.push(this.store.normalize('user', response.user));
-                user.set('api_token', response.api_token);
-                this.session.set('currentUser', user);
+                this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
             }).catch(() => this.session.logoutUser()).finally(() => {
                 window.currentUserDetected = true;
                 Ember.$(window).trigger('currentUserDetected');

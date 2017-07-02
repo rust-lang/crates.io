@@ -34,6 +34,7 @@ use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
+use cargo_registry::user::AuthenticationSource;
 use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
@@ -87,6 +88,7 @@ mod keyword;
 mod krate;
 mod record;
 mod team;
+mod token;
 mod user;
 mod version;
 
@@ -212,7 +214,6 @@ fn user(login: &str) -> User {
         name: None,
         gh_avatar: None,
         gh_access_token: "some random token".into(),
-        api_token: "some random token".into(),
     }
 }
 
@@ -455,6 +456,9 @@ fn mock_user(req: &mut Request, u: User) -> User {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
+    req.mut_extensions().insert(
+        AuthenticationSource::SessionCookie,
+    );
 }
 
 fn sign_in(req: &mut Request, app: &App) {
