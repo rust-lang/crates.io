@@ -1,11 +1,11 @@
-import { Serializer } from 'ember-cli-mirage';
+import { ActiveModelSerializer } from 'ember-cli-mirage';
 
-export default Serializer.extend({
+export default ActiveModelSerializer.extend({
     keyForCollection(modelName) {
         if (modelName === 'version-download') {
             return 'version_downloads';
         }
 
-        return Serializer.prototype.keyForCollection.apply(this, arguments);
+        return ActiveModelSerializer.prototype.keyForCollection.apply(this, arguments);
     }
 });
