@@ -5,7 +5,9 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | categories');
 
 test('listing categories', async function(assert) {
-    server.loadFixtures();
+    server.create('category', { category: 'API bindings', crates_cnt: 0 });
+    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+    server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
     await visit('/categories');
 
