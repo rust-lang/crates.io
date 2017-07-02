@@ -6,7 +6,7 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | crate page');
 
 test('visiting a crate page from the front page', async function(assert) {
-    server.loadFixtures();
+    server.create('crate', 'withVersion', { id: 'nanomsg' });
 
     await visit('/');
     await click('#just-updated ul > li:first a');
@@ -16,7 +16,9 @@ test('visiting a crate page from the front page', async function(assert) {
 });
 
 test('visiting /crates/nanomsg', async function(assert) {
-    server.loadFixtures();
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg');
 
@@ -29,7 +31,9 @@ test('visiting /crates/nanomsg', async function(assert) {
 });
 
 test('visiting /crates/nanomsg/', async function(assert) {
-    server.loadFixtures();
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/');
 
@@ -42,7 +46,9 @@ test('visiting /crates/nanomsg/', async function(assert) {
 });
 
 test('visiting /crates/nanomsg/0.6.0', async function(assert) {
-    server.loadFixtures();
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
 
