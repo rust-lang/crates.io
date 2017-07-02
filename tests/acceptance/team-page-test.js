@@ -5,6 +5,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | team page');
 
 test('has team organization display', async function(assert) {
+    server.loadFixtures();
+
     await visit('/teams/github:org:thehydroimpulse');
 
     hasText(assert, '.team-info h1', 'org');
@@ -12,6 +14,8 @@ test('has team organization display', async function(assert) {
 });
 
 test('has link to github in team header', async function(assert) {
+    server.loadFixtures();
+
     await visit('/teams/github:org:thehydroimpulse');
 
     const $githubLink = findWithAssert('.info a');
@@ -19,6 +23,8 @@ test('has link to github in team header', async function(assert) {
 });
 
 test('github link has image in team header', async function(assert) {
+    server.loadFixtures();
+
     await visit('/teams/github:org:thehydroimpulse');
 
     const $githubImg = findWithAssert('.info a img');
@@ -26,6 +32,8 @@ test('github link has image in team header', async function(assert) {
 });
 
 test('team organization details has github profile icon', async function(assert) {
+    server.loadFixtures();
+
     await visit('/teams/github:org:thehydroimpulse');
 
     const $githubProfileImg = findWithAssert('.info img');

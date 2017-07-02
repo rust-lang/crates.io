@@ -5,6 +5,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | crates page');
 
 test('visiting the crates page from the front page', async function(assert) {
+    server.loadFixtures();
+
     await visit('/');
     await click('a[href="/crates"]');
 
@@ -13,6 +15,8 @@ test('visiting the crates page from the front page', async function(assert) {
 });
 
 test('visiting the crates page directly', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates');
     await click('a[href="/crates"]');
 
@@ -21,6 +25,8 @@ test('visiting the crates page directly', async function(assert) {
 });
 
 test('listing crates', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates');
 
     hasText(assert, '.amt.small .cur', '1-10');
@@ -28,6 +34,8 @@ test('listing crates', async function(assert) {
 });
 
 test('navigating to next page of crates', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates');
     await click('.pagination .next');
 

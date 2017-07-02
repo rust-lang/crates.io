@@ -5,6 +5,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | categories');
 
 test('listing categories', async function(assert) {
+    server.loadFixtures();
+
     await visit('/categories');
 
     hasText(assert, '.row:eq(0) .desc .info span', '0 crates');
