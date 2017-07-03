@@ -7,4 +7,8 @@ export default DS.Model.extend({
     avatar: DS.attr('string'),
     url: DS.attr('string'),
     kind: DS.attr('string'),
+
+    stats() {
+        return this.store.adapterFor('user').stats(this.get('id'));
+    },
 });
