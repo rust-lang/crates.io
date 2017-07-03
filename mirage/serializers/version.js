@@ -12,5 +12,13 @@ export default BaseSerializer.extend({
         'num',
         'updated_at',
         'yanked',
-    ]
+    ],
+
+    links(version) {
+        return {
+            'authors': `/api/v1/crates/${version.crate}/${version.num}/authors`,
+            'dependencies': `/api/v1/crates/${version.crate}/${version.num}/dependencies`,
+            'version_downloads': `/api/v1/crates/${version.crate}/${version.num}/downloads`,
+        };
+    },
 });

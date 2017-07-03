@@ -10,11 +10,6 @@ export default [{
         ]
     },
     "id": 40906,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.7.0-alpha.1/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.7.0-alpha.1/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.7.0-alpha.1/downloads"
-    },
     "num": "0.7.0-alpha.1",
     "updated_at": "2016-12-27T08:40:00Z",
     "yanked": false,
@@ -39,11 +34,6 @@ export default [{
         ]
     },
     "id": 40905,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.6.1/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.6.1/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.6.1/downloads"
-    },
     "num": "0.6.1",
     "updated_at": "2016-12-27T08:40:00Z",
     "yanked": false,
@@ -65,11 +55,6 @@ export default [{
     "features": {
     },
     "id": 28431,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.6.0/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.6.0/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.6.0/downloads"
-    },
     "num": "0.6.0",
     "updated_at": "2016-06-10T20:03:55Z",
     "yanked": false,
@@ -91,11 +76,6 @@ export default [{
     "features": {
     },
     "id": 21273,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.5.0/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.5.0/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.5.0/downloads"
-    },
     "num": "0.5.0",
     "updated_at": "2016-01-24T22:07:58Z",
     "yanked": false,
@@ -117,11 +97,6 @@ export default [{
     "features": {
     },
     "id": 18445,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.4.2/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.4.2/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.4.2/downloads"
-    },
     "num": "0.4.2",
     "updated_at": "2015-12-16T00:01:56Z",
     "yanked": false,
@@ -143,11 +118,6 @@ export default [{
     "features": {
     },
     "id": 17384,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.4.1/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.4.1/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.4.1/downloads"
-    },
     "num": "0.4.1",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -169,11 +139,6 @@ export default [{
     "features": {
     },
     "id": 13574,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.4.0/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.4.0/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.4.0/downloads"
-    },
     "num": "0.4.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -195,11 +160,6 @@ export default [{
     "features": {
     },
     "id": 9014,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.3.4/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.3.4/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.3.4/downloads"
-    },
     "num": "0.3.4",
     "updated_at": "2015-12-15T00:03:39Z",
     "yanked": false,
@@ -221,11 +181,6 @@ export default [{
     "features": {
     },
     "id": 8236,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.3.3/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.3.3/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.3.3/downloads"
-    },
     "num": "0.3.3",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -247,11 +202,6 @@ export default [{
     "features": {
     },
     "id": 7190,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.3.2/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.3.2/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.3.2/downloads"
-    },
     "num": "0.3.2",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -273,11 +223,6 @@ export default [{
     "features": {
     },
     "id": 4944,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.3.1/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.3.1/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.3.1/downloads"
-    },
     "num": "0.3.1",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -299,11 +244,6 @@ export default [{
     "features": {
     },
     "id": 940,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.3.0/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.3.0/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.3.0/downloads"
-    },
     "num": "0.3.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -325,11 +265,6 @@ export default [{
     "features": {
     },
     "id": 924,
-    "links": {
-        "authors": "/api/v1/crates/nanomsg/0.2.0/authors",
-        "dependencies": "/api/v1/crates/nanomsg/0.2.0/dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/0.2.0/downloads"
-    },
     "num": "0.2.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
@@ -351,11 +286,6 @@ export default [{
     "features": {
     },
     "id": 28674,
-    "links": {
-        "authors": "/api/v1/crates/unicorn-rpc/0.2.0/authors",
-        "dependencies": "/api/v1/crates/unicorn-rpc/0.2.0/dependencies",
-        "version_downloads": "/api/v1/crates/unicorn-rpc/0.2.0/downloads"
-    },
     "num": "0.2.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
