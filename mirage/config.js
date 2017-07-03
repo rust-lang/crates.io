@@ -142,15 +142,13 @@ export default function() {
         let dependencies = allDependencies.slice(start, end);
         let total = allDependencies.length;
 
-        let serialized = this.serialize(dependencies);
+        let versions = schema.versions.find(dependencies.models.map(it => it.version_id));
 
-        // TODO https://github.com/rust-lang/crates.io/pull/810
-        serialized.dependencies.forEach(dep => {
-            let version = schema.versions.find(dep.version_id);
-            dep.crate_id = version.crate;
-        });
-
-        return withMeta(serialized, { total });
+        return {
+            ...this.serialize(dependencies),
+            ...this.serialize(versions),
+            meta: { total },
+        };
     });
 
     this.get('/crates/:crate_id/downloads', function(schema, request) {
