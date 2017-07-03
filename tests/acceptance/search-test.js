@@ -5,6 +5,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | search');
 
 test('searching for "rust"', async function(assert) {
+    server.loadFixtures();
+
     await visit('/');
     await fillIn('input.search', 'rust');
 
@@ -26,6 +28,8 @@ test('searching for "rust"', async function(assert) {
 });
 
 test('pressing S key to focus the search bar', async function(assert) {
+    server.loadFixtures();
+
     const KEYCODE_S = 83;
     const KEYCODE_A = 65;
 

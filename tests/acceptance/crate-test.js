@@ -6,6 +6,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | crate page');
 
 test('visiting a crate page from the front page', async function(assert) {
+    server.create('crate', 'withVersion', { id: 'nanomsg' });
+
     await visit('/');
     await click('#just-updated ul > li:first a');
 
@@ -14,6 +16,10 @@ test('visiting a crate page from the front page', async function(assert) {
 });
 
 test('visiting /crates/nanomsg', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+
     await visit('/crates/nanomsg');
 
     assert.equal(currentURL(), '/crates/nanomsg');
@@ -25,6 +31,10 @@ test('visiting /crates/nanomsg', async function(assert) {
 });
 
 test('visiting /crates/nanomsg/', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+
     await visit('/crates/nanomsg/');
 
     assert.equal(currentURL(), '/crates/nanomsg/');
@@ -36,6 +46,10 @@ test('visiting /crates/nanomsg/', async function(assert) {
 });
 
 test('visiting /crates/nanomsg/0.6.0', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+
     await visit('/crates/nanomsg/0.6.0');
 
     assert.equal(currentURL(), '/crates/nanomsg/0.6.0');
@@ -47,6 +61,8 @@ test('visiting /crates/nanomsg/0.6.0', async function(assert) {
 });
 
 test('navigating to the all versions page', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
     await click('#crate-versions span.small a');
 
@@ -54,6 +70,8 @@ test('navigating to the all versions page', async function(assert) {
 });
 
 test('navigating to the reverse dependencies page', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
     await click('a:contains("Dependent crates")');
 
@@ -65,6 +83,8 @@ test('navigating to the reverse dependencies page', async function(assert) {
 });
 
 test('navigating to a user page', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
     await click('.owners li:last a');
 
@@ -73,6 +93,8 @@ test('navigating to a user page', async function(assert) {
 });
 
 test('navigating to a team page', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
     await click('.owners li:first a ');
 
@@ -81,6 +103,8 @@ test('navigating to a team page', async function(assert) {
 });
 
 test('crates having user-owners', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
 
     findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"] img[src="https://avatars.githubusercontent.com/u/565790?v=3&s=64"]');
@@ -88,6 +112,8 @@ test('crates having user-owners', async function(assert) {
 });
 
 test('crates having team-owners', async function(assert) {
+    server.loadFixtures();
+
     await visit('/crates/nanomsg');
 
     findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"]');

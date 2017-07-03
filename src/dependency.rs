@@ -30,7 +30,6 @@ pub struct Dependency {
 
 pub struct ReverseDependency {
     dependency: Dependency,
-    crate_name: String,
     crate_downloads: i32,
 }
 
@@ -125,9 +124,9 @@ impl Dependency {
 }
 
 impl ReverseDependency {
-    pub fn encodable(self) -> EncodableDependency {
+    pub fn encodable(self, crate_name: &str) -> EncodableDependency {
         self.dependency.encodable(
-            &self.crate_name,
+            crate_name,
             Some(self.crate_downloads),
         )
     }
@@ -218,11 +217,10 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
 impl Queryable<(dependencies::SqlType, Integer, Text), Pg> for ReverseDependency {
     type Row = (<Dependency as Queryable<dependencies::SqlType, Pg>>::Row, i32, String);
 
-    fn build((dep_row, downloads, name): Self::Row) -> Self {
+    fn build((dep_row, downloads, _name): Self::Row) -> Self {
         ReverseDependency {
             dependency: Dependency::build(dep_row),
             crate_downloads: downloads,
-            crate_name: name,
         }
     }
 }

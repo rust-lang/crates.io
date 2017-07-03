@@ -17,7 +17,7 @@
     {{#each model as |dependency|}}
         <div class='crate row'>
             <div>
-            {{#link-to 'crate' dependency.crate_id}}{{dependency.crate_id}}{{/link-to}} requires {{dependency.req}}
+            {{#link-to 'crate' dependency.version.crateName}}{{dependency.version.crateName}}{{/link-to}} requires {{dependency.req}}
             </div>
             <div class='stats downloads'>
                 {{svg-jar "download-clear-back"}}

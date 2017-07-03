@@ -5,6 +5,8 @@ import hasText from 'cargo/tests/helpers/has-text';
 moduleForAcceptance('Acceptance | front page');
 
 test('visiting /', async function(assert) {
+    server.loadFixtures();
+
     await visit('/');
 
     assert.equal(currentURL(), '/');
