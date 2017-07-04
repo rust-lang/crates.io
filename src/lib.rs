@@ -148,6 +148,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/categories/:category_id", C(category::show));
     api_router.get("/category_slugs", C(category::slugs));
     api_router.get("/users/:user_id", C(user::show));
+    api_router.get("/users/:user_id/stats", C(user::stats));
     api_router.get("/teams/:team_id", C(user::show_team));
     let api_router = Arc::new(R404(api_router));
 
