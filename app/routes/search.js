@@ -8,6 +8,10 @@ export default Ember.Route.extend({
     },
 
     model(params) {
+        if (params.q !== null) {
+            params.q = params.q.trim();
+        }
+
         return this.store.query('crate', params);
     },
 });
