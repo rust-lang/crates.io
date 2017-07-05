@@ -17,7 +17,7 @@ before_install:
 install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - yarn install
-  - cargo install --force diesel_cli --vers 0.13.0 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force diesel_cli --vers 0.14.0 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
   - cargo install --force rustfmt
   - rustfmt --version
 
@@ -49,7 +49,7 @@ matrix:
     - cargo build
     - cargo test
     - yarn test
-  - rust: nightly-2017-03-04
+  - rust: nightly-2017-07-04
     env: CLIPPY=YESPLEASE
     script:
     - cargo rustc --lib --features "lint" -- -Zno-trans
