@@ -25,7 +25,7 @@ use util::{RequestUtils, CargoResult, ChainError, internal, human};
 use {Model, Crate};
 use license_exprs;
 
-#[derive(Clone, Identifiable, Associations)]
+#[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,
@@ -39,7 +39,7 @@ pub struct Version {
     pub license: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "versions"]
 pub struct NewVersion {
     crate_id: i32,
@@ -48,11 +48,12 @@ pub struct NewVersion {
     license: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct Author {
     pub name: String,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
     pub krate: String,
@@ -67,7 +68,7 @@ pub struct EncodableVersion {
     pub links: VersionLinks,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
@@ -286,7 +287,7 @@ impl NewVersion {
     }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "version_authors"]
 struct NewAuthor<'a> {
     version_id: i32,

@@ -8,7 +8,7 @@ use Model;
 use schema::version_downloads;
 use version::Version;
 
-#[derive(Queryable, Identifiable, Associations)]
+#[derive(Queryable, Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
 pub struct VersionDownload {
     pub id: i32,
@@ -19,14 +19,14 @@ pub struct VersionDownload {
     pub processed: bool,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "version_downloads"]
 struct NewVersionDownload(
     #[column_name(version_id)]
     i32
 );
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableVersionDownload {
     pub id: i32,
     pub version: i32,
