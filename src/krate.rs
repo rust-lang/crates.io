@@ -19,6 +19,7 @@ use rustc_serialize::json;
 use semver;
 use time::Timespec;
 use url::Url;
+use chrono::NaiveDate;
 
 use app::{App, RequestApp};
 use badge::EncodableBadge;
@@ -38,7 +39,19 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Queryable, Identifiable, Associations, AsChangeset)]
+#[belongs_to(Crate)]
+#[primary_key(crate_id, date)]
+#[table_name="crate_downloads"]
+pub struct CrateDownload {
+    pub crate_id: i32,
+    pub downloads: i32,
+    pub date: NaiveDate,
+}
+
+#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, Associations)]
+#[has_many(crate_downloads)]
+#[table_name="crates"]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -781,7 +794,7 @@ impl Model for Crate {
 /// Handles the `GET /crates` route.
 #[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::sql;
+    use diesel::expression::dsl::*;
     use diesel::types::{BigInt, Bool};
 
     let conn = req.db_conn()?;
@@ -801,6 +814,26 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if sort == "downloads" {
         query = query.order(crates::downloads.desc())
+    } else if sort == "recent-downloads" {
+        // join crates to crate_download
+        // filter by crate_dls.date less than? 90 days ago
+        // select group by crate_dls.crate_id
+        // select sum crate_dls.downloads
+        // orderby column desc
+
+        // works
+        /*let new_query = crates::table.inner_join(crate_downloads::table)
+            .select((ALL_COLUMNS));*/
+
+
+        // overflow error
+        query = query.inner_join(crate_downloads::table)
+            /*.filter(crate_downloads::date.gt(date(now - 90.days())))
+            .select((
+                    crate_downloads::table.group_by(crate_downloads::crate_id),
+                    sql::<BigInt>("SUM(crate_downloads.downloads)")
+                    ))
+            .order(crate_downloads::downloads.desc())*/
     } else {
         query = query.order(crates::name.asc())
     }
@@ -821,6 +854,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
+        } else if sort == "recent-downloads" {
+            // do same thing as above
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
