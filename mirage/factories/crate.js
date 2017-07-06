@@ -30,16 +30,6 @@ export default Factory.extend({
     _owner_teams: () => [],
     _owner_users: () => [],
 
-    links() {
-        return {
-            'owner_user': `/api/v1/crates/${this.id}/owner_user`,
-            'owner_team': `/api/v1/crates/${this.id}/owner_team`,
-            'reverse_dependencies': `/api/v1/crates/${this.id}/reverse_dependencies`,
-            'version_downloads': `/api/v1/crates/${this.id}/downloads`,
-            'versions': `/api/v1/crates/${this.id}/versions`,
-        };
-    },
-
     withVersion: trait({
         afterCreate(crate, server) {
             server.create('version', { crate: crate.id });

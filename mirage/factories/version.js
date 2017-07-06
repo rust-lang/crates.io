@@ -22,14 +22,6 @@ export default Factory.extend({
     features: () => {},
     _authors: () => [],
 
-    links() {
-        return {
-            'authors': `/api/v1/crates/${this.crate}/${this.num}/authors`,
-            'dependencies': `/api/v1/crates/${this.crate}/${this.num}/dependencies`,
-            'version_downloads': `/api/v1/crates/${this.crate}/${this.num}/downloads`,
-        };
-    },
-
     afterCreate(version, server) {
         let crate = server.schema.crates.find(version.crate);
         crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });

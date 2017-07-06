@@ -12,13 +12,6 @@ export default [{
         "network",
     ],
     "license": "MIT",
-    "links": {
-        "owner_user": "/api/v1/crates/nanomsg/owner_user",
-        "owner_team": "/api/v1/crates/nanomsg/owner_team",
-        "reverse_dependencies": "/api/v1/crates/nanomsg/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/nanomsg/downloads",
-        "versions": "/api/v1/crates/nanomsg/versions",
-    },
     "max_version": "0.7.0-alpha",
     "name": "nanomsg",
     "repository": "https://github.com/thehydroimpulse/nanomsg.rs",
@@ -60,12 +53,6 @@ export default [{
     "id": "rust_mixin",
     "keywords": ["rust", "plugin", "code-generation"],
     "license": "MIT/Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/rust_mixin/owners",
-        "reverse_dependencies": "/api/v1/crates/rust_mixin/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rust_mixin/downloads",
-        "versions": "/api/v1/crates/rust_mixin/versions"
-    },
     "max_version": "0.0.1",
     "name": "rust_mixin",
     "repository": "https://github.com/huonw/external_mixin",
@@ -128,12 +115,6 @@ export default [{
     "id": "external_mixin",
     "keywords": ["python", "ruby", "shell", "plugin", "code-generation"],
     "license": "MIT/Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/external_mixin/owners",
-        "reverse_dependencies": "/api/v1/crates/external_mixin/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/external_mixin/downloads",
-        "versions": "/api/v1/crates/external_mixin/versions"
-    },
     "max_version": "0.0.1",
     "name": "external_mixin",
     "repository": "https://github.com/huonw/external_mixin",
@@ -148,12 +129,6 @@ export default [{
     "id": "external_mixin_umbrella",
     "keywords": ["plugin", "code-generation"],
     "license": "MIT/Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/external_mixin_umbrella/owners",
-        "reverse_dependencies": "/api/v1/crates/external_mixin_umbrella/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/external_mixin_umbrella/downloads",
-        "versions": "/api/v1/crates/external_mixin_umbrella/versions"
-    },
     "max_version": "0.0.2",
     "name": "external_mixin_umbrella",
     "repository": "https://github.com/huonw/external_mixin",
@@ -168,12 +143,6 @@ export default [{
     "id": "Inflector",
     "keywords": ["string", "case", "camel", "snake", "inflection"],
     "license": "BSD-2-Clause",
-    "links": {
-        "owners": "/api/v1/crates/Inflector/owners",
-        "reverse_dependencies": "/api/v1/crates/Inflector/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/Inflector/downloads",
-        "versions": "/api/v1/crates/Inflector/versions"
-    },
     "max_version": "0.1.6",
     "name": "Inflector",
     "repository": "https://github.com/whatisinternet/inflector",
@@ -188,12 +157,6 @@ export default [{
     "id": "rs-es",
     "keywords": ["elasticsearch", "elastic"],
     "license": "Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/rs-es/owners",
-        "reverse_dependencies": "/api/v1/crates/rs-es/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rs-es/downloads",
-        "versions": "/api/v1/crates/rs-es/versions"
-    },
     "max_version": "0.1.17",
     "name": "rs-es",
     "repository": "https://github.com/benashford/rs-es",
@@ -208,12 +171,6 @@ export default [{
     "id": "rust-crypto",
     "keywords": ["Crypto", "MD5", "Sha1", "Sha2", "AES"],
     "license": "MIT/Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/rust-crypto/owners",
-        "reverse_dependencies": "/api/v1/crates/rust-crypto/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rust-crypto/downloads",
-        "versions": "/api/v1/crates/rust-crypto/versions"
-    },
     "max_version": "0.2.34",
     "name": "rust-crypto",
     "repository": "https://github.com/DaGenix/rust-crypto/",
@@ -228,12 +185,6 @@ export default [{
     "id": "rust-htslib",
     "keywords": ["htslib", "bam", "bioinformatics", "pileup", "sequencing"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/rust-htslib/owners",
-        "reverse_dependencies": "/api/v1/crates/rust-htslib/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rust-htslib/downloads",
-        "versions": "/api/v1/crates/rust-htslib/versions"
-    },
     "max_version": "0.5.2",
     "name": "rust-htslib",
     "repository": "https://github.com/rust-bio/rust-htslib.git",
@@ -248,12 +199,6 @@ export default [{
     "id": "kinetic-rust",
     "keywords": ["Protocol", "Kinetic", "Storage"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/kinetic-rust/owners",
-        "reverse_dependencies": "/api/v1/crates/kinetic-rust/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/kinetic-rust/downloads",
-        "versions": "/api/v1/crates/kinetic-rust/versions"
-    },
     "max_version": "0.0.16",
     "name": "kinetic-rust",
     "repository": "https://github.com/icorderi/kinetic-rust/",
@@ -268,12 +213,6 @@ export default [{
     "id": "rustless",
     "keywords": ["api", "web", "hyper", "iron", "rest"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/rustless/owners",
-        "reverse_dependencies": "/api/v1/crates/rustless/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rustless/downloads",
-        "versions": "/api/v1/crates/rustless/versions"
-    },
     "max_version": "0.8.0",
     "name": "rustless",
     "repository": "https://crates.io/crates/rustless",
@@ -288,12 +227,6 @@ export default [{
     "id": "serde",
     "keywords": ["serde", "serialization"],
     "license": "MIT/Apache-2.0",
-    "links": {
-        "owners": "/api/v1/crates/serde/owners",
-        "reverse_dependencies": "/api/v1/crates/serde/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/serde/downloads",
-        "versions": "/api/v1/crates/serde/versions"
-    },
     "max_version": "0.6.1",
     "name": "serde",
     "repository": "https://github.com/serde-rs/serde",
@@ -308,12 +241,6 @@ export default [{
     "id": "rusted_cypher",
     "keywords": ["neo4j", "database", "query", "cypher", "graph"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/rusted_cypher/owners",
-        "reverse_dependencies": "/api/v1/crates/rusted_cypher/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rusted_cypher/downloads",
-        "versions": "/api/v1/crates/rusted_cypher/versions"
-    },
     "max_version": "0.7.1",
     "name": "rusted_cypher",
     "repository": "https://github.com/livioribeiro/rusted-cypher",
@@ -328,12 +255,6 @@ export default [{
     "id": "zlib",
     "keywords": [],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/zlib/owners",
-        "reverse_dependencies": "/api/v1/crates/zlib/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/zlib/downloads",
-        "versions": "/api/v1/crates/zlib/versions"
-    },
     "max_version": "0.0.1",
     "name": "zlib",
     "repository": null,
@@ -348,12 +269,6 @@ export default [{
     "id": "rustful",
     "keywords": ["web", "rest", "framework", "http", "routing"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/rustful/owners",
-        "reverse_dependencies": "/api/v1/crates/rustful/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/rustful/downloads",
-        "versions": "/api/v1/crates/rustful/versions"
-    },
     "max_version": "0.5.0",
     "name": "rustful",
     "repository": "https://github.com/Ogeon/rustful",
@@ -368,12 +283,6 @@ export default [{
     "id": "postgres",
     "keywords": ["database", "sql"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/postgres/owners",
-        "reverse_dependencies": "/api/v1/crates/postgres/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/postgres/downloads",
-        "versions": "/api/v1/crates/postgres/versions"
-    },
     "max_version": "0.10.1",
     "name": "postgres",
     "repository": "https://github.com/sfackler/rust-postgres",
@@ -388,12 +297,6 @@ export default [{
     "id": "quickcheck",
     "keywords": ["testing", "quickcheck", "property", "shrinking", "fuzz"],
     "license": "Unlicense/MIT",
-    "links": {
-        "owners": "/api/v1/crates/quickcheck/owners",
-        "reverse_dependencies": "/api/v1/crates/quickcheck/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/quickcheck/downloads",
-        "versions": "/api/v1/crates/quickcheck/versions"
-    },
     "max_version": "0.2.24",
     "name": "quickcheck",
     "repository": "https://github.com/BurntSushi/quickcheck",
@@ -408,12 +311,6 @@ export default [{
     "id": "quickcheck_macros",
     "keywords": ["testing", "quickcheck", "property", "shrinking", "fuzz"],
     "license": "Unlicense/MIT",
-    "links": {
-        "owners": "/api/v1/crates/quickcheck_macros/owners",
-        "reverse_dependencies": "/api/v1/crates/quickcheck_macros/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/quickcheck_macros/downloads",
-        "versions": "/api/v1/crates/quickcheck_macros/versions"
-    },
     "max_version": "0.2.24",
     "name": "quickcheck_macros",
     "repository": "https://github.com/BurntSushi/quickcheck",
@@ -428,12 +325,6 @@ export default [{
     "id": "nc_rustlex",
     "keywords": ["lexer", "lexical", "analyser", "generator"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/nc_rustlex/owners",
-        "reverse_dependencies": "/api/v1/crates/nc_rustlex/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/nc_rustlex/downloads",
-        "versions": "/api/v1/crates/nc_rustlex/versions"
-    },
     "max_version": "0.3.1",
     "name": "nc_rustlex",
     "repository": "https://github.com/nicolas-cherel/rustlex",
@@ -448,12 +339,6 @@ export default [{
     "id": "nom",
     "keywords": ["parser", "parser-combinators", "parsing", "streaming", "bit"],
     "license": "MIT",
-    "links": {
-        "owners": "/api/v1/crates/nom/owners",
-        "reverse_dependencies": "/api/v1/crates/nom/reverse_dependencies",
-        "version_downloads": "/api/v1/crates/nom/downloads",
-        "versions": "/api/v1/crates/nom/versions"
-    },
     "max_version": "1.0.1",
     "name": "nom",
     "repository": "https://github.com/Geal/nom",
