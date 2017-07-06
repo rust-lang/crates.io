@@ -11,7 +11,7 @@ extern crate postgres;
 use std::io::prelude::*;
 
 fn main() {
-    let conn = cargo_registry::db::connect_now();
+    let conn = cargo_registry::db::connect_now_old();
     {
         let tx = conn.transaction().unwrap();
         transfer(&tx);

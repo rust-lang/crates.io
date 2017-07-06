@@ -8,6 +8,7 @@ use std::sync::Arc;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 use diesel::pg::PgConnection;
+use diesel::prelude::ConnectionResult;
 use openssl::ssl::{SslConnector, SslConnectorBuilder, SslMethod, SSL_VERIFY_NONE};
 use pg::GenericConnection;
 use pg::tls::{TlsHandshake, Stream, TlsStream};
@@ -86,7 +87,7 @@ pub fn tls_handshake() -> Box<TlsHandshake + Sync + Send> {
 
 // Note that this is intended to be called from scripts, not in the main app, it
 // panics!
-pub fn connect_now() -> pg::Connection {
+pub fn connect_now_old() -> pg::Connection {
     let tls = tls_handshake();
     let mode = if env::var("HEROKU").is_ok() {
         pg::TlsMode::Require(&*tls)
@@ -94,6 +95,15 @@ pub fn connect_now() -> pg::Connection {
         pg::TlsMode::Prefer(&*tls)
     };
     pg::Connection::connect(&::env("DATABASE_URL")[..], mode).unwrap()
+}
+
+pub fn connect_now() -> ConnectionResult<PgConnection> {
+    use diesel::Connection;
+    let mut url = Url::parse(&::env("DATABASE_URL")).expect("Invalid database URL");
+    if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+        url.query_pairs_mut().append_pair("sslmode", "require");
+    }
+    PgConnection::establish(&url.to_string())
 }
 
 pub fn pool(url: &str, config: r2d2::Config<postgres::Connection, r2d2_postgres::Error>) -> Pool {

@@ -88,7 +88,7 @@ fn categories_from_toml(
 }
 
 pub fn sync() -> CargoResult<()> {
-    let conn = db::connect_now();
+    let conn = db::connect_now_old();
     let tx = conn.transaction().unwrap();
 
     let categories = include_str!("./categories.toml");

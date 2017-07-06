@@ -17,7 +17,7 @@ use rand::{StdRng, Rng};
 
 #[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now();
+    let conn = cargo_registry::db::connect_now_old();
     {
         let tx = conn.transaction().unwrap();
         update(&tx).unwrap();
