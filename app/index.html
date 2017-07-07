@@ -7,6 +7,15 @@
 
     {{content-for 'head'}}
 
+    <script>
+      (function(i,r){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();
+      })(window,'ga');
+
+      ga('create', 'UA-58390457-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+
     <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
     <link rel="stylesheet" href="{{rootURL}}assets/cargo.css">
 
@@ -29,5 +38,7 @@
     <script src="{{rootURL}}assets/cargo.js"></script>
 
     {{content-for 'body-footer'}}
+
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
   </body>
 </html>
