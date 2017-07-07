@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use time::Timespec;
 
 use conduit::{Request, Response};
@@ -68,17 +67,6 @@ impl Category {
         })
     }
 
-    pub fn find_by_slug(conn: &GenericConnection, slug: &str) -> CargoResult<Category> {
-        let stmt = conn.prepare(
-            "SELECT * FROM categories \
-             WHERE slug = LOWER($1)",
-        )?;
-        let rows = stmt.query(&[&slug])?;
-        rows.iter().next().chain_error(|| NotFound).map(|row| {
-            Model::from_row(&row)
-        })
-    }
-
     pub fn encodable(self) -> EncodableCategory {
         let Category {
             crates_cnt,
@@ -132,79 +120,13 @@ impl Category {
         })
     }
 
-    pub fn update_crate_old(
-        conn: &GenericConnection,
-        krate: &Crate,
-        categories: &[String],
-    ) -> CargoResult<Vec<String>> {
-        let old_categories = krate.categories(conn)?;
-        let old_categories_ids: HashSet<_> = old_categories.iter().map(|cat| cat.id).collect();
+    pub fn count_toplevel(conn: &PgConnection) -> QueryResult<i64> {
+        use self::categories::dsl::*;
 
-        // If a new category specified is not in the database, filter
-        // it out and don't add it. Return it to be able to warn about it.
-        let mut invalid_categories = vec![];
-        let new_categories: Vec<Category> = categories
-            .iter()
-            .flat_map(|c| match Category::find_by_slug(conn, c) {
-                Ok(cat) => Some(cat),
-                Err(_) => {
-                    invalid_categories.push(c.to_string());
-                    None
-                }
-            })
-            .collect();
-
-        let new_categories_ids: HashSet<_> = new_categories.iter().map(|cat| cat.id).collect();
-
-        let to_rm: Vec<_> = old_categories_ids
-            .difference(&new_categories_ids)
-            .cloned()
-            .collect();
-        let to_add: Vec<_> = new_categories_ids
-            .difference(&old_categories_ids)
-            .cloned()
-            .collect();
-
-        if !to_rm.is_empty() {
-            conn.execute(
-                "DELETE FROM crates_categories \
-                 WHERE category_id = ANY($1) \
-                 AND crate_id = $2",
-                &[&to_rm, &krate.id],
-            )?;
-        }
-
-        if !to_add.is_empty() {
-            let insert: Vec<_> = to_add
-                .into_iter()
-                .map(|id| format!("({}, {})", krate.id, id))
-                .collect();
-            let insert = insert.join(", ");
-            conn.execute(
-                &format!(
-                    "INSERT INTO crates_categories \
-                     (crate_id, category_id) VALUES {}",
-                    insert
-                ),
-                &[],
-            )?;
-        }
-
-        Ok(invalid_categories)
-    }
-
-    pub fn count_toplevel(conn: &PgConnection) -> CargoResult<i64> {
-        use diesel::expression::*;
-        use diesel::types::*;
-
-        let query = sql::<BigInt>(
-            "\
-            SELECT COUNT(*) \
-            FROM categories \
-            WHERE category NOT LIKE '%::%'",
-        );
-        let count = query.get_result(&*conn)?;
-        Ok(count)
+        categories
+            .filter(category.not_like("%::%"))
+            .count()
+            .get_result(conn)
     }
 
     pub fn toplevel(
@@ -270,27 +192,23 @@ impl Category {
         Ok(categories)
     }
 
-    pub fn subcategories(&self, conn: &PgConnection) -> CargoResult<Vec<Category>> {
-        use diesel::expression::*;
-        use diesel::types::*;
+    pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
+        use diesel::expression::dsl::*;
+        use diesel::types::Text;
 
-        let query = sql::<(Integer, Text, Text, Text, Integer, Timestamp)>(
-            "\
-            SELECT c.id, c.category, c.slug, c.description, \
+        sql(
+            "SELECT c.id, c.category, c.slug, c.description, \
             COALESCE (( \
                 SELECT sum(c2.crates_cnt)::int \
                 FROM categories as c2 \
                 WHERE c2.slug = c.slug \
                 OR c2.slug LIKE c.slug || '::%' \
-            ), 0) as crates_cnt, \
-            c.created_at \
+            ), 0) as crates_cnt, c.created_at \
             FROM categories as c \
             WHERE c.category ILIKE $1 || '::%' \
             AND c.category NOT ILIKE $1 || '::%::%'",
-        ).bind::<Text, _>(&self.category);
-
-        let rows = query.get_results(conn)?;
-        Ok(rows)
+        ).bind::<Text, _>(&self.category)
+            .load(conn)
     }
 }
 
@@ -361,14 +279,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    use self::categories::dsl::{categories, slug};
-
-    let id = &req.params()["category_id"];
+    let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
-    let cat = categories.filter(slug.eq(id)).first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&*conn)?
+    let cat = categories::table
+        .filter(categories::slug.eq(::lower(slug)))
+        .first::<Category>(&*conn)?;
+    let subcats = cat.subcategories(&conn)?
         .into_iter()
-        .map(|s| s.encodable())
+        .map(Category::encodable)
         .collect();
 
     let cat = cat.encodable();
