@@ -1,7 +1,6 @@
 use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
-use std::mem;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
@@ -973,7 +972,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let max_version = krate.max_version(&conn)?;
 
     // Cheaper than cloning the value to the function
-    let doc_url = mem::replace(&mut krate.documentation, None);
+    let doc_url = krate.documentation.take();
     krate.documentation = documentation_blacklist(doc_url);
 
     #[derive(Serialize)]
