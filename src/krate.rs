@@ -10,7 +10,7 @@ use diesel::pg::upsert::*;
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
 use diesel;
-use diesel_full_text_search::*;
+//use diesel_full_text_search::*;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
@@ -39,7 +39,7 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Clone, Queryable, Identifiable, Associations, AsChangeset)]
+#[derive(Queryable, Identifiable, Associations, AsChangeset)]
 #[belongs_to(Crate)]
 #[primary_key(crate_id, date)]
 #[table_name="crate_downloads"]
@@ -799,7 +799,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
-    let params = req.query();
+    /*let params = req.query();
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
     let mut query = crates::table
@@ -812,28 +812,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .offset(offset)
         .into_boxed();
 
+    // TODO: swap back downloads and recent downloads
+    // We are preserving the functionality of downloads, but for now
+    // I'd like to get recent downloads working without dealing with
+    // the UI.
     if sort == "downloads" {
-        query = query.order(crates::downloads.desc())
+        let subquery = crate_downloads::table.select((crate_downloads::crate_id, sql::<BigInt>("SUM(crate_downloads.downloads)"))).filter(crate_downloads::date.gt(date(now - 90.days()))).group_by(crate_downloads::crate_id);
+        query = query.select((crates::name, sql::<BigInt>("crate_downloads.downloads"))).inner_join(subquery).order(sql::<BigInt>("crate_downloads.downloads").desc());
     } else if sort == "recent-downloads" {
-        // join crates to crate_download
-        // filter by crate_dls.date less than? 90 days ago
-        // select group by crate_dls.crate_id
-        // select sum crate_dls.downloads
-        // orderby column desc
-
-        // works
-        /*let new_query = crates::table.inner_join(crate_downloads::table)
-            .select((ALL_COLUMNS));*/
-
-
-        // overflow error
-        query = query.inner_join(crate_downloads::table)
-            /*.filter(crate_downloads::date.gt(date(now - 90.days())))
-            .select((
-                    crate_downloads::table.group_by(crate_downloads::crate_id),
-                    sql::<BigInt>("SUM(crate_downloads.downloads)")
-                    ))
-            .order(crate_downloads::downloads.desc())*/
+        query = query.order(crates::downloads.desc())
     } else {
         query = query.order(crates::name.asc())
     }
@@ -855,7 +842,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
-            // do same thing as above
+            //query = query.order((perfect_match, crate_downloads::downloads.desc()));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
@@ -920,9 +907,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 follows::user_id.eq(req.user()?.id),
             ),
         ));
-    }
+    }*/
 
-    let data = query.load::<(Crate, i64, bool)>(&*conn)?;
+    type SqlType = (<AllColumns as Expression>::SqlType, BigInt, Bool);
+    let data = sql::<SqlType>(include_str!("recent_downloads_query.sql"))
+            .bind::<BigInt, _>(offset)
+            .bind::<BigInt, _>(limit)
+            .load::<(Crate, i64, bool)>(&*conn)?;
+
+    //let data = query.load::<(Crate, i64, bool)>(&*conn)?;
     let total = data.get(0).map(|&(_, t, _)| t).unwrap_or(0);
     let crates = data.iter()
         .map(|&(ref c, _, _)| c.clone())
