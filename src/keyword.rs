@@ -10,6 +10,7 @@ use pg::rows::Row;
 
 use {Model, Crate};
 use db::RequestTransaction;
+use pagination::Paginate;
 use schema::*;
 use util::{RequestUtils, CargoResult};
 
@@ -138,8 +139,6 @@ impl Model for Keyword {
 
 /// Handles the `GET /keywords` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::sql;
-    use diesel::types::BigInt;
     use schema::keywords;
 
     let conn = req.db_conn()?;
@@ -147,11 +146,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
-    let mut query = keywords::table
-        .select((keywords::all_columns, sql::<BigInt>("COUNT(*) OVER ()")))
-        .limit(limit)
-        .offset(offset)
-        .into_boxed();
+    let mut query = keywords::table.into_boxed();
 
     if sort == "crates" {
         query = query.order(keywords::crates_cnt.desc());
@@ -159,7 +154,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query = query.order(keywords::keyword.asc());
     }
 
-    let data = query.load::<(Keyword, i64)>(&*conn)?;
+    let data = query.paginate(limit, offset).load::<(Keyword, i64)>(&*conn)?;
     let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
     let kws = data.into_iter()
         .map(|(k, _)| k.encodable())
