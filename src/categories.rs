@@ -6,6 +6,7 @@ use toml;
 use db;
 use util::errors::{CargoResult, ChainError, internal};
 
+#[derive(Debug)]
 struct Category {
     slug: String,
     name: String,

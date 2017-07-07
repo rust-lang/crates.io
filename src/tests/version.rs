@@ -73,9 +73,17 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_authors"));
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/foo_authors/1.0.0/authors",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap();
+    }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
     response.body.write_body(&mut data).unwrap();

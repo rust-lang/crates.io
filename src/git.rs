@@ -12,7 +12,7 @@ use app::App;
 use dependency::Kind;
 use util::{CargoResult, internal};
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct Crate {
     pub name: String,
     pub vers: String,
@@ -22,7 +22,7 @@ pub struct Crate {
     pub yanked: Option<bool>,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct Dependency {
     pub name: String,
     pub req: String,

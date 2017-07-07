@@ -8,7 +8,7 @@ use schema::*;
 use util::{CargoResult, human};
 use {Model, User, Crate};
 
-#[derive(Insertable, Associations, Identifiable)]
+#[derive(Insertable, Associations, Identifiable, Debug)]
 #[belongs_to(Crate)]
 #[belongs_to(User, foreign_key = "owner_id")]
 #[belongs_to(Team, foreign_key = "owner_id")]
@@ -21,6 +21,7 @@ pub struct CrateOwner {
     pub owner_kind: i32,
 }
 
+#[derive(Debug)]
 #[repr(u32)]
 pub enum OwnerKind {
     User = 0,
@@ -28,6 +29,7 @@ pub enum OwnerKind {
 }
 
 /// Unifies the notion of a User or a Team.
+#[derive(Debug)]
 pub enum Owner {
     User(User),
     Team(Team),
@@ -35,7 +37,7 @@ pub enum Owner {
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
-#[derive(Queryable, Identifiable, RustcEncodable, RustcDecodable)]
+#[derive(Queryable, Identifiable, RustcEncodable, RustcDecodable, Debug)]
 pub struct Team {
     /// Unique table id
     pub id: i32,
@@ -51,7 +53,7 @@ pub struct Team {
     pub avatar: Option<String>,
 }
 
-#[derive(RustcEncodable)]
+#[derive(RustcEncodable, Debug)]
 pub struct EncodableTeam {
     pub id: i32,
     pub login: String,
@@ -60,7 +62,7 @@ pub struct EncodableTeam {
     pub url: Option<String>,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
@@ -73,14 +75,14 @@ pub struct EncodableOwner {
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Rights {
     None,
     Publish,
     Full,
 }
 
-#[derive(Insertable, AsChangeset)]
+#[derive(Insertable, AsChangeset, Debug)]
 #[table_name = "teams"]
 pub struct NewTeam<'a> {
     pub login: &'a str,

@@ -12,7 +12,7 @@ use schema::*;
 use util::{CargoResult, human};
 use version::Version;
 
-#[derive(Identifiable, Associations)]
+#[derive(Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
 #[belongs_to(Crate)]
 #[table_name = "dependencies"]
@@ -28,12 +28,13 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
+#[derive(Debug)]
 pub struct ReverseDependency {
     dependency: Dependency,
     crate_downloads: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableDependency {
     pub id: i32,
     pub version_id: i32,
@@ -47,7 +48,7 @@ pub struct EncodableDependency {
     pub downloads: i32,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[repr(u32)]
 pub enum Kind {
     Normal = 0,
@@ -56,7 +57,7 @@ pub enum Kind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
-#[derive(Default, Insertable)]
+#[derive(Default, Insertable, Debug)]
 #[table_name = "dependencies"]
 pub struct NewDependency<'a> {
     pub version_id: i32,
