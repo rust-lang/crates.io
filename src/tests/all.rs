@@ -26,17 +26,22 @@ use std::sync::Arc;
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
-use cargo_registry::dependency::{Kind, NewDependency};
+use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::NewCrate;
+use cargo_registry::schema::dependencies;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
+use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
+use cargo_registry::user::AuthenticationSource;
 use cargo_registry::{User, Crate, Version, Dependency, Category, Model, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::pg::upsert::*;
+use cargo_registry::schema::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -83,6 +88,7 @@ mod keyword;
 mod krate;
 mod record;
 mod team;
+mod token;
 mod user;
 mod version;
 
@@ -208,18 +214,118 @@ fn user(login: &str) -> User {
         name: None,
         gh_avatar: None,
         gh_access_token: "some random token".into(),
-        api_token: "some random token".into(),
     }
+}
+
+fn new_team(login: &str) -> NewTeam {
+    NewTeam {
+        github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        login: login,
+        name: None,
+        avatar: None,
+    }
+}
+
+fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> CargoResult<()> {
+    let crate_owner = CrateOwner {
+        crate_id: krate.id,
+        owner_id: t.id,
+        created_by: u.id,
+        owner_kind: 1, // Team owner kind is 1 according to owner.rs
+    };
+
+    diesel::insert(&crate_owner.on_conflict(
+        crate_owners::table.primary_key(),
+        do_update().set(crate_owners::deleted.eq(false)),
+    )).into(crate_owners::table)
+        .execute(conn)?;
+
+    Ok(())
 }
 
 use cargo_registry::util::CargoResult;
 
+struct VersionBuilder<'a> {
+    num: semver::Version,
+    license: Option<&'a str>,
+    license_file: Option<&'a str>,
+    features: HashMap<String, Vec<String>>,
+    dependencies: Vec<(i32, Option<&'static str>)>,
+}
+
+impl<'a> VersionBuilder<'a> {
+    fn new(num: &str) -> Self {
+        let num = semver::Version::parse(num).unwrap_or_else(|e| {
+            panic!("The version {} is not valid: {}", num, e);
+        });
+
+        VersionBuilder {
+            num,
+            license: None,
+            license_file: None,
+            features: HashMap::new(),
+            dependencies: Vec::new(),
+        }
+    }
+
+    fn license(mut self, license: Option<&'a str>) -> Self {
+        self.license = license;
+        self
+    }
+
+    fn dependency(mut self, dependency: &Crate, target: Option<&'static str>) -> Self {
+        self.dependencies.push((dependency.id, target));
+        self
+    }
+
+    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+        use diesel::insert;
+
+        let license = match self.license {
+            Some(license) => Some(license.to_owned()),
+            None => None,
+        };
+
+        let vers = NewVersion::new(
+            crate_id,
+            &self.num,
+            &self.features,
+            license,
+            self.license_file,
+        )?
+            .save(connection, &[])?;
+
+        let new_deps = self.dependencies
+            .into_iter()
+            .map(|(crate_id, target)| {
+                NewDependency {
+                    version_id: vers.id,
+                    req: ">= 0".into(),
+                    crate_id,
+                    target,
+                    ..Default::default()
+                }
+            })
+            .collect::<Vec<_>>();
+        insert(&new_deps).into(dependencies::table).execute(
+            connection,
+        )?;
+
+        Ok(vers)
+    }
+}
+
+impl<'a> From<&'a str> for VersionBuilder<'a> {
+    fn from(num: &'a str) -> Self {
+        VersionBuilder::new(num)
+    }
+}
+
 struct CrateBuilder<'a> {
     owner_id: i32,
     krate: NewCrate<'a>,
-    license_file: Option<&'a str>,
     downloads: Option<i32>,
-    versions: Vec<semver::Version>,
+    versions: Vec<VersionBuilder<'a>>,
     keywords: Vec<&'a str>,
 }
 
@@ -231,7 +337,6 @@ impl<'a> CrateBuilder<'a> {
                 name: name,
                 ..NewCrate::default()
             },
-            license_file: None,
             downloads: None,
             versions: Vec::new(),
             keywords: Vec::new(),
@@ -268,11 +373,8 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn version(mut self, version: &str) -> Self {
-        let version = semver::Version::parse(version).unwrap_or_else(|e| {
-            panic!("The version {} is not valid: {}", version, e);
-        });
-        self.versions.push(version);
+    fn version<T: Into<VersionBuilder<'a>>>(mut self, version: T) -> Self {
+        self.versions.push(version.into());
         self
     }
 
@@ -284,11 +386,7 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::update;
 
-        let mut krate = self.krate.create_or_update(
-            connection,
-            self.license_file,
-            self.owner_id,
-        )?;
+        let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -298,14 +396,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if self.versions.is_empty() {
-            self.versions.push("0.99.0".parse().expect(
-                "invalid version number",
-            ));
+            self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
-        for version_num in &self.versions {
-            NewVersion::new(krate.id, version_num, &HashMap::new())?
-                .save(connection, &[])?;
+        for version_builder in self.versions {
+            version_builder.build(krate.id, connection)?;
         }
 
         if !self.keywords.is_empty() {
@@ -325,7 +420,7 @@ impl<'a> CrateBuilder<'a> {
 
 fn new_version(crate_id: i32, num: &str) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new()).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -361,6 +456,9 @@ fn mock_user(req: &mut Request, u: User) -> User {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
+    req.mut_extensions().insert(
+        AuthenticationSource::SessionCookie,
+    );
 }
 
 fn sign_in(req: &mut Request, app: &App) {
@@ -409,25 +507,6 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .unwrap()
 }
 
-fn mock_dep(
-    req: &mut Request,
-    version: &Version,
-    krate: &Crate,
-    target: Option<&str>,
-) -> Dependency {
-    Dependency::insert(
-        req.tx().unwrap(),
-        version.id,
-        krate.id,
-        &semver::VersionReq::parse(">= 0").unwrap(),
-        Kind::Normal,
-        false,
-        true,
-        &[],
-        &target.map(|s| s.to_string()),
-    ).unwrap()
-}
-
 fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
     NewCategory {
         category: category,
@@ -440,9 +519,9 @@ fn mock_category(req: &mut Request, name: &str, slug: &str) -> Category {
     let conn = req.tx().unwrap();
     let stmt = conn.prepare(
         " \
-        INSERT INTO categories (category, slug) \
-        VALUES ($1, $2) \
-        RETURNING *",
+         INSERT INTO categories (category, slug) \
+         VALUES ($1, $2) \
+         RETURNING *",
     ).unwrap();
     let rows = stmt.query(&[&name, &slug]).unwrap();
     Model::from_row(&rows.iter().next().unwrap())

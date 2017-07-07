@@ -1,7 +1,11 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Route.extend({
+
+    ajax: service(),
+
     headTags: [{
         type: 'meta',
         attrs: {
@@ -12,12 +16,12 @@ export default Ember.Route.extend({
 
     model() {
         function addCrates(store, crates) {
-            for (var i = 0; i < crates.length; i++) {
+            for (let i = 0; i < crates.length; i++) {
                 crates[i] = store.push(store.normalize('crate', crates[i]));
             }
         }
 
-        return ajax('/summary').then((data) => {
+        return this.get('ajax').request('/summary').then((data) => {
             addCrates(this.store, data.new_crates);
             addCrates(this.store, data.most_downloaded);
             addCrates(this.store, data.just_updated);

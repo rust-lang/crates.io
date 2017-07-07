@@ -13,7 +13,7 @@ use db::RequestTransaction;
 use schema::*;
 use util::{RequestUtils, CargoResult};
 
-#[derive(Clone, Identifiable, Queryable)]
+#[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
@@ -21,7 +21,7 @@ pub struct Keyword {
     pub created_at: Timespec,
 }
 
-#[derive(Associations, Insertable, Identifiable)]
+#[derive(Associations, Insertable, Identifiable, Debug)]
 #[belongs_to(Keyword)]
 #[belongs_to(Crate)]
 #[table_name = "crates_keywords"]
@@ -31,7 +31,7 @@ pub struct CrateKeyword {
     keyword_id: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,

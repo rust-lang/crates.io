@@ -12,7 +12,7 @@ use conduit_router::{RouteBuilder, RequestParams};
 use db::RequestTransaction;
 use self::errors::NotFound;
 
-pub use self::errors::{CargoError, CargoResult, internal, human, internal_error};
+pub use self::errors::{CargoError, CargoResult, internal, human, bad_request, internal_error};
 pub use self::errors::{ChainError, std_error};
 pub use self::hasher::HashingReader;
 pub use self::head::Head;

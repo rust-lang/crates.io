@@ -1,33 +1,26 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
+
+const { inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
+    tokenSort: ['created_at:desc'],
+
+    sortedTokens: Ember.computed.sort('model.api_tokens', 'tokenSort'),
+
+    ajax: service(),
+
+    flashMessages: service(),
+
     isResetting: false,
 
-    actions: {
-        resetToken() {
-            this.set('isResetting', true);
+    newTokens: Ember.computed.filterBy('model.api_tokens', 'isNew', true),
+    disableCreate: Ember.computed.notEmpty('newTokens'),
 
-            ajax({
-                dataType: 'json',
-                url: '/me/reset_token',
-                method: 'put',
-            }).then((d) => {
-                this.get('model').set('api_token', d.api_token);
-            }).catch((reason) => {
-                var msg;
-                if (reason.status === 403) {
-                    msg = 'A login is required to perform this action';
-                } else {
-                    msg = 'An unknown error occurred';
-                }
-                this.controllerFor('application').set('nextFlashError', msg);
-                // TODO: this should be an action, the route state machine
-                // should recieve signals not external transitions
-                this.transitionToRoute('index');
-            }).finally(() => {
-                this.set('isResetting', false);
+    actions: {
+        startNewToken() {
+            this.get('store').createRecord('api-token', {
+                created_at: new Date(Date.now() + 2000),
             });
-        }
+        },
     }
 });

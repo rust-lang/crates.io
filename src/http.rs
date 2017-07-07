@@ -49,19 +49,19 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> Cargo
         403 => {
             return Err(human(
                 "It looks like you don't have permission \
-                              to query a necessary property from Github \
-                              to complete this request. \
-                              You may need to re-authenticate on \
-                              crates.io to grant permission to read \
-                              github org memberships. Just go to \
-                              https://crates.io/login",
+                 to query a necessary property from Github \
+                 to complete this request. \
+                 You may need to re-authenticate on \
+                 crates.io to grant permission to read \
+                 github org memberships. Just go to \
+                 https://crates.io/login",
             ));
         }
         n => {
             let resp = String::from_utf8_lossy(data);
             return Err(internal(&format_args!(
                 "didn't get a 200 result from \
-                                        github, got {} with: {}",
+                 github, got {} with: {}",
                 n,
                 resp
             )));

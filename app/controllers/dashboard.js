@@ -1,10 +1,12 @@
 import Ember from 'ember';
-import ajax from 'ic-ajax';
 
 const TO_SHOW = 5;
-const { computed } = Ember;
+const { computed, inject: { service } } = Ember;
 
 export default Ember.Controller.extend({
+
+    ajax: service(),
+
     init() {
         this._super(...arguments);
 
@@ -14,31 +16,36 @@ export default Ember.Controller.extend({
         this.myCrates = [];
         this.myFollowing = [];
         this.myFeed = [];
+        this.myStats = 0;
     },
 
-    visibleCrates: computed('myCreates', function() {
+    visibleCrates: computed('myCrates.[]', function() {
         return this.get('myCrates').slice(0, TO_SHOW);
     }),
 
-    visibleFollowing: computed('myFollowing', function() {
+    visibleFollowing: computed('myFollowing.[]', function() {
         return this.get('myFollowing').slice(0, TO_SHOW);
     }),
 
-    hasMoreCrates: computed('myCreates', function() {
+    visibleStats: computed('myStats', function() {
+        return this.get('myStats');
+    }),
+
+    hasMoreCrates: computed('myCrates.[]', function() {
         return this.get('myCrates.length') > TO_SHOW;
     }),
 
-    hasMoreFollowing: computed('myFollowing', function() {
+    hasMoreFollowing: computed('myFollowing.[]', function() {
         return this.get('myFollowing.length') > TO_SHOW;
     }),
 
     actions: {
         loadMore() {
             this.set('loadingMore', true);
-            var page = (this.get('myFeed').length / 10) + 1;
+            let page = (this.get('myFeed').length / 10) + 1;
 
-            ajax(`/me/updates?page=${page}`).then((data) => {
-                var versions = data.versions.map(version =>
+            this.get('ajax').request(`/me/updates?page=${page}`).then((data) => {
+                let versions = data.versions.map(version =>
                     this.store.push(this.store.normalize('version', version)));
 
                 this.get('myFeed').pushObjects(versions);

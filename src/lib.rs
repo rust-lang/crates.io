@@ -85,13 +85,14 @@ pub mod krate;
 pub mod model;
 pub mod owner;
 pub mod schema;
+pub mod token;
 pub mod upload;
 pub mod uploaders;
 pub mod user;
 pub mod util;
 pub mod version;
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
     Test,
@@ -100,7 +101,7 @@ pub enum Env {
 
 // There may be more ways to run crates.io servers in the future, such as a
 // mirror that also has private crates that crates.io does not have.
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Replica {
     Primary,
     ReadOnlyMirror,
@@ -129,6 +130,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
     api_router.get("/crates/:crate_id/owners", C(krate::owners));
+    api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
+    api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));
     api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
     api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
@@ -145,6 +148,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/categories/:category_id", C(category::show));
     api_router.get("/category_slugs", C(category::slugs));
     api_router.get("/users/:user_id", C(user::show));
+    api_router.get("/users/:user_id/stats", C(user::stats));
+    api_router.get("/teams/:team_id", C(user::show_team));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
@@ -161,8 +166,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/authorize", C(user::github_access_token));
     router.get("/logout", C(user::logout));
     router.get("/me", C(user::me));
-    router.put("/me/reset_token", C(user::reset_token));
     router.get("/me/updates", C(user::updates));
+    router.get("/me/tokens", C(token::list));
+    router.post("/me/tokens", C(token::new));
+    router.delete("/me/tokens/:id", C(token::revoke));
     router.get("/summary", C(krate::summary));
 
     let env = app.config.env;

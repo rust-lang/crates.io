@@ -15,10 +15,16 @@ pub struct LazyCell<T> {
     inner: RefCell<Option<T>>,
 }
 
+impl<T> Default for LazyCell<T> {
+    fn default() -> Self {
+        LazyCell { inner: RefCell::new(None) }
+    }
+}
+
 impl<T> LazyCell<T> {
     /// Creates a new empty lazy cell.
     pub fn new() -> LazyCell<T> {
-        LazyCell { inner: RefCell::new(None) }
+        LazyCell::default()
     }
 
     /// Put a value into this cell.

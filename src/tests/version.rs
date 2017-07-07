@@ -29,8 +29,10 @@ fn index() {
         let conn = app.diesel_database.get().unwrap();
         let u = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_vers_index", u.id)
-            .version("2.0.0")
-            .version("2.0.1")
+            .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
+            .version(::VersionBuilder::new("2.0.1").license(
+                Some("MIT/Apache-2.0"),
+            ))
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)
@@ -42,6 +44,14 @@ fn index() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 2);
+
+    for v in &json.versions {
+        match v.num.as_ref() {
+            "2.0.0" => assert_eq!(v.license, Some(String::from("MIT"))),
+            "2.0.1" => assert_eq!(v.license, Some(String::from("MIT/Apache-2.0"))),
+            _ => panic!("unexpected version"),
+        }
+    }
 }
 
 #[test]
@@ -63,9 +73,17 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
-    ::mock_user(&mut req, ::user("foo"));
-    ::mock_crate(&mut req, ::krate("foo_authors"));
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/foo_authors/1.0.0/authors",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap();
+    }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
     response.body.write_body(&mut data).unwrap();

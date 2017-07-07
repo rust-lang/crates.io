@@ -1,4 +1,3 @@
-use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use pg::rows::Row;
@@ -9,7 +8,7 @@ use schema::*;
 use util::{CargoResult, human};
 use {Model, User, Crate};
 
-#[derive(Insertable, Associations, Identifiable)]
+#[derive(Insertable, Associations, Identifiable, Debug)]
 #[belongs_to(Crate)]
 #[belongs_to(User, foreign_key = "owner_id")]
 #[belongs_to(Team, foreign_key = "owner_id")]
@@ -22,6 +21,7 @@ pub struct CrateOwner {
     pub owner_kind: i32,
 }
 
+#[derive(Debug)]
 #[repr(u32)]
 pub enum OwnerKind {
     User = 0,
@@ -29,6 +29,7 @@ pub enum OwnerKind {
 }
 
 /// Unifies the notion of a User or a Team.
+#[derive(Debug)]
 pub enum Owner {
     User(User),
     Team(Team),
@@ -36,7 +37,7 @@ pub enum Owner {
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, RustcEncodable, RustcDecodable, Debug)]
 pub struct Team {
     /// Unique table id
     pub id: i32,
@@ -52,7 +53,16 @@ pub struct Team {
     pub avatar: Option<String>,
 }
 
-#[derive(RustcEncodable)]
+#[derive(RustcEncodable, Debug)]
+pub struct EncodableTeam {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
@@ -65,11 +75,46 @@ pub struct EncodableOwner {
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Rights {
     None,
     Publish,
     Full,
+}
+
+#[derive(Insertable, AsChangeset, Debug)]
+#[table_name = "teams"]
+pub struct NewTeam<'a> {
+    pub login: &'a str,
+    pub github_id: i32,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+}
+
+impl<'a> NewTeam<'a> {
+    pub fn new(
+        login: &'a str,
+        github_id: i32,
+        name: Option<String>,
+        avatar: Option<String>,
+    ) -> Self {
+        NewTeam {
+            login: login,
+            github_id: github_id,
+            name: name,
+            avatar: avatar,
+        }
+    }
+
+    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Team> {
+        use diesel::insert;
+        use diesel::pg::upsert::*;
+
+        insert(&self.on_conflict(teams::github_id, do_update().set(self)))
+            .into(teams::table)
+            .get_result(conn)
+            .map_err(Into::into)
+    }
 }
 
 impl Team {
@@ -90,7 +135,7 @@ impl Team {
                 let team = chunks.next().ok_or_else(|| {
                     human(
                         "missing github team argument; \
-                            format is github:org:team",
+                         format is github:org:team",
                     )
                 })?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
@@ -98,7 +143,7 @@ impl Team {
             _ => {
                 Err(human(
                     "unknown organization handler, \
-                            only 'github:org:team' is supported",
+                     only 'github:org:team' is supported",
                 ))
             }
         }
@@ -129,7 +174,7 @@ impl Team {
         if let Some(c) = org_name.chars().find(whitelist) {
             return Err(human(&format_args!(
                 "organization cannot contain special \
-                                        characters like {}",
+                 characters like {}",
                 c
             )));
         }
@@ -172,39 +217,7 @@ impl Team {
         let (handle, resp) = http::github(app, &url, &token)?;
         let org: Org = http::parse_github_response(handle, &resp)?;
 
-        Team::insert(conn, login, team.id, team.name, org.avatar_url)
-    }
-
-    pub fn insert(
-        conn: &PgConnection,
-        login: &str,
-        github_id: i32,
-        name: Option<String>,
-        avatar: Option<String>,
-    ) -> CargoResult<Self> {
-        use diesel::pg::upsert::*;
-
-        #[derive(Insertable, AsChangeset)]
-        #[table_name = "teams"]
-        struct NewTeam<'a> {
-            login: &'a str,
-            github_id: i32,
-            name: Option<String>,
-            avatar: Option<String>,
-        }
-        let new_team = NewTeam {
-            login: login,
-            github_id: github_id,
-            name: name,
-            avatar: avatar,
-        };
-
-        diesel::insert(&new_team.on_conflict(
-            teams::github_id,
-            do_update().set(&new_team),
-        )).into(teams::table)
-            .get_result(conn)
-            .map_err(Into::into)
+        NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(conn)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.
@@ -213,6 +226,48 @@ impl Team {
     /// private membership information here.
     pub fn contains_user(&self, app: &App, user: &User) -> CargoResult<bool> {
         team_with_gh_id_contains_user(app, self.github_id, user)
+    }
+
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
+        let teams = base_query
+            .inner_join(teams::table)
+            .select(teams::all_columns)
+            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
+            .load(conn)?
+            .into_iter()
+            .map(Owner::Team);
+
+        Ok(teams.collect())
+    }
+
+    pub fn encodable(self) -> EncodableTeam {
+        let Team {
+            id,
+            name,
+            login,
+            avatar,
+            ..
+        } = self;
+        let url = Team::github_url(&login);
+
+        EncodableTeam {
+            id: id,
+            login: login,
+            name: name,
+            avatar: avatar,
+            url: Some(url),
+        }
+    }
+
+    fn github_url(login: &str) -> String {
+        let mut login_pieces = login.split(':');
+        login_pieces.next();
+
+        format!(
+            "https://github.com/{}",
+            login_pieces.next().expect("org failed"),
+        )
     }
 }
 
@@ -330,15 +385,7 @@ impl Owner {
                             avatar,
                             ..
                         }) => {
-                let url = {
-                    let mut parts = login.split(':');
-                    parts.next(); // discard github
-                    format!(
-                        "https://github.com/orgs/{}/teams/{}",
-                        parts.next().unwrap(),
-                        parts.next().unwrap()
-                    )
-                };
+                let url = Team::github_url(&login);
                 EncodableOwner {
                     id: id,
                     login: login,

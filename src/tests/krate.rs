@@ -1,3 +1,5 @@
+extern crate diesel;
+
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::fs::{self, File};
@@ -6,18 +8,21 @@ use conduit::{Handler, Method};
 
 use git2;
 use rustc_serialize::json;
+use self::diesel::prelude::*;
 use semver;
 
-use cargo_registry::db::RequestTransaction;
+use cargo_registry::category::Category;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
+use cargo_registry::token::ApiToken;
+use cargo_registry::owner::EncodableOwner;
+use cargo_registry::schema::versions;
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::Category;
 
 #[derive(RustcDecodable)]
 struct CrateList {
@@ -55,11 +60,20 @@ struct Deps {
 #[derive(RustcDecodable)]
 struct RevDeps {
     dependencies: Vec<EncodableDependency>,
+    versions: Vec<EncodableVersion>,
     meta: CrateMeta,
 }
 #[derive(RustcDecodable)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
+}
+#[derive(RustcDecodable)]
+struct TeamResponse {
+    teams: Vec<EncodableOwner>,
+}
+#[derive(RustcDecodable)]
+struct UserResponse {
+    users: Vec<EncodableOwner>,
 }
 
 fn new_crate(name: &str) -> u::NewCrate {
@@ -213,6 +227,25 @@ fn index_queries() {
 }
 
 #[test]
+fn search_includes_crates_where_name_is_stopword() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        ::CrateBuilder::new("which", u.id).expect_build(&conn);
+        ::CrateBuilder::new("should_be_excluded", u.id)
+            .readme("crate which does things")
+            .expect_build(&conn);
+    }
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("q=which")));
+    let json = ::json::<CrateList>(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.meta.total, 1);
+}
+
+#[test]
 fn exact_match_first_on_queries() {
     let (_b, app, middle) = ::app();
 
@@ -338,9 +371,9 @@ fn show() {
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
-            .version("1.0.0")
-            .version("0.5.0")
-            .version("0.5.1")
+            .version(::VersionBuilder::new("1.0.0"))
+            .version(::VersionBuilder::new("0.5.0"))
+            .version(::VersionBuilder::new("0.5.1"))
             .keyword("kw1")
             .expect_build(&conn);
     }
@@ -441,6 +474,24 @@ fn new_krate() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
     ::sign_in(&mut req, &app);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_new");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
+fn new_krate_with_token() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
+
+    {
+        let conn = t!(app.diesel_database.get());
+        let user = t!(::new_user("foo").create_or_update(&conn));
+        let token = t!(ApiToken::insert(&conn, user.id, "bar"));
+        req.header("Authorization", &token.token);
+    }
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
@@ -744,7 +795,7 @@ fn new_krate_duplicate_version() {
         ::sign_in_as(&mut req, &user);
 
         ::CrateBuilder::new("foo_dupe", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
     let json = bad_resp!(middle.call(&mut req));
@@ -930,7 +981,7 @@ fn download() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         ::CrateBuilder::new("foo_download", user.id)
-            .version("1.0.0")
+            .version(::VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
     let resp = t_resp!(middle.call(&mut req));
@@ -1560,23 +1611,35 @@ fn ignored_badges() {
 fn reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110 = semver::Version::parse("1.1.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v110);
-
-    ::mock_dep(&mut req, &c2v1, &c1, None);
-    ::mock_dep(&mut req, &c2v2, &c1, None);
-    ::mock_dep(&mut req, &c2v2, &c1, Some("foo"));
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version(
+                ::VersionBuilder::new("1.1.0")
+                    .dependency(&c1, None)
+                    .dependency(&c1, Some("foo")),
+            )
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
+    assert_eq!(deps.versions.len(), 1);
+    assert_eq!(deps.versions[0].krate, "c2");
+    assert_eq!(deps.versions[0].num, "1.1.0");
 
     // c1 has no dependent crates.
     req.with_path("/api/v1/crates/c2/reverse_dependencies");
@@ -1590,37 +1653,50 @@ fn reverse_dependencies() {
 fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110 = semver::Version::parse("1.1.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v110);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v2, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.1.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.0.0")
+            .version(::VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 }
 
 #[test]
 fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let (_, c2v1) = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v1, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version("2.0.0")
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1632,45 +1708,65 @@ fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
 fn prerelease_versions_not_included_in_reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v110_pre = semver::Version::parse("1.1.0-pre").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v110_pre);
-    let (_, c3v1) = ::mock_crate_vers(&mut req, ::krate("c3"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c3"), &v110_pre);
-
-    ::mock_dep(&mut req, &c3v1, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.1.0-pre")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c3", u.id)
+            .version(::VersionBuilder::new("1.0.0").dependency(&c1, None))
+            .version("1.1.0-pre")
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c3");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 }
 
 #[test]
 fn yanked_versions_not_included_in_reverse_dependencies() {
     let (_b, app, middle) = ::app();
 
-    let v100 = semver::Version::parse("1.0.0").unwrap();
-    let v200 = semver::Version::parse("2.0.0").unwrap();
-    let mut req = ::req(app, Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    ::mock_user(&mut req, ::user("foo"));
-    let (c1, _) = ::mock_crate_vers(&mut req, ::krate("c1"), &v100);
-    let _ = ::mock_crate_vers(&mut req, ::krate("c2"), &v100);
-    let (_, c2v2) = ::mock_crate_vers(&mut req, ::krate("c2"), &v200);
-
-    ::mock_dep(&mut req, &c2v2, &c1, None);
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/c1/reverse_dependencies",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c1 = ::CrateBuilder::new("c1", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
+        ::CrateBuilder::new("c2", u.id)
+            .version("1.0.0")
+            .version(::VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(&conn);
+    }
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c2");
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
 
-    t!(c2v2.yank(req.tx().unwrap(), true));
+    // TODO: have this test call `version.yank()` once the yank method is converted to diesel
+    diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
+        .set(versions::yanked.eq(true))
+        .execute(&*app.diesel_database.get().unwrap())
+        .unwrap();
 
     let mut response = ok_resp!(middle.call(&mut req));
     let deps = ::json::<RevDeps>(&mut response);
@@ -1720,4 +1816,93 @@ fn author_license_and_description_required() {
         "{:?}",
         json.errors
     );
+}
+
+/*  Testing the crate ownership between two crates and one team.
+    Given two crates, one crate owned by both a team and a user,
+    one only owned by a user, check that the CrateList returned
+    for the user_id contains only the crates owned by that user,
+    and that the CrateList returned for the team_id contains
+    only crates owned by that team.
+*/
+#[test]
+fn check_ownership_two_crates() {
+    let (_b, app, middle) = ::app();
+
+    let (krate_owned_by_team, team) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        (krate, t)
+    };
+
+    let (krate_not_owned_by_team, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_bar").create_or_update(&conn).unwrap();
+        (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
+    };
+
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+
+    let query = format!("user_id={}", user.id);
+    let mut response = ok_resp!(middle.call(req.with_query(&query)));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
+    assert_eq!(json.crates.len(), 1);
+
+    let query = format!("team_id={}", team.id);
+    let mut response = ok_resp!(middle.call(req.with_query(&query)));
+
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.crates.len(), 1);
+    assert_eq!(json.crates[0].name, krate_owned_by_team.name);
+}
+
+/*  Given a crate owned by both a team and a user, check that the
+    JSON returned by the /owner_team route and /owner_user route
+    contains the correct kind of owner
+
+    Note that in this case function new_team must take a team name
+    of form github:org_name:team_name as that is the format
+    EncodableOwner::encodable is expecting
+*/
+#[test]
+fn check_ownership_one_crate() {
+    let (_b, app, middle) = ::app();
+
+    let (team, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_cat").create_or_update(&conn).unwrap();
+        let t = ::new_team("github:test_org:team_sloth")
+            .create_or_update(&conn)
+            .unwrap();
+        let krate = ::CrateBuilder::new("best_crate", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        (t, u)
+    };
+
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_team",
+    );
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: TeamResponse = ::json(&mut response);
+
+    assert_eq!(json.teams[0].kind, "team");
+    assert_eq!(json.teams[0].name, team.name);
+
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/best_crate/owner_user",
+    );
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: UserResponse = ::json(&mut response);
+
+    assert_eq!(json.users[0].kind, "user");
+    assert_eq!(json.users[0].name, user.name);
 }

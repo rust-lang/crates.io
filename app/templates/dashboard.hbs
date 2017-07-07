@@ -1,16 +1,24 @@
 {{ title 'Dashboard' }}
 
 <div id='crates-heading'>
-    <img class='logo dashboard' src="/assets/dashboard.png"/>
+    {{svg-jar "dashboard"}}
     <h1>My Dashboard</h1>
+    <div id="stats">
+        <div class='downloads'>
+            <img class="download" src="/assets/download.svg" />
+            <span class='num'>{{visibleStats.total_downloads}}</span>
+            <span class='desc small'>Total Downloads</span>
+        </div>
+    </div>
 </div>
+
 
 <div id='my-info'>
     <div id='my-crate-lists' class='crate-lists'>
         <div id='my-crates'>
             <div class='header'>
                 <h2>
-                    <img class="my-packages" src="/assets/my-packages.png"/>
+                    {{svg-jar "my-packages"}}
                     My Crates
                 </h2>
 
@@ -25,7 +33,7 @@
         <div id='my-following'>
             <div class='header'>
                 <h2>
-                    <img class="following" src="/assets/following.png"/>
+                    {{svg-jar "following"}}
                     Following
                 </h2>
 
@@ -41,7 +49,7 @@
 
     <div id='my-feed'>
         <h2>
-            <img class="latest-updates" src="/assets/latest-updates.png"/>
+            {{svg-jar "latest-updates"}}
             Latest Updates
         </h2>
 

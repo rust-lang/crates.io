@@ -23,8 +23,9 @@ use user::RequestUser;
 use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, ChainError, internal, human};
 use {Model, Crate};
+use license_exprs;
 
-#[derive(Clone, Identifiable, Associations)]
+#[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,
@@ -35,21 +36,19 @@ pub struct Version {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    pub license: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "versions"]
 pub struct NewVersion {
     crate_id: i32,
     num: String,
     features: String,
+    license: Option<String>,
 }
 
-pub struct Author {
-    pub name: String,
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
     pub krate: String,
@@ -60,10 +59,11 @@ pub struct EncodableVersion {
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    pub license: Option<String>,
     pub links: VersionLinks,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
@@ -79,7 +79,7 @@ impl Version {
         let num = num.to_string();
         let stmt = conn.prepare(
             "SELECT * FROM versions \
-                                      WHERE crate_id = $1 AND num = $2",
+             WHERE crate_id = $1 AND num = $2",
         )?;
         let rows = stmt.query(&[&crate_id, &num])?;
         Ok(rows.iter().next().map(|r| Model::from_row(&r)))
@@ -96,9 +96,9 @@ impl Version {
         let features = json::encode(features).unwrap();
         let stmt = conn.prepare(
             "INSERT INTO versions \
-                                      (crate_id, num, features) \
-                                      VALUES ($1, $2, $3) \
-                                      RETURNING *",
+             (crate_id, num, features) \
+             VALUES ($1, $2, $3) \
+             RETURNING *",
         )?;
         let rows = stmt.query(&[&crate_id, &num, &features])?;
         let ret: Version = Model::from_row(&rows.iter().next().chain_error(
@@ -123,6 +123,7 @@ impl Version {
             downloads,
             features,
             yanked,
+            license,
             ..
         } = self;
         let num = num.to_string();
@@ -136,6 +137,7 @@ impl Version {
             downloads: downloads,
             features: features,
             yanked: yanked,
+            license: license,
             links: VersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
@@ -151,20 +153,6 @@ impl Version {
             .select((dependencies::all_columns, crates::name))
             .order((dependencies::optional, crates::name))
             .load(conn)
-    }
-
-    pub fn authors(&self, conn: &GenericConnection) -> CargoResult<Vec<Author>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM version_authors
-                                       WHERE version_id = $1
-                                       ORDER BY name ASC",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(
-            rows.into_iter()
-                .map(|row| Author { name: row.get("name") })
-                .collect(),
-        )
     }
 
     pub fn add_author(&self, conn: &GenericConnection, name: &str) -> CargoResult<()> {
@@ -205,13 +193,21 @@ impl NewVersion {
         crate_id: i32,
         num: &semver::Version,
         features: &HashMap<String, Vec<String>>,
+        license: Option<String>,
+        license_file: Option<&str>,
     ) -> CargoResult<Self> {
         let features = json::encode(features)?;
-        Ok(NewVersion {
+
+        let mut new_version = NewVersion {
             crate_id: crate_id,
             num: num.to_string(),
             features: features,
-        })
+            license: license,
+        };
+
+        new_version.validate_license(license_file)?;
+
+        Ok(new_version)
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
@@ -225,7 +221,7 @@ impl NewVersion {
         if select(exists(already_uploaded)).get_result(conn)? {
             return Err(human(&format_args!(
                 "crate version `{}` is already \
-                                           uploaded",
+                 uploaded",
                 self.num
             )));
         }
@@ -249,9 +245,30 @@ impl NewVersion {
             Ok(version)
         })
     }
+
+    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+        if let Some(ref license) = self.license {
+            for part in license.split('/') {
+                license_exprs::validate_license_expr(part).map_err(|e| {
+                    human(&format_args!(
+                        "{}; see http://opensource.org/licenses \
+                         for options, and http://spdx.org/licenses/ \
+                         for their identifiers",
+                        e
+                    ))
+                })?;
+            }
+        } else if license_file.is_some() {
+            // If no license is given, but a license file is given, flag this
+            // crate as having a nonstandard license. Note that we don't
+            // actually do anything else with license_file currently.
+            self.license = Some(String::from("non-standard"));
+        }
+        Ok(())
+    }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "version_authors"]
 struct NewAuthor<'a> {
     version_id: i32,
@@ -259,7 +276,7 @@ struct NewAuthor<'a> {
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
-    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool);
+    type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool, Option<String>);
 
     fn build(row: Self::Row) -> Self {
         let features = row.6.map(|s| json::decode(&s).unwrap()).unwrap_or_else(
@@ -274,6 +291,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             downloads: row.5,
             features: features,
             yanked: row.7,
+            license: row.8,
         }
     }
 }
@@ -294,6 +312,7 @@ impl Model for Version {
             downloads: row.get("downloads"),
             features: features,
             yanked: row.get("yanked"),
+            license: row.get("license"),
         }
     }
     fn table_name(_: Option<Version>) -> &'static str {
@@ -354,25 +373,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         version: EncodableVersion,
     }
     Ok(req.json(&R { version: version.encodable(&krate.name) }))
-}
-
-fn version_and_crate_old(req: &mut Request) -> CargoResult<(Version, Crate)> {
-    let crate_name = &req.params()["crate_id"];
-    let semver = &req.params()["version"];
-    let semver = semver::Version::parse(semver).map_err(|_| {
-        human(&format_args!("invalid semver: {}", semver))
-    })?;
-    let tx = req.tx()?;
-    let krate = Crate::find_by_name(tx, crate_name)?;
-    let version = Version::find_by_num(tx, krate.id, &semver)?;
-    let version = version.chain_error(|| {
-        human(&format_args!(
-            "crate `{}` does not have a version `{}`",
-            crate_name,
-            semver
-        ))
-    })?;
-    Ok((version, krate))
 }
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
@@ -444,9 +444,13 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
 pub fn authors(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate_old(req)?;
-    let tx = req.tx()?;
-    let names = version.authors(tx)?.into_iter().map(|a| a.name).collect();
+    let (version, _) = version_and_crate(req)?;
+    let conn = req.db_conn()?;
+    let names = version_authors::table
+        .filter(version_authors::version_id.eq(version.id))
+        .select(version_authors::name)
+        .order(version_authors::name)
+        .load(&*conn)?;
 
     // It was imagined that we wold associate authors with users.
     // This was never implemented. This complicated return struct

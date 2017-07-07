@@ -88,7 +88,7 @@ pub const MAX_NAME_LENGTH: usize = 64;
 
 type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
@@ -109,15 +109,17 @@ pub struct EncodableCrate {
     pub exact_match: bool,
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
     pub owners: Option<String>,
+    pub owner_team: Option<String>,
+    pub owner_user: Option<String>,
     pub reverse_dependencies: String,
 }
 
-#[derive(Insertable, AsChangeset, Default)]
+#[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
 #[primary_key(name, max_upload_size)] // This is actually just to skip updating them
 pub struct NewCrate<'a> {
@@ -127,15 +129,15 @@ pub struct NewCrate<'a> {
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
-    pub license: Option<&'a str>,
     pub max_upload_size: Option<i32>,
+    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        license_file: Option<&str>,
+        license_file: Option<&'a str>,
         uploader: i32,
     ) -> CargoResult<Crate> {
         use diesel::update;
@@ -161,7 +163,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+    fn validate(&mut self, license_file: Option<&'a str>) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -175,7 +177,7 @@ impl<'a> NewCrate<'a> {
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
-                                                    scheme: `{}`",
+                         scheme: `{}`",
                         field,
                         s
                     )))
@@ -184,7 +186,7 @@ impl<'a> NewCrate<'a> {
             if url.cannot_be_a_base() {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
-                                               data: {}",
+                     data: {}",
                     field,
                     url
                 )));
@@ -205,8 +207,8 @@ impl<'a> NewCrate<'a> {
                 license_exprs::validate_license_expr(part).map_err(|e| {
                     human(&format_args!(
                         "{}; see http://opensource.org/licenses \
-                                                    for options, and http://spdx.org/licenses/ \
-                                                    for their identifiers",
+                         for options, and http://spdx.org/licenses/ \
+                         for their identifiers",
                         e
                     ))
                 })?;
@@ -412,7 +414,7 @@ impl Crate {
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
-                                               scheme: `{}`",
+                         scheme: `{}`",
                         field,
                         s
                     )))
@@ -421,7 +423,7 @@ impl Crate {
             if url.cannot_be_a_base() {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
-                                                        data: {}",
+                     data: {}",
                     field,
                     url
                 )));
@@ -439,8 +441,8 @@ impl Crate {
                 .map_err(|e| {
                     human(&format_args!(
                         "{}; see http://opensource.org/licenses \
-                                                  for options, and http://spdx.org/licenses/ \
-                                                  for their identifiers",
+                         for options, and http://spdx.org/licenses/ \
+                         for their identifiers",
                         e
                     ))
                 })
@@ -503,8 +505,8 @@ impl Crate {
             description,
             homepage,
             documentation,
-            license,
             repository,
+            license,
             ..
         } = self;
         let versions_link = match versions {
@@ -529,12 +531,14 @@ impl Crate {
             homepage: homepage,
             exact_match: exact_match,
             description: description,
-            license: license,
             repository: repository,
+            license: license,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
+                owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
+                owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
             },
         }
@@ -568,7 +572,7 @@ impl Crate {
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
         let stmt = conn.prepare(
             "SELECT * FROM versions \
-                                      WHERE crate_id = $1",
+             WHERE crate_id = $1",
         )?;
         let rows = stmt.query(&[&self.id])?;
         let mut ret = rows.iter()
@@ -640,7 +644,7 @@ impl Crate {
                 } else {
                     return Err(human(&format_args!(
                         "only members of {} can add it as \
-                                          an owner",
+                         an owner",
                         login
                     )));
                 }
@@ -714,10 +718,10 @@ impl Crate {
     pub fn categories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
         let stmt = conn.prepare(
             "SELECT categories.* FROM categories \
-                                      LEFT JOIN crates_categories \
-                                      ON categories.id = \
-                                         crates_categories.category_id \
-                                      WHERE crates_categories.crate_id = $1",
+             LEFT JOIN crates_categories \
+             ON categories.id = \
+             crates_categories.category_id \
+             WHERE crates_categories.crate_id = $1",
         )?;
         let rows = stmt.query(&[&self.id])?;
         Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
@@ -732,20 +736,22 @@ impl Crate {
     /// Returns (dependency, dependent crate name, dependent crate downloads)
     pub fn reverse_dependencies(
         &self,
-        conn: &GenericConnection,
+        conn: &PgConnection,
         offset: i64,
         limit: i64,
     ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
-        let stmt = conn.prepare(include_str!("krate_reverse_dependencies.sql"))?;
+        use diesel::expression::dsl::sql;
+        use diesel::types::{Integer, Text, BigInt};
 
-        let rows = stmt.query(&[&self.id, &offset, &limit])?;
-        let cnt = if rows.is_empty() {
-            0i64
-        } else {
-            rows.get(0).get("total")
-        };
-        let vec: Vec<_> = rows.iter().map(|r| Model::from_row(&r)).collect();
+        type SqlType = ((dependencies::SqlType, Integer, Text), BigInt);
+        let rows = sql::<SqlType>(include_str!("krate_reverse_dependencies.sql"))
+            .bind::<Integer, _>(self.id)
+            .bind::<BigInt, _>(offset)
+            .bind::<BigInt, _>(limit)
+            .load::<(ReverseDependency, i64)>(conn)?;
 
+        let (vec, counts): (_, Vec<_>) = rows.into_iter().unzip();
+        let cnt = counts.into_iter().nth(0).unwrap_or(0i64);
         Ok((vec, cnt))
     }
 }
@@ -801,7 +807,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if let Some(q_string) = params.get("q") {
         let q = plainto_tsquery(q_string);
-        query = query.filter(q.matches(crates::textsearchable_index_col));
+        query = query.filter(q.matches(crates::textsearchable_index_col).or(
+            crates::name.eq(
+                q_string,
+            ),
+        ));
 
         query = query.select((
             ALL_COLUMNS,
@@ -858,6 +868,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                     .select(crate_owners::crate_id)
                     .filter(crate_owners::owner_id.eq(user_id))
                     .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
+            ),
+        );
+    } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
+        query = query.filter(
+            crates::id.eq_any(
+                crate_owners::table
+                    .select(crate_owners::crate_id)
+                    .filter(crate_owners::owner_id.eq(team_id))
+                    .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32)),
             ),
         );
     } else if params.get("following").is_some() {
@@ -1079,6 +1098,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
+
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
         let krate = persist.create_or_update(&conn, license_file, user.id)?;
 
@@ -1086,7 +1106,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         if rights(req.app(), &owners, &user)? < Rights::Publish {
             return Err(human(
                 "crate name has already been claimed by \
-                              another user",
+                 another user",
             ));
         }
 
@@ -1107,12 +1127,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             return Err(human(&format_args!("max upload size is: {}", max)));
         }
 
+        // This is only redundant for now. Eventually the duplication will be removed.
+        let license = new_crate.license.clone();
+
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features)?.save(
-            &conn,
-            &new_crate
-                .authors,
-        )?;
+        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?
+            .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -1209,8 +1229,8 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     if !missing.is_empty() {
         return Err(human(&format_args!(
             "missing or empty metadata fields: {}. Please \
-            see http://doc.crates.io/manifest.html#package-metadata for \
-            how to upload metadata",
+             see http://doc.crates.io/manifest.html#package-metadata for \
+             how to upload metadata",
             missing.join(", ")
         )));
     }
@@ -1419,6 +1439,40 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { users: owners }))
 }
 
+/// Handles the `GET /crates/:crate_id/owner_team` route.
+pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let owners = Team::owning(&krate, &conn)?
+        .into_iter()
+        .map(Owner::encodable)
+        .collect();
+
+    #[derive(RustcEncodable)]
+    struct R {
+        teams: Vec<EncodableOwner>,
+    }
+    Ok(req.json(&R { teams: owners }))
+}
+
+/// Handles the `GET /crates/:crate_id/owner_user` route.
+pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let owners = User::owning(&krate, &conn)?
+        .into_iter()
+        .map(Owner::encodable)
+        .collect();
+
+    #[derive(RustcEncodable)]
+    struct R {
+        users: Vec<EncodableOwner>,
+    }
+    Ok(req.json(&R { users: owners }))
+}
+
 /// Handles the `PUT /crates/:crate_id/owners` route.
 pub fn add_owners(req: &mut Request) -> CargoResult<Response> {
     modify_owners(req, true)
@@ -1489,19 +1543,33 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::any;
+
     let name = &req.params()["crate_id"];
-    let conn = req.tx()?;
-    let krate = Crate::find_by_name(conn, name)?;
+    let conn = req.db_conn()?;
+    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
     let (offset, limit) = req.pagination(10, 100)?;
-    let (rev_deps, total) = krate.reverse_dependencies(conn, offset, limit)?;
-    let rev_deps = rev_deps
+    let (rev_deps, total) = krate.reverse_dependencies(&*conn, offset, limit)?;
+    let rev_deps: Vec<_> = rev_deps
         .into_iter()
-        .map(ReverseDependency::encodable)
+        .map(|dep| dep.encodable(&krate.name))
+        .collect();
+
+    let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
+
+    let versions = versions::table
+        .filter(versions::id.eq(any(version_ids)))
+        .inner_join(crates::table)
+        .select((versions::all_columns, crates::name))
+        .load::<(Version, String)>(&*conn)?
+        .into_iter()
+        .map(|(version, krate_name)| version.encodable(&krate_name))
         .collect();
 
     #[derive(RustcEncodable)]
     struct R {
         dependencies: Vec<EncodableDependency>,
+        versions: Vec<EncodableVersion>,
         meta: Meta,
     }
     #[derive(RustcEncodable)]
@@ -1510,6 +1578,7 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         dependencies: rev_deps,
+        versions,
         meta: Meta { total: total },
     }))
 }

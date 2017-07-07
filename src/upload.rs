@@ -8,7 +8,7 @@ use dependency::Kind as DependencyKind;
 use keyword::Keyword as CrateKeyword;
 use krate::{Crate, MAX_NAME_LENGTH};
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Debug)]
 pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
@@ -27,17 +27,24 @@ pub struct NewCrate {
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct CrateName(pub String);
+#[derive(Debug)]
 pub struct CrateVersion(pub semver::Version);
+#[derive(Debug)]
 pub struct CrateVersionReq(pub semver::VersionReq);
+#[derive(Debug)]
 pub struct KeywordList(pub Vec<Keyword>);
+#[derive(Debug)]
 pub struct Keyword(pub String);
+#[derive(Debug)]
 pub struct CategoryList(pub Vec<Category>);
+#[derive(Debug)]
 pub struct Category(pub String);
+#[derive(Debug)]
 pub struct Feature(pub String);
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Debug)]
 pub struct CrateDependency {
     pub optional: bool,
     pub default_features: bool,
@@ -54,9 +61,9 @@ impl Decodable for CrateName {
         if !Crate::valid_name(&s) {
             return Err(d.error(&format!(
                 "invalid crate name specified: {}. \
-                Valid crate names must start with a letter; contain only \
-                letters, numbers, hyphens, or underscores; and have {} or \
-                fewer characters.",
+                 Valid crate names must start with a letter; contain only \
+                 letters, numbers, hyphens, or underscores; and have {} or \
+                 fewer characters.",
                 s,
                 MAX_NAME_LENGTH
             )));
@@ -139,7 +146,7 @@ impl Decodable for KeywordList {
             if val.len() > 20 {
                 return Err(d.error(
                     "keywords must contain less than 20 \
-                                    characters",
+                     characters",
                 ));
             }
         }
@@ -167,7 +174,7 @@ impl Decodable for DependencyKind {
             s => {
                 Err(d.error(&format!(
                     "invalid dependency kind `{}`, must be \
-                                       one of dev, build, or normal",
+                     one of dev, build, or normal",
                     s
                 )))
             }
