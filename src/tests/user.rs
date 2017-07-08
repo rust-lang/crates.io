@@ -252,6 +252,27 @@ fn user_total_downloads() {
 }
 
 #[test]
+fn user_total_downloads_no_crates() {
+    let (_b, app, middle) = ::app();
+    let u;
+    {
+        let conn = app.diesel_database.get().unwrap();
+
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+    }
+
+    let mut req = ::req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(Deserialize)]
+    struct Response {
+        total_downloads: i64,
+    }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.total_downloads, 0);
+}
+
+#[test]
 fn updating_existing_user_doesnt_change_api_token() {
     let (_b, app, _middle) = ::app();
     let conn = t!(app.diesel_database.get());
