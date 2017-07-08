@@ -3,6 +3,8 @@
 #[macro_use]
 extern crate serde_derive;
 extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate bufstream;
 extern crate cargo_registry;
 extern crate conduit;
@@ -89,6 +91,7 @@ mod git;
 mod keyword;
 mod krate;
 mod record;
+mod schema_details;
 mod team;
 mod token;
 mod user;
