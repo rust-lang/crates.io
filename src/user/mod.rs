@@ -418,19 +418,29 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id/stats` route.
 pub fn stats(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::sum;
+    use diesel::expression::dsl::{sum, count};
     use owner::OwnerKind;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
 
-    let data = crate_owners::table
+    let mut data = 0;
+    if crate_owners::table
         .inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id).and(
             crate_owners::owner_kind.eq(OwnerKind::User as i32),
         ))
-        .select(sum(crates::downloads))
-        .first::<i64>(&*conn)?;
+        .select(count(crates::downloads))
+        .first::<i64>(&*conn)? > 0
+    {
+        data = crate_owners::table
+            .inner_join(crates::table)
+            .filter(crate_owners::owner_id.eq(user_id).and(
+                crate_owners::owner_kind.eq(OwnerKind::User as i32),
+            ))
+            .select(sum(crates::downloads))
+            .first::<i64>(&*conn)?;
+    }
 
     #[derive(Serialize)]
     struct R {
