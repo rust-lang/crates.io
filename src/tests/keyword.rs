@@ -3,16 +3,16 @@ use conduit_test::MockRequest;
 
 use cargo_registry::keyword::{Keyword, EncodableKeyword};
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct KeywordList {
     keywords: Vec<EncodableKeyword>,
     meta: KeywordMeta,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct KeywordMeta {
     total: i32,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct GoodKeyword {
     keyword: EncodableKeyword,
 }

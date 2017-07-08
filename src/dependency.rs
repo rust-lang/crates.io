@@ -34,7 +34,7 @@ pub struct ReverseDependency {
     crate_downloads: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableDependency {
     pub id: i32,
     pub version_id: i32,
@@ -48,7 +48,8 @@ pub struct EncodableDependency {
     pub downloads: i32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
 #[repr(u32)]
 pub enum Kind {
     Normal = 0,

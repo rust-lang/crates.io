@@ -32,7 +32,7 @@ pub struct CrateKeyword {
     keyword_id: i32,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
@@ -160,12 +160,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .map(|(k, _)| k.encodable())
         .collect::<Vec<_>>();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         keywords: Vec<EncodableKeyword>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         total: i64,
     }
@@ -183,7 +183,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     let kw = Keyword::find_by_keyword(&conn, name)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         keyword: EncodableKeyword,
     }

@@ -7,11 +7,11 @@ use diesel::result::Error as DieselError;
 
 use util::json_response;
 
-#[derive(RustcEncodable)]
+#[derive(Serialize)]
 struct StringError {
     detail: String,
 }
-#[derive(RustcEncodable)]
+#[derive(Serialize)]
 struct Bad {
     errors: Vec<StringError>,
 }
@@ -185,7 +185,8 @@ impl CargoError for ::curl::Error {
         Error::description(self)
     }
 }
-impl CargoError for ::rustc_serialize::json::DecoderError {
+
+impl CargoError for ::serde_json::Error {
     fn description(&self) -> &str {
         Error::description(self)
     }

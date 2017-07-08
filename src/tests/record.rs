@@ -15,7 +15,7 @@ use std::thread;
 use bufstream::BufStream;
 use cargo_registry::user::NewUser;
 use curl::easy::{Easy, List, ReadError};
-use rustc_serialize::json;
+use serde_json;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -313,7 +313,7 @@ impl GhUser {
         }
 
         let password = ::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
-        #[derive(RustcEncodable)]
+        #[derive(Serialize)]
         struct Authorization {
             scopes: Vec<String>,
             note: String,
@@ -326,7 +326,7 @@ impl GhUser {
             self.login,
             password
         );
-        let body = json::encode(&Authorization {
+        let body = serde_json::to_string(&Authorization {
             scopes: vec!["read:org".to_string()],
             note: "crates.io test".to_string(),
             client_id: ::env("GH_CLIENT_ID"),
@@ -358,11 +358,11 @@ impl GhUser {
             panic!("failed to get a 200 {}", String::from_utf8_lossy(&response));
         }
 
-        #[derive(RustcDecodable)]
+        #[derive(Deserialize)]
         struct Response {
             token: String,
         }
-        let resp: Response = json::decode(str::from_utf8(&response).unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(str::from_utf8(&response).unwrap()).unwrap();
         File::create(&self.filename())
             .unwrap()
             .write_all(&resp.token.as_bytes())

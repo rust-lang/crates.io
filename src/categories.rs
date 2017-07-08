@@ -39,7 +39,7 @@ impl Category {
     }
 }
 
-fn required_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> CargoResult<&'a str> {
+fn required_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> CargoResult<&'a str> {
     toml.get(key).and_then(toml::Value::as_str).chain_error(|| {
         internal(&format_args!(
             "Expected category TOML attribute '{}' to be a String",
@@ -48,12 +48,12 @@ fn required_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> CargoResul
     })
 }
 
-fn optional_string_from_toml<'a>(toml: &'a toml::Table, key: &str) -> &'a str {
+fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a str {
     toml.get(key).and_then(toml::Value::as_str).unwrap_or("")
 }
 
 fn categories_from_toml(
-    categories: &toml::Table,
+    categories: &toml::value::Table,
     parent: Option<&Category>,
 ) -> CargoResult<Vec<Category>> {
     let mut result = vec![];
@@ -92,9 +92,8 @@ pub fn sync() -> CargoResult<()> {
     let tx = conn.transaction().unwrap();
 
     let categories = include_str!("./categories.toml");
-    let toml = toml::Parser::new(categories).parse().expect(
-        "Could not parse categories.toml",
-    );
+    let toml: toml::value::Table =
+        toml::from_str(categories).expect("Could not parse categories.toml");
 
     let categories =
         categories_from_toml(&toml, None).expect("Could not convert categories from TOML");

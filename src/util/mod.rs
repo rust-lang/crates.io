@@ -3,8 +3,8 @@ use std::error::Error;
 use std::io::{self, Cursor};
 use std::sync::Arc;
 
-use rustc_serialize::{json, Encodable};
-use rustc_serialize::json::Json;
+use serde_json;
+use serde::Serialize;
 use url;
 
 use conduit::{Request, Response, Handler};
@@ -30,49 +30,30 @@ mod request_proxy;
 pub trait RequestUtils {
     fn redirect(&self, url: String) -> Response;
 
-    fn json<T: Encodable>(&self, t: &T) -> Response;
+    fn json<T: Serialize>(&self, t: &T) -> Response;
     fn query(&self) -> HashMap<String, String>;
     fn wants_json(&self) -> bool;
     fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
 }
 
-pub fn json_response<T: Encodable>(t: &T) -> Response {
-    let s = json::encode(t).unwrap();
-    let json = fixup(s.parse().unwrap()).to_string();
+pub fn json_response<T: Serialize>(t: &T) -> Response {
+    let json = serde_json::to_string(t).unwrap();
     let mut headers = HashMap::new();
     headers.insert(
         "Content-Type".to_string(),
         vec!["application/json; charset=utf-8".to_string()],
     );
     headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
-    return Response {
+    Response {
         status: (200, "OK"),
         headers: headers,
         body: Box::new(Cursor::new(json.into_bytes())),
-    };
-
-    fn fixup(json: Json) -> Json {
-        match json {
-            Json::Object(object) => {
-                Json::Object(
-                    object
-                        .into_iter()
-                        .map(|(k, v)| {
-                            let k = if k == "krate" { "crate".to_string() } else { k };
-                            (k, fixup(v))
-                        })
-                        .collect(),
-                )
-            }
-            Json::Array(list) => Json::Array(list.into_iter().map(fixup).collect()),
-            j => j,
-        }
     }
 }
 
 
 impl<'a> RequestUtils for Request + 'a {
-    fn json<T: Encodable>(&self, t: &T) -> Response {
+    fn json<T: Serialize>(&self, t: &T) -> Response {
         json_response(t)
     }
 

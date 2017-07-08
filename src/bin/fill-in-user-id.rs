@@ -10,7 +10,8 @@
 extern crate cargo_registry;
 extern crate git2;
 extern crate postgres;
-extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
 
 use std::path::PathBuf;
 
@@ -44,7 +45,7 @@ fn main() {
     }
 }
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct GithubUser {
     login: String,
     id: i32,

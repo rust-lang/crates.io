@@ -3,7 +3,8 @@ use curl::easy::{Easy, List};
 use oauth2::*;
 use app::App;
 use util::{CargoResult, internal, ChainError, human};
-use rustc_serialize::{json, Decodable};
+use serde_json;
+use serde::Deserialize;
 use std::str;
 
 
@@ -43,7 +44,10 @@ pub fn github(app: &App, url: &str, auth: &Token) -> Result<(Easy, Vec<u8>), cur
 }
 
 /// Checks for normal responses
-pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> CargoResult<T> {
+pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
+    mut resp: Easy,
+    data: &'a [u8],
+) -> CargoResult<T> {
     match resp.response_code().unwrap() {
         200 => {} // Ok!
         403 => {
@@ -72,7 +76,7 @@ pub fn parse_github_response<T: Decodable>(mut resp: Easy, data: &[u8]) -> Cargo
         internal("github didn't send a utf8-response")
     })?;
 
-    json::decode(json).chain_error(|| internal("github didn't send a valid json response"))
+    serde_json::from_str(json).chain_error(|| internal("github didn't send a valid json response"))
 }
 
 /// Gets a token with the given string as the access token, but all

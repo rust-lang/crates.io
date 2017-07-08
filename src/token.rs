@@ -4,7 +4,7 @@ use diesel::pg::PgConnection;
 use conduit::{Request, Response};
 use time::Timespec;
 use conduit_router::RequestParams;
-use rustc_serialize::json;
+use serde_json as json;
 
 use db::RequestTransaction;
 use user::{RequestUser, AuthenticationSource};
@@ -23,7 +23,7 @@ pub struct ApiToken {
 }
 
 /// The serialization format for the `ApiToken` model without its token value.
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct EncodableApiToken {
     pub id: i32,
     pub name: String,
@@ -34,7 +34,7 @@ pub struct EncodableApiToken {
 /// The serialization format for the `ApiToken` model with its token value.
 /// This should only be used when initially creating a new token to minimize
 /// the chance of token leaks.
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
@@ -120,7 +120,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
         .into_iter()
         .map(ApiToken::encodable)
         .collect();
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         api_tokens: Vec<EncodableApiToken>,
     }
@@ -130,13 +130,13 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `POST /me/tokens` route.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
-    #[derive(RustcDecodable, RustcEncodable)]
+    #[derive(Deserialize, Serialize)]
     struct NewApiToken {
         name: String,
     }
 
     /// The incoming serialization format for the `ApiToken` model.
-    #[derive(RustcDecodable, RustcEncodable)]
+    #[derive(Deserialize, Serialize)]
     struct NewApiTokenRequest {
         api_token: NewApiToken,
     }
@@ -163,7 +163,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         bad_request(&"json body was not valid utf-8")
     })?;
 
-    let new: NewApiTokenRequest = json::decode(&json).map_err(|e| {
+    let new: NewApiTokenRequest = json::from_str(&json).map_err(|e| {
         bad_request(&format!("invalid new token request: {:?}", e))
     })?;
 
@@ -185,7 +185,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     let api_token = ApiToken::insert(&*req.db_conn()?, user.id, name)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         api_token: EncodableApiTokenWithToken,
     }
@@ -201,7 +201,7 @@ pub fn revoke(req: &mut Request) -> CargoResult<Response> {
 
     ApiToken::delete(&*req.db_conn()?, user.id, id)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {}
     Ok(req.json(&R {}))
 }

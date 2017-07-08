@@ -7,71 +7,75 @@ use std::fs::{self, File};
 use conduit::{Handler, Method};
 
 use git2;
-use rustc_serialize::json;
 use self::diesel::prelude::*;
+use serde_json;
 use semver;
 
-use cargo_registry::category::Category;
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
+
 use cargo_registry::token::ApiToken;
 use cargo_registry::owner::EncodableOwner;
 use cargo_registry::schema::versions;
+
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodableUser;
 use cargo_registry::version::EncodableVersion;
+use cargo_registry::category::Category;
 
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct VersionsList {
     versions: Vec<EncodableVersion>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CrateMeta {
     total: i32,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct Warnings {
     invalid_categories: Vec<String>,
     invalid_badges: Vec<String>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct GoodCrate {
+    #[serde(rename = "crate")]
     krate: EncodableCrate,
     warnings: Warnings,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct CrateResponse {
+    #[serde(rename = "crate")]
     krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct Deps {
     dependencies: Vec<EncodableDependency>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct RevDeps {
     dependencies: Vec<EncodableDependency>,
     versions: Vec<EncodableVersion>,
     meta: CrateMeta,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct TeamResponse {
     teams: Vec<EncodableOwner>,
 }
-#[derive(RustcDecodable)]
+#[derive(Deserialize)]
 struct UserResponse {
     users: Vec<EncodableOwner>,
 }
@@ -462,7 +466,9 @@ fn new_bad_names() {
         ::mock_user(&mut req, ::user("foo"));
         let json = bad_resp!(middle.call(&mut req));
         assert!(
-            json.errors[0].detail.contains("invalid crate name"),
+            json.errors[0].detail.contains(
+                "expected a valid crate name",
+            ),
             "{:?}",
             json.errors
         );
@@ -562,7 +568,7 @@ fn new_krate_with_dependency() {
         .unwrap()
         .read_to_string(&mut contents)
         .unwrap();
-    let p: git::Crate = json::decode(&contents).unwrap();
+    let p: git::Crate = serde_json::from_str(&contents).unwrap();
     assert_eq!(p.name, "new_dep");
     assert_eq!(p.vers, "1.0.0");
     assert_eq!(p.deps.len(), 1);
@@ -675,7 +681,9 @@ fn new_krate_bad_name() {
         ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
-            json.errors[0].detail.contains("invalid crate name"),
+            json.errors[0].detail.contains(
+                "expected a valid crate name",
+            ),
             "{:?}",
             json.errors
         );
@@ -685,7 +693,9 @@ fn new_krate_bad_name() {
         ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
-            json.errors[0].detail.contains("invalid crate name"),
+            json.errors[0].detail.contains(
+                "expected a valid crate name",
+            ),
             "{:?}",
             json.errors
         );
@@ -694,7 +704,7 @@ fn new_krate_bad_name() {
 
 #[test]
 fn new_crate_owner() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }
@@ -879,7 +889,7 @@ fn new_krate_git_upload() {
         .unwrap()
         .read_to_string(&mut contents)
         .unwrap();
-    let p: git::Crate = json::decode(&contents).unwrap();
+    let p: git::Crate = serde_json::from_str(&contents).unwrap();
     assert_eq!(p.name, "fgt");
     assert_eq!(p.vers, "1.0.0");
     assert!(p.deps.is_empty());
@@ -913,8 +923,8 @@ fn new_krate_git_upload_appends() {
         .read_to_string(&mut contents)
         .unwrap();
     let mut lines = contents.lines();
-    let p1: git::Crate = json::decode(lines.next().unwrap().trim()).unwrap();
-    let p2: git::Crate = json::decode(lines.next().unwrap().trim()).unwrap();
+    let p1: git::Crate = serde_json::from_str(lines.next().unwrap().trim()).unwrap();
+    let p2: git::Crate = serde_json::from_str(lines.next().unwrap().trim()).unwrap();
     assert!(lines.next().is_none());
     assert_eq!(p1.name, "FPP");
     assert_eq!(p1.vers, "0.0.1");
@@ -1112,11 +1122,11 @@ fn diesel_not_found_results_in_404() {
 
 #[test]
 fn following() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct F {
         following: bool,
     }
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }
@@ -1179,11 +1189,11 @@ fn following() {
 
 #[test]
 fn owners() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct R {
         users: Vec<EncodableUser>,
     }
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }
@@ -1241,11 +1251,11 @@ fn owners() {
 
 #[test]
 fn yank() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct V {
         version: EncodableVersion,
     }
@@ -1317,7 +1327,7 @@ fn yank_not_owner() {
 
 #[test]
 fn yank_max_version() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }
@@ -1413,7 +1423,7 @@ fn yank_max_version() {
 
 #[test]
 fn publish_after_yank_max_version() {
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct O {
         ok: bool,
     }

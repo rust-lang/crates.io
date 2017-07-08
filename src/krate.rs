@@ -14,8 +14,8 @@ use diesel_full_text_search::*;
 use license_exprs;
 use pg::GenericConnection;
 use pg::rows::Row;
-use rustc_serialize::hex::ToHex;
-use rustc_serialize::json;
+use hex::ToHex;
+use serde_json;
 use semver;
 use time::Timespec;
 use url::Url;
@@ -89,7 +89,7 @@ pub const MAX_NAME_LENGTH: usize = 64;
 
 type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
@@ -110,7 +110,7 @@ pub struct EncodableCrate {
     pub exact_match: bool,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CrateLinks {
     pub version_downloads: String,
     pub versions: Option<String>,
@@ -910,12 +910,12 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         })
         .collect::<Result<_, ::diesel::result::Error>>()?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         crates: Vec<EncodableCrate>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         total: i64,
     }
@@ -980,7 +980,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .map(Category::encodable)
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         num_downloads: i64,
         num_crates: i64,
@@ -1025,8 +1025,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     )?;
     let max_version = krate.max_version(&conn)?;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
+        #[serde(rename = "crate")]
         krate: EncodableCrate,
         versions: Vec<EncodableVersion>,
         keywords: Vec<EncodableKeyword>,
@@ -1166,7 +1167,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         // Now that we've come this far, we're committed!
         bomb.path = None;
 
-        #[derive(RustcEncodable)]
+        #[derive(Serialize)]
         struct Warnings<'a> {
             invalid_categories: Vec<&'a str>,
             invalid_badges: Vec<&'a str>,
@@ -1176,8 +1177,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             invalid_badges: ignored_invalid_badges,
         };
 
-        #[derive(RustcEncodable)]
+        #[derive(Serialize)]
         struct R<'a> {
+            #[serde(rename = "crate")]
             krate: EncodableCrate,
             warnings: Warnings<'a>,
         }
@@ -1200,7 +1202,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     let json = String::from_utf8(json).map_err(|_| {
         human("json body was not valid utf-8")
     })?;
-    let new: upload::NewCrate = json::decode(&json).map_err(|e| {
+    let new: upload::NewCrate = serde_json::from_str(&json).map_err(|e| {
         human(&format_args!("invalid upload request: {:?}", e))
     })?;
 
@@ -1254,7 +1256,7 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         .ok_or_else(|| human("crate files not found"))?;
 
     if req.wants_json() {
-        #[derive(RustcEncodable)]
+        #[derive(Serialize)]
         struct R {
             url: String,
         }
@@ -1312,17 +1314,17 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         .order(version_downloads::date.asc())
         .load::<ExtraDownload>(&*conn)?;
 
-    #[derive(RustcEncodable, Queryable)]
+    #[derive(Serialize, Queryable)]
     struct ExtraDownload {
         date: String,
         downloads: i64,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         version_downloads: Vec<EncodableVersionDownload>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         extra_downloads: Vec<ExtraDownload>,
     }
@@ -1360,7 +1362,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
     diesel::insert(&follow.on_conflict_do_nothing())
         .into(follows::table)
         .execute(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         ok: bool,
     }
@@ -1372,7 +1374,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     diesel::delete(&follow).execute(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         ok: bool,
     }
@@ -1387,7 +1389,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let following = diesel::select(exists(follows::table.find(follow.id())))
         .get_result(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         following: bool,
     }
@@ -1408,7 +1410,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
         .map(|v| v.encodable(crate_name))
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         versions: Vec<EncodableVersion>,
     }
@@ -1426,7 +1428,7 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
         .map(Owner::encodable)
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         users: Vec<EncodableOwner>,
     }
@@ -1443,7 +1445,7 @@ pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
         .map(Owner::encodable)
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         teams: Vec<EncodableOwner>,
     }
@@ -1460,7 +1462,7 @@ pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
         .map(Owner::encodable)
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         users: Vec<EncodableOwner>,
     }
@@ -1497,14 +1499,14 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct Request {
         // identical, for back-compat (owners preferred)
         users: Option<Vec<String>>,
         owners: Option<Vec<String>>,
     }
 
-    let request: Request = json::decode(&body).map_err(
+    let request: Request = serde_json::from_str(&body).map_err(
         |_| human("invalid json request"),
     )?;
 
@@ -1528,7 +1530,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         ok: bool,
     }
@@ -1560,13 +1562,13 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
         .map(|(version, krate_name)| version.encodable(&krate_name))
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         dependencies: Vec<EncodableDependency>,
         versions: Vec<EncodableVersion>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         total: i64,
     }

@@ -37,7 +37,7 @@ pub enum Owner {
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
-#[derive(Queryable, Identifiable, RustcEncodable, RustcDecodable, Debug)]
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug)]
 pub struct Team {
     /// Unique table id
     pub id: i32,
@@ -53,7 +53,7 @@ pub struct Team {
     pub avatar: Option<String>,
 }
 
-#[derive(RustcEncodable, Debug)]
+#[derive(Serialize, Debug)]
 pub struct EncodableTeam {
     pub id: i32,
     pub login: String,
@@ -62,7 +62,7 @@ pub struct EncodableTeam {
     pub url: Option<String>,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
@@ -179,7 +179,7 @@ impl Team {
             )));
         }
 
-        #[derive(RustcDecodable)]
+        #[derive(Deserialize)]
         struct GithubTeam {
             slug: String, // the name we want to find
             id: i32, // unique GH id (needed for membership queries)
@@ -208,7 +208,7 @@ impl Team {
             return Err(human("only members of a team can add it as an owner"));
         }
 
-        #[derive(RustcDecodable)]
+        #[derive(Deserialize)]
         struct Org {
             avatar_url: Option<String>,
         }
@@ -275,7 +275,7 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 
-    #[derive(RustcDecodable)]
+    #[derive(Deserialize)]
     struct Membership {
         state: String,
     }

@@ -7,8 +7,8 @@ use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
 use pg::GenericConnection;
 use pg::rows::Row;
-use rustc_serialize::json;
 use semver;
+use serde_json;
 use time::{Duration, Timespec, now_utc, strptime};
 use url;
 
@@ -48,7 +48,7 @@ pub struct NewVersion {
     license: Option<String>,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
     pub krate: String,
@@ -63,7 +63,7 @@ pub struct EncodableVersion {
     pub links: VersionLinks,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
@@ -93,7 +93,7 @@ impl Version {
         authors: &[String],
     ) -> CargoResult<Version> {
         let num = num.to_string();
-        let features = json::encode(features).unwrap();
+        let features = serde_json::to_string(features).unwrap();
         let stmt = conn.prepare(
             "INSERT INTO versions \
              (crate_id, num, features) \
@@ -196,7 +196,7 @@ impl NewVersion {
         license: Option<String>,
         license_file: Option<&str>,
     ) -> CargoResult<Self> {
-        let features = json::encode(features)?;
+        let features = serde_json::to_string(features)?;
 
         let mut new_version = NewVersion {
             crate_id: crate_id,
@@ -279,9 +279,9 @@ impl Queryable<versions::SqlType, Pg> for Version {
     type Row = (i32, i32, String, Timespec, Timespec, i32, Option<String>, bool, Option<String>);
 
     fn build(row: Self::Row) -> Self {
-        let features = row.6.map(|s| json::decode(&s).unwrap()).unwrap_or_else(
-            HashMap::new,
-        );
+        let features = row.6
+            .map(|s| serde_json::from_str(&s).unwrap())
+            .unwrap_or_else(HashMap::new);
         Version {
             id: row.0,
             crate_id: row.1,
@@ -300,9 +300,9 @@ impl Model for Version {
     fn from_row(row: &Row) -> Version {
         let num: String = row.get("num");
         let features: Option<String> = row.get("features");
-        let features = features.map(|s| json::decode(&s).unwrap()).unwrap_or_else(
-            HashMap::new,
-        );
+        let features = features
+            .map(|s| serde_json::from_str(&s).unwrap())
+            .unwrap_or_else(HashMap::new);
         Version {
             id: row.get("id"),
             crate_id: row.get("crate_id"),
@@ -345,7 +345,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .map(|(version, crate_name)| version.encodable(&crate_name))
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         versions: Vec<EncodableVersion>,
     }
@@ -368,7 +368,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         }
     };
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         version: EncodableVersion,
     }
@@ -405,7 +405,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
         .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         dependencies: Vec<EncodableDependency>,
     }
@@ -435,7 +435,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
         .map(VersionDownload::encodable)
         .collect();
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         version_downloads: Vec<EncodableVersionDownload>,
     }
@@ -455,12 +455,12 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     // It was imagined that we wold associate authors with users.
     // This was never implemented. This complicated return struct
     // is all that is left, hear for backwards compatibility.
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         users: Vec<::user::EncodableUser>,
         meta: Meta,
     }
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct Meta {
         names: Vec<String>,
     }
@@ -499,7 +499,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
         })?;
     }
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R {
         ok: bool,
     }
