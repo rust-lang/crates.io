@@ -309,28 +309,17 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /category_slugs` route.
 pub fn slugs(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.tx()?;
-    let stmt = conn.prepare(
-        "SELECT slug FROM categories \
-         ORDER BY slug",
-    )?;
-    let rows = stmt.query(&[])?;
+    let conn = req.db_conn()?;
+    let slugs = categories::table
+        .select((categories::slug, categories::slug))
+        .order(categories::slug)
+        .load(&*conn)?;
 
-    #[derive(Serialize)]
+    #[derive(Serialize, Queryable)]
     struct Slug {
         id: String,
         slug: String,
     }
-
-    let slugs: Vec<Slug> = rows.iter()
-        .map(|r| {
-            let slug: String = r.get("slug");
-            Slug {
-                id: slug.clone(),
-                slug: slug,
-            }
-        })
-        .collect();
 
     #[derive(Serialize)]
     struct R {
