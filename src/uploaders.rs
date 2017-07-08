@@ -59,17 +59,22 @@ impl Uploader {
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
+    fn readme_path(name: &str, version: &str) -> String {
+        format!("readmes/{}/{}-{}.html", name, name, version)
+    }
+
     pub fn upload(
         &self,
         req: &mut Request,
         krate: &Crate,
+        readme: String,
         max: u64,
         vers: &semver::Version,
-    ) -> CargoResult<(Vec<u8>, Bomb)> {
+    ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = req.app().handle();
-                let path = format!("/{}", Uploader::crate_path(&krate.name, &vers.to_string()));
+                let crate_path = format!("/{}", Uploader::crate_path(&krate.name, &vers.to_string()));
                 let (response, cksum) = {
                     let length = read_le_u32(req.body())?;
                     let body = LimitErrorReader::new(req.body(), max);
@@ -78,7 +83,7 @@ impl Uploader {
                     {
                         let mut s3req = bucket.put(
                             &mut handle,
-                            &path,
+                            &crate_path,
                             &mut body,
                             "application/x-tar",
                             length as u64,
@@ -90,7 +95,7 @@ impl Uploader {
                             })
                             .unwrap();
                         s3req.perform().chain_error(|| {
-                            internal(&format_args!("failed to upload to S3: `{}`", path))
+                            internal(&format_args!("failed to upload to S3: `{}`", crate_path))
                         })?;
                     }
                     (response, body.finalize())
@@ -103,21 +108,62 @@ impl Uploader {
                     )));
                 }
 
+                let mut handle = req.app().handle();
+                let readme_path = format!("/{}", Uploader::readme_path(&krate.name, &vers.to_string()));
+                let response = {
+                    let mut response = Vec::new();
+                    {
+                        let readme_len = readme.len();
+                        let mut cursor = io::Cursor::new(readme.into_bytes());
+                        let mut s3req = bucket.put(
+                            &mut handle,
+                            &readme_path,
+                            &mut cursor,
+                            "text/html",
+                            readme_len as u64,
+                        );
+                        s3req.write_function(|data| {
+                            response.extend(data);
+                            Ok(data.len())
+                        }).unwrap();
+                        s3req.perform().chain_error(|| {
+                            internal(&format_args!("failed to upload readme to S3: `{}`", readme_path))
+                        })?;
+                    }
+                    response
+                };
+                if handle.response_code().unwrap() != 200 {
+                    if let Err(e) = self.delete(req.app().clone(), &crate_path) {
+                        println!("failed to delete crate from S3: `{}`, {:?}", crate_path, e);
+                    }
+                    let response = String::from_utf8_lossy(&response);
+                    return Err(internal(&format_args!(
+                        "failed to get a 200 response from S3: {}",
+                        response
+                    )));
+                }
+
                 Ok((
                     cksum,
                     Bomb {
                         app: req.app().clone(),
-                        path: Some(path),
+                        path: Some(crate_path),
+                    },
+                    Bomb {
+                        app: req.app().clone(),
+                        path: Some(readme_path),
                     },
                 ))
             }
             Uploader::Local => {
-                let path = Uploader::crate_path(&krate.name, &vers.to_string());
+                use std::io::Write;
+
+                let crate_path = Uploader::crate_path(&krate.name, &vers.to_string());
                 let crate_filename = env::current_dir()
                     .unwrap()
                     .join("dist")
                     .join("local_uploads")
-                    .join(path);
+                    .join(crate_path);
 
                 let crate_dir = crate_filename.parent().unwrap();
                 fs::create_dir_all(crate_dir)?;
@@ -133,11 +179,28 @@ impl Uploader {
                     body.finalize()
                 };
 
+                let readme_path = Uploader::readme_path(&krate.name, &vers.to_string());
+                let readme_filename = env::current_dir()
+                    .unwrap()
+                    .join("dist")
+                    .join("local_uploads")
+                    .join(readme_path);
+
+                let readme_dir = readme_filename.parent().unwrap();
+                fs::create_dir_all(readme_dir)?;
+
+                let mut readme_file = File::create(&readme_filename)?;
+                readme_file.write_all(readme.as_ref())?;
+
                 Ok((
                     cksum,
                     Bomb {
                         app: req.app().clone(),
                         path: crate_filename.to_str().map(String::from),
+                    },
+                    Bomb {
+                        app: req.app().clone(),
+                        path: readme_filename.to_str().map(String::from),
                     },
                 ))
             }
@@ -147,6 +210,10 @@ impl Uploader {
                     Bomb {
                         app: req.app().clone(),
                         path: None,
+                    },
+                    Bomb {
+                        app: req.app().clone(),
+                        path: None
                     },
                 ))
             }

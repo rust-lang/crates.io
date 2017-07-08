@@ -31,6 +31,7 @@ use git;
 use keyword::{EncodableKeyword, CrateKeyword};
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use pagination::Paginate;
+use render;
 use schema::*;
 use upload;
 use user::RequestUser;
@@ -1189,10 +1190,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let max_version = krate.max_version(&conn)?;
 
+        // Render the README for this crate
+        let readme = render::markdown_to_html(new_crate.readme.as_ref().map(|s| &**s))?;
+
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload(req, &krate, readme, max, vers)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -1211,7 +1215,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         })?;
 
         // Now that we've come this far, we're committed!
-        bomb.path = None;
+        crate_bomb.path = None;
+        readme_bomb.path = None;
 
         #[derive(Serialize)]
         struct Warnings<'a> {

@@ -133,6 +133,7 @@ dependencies = [
  "postgres 0.14.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2-diesel 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark 0.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2_postgres 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -866,6 +867,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "quine-mc_cluskey"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1328,6 +1337,7 @@ dependencies = [
 "checksum postgres-protocol 0.3.0 (git+https://github.com/sfackler/rust-postgres.git)" = "<none>"
 "checksum postgres-shared 0.3.0 (git+https://github.com/sfackler/rust-postgres.git)" = "<none>"
 "checksum pq-sys 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "4dfb5e575ef93a1b7b2a381d47ba7c5d4e4f73bff37cee932195de769aad9a54"
+"checksum pulldown-cmark 0.0.15 (registry+https://github.com/rust-lang/crates.io-index)" = "378e941dbd392c101f2cb88097fa4d7167bc421d4b88de3ff7dbee503bc3233b"
 "checksum quine-mc_cluskey 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "07589615d719a60c8dd8a4622e7946465dfef20d1a428f969e3443e7386d5f45"
 "checksum quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e920b65c65f10b2ae65c831a81a073a89edd28c7cce89475bff467ab4167a"
 "checksum r2d2 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "6c665a538b218e1620093be6643b375d3321837bfc1b30aa18757b7c6546d2ca"
