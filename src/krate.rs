@@ -504,7 +504,7 @@ impl Crate {
             downloads,
             description,
             homepage,
-            documentation,
+            mut documentation,
             repository,
             ..
         } = self;
@@ -515,6 +515,9 @@ impl Crate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
+        let doc_url = documentation.take();
+        documentation = Crate::documentation_blacklist(doc_url);
+
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -539,6 +542,16 @@ impl Crate {
                 owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
             },
+        }
+    }
+
+    fn documentation_blacklist(url: Option<String>) -> Option<String> {
+        let blacklisted_url = "rust-ci.org";
+
+        match url {
+            Some(ref url) if url.contains(blacklisted_url) => None,
+            Some(_) => url,
+            None => None,
         }
     }
 
@@ -951,7 +964,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
-    let mut krate = Crate::by_name(name).first::<Crate>(&*conn)?;
+    let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
     let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
@@ -970,10 +983,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         &*conn,
     )?;
     let max_version = krate.max_version(&conn)?;
-
-    // Cheaper than cloning the value to the function
-    let doc_url = krate.documentation.take();
-    krate.documentation = documentation_blacklist(doc_url);
 
     #[derive(Serialize)]
     struct R {
@@ -1003,16 +1012,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     )
 }
 
-fn documentation_blacklist(url: Option<String>) -> Option<String> {
-    let blacklisted_url = "rust-ci.org";
 
-    match url {
-        Some(ref url) if url.contains(blacklisted_url) => None,
-        Some(_) => url,
-        None => None,
-    }
-
-}
 
 /// Handles the `PUT /crates/new` route.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
