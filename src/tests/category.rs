@@ -172,8 +172,8 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
     let (_b, app, middle) = ::app();
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Foo", "foo").find_or_create(&conn).unwrap();
-        ::new_category("Bar", "bar").find_or_create(&conn).unwrap();
+        ::new_category("Foo", "foo").create_or_update(&conn).unwrap();
+        ::new_category("Bar", "bar").create_or_update(&conn).unwrap();
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/category_slugs");
