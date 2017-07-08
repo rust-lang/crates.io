@@ -178,13 +178,13 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
 
     let mut req = ::req(app, Method::Get, "/api/v1/category_slugs");
 
-    #[derive(RustcDecodable, Debug, PartialEq)]
+    #[derive(Deserialize, Debug, PartialEq)]
     struct Slug {
         id: String,
         slug: String,
     }
 
-    #[derive(RustcDecodable, Debug, PartialEq)]
+    #[derive(Deserialize, Debug, PartialEq)]
     struct Slugs {
         category_slugs: Vec<Slug>,
     }
