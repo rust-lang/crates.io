@@ -158,7 +158,7 @@ fn update_add_gitlab() {
     let conn = app.diesel_database.get().unwrap();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(String::from("git-lab"), test_badges.gitlab_attributes);
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
 }
@@ -231,7 +231,7 @@ fn replace_badge() {
 
     // Add a badge
     let mut badges = HashMap::new();
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(String::from("git-lab"), test_badges.gitlab_attributes);
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
 
@@ -288,7 +288,7 @@ fn clear_badges() {
     // Adding 3 badges
     badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(String::from("git-lab"), test_badges.gitlab_attributes);
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
 
     let current_badges = krate.badges(&conn).unwrap();
@@ -348,11 +348,11 @@ fn gitlab_required_keys() {
 
     // Repository is a required key
     test_badges.gitlab_attributes.remove("repository");
-    badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
+    badges.insert(String::from("git-lab"), test_badges.gitlab_attributes);
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"gitlab"));
+    assert!(invalid_badges.contains(&"git-lab"));
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 

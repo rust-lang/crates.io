@@ -19,7 +19,6 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    #[serde(rename = "gitlab")]
     GitLab {
         repository: String,
         branch: Option<String>,
@@ -56,18 +55,6 @@ impl Queryable<badges::SqlType, Pg> for Badge {
 impl Badge {
     pub fn encodable(self) -> EncodableBadge {
         serde_json::from_value(serde_json::to_value(self).unwrap()).unwrap()
-    }
-
-    pub fn badge_type(&self) -> &'static str {
-        match *self {
-            Badge::TravisCi { .. } => "travis-ci",
-            Badge::Appveyor { .. } => "appveyor",
-            Badge::GitLab { .. } => "gitlab",
-            Badge::IsItMaintainedIssueResolution { .. } => "is-it-maintained-issue-resolution",
-            Badge::IsItMaintainedOpenIssues { .. } => "is-it-maintained-open-issues",
-            Badge::Codecov { .. } => "codecov",
-            Badge::Coveralls { .. } => "coveralls",
-        }
     }
 
     pub fn update_crate<'a>(
