@@ -19,7 +19,6 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    #[serde(rename = "gitlab")]
     GitLab {
         repository: String,
         branch: Option<String>,
@@ -62,7 +61,7 @@ impl Badge {
         match *self {
             Badge::TravisCi { .. } => "travis-ci",
             Badge::Appveyor { .. } => "appveyor",
-            Badge::GitLab { .. } => "gitlab",
+            Badge::GitLab { .. } => "git-lab",
             Badge::IsItMaintainedIssueResolution { .. } => "is-it-maintained-issue-resolution",
             Badge::IsItMaintainedOpenIssues { .. } => "is-it-maintained-open-issues",
             Badge::Codecov { .. } => "codecov",
