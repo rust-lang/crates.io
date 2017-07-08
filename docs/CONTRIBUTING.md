@@ -157,7 +157,7 @@ methods we'd recommend for each operating system:
   following distributions:
 
   - Ubuntu: `sudo apt-get install postgresql postgresql-contrib libpq-dev`
-  - Fedora: `sudo dnf install postgresql-server postgresql-contrib`
+  - Fedora: `sudo dnf install postgresql-server postgresql-contrib postgresql-devel`
 
   > If you're missing a package, when you try to `cargo install` or `cargo
   > build` later, you'll get an error that looks like this:
