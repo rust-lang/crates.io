@@ -8,14 +8,12 @@ use serde_json;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
-#[serde(tag = "badge_type", content = "attributes")]
+#[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
 pub enum Badge {
-    #[serde(rename = "travis-ci")]
     TravisCi {
         repository: String,
         branch: Option<String>,
     },
-    #[serde(rename = "appveyor")]
     Appveyor {
         repository: String,
         branch: Option<String>,
@@ -26,17 +24,13 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
-    #[serde(rename = "is-it-maintained-issue-resolution")]
     IsItMaintainedIssueResolution { repository: String },
-    #[serde(rename = "is-it-maintained-open-issues")]
     IsItMaintainedOpenIssues { repository: String },
-    #[serde(rename = "codecov")]
     Codecov {
         repository: String,
         branch: Option<String>,
         service: Option<String>,
     },
-    #[serde(rename = "coveralls")]
     Coveralls {
         repository: String,
         branch: Option<String>,
