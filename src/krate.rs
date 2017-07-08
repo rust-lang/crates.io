@@ -1202,7 +1202,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
         human("json body was not valid utf-8")
     })?;
     let new: upload::NewCrate = serde_json::from_str(&json).map_err(|e| {
-        human(&format_args!("invalid upload request: {:?}", e))
+        human(&format_args!("invalid upload request: {}", e))
     })?;
 
     // Make sure required fields are provided
