@@ -1001,6 +1001,19 @@ fn new_krate_dependency_missing() {
 }
 
 #[test]
+fn new_krate_with_readme() {
+    let (_b, app, middle) = ::app();
+    let mut krate = ::krate("foo_readme");
+    krate.readme = Some("".to_owned());
+    let mut req = ::new_req_full(app.clone(), krate, "1.0.0", vec![]);
+    ::sign_in(&mut req, &app);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_readme");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
 fn summary_doesnt_die() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/summary");
