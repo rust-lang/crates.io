@@ -1,6 +1,7 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+
 import DropdownComponentMixin from '../mixins/rl-dropdown-component';
 
-export default Ember.Component.extend(DropdownComponentMixin, {
+export default Component.extend(DropdownComponentMixin, {
     classNameBindings: ['dropdownExpanded']
 });

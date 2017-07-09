@@ -1,9 +1,9 @@
-import Ember from 'ember';
+import Controller, { inject as controller } from '@ember/controller';
+import { computed } from '@ember/object';
+
 import PaginationMixin from '../../mixins/pagination';
 
-const { computed } = Ember;
-
-export default Ember.Controller.extend(PaginationMixin, {
+export default Controller.extend(PaginationMixin, {
     queryParams: ['page', 'per_page', 'sort'],
     page: '1',
     per_page: 10,
@@ -11,7 +11,7 @@ export default Ember.Controller.extend(PaginationMixin, {
 
     totalItems: computed.readOnly('model.meta.total'),
 
-    categoryController: Ember.inject.controller('category'),
+    categoryController: controller('category'),
     category: computed.alias('categoryController.model'),
 
     currentSortBy: computed('sort', function() {

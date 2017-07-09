@@ -1,7 +1,8 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
-export default Ember.Route.extend({
-    flashMessages: Ember.inject.service(),
+export default Route.extend({
+    flashMessages: service(),
 
     model(params) {
         return this.store.find('crate', params.crate_id).catch(e => {

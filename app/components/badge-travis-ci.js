@@ -1,13 +1,15 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
 
-export default Ember.Component.extend({
+export default Component.extend({
     tagName: 'span',
     classNames: ['badge'],
-    repository: Ember.computed.alias('badge.attributes.repository'),
-    branch: Ember.computed('badge.attributes.branch', function() {
+    repository: alias('badge.attributes.repository'),
+    branch: computed('badge.attributes.branch', function() {
         return this.get('badge.attributes.branch') || 'master';
     }),
-    text: Ember.computed('branch', function() {
+    text: computed('branch', function() {
         return `Travis CI build status for the ${ this.get('branch') } branch`;
     })
 });

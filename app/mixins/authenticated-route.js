@@ -1,7 +1,9 @@
-import Ember from 'ember';
+import Mixin from '@ember/object/mixin';
+import { inject as service } from '@ember/service';
+import $ from 'jquery';
 
-export default Ember.Mixin.create({
-    flashMessages: Ember.inject.service(),
+export default Mixin.create({
+    flashMessages: service(),
 
     beforeModel(transition) {
         let user = this.session.get('currentUser');
@@ -15,8 +17,8 @@ export default Ember.Mixin.create({
         // process over again!
         if (!window.currentUserDetected) {
             transition.abort();
-            Ember.$(window).on('currentUserDetected', function() {
-                Ember.$(window).off('currentUserDetected');
+            $(window).on('currentUserDetected', function() {
+                $(window).off('currentUserDetected');
                 transition.retry();
             });
         } else {

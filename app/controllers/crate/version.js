@@ -1,12 +1,16 @@
-import Ember from 'ember';
+import Controller from '@ember/controller';
+import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
+import ArrayProxy from '@ember/array/proxy';
+import { computed } from '@ember/object';
+import { later } from '@ember/runloop';
+import $ from 'jquery';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
-const { computed, run: { later } } = Ember;
 
-const PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
+const PromiseArray = ArrayProxy.extend(PromiseProxyMixin);
 
-export default Ember.Controller.extend({
+export default Controller.extend({
     isDownloading: false,
 
     downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
@@ -165,7 +169,7 @@ export default Ember.Controller.extend({
             version.getDownloadUrl().then(url => {
                 this.incrementProperty('crate.downloads');
                 this.incrementProperty('currentVersion.downloads');
-                Ember.$('#download-frame').attr('src', url);
+                $('#download-frame').attr('src', url);
             }).finally(() => this.set('isDownloading', false));
         },
 

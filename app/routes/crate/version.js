@@ -1,14 +1,14 @@
-import Ember from 'ember';
+import { observer } from '@ember/object';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
-const { inject: { service } } = Ember;
-
-export default Ember.Route.extend({
+export default Route.extend({
 
     ajax: service(),
 
     flashMessages: service(),
 
-    refreshAfterLogin: Ember.observer('session.isLoggedIn', function() {
+    refreshAfterLogin: observer('session.isLoggedIn', function() {
         this.refresh();
     }),
 

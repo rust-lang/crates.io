@@ -1,11 +1,15 @@
-import Ember from 'ember';
+import Mixin from '@ember/object/mixin';
+import { observer } from '@ember/object';
+import { on } from '@ember/object/evented';
+import { bind, later } from '@ember/runloop';
+import $ from 'jquery';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
     init() {
         this._super(...arguments);
 
-        this.set('boundClickoutHandler', Ember.run.bind(this, this.clickoutHandler));
-        this.set('boundEscapeHandler', Ember.run.bind(this, this.escapeHandler));
+        this.set('boundClickoutHandler', bind(this, this.clickoutHandler));
+        this.set('boundEscapeHandler', bind(this, this.escapeHandler));
     },
 
     onOpen() { },
@@ -43,21 +47,21 @@ export default Ember.Mixin.create({
         }
     },
 
-    manageClosingEvents: Ember.on('didInsertElement', Ember.observer('dropdownExpanded', function() {
+    manageClosingEvents: on('didInsertElement', observer('dropdownExpanded', function() {
         let namespace = this.get('closingEventNamespace');
         let clickEventName = `click.${namespace}`;
         let focusEventName = `focusin.${namespace}`;
         let touchEventName = `touchstart.${namespace}`;
         let escapeEventName = `keydown.${namespace}`;
         let component = this;
-        let $document = Ember.$(document);
+        let $document = $(document);
 
         if (this.get('dropdownExpanded')) {
 
             /* Add clickout handler with 1ms delay, to allow opening the dropdown
              * by clicking e.g. a checkbox and binding to dropdownExpanded, without
              * having the handler close the dropdown immediately. */
-            Ember.run.later(() => {
+            later(() => {
                 $document.bind(clickEventName, { component }, component.boundClickoutHandler);
                 $document.bind(focusEventName, { component }, component.boundClickoutHandler);
                 $document.bind(touchEventName, { component }, component.boundClickoutHandler);
@@ -74,9 +78,9 @@ export default Ember.Mixin.create({
         }
     })),
 
-    unbindClosingEvents: Ember.on('willDestroyElement', function() {
+    unbindClosingEvents: on('willDestroyElement', function() {
         let namespace = this.get('closingEventNamespace');
-        let $document = Ember.$(document);
+        let $document = $(document);
 
         $document.unbind(`click.${namespace}`, this.boundClickoutHandler);
         $document.unbind(`focusin.${namespace}`, this.boundClickoutHandler);
@@ -87,7 +91,7 @@ export default Ember.Mixin.create({
     clickoutHandler(event) {
         let { component } = event.data;
         let $c = component.$();
-        let $target = Ember.$(event.target);
+        let $target = $(event.target);
 
         /* There is an issue when the click triggered a dom change in the
          * dropdown that unloaded the target element. The ancestry of the target

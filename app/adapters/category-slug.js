@@ -1,10 +1,12 @@
-import ApplicationAdapter from './application';
 import Ember from 'ember';
+import { underscore, decamelize } from '@ember/string';
+
+import ApplicationAdapter from './application';
 
 export default ApplicationAdapter.extend({
     pathForType(modelName) {
-        let decamelized = Ember.String.underscore(
-            Ember.String.decamelize(modelName)
+        let decamelized = underscore(
+            decamelize(modelName)
         );
         return Ember.String.pluralize(decamelized);
     }

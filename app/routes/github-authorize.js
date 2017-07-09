@@ -1,6 +1,5 @@
-import Ember from 'ember';
-
-const { inject: { service } } = Ember;
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
@@ -15,7 +14,7 @@ const { inject: { service } } = Ember;
  * @see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
  * @see `/login` route
  */
-export default Ember.Route.extend({
+export default Route.extend({
 
     ajax: service(),
 

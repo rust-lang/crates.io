@@ -1,11 +1,11 @@
-import Ember from 'ember';
+import Controller from '@ember/controller';
+import { sort, filterBy, notEmpty } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
 
-const { inject: { service } } = Ember;
-
-export default Ember.Controller.extend({
+export default Controller.extend({
     tokenSort: ['created_at:desc'],
 
-    sortedTokens: Ember.computed.sort('model.api_tokens', 'tokenSort'),
+    sortedTokens: sort('model.api_tokens', 'tokenSort'),
 
     ajax: service(),
 
@@ -13,8 +13,8 @@ export default Ember.Controller.extend({
 
     isResetting: false,
 
-    newTokens: Ember.computed.filterBy('model.api_tokens', 'isNew', true),
-    disableCreate: Ember.computed.notEmpty('newTokens'),
+    newTokens: filterBy('model.api_tokens', 'isNew', true),
+    disableCreate: notEmpty('newTokens'),
 
     actions: {
         startNewToken() {

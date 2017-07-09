@@ -1,14 +1,18 @@
-import Ember from 'ember';
+import Mixin from '@ember/object/mixin';
+import { get } from '@ember/object';
+import { scheduleOnce } from '@ember/runloop';
+import { on } from '@ember/object/evented';
+import { inject as service } from '@ember/service';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
-    metrics: Ember.inject.service(),
+    metrics: service(),
 
-    notifyGoogleAnalytics: Ember.on('didTransition', function() {
-        Ember.run.scheduleOnce('afterRender', this, () => {
+    notifyGoogleAnalytics: on('didTransition', function() {
+        scheduleOnce('afterRender', this, () => {
             const page = this.get('url');
             const title = this.get('url');
-            Ember.get(this, 'metrics').trackPage({ page, title });
+            get(this, 'metrics').trackPage({ page, title });
         });
     })
 });

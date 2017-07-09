@@ -1,14 +1,14 @@
-import Ember from 'ember';
+import { run } from '@ember/runloop';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
-const { inject: { service } } = Ember;
-
-export default Ember.Route.extend({
+export default Route.extend({
 
     ajax: service(),
 
     activate() {
         this.get('ajax').request(`/logout`).then(() => {
-            Ember.run(() => {
+            run(() => {
                 this.session.logoutUser();
                 this.transitionTo('index');
             });

@@ -1,16 +1,18 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
 
-export default Ember.Component.extend({
+export default Component.extend({
     tagName: 'span',
     classNames: ['badge'],
-    repository: Ember.computed.alias('badge.attributes.repository'),
-    branch: Ember.computed('badge.attributes.branch', function() {
+    repository: alias('badge.attributes.repository'),
+    branch: computed('badge.attributes.branch', function() {
         return this.get('badge.attributes.branch') || 'master';
     }),
-    service: Ember.computed('badge.attributes.service', function() {
+    service: computed('badge.attributes.service', function() {
         return this.get('badge.attributes.service') || 'github';
     }),
-    text: Ember.computed('branch', function() {
+    text: computed('branch', function() {
         return `CodeCov coverage status for the ${ this.get('branch') } branch`;
     })
 });

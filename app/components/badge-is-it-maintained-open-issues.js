@@ -1,10 +1,12 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
 
-export default Ember.Component.extend({
+export default Component.extend({
     tagName: 'span',
     classNames: ['badge'],
-    repository: Ember.computed.alias('badge.attributes.repository'),
-    text: Ember.computed('badge', function() {
+    repository: alias('badge.attributes.repository'),
+    text: computed('badge', function() {
         return `Is It Maintained percentage of issues still open`;
     })
 });

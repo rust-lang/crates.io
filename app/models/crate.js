@@ -1,5 +1,5 @@
+import { map, sort } from '@ember/object/computed';
 import DS from 'ember-data';
-import Ember from 'ember';
 
 export default DS.Model.extend({
     name: DS.attr('string'),
@@ -20,7 +20,7 @@ export default DS.Model.extend({
 
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),
-    enhanced_badges: Ember.computed.map('badges', badge => ({
+    enhanced_badges: map('badges', badge => ({
         // jshint ignore:start
         // needed until https://github.com/jshint/jshint/issues/2991 is fixed
         ...badge,
@@ -28,7 +28,7 @@ export default DS.Model.extend({
         component_name: `badge-${badge.badge_type}`
     })),
     badge_sort: ['badge_type'],
-    annotated_badges: Ember.computed.sort('enhanced_badges', 'badge_sort'),
+    annotated_badges: sort('enhanced_badges', 'badge_sort'),
     owners: DS.hasMany('users', { async: true }),
     owner_team: DS.hasMany('teams', { async: true }),
     owner_user: DS.hasMany('users', { async: true }),

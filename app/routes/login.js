@@ -1,4 +1,5 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 /**
  * This route will open a popup window directed at the `/github_login` route.
@@ -7,8 +8,8 @@ import Ember from 'ember';
  *
  * @see `/github_authorize` route
  */
-export default Ember.Route.extend({
-    flashMessages: Ember.inject.service(),
+export default Route.extend({
+    flashMessages: service(),
 
     beforeModel(transition) {
         try {

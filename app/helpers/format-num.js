@@ -1,4 +1,4 @@
-import Ember from 'ember';
+import { helper } from '@ember/component/helper';
 
 export function formatNum(value) {
     if (value === 0) {
@@ -19,4 +19,4 @@ export function formatNum(value) {
     return ret;
 }
 
-export default Ember.Helper.helper(params => formatNum(params[0]));
+export default helper(params => formatNum(params[0]));

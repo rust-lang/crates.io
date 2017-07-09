@@ -1,4 +1,5 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import $ from 'jquery';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = [
@@ -12,19 +13,19 @@ const COLORS = [
     '#053061'
 ];
 
-export default Ember.Component.extend({
+export default Component.extend({
     classNames: 'graph-data',
 
     didInsertElement() {
         this._super(...arguments);
 
-        Ember.$(window).on('resize.chart', () => this.rerender());
-        Ember.$(document).on('googleChartsLoaded', () => this.rerender());
+        $(window).on('resize.chart', () => this.rerender());
+        $(document).on('googleChartsLoaded', () => this.rerender());
     },
 
     willDestroyElement() {
-        Ember.$(window).off('resize.chart');
-        Ember.$(document).off('googleChartsLoaded');
+        $(window).off('resize.chart');
+        $(document).off('googleChartsLoaded');
     },
 
     didRender() {

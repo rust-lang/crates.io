@@ -1,5 +1,5 @@
+import { computed } from '@ember/object';
 import DS from 'ember-data';
-import Ember from 'ember';
 
 export default DS.Model.extend({
     num: DS.attr('string'),
@@ -16,7 +16,7 @@ export default DS.Model.extend({
     dependencies: DS.hasMany('dependency', { async: true }),
     version_downloads: DS.hasMany('version-download', { async: true }),
 
-    crateName: Ember.computed('crate', function() {
+    crateName: computed('crate', function() {
         return this.belongsTo('crate').id();
     }),
 

@@ -1,13 +1,15 @@
-import Ember from 'ember';
+import Controller, { inject as controller } from '@ember/controller';
+import { oneWay } from '@ember/object/computed';
+import $ from 'jquery';
 
-export default Ember.Controller.extend({
-    searchController: Ember.inject.controller('search'),
-    search: Ember.computed.oneWay('searchController.q'),
+export default Controller.extend({
+    searchController: controller('search'),
+    search: oneWay('searchController.q'),
 
     init() {
         this._super(...arguments);
-        Ember.$(document).on('keypress', this.handleKeyPress.bind(this));
-        Ember.$(document).on('keydown', this.handleKeyPress.bind(this));
+        $(document).on('keypress', this.handleKeyPress.bind(this));
+        $(document).on('keydown', this.handleKeyPress.bind(this));
     },
 
     // Gets the human-readable string for the virtual-key code of the
@@ -42,13 +44,13 @@ export default Ember.Controller.extend({
         }
         if (this.getVirtualKey(evt).toLowerCase() === 's') {
             evt.preventDefault();
-            Ember.$('#cargo-desktop-search').focus();
+            $('#cargo-desktop-search').focus();
         }
     },
 
     willDestroy() {
-        Ember.$(document).off('keypress');
-        Ember.$(document).off('keydown');
+        $(document).off('keypress');
+        $(document).off('keydown');
     },
 
     actions: {
