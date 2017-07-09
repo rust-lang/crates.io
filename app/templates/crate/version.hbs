@@ -57,12 +57,6 @@
 {{else}}
 <div class='crate-info'>
     <div class='docs'>
-        {{#if crate.description}}
-            <div class='about'>
-                <h3>About This Package</h3>
-                <p>{{ crate.description }}</p>
-            </div>
-        {{/if}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>

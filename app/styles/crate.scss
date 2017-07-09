@@ -209,10 +209,6 @@
             @include flex(7);
             padding-right: 40px;
             max-width: 600px;
-
-            pre {
-                overflow-x: scroll;
-            }
         }
         .authorship {
             @include flex(3);
@@ -306,6 +302,9 @@
         .copy-failure {
             color: red;
         }
+    }
+    .docs pre {
+        overflow-x: scroll;
     }
     .last-update {
         color: $main-color-light;
