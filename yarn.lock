@@ -2658,9 +2658,9 @@ ember-cli@~2.14.0:
     walk-sync "^0.3.0"
     yam "0.0.22"
 
-ember-data@2.12.1:
-  version "2.12.1"
-  resolved "https://registry.yarnpkg.com/ember-data/-/ember-data-2.12.1.tgz#c06d47b14ff4956e6579b04960f62060b8ce7a70"
+ember-data@~2.12.1:
+  version "2.12.2"
+  resolved "https://registry.yarnpkg.com/ember-data/-/ember-data-2.12.2.tgz#45369001847b59e7d0ca8b183e9f57cb1f339260"
   dependencies:
     amd-name-resolver "0.0.5"
     babel-plugin-feature-flags "^0.2.1"
@@ -2842,9 +2842,9 @@ ember-runtime-enumerable-includes-polyfill@^2.0.0:
     ember-cli-babel "^6.0.0"
     ember-cli-version-checker "^1.1.6"
 
-ember-source@^2.13.3:
-  version "2.13.3"
-  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-2.13.3.tgz#7fbf413cceddb71d267502d59162ad2df6e9ff11"
+ember-source@~2.13.3:
+  version "2.13.4"
+  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-2.13.4.tgz#97022069febfb5651ddc26a83f1987370cc404c8"
   dependencies:
     "@glimmer/compiler" "^0.22.3"
     "@glimmer/di" "^0.1.8"
