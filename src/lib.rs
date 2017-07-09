@@ -17,6 +17,7 @@ extern crate log;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
+extern crate ammonia;
 extern crate chrono;
 extern crate curl;
 extern crate diesel_full_text_search;
