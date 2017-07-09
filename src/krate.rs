@@ -1317,6 +1317,28 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
+/// Handles the `GET /crates/:crate_id/:version/readme` route.
+pub fn readme(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let version = &req.params()["version"];
+
+    let redirect_url = req.app()
+        .config
+        .uploader
+        .readme_location(crate_name, version)
+        .ok_or_else(|| human("crate readme not found"))?;
+
+    if req.wants_json() {
+        #[derive(Serialize)]
+        struct R {
+            url: String,
+        }
+        Ok(req.json(&R { url: redirect_url }))
+    } else {
+        Ok(req.redirect(redirect_url))
+    }
+}
+
 fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
     use self::versions::dsl::*;
 

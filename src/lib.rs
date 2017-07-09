@@ -120,6 +120,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/new", C(krate::new));
     api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+    api_router.get("/crates/:crate_id/:version/readme", C(krate::readme));
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
         C(version::dependencies),

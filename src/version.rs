@@ -56,6 +56,7 @@ pub struct EncodableVersion {
     pub krate: String,
     pub num: String,
     pub dl_path: String,
+    pub readme_path: String,
     pub updated_at: String,
     pub created_at: String,
     pub downloads: i32,
@@ -127,6 +128,7 @@ impl Version {
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
+            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
             num: num.clone(),
             id: id,
             krate: crate_name.to_string(),

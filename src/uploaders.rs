@@ -54,6 +54,25 @@ impl Uploader {
         }
     }
 
+    pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
+        match *self {
+            Uploader::S3 { ref bucket, .. } => {
+                Some(format!(
+                    "https://{}/{}",
+                    bucket.host(),
+                    Uploader::readme_path(crate_name, version)
+                ))
+            }
+            Uploader::Local => {
+                Some(format!(
+                    "/local_uploads/{}",
+                    Uploader::readme_path(crate_name, version)
+                ))
+            }
+            Uploader::NoOp => None,
+        }
+    }
+
     fn crate_path(name: &str, version: &str) -> String {
         // No slash in front so we can use join
         format!("crates/{}/{}-{}.crate", name, name, version)
