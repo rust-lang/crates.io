@@ -1,9 +1,9 @@
-import Ember from 'ember';
+import Controller from '@ember/controller';
+import { computed } from '@ember/object';
+
 import PaginationMixin from '../mixins/pagination';
 
-const { computed } = Ember;
-
-export default Ember.Controller.extend(PaginationMixin, {
+export default Controller.extend(PaginationMixin, {
     queryParams: ['letter', 'page', 'per_page', 'sort'],
     letter: null,
     page: '1',

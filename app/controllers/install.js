@@ -1,10 +1,10 @@
-import Ember from 'ember';
+import Controller from '@ember/controller';
 
 function link(target) {
     return `https://static.rust-lang.org/cargo-dist/cargo-nightly-${target}.tar.gz`;
 }
 
-export default Ember.Controller.extend({
+export default Controller.extend({
     linux64: link('x86_64-unknown-linux-gnu'),
     linux32: link('i686-unknown-linux-gnu'),
     mac64: link('x86_64-apple-darwin'),

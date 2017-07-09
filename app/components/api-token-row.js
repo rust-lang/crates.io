@@ -1,8 +1,9 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { empty, or } from '@ember/object/computed';
 
-export default Ember.Component.extend({
-    emptyName: Ember.computed.empty('api_token.name'),
-    disableCreate: Ember.computed.or('api_token.isSaving', 'emptyName'),
+export default Component.extend({
+    emptyName: empty('api_token.name'),
+    disableCreate: or('api_token.isSaving', 'emptyName'),
     serverError: null,
 
     didInsertElement() {

@@ -1,7 +1,9 @@
-import Ember from 'ember';
+import RSVP from 'rsvp';
+import { inject as service } from '@ember/service';
+import Route from '@ember/routing/route';
 
-export default Ember.Route.extend({
-    flashMessages: Ember.inject.service(),
+export default Route.extend({
+    flashMessages: service(),
 
     queryParams: {
         page: { refreshedModel: true },
@@ -22,7 +24,7 @@ export default Ember.Route.extend({
         return this.store.queryRecord('team', { team_id }).then(
             (team) => {
                 params.team_id = team.get('id');
-                return Ember.RSVP.hash({
+                return RSVP.hash({
                     crates: this.store.query('crate', params),
                     team
                 });

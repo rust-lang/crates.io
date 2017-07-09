@@ -1,3 +1,4 @@
+import { helper } from '@ember/component/helper';
 import Ember from 'ember';
 
 const escape = Ember.Handlebars.Utils.escapeExpression;
@@ -15,4 +16,4 @@ export function formatEmail(email) {
     return ret.htmlSafe();
 }
 
-export default Ember.Helper.helper(params => formatEmail(params[0]));
+export default helper(params => formatEmail(params[0]));

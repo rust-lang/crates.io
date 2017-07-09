@@ -1,7 +1,8 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+
 import AuthenticatedRoute from '../../mixins/authenticated-route';
 
-export default Ember.Route.extend(AuthenticatedRoute, {
+export default Route.extend(AuthenticatedRoute, {
     queryParams: {
         page: { refreshModel: true },
         sort: { refreshModel: true },

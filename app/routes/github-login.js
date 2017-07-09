@@ -1,6 +1,5 @@
-import Ember from 'ember';
-
-const { inject: { service } } = Ember;
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
@@ -15,7 +14,7 @@ const { inject: { service } } = Ember;
  * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
  * @see `/github_authorize` route
  */
-export default Ember.Route.extend({
+export default Route.extend({
 
     ajax: service(),
 

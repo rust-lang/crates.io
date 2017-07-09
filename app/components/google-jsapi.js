@@ -1,15 +1,16 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import $ from 'jquery';
 
-export default Ember.Component.extend({
+export default Component.extend({
     tagName: '',
 
     didInsertElement() {
-        Ember.$.getScript('https://www.google.com/jsapi', function() {
+        $.getScript('https://www.google.com/jsapi', function() {
             window.google.load('visualization', '1.0', {
                 packages: ['corechart'],
                 callback() {
                     window.googleChartsLoaded = true;
-                    Ember.$(document).trigger('googleChartsLoaded');
+                    $(document).trigger('googleChartsLoaded');
                 }
             });
         });

@@ -1,9 +1,9 @@
-import Ember from 'ember';
+import Mixin from '@ember/object/mixin';
+import { computed } from '@ember/object';
 
 const VIEWABLE_PAGES = 9;
-const { computed } = Ember;
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
     // Gives page numbers to the surrounding 9 pages.
     pages: computed('currentPage', 'availablePages', function() {

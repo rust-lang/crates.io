@@ -1,7 +1,9 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+import RSVP from 'rsvp';
+
 import AuthenticatedRoute from '../mixins/authenticated-route';
 
-export default Ember.Route.extend(AuthenticatedRoute, {
+export default Route.extend(AuthenticatedRoute, {
     data: {},
 
     setupController(controller, model) {
@@ -33,7 +35,7 @@ export default Ember.Route.extend(AuthenticatedRoute, {
 
         let myStats = user.stats();
 
-        return Ember.RSVP.hash({
+        return RSVP.hash({
             myCrates,
             myFollowing,
             myStats
