@@ -63,7 +63,7 @@
     "normalize.css": "^7.0.0"
   },
   "engines": {
-    "node": "= 4.6.0"
+    "node": "= 6.10.3"
   },
   "private": true
 }
