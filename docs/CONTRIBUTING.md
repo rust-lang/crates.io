@@ -97,7 +97,7 @@ libraries that crates.io uses change. Usually you'll know they've changed
 because you'll run the next step and it will fail saying it can't find some
 libraries.
 
-To build and serve the frontend assets, use the command `npm start`. There
+To build and serve the frontend assets, use the command `npm run start`. There
 are variations on this command that change which backend your frontend tries to
 talk to:
 
@@ -107,7 +107,7 @@ talk to:
 | `npm run start:staging` | https://staging-crates-io.herokuapp.com | Testing UI changes with a smaller set of realistic data |
 | `npm run start` | Static fixture test data in `mirage/fixtures` | Setting up particular situations, see note |
 | `npm run start:local` | Backend server running locally | See the Working on the backend section for setup |
-| `npm start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg | If your use case is not covered here |
+| `npm run start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg | If your use case is not covered here |
 
 > Note: If you want to set up a particular situation, you can edit the fixture
 > data used for tests in `mirage/fixtures`. The fixture data does not currently
