@@ -99,9 +99,26 @@ export default Route.extend({
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }
 
-                return version ||
+                const result = version ||
                     versions.find(version => version.get('num') === maxVersion) ||
                     versions.objectAt(0);
+                if (result.get('readme_path')) {
+                    this.get('ajax').request(result.get('readme_path'))
+                        .then((r) => this.get('ajax').raw(r.url, {
+                            method: 'GET',
+                            dataType: 'html',
+                            headers: {
+                                Accept: '*/*',
+                            },
+                        }))
+                        .then((r) => {
+                            crate.set('readme', r.payload);
+                        })
+                        .catch((r) => {
+                            console.error(r);
+                        })
+                }
+                return result;
             });
     },
 

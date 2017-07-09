@@ -208,6 +208,11 @@
         .docs {
             @include flex(7);
             padding-right: 40px;
+            max-width: 600px;
+
+            pre {
+                overflow-x: scroll;
+            }
         }
         .authorship {
             @include flex(3);
