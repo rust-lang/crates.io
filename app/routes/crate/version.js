@@ -108,6 +108,8 @@ export default Route.extend({
                             method: 'GET',
                             dataType: 'html',
                             headers: {
+                                // We need to force the Accept header, otherwise crates.io won't return
+                                // the readme file when not using S3.
                                 Accept: '*/*',
                             },
                         }))
