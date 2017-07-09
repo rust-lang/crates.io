@@ -1191,12 +1191,16 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let max_version = krate.max_version(&conn)?;
 
         // Render the README for this crate
-        let readme = render::markdown_to_html(new_crate.readme.as_ref().map(|s| &**s))?;
+        let readme = match new_crate.readme.as_ref() {
+            Some(readme) => Some(render::markdown_to_html(&**readme)?),
+            None => None,
+        };
 
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload(req, &krate, readme, max, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) =
+            app.config.uploader.upload(req, &krate, readme, max, vers)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
