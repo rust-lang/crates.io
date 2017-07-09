@@ -114,9 +114,9 @@ export default Route.extend({
                         .then((r) => {
                             crate.set('readme', r.payload);
                         })
-                        .catch((r) => {
-                            console.error(r);
-                        })
+                        .catch(() => {
+                            crate.set('readme', null);
+                        });
                 }
                 return result;
             });
