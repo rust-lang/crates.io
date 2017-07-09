@@ -1,8 +1,9 @@
 import Ember from 'ember';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
 
 const { inject: { service } } = Ember;
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(FastBootUtils, {
 
     ajax: service(),
 
@@ -85,7 +86,7 @@ export default Ember.Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.session.get('currentUser')) {
-            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
+            this.get('ajax').request(`${this.get('appURL')}/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }

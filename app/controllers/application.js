@@ -1,13 +1,16 @@
 import Ember from 'ember';
+import FastbootUtils from '../mixins/fastboot-utils';
 
-export default Ember.Controller.extend({
+export default Ember.Controller.extend(FastbootUtils, {
     searchController: Ember.inject.controller('search'),
     search: Ember.computed.oneWay('searchController.q'),
 
     init() {
         this._super(...arguments);
-        Ember.$(document).on('keypress', this.handleKeyPress.bind(this));
-        Ember.$(document).on('keydown', this.handleKeyPress.bind(this));
+        if (this.get('isNotFastBoot')) {
+            Ember.$(window.document).on('keypress', this.handleKeyPress.bind(this));
+            Ember.$(window.document).on('keydown', this.handleKeyPress.bind(this));
+        }
     },
 
     // Gets the human-readable string for the virtual-key code of the
@@ -47,8 +50,10 @@ export default Ember.Controller.extend({
     },
 
     willDestroy() {
-        Ember.$(document).off('keypress');
-        Ember.$(document).off('keydown');
+        if (this.get('isNotFastBoot')) {
+            Ember.$(window.document).off('keypress');
+            Ember.$(window.document).off('keydown');
+        }
     },
 
     actions: {

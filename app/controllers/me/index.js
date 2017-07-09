@@ -1,15 +1,13 @@
 import Ember from 'ember';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
 
-const { inject: { service } } = Ember;
+export default Ember.Controller.extend(FastBootUtils, {
 
-export default Ember.Controller.extend({
     tokenSort: ['created_at:desc'],
 
     sortedTokens: Ember.computed.sort('model.api_tokens', 'tokenSort'),
 
-    ajax: service(),
-
-    flashMessages: service(),
+    flashMessages: Ember.inject.service(),
 
     isResetting: false,
 

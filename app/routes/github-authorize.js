@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
 
 const { inject: { service } } = Ember;
 
@@ -15,12 +16,12 @@ const { inject: { service } } = Ember;
  * @see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
  * @see `/login` route
  */
-export default Ember.Route.extend({
+export default Ember.Route.extend(FastBootUtils, {
 
     ajax: service(),
 
     beforeModel(transition) {
-        return this.get('ajax').request(`/authorize`, { data: transition.queryParams }).then((d) => {
+        return this.get('ajax').request(`${this.get('appURL')}/authorize`, { data: transition.queryParams }).then((d) => {
             let item = JSON.stringify({ ok: true, data: d });
             if (window.opener) {
                 window.opener.github_response = item;

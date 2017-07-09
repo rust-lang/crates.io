@@ -1,9 +1,10 @@
 import Ember from 'ember';
+import FastBootUtils from 'cargo/mixins/fastboot-utils';
 
 const TO_SHOW = 5;
 const { computed, inject: { service } } = Ember;
 
-export default Ember.Controller.extend({
+export default Ember.Controller.extend(FastBootUtils, {
 
     ajax: service(),
 
@@ -44,7 +45,7 @@ export default Ember.Controller.extend({
             this.set('loadingMore', true);
             let page = (this.get('myFeed').length / 10) + 1;
 
-            this.get('ajax').request(`/me/updates?page=${page}`).then((data) => {
+            this.get('ajax').request(`${this.get('appURL')}/me/updates?page=${page}`).then((data) => {
                 let versions = data.versions.map(version =>
                     this.store.push(this.store.normalize('version', version)));
 
