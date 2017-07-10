@@ -430,7 +430,8 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
             crate_owners::owner_kind.eq(OwnerKind::User as i32),
         ))
         .select(sum(crates::downloads))
-        .first::<i64>(&*conn)?;
+        .first::<Option<i64>>(&*conn)?
+        .unwrap_or(0);
 
     #[derive(Serialize)]
     struct R {
