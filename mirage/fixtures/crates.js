@@ -76,7 +76,7 @@ export default [{
                 "branch": "master",
                 "repository": "huonw/external_mixin"
             },
-            "badge_type": "git-lab"
+            "badge_type": "gitlab"
         },
         {
             "attributes": {
