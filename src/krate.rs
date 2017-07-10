@@ -111,6 +111,7 @@ pub struct EncodableCrate {
     pub badges: Option<Vec<EncodableBadge>>,
     pub created_at: String,
     pub downloads: i32,
+    pub recent_downloads: i64,
     pub max_version: String,
     pub description: Option<String>,
     pub homepage: Option<String>,
@@ -495,8 +496,9 @@ impl Crate {
         max_version: semver::Version,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
+        recent_downloads: i64,
     ) -> EncodableCrate {
-        self.encodable(max_version, None, None, None, badges, exact_match)
+        self.encodable(max_version, None, None, None, badges, exact_match, recent_downloads)
     }
 
     pub fn encodable(
@@ -507,6 +509,7 @@ impl Crate {
         categories: Option<&[Category]>,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
+        recent_downloads: i64,
     ) -> EncodableCrate {
         let Crate {
             name,
@@ -532,6 +535,7 @@ impl Crate {
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
+            recent_downloads: recent_downloads,
             versions: versions,
             keywords: keyword_ids,
             categories: category_ids,
@@ -759,6 +763,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .into_boxed();
 
     if sort == "downloads" {
+        query = query.order(crates::downloads.desc())
+    } else if sort == "recent-downloads" {
         query = query.order(recent_downloads.clone().desc())
     } else {
         query = query.order(crates::name.asc())
@@ -776,6 +782,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
+        } else if sort == "recent-downloads" {
+            query = query.order((perfect_match, recent_downloads.clone().desc()));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
@@ -849,7 +857,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let crates = data.iter()
         .map(|&((ref c, _, _), _)| c.clone())
         .collect::<Vec<_>>();
-    let perfect_matches = data.into_iter().map(|((_, b, _), _)| b).collect::<Vec<_>>();
+    let perfect_matches = data.clone().into_iter().map(|((_, b, _), _)| b).collect::<Vec<_>>();
+    let recent_downloads = data.clone().into_iter().map(|((_, _, s), _)| s).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
@@ -860,7 +869,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
-        .map(|((max_version, krate), perfect_match)| {
+        .zip(recent_downloads)
+        .map(|(((max_version, krate), perfect_match), recent_downloads)| {
             // FIXME: If we add crate_id to the Badge enum we can eliminate
             // this N+1
             let badges = badges::table
@@ -870,6 +880,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 max_version,
                 Some(badges),
                 perfect_match,
+                recent_downloads,
             ))
         })
         .collect::<Result<_, ::diesel::result::Error>>()?;
@@ -909,7 +920,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false))
+                Ok(krate.minimal_encodable(max_version, None, false, 0))
             })
             .collect()
     };
@@ -1006,6 +1017,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
                 Some(&cats),
                 Some(badges),
                 false,
+                0,
             ),
             versions: versions
                 .into_iter()
@@ -1148,7 +1160,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false),
+            krate: krate.minimal_encodable(max_version, None, false, 0),
             warnings: warnings,
         }))
     })
