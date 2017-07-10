@@ -19,6 +19,7 @@ use serde_json;
 use semver;
 use time::Timespec;
 use url::Url;
+use chrono::NaiveDate;
 
 use app::{App, RequestApp};
 use badge::EncodableBadge;
@@ -39,7 +40,18 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
+#[derive(Queryable, Identifiable, Associations, AsChangeset)]
+#[belongs_to(Crate)]
+#[primary_key(crate_id, date)]
+#[table_name="crate_downloads"]
+pub struct CrateDownload {
+    pub crate_id: i32,
+    pub downloads: i32,
+    pub date: NaiveDate,
+}
+
+#[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset)]
+#[has_many(crate_downloads)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -728,16 +740,23 @@ impl Model for Crate {
 
 /// Handles the `GET /crates` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::AsExpression;
-    use diesel::types::Bool;
+    use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
+    use diesel::types::{Bool, BigInt};
+    use diesel::expression::functions::date_and_time::{now, date};
+    use diesel::expression::sql_literal::sql;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
+    let recent_downloads = sql::<BigInt>("SUM(crate_downloads.downloads)");
+
     let mut query = crates::table
-        .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false)))
+        .inner_join(crate_downloads::table)
+        .group_by(crates::id)
+        .filter(crate_downloads::date.gt(date(now - 90.days())))
+        .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false), recent_downloads.clone()))
         .into_boxed();
 
     if sort == "downloads" {
@@ -754,7 +773,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         ));
 
-        query = query.select((ALL_COLUMNS, crates::name.eq(q_string)));
+        query = query.select((ALL_COLUMNS, crates::name.eq(q_string), recent_downloads.clone()));
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
@@ -824,14 +843,14 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let data = query.paginate(limit, offset).load::<((Crate, bool), i64)>(
+    let data = query.paginate(limit, offset).load::<((Crate, bool, i64), i64)>(
         &*conn,
     )?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let crates = data.iter()
-        .map(|&((ref c, _), _)| c.clone())
+        .map(|&((ref c, _, _), _)| c.clone())
         .collect::<Vec<_>>();
-    let perfect_matches = data.into_iter().map(|((_, b), _)| b).collect::<Vec<_>>();
+    let perfect_matches = data.into_iter().map(|((_, b, _), _)| b).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
