@@ -51,7 +51,6 @@ pub struct CrateDownload {
 }
 
 #[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset)]
-#[has_many(crate_downloads)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -760,7 +759,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .into_boxed();
 
     if sort == "downloads" {
-        query = query.order(crates::downloads.desc())
+        query = query.order(recent_downloads.clone().desc())
     } else {
         query = query.order(crates::name.asc())
     }
