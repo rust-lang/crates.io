@@ -504,7 +504,7 @@ impl Crate {
             downloads,
             description,
             homepage,
-            mut documentation,
+            documentation,
             repository,
             ..
         } = self;
@@ -515,8 +515,7 @@ impl Crate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
-        let doc_url = documentation.take();
-        documentation = Crate::documentation_blacklist(doc_url);
+        let documentation = Crate::remove_blacklisted_documentation_urls(documentation);
 
         EncodableCrate {
             id: name.clone(),
@@ -545,7 +544,7 @@ impl Crate {
         }
     }
 
-    fn documentation_blacklist(url: Option<String>) -> Option<String> {
+    fn remove_blacklisted_documentation_urls(url: Option<String>) -> Option<String> {
         let blacklisted_url = "rust-ci.org";
 
         match url {
@@ -1011,8 +1010,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         }),
     )
 }
-
-
 
 /// Handles the `PUT /crates/new` route.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
