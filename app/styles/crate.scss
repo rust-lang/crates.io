@@ -136,7 +136,16 @@
         width: 15%;
         color: $main-color-light;
     }
-    .downloads { @include display-flex; @include align-items(center); }
+    .downloads {
+        @include display-flex;
+        @include align-items(center);
+        padding-bottom: 5px;
+    }
+    .recent-downloads {
+        @include display-flex;
+        @include align-items(center);
+
+    }
 
     .rev-dep-downloads {padding-left: 7px}
 }
