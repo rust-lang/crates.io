@@ -1922,7 +1922,7 @@ fn check_ownership_one_crate() {
 }
 
 #[test]
-fn blocked_documentation() {
+fn block_blacklisted_documentation_url() {
     let (_b, app, middle) = ::app();
 
     let _ = {
