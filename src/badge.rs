@@ -40,34 +40,33 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
+    #[serde(rename = "maintenance")]
+    Maintenance { value: MaintenanceValue },
+}
+
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(tag = "badge_type", content = "attributes")]
+pub enum MaintenanceValue {
     #[serde(rename = "actively-developed")]
-    ActivelyDeveloped {
-        repository: String, branch: Option<String>,
-    },
+    ActivelyDeveloped,
+
     #[serde(rename = "passively-maintained")]
-    PassivelyMaintained {
-        repository: String, branch: Option<String>,
-    },
+    PassivelyMaintained,
+
     #[serde(rename = "as-is")]
-    AsIs {
-        repository: String, branch: Option<String>,
-    },
+    AsIs,
+
     #[serde(rename = "none")]
-    None {
-        repository: String, branch: Option<String>,
-    },
+    None,
+
     #[serde(rename = "experimental")]
-    Experimental {
-        repository: String, branch: Option<String>,
-    },
+    Experimental,
+
     #[serde(rename = "looking-for-maintainer")]
-    LookingForMaintainer {
-        repository: String, branch: Option<String>,
-    },
+    LookingForMaintainer,
+
     #[serde(rename = "deprecated")]
-    Deprecated {
-        repository: String, branch: Option<String>,
-    }
+    Deprecated,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
