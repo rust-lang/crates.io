@@ -67,28 +67,27 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     );
     get_confirm("continue");
 
-
     let stmt = tx.prepare(
         "SELECT * FROM crate_owners
                                    WHERE owner_id = $1
                                      AND owner_kind = $2",
     ).unwrap();
     let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
+
     for row in rows.iter() {
-        let owner_id: i32 = row.get("owner_id");
         let krate = Crate::find(tx, row.get("crate_id")).unwrap();
         println!("transferring {}", krate.name);
         let owners = krate.owners_old(tx).unwrap();
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
-        let n = tx.execute(
-            "UPDATE crate_owners SET owner_id = $1
-                             WHERE owner_id = $2",
-            &[&to.id, &owner_id],
-        ).unwrap();
-        assert_eq!(n, 1);
     }
+
+    let _ = tx.execute(
+        "UPDATE crate_owners SET owner_id = $1
+                             WHERE owner_id = $2",
+        &[&to.id, &from.id],
+    ).unwrap();
 
     get_confirm("commit?");
 }
