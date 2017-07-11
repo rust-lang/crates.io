@@ -24,6 +24,10 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
+    CircleCi {
+        repository: String,
+        branch: Option<String>,
+    },
     IsItMaintainedIssueResolution { repository: String },
     IsItMaintainedOpenIssues { repository: String },
     Codecov {
