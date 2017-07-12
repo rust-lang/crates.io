@@ -13,6 +13,12 @@ export default Controller.extend(PaginationMixin, {
     totalItems: computed.readOnly('model.crates.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
+        if (this.get('sort') === 'downloads') {
+            return 'All Time Downloads';
+        } else if (this.get('sort') === 'recent-downloads') {
+            return 'Recent Downloads';
+        } else {
+            return 'Alphabetical';
+        }
     }),
 });
