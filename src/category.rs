@@ -221,7 +221,7 @@ pub struct NewCategory<'a> {
 
 impl<'a> NewCategory<'a> {
     /// Inserts the category into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Category> {
+    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
         use diesel::insert;
         use diesel::pg::upsert::*;
 

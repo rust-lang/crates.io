@@ -242,7 +242,7 @@ impl<'a> NewCrate<'a> {
         }
     }
 
-    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> CargoResult<Option<Crate>> {
+    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
         use schema::crates::dsl::*;
         use diesel::insert;
 
@@ -740,7 +740,7 @@ impl Crate {
         conn: &PgConnection,
         offset: i64,
         limit: i64,
-    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::expression::dsl::sql;
         use diesel::types::{Integer, Text, BigInt};
 
