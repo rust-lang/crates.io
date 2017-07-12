@@ -21,7 +21,5 @@ export default Controller.extend(PaginationMixin, {
         } else {
             return 'Alphabetical';
         }
- 
-        //return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
     }),
 });

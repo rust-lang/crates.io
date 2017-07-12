@@ -13,14 +13,13 @@ export default Controller.extend(PaginationMixin, {
     totalItems: computed.readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort' === 'downloads')) {
+        if (this.get('sort') === 'downloads') {
             return 'All-Time Downloads';
         } else if (this.get('sort') === 'recent-downloads') {
             return 'Recent Downloads';
         } else {
             return 'Relevance';
         }
-        //return (this.get('sort') === 'downloads') ? 'Downloads' : 'Relevance';
     }),
 
     hasItems: computed.bool('totalItems'),
