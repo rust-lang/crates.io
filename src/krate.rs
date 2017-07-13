@@ -780,7 +780,6 @@ impl Model for Crate {
 }
 
 /// Handles the `GET /crates` route.
-#[allow(trivial_casts)]
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::AsExpression;
     use diesel::types::Bool;

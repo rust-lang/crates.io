@@ -105,7 +105,6 @@ where
 }
 
 impl<T, E: CargoError> ChainError<T> for Result<T, E> {
-    #[allow(trivial_casts)]
     fn chain_error<E2, C>(self, callback: C) -> CargoResult<T>
     where
         E2: CargoError,
