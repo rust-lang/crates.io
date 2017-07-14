@@ -744,7 +744,7 @@ impl Model for Crate {
 /// Handles the `GET /crates` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
-    use diesel::types::{Bool, BigInt};
+    use diesel::types::{Bool, BigInt, Nullable};
     use diesel::expression::functions::date_and_time::{now, date};
     use diesel::expression::sql_literal::sql;
     use diesel::query_source::joins::LeftOuter;
@@ -754,7 +754,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let params = req.query();
     let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
 
-    let recent_downloads = sql::<BigInt>("SUM(crate_downloads.downloads)");
+    let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
     let mut query = crates::table
         .join(crate_downloads::table, LeftOuter, crates::id.eq(crate_downloads::crate_id).and(crate_downloads::date.gt(date(now - 90.days()))))
@@ -851,8 +851,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     println!("crate count: {:?}", crates::table.count().get_result::<i64>(&*conn));
-
-    let data = query.paginate(limit, offset).load::<((Crate, bool, i64), i64)>(
+    let data = query.paginate(limit, offset).load::<((Crate, bool, Option<i64>), i64)>(
         &*conn,
     )?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
@@ -860,7 +859,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .map(|&((ref c, _, _), _)| c.clone())
         .collect::<Vec<_>>();
     let perfect_matches = data.clone().into_iter().map(|((_, b, _), _)| b).collect::<Vec<_>>();
-    let recent_downloads = data.clone().into_iter().map(|((_, _, s), _)| s).collect::<Vec<_>>();
+    let recent_downloads = data.clone().into_iter().map(|((_, _, s), _)| s.unwrap_or(0)).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
