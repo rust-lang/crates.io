@@ -63,7 +63,7 @@ fn collect(
 ) -> postgres::Result<Option<i32>> {
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
-    let now = chrono::UTC::now();
+    let now = chrono::Utc::now();
     let cutoff = now.naive_utc().date() - chrono::Duration::days(1);
 
     let mut map = HashMap::new();
