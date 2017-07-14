@@ -1199,8 +1199,13 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut crate_bomb, mut readme_bomb) =
-            app.config.uploader.upload(req, &krate, readme, max, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload_crate(
+            req,
+            &krate,
+            readme,
+            max,
+            vers,
+        )?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
