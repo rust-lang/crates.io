@@ -101,7 +101,7 @@ impl Uploader {
                     let mut response = Vec::new();
                     {
                         let mut s3req =
-                            bucket.put(&mut handle, &path, &mut body, content_type, content_length);
+                            bucket.put(&mut handle, path, &mut body, content_type, content_length);
                         s3req
                             .write_function(|data| {
                                 response.extend(data);
