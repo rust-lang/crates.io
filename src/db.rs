@@ -8,6 +8,7 @@ use std::sync::Arc;
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 use diesel::pg::PgConnection;
+use diesel::Connection;
 use openssl::ssl::{SslConnector, SslConnectorBuilder, SslMethod, SSL_VERIFY_NONE};
 use pg::GenericConnection;
 use pg::tls::{TlsHandshake, Stream, TlsStream};
@@ -237,7 +238,11 @@ pub trait RequestTransaction {
 
 impl<T: Request + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> CargoResult<DieselPooledConn> {
-        self.app().diesel_database.get().map_err(Into::into)
+        let db_conn = self.app().diesel_database.get()?;
+        // TEMP: This can be removed when diesel sets this by default.
+        // https://github.com/diesel-rs/diesel/issues/1024
+        db_conn.execute("SET TIME ZONE 'UTC'")?;
+        Ok(db_conn)
     }
 
     fn tx(&self) -> CargoResult<&GenericConnection> {
