@@ -101,7 +101,7 @@ fn new_crate(name: &str) -> u::NewCrate {
 }
 
 #[test]
-fn index() {
+fn index_sql_test() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(&mut req));
