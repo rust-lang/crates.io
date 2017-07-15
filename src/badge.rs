@@ -40,7 +40,6 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    #[serde(rename = "maintenance")]
     Maintenance { value: MaintenanceValue },
 }
 
