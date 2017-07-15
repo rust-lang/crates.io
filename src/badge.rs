@@ -44,26 +44,14 @@ pub enum Badge {
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum MaintenanceValue {
-    #[serde(rename = "actively-developed")]
     ActivelyDeveloped,
-
-    #[serde(rename = "passively-maintained")]
     PassivelyMaintained,
-
-    #[serde(rename = "as-is")]
     AsIs,
-
-    #[serde(rename = "none")]
     None,
-
-    #[serde(rename = "experimental")]
     Experimental,
-
-    #[serde(rename = "looking-for-maintainer")]
     LookingForMaintainer,
-
-    #[serde(rename = "deprecated")]
     Deprecated,
 }
 
