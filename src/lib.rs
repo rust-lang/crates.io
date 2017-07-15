@@ -37,6 +37,7 @@ extern crate rand;
 extern crate s3;
 extern crate semver;
 extern crate serde;
+extern crate syntect;
 extern crate time;
 extern crate toml;
 extern crate url;
