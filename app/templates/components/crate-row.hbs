@@ -30,6 +30,8 @@
         {{/if}}
         {{#if crate.documentation}}
           <li><a href="{{crate.documentation}}">Documentation</a></li>
+        {{else}}
+          <li><a href="https://docs.rs/{{crate.name}}">Documentation</a></li>
         {{/if}}
         {{#if crate.repository}}
           <li><a href="{{crate.repository}}">Repository</a></li>
