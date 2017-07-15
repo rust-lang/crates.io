@@ -6,6 +6,7 @@ use diesel;
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
 use pg::GenericConnection;
+use pg::Result as PgResult;
 use pg::rows::Row;
 use semver;
 use serde_json;
@@ -76,7 +77,7 @@ impl Version {
         conn: &GenericConnection,
         crate_id: i32,
         num: &semver::Version,
-    ) -> CargoResult<Option<Version>> {
+    ) -> PgResult<Option<Version>> {
         let num = num.to_string();
         let stmt = conn.prepare(
             "SELECT * FROM versions \
@@ -156,7 +157,7 @@ impl Version {
             .load(conn)
     }
 
-    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> CargoResult<()> {
+    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> PgResult<()> {
         conn.execute(
             "INSERT INTO version_authors (version_id, name)
                            VALUES ($1, $2)",

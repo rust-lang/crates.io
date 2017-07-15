@@ -557,19 +557,6 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn max_version_old(&self, conn: &GenericConnection) -> CargoResult<semver::Version> {
-        let stmt = conn.prepare(
-            "SELECT num FROM versions WHERE crate_id = $1
-                                 AND yanked = 'f'",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(Version::max(
-            rows.iter().map(|r| r.get::<_, String>("num")).map(|s| {
-                semver::Version::parse(&s).unwrap()
-            }),
-        ))
-    }
-
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
         let stmt = conn.prepare(
             "SELECT * FROM versions \
@@ -603,6 +590,7 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
+    // TODO: Update bin/transfer_crates to use owners() then get rid of this
     pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
         let stmt = conn.prepare(
             "SELECT * FROM users

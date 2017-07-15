@@ -153,7 +153,7 @@ impl Uploader {
         }
     }
 
-    pub fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
+    fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = app.handle();

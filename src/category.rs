@@ -9,8 +9,7 @@ use pg::rows::Row;
 
 use db::RequestTransaction;
 use schema::*;
-use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, ChainError};
+use util::{RequestUtils, CargoResult};
 use {Model, Crate};
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
@@ -56,17 +55,6 @@ pub struct EncodableCategoryWithSubcategories {
 }
 
 impl Category {
-    pub fn find_by_category(conn: &GenericConnection, name: &str) -> CargoResult<Category> {
-        let stmt = conn.prepare(
-            "SELECT * FROM categories \
-             WHERE category = $1",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        rows.iter().next().chain_error(|| NotFound).map(|row| {
-            Model::from_row(&row)
-        })
-    }
-
     pub fn encodable(self) -> EncodableCategory {
         let Category {
             crates_cnt,

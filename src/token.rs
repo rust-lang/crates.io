@@ -45,7 +45,7 @@ pub struct EncodableApiTokenWithToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> CargoResult<ApiToken> {
+    pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> QueryResult<ApiToken> {
         #[table_name = "api_tokens"]
         #[derive(Insertable, AsChangeset)]
         struct NewApiToken<'a> {
@@ -62,14 +62,14 @@ impl ApiToken {
     }
 
     /// Deletes the provided API token if it belongs to the provided user
-    pub fn delete(conn: &PgConnection, user_id: i32, id: i32) -> CargoResult<()> {
+    pub fn delete(conn: &PgConnection, user_id: i32, id: i32) -> QueryResult<()> {
         diesel::delete(api_tokens::table.find(id).filter(
             api_tokens::user_id.eq(user_id),
         )).execute(conn)?;
         Ok(())
     }
 
-    pub fn find_for_user(conn: &PgConnection, user_id: i32) -> CargoResult<Vec<ApiToken>> {
+    pub fn find_for_user(conn: &PgConnection, user_id: i32) -> QueryResult<Vec<ApiToken>> {
         api_tokens::table
             .filter(api_tokens::user_id.eq(user_id))
             .order(api_tokens::created_at.desc())
