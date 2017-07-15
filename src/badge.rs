@@ -40,6 +40,19 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
+    Maintenance { value: MaintenanceValue },
+}
+
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MaintenanceValue {
+    ActivelyDeveloped,
+    PassivelyMaintained,
+    AsIs,
+    None,
+    Experimental,
+    LookingForMaintainer,
+    Deprecated,
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]

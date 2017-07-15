@@ -1,5 +1,5 @@
 use cargo_registry::app::App;
-use cargo_registry::badge::Badge;
+use cargo_registry::badge::{Badge, MaintenanceValue};
 use cargo_registry::krate::Crate;
 
 use std::collections::HashMap;
@@ -22,6 +22,8 @@ struct BadgeRef {
     coveralls_attributes: HashMap<String, String>,
     circle_ci: Badge,
     circle_ci_attributes: HashMap<String, String>,
+    maintenance: Badge,
+    maintenance_attributes: HashMap<String, String>,
 }
 
 fn set_up() -> (Arc<App>, Crate, BadgeRef) {
@@ -106,6 +108,13 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let maintenance = Badge::Maintenance { value: MaintenanceValue::LookingForMaintainer };
+    let mut maintenance_attributes = HashMap::new();
+    maintenance_attributes.insert(
+        String::from("value"),
+        String::from("looking-for-maintainer"),
+    );
+
     let badges = BadgeRef {
         appveyor: appveyor,
         appveyor_attributes: badge_attributes_appveyor,
@@ -124,6 +133,8 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
         coveralls_attributes: badge_attributes_coveralls,
         circle_ci: circle_ci,
         circle_ci_attributes: badge_attributes_circle_ci,
+        maintenance,
+        maintenance_attributes,
     };
     (app, krate, badges)
 }
@@ -245,6 +256,21 @@ fn update_add_circle_ci() {
     badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
     Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.circle_ci]);
+}
+
+#[test]
+fn update_add_maintenance() {
+    // Add a maintenance badge
+    let (app, krate, test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("maintenance"),
+        test_badges.maintenance_attributes,
+    );
+    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.maintenance]);
 }
 
 #[test]
@@ -477,6 +503,53 @@ fn circle_ci_required_keys() {
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
     assert!(invalid_badges.contains(&"circle-ci"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+}
+
+#[test]
+fn maintenance_required_keys() {
+    // Add a maintenance badge missing a required field
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
+
+    let mut badges = HashMap::new();
+
+    // Value is a required key
+    test_badges.maintenance_attributes.remove("value");
+    badges.insert(
+        String::from("maintenance"),
+        test_badges.maintenance_attributes,
+    );
+
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&"maintenance"));
+    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+}
+
+#[test]
+fn maintenance_invalid_values() {
+    // Add a maintenance badge with an invalid value
+    let (app, krate, mut test_badges) = set_up();
+    let conn = app.diesel_database.get().unwrap();
+
+    let mut badges = HashMap::new();
+
+    // "totes broken" is not a recognized value
+    test_badges.maintenance_attributes.insert(
+        String::from("value"),
+        String::from(
+            "totes broken",
+        ),
+    );
+    badges.insert(
+        String::from("maintenance"),
+        test_badges.maintenance_attributes,
+    );
+
+    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    assert_eq!(invalid_badges.len(), 1);
+    assert!(invalid_badges.contains(&"maintenance"));
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
