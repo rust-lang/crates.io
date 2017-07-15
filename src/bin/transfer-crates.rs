@@ -83,7 +83,7 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         }
     }
 
-    let _ = tx.execute(
+    tx.execute(
         "UPDATE crate_owners SET owner_id = $1
                              WHERE owner_id = $2",
         &[&to.id, &from.id],
