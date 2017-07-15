@@ -44,7 +44,6 @@ pub enum Badge {
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
-#[serde(tag = "badge_type", content = "attributes")]
 pub enum MaintenanceValue {
     #[serde(rename = "actively-developed")]
     ActivelyDeveloped,
