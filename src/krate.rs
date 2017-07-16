@@ -678,44 +678,6 @@ impl Crate {
         Ok(())
     }
 
-    pub fn add_version(
-        &mut self,
-        conn: &GenericConnection,
-        ver: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
-        authors: &[String],
-    ) -> CargoResult<Version> {
-        if Version::find_by_num(conn, self.id, ver)?.is_some() {
-            return Err(human(
-                &format_args!("crate version `{}` is already uploaded", ver),
-            ));
-        }
-        Version::insert(conn, self.id, ver, features, authors)
-    }
-
-    pub fn keywords(&self, conn: &GenericConnection) -> CargoResult<Vec<Keyword>> {
-        let stmt = conn.prepare(
-            "SELECT keywords.* FROM keywords
-                                      LEFT JOIN crates_keywords
-                                      ON keywords.id = crates_keywords.keyword_id
-                                      WHERE crates_keywords.crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
-    }
-
-    pub fn categories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
-        let stmt = conn.prepare(
-            "SELECT categories.* FROM categories \
-             LEFT JOIN crates_categories \
-             ON categories.id = \
-             crates_categories.category_id \
-             WHERE crates_categories.crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
-    }
-
     pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
         badges::table.filter(badges::crate_id.eq(self.id)).load(
             conn,

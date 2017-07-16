@@ -4,7 +4,6 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
 use diesel::pg::PgConnection;
-use pg::GenericConnection;
 use pg::rows::Row;
 
 use db::RequestTransaction;
@@ -145,39 +144,6 @@ impl Category {
             limit,
             offset
         ))).load(conn)
-    }
-
-    pub fn toplevel_old(
-        conn: &GenericConnection,
-        sort: &str,
-        limit: i64,
-        offset: i64,
-    ) -> CargoResult<Vec<Category>> {
-
-        let sort_sql = match sort {
-            "crates" => "ORDER BY crates_cnt DESC",
-            _ => "ORDER BY category ASC",
-        };
-
-        // Collect all the top-level categories and sum up the crates_cnt of
-        // the crates in all subcategories
-        let stmt = conn.prepare(&format!(
-            "SELECT c.id, c.category, c.slug, c.description, c.created_at,
-                sum(c2.crates_cnt)::int as crates_cnt
-             FROM categories as c
-             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug
-             WHERE split_part(c.slug, '::', 1) = c.slug
-             GROUP BY c.id
-             {} LIMIT $1 OFFSET $2",
-            sort_sql
-        ))?;
-
-        let categories: Vec<_> = stmt.query(&[&limit, &offset])?
-            .iter()
-            .map(|row| Model::from_row(&row))
-            .collect();
-
-        Ok(categories)
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {

@@ -112,10 +112,6 @@ impl Version {
         Ok(ret)
     }
 
-    pub fn valid(version: &str) -> bool {
-        semver::Version::parse(version).is_ok()
-    }
-
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version {
             id,
@@ -162,14 +158,6 @@ impl Version {
             "INSERT INTO version_authors (version_id, name)
                            VALUES ($1, $2)",
             &[&self.id, &name],
-        )?;
-        Ok(())
-    }
-
-    pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
-        conn.execute(
-            "UPDATE versions SET yanked = $1 WHERE id = $2",
-            &[&yanked, &self.id],
         )?;
         Ok(())
     }
