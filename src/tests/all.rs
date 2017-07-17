@@ -1,4 +1,4 @@
-#![deny(warnings)]
+//#![deny(warnings)]
 
 #[macro_use]
 extern crate serde_derive;
@@ -7,6 +7,7 @@ extern crate diesel;
 extern crate diesel_codegen;
 extern crate bufstream;
 extern crate cargo_registry;
+extern crate chrono;
 extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
@@ -32,7 +33,7 @@ use cargo_registry::category::NewCategory;
 use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::NewCrate;
+use cargo_registry::krate::{NewCrate, CrateDownload};
 use cargo_registry::schema::dependencies;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
@@ -308,6 +309,7 @@ struct CrateBuilder<'a> {
     owner_id: i32,
     krate: NewCrate<'a>,
     downloads: Option<i32>,
+    recent_downloads: Option<i32>,
     versions: Vec<VersionBuilder<'a>>,
     keywords: Vec<&'a str>,
 }
@@ -321,6 +323,7 @@ impl<'a> CrateBuilder<'a> {
                 ..NewCrate::default()
             },
             downloads: None,
+            recent_downloads: None,
             versions: Vec::new(),
             keywords: Vec::new(),
         }
@@ -356,6 +359,11 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    fn recent_downloads(mut self, recent_downloads: i32) -> Self {
+        self.recent_downloads = Some(recent_downloads);
+        self
+    }
+
     fn version<T: Into<VersionBuilder<'a>>>(mut self, version: T) -> Self {
         self.versions.push(version.into());
         self
@@ -367,15 +375,37 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::update;
+        use diesel::{insert, update};
 
         let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
+
+        let old_downloads = self.downloads.unwrap_or(0) - self.recent_downloads.unwrap_or(0);
+        let now = chrono::Utc::now();
+        let old_date = now.naive_utc().date() - chrono::Duration::days(91);
+
         if let Some(downloads) = self.downloads {
+            let crate_download = CrateDownload {
+                crate_id: krate.id,
+                downloads: old_downloads,
+                date: old_date,
+            };
+
+            insert(&crate_download).into(crate_downloads::table).execute(connection)?;
             krate.downloads = downloads;
             update(&krate).set(&krate).execute(connection)?;
+        }
+
+        if let Some(recent_downloads) = self.recent_downloads {
+            let crate_download = CrateDownload {
+                crate_id: krate.id,
+                downloads: self.recent_downloads.unwrap(),
+                date: now.naive_utc().date(),
+            };
+
+            insert(&crate_download).into(crate_downloads::table).execute(connection)?;
         }
 
         if self.versions.is_empty() {

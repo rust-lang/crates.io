@@ -40,7 +40,7 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Queryable, Identifiable, Associations, AsChangeset)]
+#[derive(Insertable, Queryable, Identifiable, Associations, AsChangeset)]
 #[belongs_to(Crate)]
 #[primary_key(crate_id, date)]
 #[table_name="crate_downloads"]
