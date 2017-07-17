@@ -12,6 +12,7 @@ export default BaseSerializer.extend({
         'num',
         'updated_at',
         'yanked',
+        'license',
     ],
 
     links(version) {

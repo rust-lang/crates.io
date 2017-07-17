@@ -11,7 +11,6 @@ export default BaseSerializer.extend({
         'homepage',
         'id',
         'keywords',
-        'license',
         'links',
         'max_version',
         'name',

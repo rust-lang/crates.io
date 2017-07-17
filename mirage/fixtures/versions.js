@@ -13,6 +13,7 @@ export default [{
     "num": "0.7.0-alpha.1",
     "updated_at": "2016-12-27T08:40:00Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -37,6 +38,7 @@ export default [{
     "num": "0.6.1",
     "updated_at": "2016-12-27T08:40:00Z",
     "yanked": false,
+    "license": "Apache-2.0",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -58,6 +60,7 @@ export default [{
     "num": "0.6.0",
     "updated_at": "2016-06-10T20:03:55Z",
     "yanked": false,
+    "license": "Apache-2.0",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -79,6 +82,7 @@ export default [{
     "num": "0.5.0",
     "updated_at": "2016-01-24T22:07:58Z",
     "yanked": false,
+    "license": "MIT/Apache-2.0",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -100,6 +104,7 @@ export default [{
     "num": "0.4.2",
     "updated_at": "2015-12-16T00:01:56Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -121,6 +126,7 @@ export default [{
     "num": "0.4.1",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -142,6 +148,7 @@ export default [{
     "num": "0.4.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -163,6 +170,7 @@ export default [{
     "num": "0.3.4",
     "updated_at": "2015-12-15T00:03:39Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -184,6 +192,7 @@ export default [{
     "num": "0.3.3",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -205,6 +214,7 @@ export default [{
     "num": "0.3.2",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "Apache-2.0",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -226,6 +236,7 @@ export default [{
     "num": "0.3.1",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT/Apache-2.0",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -247,6 +258,7 @@ export default [{
     "num": "0.3.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -268,6 +280,7 @@ export default [{
     "num": "0.2.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "Daniel Fagnan <someone@example.com>",
         "Jason E. Aten",
@@ -289,6 +302,7 @@ export default [{
     "num": "0.2.0",
     "updated_at": "2015-12-11T23:54:29Z",
     "yanked": false,
+    "license": "MIT",
     "_authors": [
         "David C. Bishop",
     ]
