@@ -104,7 +104,6 @@ pub struct EncodableCrate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
-    pub license: Option<String>,
     pub repository: Option<String>,
     pub links: CrateLinks,
     pub exact_match: bool,
@@ -507,7 +506,6 @@ impl Crate {
             homepage,
             documentation,
             repository,
-            license,
             ..
         } = self;
         let versions_link = match versions {
@@ -533,7 +531,6 @@ impl Crate {
             exact_match: exact_match,
             description: description,
             repository: repository,
-            license: license,
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
