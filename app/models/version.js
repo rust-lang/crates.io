@@ -8,6 +8,7 @@ export default DS.Model.extend({
     updated_at: DS.attr('date'),
     downloads: DS.attr('number'),
     yanked: DS.attr('boolean'),
+    license: DS.attr('string'),
 
     crate: DS.belongsTo('crate', {
         async: false

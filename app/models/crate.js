@@ -15,7 +15,6 @@ export default DS.Model.extend({
     issues: DS.attr('string'),
     documentation: DS.attr('string'),
     repository: DS.attr('string'),
-    license: DS.attr('string'),
     exact_match: DS.attr('boolean'),
 
     versions: DS.hasMany('versions', { async: true }),
