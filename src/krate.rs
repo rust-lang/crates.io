@@ -39,6 +39,8 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
+const DOCUMENTATION_BLACKLIST: [&'static str; 1] = ["rust-ci.org"];
+
 #[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
 pub struct Crate {
     pub id: i32,
@@ -544,13 +546,28 @@ impl Crate {
         }
     }
 
+    // Return None if the documentation URL host matches a blacklisted host
     fn remove_blacklisted_documentation_urls(url: Option<String>) -> Option<String> {
-        let blacklisted_url = "rust-ci.org";
+        let url = match url {
+            Some(url) => url,
+            None => return None,
+        };
 
-        match url {
-            Some(ref url) if url.contains(blacklisted_url) => None,
-            Some(_) => url,
-            None => None,
+        // Handles the case if the documentation URL does not parse successfully
+        let parsed_url = match Url::parse(&url) {
+            Ok(parsed_url) => parsed_url,
+            Err(_) => return None,
+        };
+
+        let url_host = match parsed_url.host_str() {
+            Some(url_host) => url_host,
+            None => return None,
+        };
+
+        if DOCUMENTATION_BLACKLIST.contains(&url_host) {
+            None
+        } else {
+            Some(url)
         }
     }
 
