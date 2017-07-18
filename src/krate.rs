@@ -752,7 +752,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
+    let sort = params.get("sort").map(|s| &**s).unwrap_or("recent-downloads");
 
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
@@ -771,6 +771,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     if let Some(q_string) = params.get("q") {
+        let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
         let q = plainto_tsquery(q_string);
         query = query.filter(q.matches(crates::textsearchable_index_col).or(
             crates::name.eq(
