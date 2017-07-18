@@ -170,6 +170,12 @@ export default function() {
         return withMeta(this.serialize(categories), { total });
     });
 
+    this.get('/categories/:category_id', function(schema, request) {
+        let catId = request.params.category_id;
+        let category = schema.categories.find(catId);
+        return category ? category : notFound();
+    });
+
     this.get('/keywords', function(schema, request) {
         let { start, end } = pageParams(request);
 

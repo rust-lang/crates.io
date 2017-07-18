@@ -15,3 +15,12 @@ test('listing categories', async function(assert) {
     hasText(assert, '.row:eq(1) .desc .info span', '1 crate');
     hasText(assert, '.row:eq(2) .desc .info span', '3,910 crates');
 });
+
+test('category/:category_id index default sort is recent-downloads', async function(assert) {
+    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+
+    await visit('/categories/algorithms');
+
+    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
+    hasText(assert, $sort, 'Recent Downloads');
+});

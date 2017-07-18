@@ -55,3 +55,17 @@ test('pressing S key to focus the search bar', async function(assert) {
     await keyEvent(document, 'keydown', KEYCODE_S);
     assertSearchBarIsFocused();
 });
+
+test('check search results are by default displayed by relevance', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/');
+    await fillIn('input.search', 'rust');
+
+    findWithAssert('form.search').submit();
+
+    await wait();
+
+    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
+    hasText(assert, $sort, 'Relevance');
+});

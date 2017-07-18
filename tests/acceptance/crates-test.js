@@ -43,3 +43,28 @@ test('navigating to next page of crates', async function(assert) {
     hasText(assert, '.amt.small .cur', '11-19');
     hasText(assert, '.amt.small .total', '19');
 });
+
+test('crates default sort is alphabetical', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates');
+
+    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
+    hasText(assert, $sort, 'Alphabetical');
+});
+
+test('downloads appears for each crate on crate list', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates');
+    const $recentDownloads = findWithAssert('div.downloads:first span.num');
+    hasText(assert, $recentDownloads, 'All-Time: 497');
+});
+
+test('recent downloads appears for each crate on crate list', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates');
+    const $recentDownloads = findWithAssert('div.recent-downloads:first span.num');
+    hasText(assert, $recentDownloads, 'Recent:');
+});
