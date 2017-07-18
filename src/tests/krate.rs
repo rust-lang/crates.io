@@ -1933,13 +1933,12 @@ fn check_ownership_one_crate() {
     assert_eq!(json.users[0].name, user.name);
 }
 
-/*  Test recent download count
-    insert crate_downloads for a crate
-    2 crates:
-    - Date more than 90 days ago and number
-    - Date less than 90 days ago and number:
-        verify index returns recent downloads only
-    verify index returns total downloads that is the total
+/*  Given two crates, one with downloads less than 90 days ago, the
+    other with all downloads greater than 90 days ago, check that
+    the order returned is by recent downloads, descending. Check
+    also that recent download counts are returned in recent_downloads,
+    and total downloads counts are returned in downloads, and that
+    these numbers do not overlap.
 */
 #[test]
 fn test_recent_download_count() {
@@ -1979,9 +1978,9 @@ fn test_recent_download_count() {
     assert_eq!(json.crates[1].downloads, 10);
 }
 
-/*  Test zero downloads
-    - Crate should show up in index results
-    - Shows up with 0 counts for downloads
+/*  Given one crate with zero downloads, check that the crate
+    still shows up in index results, but that it displays 0
+    for both recent downloads and downloads.
  */
 #[test]
 fn test_zero_downloads() {
@@ -2010,14 +2009,9 @@ fn test_zero_downloads() {
     assert_eq!(json.crates[0].downloads, 0);
 }
 
-/*  Test that index for categories and keywords is sorted
-    by recent downloads by default
-    - set up 2 crates, one with more all-time, one with
-      more recent
-
-      recent  total
-   c1 10      10
-   c2 0       50
+/*  Given two crates, one with more all-time downloads, the other with
+    more downloads in the past 90 days, check that the index page for
+    categories and keywords is sorted by recent downlaods by default.
 */
 #[test]
 fn test_default_sort_recent() {
