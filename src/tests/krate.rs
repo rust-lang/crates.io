@@ -2007,32 +2007,61 @@ fn test_zero_downloads() {
    c1 10      10
    c2 0       50
 */
-/*#[test]
+#[test]
 fn test_default_sort_recent() {
     let (_b, app, middle) = ::app();
 
-    {
+    let (green_crate, potato_crate) = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
 
         // More than 90 days ago
-        ::CrateBuilder::new("green_ball", user.id)
+        let green_crate = ::CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
+            .keyword("dog")
             .downloads(10)
             .recent_downloads(10)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("sweet_potato_snack", user.id)
+        let potato_crate = ::CrateBuilder::new("sweet_potato_snack", user.id)
             .description("For when better than usual")
+            .keyword("dog")
             .downloads(20)
             .recent_downloads(0)
             .expect_build(&conn);
+
+        (green_crate, potato_crate)
+    };
+
+    // test that index for keywords is sorted by recent_downloads
+    // by default
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("keyword=dog")));
+    let json:CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[1].name, "sweet_potato_snack");
+
+    assert_eq!(json.crates[0].recent_downloads, Some(10));
+    assert_eq!(json.crates[0].downloads, 10);
+
+    assert_eq!(json.crates[1].recent_downloads, Some(0));
+    assert_eq!(json.crates[1].downloads, 20);
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_category("Animal", "animal")
+            .create_or_update(&conn)
+            .unwrap();
+        Category::update_crate(&conn, &green_crate, &["animal"]).unwrap();
+        Category::update_crate(&conn, &potato_crate, &["animal"]).unwrap();
     }
 
     // test that index for categories is sorted by recent_downloads
     // by default
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/categories");
-    let mut response = ok_resp!(middle.call(&mut req));
+    let mut response = ok_resp!(middle.call(req.with_query("category=animal")));
     let json:CrateList = ::json(&mut response);
 
     assert_eq!(json.meta.total, 2);
@@ -2045,21 +2074,4 @@ fn test_default_sort_recent() {
 
     assert_eq!(json.crates[1].recent_downloads, Some(0));
     assert_eq!(json.crates[1].downloads, 20);
-
-    // test that index for keywords is sorted by recent_downloads
-    // by default
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/keywords");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json:CrateList = ::json(&mut response);
-
-    assert_eq!(json.meta.total, 2);
-
-    assert_eq!(json.crates[0].name, "green_ball");
-    assert_eq!(json.crates[1].name, "sweet_potato_snack");
-
-    assert_eq!(json.crates[0].recent_downloads, Some(10));
-    assert_eq!(json.crates[0].downloads, 10);
-
-    assert_eq!(json.crates[1].recent_downloads, Some(0));
-    assert_eq!(json.crates[1].downloads, 20);
-}*/
+}
