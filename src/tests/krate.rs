@@ -311,11 +311,13 @@ fn exact_match_on_queries_with_sort() {
         ::CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
+            .recent_downloads(50)
             .expect_build(&conn);
 
         ::CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
+            .recent_downloads(0)
             .expect_build(&conn);
 
         ::CrateBuilder::new("baz_sort", user.id)
@@ -323,6 +325,7 @@ fn exact_match_on_queries_with_sort() {
                 "foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const",
             )
             .downloads(100000)
+            .recent_downloads(10)
             .expect_build(&conn);
 
         ::CrateBuilder::new("other_sort", user.id)
@@ -331,6 +334,7 @@ fn exact_match_on_queries_with_sort() {
             .expect_build(&conn);
     }
 
+    // Sort by downloads
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("q=foo_sort&sort=downloads")));
     let json: CrateList = ::json(&mut response);
@@ -360,6 +364,14 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "bar_sort");
     assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Sort by recent-downloads
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar_sort");
+    assert_eq!(json.crates[1].name, "foo_sort");
+    assert_eq!(json.crates[2].name, "baz_sort");
 }
 
 #[test]
