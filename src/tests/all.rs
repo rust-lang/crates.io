@@ -398,7 +398,7 @@ impl<'a> CrateBuilder<'a> {
             update(&krate).set(&krate).execute(connection)?;
         }
 
-        if let Some(recent_downloads) = self.recent_downloads {
+        if self.recent_downloads.is_some() {
             let crate_download = CrateDownload {
                 crate_id: krate.id,
                 downloads: self.recent_downloads.unwrap(),
