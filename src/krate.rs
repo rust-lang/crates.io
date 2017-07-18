@@ -757,7 +757,13 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
     let mut query = crates::table
-        .join(crate_downloads::table, LeftOuter, crates::id.eq(crate_downloads::crate_id).and(crate_downloads::date.gt(date(now - 90.days()))))
+        .join(
+            crate_downloads::table,
+            LeftOuter,
+            crates::id
+                .eq(crate_downloads::crate_id)
+                .and(crate_downloads::date.gt(date(now - 90.days())))
+             )
         .group_by(crates::id)
         .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false), recent_downloads.clone()))
         .into_boxed();
@@ -851,7 +857,6 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    println!("crate count: {:?}", crates::table.count().get_result::<i64>(&*conn));
     let data = query.paginate(limit, offset).load::<((Crate, bool, Option<i64>), i64)>(
         &*conn,
     )?;
