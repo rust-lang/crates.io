@@ -393,7 +393,9 @@ impl<'a> CrateBuilder<'a> {
                 date: old_date,
             };
 
-            insert(&crate_download).into(crate_downloads::table).execute(connection)?;
+            insert(&crate_download)
+                .into(crate_downloads::table)
+                .execute(connection)?;
             krate.downloads = downloads;
             update(&krate).set(&krate).execute(connection)?;
         }
@@ -405,7 +407,9 @@ impl<'a> CrateBuilder<'a> {
                 date: now.naive_utc().date(),
             };
 
-            insert(&crate_download).into(crate_downloads::table).execute(connection)?;
+            insert(&crate_download)
+                .into(crate_downloads::table)
+                .execute(connection)?;
         }
 
         if self.versions.is_empty() {

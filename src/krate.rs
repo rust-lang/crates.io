@@ -43,7 +43,7 @@ use {Model, User, Keyword, Version, Category, Badge, Replica};
 #[derive(Insertable, Queryable, Identifiable, Associations, AsChangeset)]
 #[belongs_to(Crate)]
 #[primary_key(crate_id, date)]
-#[table_name="crate_downloads"]
+#[table_name = "crate_downloads"]
 pub struct CrateDownload {
     pub crate_id: i32,
     pub downloads: i32,
@@ -498,7 +498,15 @@ impl Crate {
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> EncodableCrate {
-        self.encodable(max_version, None, None, None, badges, exact_match, recent_downloads)
+        self.encodable(
+            max_version,
+            None,
+            None,
+            None,
+            badges,
+            exact_match,
+            recent_downloads,
+        )
     }
 
     pub fn encodable(
@@ -752,7 +760,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    let sort = params.get("sort").map(|s| &**s).unwrap_or("recent-downloads");
+    let sort = params.get("sort").map(|s| &**s).unwrap_or(
+        "recent-downloads",
+    );
 
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
@@ -760,12 +770,16 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .join(
             crate_downloads::table,
             LeftOuter,
-            crates::id
-                .eq(crate_downloads::crate_id)
-                .and(crate_downloads::date.gt(date(now - 90.days())))
-             )
+            crates::id.eq(crate_downloads::crate_id).and(
+                crate_downloads::date.gt(date(now - 90.days())),
+            ),
+        )
         .group_by(crates::id)
-        .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false), recent_downloads.clone()))
+        .select((
+            ALL_COLUMNS,
+            AsExpression::<Bool>::as_expression(false),
+            recent_downloads.clone(),
+        ))
         .into_boxed();
 
     if sort == "downloads" {
@@ -785,7 +799,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         ));
 
-        query = query.select((ALL_COLUMNS, crates::name.eq(q_string), recent_downloads.clone()));
+        query = query.select((
+            ALL_COLUMNS,
+            crates::name.eq(q_string),
+            recent_downloads.clone(),
+        ));
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
@@ -857,15 +875,21 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let data = query.paginate(limit, offset).load::<((Crate, bool, Option<i64>), i64)>(
-        &*conn,
-    )?;
+    let data = query
+        .paginate(limit, offset)
+        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let crates = data.iter()
         .map(|&((ref c, _, _), _)| c.clone())
         .collect::<Vec<_>>();
-    let perfect_matches = data.clone().into_iter().map(|((_, b, _), _)| b).collect::<Vec<_>>();
-    let recent_downloads = data.clone().into_iter().map(|((_, _, s), _)| s.unwrap_or(0)).collect::<Vec<_>>();
+    let perfect_matches = data.clone()
+        .into_iter()
+        .map(|((_, b, _), _)| b)
+        .collect::<Vec<_>>();
+    let recent_downloads = data.clone()
+        .into_iter()
+        .map(|((_, _, s), _)| s.unwrap_or(0))
+        .collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
@@ -877,7 +901,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .zip(crates)
         .zip(perfect_matches)
         .zip(recent_downloads)
-        .map(|(((max_version, krate), perfect_match), recent_downloads)| {
+        .map(|(((max_version, krate), perfect_match),
+          recent_downloads)| {
             // FIXME: If we add crate_id to the Badge enum we can eliminate
             // this N+1
             let badges = badges::table

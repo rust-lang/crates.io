@@ -366,7 +366,9 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[3].name, "foo_sort");
 
     // Sort by recent-downloads
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-downloads")));
+    let mut response = ok_resp!(middle.call(
+        req.with_query("q=bar_sort&sort=recent-downloads"),
+    ));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "bar_sort");
@@ -1964,7 +1966,7 @@ fn test_recent_download_count() {
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json:CrateList = ::json(&mut response);
+    let json: CrateList = ::json(&mut response);
 
     assert_eq!(json.meta.total, 2);
 
@@ -2000,7 +2002,7 @@ fn test_zero_downloads() {
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json:CrateList = ::json(&mut response);
+    let json: CrateList = ::json(&mut response);
 
     assert_eq!(json.meta.total, 1);
 
@@ -2043,7 +2045,7 @@ fn test_default_sort_recent() {
     // by default
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("keyword=dog")));
-    let json:CrateList = ::json(&mut response);
+    let json: CrateList = ::json(&mut response);
 
     assert_eq!(json.meta.total, 2);
 
@@ -2068,7 +2070,7 @@ fn test_default_sort_recent() {
     // test that index for categories is sorted by recent_downloads
     // by default
     let mut response = ok_resp!(middle.call(req.with_query("category=animal")));
-    let json:CrateList = ::json(&mut response);
+    let json: CrateList = ::json(&mut response);
 
     assert_eq!(json.meta.total, 2);
 
