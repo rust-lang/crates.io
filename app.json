@@ -56,19 +56,19 @@
   ],
   "buildpacks": [
       {
-        "url": "https://github.com/rcaught/heroku-buildpack-cmake.git#e4e2c9e"
+        "url": "https://github.com/rcaught/heroku-buildpack-cmake"
       },
       {
-        "url": "https://github.com/emk/heroku-buildpack-rust.git#578d630"
+        "url": "https://github.com/emk/heroku-buildpack-rust"
       },
       {
         "url": "https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/emberjs.tgz"
       },
       {
-        "url": "https://github.com/travis-ci/nginx-buildpack.git#2fbde35"
+        "url": "https://github.com/travis-ci/nginx-buildpack"
       },
       {
-        "url": "https://github.com/sgrif/heroku-buildpack-diesel.git#f605edd"
+        "url": "https://github.com/sgrif/heroku-buildpack-diesel"
       }
   ]
 }
