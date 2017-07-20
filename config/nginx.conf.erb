@@ -36,15 +36,16 @@ http {
 		listen <%= ENV["PORT"] %>;
 		server_name _;
 		keepalive_timeout 5;
-		add_header Strict-Transport-Security "max-age=31536000";
 
 		location ~ ^/assets/ {
+			add_header Strict-Transport-Security "max-age=31536000" always;
 			add_header Cache-Control public;
 			root dist;
 			expires max;
 		}
 
 		location / {
+			add_header Strict-Transport-Security "max-age=31536000" always;
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
