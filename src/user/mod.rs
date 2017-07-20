@@ -7,6 +7,7 @@ use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
+use serde_json;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -25,7 +26,7 @@ pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -437,4 +438,50 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
         total_downloads: i64,
     }
     Ok(req.json(&R { total_downloads: data }))
+}
+
+/// Handles the `PUT /user/:user_id` route.
+pub fn update_user(req: &mut Request) -> CargoResult<Response> {
+    use diesel::update;
+    use self::users::dsl::{users, gh_login, email};
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let user = req.user()?;
+    let name = &req.params()["user_id"];
+    let conn = req.db_conn()?;
+
+    // need to check if current user matches user to be updated
+    if &user.id.to_string() != name {
+        return Err(human("current user does not match requested user"));
+    }
+
+    #[derive(Deserialize)]
+    struct UserUpdate {
+        user: User,
+    }
+
+    #[derive(Deserialize)]
+    struct User {
+        avatar: Option<String>,
+        email: Option<String>,
+        kind: Option<i32>,
+        login: String,
+        name: Option<String>,
+        url: Option<String>,
+    }
+
+    let user_update: UserUpdate = serde_json::from_str(&body).map_err(
+        |_| human("invalid json request"),
+    )?;
+
+    update(users.filter(gh_login.eq(&user.gh_login)))
+        .set(email.eq(user_update.user.email))
+        .execute(&*conn)?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
 }
