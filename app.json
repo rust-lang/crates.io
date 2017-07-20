@@ -65,7 +65,7 @@
         "url": "https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/emberjs.tgz"
       },
       {
-        "url": "https://github.com/ryandotsmith/nginx-buildpack.git#af813ba"
+        "url": "https://github.com/travis-ci/nginx-buildpack.git#2fbde35"
       },
       {
         "url": "https://github.com/sgrif/heroku-buildpack-diesel.git#f605edd"
