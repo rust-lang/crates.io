@@ -470,8 +470,15 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         |_| human("invalid json request"),
     )?;
 
+    if user_update.user.email.is_none() {
+        return Err(human("empty email rejected"));
+    }
+
+    let user_email = user_update.user.email.unwrap();
+    let user_email = user_email.trim();
+
     update(users.filter(gh_login.eq(&user.gh_login)))
-        .set(email.eq(user_update.user.email))
+        .set(email.eq(user_email))
         .execute(&*conn)?;
 
     #[derive(Serialize)]

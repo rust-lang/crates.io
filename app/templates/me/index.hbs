@@ -19,10 +19,10 @@
             <dt>Email</dt>
 
             {{#if isEditing }}
-                {{input value=userEmail type="text" placeholder="Email" enter="saveEmail"}}
+                {{validated-input model=model.user value=userEmail valuePath='email' placeHolder='Email'}}
                 <p>Please add your email address. We need this in order to contact you
                 just in case anything goes wrong. We promise we'll never share it!</p>
-                <button class='small yellow-button' {{action "saveEmail"}}>Save</button>
+                <button class='small yellow-button' disabled={{v-get model.user 'isInvalid'}} {{action "saveEmail"}}>Save</button>
                 <button class='small yellow-button' {{action "cancelEdit"}}>Cancel</button>
             {{else}}
                 <dd>{{ model.user.email }}</dd>
