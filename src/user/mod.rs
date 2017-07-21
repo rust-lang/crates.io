@@ -463,12 +463,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Deserialize)]
     struct User {
-        avatar: Option<String>,
         email: Option<String>,
-        kind: Option<i32>,
-        login: String,
-        name: Option<String>,
-        url: Option<String>,
     }
 
     let user_update: UserUpdate = serde_json::from_str(&body).map_err(
