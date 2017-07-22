@@ -39,6 +39,7 @@ http {
 
 		location ~ ^/assets/ {
 			add_header Strict-Transport-Security "max-age=31536000" always;
+			add_header X-Content-Type-Options nosniff;
 			add_header Cache-Control public;
 			root dist;
 			expires max;
