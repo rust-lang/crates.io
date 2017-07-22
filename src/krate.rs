@@ -241,7 +241,7 @@ impl<'a> NewCrate<'a> {
         }
     }
 
-    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> CargoResult<Option<Crate>> {
+    fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
         use schema::crates::dsl::*;
         use diesel::insert;
 
@@ -554,19 +554,6 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn max_version_old(&self, conn: &GenericConnection) -> CargoResult<semver::Version> {
-        let stmt = conn.prepare(
-            "SELECT num FROM versions WHERE crate_id = $1
-                                 AND yanked = 'f'",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(Version::max(
-            rows.iter().map(|r| r.get::<_, String>("num")).map(|s| {
-                semver::Version::parse(&s).unwrap()
-            }),
-        ))
-    }
-
     pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
         let stmt = conn.prepare(
             "SELECT * FROM versions \
@@ -600,6 +587,7 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
+    // TODO: Update bin/transfer_crates to use owners() then get rid of this
     pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
         let stmt = conn.prepare(
             "SELECT * FROM users
@@ -687,44 +675,6 @@ impl Crate {
         Ok(())
     }
 
-    pub fn add_version(
-        &mut self,
-        conn: &GenericConnection,
-        ver: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
-        authors: &[String],
-    ) -> CargoResult<Version> {
-        if Version::find_by_num(conn, self.id, ver)?.is_some() {
-            return Err(human(
-                &format_args!("crate version `{}` is already uploaded", ver),
-            ));
-        }
-        Version::insert(conn, self.id, ver, features, authors)
-    }
-
-    pub fn keywords(&self, conn: &GenericConnection) -> CargoResult<Vec<Keyword>> {
-        let stmt = conn.prepare(
-            "SELECT keywords.* FROM keywords
-                                      LEFT JOIN crates_keywords
-                                      ON keywords.id = crates_keywords.keyword_id
-                                      WHERE crates_keywords.crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
-    }
-
-    pub fn categories(&self, conn: &GenericConnection) -> CargoResult<Vec<Category>> {
-        let stmt = conn.prepare(
-            "SELECT categories.* FROM categories \
-             LEFT JOIN crates_categories \
-             ON categories.id = \
-             crates_categories.category_id \
-             WHERE crates_categories.crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        Ok(rows.iter().map(|r| Model::from_row(&r)).collect())
-    }
-
     pub fn badges(&self, conn: &PgConnection) -> QueryResult<Vec<Badge>> {
         badges::table.filter(badges::crate_id.eq(self.id)).load(
             conn,
@@ -737,7 +687,7 @@ impl Crate {
         conn: &PgConnection,
         offset: i64,
         limit: i64,
-    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::expression::dsl::sql;
         use diesel::types::{Integer, Text, BigInt};
 

@@ -1,6 +1,5 @@
 use krate::Crate;
 use schema::badges;
-use util::CargoResult;
 
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
@@ -79,7 +78,7 @@ impl Badge {
         conn: &PgConnection,
         krate: &Crate,
         badges: Option<&'a HashMap<String, HashMap<String, String>>>,
-    ) -> CargoResult<Vec<&'a str>> {
+    ) -> QueryResult<Vec<&'a str>> {
         use diesel::{insert, delete};
 
         #[derive(Insertable)]

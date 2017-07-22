@@ -4,13 +4,11 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
 use diesel::pg::PgConnection;
-use pg::GenericConnection;
 use pg::rows::Row;
 
 use db::RequestTransaction;
 use schema::*;
-use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, ChainError};
+use util::{RequestUtils, CargoResult};
 use {Model, Crate};
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
@@ -56,17 +54,6 @@ pub struct EncodableCategoryWithSubcategories {
 }
 
 impl Category {
-    pub fn find_by_category(conn: &GenericConnection, name: &str) -> CargoResult<Category> {
-        let stmt = conn.prepare(
-            "SELECT * FROM categories \
-             WHERE category = $1",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        rows.iter().next().chain_error(|| NotFound).map(|row| {
-            Model::from_row(&row)
-        })
-    }
-
     pub fn encodable(self) -> EncodableCategory {
         let Category {
             crates_cnt,
@@ -159,39 +146,6 @@ impl Category {
         ))).load(conn)
     }
 
-    pub fn toplevel_old(
-        conn: &GenericConnection,
-        sort: &str,
-        limit: i64,
-        offset: i64,
-    ) -> CargoResult<Vec<Category>> {
-
-        let sort_sql = match sort {
-            "crates" => "ORDER BY crates_cnt DESC",
-            _ => "ORDER BY category ASC",
-        };
-
-        // Collect all the top-level categories and sum up the crates_cnt of
-        // the crates in all subcategories
-        let stmt = conn.prepare(&format!(
-            "SELECT c.id, c.category, c.slug, c.description, c.created_at,
-                sum(c2.crates_cnt)::int as crates_cnt
-             FROM categories as c
-             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug
-             WHERE split_part(c.slug, '::', 1) = c.slug
-             GROUP BY c.id
-             {} LIMIT $1 OFFSET $2",
-            sort_sql
-        ))?;
-
-        let categories: Vec<_> = stmt.query(&[&limit, &offset])?
-            .iter()
-            .map(|row| Model::from_row(&row))
-            .collect();
-
-        Ok(categories)
-    }
-
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
         use diesel::expression::dsl::*;
         use diesel::types::Text;
@@ -221,7 +175,7 @@ pub struct NewCategory<'a> {
 
 impl<'a> NewCategory<'a> {
     /// Inserts the category into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Category> {
+    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
         use diesel::insert;
         use diesel::pg::upsert::*;
 

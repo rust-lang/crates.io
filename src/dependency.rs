@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 use diesel::pg::{Pg, PgConnection};
 use diesel::types::{Integer, Text};
-use pg::GenericConnection;
 use pg::rows::Row;
 use semver;
 
@@ -72,42 +71,6 @@ pub struct NewDependency<'a> {
 }
 
 impl Dependency {
-    // FIXME: Encapsulate this in a `NewDependency` struct
-    #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
-    pub fn insert(
-        conn: &GenericConnection,
-        version_id: i32,
-        crate_id: i32,
-        req: &semver::VersionReq,
-        kind: Kind,
-        optional: bool,
-        default_features: bool,
-        features: &[String],
-        target: &Option<String>,
-    ) -> CargoResult<Dependency> {
-        let req = req.to_string();
-        let stmt = conn.prepare(
-            "INSERT INTO dependencies
-                                      (version_id, crate_id, req, optional,
-                                       default_features, features, target, kind)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[
-                &version_id,
-                &crate_id,
-                &req,
-                &optional,
-                &default_features,
-                &features,
-                target,
-                &(kind as i32),
-            ],
-        )?;
-        Ok(Model::from_row(&rows.iter().next().unwrap()))
-    }
-
     // `downloads` need only be specified when generating a reverse dependency
     pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
         EncodableDependency {

@@ -6,6 +6,7 @@ use diesel;
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
 use pg::GenericConnection;
+use pg::Result as PgResult;
 use pg::rows::Row;
 use semver;
 use serde_json;
@@ -76,7 +77,7 @@ impl Version {
         conn: &GenericConnection,
         crate_id: i32,
         num: &semver::Version,
-    ) -> CargoResult<Option<Version>> {
+    ) -> PgResult<Option<Version>> {
         let num = num.to_string();
         let stmt = conn.prepare(
             "SELECT * FROM versions \
@@ -109,10 +110,6 @@ impl Version {
             ret.add_author(conn, author)?;
         }
         Ok(ret)
-    }
-
-    pub fn valid(version: &str) -> bool {
-        semver::Version::parse(version).is_ok()
     }
 
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
@@ -156,19 +153,11 @@ impl Version {
             .load(conn)
     }
 
-    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> CargoResult<()> {
+    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> PgResult<()> {
         conn.execute(
             "INSERT INTO version_authors (version_id, name)
                            VALUES ($1, $2)",
             &[&self.id, &name],
-        )?;
-        Ok(())
-    }
-
-    pub fn yank(&self, conn: &GenericConnection, yanked: bool) -> CargoResult<()> {
-        conn.execute(
-            "UPDATE versions SET yanked = $1 WHERE id = $2",
-            &[&yanked, &self.id],
         )?;
         Ok(())
     }
