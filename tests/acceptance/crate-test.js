@@ -119,3 +119,12 @@ test('crates having team-owners', async function(assert) {
     findWithAssert('ul.owners li:first a[href="/teams/github:org:thehydroimpulse"]');
     assert.equal(find('ul.owners li').length, 4);
 });
+
+test('crates license is supplied by version', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg');
+    hasText(assert, '.license', 'Apache-2.0');
+    await click('#crate-versions a:contains("0.5.0")');
+    hasText(assert, '.license', 'MIT/Apache-2.0');
+});

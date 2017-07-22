@@ -13,6 +13,7 @@ export default Factory.extend({
     },
 
     yanked: false,
+    license: () => faker.hacker.abbreviation(),
 
     dl_path() {
         return `/api/v1/crates/${this.crate}/${this.num}/download`;
