@@ -14,7 +14,7 @@ export default Route.extend({
     },
 
     afterModel(model) {
-        if (typeof model.get === 'function') {
+        if (model && typeof model.get === 'function') {
             this.setHeadTags(model);
         }
     },
