@@ -118,7 +118,6 @@ dependencies = [
  "conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "diesel 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel_codegen 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel_full_text_search 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -404,15 +403,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "diesel"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pq-sys 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1282,7 +1272,6 @@ dependencies = [
 "checksum curl-sys 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)" = "d5481162dc4f424d088581db2f979fa7d4c238fe9794595de61d8d7522e277de"
 "checksum dbghelp-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "97590ba53bcb8ac28279161ca943a924d1fd4a8fb3fa63302591647c4fc5b850"
 "checksum derive-error-chain 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3c9ca9ade651388daad7c993f005d0d20c4f6fe78c1cdc93e95f161c6f5ede4a"
-"checksum diesel 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8dfbfd2fe603bbe350a9929d8a3e51918bae9d57c3fddbcece8e24afb37125a8"
 "checksum diesel 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4738240bdb5976ee7d63abcc65802693b0b0fd7c03093cb6dc05e7e588bf006f"
 "checksum diesel_codegen 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "044abc50a0ee67e195b0ae95c9ffe6903748434294636dd67808301b7df1902f"
 "checksum diesel_full_text_search 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "662d280cba90b6450452a3591ab0254587ee8ad9a87067ef103b1358e72ea7c2"
