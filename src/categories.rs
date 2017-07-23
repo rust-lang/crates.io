@@ -1,9 +1,12 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
+use diesel;
+use diesel::prelude::*;
 use toml;
 
 use db;
+use schema::categories;
 use util::errors::{CargoResult, ChainError, internal};
 
 #[derive(Debug)]
@@ -87,45 +90,54 @@ fn categories_from_toml(
     Ok(result)
 }
 
+#[derive(Insertable)]
+#[table_name = "categories"]
+struct NewCategory {
+    slug: String,
+    category: String,
+    description: String,
+}
+
 pub fn sync() -> CargoResult<()> {
-    let conn = db::connect_now_old();
-    let tx = conn.transaction().unwrap();
+    use diesel::pg::upsert::*;
+    use diesel::expression::dsl::any;
+
+    let conn = db::connect_now().unwrap();
 
     let categories = include_str!("./categories.toml");
     let toml: toml::value::Table =
         toml::from_str(categories).expect("Could not parse categories.toml");
 
-    let categories =
-        categories_from_toml(&toml, None).expect("Could not convert categories from TOML");
+    let categories = categories_from_toml(&toml, None)
+        .expect("Could not convert categories from TOML")
+        .into_iter()
+        .map(|c| {
+            NewCategory {
+                slug: c.slug.to_lowercase(),
+                category: c.name,
+                description: c.description,
+            }
+        })
+        .collect::<Vec<_>>();
 
-    for category in &categories {
-        tx.execute(
-            "\
-             INSERT INTO categories (slug, category, description) \
-             VALUES (LOWER($1), $2, $3) \
-             ON CONFLICT (slug) DO UPDATE \
-             SET category = EXCLUDED.category, \
-             description = EXCLUDED.description;",
-            &[&category.slug, &category.name, &category.description],
-        )?;
-    }
+    let to_insert = categories.on_conflict(
+        categories::slug,
+        do_update().set((
+            categories::category.eq(excluded(categories::category)),
+            categories::description.eq(
+                excluded(categories::description),
+            ),
+        )),
+    );
 
-    let in_clause = categories
-        .iter()
-        .map(|category| format!("LOWER('{}')", category.slug))
-        .collect::<Vec<_>>()
-        .join(",");
+    conn.transaction(|| {
+        let slugs = diesel::insert(&to_insert)
+            .into(categories::table)
+            .returning(categories::slug)
+            .get_results::<String>(&conn)?;
 
-    tx.execute(
-        &format!(
-            "\
-             DELETE FROM categories \
-             WHERE slug NOT IN ({});",
-            in_clause
-        ),
-        &[],
-    )?;
-    tx.set_commit();
-    tx.finish().unwrap();
-    Ok(())
+        let to_delete = categories::table.filter(categories::slug.ne(any(slugs)));
+        diesel::delete(to_delete).execute(&conn)?;
+        Ok(())
+    })
 }
