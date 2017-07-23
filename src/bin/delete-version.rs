@@ -8,28 +8,29 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate postgres;
+extern crate diesel;
 extern crate time;
 extern crate semver;
 
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use std::env;
 use std::io;
 use std::io::prelude::*;
 
 use cargo_registry::{Crate, Version};
+use cargo_registry::schema::versions;
 
 #[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        delete(&tx);
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = cargo_registry::db::connect_now().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|| {
+        delete(&conn);
+        Ok(())
+    }).unwrap()
 }
 
-fn delete(tx: &postgres::transaction::Transaction) {
+fn delete(conn: &PgConnection) {
     let name = match env::args().nth(1) {
         None => {
             println!("needs a crate-name argument");
@@ -44,11 +45,11 @@ fn delete(tx: &postgres::transaction::Transaction) {
         }
         Some(s) => s,
     };
-    let version = semver::Version::parse(&version).unwrap();
 
-    let krate = Crate::find_by_name(tx, &name).unwrap();
-    let v = Version::find_by_num(tx, krate.id, &version)
-        .unwrap()
+    let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
+    let v = Version::belonging_to(&krate)
+        .filter(versions::num.eq(&version))
+        .first::<Version>(conn)
         .unwrap();
     print!(
         "Are you sure you want to delete {}#{} ({}) [y/N]: ",
@@ -64,20 +65,8 @@ fn delete(tx: &postgres::transaction::Transaction) {
     }
 
     println!("deleting version {} ({})", v.num, v.id);
-    let n = tx.execute(
-        "DELETE FROM version_downloads WHERE version_id = $1",
-        &[&v.id],
-    ).unwrap();
-    println!("  {} download records deleted", n);
-    let n = tx.execute(
-        "DELETE FROM version_authors WHERE version_id = $1",
-        &[&v.id],
-    ).unwrap();
-    println!("  {} author records deleted", n);
-    let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1", &[&v.id])
-        .unwrap();
-    println!("  {} dependencies deleted", n);
-    tx.execute("DELETE FROM versions WHERE id = $1", &[&v.id])
+    diesel::delete(versions::table.find(&v.id))
+        .execute(conn)
         .unwrap();
 
     print!("commit? [y/N]: ");
