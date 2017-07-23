@@ -183,10 +183,3 @@ table! {
         license -> Nullable<Varchar>,
     }
 }
-
-numeric_expr!(crate_downloads::downloads);
-numeric_expr!(crates::downloads);
-numeric_expr!(metadata::total_downloads);
-numeric_expr!(version_downloads::counted);
-numeric_expr!(version_downloads::downloads);
-numeric_expr!(versions::downloads);

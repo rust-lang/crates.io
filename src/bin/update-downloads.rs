@@ -196,7 +196,7 @@ mod test {
         let conn = conn();
         let user = user(&conn);
         let (krate, version) = crate_and_version(&conn, user.id);
-        // FIXME: Diesel 0.15 or 1.0 can do this:
+        // FIXME: Diesel 1.0 can do this:
         // insert((version_id.eq(version.id),))
         //     .into(version_downloads)
         //     .execute(&conn)
