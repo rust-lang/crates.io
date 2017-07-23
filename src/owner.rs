@@ -1,12 +1,11 @@
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use pg::rows::Row;
 
 use app::App;
 use http;
 use schema::*;
 use util::{CargoResult, human};
-use {Model, User, Crate};
+use {User, Crate};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -293,22 +292,6 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
     Ok(membership.state == "active")
-}
-
-impl Model for Team {
-    fn from_row(row: &Row) -> Self {
-        Team {
-            id: row.get("id"),
-            name: row.get("name"),
-            github_id: row.get("github_id"),
-            login: row.get("login"),
-            avatar: row.get("avatar"),
-        }
-    }
-
-    fn table_name(_: Option<Self>) -> &'static str {
-        "teams"
-    }
 }
 
 impl Owner {

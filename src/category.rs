@@ -4,12 +4,11 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
 use diesel::pg::PgConnection;
-use pg::rows::Row;
 
+use Crate;
 use db::RequestTransaction;
 use schema::*;
 use util::{RequestUtils, CargoResult};
-use {Model, Crate};
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 #[table_name = "categories"]
@@ -183,22 +182,6 @@ impl<'a> NewCategory<'a> {
             .into(categories::table)
             .get_result(conn)
             .map_err(Into::into)
-    }
-}
-
-impl Model for Category {
-    fn from_row(row: &Row) -> Category {
-        Category {
-            id: row.get("id"),
-            created_at: row.get("created_at"),
-            crates_cnt: row.get("crates_cnt"),
-            category: row.get("category"),
-            slug: row.get("slug"),
-            description: row.get("description"),
-        }
-    }
-    fn table_name(_: Option<Category>) -> &'static str {
-        "categories"
     }
 }
 

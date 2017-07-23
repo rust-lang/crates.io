@@ -5,14 +5,12 @@ use conduit_router::RequestParams;
 use diesel;
 use diesel::pg::{Pg, PgConnection};
 use diesel::prelude::*;
-use pg::GenericConnection;
-use pg::Result as PgResult;
-use pg::rows::Row;
 use semver;
 use serde_json;
 use time::{Duration, Timespec, now_utc, strptime};
 use url;
 
+use Crate;
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
@@ -22,8 +20,7 @@ use owner::{rights, Rights};
 use schema::*;
 use user::RequestUser;
 use util::errors::CargoError;
-use util::{RequestUtils, CargoResult, ChainError, internal, human};
-use {Model, Crate};
+use util::{RequestUtils, CargoResult, human};
 use license_exprs;
 
 #[derive(Clone, Identifiable, Associations, Debug)]
@@ -73,45 +70,6 @@ pub struct VersionLinks {
 }
 
 impl Version {
-    pub fn find_by_num(
-        conn: &GenericConnection,
-        crate_id: i32,
-        num: &semver::Version,
-    ) -> PgResult<Option<Version>> {
-        let num = num.to_string();
-        let stmt = conn.prepare(
-            "SELECT * FROM versions \
-             WHERE crate_id = $1 AND num = $2",
-        )?;
-        let rows = stmt.query(&[&crate_id, &num])?;
-        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
-    }
-
-    pub fn insert(
-        conn: &GenericConnection,
-        crate_id: i32,
-        num: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
-        authors: &[String],
-    ) -> CargoResult<Version> {
-        let num = num.to_string();
-        let features = serde_json::to_string(features).unwrap();
-        let stmt = conn.prepare(
-            "INSERT INTO versions \
-             (crate_id, num, features) \
-             VALUES ($1, $2, $3) \
-             RETURNING *",
-        )?;
-        let rows = stmt.query(&[&crate_id, &num, &features])?;
-        let ret: Version = Model::from_row(&rows.iter().next().chain_error(
-            || internal("no version returned"),
-        )?);
-        for author in authors {
-            ret.add_author(conn, author)?;
-        }
-        Ok(ret)
-    }
-
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version {
             id,
@@ -151,15 +109,6 @@ impl Version {
             .select((dependencies::all_columns, crates::name))
             .order((dependencies::optional, crates::name))
             .load(conn)
-    }
-
-    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> PgResult<()> {
-        conn.execute(
-            "INSERT INTO version_authors (version_id, name)
-                           VALUES ($1, $2)",
-            &[&self.id, &name],
-        )?;
-        Ok(())
     }
 
     pub fn max<T>(versions: T) -> semver::Version
@@ -283,30 +232,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
             yanked: row.7,
             license: row.8,
         }
-    }
-}
-
-impl Model for Version {
-    fn from_row(row: &Row) -> Version {
-        let num: String = row.get("num");
-        let features: Option<String> = row.get("features");
-        let features = features
-            .map(|s| serde_json::from_str(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
-        Version {
-            id: row.get("id"),
-            crate_id: row.get("crate_id"),
-            num: semver::Version::parse(&num).unwrap(),
-            updated_at: row.get("updated_at"),
-            created_at: row.get("created_at"),
-            downloads: row.get("downloads"),
-            features: features,
-            yanked: row.get("yanked"),
-            license: row.get("license"),
-        }
-    }
-    fn table_name(_: Option<Version>) -> &'static str {
-        "versions"
     }
 }
 

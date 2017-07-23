@@ -6,9 +6,8 @@ use conduit_router::RequestParams;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel;
-use pg::rows::Row;
 
-use {Model, Crate};
+use Crate;
 use db::RequestTransaction;
 use pagination::Paginate;
 use schema::*;
@@ -120,20 +119,6 @@ impl Keyword {
                 .execute(conn)?;
             Ok(())
         })
-    }
-}
-
-impl Model for Keyword {
-    fn from_row(row: &Row) -> Keyword {
-        Keyword {
-            id: row.get("id"),
-            created_at: row.get("created_at"),
-            crates_cnt: row.get("crates_cnt"),
-            keyword: row.get("keyword"),
-        }
-    }
-    fn table_name(_: Option<Keyword>) -> &'static str {
-        "keywords"
     }
 }
 

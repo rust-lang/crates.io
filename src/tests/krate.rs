@@ -475,8 +475,8 @@ fn new_wrong_token() {
     bad_resp!(middle.call(&mut req));
     drop(req);
 
-    let mut req = ::new_req(app, "foo", "1.0.0");
-    ::mock_user(&mut req, ::user("foo"));
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    ::sign_in(&mut req, &app);
     ::logout(&mut req);
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
@@ -487,8 +487,8 @@ fn new_bad_names() {
     fn bad_name(name: &str) {
         println!("testing: `{}`", name);
         let (_b, app, middle) = ::app();
-        let mut req = ::new_req(app, name, "1.0.0");
-        ::mock_user(&mut req, ::user("foo"));
+        let mut req = ::new_req(app.clone(), name, "1.0.0");
+        ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
             json.errors[0].detail.contains(
@@ -537,8 +537,8 @@ fn new_krate_with_token() {
 fn new_krate_with_reserved_name() {
     fn test_bad_name(name: &str) {
         let (_b, app, middle) = ::app();
-        let mut req = ::new_req(app, name, "1.0.0");
-        ::mock_user(&mut req, ::user("foo"));
+        let mut req = ::new_req(app.clone(), name, "1.0.0");
+        ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains(
             "cannot upload a crate with a reserved name",

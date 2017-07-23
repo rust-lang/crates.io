@@ -14,7 +14,6 @@ extern crate conduit_test;
 extern crate curl;
 extern crate dotenv;
 extern crate git2;
-extern crate postgres;
 extern crate semver;
 extern crate serde;
 extern crate serde_json;
@@ -30,7 +29,6 @@ use std::sync::Arc;
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
-use cargo_registry::db::{self, RequestTransaction};
 use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::{NewCrate, CrateDownload};
@@ -146,10 +144,8 @@ fn env(s: &str) -> String {
     }
 }
 
-fn req(app: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
-    let mut req = MockRequest::new(method, path);
-    req.mut_extensions().insert(db::Transaction::new(app));
-    return req;
+fn req(_: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
+    MockRequest::new(method, path)
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {
@@ -458,20 +454,6 @@ fn krate(name: &str) -> Crate {
     }
 }
 
-fn mock_user(req: &mut Request, u: User) -> User {
-    let u = User::find_or_insert(
-        req.tx().unwrap(),
-        u.gh_id,
-        &u.gh_login,
-        u.email.as_ref().map(|s| &s[..]),
-        u.name.as_ref().map(|s| &s[..]),
-        u.gh_avatar.as_ref().map(|s| &s[..]),
-        &u.gh_access_token,
-    ).unwrap();
-    sign_in_as(req, &u);
-    return u;
-}
-
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions().insert(
@@ -479,10 +461,11 @@ fn sign_in_as(req: &mut Request, user: &User) {
     );
 }
 
-fn sign_in(req: &mut Request, app: &App) {
+fn sign_in(req: &mut Request, app: &App) -> User {
     let conn = app.diesel_database.get().unwrap();
     let user = ::new_user("foo").create_or_update(&conn).unwrap();
     sign_in_as(req, &user);
+    user
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {

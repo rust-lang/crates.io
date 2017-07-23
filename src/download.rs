@@ -2,9 +2,7 @@ use chrono::NaiveDate;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use pg::rows::Row;
 
-use Model;
 use schema::version_downloads;
 use version::Version;
 
@@ -60,22 +58,5 @@ impl VersionDownload {
             downloads: self.downloads,
             date: self.date.to_string(),
         }
-    }
-}
-
-impl Model for VersionDownload {
-    fn from_row(row: &Row) -> VersionDownload {
-        VersionDownload {
-            id: row.get("id"),
-            version_id: row.get("version_id"),
-            downloads: row.get("downloads"),
-            counted: row.get("counted"),
-            date: row.get("date"),
-            processed: row.get("processed"),
-        }
-    }
-
-    fn table_name(_: Option<VersionDownload>) -> &'static str {
-        "version_downloads"
     }
 }
