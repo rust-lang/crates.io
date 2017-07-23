@@ -15,8 +15,6 @@ install:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - npm install
   - cargo install --force diesel_cli --vers 0.14.0 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
-  - cargo install --force rustfmt
-  - rustfmt --version
 
 before_script:
   - diesel database setup
@@ -40,6 +38,8 @@ matrix:
   - rust: stable
     env: RUSTFMT=YESPLEASE
     script:
+    - cargo install --force rustfmt
+    - rustfmt --version
     - cargo fmt -- --write-mode=diff
   - rust: stable
     script:
