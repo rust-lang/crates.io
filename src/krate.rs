@@ -39,6 +39,8 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
+/// Hosts in this blacklist are known to not be hosting documentation,
+/// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLACKLIST: [&'static str; 1] = ["rust-ci.org"];
 
 #[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
