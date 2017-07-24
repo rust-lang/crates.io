@@ -1,10 +1,12 @@
-import Ember from 'ember';
+import Component from '@ember/component';
+import { empty } from '@ember/object/computed';
 
-export default Ember.Component.extend({
+export default Component.extend({
     type: '',
     value: '',
     isEditing: false,
     user: null,
+    disableSave: empty('user.email'),
 
     actions: {
         editEmail() {
@@ -13,13 +15,11 @@ export default Ember.Component.extend({
 
         saveEmail() {
             var userEmail = this.get('value');
-
             var user = this.get('user');
+
             user.set('email', userEmail);
             user.save();
 
-            console.log('username: ' + user.get('name'));
-            console.log('userEmail: ' + userEmail);
             this.set('isEditing', false);
         },
 
