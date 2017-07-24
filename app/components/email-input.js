@@ -17,12 +17,12 @@ export default Component.extend({
         },
 
         saveEmail() {
-            var userEmail = this.get('value');
-            var user = this.get('user');
+            let userEmail = this.get('value');
+            let user = this.get('user');
 
-            var emailIsProperFormat = function(userEmail) {
-                var regExp = /\S+@\S+\.\S+/;
-                return egExp.test(userEmail);
+            let emailIsProperFormat = function(userEmail) {
+                let regExp = /\S+@\S+\.\S+/;
+                return regExp.test(userEmail);
             };
 
             if (!emailIsProperFormat(userEmail)) {
@@ -31,7 +31,17 @@ export default Component.extend({
             }
 
             user.set('email', userEmail);
-            user.save();
+            user.save()
+                .then(() => this.set('serverError', null))
+                .catch(err => {
+                    let msg;
+                    if (err.errors && err.errors[0] && err.errors[0].detail) {
+                        msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
+                    } else {
+                        msg = 'An unknown error occurred while saving this token.';
+                    }
+                    this.set('serverError', msg);
+                });
 
             this.set('isEditing', false);
             this.set('notValidEmail', false);
