@@ -17,17 +17,7 @@
             <dt>GitHub Account</dt>
             <dd>{{ model.user.login }}</dd>
             <dt>Email</dt>
-
-            {{#if isEditing }}
-                {{validated-input model=model.user value=userEmail valuePath='email' placeHolder='Email'}}
-                <p>Please add your email address. We need this in order to contact you
-                just in case anything goes wrong. We promise we'll never share it!</p>
-                <button class='small yellow-button' disabled={{v-get model.user 'isInvalid'}} {{action "saveEmail"}}>Save</button>
-                <button class='small yellow-button' {{action "cancelEdit"}}>Cancel</button>
-            {{else}}
-                <dd>{{ model.user.email }}</dd>
-                <button class='small yellow-button' {{action "editEmail"}}>Edit</button>
-            {{/if}}
+            {{email-input type='text' value=userEmail user=model.user}}
         </dl>
     </div>
 </div>

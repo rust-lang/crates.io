@@ -1,0 +1,11 @@
+{{#if isEditing }}
+    {{input type=type value=value placeholder='Email'}}
+    <p> Please add your email address. We need this in order to contact you
+        just in case anything goes wrong. We promise we'll never share it!
+    </p>
+    <button class='small yellow-button' {{action 'saveEmail'}}>Save</button>
+    <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+{{else}}
+    <dd>{{ user.email }}</dd>
+    <button class='small yellow-button' {{action 'editEmail'}}>Edit</button>
+{{/if}}
