@@ -561,6 +561,7 @@ impl Crate {
             Err(_) => return None,
         };
 
+        // Unwrap is fine here since a None type is handled in the first match statement
         let url_host = match parsed_url.host_str() {
             Some(url_host) => url_host,
             None => return None,
@@ -1559,3 +1560,41 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
 use diesel::types::{Text, Date};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
 sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
+
+#[cfg(test)]
+mod tests {
+    use super::Crate;
+
+    #[test]
+    fn documentation_blacklist_no_url_provided() {
+        assert_eq!(Crate::remove_blacklisted_documentation_urls(None), None);
+    }
+
+    #[test]
+    fn documentation_blacklist_invalid_url() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(Some(String::from("not a url"))),
+            None
+        );
+    }
+
+    #[test]
+    fn documentation_blacklist_url_contains_partial_match() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(
+                Some(String::from("http://rust-ci.organists.com")),
+            ),
+            Some(String::from("http://rust-ci.organists.com"))
+        );
+    }
+
+    #[test]
+    fn documentation_blacklist_blacklisted_url() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+                "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
+            ))),
+            None
+        );
+    }
+}
