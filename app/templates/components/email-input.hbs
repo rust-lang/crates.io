@@ -1,5 +1,8 @@
 {{#if isEditing }}
     {{input type=type value=value placeholder='Email'}}
+    {{#if notValidEmail }}
+        <p>Invalid email format. Please try again.</p>
+    {{/if}}
     <p> Please add your email address. We need this in order to contact you
         just in case anything goes wrong. We promise we'll never share it!
     </p>
