@@ -117,6 +117,7 @@ dependencies = [
  "conduit-router 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cookie 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel_codegen 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",

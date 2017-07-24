@@ -120,7 +120,7 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
 
     let config = cargo_registry::Config {
         uploader: uploader,
-        session_key: "test".to_string(),
+        session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or(String::new()),
         gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or(String::new()),
