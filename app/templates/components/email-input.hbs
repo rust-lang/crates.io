@@ -1,16 +1,19 @@
-{{#if isEditing }}
-    <form {{action 'saveEmail' on='submit'}}>
-        {{input type=type value=value placeholder='Email' class='form-control'}}
-        {{#if notValidEmail }}
-            <p>Invalid email format. Please try again.</p>
-        {{/if}}
-        <p> Please add your email address. We need this in order to contact you
+<div>
+    <dt>Email</dt>
+    {{#if isEditing }}
+        <form {{action 'saveEmail' on='submit'}}>
+            {{input type=type value=value placeholder='Email' class='form-control'}}
+            {{#if notValidEmail }}
+                <p>Invalid email format. Please try again.</p>
+            {{/if}}
+            <p> Please add your email address. We need this in order to contact you
             just in case anything goes wrong. We promise we'll never share it!
-        </p>
-        <button type='submit' class='small yellow-button' disabled={{disableSave}}>Save</button>
-        <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
-    </form>
-{{else}}
-    <dd>{{ user.email }}</dd>
-    <button class='small yellow-button' {{action 'editEmail'}}>Edit</button>
-{{/if}}
+            </p>
+            <button type='submit' class='small yellow-button' disabled={{disableSave}}>Save</button>
+            <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+        </form>
+    {{else}}
+        <dd>{{ user.email }}</dd>
+        <button class='small yellow-button' {{action 'editEmail'}}>Edit</button>
+    {{/if}}
+</div>
