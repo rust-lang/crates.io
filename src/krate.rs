@@ -548,25 +548,27 @@ impl Crate {
         }
     }
 
-    // Return None if the documentation URL host matches a blacklisted host
+    /// Return `None` if the documentation URL host matches a blacklisted host
     fn remove_blacklisted_documentation_urls(url: Option<String>) -> Option<String> {
+        // Handles if documentation URL is None
         let url = match url {
             Some(url) => url,
             None => return None,
         };
 
-        // Handles the case if the documentation URL does not parse successfully
+        // Handles unsuccessful parsing of documentation URL
         let parsed_url = match Url::parse(&url) {
             Ok(parsed_url) => parsed_url,
             Err(_) => return None,
         };
 
-        // Unwrap is fine here since a None type is handled in the first match statement
+        // Extract host string from documentation URL
         let url_host = match parsed_url.host_str() {
             Some(url_host) => url_host,
             None => return None,
         };
 
+        // Match documentation URL host against blacklisted host array elements
         if DOCUMENTATION_BLACKLIST.contains(&url_host) {
             None
         } else {
