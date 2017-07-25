@@ -16,15 +16,23 @@
             clear: both;
         }
         dd { float: left; margin-left: 10px; }
+        .align-center {
+            @include align-items(center);
+        }
         .row {
             width: 100%;
             border: 1px solid #d5d3cb;
             border-bottom-width: 0px;
             &:last-child { border-bottom-width: 1px; }
-            padding: 10px 20px;
+            padding: 10px 20px 10px 0;
             @include display-flex;
-            @include align-items(center);
             background-color: $main-bg-dark;
+            .small-text {
+                font-size: 90%;
+            }
+            .error {
+                color: rgb(216, 0, 41);
+            }
             .label {
                 @include flex(1);
                 margin-right: 0.4em;
@@ -33,6 +41,18 @@
             .actions {
                 @include display-flex;
                 @include align-items(center);
+            }
+            .space-left {
+                margin-left: 10px;
+            }
+            .space-right {
+                margin-right: 10px;
+            }
+            .no-space-left {
+                margin-left: 0px;
+            }
+            p {
+                width: 80%;
             }
         }
     }
