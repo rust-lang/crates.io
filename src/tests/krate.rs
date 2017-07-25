@@ -374,6 +374,19 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[0].name, "bar_sort");
     assert_eq!(json.crates[1].name, "foo_sort");
     assert_eq!(json.crates[2].name, "baz_sort");
+
+    // Test for bug with showing null results first when sorting
+    // by descending
+    // This has nothing to do with querying for exact match I'm sorry
+    let mut response = ok_resp!(middle.call(
+        req.with_query("sort=recent-downloads"),
+    ));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
 }
 
 #[test]
