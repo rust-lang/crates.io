@@ -66,5 +66,5 @@ test('recent downloads appears for each crate on crate list', async function(ass
 
     await visit('/crates');
     const $recentDownloads = findWithAssert('div.recent-downloads:first span.num');
-    hasText(assert, $recentDownloads, 'Recent:');
+    hasText(assert, $recentDownloads, 'Recent: 497');
 });
