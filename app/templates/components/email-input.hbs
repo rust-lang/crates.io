@@ -4,13 +4,16 @@
             <dt>Email</dt>
         </div>
         <form {{action 'saveEmail' on='submit'}}>
-            {{input type=type value=value placeholder='Email' class='form-control'}}
+            {{input type=type value=value placeholder='Email' class='form-control space-bottom'}}
             {{#if notValidEmail }}
                 <p class='small-text error'>Invalid email format. Please try again.</p>
             {{/if}}
-            <p class='small-text'> Please add your email address. We need this in order to contact you
-            just in case anything goes wrong. We promise we'll never share it!
-            </p>
+            {{#if emailIsNull }}
+                <p class='small-text'> Please add your email address. We need this in
+                order to contact you just in case anything goes wrong. We promise
+                we'll never share it!
+                </p>
+            {{/if}}
             <div class='actions'>
                 <button type='submit' class='small yellow-button space-right' disabled={{disableSave}}>Save</button>
                 <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>

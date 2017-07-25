@@ -9,9 +9,20 @@ export default Component.extend({
     disableSave: empty('user.email'),
     notValidEmail: false,
     prevEmail: '',
+    emailIsNull: true,
 
     actions: {
         editEmail() {
+            let user = this.get('user');
+            let isEmailNull = function(user) {
+                if (user.email == null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            };
+
+            this.set('emailIsNull', isEmailNull(user));
             this.set('isEditing', true);
             this.set('prevEmail', this.get('value'));
         },
