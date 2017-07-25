@@ -16,6 +16,25 @@
             clear: both;
         }
         dd { float: left; margin-left: 10px; }
+        .row {
+            width: 100%;
+            border: 1px solid #d5d3cb;
+            border-bottom-width: 0px;
+            &:last-child { border-bottom-width: 1px; }
+            padding: 10px 20px;
+            @include display-flex;
+            @include align-items(center);
+            background-color: $main-bg-dark;
+            .label {
+                @include flex(1);
+                margin-right: 0.4em;
+                font-weight: bold;
+            }
+            .actions {
+                @include display-flex;
+                @include align-items(center);
+            }
+        }
     }
 
     @media only screen and (max-width: 550px) {

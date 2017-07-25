@@ -1,5 +1,7 @@
-<div>
-    <dt>Email</dt>
+<div class='row'>
+    <div class='label'>
+        <dt>Email</dt>
+    </div>
     {{#if isEditing }}
         <form {{action 'saveEmail' on='submit'}}>
             {{input type=type value=value placeholder='Email' class='form-control'}}
@@ -9,11 +11,17 @@
             <p> Please add your email address. We need this in order to contact you
             just in case anything goes wrong. We promise we'll never share it!
             </p>
-            <button type='submit' class='small yellow-button' disabled={{disableSave}}>Save</button>
-            <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+            <div class='actions'>
+                <button type='submit' class='small yellow-button' disabled={{disableSave}}>Save</button>
+                <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+            </div>
         </form>
     {{else}}
-        <dd>{{ user.email }}</dd>
-        <button class='small yellow-button' {{action 'editEmail'}}>Edit</button>
+        <div class='email'>
+            <dd>{{ user.email }}</dd>
+        </div>
+        <div class='actions'>
+            <button class='small yellow-button' {{action 'editEmail'}}>Edit</button>
+        </div>
     {{/if}}
 </div>
