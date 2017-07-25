@@ -41,7 +41,10 @@ impl Handler for Middleware {
             .find("Accept")
             .map(|accept| accept.iter().any(|s| s.contains("html")))
             .unwrap_or(false);
-        if wants_html {
+        // If the route starts with /api, just assume they want the API
+        // response. Someone is either debugging or trying to download a crate.
+        let is_api_path = req.path().starts_with("/api");
+        if wants_html && !is_api_path {
             self.dist.call(&mut RequestProxy {
                 other: req,
                 path: Some("/index.html"),
