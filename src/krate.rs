@@ -809,7 +809,10 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
-            query = query.order((perfect_match, recent_downloads.clone().desc().nulls_last()));
+            query = query.order((
+                perfect_match,
+                recent_downloads.clone().desc().nulls_last(),
+            ));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
