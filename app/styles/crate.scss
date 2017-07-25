@@ -144,7 +144,6 @@
     .recent-downloads {
         @include display-flex;
         @include align-items(center);
-
     }
 
     .rev-dep-downloads {padding-left: 7px}
