@@ -509,6 +509,7 @@ impl Crate {
         )
     }
 
+    #[allow(too_many_arguments)]
     pub fn encodable(
         self,
         max_version: semver::Version,
