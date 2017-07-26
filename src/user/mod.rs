@@ -74,8 +74,20 @@ impl<'a> NewUser<'a> {
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
 
+        let update_user = NewUser {
+            email: None,
+            gh_id: self.gh_id,
+            gh_login: self.gh_login,
+            name: self.name,
+            gh_avatar: self.gh_avatar,
+            gh_access_token: self.gh_access_token.clone(),
+        };
+
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        insert(&self.on_conflict(conflict_target, do_update().set(self)))
+        insert(&self.on_conflict(
+                conflict_target,
+                do_update().set(&update_user),
+            ))
             .into(users::table)
             .get_result(conn)
             .map_err(Into::into)
