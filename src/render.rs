@@ -89,8 +89,19 @@ impl<'a> Default for MarkdownRenderer<'a> {
     }
 }
 
-/// Renders a markdown text to sanitized HTML. The returned text should not contain any harmful
-/// HTML tag or attribute (such as iframe, onclick, onmouseover, etc.).
+/// Renders a markdown text to sanitized HTML.
+///
+/// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
+/// onclick, onmouseover, etc.).
+///
+/// # Examples
+///
+/// ```
+/// use render::markdown_to_html;
+///
+/// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
+/// let rendered = markdown_to_html(text)?;
+/// ```
 pub fn markdown_to_html(text: &str) -> CargoResult<String> {
     let renderer = MarkdownRenderer::new();
     renderer.to_html(text)

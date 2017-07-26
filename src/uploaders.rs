@@ -35,6 +35,10 @@ impl Uploader {
         }
     }
 
+    /// Returns the URL of an uploaded crate's version archive.
+    ///
+    /// The function doesn't check for the existence of the file.
+    /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
@@ -54,6 +58,10 @@ impl Uploader {
         }
     }
 
+    /// Returns the URL of an uploaded crate's version readme.
+    ///
+    /// The function doesn't check for the existence of the file.
+    /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
@@ -73,16 +81,19 @@ impl Uploader {
         }
     }
 
+    /// Returns the interna path of an uploaded crate's version archive.
     fn crate_path(name: &str, version: &str) -> String {
         // No slash in front so we can use join
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
+    /// Returns the interna path of an uploaded crate's version readme.
     fn readme_path(name: &str, version: &str) -> String {
         format!("readmes/{}/{}-{}.html", name, name, version)
     }
 
-    /// Uploads a file using the configured uploader (either S3, Local or NoOp).
+    /// Uploads a file using the configured uploader (either `S3`, `Local` or `NoOp`).
+    ///
     /// It returns a a tuple containing the path of the uploaded file
     /// and its checksum.
     pub fn upload(
@@ -163,6 +174,8 @@ impl Uploader {
                 length as u64,
             )?
         };
+        // We create the bomb for the crate file before uploading the readme so that if the
+        // readme upload fails, the uploaded crate file is automatically deleted.
         let crate_bomb = Bomb {
             app: app.clone(),
             path: crate_path,
@@ -191,6 +204,7 @@ impl Uploader {
         ))
     }
 
+    /// Deletes an uploaded file.
     fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
