@@ -312,15 +312,14 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
 
-    let user = User::find_or_insert(
-        req.tx()?,
+    let user = NewUser::new(
         ghuser.id,
         &ghuser.login,
         ghuser.email.as_ref().map(|s| &s[..]),
         ghuser.name.as_ref().map(|s| &s[..]),
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
-    )?;
+    ).create_or_update(&*req.db_conn()?)?;
     req.session().insert(
         "user_id".to_string(),
         user.id.to_string(),
