@@ -3,7 +3,6 @@ import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
 import { computed } from '@ember/object';
 import { later } from '@ember/runloop';
-import $ from 'jquery';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -161,16 +160,6 @@ export default Controller.extend({
 
         copyError() {
             this.toggleClipboardProps(false);
-        },
-
-        download(version) {
-            this.set('isDownloading', true);
-
-            version.getDownloadUrl().then(url => {
-                this.incrementProperty('crate.downloads');
-                this.incrementProperty('currentVersion.downloads');
-                $('#download-frame').attr('src', url);
-            }).finally(() => this.set('isDownloading', false));
         },
 
         toggleFollow() {
