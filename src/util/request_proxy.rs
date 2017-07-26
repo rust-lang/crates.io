@@ -5,6 +5,8 @@ use conduit;
 use conduit::Request;
 use semver;
 
+// Can't derive Debug because of Request.
+#[allow(missing_debug_implementations)]
 pub struct RequestProxy<'a> {
     pub other: &'a mut (Request + 'a),
     pub path: Option<&'a str>,

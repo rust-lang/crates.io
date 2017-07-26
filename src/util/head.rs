@@ -6,6 +6,8 @@ use conduit_middleware::AroundMiddleware;
 
 use util::RequestProxy;
 
+// Can't derive debug because of Handler.
+#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct Head {
     handler: Option<Box<Handler>>,

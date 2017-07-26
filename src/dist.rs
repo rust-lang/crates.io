@@ -6,6 +6,8 @@ use conduit_middleware::AroundMiddleware;
 
 use util::RequestProxy;
 
+// Can't derive debug because of Handler and Static.
+#[allow(missing_debug_implementations)]
 pub struct Middleware {
     handler: Option<Box<Handler>>,
     dist: Static,
