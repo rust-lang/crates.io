@@ -67,7 +67,6 @@ pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
     pub kind: String,
-    pub email: Option<String>,
     pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
@@ -361,7 +360,6 @@ impl Owner {
         match self {
             Owner::User(User {
                             id,
-                            email,
                             name,
                             gh_login,
                             gh_avatar,
@@ -371,7 +369,6 @@ impl Owner {
                 EncodableOwner {
                     id: id,
                     login: gh_login,
-                    email: email,
                     avatar: gh_avatar,
                     url: Some(url),
                     name: name,
@@ -389,7 +386,6 @@ impl Owner {
                 EncodableOwner {
                     id: id,
                     login: login,
-                    email: None,
                     url: Some(url),
                     avatar: avatar,
                     name: name,

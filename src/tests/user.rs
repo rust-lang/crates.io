@@ -5,7 +5,7 @@ use conduit::{Handler, Method};
 use cargo_registry::Model;
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodableUser};
+use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -18,7 +18,7 @@ struct AuthResponse {
 
 #[derive(Deserialize)]
 pub struct UserShowResponse {
-    pub user: EncodableUser,
+    pub user: EncodablePrivateUser,
 }
 
 #[test]
@@ -91,12 +91,14 @@ fn show() {
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(Some("foo@bar.com".into()), json.user.email);
+    // Emails should be None as when on the user/:user_id page, a user's email should
+    // not be accessible in order to keep private.
+    assert_eq!(None, json.user.email);
     assert_eq!("foo", json.user.login);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
     let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(Some("bar@baz.com".into()), json.user.email);
+    assert_eq!(None, json.user.email);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
 }

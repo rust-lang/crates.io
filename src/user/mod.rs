@@ -83,8 +83,21 @@ impl<'a> NewUser<'a> {
 }
 
 /// The serialization format for the `User` model.
+/// Same as private user, except no email field
 #[derive(Deserialize, Serialize, Debug)]
-pub struct EncodableUser {
+pub struct EncodablePublicUser {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+/// The serialization format for the `User` model.
+/// Same as public user, except for addition of
+/// email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePrivateUser {
     pub id: i32,
     pub login: String,
     pub email: Option<String>,
@@ -176,8 +189,8 @@ impl User {
         Ok(users.collect())
     }
 
-    /// Converts this `User` model into an `EncodableUser` for JSON serialization.
-    pub fn encodable(self) -> EncodableUser {
+    /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
+    pub fn encodable_private(self) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -187,9 +200,28 @@ impl User {
             ..
         } = self;
         let url = format!("https://github.com/{}", gh_login);
-        EncodableUser {
+        EncodablePrivateUser {
             id: id,
             email: email,
+            avatar: gh_avatar,
+            login: gh_login,
+            name: name,
+            url: Some(url),
+        }
+    }
+
+    /// Converts this`User` model into an `EncodablePublicUser` for JSON serialization.
+    pub fn encodable_public(self) -> EncodablePublicUser {
+        let User {
+            id,
+            name,
+            gh_login,
+            gh_avatar,
+            ..
+        } = self;
+        let url = format!("https://github.com/{}", gh_login);
+        EncodablePublicUser {
+            id: id,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
@@ -339,9 +371,9 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 pub fn me(req: &mut Request) -> CargoResult<Response> {
     #[derive(Serialize)]
     struct R {
-        user: EncodableUser,
+        user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: req.user()?.clone().encodable() }))
+    Ok(req.json(&R { user: req.user()?.clone().encodable_private() }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -354,9 +386,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
-        user: EncodableUser,
+        user: EncodablePublicUser,
     }
-    Ok(req.json(&R { user: user.encodable() }))
+    Ok(req.json(&R { user: user.encodable_public() }))
 }
 
 /// Handles the `GET /teams/:team_id` route.
