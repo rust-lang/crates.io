@@ -74,8 +74,8 @@ impl Default for Config {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
                         env::var("S3_REGION").ok(),
-                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                        env::var("S3_ACCESS_KEY").unwrap_or_default(),
+                        env::var("S3_SECRET_KEY").unwrap_or_default(),
                         &api_protocol,
                     ),
                     proxy: None,
@@ -88,8 +88,8 @@ impl Default for Config {
                         bucket: s3::Bucket::new(
                             env("S3_BUCKET"),
                             env::var("S3_REGION").ok(),
-                            env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-                            env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+                            env::var("S3_ACCESS_KEY").unwrap_or_default(),
+                            env::var("S3_SECRET_KEY").unwrap_or_default(),
                             &api_protocol,
                         ),
                         proxy: None,
