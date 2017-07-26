@@ -28,13 +28,13 @@ use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use std::env;
 use std::io::{Cursor, Read};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use tar::Archive;
 use url::Url;
 
-use cargo_registry::{App, env, Env, Replica, Uploader, Version};
+use cargo_registry::{App, Config, Version};
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
@@ -42,7 +42,8 @@ use cargo_registry::render::markdown_to_html;
 const DEFAULT_PAGE_SIZE: i64 = 25;
 
 fn main() {
-    let app = make_app();
+    let config: Config = Default::default();
+    let app = Arc::new(App::new(&config));
     let conn = app.diesel_database.get().unwrap();
     let versions_count = versions::table
         .select(versions::all_columns)
@@ -250,81 +251,4 @@ fn find_file_by_path<R: Read>(
             return Some(contents);
         }
     }
-}
-
-/// Creates and Arc over an App instance.
-fn make_app() -> Arc<App> {
-    let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
-    let api_protocol = String::from("https");
-    let mirror = if env::var("MIRROR").is_ok() {
-        Replica::ReadOnlyMirror
-    } else {
-        Replica::Primary
-    };
-    let heroku = env::var("HEROKU").is_ok();
-    let cargo_env = if heroku {
-        Env::Production
-    } else {
-        Env::Development
-    };
-    let uploader = match (cargo_env, mirror) {
-        (Env::Production, Replica::Primary) => {
-            // `env` panics if these vars are not set
-            Uploader::S3 {
-                bucket: s3::Bucket::new(
-                    env("S3_BUCKET"),
-                    env::var("S3_REGION").ok(),
-                    env("S3_ACCESS_KEY"),
-                    env("S3_SECRET_KEY"),
-                    &api_protocol,
-                ),
-                proxy: None,
-            }
-        }
-        (Env::Production, Replica::ReadOnlyMirror) => {
-            // Read-only mirrors don't need access key or secret key,
-            // but they might have them. Definitely need bucket though.
-            Uploader::S3 {
-                bucket: s3::Bucket::new(
-                    env("S3_BUCKET"),
-                    env::var("S3_REGION").ok(),
-                    env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-                    env::var("S3_SECRET_KEY").unwrap_or(String::new()),
-                    &api_protocol,
-                ),
-                proxy: None,
-            }
-        }
-        _ => {
-            if env::var("S3_BUCKET").is_ok() {
-                println!("Using S3 uploader");
-                Uploader::S3 {
-                    bucket: s3::Bucket::new(
-                        env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
-                        env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-                        env::var("S3_SECRET_KEY").unwrap_or(String::new()),
-                        &api_protocol,
-                    ),
-                    proxy: None,
-                }
-            } else {
-                println!("Using local uploader, crate files will be in the dist directory");
-                Uploader::Local
-            }
-        }
-    };
-    let config = cargo_registry::Config {
-        uploader: uploader,
-        session_key: env("SESSION_KEY"),
-        git_repo_checkout: checkout,
-        gh_client_id: env("GH_CLIENT_ID"),
-        gh_client_secret: env("GH_CLIENT_SECRET"),
-        db_url: env("DATABASE_URL"),
-        env: cargo_env,
-        max_upload_size: 10 * 1024 * 1024,
-        mirror: mirror,
-        api_protocol: api_protocol,
-    };
-    Arc::new(cargo_registry::App::new(&config))
 }
