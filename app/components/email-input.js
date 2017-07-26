@@ -13,16 +13,16 @@ export default Component.extend({
 
     actions: {
         editEmail() {
-            let user = this.get('user');
-            let isEmailNull = function(user) {
-                if (user.email == null) {
+            let email = this.get('value');
+            let isEmailNull = function(email) {
+                if (email == null) {
                     return true;
                 } else {
                     return false;
                 }
             };
 
-            this.set('emailIsNull', isEmailNull(user));
+            this.set('emailIsNull', isEmailNull(email));
             this.set('isEditing', true);
             this.set('prevEmail', this.get('value'));
         },
