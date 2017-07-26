@@ -19,6 +19,7 @@ use serde_json;
 use semver;
 use time::Timespec;
 use url::Url;
+use chrono::NaiveDate;
 
 use app::{App, RequestApp};
 use badge::EncodableBadge;
@@ -39,7 +40,17 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset)]
+#[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset)]
+#[belongs_to(Crate)]
+#[primary_key(crate_id, date)]
+#[table_name = "crate_downloads"]
+pub struct CrateDownload {
+    pub crate_id: i32,
+    pub downloads: i32,
+    pub date: NaiveDate,
+}
+
+#[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset)]
 pub struct Crate {
     pub id: i32,
     pub name: String,
@@ -100,6 +111,7 @@ pub struct EncodableCrate {
     pub badges: Option<Vec<EncodableBadge>>,
     pub created_at: String,
     pub downloads: i32,
+    pub recent_downloads: Option<i64>,
     pub max_version: String,
     pub description: Option<String>,
     pub homepage: Option<String>,
@@ -484,10 +496,20 @@ impl Crate {
         max_version: semver::Version,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
+        recent_downloads: Option<i64>,
     ) -> EncodableCrate {
-        self.encodable(max_version, None, None, None, badges, exact_match)
+        self.encodable(
+            max_version,
+            None,
+            None,
+            None,
+            badges,
+            exact_match,
+            recent_downloads,
+        )
     }
 
+    #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
     pub fn encodable(
         self,
         max_version: semver::Version,
@@ -496,6 +518,7 @@ impl Crate {
         categories: Option<&[Category]>,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
+        recent_downloads: Option<i64>,
     ) -> EncodableCrate {
         let Crate {
             name,
@@ -521,6 +544,7 @@ impl Crate {
             updated_at: ::encode_time(updated_at),
             created_at: ::encode_time(created_at),
             downloads: downloads,
+            recent_downloads: recent_downloads,
             versions: versions,
             keywords: keyword_ids,
             categories: category_ids,
@@ -728,25 +752,47 @@ impl Model for Crate {
 
 /// Handles the `GET /crates` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::AsExpression;
-    use diesel::types::Bool;
+    use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
+    use diesel::types::{Bool, BigInt, Nullable};
+    use diesel::expression::functions::date_and_time::{now, date};
+    use diesel::expression::sql_literal::sql;
+    use diesel::query_source::joins::LeftOuter;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    let sort = params.get("sort").map(|s| &**s).unwrap_or("alpha");
+    let sort = params.get("sort").map(|s| &**s).unwrap_or(
+        "recent-downloads",
+    );
+
+    let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
     let mut query = crates::table
-        .select((ALL_COLUMNS, AsExpression::<Bool>::as_expression(false)))
+        .join(
+            crate_downloads::table,
+            LeftOuter,
+            crates::id.eq(crate_downloads::crate_id).and(
+                crate_downloads::date.gt(date(now - 90.days())),
+            ),
+        )
+        .group_by(crates::id)
+        .select((
+            ALL_COLUMNS,
+            AsExpression::<Bool>::as_expression(false),
+            recent_downloads.clone(),
+        ))
         .into_boxed();
 
     if sort == "downloads" {
         query = query.order(crates::downloads.desc())
+    } else if sort == "recent-downloads" {
+        query = query.order(recent_downloads.clone().desc().nulls_last())
     } else {
         query = query.order(crates::name.asc())
     }
 
     if let Some(q_string) = params.get("q") {
+        let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
         let q = plainto_tsquery(q_string);
         query = query.filter(q.matches(crates::textsearchable_index_col).or(
             crates::name.eq(
@@ -754,10 +800,19 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
             ),
         ));
 
-        query = query.select((ALL_COLUMNS, crates::name.eq(q_string)));
+        query = query.select((
+            ALL_COLUMNS,
+            crates::name.eq(q_string),
+            recent_downloads.clone(),
+        ));
         let perfect_match = crates::name.eq(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
+        } else if sort == "recent-downloads" {
+            query = query.order((
+                perfect_match,
+                recent_downloads.clone().desc().nulls_last(),
+            ));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))
@@ -824,14 +879,21 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let data = query.paginate(limit, offset).load::<((Crate, bool), i64)>(
-        &*conn,
-    )?;
+    let data = query
+        .paginate(limit, offset)
+        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let crates = data.iter()
-        .map(|&((ref c, _), _)| c.clone())
+        .map(|&((ref c, _, _), _)| c.clone())
         .collect::<Vec<_>>();
-    let perfect_matches = data.into_iter().map(|((_, b), _)| b).collect::<Vec<_>>();
+    let perfect_matches = data.clone()
+        .into_iter()
+        .map(|((_, b, _), _)| b)
+        .collect::<Vec<_>>();
+    let recent_downloads = data.clone()
+        .into_iter()
+        .map(|((_, _, s), _)| s.unwrap_or(0))
+        .collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
@@ -842,7 +904,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
-        .map(|((max_version, krate), perfect_match)| {
+        .zip(recent_downloads)
+        .map(|(((max_version, krate), perfect_match),
+          recent_downloads)| {
             // FIXME: If we add crate_id to the Badge enum we can eliminate
             // this N+1
             let badges = badges::table
@@ -852,6 +916,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 max_version,
                 Some(badges),
                 perfect_match,
+                Some(recent_downloads),
             ))
         })
         .collect::<Result<_, ::diesel::result::Error>>()?;
@@ -891,7 +956,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false))
+                Ok(krate.minimal_encodable(max_version, None, false, Some(0)))
             })
             .collect()
     };
@@ -988,6 +1053,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
                 Some(&cats),
                 Some(badges),
                 false,
+                Some(0),
             ),
             versions: versions
                 .into_iter()
@@ -1130,7 +1196,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false),
+            krate: krate.minimal_encodable(max_version, None, false, Some(0)),
             warnings: warnings,
         }))
     })

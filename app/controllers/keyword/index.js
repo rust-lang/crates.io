@@ -7,11 +7,17 @@ export default Controller.extend(PaginationMixin, {
     queryParams: ['page', 'per_page', 'sort'],
     page: '1',
     per_page: 10,
-    sort: 'alpha',
+    sort: 'recent-downloads',
 
     totalItems: computed.readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        return (this.get('sort') === 'downloads') ? 'Downloads' : 'Alphabetical';
+        if (this.get('sort') === 'downloads') {
+            return 'All-Time Downloads';
+        } else if (this.get('sort') === 'alpha') {
+            return 'Alphabetical';
+        } else {
+            return 'Recent Downloads';
+        }
     }),
 });

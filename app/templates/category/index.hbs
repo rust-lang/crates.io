@@ -61,7 +61,12 @@
                 </li>
                 <li>
                     {{#link-to (query-params sort="downloads")}}
-                        Downloads
+                        All-Time Downloads
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to (query-params sort="recent-downloads")}}
+                        Recent Downloads
                     {{/link-to}}
                 </li>
             {{/rl-dropdown}}
