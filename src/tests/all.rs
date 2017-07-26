@@ -92,7 +92,6 @@ mod git;
 mod keyword;
 mod krate;
 mod record;
-mod render;
 mod schema_details;
 mod team;
 mod token;
