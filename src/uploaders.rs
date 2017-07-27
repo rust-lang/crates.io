@@ -163,7 +163,7 @@ impl Uploader {
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = req.app().clone();
         let (crate_path, checksum) = {
-            let path = format!("/{}", Uploader::crate_path(&krate.name, &vers.to_string()));
+            let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = LimitErrorReader::new(req.body(), max);
             self.upload(
@@ -181,7 +181,7 @@ impl Uploader {
             path: crate_path,
         };
         let (readme_path, _) = if let Some(rendered) = readme {
-            let path = format!("/{}", Uploader::readme_path(&krate.name, &vers.to_string()));
+            let path = Uploader::readme_path(&krate.name, &vers.to_string());
             let length = rendered.len();
             let mut body = io::Cursor::new(rendered.into_bytes());
             self.upload(
