@@ -324,9 +324,12 @@ fn test_github_login_does_not_overwrite_email() {
     let mut req = ::req(app.clone(), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user_with_id("apricot", 1)
-            .create_or_update(&conn)
-            .unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            ..::new_user("apricot")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
         user
     };
@@ -350,9 +353,12 @@ fn test_github_login_does_not_overwrite_email() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user_with_id("apricot", 1)
-            .create_or_update(&conn)
-            .unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            ..::new_user("apricot")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
     }
 
