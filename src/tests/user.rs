@@ -303,8 +303,52 @@ fn updating_existing_user_doesnt_change_api_token() {
 */
 #[test]
 fn test_github_login_does_not_overwrite_email() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
 
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
 
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user_with_id("apricot", 1).create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email, None);
+    assert_eq!(r.user.login, "apricot");
+
+    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes())
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    ::logout(&mut req);
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user_with_id("apricot", 1).create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
+    assert_eq!(r.user.login, "apricot");
 }
 
 /*  Make sure that what is passed into the database is

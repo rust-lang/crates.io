@@ -189,6 +189,19 @@ fn new_user(login: &str) -> NewUser {
     }
 }
 
+// I want to be able to seed the github id for use in test
+// github_login_does_not_overwrite_email
+fn new_user_with_id(login: &str, gh_id: i32) -> NewUser {
+    NewUser {
+        gh_id: gh_id,
+        gh_login: login,
+        email: None,
+        name: None,
+        gh_avatar: None,
+        gh_access_token: Cow::Borrowed("some random token"),
+    }
+}
+
 fn user(login: &str) -> User {
     User {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
