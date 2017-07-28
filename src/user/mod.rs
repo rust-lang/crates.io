@@ -541,8 +541,6 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         return Err(human("empty email rejected"));
     }
 
-    println!("update_user email: {:?}", user_email);
-
     update(users.filter(gh_login.eq(&user.gh_login)))
         .set(email.eq(user_email))
         .execute(&*conn)?;

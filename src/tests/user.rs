@@ -298,8 +298,15 @@ fn updating_existing_user_doesnt_change_api_token() {
     assert_eq!("bar_token", user.gh_access_token);
 }
 
-/*  Email GitHub private overwrite bug
-    Please find a better description, that is not english
+/*  Given a GitHub user, check that if the user logs in,
+    updates their email, logs out, then logs back in, the
+    email they added to crates.io will not be overwritten
+    by the information sent by GitHub.
+
+    This bug is problematic if the user's email preferences
+    are set to private on GitHub, as GitHub will always
+    send none as the email and we will end up inadvertenly
+    deleting their email when they sign back in.
 */
 #[test]
 fn test_github_login_does_not_overwrite_email() {
@@ -351,8 +358,9 @@ fn test_github_login_does_not_overwrite_email() {
     assert_eq!(r.user.login, "apricot");
 }
 
-/*  Make sure that what is passed into the database is
-    also what is extracted out of the database
+/*  Given a crates.io user, check that the user's email can be
+    updated in the database (PUT /user/:user_id), then check
+    that the updated email is sent back to the user (GET /me).
 */
 #[test]
 fn test_email_get_and_put() {
@@ -396,10 +404,15 @@ fn test_email_get_and_put() {
     assert_eq!(r.user.login, "mango");
 }
 
-/*  Make sure that empty strings will error and are
-    not added to the database
-    Tests for empty string and none. unlikely this
-    would ever occur but might as well check it
+/*  Given a crates.io user, check to make sure that the user
+    cannot add to the database an empty string or null as
+    their email. If an attempt is made, update_user.rs will
+    return an error indicating that an empty email cannot be
+    added.
+
+    This is checked on the frontend already, but I'd like to
+    make sure that a user cannot get around that and delete
+    their email by adding an empty string.
 */
 #[test]
 fn test_empty_email_not_added() {
@@ -435,11 +448,13 @@ fn test_empty_email_not_added() {
     assert!(json.errors[0].detail.contains("empty email rejected"), "{:?}", json.errors);
 }
 
-/*  A user cannot change the email of another user
-    Two users in database, one signed in, the other
-    not signed in, from one that is not signed in try to
-    change signed in's email
+/*  Given two users, one signed in and the other not signed in,
+    check to make sure that the not signed in user cannot edit
+    the email of the signed in user, or vice-versa.
 
+    If an attempt is made, update_user.rs will return an error
+    indicating that the current user does not match the
+    requested user.
 */
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
