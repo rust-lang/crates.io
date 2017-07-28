@@ -324,7 +324,9 @@ fn test_github_login_does_not_overwrite_email() {
     let mut req = ::req(app.clone(), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user_with_id("apricot", 1).create_or_update(&conn).unwrap();
+        let user = ::new_user_with_id("apricot", 1)
+            .create_or_update(&conn)
+            .unwrap();
         ::sign_in_as(&mut req, &user);
         user
     };
@@ -339,7 +341,7 @@ fn test_github_login_does_not_overwrite_email() {
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(::json::<S>(&mut response).ok);
@@ -348,7 +350,9 @@ fn test_github_login_does_not_overwrite_email() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user_with_id("apricot", 1).create_or_update(&conn).unwrap();
+        let user = ::new_user_with_id("apricot", 1)
+            .create_or_update(&conn)
+            .unwrap();
         ::sign_in_as(&mut req, &user);
     }
 
@@ -393,7 +397,7 @@ fn test_email_get_and_put() {
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
                 .with_method(Method::Put)
-                .with_body(body.as_bytes())
+                .with_body(body.as_bytes()),
         )
     );
     assert!(::json::<S>(&mut response).ok);
@@ -434,7 +438,11 @@ fn test_empty_email_not_added() {
         )
     );
 
-    assert!(json.errors[0].detail.contains("empty email rejected"), "{:?}", json.errors);
+    assert!(
+        json.errors[0].detail.contains("empty email rejected"),
+        "{:?}",
+        json.errors
+    );
 
     let body = r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
     let json = bad_resp!(
@@ -445,7 +453,11 @@ fn test_empty_email_not_added() {
         )
     );
 
-    assert!(json.errors[0].detail.contains("empty email rejected"), "{:?}", json.errors);
+    assert!(
+        json.errors[0].detail.contains("empty email rejected"),
+        "{:?}",
+        json.errors
+    );
 }
 
 /*  Given two users, one signed in and the other not signed in,
@@ -479,6 +491,12 @@ fn test_this_user_cannot_change_that_user_email() {
         )
     );
 
-    assert!(json.errors[0].detail.contains("current user does not match requested user"), "{:?}", json.errors);
+    assert!(
+        json.errors[0].detail.contains(
+            "current user does not match requested user",
+        ),
+        "{:?}",
+        json.errors
+    );
 
 }

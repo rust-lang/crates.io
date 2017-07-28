@@ -85,10 +85,9 @@ impl<'a> NewUser<'a> {
 
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
         insert(&self.on_conflict(
-                conflict_target,
-                do_update().set(&update_user),
-            ))
-            .into(users::table)
+            conflict_target,
+            do_update().set(&update_user),
+        )).into(users::table)
             .get_result(conn)
             .map_err(Into::into)
     }
