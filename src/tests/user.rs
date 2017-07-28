@@ -345,12 +345,12 @@ fn test_github_login_does_not_overwrite_email() {
     assert!(::json::<S>(&mut response).ok);
 
     ::logout(&mut req);
-    let user = {
+
+    {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user_with_id("apricot", 1).create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        user
-    };
+    }
 
     let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
