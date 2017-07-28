@@ -71,7 +71,7 @@ impl Keyword {
                 .execute(conn)?;
         }
         keywords::table
-            .filter(::lower(keywords::keyword).eq(any(&lowercase_names)))
+            .filter(keywords::keyword.eq(any(&lowercase_names)))
             .load(conn)
     }
 
@@ -188,4 +188,46 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         keyword: EncodableKeyword,
     }
     Ok(req.json(&R { keyword: kw.encodable() }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotenv::dotenv;
+    use std::env;
+    use diesel;
+    use diesel::connection::SimpleConnection;
+
+    #[derive(Insertable)]
+    #[table_name = "keywords"]
+    struct NewKeyword<'a> {
+        keyword: &'a str,
+    }
+
+    fn pg_connection() -> PgConnection {
+        let _ = dotenv();
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        let conn = PgConnection::establish(&database_url).unwrap();
+        // These tests deadlock if run concurrently
+        conn.batch_execute("BEGIN;").unwrap();
+        conn
+    }
+
+    #[test]
+    fn dont_associate_with_non_lowercased_keywords() {
+        let conn = pg_connection();
+        // The code should be preventing lowercased keywords from existing,
+        // but if one happens to sneak in there, don't associate crates with it.
+        let bad_keyword = NewKeyword { keyword: "NO" };
+
+        diesel::insert(&bad_keyword)
+            .into(keywords::table)
+            .execute(&conn)
+            .unwrap();
+
+        let associated = Keyword::find_or_create_all(&conn, &["no"]).unwrap();
+        assert_eq!(associated.len(), 1);
+        assert_eq!(associated.first().unwrap().keyword, "no");
+    }
 }
