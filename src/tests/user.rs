@@ -354,10 +354,41 @@ fn test_email_get_and_put() {
 
 /*  Make sure that empty strings will error and are
     not added to the database
+    Tests for empty string and none. unlikely this
+    would ever occur but might as well check it
 */
 #[test]
 fn test_empty_email_not_added() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("papaya").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
 
+    let body = r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(json.errors[0].detail.contains("empty email rejected"), "{:?}", json.errors);
+
+    let body = r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(json.errors[0].detail.contains("empty email rejected"), "{:?}", json.errors);
 }
 
 /*  A user cannot change the email of another user
@@ -368,5 +399,27 @@ fn test_empty_email_not_added() {
 */
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+
+    let not_signed_in_user = {
+        let conn = app.diesel_database.get().unwrap();
+        let signed_user = ::new_user("pineapple").create_or_update(&conn).unwrap();
+        let unsigned_user = ::new_user("coconut").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &signed_user);
+        unsigned_user
+    };
+
+    let body = r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
+
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", not_signed_in_user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(json.errors[0].detail.contains("current user does not match requested user"), "{:?}", json.errors);
 
 }
