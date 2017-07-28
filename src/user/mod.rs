@@ -381,11 +381,27 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
+    // Changed to getting User information from database because in
+    // src/tests/user.rs, when testing put and get on updating email,
+    // request seems to be somehow 'cached'. When we try to get a
+    // request from the /me route with the just updated user (call
+    // this function) the user is the same as the initial GET request
+    // and does not seem to get the updated user information from the
+    // database
+    // This change is not preferable, we'd rather fix the request,
+    // perhaps adding `req.mut_extensions().insert(user)` to the
+    // update_user route, however this somehow does not seem to work
+    use self::users::dsl::{users, id};
+    let user_id = req.user()?.id;
+    let conn = req.db_conn()?;
+    let user = users.filter(id.eq(user_id)).first::<User>(&*conn)?;
+    println!("user id: {:?} user_id: {:?}", user.id, user_id);
+
     #[derive(Serialize)]
     struct R {
         user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: req.user()?.clone().encodable_private() }))
+    Ok(req.json(&R { user: user.encodable_private() }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -520,6 +536,8 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
 
     let user_email = user_update.user.email.unwrap();
     let user_email = user_email.trim();
+
+    println!("update_user email: {:?}", user_email);
 
     update(users.filter(gh_login.eq(&user.gh_login)))
         .set(email.eq(user_email))

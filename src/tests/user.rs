@@ -66,12 +66,18 @@ fn user_insert() {
 #[test]
 fn me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = ::mock_user(&mut req, ::user("foo"));
-
+    // with GET /me update gives 404 response
+    // let user = ::mock_user(&mut req, ::user("foo"));
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
 
@@ -290,4 +296,77 @@ fn updating_existing_user_doesnt_change_api_token() {
 
     assert_eq!("bar", user.gh_login);
     assert_eq!("bar_token", user.gh_access_token);
+}
+
+/*  Email GitHub private overwrite bug
+    Please find a better description, that is not english
+*/
+#[test]
+fn test_github_login_does_not_overwrite_email() {
+
+
+}
+
+/*  Make sure that what is passed into the database is
+    also what is extracted out of the database
+*/
+#[test]
+fn test_email_get_and_put() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("mango").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email, None);
+    assert_eq!(r.user.login, "mango");
+
+    let body = r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes())
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
+    assert_eq!(r.user.login, "mango");
+}
+
+/*  Make sure that empty strings will error and are
+    not added to the database
+*/
+#[test]
+fn test_empty_email_not_added() {
+
+}
+
+/*  A user cannot change the email of another user
+    Two users in database, one signed in, the other
+    not signed in, from one that is not signed in try to
+    change signed in's email
+
+*/
+#[test]
+fn test_this_user_cannot_change_that_user_email() {
+
 }
