@@ -303,8 +303,12 @@
             color: red;
         }
     }
-    .docs pre {
-        overflow-x: scroll;
+    .crate-readme {
+        line-height: 1.5;
+
+        pre {
+            overflow-x: scroll;
+        }
     }
     .last-update {
         color: $main-color-light;

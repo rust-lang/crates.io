@@ -60,7 +60,7 @@ impl<'a> MarkdownRenderer<'a> {
                     .cloned()
                     .collect(),
             ),
-            ("pre", ["style"].iter().cloned().collect()),
+            ("code", ["class"].iter().cloned().collect()),
             ("span", ["style"].iter().cloned().collect()),
         ].iter()
             .cloned()
