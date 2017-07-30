@@ -181,7 +181,7 @@ fn get_readme(app: Arc<App>, version: &EncodableVersion) -> Option<String> {
     ));
     let manifest: Manifest = {
         let path = format!("{}-{}/Cargo.toml", version.krate, version.num);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version).unwrap();
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
         toml::from_str(&contents).expect(&format!(
             "[{}-{}] Syntax error in manifest file",
             version.krate,
@@ -198,7 +198,7 @@ fn get_readme(app: Arc<App>, version: &EncodableVersion) -> Option<String> {
             version.num,
             manifest.package.readme.unwrap()
         );
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version).unwrap();
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
         markdown_to_html(&contents).expect(&format!(
             "[{}-{}] Couldn't render README",
             version.krate,
@@ -221,7 +221,7 @@ fn find_file_by_path<R: Read>(
     mut entries: &mut tar::Entries<R>,
     path: &Path,
     version: &EncodableVersion,
-) -> Option<String> {
+) -> String {
     let mut file = entries
         .find(|entry| match *entry {
             Err(_) => false,
@@ -234,21 +234,22 @@ fn find_file_by_path<R: Read>(
             }
         })
         .expect(&format!(
+            "[{}-{}] couldn't open file: {}",
+            version.krate,
+            version.num,
+            path.display()
+        ))
+        .expect(&format!(
             "[{}-{}] file is not present: {}",
             version.krate,
             version.num,
             path.display()
         ));
-    match file {
-        Err(_) => None,
-        Ok(ref mut f) => {
-            let mut contents = String::new();
-            f.read_to_string(&mut contents).expect(&format!(
-                "[{}-{}] Couldn't read file contents",
-                version.krate,
-                version.num
-            ));
-            return Some(contents);
-        }
-    }
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect(&format!(
+        "[{}-{}] Couldn't read file contents",
+        version.krate,
+        version.num
+    ));
+    contents
 }
