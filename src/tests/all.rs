@@ -478,10 +478,11 @@ fn sign_in_as(req: &mut Request, user: &User) {
     );
 }
 
-fn sign_in(req: &mut Request, app: &App) {
+fn sign_in(req: &mut Request, app: &App) -> User {
     let conn = app.diesel_database.get().unwrap();
     let user = ::new_user("foo").create_or_update(&conn).unwrap();
     sign_in_as(req, &user);
+    user
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {

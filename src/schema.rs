@@ -183,3 +183,5 @@ table! {
         license -> Nullable<Varchar>,
     }
 }
+
+operator_allowed!(crates::updated_at, Sub, sub);
