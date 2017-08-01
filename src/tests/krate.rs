@@ -15,7 +15,7 @@ use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
 use cargo_registry::keyword::EncodableKeyword;
-use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
+use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH, NewCrate};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::owner::EncodableOwner;
@@ -2114,4 +2114,24 @@ fn block_blacklisted_documentation_url() {
     let json: CrateResponse = ::json(&mut response);
 
     assert_eq!(json.krate.documentation, None);
+}
+
+#[test]
+fn updated_at_always_updated() {
+    let (_b, app, _middle) = ::app();
+    let conn = app.diesel_database.get().unwrap();
+    let u = ::new_user("foo").create_or_update(&conn).unwrap();
+    let create_crate = NewCrate{
+        name: "updated-crate",
+        .. NewCrate::default()
+    };
+    let created_crate = create_crate.create_or_update(&conn, None, u.id)
+        .expect("create");
+    let update_crate = NewCrate{
+        name: "updated-crate",
+        .. NewCrate::default()
+    };
+    let updated_crate = update_crate.create_or_update(&conn, None, u.id)
+        .expect("update");
+    assert!(created_crate.updated_at != updated_crate.updated_at);
 }

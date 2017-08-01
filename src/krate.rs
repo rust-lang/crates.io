@@ -135,7 +135,7 @@ pub struct CrateLinks {
     pub reverse_dependencies: String,
 }
 
-#[derive(Insertable, AsChangeset, Default, Debug)]
+#[derive(Insertable, AsChangeset, Debug)]
 #[table_name = "crates"]
 #[primary_key(name, max_upload_size)] // This is actually just to skip updating them
 pub struct NewCrate<'a> {
@@ -147,9 +147,35 @@ pub struct NewCrate<'a> {
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
     pub license: Option<&'a str>,
+    pub updated_at: Timespec,
+}
+
+impl<'a> Default for NewCrate<'a> {
+    fn default() -> Self {
+        NewCrate{
+            name: "",
+            description: None,
+            homepage: None,
+            documentation: None,
+            readme: None,
+            repository: None,
+            max_upload_size: None,
+            license: None,
+            // the `updated_at` column must be changed to be "now"
+            // even if none of the columns were actually changed.
+            updated_at: ::time::now_utc().to_timespec(),
+        }
+    }
 }
 
 impl<'a> NewCrate<'a> {
+    /// Creates this crate,
+    /// or updates the existing crate if it already exists under the same name.
+    ///
+    /// This "create-or-update" has been made an atomic operation to avoid race conditions when
+    /// two authors try to publish crates with the same name. After this operation completes, a
+    /// CrateVersion should also be created, since it's valid to transiently have a crate with no
+    /// versions, but it doesn't make any sense.
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
@@ -162,8 +188,6 @@ impl<'a> NewCrate<'a> {
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
-            // To avoid race conditions, we try to insert
-            // first so we know whether to add an owner
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
                 return Ok(krate);
             }
@@ -1136,7 +1160,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             readme: new_crate.readme.as_ref().map(|s| &**s),
             repository: new_crate.repository.as_ref().map(|s| &**s),
             license: new_crate.license.as_ref().map(|s| &**s),
-            max_upload_size: None,
+            .. NewCrate::default()
         };
 
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
