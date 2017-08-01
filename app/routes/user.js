@@ -1,4 +1,3 @@
-<<<<<<< 120f8008fb08c21fc6cd239c1100692a0ff487e6
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
@@ -44,7 +43,7 @@ export default Route.extend({
             this.session.get('currentUser') !== model.user
         );
         
-        if (controller.get('allowFavorting')) {
+        if (controller.get('allowFavoriting')) {
             ajax(`/api/v1/users/${model.user.id}/favorited`)
                 .then((d) => controller.set('favorited', d.favorited))
                 .finally(() => controller.set('fetchingFavorite', false));
