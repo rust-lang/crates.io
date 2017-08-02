@@ -23,7 +23,7 @@ related crates. More information about the backend is in
 
 [conduit]: https://crates.io/crates/conduit
 
-These files have to do with the backend:
+These files and directories have to do with the backend:
 
 * `build.rs` - Cargo build script
 * `Cargo.lock` - Locks dependencies to specific versions providing consistency across development
