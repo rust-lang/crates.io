@@ -394,7 +394,6 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_id = req.user()?.id;
     let conn = req.db_conn()?;
     let user = users.filter(id.eq(user_id)).first::<User>(&*conn)?;
-    println!("user id: {:?} user_id: {:?}", user.id, user_id);
 
     #[derive(Serialize)]
     struct R {
