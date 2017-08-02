@@ -1,8 +1,9 @@
 //! This crate implements the backend server for https://crates.io/
 //!
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
-//! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
-//! [user](user/index.html) and [version](version/index.html) modules.
+//! implemented in the [category](category/index.html), [keyword](keyword/index.html),
+//! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
+
 #![deny(warnings)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
@@ -95,6 +96,12 @@ pub mod version;
 
 mod pagination;
 
+/// Used for setting different values depending on whether the app is being run in production,
+/// in development, or for testing.
+///
+/// The app's `config.env` value is set in *src/bin/server.rs* to `Production` if the environment
+/// variable `HEROKU` is set and `Development` otherwise. `config.env` is set to `Test`
+/// unconditionally in *src/test/all.rs*.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Env {
     Development,
@@ -102,14 +109,26 @@ pub enum Env {
     Production,
 }
 
-// There may be more ways to run crates.io servers in the future, such as a
-// mirror that also has private crates that crates.io does not have.
+/// Used for setting different values depending on the type of registry this instance is.
+///
+/// `Primary` indicates this instance is a primary registry that is the source of truth for these
+/// crates' information. `ReadOnlyMirror` indicates this instanceis a read-only mirror of crate
+/// information that exists on another instance.
+///
+/// The app's `config.mirror` value is set in *src/bin/server.rs* to `ReadOnlyMirror` if the
+/// `MIRROR` environment variable is set and to `Primary` otherwise.
+///
+/// There may be more ways to run crates.io servers in the future, such as a
+/// mirror that also has private crates that crates.io does not have.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Replica {
     Primary,
     ReadOnlyMirror,
 }
 
+/// Configures routes, sessions, logging, and other middleware.
+///
+/// Called from *src/bin/server.rs*.
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 
@@ -175,6 +194,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.delete("/me/tokens/:id", C(token::revoke));
     router.get("/summary", C(krate::summary));
 
+    // Only serve the local checkout of the git index in development mode.
+    // In production, for crates.io, cargo gets the index from
+    // https://github.com/rust-lang/crates.io-index directly.
     let env = app.config.env;
     if env == Env::Development {
         let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
@@ -184,12 +206,16 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
 
     let mut m = MiddlewareBuilder::new(R404(router));
+
     if env == Env::Development {
+        // DebugMiddleware is defined below to print logs for each request.
         m.add(DebugMiddleware);
     }
+
     if env != Env::Test {
         m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
     }
+
     m.around(util::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
@@ -198,10 +224,18 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         env == Env::Production,
     ));
     m.add(app::AppMiddleware::new(app));
+
+    // Run each request in a transaction and roll back the transaction if the request results
+    // in an error. Not used when running tests because each test is run in a transaction.
     if env != Env::Test {
         m.add(db::TransactionMiddleware);
     }
+
+    // Sets the current user on each request.
     m.add(user::Middleware);
+
+    // Serve the static files in the *dist* directory, which are the frontend assets.
+    // Not needed for the backend tests.
     if env != Env::Test {
         m.around(dist::Middleware::default());
     }
@@ -240,14 +274,27 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
 }
 
+/// Convenience function for getting the current server time in UTC.
 pub fn now() -> time::Timespec {
     time::now_utc().to_timespec()
 }
 
+/// Convenience function for getting a time in RFC 3339 format.
+///
+/// Example: `2012-02-22T14:53:18Z`. Used for returning time values in JSON API responses.
 pub fn encode_time(ts: time::Timespec) -> String {
     time::at_utc(ts).rfc3339().to_string()
 }
 
+/// Convenience function requiring that an environment variable is set.
+///
+/// Ensures that we've initialized the dotenv crate in order to read environment variables
+/// from a *.env* file if present. Don't use this for optionally set environment variables.
+///
+/// # Panics
+///
+/// Panics if the environment variable with the name passed in as an argument is not defined
+/// in the current environment.
 pub fn env(s: &str) -> String {
     dotenv::dotenv().ok();
     ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
