@@ -70,8 +70,6 @@ fn me() {
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    // with GET /me update gives 404 response
-    // let user = ::mock_user(&mut req, ::user("foo"));
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
