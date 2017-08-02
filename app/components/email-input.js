@@ -28,7 +28,7 @@ export default Component.extend({
             let user = this.get('user');
 
             let emailIsProperFormat = function(userEmail) {
-                let regExp = /\S+@\S+\.\S+/;
+                let regExp = /^\S+@\S+\.\S+$/;
                 return regExp.test(userEmail);
             };
 
