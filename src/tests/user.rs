@@ -5,7 +5,7 @@ use conduit::{Handler, Method};
 use cargo_registry::Model;
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodableUser};
+use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -18,7 +18,7 @@ struct AuthResponse {
 
 #[derive(Deserialize)]
 pub struct UserShowResponse {
-    pub user: EncodableUser,
+    pub user: EncodablePrivateUser,
 }
 
 #[test]
@@ -66,12 +66,16 @@ fn user_insert() {
 #[test]
 fn me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = ::mock_user(&mut req, ::user("foo"));
-
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
 
@@ -91,12 +95,14 @@ fn show() {
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(Some("foo@bar.com".into()), json.user.email);
+    // Emails should be None as when on the user/:user_id page, a user's email should
+    // not be accessible in order to keep private.
+    assert_eq!(None, json.user.email);
     assert_eq!("foo", json.user.login);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
     let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(Some("bar@baz.com".into()), json.user.email);
+    assert_eq!(None, json.user.email);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
 }
@@ -288,4 +294,213 @@ fn updating_existing_user_doesnt_change_api_token() {
 
     assert_eq!("bar", user.gh_login);
     assert_eq!("bar_token", user.gh_access_token);
+}
+
+/*  Given a GitHub user, check that if the user logs in,
+    updates their email, logs out, then logs back in, the
+    email they added to crates.io will not be overwritten
+    by the information sent by GitHub.
+
+    This bug is problematic if the user's email preferences
+    are set to private on GitHub, as GitHub will always
+    send none as the email and we will end up inadvertenly
+    deleting their email when they sign back in.
+*/
+#[test]
+fn test_github_login_does_not_overwrite_email() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            ..::new_user("apricot")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email, None);
+    assert_eq!(r.user.login, "apricot");
+
+    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    ::logout(&mut req);
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            ..::new_user("apricot")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
+    assert_eq!(r.user.login, "apricot");
+}
+
+/*  Given a crates.io user, check that the user's email can be
+    updated in the database (PUT /user/:user_id), then check
+    that the updated email is sent back to the user (GET /me).
+*/
+#[test]
+fn test_email_get_and_put() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("mango").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email, None);
+    assert_eq!(r.user.login, "mango");
+
+    let body = r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
+    assert_eq!(r.user.login, "mango");
+}
+
+/*  Given a crates.io user, check to make sure that the user
+    cannot add to the database an empty string or null as
+    their email. If an attempt is made, update_user.rs will
+    return an error indicating that an empty email cannot be
+    added.
+
+    This is checked on the frontend already, but I'd like to
+    make sure that a user cannot get around that and delete
+    their email by adding an empty string.
+*/
+#[test]
+fn test_empty_email_not_added() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("papaya").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let body = r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(
+        json.errors[0].detail.contains("empty email rejected"),
+        "{:?}",
+        json.errors
+    );
+
+    let body = r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(
+        json.errors[0].detail.contains("empty email rejected"),
+        "{:?}",
+        json.errors
+    );
+}
+
+/*  Given two users, one signed in and the other not signed in,
+    check to make sure that the not signed in user cannot edit
+    the email of the signed in user, or vice-versa.
+
+    If an attempt is made, update_user.rs will return an error
+    indicating that the current user does not match the
+    requested user.
+*/
+#[test]
+fn test_this_user_cannot_change_that_user_email() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+
+    let not_signed_in_user = {
+        let conn = app.diesel_database.get().unwrap();
+        let signed_user = ::new_user("pineapple").create_or_update(&conn).unwrap();
+        let unsigned_user = ::new_user("coconut").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &signed_user);
+        unsigned_user
+    };
+
+    let body = r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
+
+    let json = bad_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", not_signed_in_user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    assert!(
+        json.errors[0].detail.contains(
+            "current user does not match requested user",
+        ),
+        "{:?}",
+        json.errors
+    );
+
 }

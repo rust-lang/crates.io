@@ -1,0 +1,14 @@
+<div class='form-group'>
+    {{input type=type value=value placeholder=placeholder class='form-control' name=valuePath}}
+    {{#if isValid}}
+        <span class='valid-input fa fa-check'></span>
+    {{/if}}
+
+    <div class='input-error'>
+        {{#if showErrorMessage}}
+            <div class='error'>
+                {{v-get model valuePath 'message'}}
+            </div>
+        {{/if}}
+    </div>
+</div>
