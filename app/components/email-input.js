@@ -15,11 +15,7 @@ export default Component.extend({
         editEmail() {
             let email = this.get('value');
             let isEmailNull = function(email) {
-                if (email == null) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return (email == null);
             };
 
             this.set('emailIsNull', isEmailNull(email));
@@ -49,7 +45,7 @@ export default Component.extend({
                     if (err.errors && err.errors[0] && err.errors[0].detail) {
                         msg = `An error occurred while saving this email, ${err.errors[0].detail}`;
                     } else {
-                        msg = 'An unknown error occurred while saving this token.';
+                        msg = 'An unknown error occurred while saving this email.';
                     }
                     this.set('serverError', msg);
                 });
