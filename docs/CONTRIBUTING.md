@@ -20,6 +20,10 @@ If you'd like to work on something that isn't in a current issue, especially if
 it would be a big change, please open a new issue for discussion!
 
 ## Submitting a Pull Request
+As an initiative to improve the documentation of the crates.io codebase, we would
+like to see all new types and functions, public and private, to have documentation
+comments on them. If you change an existing type or function, and it doesn't have
+a documentation comment on it, it'd be great if you could add one to it too.
 
 When you submit a pull request, it will be automatically tested on TravisCI. In
 addition to running both the frontend and the backend tests described below,

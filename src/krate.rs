@@ -40,6 +40,10 @@ use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
 use {Model, User, Keyword, Version, Category, Badge, Replica};
 
+/// Hosts in this blacklist are known to not be hosting documentation,
+/// and are possibly of malicious intent e.g. ad tracking networks, etc.
+const DOCUMENTATION_BLACKLIST: [&'static str; 1] = ["rust-ci.org"];
+
 #[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
 #[belongs_to(Crate)]
 #[primary_key(crate_id, date)]
@@ -538,6 +542,8 @@ impl Crate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
+        let documentation = Crate::remove_blacklisted_documentation_urls(documentation);
+
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
@@ -563,6 +569,34 @@ impl Crate {
                 owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
             },
+        }
+    }
+
+    /// Return `None` if the documentation URL host matches a blacklisted host
+    fn remove_blacklisted_documentation_urls(url: Option<String>) -> Option<String> {
+        // Handles if documentation URL is None
+        let url = match url {
+            Some(url) => url,
+            None => return None,
+        };
+
+        // Handles unsuccessful parsing of documentation URL
+        let parsed_url = match Url::parse(&url) {
+            Ok(parsed_url) => parsed_url,
+            Err(_) => return None,
+        };
+
+        // Extract host string from documentation URL
+        let url_host = match parsed_url.host_str() {
+            Some(url_host) => url_host,
+            None => return None,
+        };
+
+        // Match documentation URL host against blacklisted host array elements
+        if DOCUMENTATION_BLACKLIST.contains(&url_host) {
+            None
+        } else {
+            Some(url)
         }
     }
 
@@ -1594,3 +1628,41 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
 use diesel::types::{Text, Date};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
 sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
+
+#[cfg(test)]
+mod tests {
+    use super::Crate;
+
+    #[test]
+    fn documentation_blacklist_no_url_provided() {
+        assert_eq!(Crate::remove_blacklisted_documentation_urls(None), None);
+    }
+
+    #[test]
+    fn documentation_blacklist_invalid_url() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(Some(String::from("not a url"))),
+            None
+        );
+    }
+
+    #[test]
+    fn documentation_blacklist_url_contains_partial_match() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(
+                Some(String::from("http://rust-ci.organists.com")),
+            ),
+            Some(String::from("http://rust-ci.organists.com"))
+        );
+    }
+
+    #[test]
+    fn documentation_blacklist_blacklisted_url() {
+        assert_eq!(
+            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+                "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
+            ))),
+            None
+        );
+    }
+}

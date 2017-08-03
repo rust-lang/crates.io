@@ -447,7 +447,7 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     // is all that is left, hear for backwards compatibility.
     #[derive(Serialize)]
     struct R {
-        users: Vec<::user::EncodableUser>,
+        users: Vec<::user::EncodablePublicUser>,
         meta: Meta,
     }
     #[derive(Serialize)]
