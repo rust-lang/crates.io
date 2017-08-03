@@ -375,6 +375,13 @@ Crates related to solving problems involving math, physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 
+[simulation]
+name = "Simulation"
+description = """
+Crates used to model or construct models for some activity, e.g. to.\
+simulate a networking protocol.\
+"""
+
 [template-engine]
 name = "Template engine"
 description = """
