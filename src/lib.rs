@@ -43,6 +43,7 @@ extern crate url;
 extern crate conduit;
 extern crate conduit_conditional_get;
 extern crate conduit_cookie;
+extern crate cookie;
 extern crate conduit_git_http_backend;
 extern crate conduit_json_parser;
 extern crate conduit_log_requests;
@@ -219,9 +220,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     m.around(util::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
-    m.add(conduit_cookie::Middleware::new(app.session_key.as_bytes()));
+    m.add(conduit_cookie::Middleware::new());
     m.add(conduit_cookie::SessionMiddleware::new(
         "cargo_session",
+        cookie::Key::from_master(app.session_key.as_bytes()),
         env == Env::Production,
     ));
     m.add(app::AppMiddleware::new(app));
