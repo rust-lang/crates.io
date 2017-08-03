@@ -51,7 +51,7 @@ impl Keyword {
         use diesel::pg::upsert::*;
         use diesel::expression::dsl::any;
 
-        #[derive(Insertable, Debug)]
+        #[derive(Insertable, Debug, Clone, Copy)]
         #[table_name = "keywords"]
         struct NewKeyword<'a> {
             keyword: &'a str,
@@ -198,7 +198,7 @@ mod tests {
     use diesel;
     use diesel::connection::SimpleConnection;
 
-    #[derive(Insertable)]
+    #[derive(Insertable, Debug, Clone, Copy)]
     #[table_name = "keywords"]
     struct NewKeyword<'a> {
         keyword: &'a str,
