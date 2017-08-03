@@ -16,6 +16,8 @@ use {db, Config};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
+// The db, oauth, and git2 types don't implement debug.
+#[allow(missing_debug_implementations)]
 pub struct App {
     /// The database connection pool
     pub database: db::Pool,
@@ -40,6 +42,8 @@ pub struct App {
 }
 
 /// The `AppMiddleware` injects an `App` instance into the `Request` extensions
+// Can't derive Debug because `App` can't.
+#[allow(missing_debug_implementations)]
 pub struct AppMiddleware {
     app: Arc<App>,
 }

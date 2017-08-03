@@ -42,7 +42,7 @@ pub enum Badge {
     Maintenance { value: MaintenanceValue },
 }
 
-#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum MaintenanceValue {
     ActivelyDeveloped,
@@ -81,7 +81,7 @@ impl Badge {
     ) -> QueryResult<Vec<&'a str>> {
         use diesel::{insert, delete};
 
-        #[derive(Insertable)]
+        #[derive(Insertable, Debug)]
         #[table_name = "badges"]
         struct NewBadge<'a> {
             crate_id: i32,

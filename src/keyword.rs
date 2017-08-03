@@ -22,7 +22,7 @@ pub struct Keyword {
     pub created_at: Timespec,
 }
 
-#[derive(Associations, Insertable, Identifiable, Debug)]
+#[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Keyword)]
 #[belongs_to(Crate)]
 #[table_name = "crates_keywords"]
@@ -51,7 +51,7 @@ impl Keyword {
         use diesel::pg::upsert::*;
         use diesel::expression::dsl::any;
 
-        #[derive(Insertable)]
+        #[derive(Insertable, Debug, Clone, Copy)]
         #[table_name = "keywords"]
         struct NewKeyword<'a> {
             keyword: &'a str,
@@ -198,7 +198,7 @@ mod tests {
     use diesel;
     use diesel::connection::SimpleConnection;
 
-    #[derive(Insertable)]
+    #[derive(Insertable, Debug, Clone, Copy)]
     #[table_name = "keywords"]
     struct NewKeyword<'a> {
         keyword: &'a str,

@@ -23,7 +23,7 @@ pub struct ApiToken {
 }
 
 /// The serialization format for the `ApiToken` model without its token value.
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableApiToken {
     pub id: i32,
     pub name: String,
@@ -34,7 +34,7 @@ pub struct EncodableApiToken {
 /// The serialization format for the `ApiToken` model with its token value.
 /// This should only be used when initially creating a new token to minimize
 /// the chance of token leaks.
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
@@ -47,7 +47,7 @@ impl ApiToken {
     /// Generates a new named API token for a user
     pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> QueryResult<ApiToken> {
         #[table_name = "api_tokens"]
-        #[derive(Insertable, AsChangeset)]
+        #[derive(Insertable, AsChangeset, Debug)]
         struct NewApiToken<'a> {
             user_id: i32,
             name: &'a str,

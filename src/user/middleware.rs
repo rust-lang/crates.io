@@ -9,6 +9,7 @@ use db::RequestTransaction;
 use super::User;
 use util::errors::{CargoResult, Unauthorized, ChainError, std_error};
 
+#[derive(Debug, Clone, Copy)]
 pub struct Middleware;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

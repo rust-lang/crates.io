@@ -169,6 +169,8 @@ impl Uploader {
     }
 }
 
+// Can't derive Debug because of App.
+#[allow(missing_debug_implementations)]
 pub struct Bomb {
     app: Arc<App>,
     pub path: Option<String>,

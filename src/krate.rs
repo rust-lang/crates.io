@@ -44,7 +44,7 @@ use {Model, User, Keyword, Version, Category, Badge, Replica};
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLACKLIST: [&'static str; 1] = ["rust-ci.org"];
 
-#[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset)]
+#[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
 #[belongs_to(Crate)]
 #[primary_key(crate_id, date)]
 #[table_name = "crate_downloads"]
@@ -1381,7 +1381,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
-#[derive(Insertable, Queryable, Identifiable, Associations)]
+#[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]
 #[belongs_to(User)]
 #[primary_key(user_id, crate_id)]
 #[table_name = "follows"]
