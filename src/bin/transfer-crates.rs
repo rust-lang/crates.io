@@ -6,30 +6,28 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate postgres;
-extern crate time;
+extern crate diesel;
 extern crate semver;
 
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use std::env;
 use std::io;
 use std::io::prelude::*;
 
 use cargo_registry::{Crate, User};
 use cargo_registry::owner::OwnerKind;
-use cargo_registry::Model;
+use cargo_registry::schema::*;
 
-#[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        transfer(&tx);
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = cargo_registry::db::connect_now().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|| {
+        transfer(&conn);
+        Ok(())
+    }).unwrap()
 }
 
-fn transfer(tx: &postgres::transaction::Transaction) {
+fn transfer(conn: &PgConnection) {
     let from = match env::args().nth(1) {
         None => {
             println!("needs a from-user argument");
@@ -45,8 +43,14 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         Some(s) => s,
     };
 
-    let from = User::find_by_login(tx, &from).unwrap();
-    let to = User::find_by_login(tx, &to).unwrap();
+    let from = users::table
+        .filter(users::gh_login.eq(from))
+        .first::<User>(conn)
+        .unwrap();
+    let to = users::table
+        .filter(users::gh_login.eq(to))
+        .first::<User>(conn)
+        .unwrap();
 
     if from.gh_id != to.gh_id {
         println!("====================================================");
@@ -67,27 +71,27 @@ fn transfer(tx: &postgres::transaction::Transaction) {
     );
     get_confirm("continue");
 
-    let stmt = tx.prepare(
-        "SELECT * FROM crate_owners
-                                   WHERE owner_id = $1
-                                     AND owner_kind = $2",
-    ).unwrap();
-    let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
+    let crate_owners = crate_owners::table
+        .filter(crate_owners::owner_id.eq(from.id))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32));
+    let crates = Crate::all()
+        .filter(crates::id.eq_any(
+            crate_owners.select(crate_owners::crate_id),
+        ))
+        .load::<Crate>(conn)
+        .unwrap();
 
-    for row in rows.iter() {
-        let krate = Crate::find(tx, row.get("crate_id")).unwrap();
-        println!("transferring {}", krate.name);
-        let owners = krate.owners_old(tx).unwrap();
+    for krate in crates {
+        let owners = krate.owners(conn).unwrap();
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
     }
 
-    tx.execute(
-        "UPDATE crate_owners SET owner_id = $1
-                             WHERE owner_id = $2",
-        &[&to.id, &from.id],
-    ).unwrap();
+    diesel::update(crate_owners)
+        .set(crate_owners::owner_id.eq(to.id))
+        .execute(conn)
+        .unwrap();
 
     get_confirm("commit?");
 }
