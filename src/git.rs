@@ -73,6 +73,12 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     })
 }
 
+/// Yanks or unyanks a crate version. This requires finding the index
+/// file, deserlialise the crate from JSON, change the yank boolean to
+/// `true` or `false`, write all the lines back out, and commit and
+/// push the changes.
+// TODO: factor out the tasks this function does into smaller, separate
+// functions.
 pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo_path = repo.workdir().unwrap();

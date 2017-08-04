@@ -461,6 +461,14 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
+/// This does not delete a crate version, it makes the crate
+/// version accessible only to crates that already have a
+/// `Cargo.lock` containing this version.
+///
+/// Notes:
+/// Crate deletion is not implemented to avoid breaking builds,
+/// and the goal of yanking a crate is to prevent crates
+/// beginning to depend on the yanked crate version.
 pub fn yank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, true)
 }
@@ -470,6 +478,7 @@ pub fn unyank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, false)
 }
 
+/// Changes `yanked` flag on a crate version record
 fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let (version, krate) = version_and_crate(req)?;
     let user = req.user()?;
