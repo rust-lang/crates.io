@@ -5,7 +5,7 @@
   "bugs": {
     "url": "https://github.com/rust-lang/crates.io/issues"
   },
-  "license": "MIT",
+  "license": "(MIT OR Apache-2.0)",
   "author": "",
   "directories": {
     "doc": "docs",

@@ -102,6 +102,8 @@ impl<'a> RequestUtils for Request + 'a {
     }
 }
 
+// Can't Copy or Debug the fn.
+#[allow(missing_debug_implementations, missing_copy_implementations)]
 pub struct C(pub fn(&mut Request) -> CargoResult<Response>);
 
 impl Handler for C {
@@ -122,6 +124,7 @@ impl Handler for C {
     }
 }
 
+#[derive(Debug)]
 pub struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
@@ -136,6 +139,8 @@ impl<H: Handler> Handler for R<H> {
     }
 }
 
+// Can't derive Debug because of RouteBuilder.
+#[allow(missing_debug_implementations)]
 pub struct R404(pub RouteBuilder);
 
 impl Handler for R404 {

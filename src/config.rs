@@ -55,7 +55,9 @@ impl Default for Config {
         };
         let uploader = match (cargo_env, mirror) {
             (Env::Production, Replica::Primary) => {
-                // `env` panics if these vars are not set
+                // `env` panics if these vars are not set, and in production for a primary instance,
+                // that's what we want since we don't want to be able to start the server if the
+                // server doesn't know where to upload crates.
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
@@ -68,8 +70,14 @@ impl Default for Config {
                 }
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
-                // Read-only mirrors don't need access key or secret key,
-                // but they might have them. Definitely need bucket though.
+                // Read-only mirrors don't need access key or secret key since by definition,
+                // they'll only need to read from a bucket, not upload.
+                //
+                // Read-only mirrors might have access key or secret key, so use them if those
+                // environment variables are set.
+                //
+                // Read-only mirrors definitely need bucket though, so that they know where
+                // to serve crate files from.
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
@@ -81,8 +89,13 @@ impl Default for Config {
                     proxy: None,
                 }
             }
+            // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
                 if env::var("S3_BUCKET").is_ok() {
+                    // If we've set the `S3_BUCKET` variable to any value, use all of the values
+                    // for the related S3 environment variables and configure the app to upload to
+                    // and read from S3 like production does. All values except for bucket are
+                    // optional, like production read-only mirrors.
                     println!("Using S3 uploader");
                     Uploader::S3 {
                         bucket: s3::Bucket::new(
@@ -95,6 +108,9 @@ impl Default for Config {
                         proxy: None,
                     }
                 } else {
+                    // If we don't set the `S3_BUCKET` variable, we'll use a development-only
+                    // uploader that makes it possible to run and publish to a locally-running
+                    // crates.io instance without needing to set up an account and a bucket in S3.
                     println!("Using local uploader, crate files will be in the dist directory");
                     Uploader::Local
                 }
@@ -108,7 +124,7 @@ impl Default for Config {
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),
             env: cargo_env,
-            max_upload_size: 10 * 1024 * 1024,
+            max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             mirror: mirror,
             api_protocol: api_protocol,
         }

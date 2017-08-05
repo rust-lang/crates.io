@@ -16,9 +16,14 @@ use std::sync::mpsc::channel;
 
 #[allow(dead_code)]
 fn main() {
+    // Initialize logging
     env_logger::init().unwrap();
     let config: cargo_registry::Config = Default::default();
 
+    // If there isn't a git checkout containing the crate index repo at the path specified
+    // by `GIT_REPO_CHECKOUT`, delete that directory and clone the repo specified by `GIT_REPO_URL`
+    // into that directory instead. Uses the credentials specified in `GIT_HTTP_USER` and
+    // `GIT_HTTP_PWD` via the `cargo_registry::git::credentials` function.
     let url = env("GIT_REPO_URL");
     let repo = match git2::Repository::open(&config.git_repo_checkout) {
         Ok(r) => r,
@@ -35,6 +40,9 @@ fn main() {
                 .unwrap()
         }
     };
+
+    // All commits to the index registry made through crates.io will be made by bors, the Rust
+    // community's friendly GitHub bot.
     let mut cfg = repo.config().unwrap();
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
@@ -42,6 +50,8 @@ fn main() {
     let app = cargo_registry::App::new(&config);
     let app = cargo_registry::middleware(Arc::new(app));
 
+    // On every server restart, ensure the categories available in the database match
+    // the information in *src/categories.toml*.
     cargo_registry::categories::sync().unwrap();
 
     let heroku = env::var("HEROKU").is_ok();
@@ -61,7 +71,11 @@ fn main() {
     let mut cfg = civet::Config::new();
     cfg.port(port).threads(threads).keep_alive(true);
     let _a = Server::start(cfg, app);
+
     println!("listening on port {}", port);
+
+    // Creating this file tells heroku to tell nginx that the application is ready
+    // to receive traffic.
     if heroku {
         File::create("/tmp/app-initialized").unwrap();
     }

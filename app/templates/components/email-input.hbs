@@ -1,0 +1,34 @@
+{{#if isEditing }}
+    <div class='row'>
+        <div class='label'>
+            <dt>Email</dt>
+        </div>
+        <form {{action 'saveEmail' on='submit'}}>
+            {{input type=type value=value placeholder='Email' class='form-control space-bottom'}}
+            {{#if notValidEmail }}
+                <p class='small-text error'>Invalid email format. Please try again.</p>
+            {{/if}}
+            {{#if emailIsNull }}
+                <p class='small-text'> Please add your email address. We will only use
+                it to contact you about your account. We promise we'll never share it!
+                </p>
+            {{/if}}
+            <div class='actions'>
+                <button type='submit' class='small yellow-button space-right' disabled={{disableSave}}>Save</button>
+                <button class='small yellow-button' {{action 'cancelEdit'}}>Cancel</button>
+            </div>
+        </form>
+    </div>
+{{else}}
+    <div class='row align-center'>
+        <div class='label'>
+            <dt>Email</dt>
+        </div>
+        <div class='email'>
+            <dd class='no-space-left'>{{ user.email }}</dd>
+        </div>
+        <div class='actions'>
+            <button class='small yellow-button space-left' {{action 'editEmail'}}>Edit</button>
+        </div>
+    </div>
+{{/if}}

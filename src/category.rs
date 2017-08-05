@@ -22,7 +22,7 @@ pub struct Category {
     pub created_at: Timespec,
 }
 
-#[derive(Associations, Insertable, Identifiable, Debug)]
+#[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Category)]
 #[belongs_to(Crate)]
 #[table_name = "crates_categories"]

@@ -128,8 +128,11 @@ pub fn diesel_pool(
     r2d2::Pool::new(config, manager).unwrap()
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct TransactionMiddleware;
 
+// Can't derive Debug because of LazyCell and App.
+#[allow(missing_debug_implementations)]
 pub struct Transaction {
     // fields are destructed top-to-bottom so ensure we destroy them in the
     // right order.
