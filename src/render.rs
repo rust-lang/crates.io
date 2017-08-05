@@ -5,6 +5,7 @@ use pulldown_cmark::html;
 use util::CargoResult;
 
 /// Context for markdown to HTML rendering.
+#[allow(missing_debug_implementations)]
 pub struct MarkdownRenderer<'a> {
     html_sanitizer: Ammonia<'a>,
 }
