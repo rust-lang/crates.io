@@ -138,11 +138,17 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     return (bomb, app, middleware);
 }
 
+// Return the environment variable only if it has been defined
 fn env(s: &str) -> String {
-    match env::var(s).ok() {
-        Some(s) => s,
-        None => panic!("must have `{}` defined", s),
+    // Handles both the `None` and empty string cases e.g. VAR=
+    // by converting `None` to an empty string
+    let env_result = env::var(s).ok().unwrap_or(String::new());
+
+    if env_result == "" {
+        panic!("must have `{}` defined", s);
     }
+
+    env_result
 }
 
 fn req(app: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
