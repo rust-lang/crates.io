@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
+use time::Timespec;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -44,6 +45,38 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
+#[derive(Debug, Queryable, AsChangeset)]
+pub struct Email {
+    pub id: i32,
+    pub user_id: i32,
+    pub email: String,
+    pub verified: bool,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name="emails"]
+pub struct NewEmail {
+    pub user_id: i32,
+    pub email: String,
+    pub verified: bool,
+}
+
+#[derive(Debug, Queryable, AsChangeset)]
+pub struct Token {
+    pub id: i32,
+    pub email_id: i32,
+    pub token: String,
+    pub created_at: Timespec,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name="tokens"]
+pub struct NewToken {
+    pub email_id: i32,
+    pub token: String,
+    pub created_at: Timespec,
+}
+
 impl<'a> NewUser<'a> {
     pub fn new(
         gh_id: i32,
@@ -69,6 +102,7 @@ impl<'a> NewUser<'a> {
         use diesel::expression::dsl::sql;
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
+        use time;
 
         let update_user = NewUser {
             email: None,
@@ -88,12 +122,43 @@ impl<'a> NewUser<'a> {
         // necessary for most fields in the database to be used as a conflict
         // target :)
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        insert(&self.on_conflict(
+        let result = insert(&self.on_conflict(
             conflict_target,
             do_update().set(&update_user),
         )).into(users::table)
             .get_result(conn)
-            .map_err(Into::into)
+            .map_err(Into::into);
+
+        println!("insert into user table result: {:?}", result);
+
+        if let Some(user_email) = self.email {
+            let user_id = users::table.select(users::id).filter(users::gh_id.eq(&self.gh_id)).first(&*conn).unwrap();
+
+            let new_email = NewEmail {
+                user_id: user_id,
+                email: String::from(user_email),
+                verified: false,
+            };
+
+            let conflict_target = sql::<Integer>("(user_id) WHERE user_id > 0");
+            let email_result : QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
+                .into(emails::table)
+                .get_result(conn)
+                .map_err(Into::into);
+
+            println!("insert into email table: {:?}", email_result);
+
+            /*let token = generate_token();
+            let new_token = NewToken {
+                email_id: user_id,
+                token: token,
+                created_at: time::now_utc().to_timespec(),
+            };
+
+            let token_result = insert(new_token).into(tokens::table).get_result(conn).map_err(Into::into);*/
+        }
+
+        result
     }
 }
 
@@ -432,6 +497,12 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     use diesel::update;
     use self::users::dsl::{users, gh_login, email};
+    use diesel::insert;
+    use diesel::expression::dsl::sql;
+    use diesel::types::Integer;
+    use diesel::pg::upsert::*;
+    use time;
+
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -473,9 +544,94 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .set(email.eq(user_email))
         .execute(&*conn)?;
 
+    /*let token = generate_token();
+
+    let update_email = Email {
+        id: 1,
+        user_id: user.id,
+        email: String::from(user_email),
+        verified: false,
+    };
+    
+    let new_token = Token {
+        id: 1,
+        email_id: user.id,
+        token: token,
+        created_at: time::now_utc().to_timespec(),
+    };
+    
+    let conflict_target = sql::<Integer>("(user_id) WHERE user_id > 0");
+    insert(&update_email.on_conflict(
+        conflict_target,
+        do_update().set(&update_email),
+    )).into(emails::table)
+        .get_result(conn)
+        .map_err(Into::into);
+
+    let confict_target = sql::<Integer>("(email_id) WHERE email_id > 0");
+    insert(&new_token.on_conflict(
+        conflict_target,
+        do_update().set(&new_token),
+    )).into(emails::table)
+        .get_result(conn)
+        .map_err(Into::into);
+
+    confirm_user_email(user_email, user, token);*/
+
     #[derive(Serialize)]
     struct R {
         ok: bool,
     }
     Ok(req.json(&R { ok: true }))
+}
+
+/*fn confirm_user_email(email: &str, user: &User, token: String) {
+    // perhaps use crate lettre and heroku service Mailgun
+    // Need to add two, perhaps three, columns to the user table
+    //  One column: token string
+    //  Two column: email confirmed?
+    //  Three column: token expiration - perhaps a timestamp of when
+    //  the token was created, or when the token is invalid?
+    // Generate longish string as a token, store it in the table
+    // Create a URL with token string as path to send to user
+    // If user clicks on path, look email/user up in database,
+    // make sure tokens match
+
+    use dotenv::dotenv;
+    use std::env;
+    use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
+    use lettre::email::EmailBuilder;
+    use lettre::transport::smtp::authentication::Mechanism;
+    use lettre::transport::smtp::SUBMISSION_PORT;
+    use lettre::transport::EmailTransport;
+
+    dotenv().ok();
+    let mailgun_username = env::var("MAILGUN_SMTP_LOGIN").unwrap();
+    let mailgun_password = env::var("MAILGUN_SMTP_PASSWORD").unwrap();
+    let mailgun_server = env::var("MAILGUN_SMTP_SERVER").unwrap();
+
+    let email = EmailBuilder::new()
+        .to(email)
+        .from(mailgun_username.as_str())
+        .subject("Please confirm your email address")
+        .body(format!("Hello {}! Welcome to Crates.io. Please click the
+                      link below to verify your email address. Thank you!
+                      \n\n
+                      {}", user.name.unwrap(), token).as_str())
+        .build().unwrap();
+
+    let mut transport = SmtpTransportBuilder::new((mailgun_server.as_str(), SUBMISSION_PORT))
+        .unwrap()
+        .credentials(&mailgun_username, &mailgun_password)
+        .security_level(SecurityLevel::AlwaysEncrypt)
+        .smtp_utf8(true)
+        .authentication_mechanism(Mechanism::Plain)
+        .build();
+
+    transport.send(email)
+}*/
+
+fn generate_token() -> String {
+    let token: String = thread_rng().gen_ascii_chars().take(26).collect();
+    token
 }
