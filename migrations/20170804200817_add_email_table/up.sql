@@ -8,7 +8,7 @@ CREATE table emails (
 
 CREATE table tokens (
     id          SERIAL PRIMARY KEY,
-    email_id    INTEGER NOT NULL REFERENCES emails,
+    email_id    INTEGER NOT NULL UNIQUE REFERENCES emails,
     token       VARCHAR NOT NULL,
     created_at  TIMESTAMP NOT NULL DEFAULT now()
 );
