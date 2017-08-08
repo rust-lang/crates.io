@@ -53,7 +53,7 @@ pub struct Email {
     pub verified: bool,
 }
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, AsChangeset)]
 #[table_name="emails"]
 pub struct NewEmail {
     pub user_id: i32,
@@ -69,7 +69,7 @@ pub struct Token {
     pub created_at: Timespec,
 }
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, AsChangeset)]
 #[table_name="tokens"]
 pub struct NewToken {
     pub email_id: i32,
@@ -139,7 +139,7 @@ impl<'a> NewUser<'a> {
                 verified: false,
             };
 
-            let conflict_target = sql::<Integer>("(user_id) WHERE user_id > 0");
+            let conflict_target = sql::<Integer>("user_id");
             let email_result : QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
                 .into(emails::table)
                 .get_result(conn)
@@ -550,40 +550,49 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     update(users.filter(gh_login.eq(&user.gh_login)))
         .set(email.eq(user_email))
         .execute(&*conn)?;
-
-    /*let token = generate_token();
-
-    let update_email = Email {
-        id: 1,
+ 
+    let new_email = NewEmail {
         user_id: user.id,
         email: String::from(user_email),
         verified: false,
     };
-    
-    let new_token = Token {
-        id: 1,
-        email_id: user.id,
-        token: token,
-        created_at: time::now_utc().to_timespec(),
-    };
-    
-    let conflict_target = sql::<Integer>("(user_id) WHERE user_id > 0");
-    insert(&update_email.on_conflict(
-        conflict_target,
-        do_update().set(&update_email),
-    )).into(emails::table)
-        .get_result(conn)
+
+    let conflict_target = sql::<Integer>("user_id");
+    let email_result : QueryResult<Email> = insert(&new_email
+        .on_conflict(
+            conflict_target,
+            do_update().set(&new_email)
+        ))
+        .into(emails::table)
+        .get_result(&*conn)
         .map_err(Into::into);
 
-    let confict_target = sql::<Integer>("(email_id) WHERE email_id > 0");
-    insert(&new_token.on_conflict(
-        conflict_target,
-        do_update().set(&new_token),
-    )).into(emails::table)
-        .get_result(conn)
-        .map_err(Into::into);
+    println!("email_result from insert/update: {:?}", email_result);
 
-    confirm_user_email(user_email, user, token);*/
+    match email_result {
+        Ok(email_response) => {
+            let token = generate_token();
+            let new_token = NewToken {
+                email_id: email_response.id,
+                token: token,
+                created_at: time::now_utc().to_timespec(),
+            };
+
+            let conflict_target = sql::<Integer>("email_id");
+            let token_result : QueryResult<Token> = insert(&new_token
+                .on_conflict(
+                    conflict_target,
+                    do_update().set(&new_token)        
+                ))
+                .into(tokens::table)
+                .get_result(&*conn)
+                .map_err(Into::into);
+            println!("token_result from insert/update: {:?}", token_result);
+        },
+        Err(err) => {
+            return Err(human("Error in creating token"));
+        }
+    }
 
     #[derive(Serialize)]
     struct R {
