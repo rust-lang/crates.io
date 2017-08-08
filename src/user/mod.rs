@@ -45,7 +45,7 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
-#[derive(Debug, Queryable, AsChangeset)]
+#[derive(Debug, Queryable, AsChangeset, Clone)]
 pub struct Email {
     pub id: i32,
     pub user_id: i32,
@@ -103,6 +103,7 @@ impl<'a> NewUser<'a> {
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
         use time;
+        use diesel::result::Error;
 
         let update_user = NewUser {
             email: None,
@@ -129,8 +130,6 @@ impl<'a> NewUser<'a> {
             .get_result(conn)
             .map_err(Into::into);
 
-        println!("insert into user table result: {:?}", result);
-
         if let Some(user_email) = self.email {
             let user_id = users::table.select(users::id).filter(users::gh_id.eq(&self.gh_id)).first(&*conn).unwrap();
 
@@ -146,16 +145,24 @@ impl<'a> NewUser<'a> {
                 .get_result(conn)
                 .map_err(Into::into);
 
-            println!("insert into email table: {:?}", email_result);
+            match email_result {
+                Ok(email) => {
+                    let token = generate_token();
+                    let new_token = NewToken {
+                        email_id: email.id,
+                        token: token,
+                        created_at: time::now_utc().to_timespec(),
+                    };
 
-            /*let token = generate_token();
-            let new_token = NewToken {
-                email_id: user_id,
-                token: token,
-                created_at: time::now_utc().to_timespec(),
-            };
-
-            let token_result = insert(new_token).into(tokens::table).get_result(conn).map_err(Into::into);*/
+                    let token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
+                },
+                Err(Error::NotFound) => {
+                    // Pass, email had conflict, do nothing, this is expected
+                },
+                Err(err) => {
+                    return Err(err);
+                }
+            }
         }
 
         result

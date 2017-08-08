@@ -510,3 +510,65 @@ fn test_this_user_cannot_change_that_user_email() {
     );
 
 }
+
+#[test]
+fn test_insert_into_email_table() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("hi@hello.hey"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.login, "potato");
+
+    /*let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);*/
+
+    ::logout(&mut req);
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("hi@hello.hey"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.login, "potato");
+}
