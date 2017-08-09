@@ -612,6 +612,8 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
+    send_user_confirm_email(user_email, user, token);
+
     #[derive(Serialize)]
     struct R {
         ok: bool,
@@ -619,14 +621,8 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
-/*fn confirm_user_email(email: &str, user: &User, token: String) {
+fn send_user_confirm_email(email: &str, user: &User, token: String) {
     // perhaps use crate lettre and heroku service Mailgun
-    // Need to add two, perhaps three, columns to the user table
-    //  One column: token string
-    //  Two column: email confirmed?
-    //  Three column: token expiration - perhaps a timestamp of when
-    //  the token was created, or when the token is invalid?
-    // Generate longish string as a token, store it in the table
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match
@@ -651,7 +647,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .body(format!("Hello {}! Welcome to Crates.io. Please click the
                       link below to verify your email address. Thank you!
                       \n\n
-                      {}", user.name.unwrap(), token).as_str())
+                      crates.io/me/confirm/{}", user.name.unwrap(), token).as_str())
         .build().unwrap();
 
     let mut transport = SmtpTransportBuilder::new((mailgun_server.as_str(), SUBMISSION_PORT))
@@ -663,7 +659,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .build();
 
     transport.send(email)
-}*/
+}
 
 fn generate_token() -> String {
     let token: String = thread_rng().gen_ascii_chars().take(26).collect();
