@@ -23,7 +23,7 @@ pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -45,7 +45,8 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
-#[derive(Debug, Queryable, AsChangeset, Clone)]
+#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
+#[belongs_to(User)]
 pub struct Email {
     pub id: i32,
     pub user_id: i32,
@@ -61,7 +62,8 @@ pub struct NewEmail {
     pub verified: bool,
 }
 
-#[derive(Debug, Queryable, AsChangeset)]
+#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
+#[belongs_to(Email)]
 pub struct Token {
     pub id: i32,
     pub email_id: i32,
@@ -129,6 +131,7 @@ impl<'a> NewUser<'a> {
         )).into(users::table)
             .get_result(conn)
             .map_err(Into::into);
+        println!("create_or_update upsert user: {:?}", result);
 
         if let Some(user_email) = self.email {
             let user_id = users::table.select(users::id).filter(users::gh_id.eq(&self.gh_id)).first(&*conn).unwrap();
@@ -143,6 +146,7 @@ impl<'a> NewUser<'a> {
                 .into(emails::table)
                 .get_result(conn)
                 .map_err(Into::into);
+            println!("create_or_update upsert email: {:?}", email_result);
 
             match email_result {
                 Ok(email) => {
@@ -153,7 +157,8 @@ impl<'a> NewUser<'a> {
                         created_at: time::now_utc().to_timespec(),
                     };
 
-                    let _token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
+                    let token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
+                    println!("create_or_update insert token: {:?}", token_result);
                 },
                 Err(Error::NotFound) => {
                     // Pass, email had conflict, do nothing, this is expected
@@ -403,6 +408,8 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
     let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
 
+    println!("GET /me user_info: {:?}", user_info);
+    println!("GET /me email_result: {:?}", email_result);
     let (email, verified) : (Option<String>, bool) = match email_result {
         Ok(response) => (Some(response.email), response.verified),
         Err(err) => (None, false)
@@ -588,13 +595,15 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .into(emails::table)
         .get_result(&*conn)
         .map_err(Into::into);
+    println!("update_user upsert email: {:?}", email_result);
+
+    let token = generate_token();
 
     match email_result {
         Ok(email_response) => {
-            let token = generate_token();
             let new_token = NewToken {
                 email_id: email_response.id,
-                token: token,
+                token: token.clone(),
                 created_at: time::now_utc().to_timespec(),
             };
 
@@ -606,13 +615,14 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 .into(tokens::table)
                 .get_result(&*conn)
                 .map_err(Into::into);
+            println!("update_user upsert token: {:?}", token_result);
         },
         Err(err) => {
             return Err(human("Error in creating token"));
         }
     }
 
-    send_user_confirm_email(user_email, user, token);
+    //send_user_confirm_email(user_email, user, &token);
 
     #[derive(Serialize)]
     struct R {
@@ -621,7 +631,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
-fn send_user_confirm_email(email: &str, user: &User, token: String) {
+fn send_user_confirm_email(email: &str, user: &User, token: &str) {
     // perhaps use crate lettre and heroku service Mailgun
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
@@ -647,18 +657,44 @@ fn send_user_confirm_email(email: &str, user: &User, token: String) {
         .body(format!("Hello {}! Welcome to Crates.io. Please click the
                       link below to verify your email address. Thank you!
                       \n\n
-                      crates.io/me/confirm/{}", user.name.unwrap(), token).as_str())
-        .build().unwrap();
+                      crates.io/me/confirm/{}", user.name.as_ref().unwrap(), token).as_str())
+        .build()
+        .expect("Failed to build confirm email message");
 
     let mut transport = SmtpTransportBuilder::new((mailgun_server.as_str(), SUBMISSION_PORT))
-        .unwrap()
+        .expect("Failed to create message transport")
         .credentials(&mailgun_username, &mailgun_password)
         .security_level(SecurityLevel::AlwaysEncrypt)
         .smtp_utf8(true)
         .authentication_mechanism(Mechanism::Plain)
         .build();
 
-    transport.send(email)
+    transport.send(email);
+}
+
+/// Handles the `PUT /confirm/:email_token` route
+fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
+    // to confirm, we must grab the token on the request as part of the URL
+    // look up the token in the tokens table
+    // find what user the token belongs to
+    // on the email table, change 'verified' to true
+    // delete the token from the tokens table
+    use diesel::{update, delete};
+
+    let conn = req.db_conn()?;
+    let req_token = &req.params()["email_token"];
+
+    let token_info = tokens::table.filter(tokens::token.eq(req_token)).first::<Token>(&*conn)?;
+    let email_info = emails::table.filter(emails::id.eq(token_info.email_id)).first::<Email>(&*conn)?;
+
+    update(emails::table.filter(emails::id.eq(email_info.id))).set(emails::verified.eq(true)).execute(&*conn)?;
+    delete(tokens::table.filter(tokens::id.eq(token_info.id))).execute(&*conn)?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
 }
 
 fn generate_token() -> String {
