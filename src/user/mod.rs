@@ -83,6 +83,14 @@ impl<'a> NewUser<'a> {
             gh_access_token: self.gh_access_token.clone(),
         };
 
+        // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+        // to `-1` indicates that we were unable to find a GitHub ID for
+        // the associated GitHub login at the time that we backfilled
+        // GitHub IDs. Therefore, there are multiple records in production
+        // that have a `gh_id` of `-1` so we need to exclude those when
+        // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+        // necessary for most fields in the database to be used as a conflict
+        // target :)
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
         insert(&self.on_conflict(
             conflict_target,
