@@ -139,7 +139,6 @@ impl<'a> NewUser<'a> {
                 verified: false,
             };
 
-            let conflict_target = sql::<Integer>("user_id");
             let email_result : QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
                 .into(emails::table)
                 .get_result(conn)
@@ -154,7 +153,7 @@ impl<'a> NewUser<'a> {
                         created_at: time::now_utc().to_timespec(),
                     };
 
-                    let token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
+                    let _token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
                 },
                 Err(Error::NotFound) => {
                     // Pass, email had conflict, do nothing, this is expected
@@ -392,10 +391,30 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     // This change is not preferable, we'd rather fix the request,
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
+
     use self::users::dsl::{users, id};
-    let user_id = req.user()?.id;
+    use self::emails::dsl::{emails, user_id};
+
+    let u_id = req.user()?.id;
     let conn = req.db_conn()?;
-    let user = users.filter(id.eq(user_id)).first::<User>(&*conn)?;
+
+    let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
+    let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
+
+    let email : Option<String> = match email_result {
+        Ok(response) => Some(response.email),
+        Err(err) => None
+    };
+
+    let user = User {
+        id: user_info.id,
+        email: email,
+        gh_access_token: user_info.gh_access_token,
+        gh_login: user_info.gh_login,
+        name: user_info.name,
+        gh_avatar: user_info.gh_avatar,
+        gh_id: user_info.gh_id,
+    };
 
     #[derive(Serialize)]
     struct R {
@@ -504,6 +523,8 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     use diesel::update;
     use self::users::dsl::{users, gh_login, email};
+    use self::emails::dsl::user_id;
+    use self::tokens::dsl::email_id;
     use diesel::insert;
     use diesel::expression::dsl::sql;
     use diesel::types::Integer;
@@ -557,10 +578,9 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         verified: false,
     };
 
-    let conflict_target = sql::<Integer>("user_id");
     let email_result : QueryResult<Email> = insert(&new_email
         .on_conflict(
-            conflict_target,
+            user_id,
             do_update().set(&new_email)
         ))
         .into(emails::table)
@@ -578,10 +598,9 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 created_at: time::now_utc().to_timespec(),
             };
 
-            let conflict_target = sql::<Integer>("email_id");
             let token_result : QueryResult<Token> = insert(&new_token
                 .on_conflict(
-                    conflict_target,
+                    email_id,
                     do_update().set(&new_token)        
                 ))
                 .into(tokens::table)
