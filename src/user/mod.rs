@@ -187,6 +187,7 @@ pub struct EncodablePrivateUser {
     pub id: i32,
     pub login: String,
     pub email: Option<String>,
+    pub email_verified: bool,
     pub name: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
@@ -220,7 +221,7 @@ impl User {
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn encodable_private(self) -> EncodablePrivateUser {
+    pub fn encodable_private(self, email_verified : bool) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -233,6 +234,7 @@ impl User {
         EncodablePrivateUser {
             id: id,
             email: email,
+            email_verified,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
@@ -401,9 +403,9 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
     let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
 
-    let email : Option<String> = match email_result {
-        Ok(response) => Some(response.email),
-        Err(err) => None
+    let (email, verified) : (Option<String>, bool) = match email_result {
+        Ok(response) => (Some(response.email), response.verified),
+        Err(err) => (None, false)
     };
 
     let user = User {
@@ -420,7 +422,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     struct R {
         user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: user.encodable_private() }))
+    Ok(req.json(&R { user: user.encodable_private(verified) }))
 }
 
 /// Handles the `GET /users/:user_id` route.
