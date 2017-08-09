@@ -589,8 +589,6 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .get_result(&*conn)
         .map_err(Into::into);
 
-    println!("email_result from insert/update: {:?}", email_result);
-
     match email_result {
         Ok(email_response) => {
             let token = generate_token();
@@ -608,7 +606,6 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 .into(tokens::table)
                 .get_result(&*conn)
                 .map_err(Into::into);
-            println!("token_result from insert/update: {:?}", token_result);
         },
         Err(err) => {
             return Err(human("Error in creating token"));
