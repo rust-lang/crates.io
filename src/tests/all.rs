@@ -86,6 +86,7 @@ struct Bad {
 }
 
 mod badge;
+mod categories;
 mod category;
 mod git;
 mod keyword;
