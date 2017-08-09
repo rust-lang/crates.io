@@ -98,15 +98,14 @@ struct NewCategory {
     description: String,
 }
 
-pub fn sync() -> CargoResult<()> {
+pub fn sync(toml_str: &str) -> CargoResult<()> {
     use diesel::pg::upsert::*;
     use diesel::expression::dsl::all;
 
     let conn = db::connect_now().unwrap();
 
-    let categories = include_str!("./categories.toml");
     let toml: toml::value::Table =
-        toml::from_str(categories).expect("Could not parse categories.toml");
+        toml::from_str(toml_str).expect("Could not parse categories toml");
 
     let categories = categories_from_toml(&toml, None)
         .expect("Could not convert categories from TOML")
