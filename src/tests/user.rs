@@ -4,7 +4,7 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser};
+use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser, Email, Token};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -512,6 +512,9 @@ fn test_this_user_cannot_change_that_user_email() {
 
 }
 
+// Test inserting into the email & token tables
+// TODO make test better/actually test what is being put in
+// and taken out of the tables
 #[test]
 fn test_insert_into_email_table() {
     #[derive(Deserialize)]
@@ -572,4 +575,60 @@ fn test_insert_into_email_table() {
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
     assert_eq!(r.user.login, "potato");
+}
+
+/* Given a new user
+*/
+#[test]
+fn test_confirm_user_email() {
+    use cargo_registry::schema::{emails, tokens};
+
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            email: Some("hi@hello.hey"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let email_token = {
+        let conn = app.diesel_database.get().unwrap();
+        let email_info = emails::table.filter(emails::user_id.eq(user.id))
+            .first::<Email>(&*conn)
+            .unwrap();
+        let token_info = tokens::table.filter(tokens::email_id.eq(email_info.id))
+            .first::<Token>(&*conn)
+            .unwrap();
+        token_info.token
+    };
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/confirm/{}", email_token))
+                .with_method(Method::Put)
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.login, "potato");
+    assert!(r.user.email_verified);
 }
