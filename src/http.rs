@@ -95,16 +95,22 @@ pub fn token(token: String) -> Token {
 pub struct SecurityHeadersMiddleware;
 
 impl Middleware for SecurityHeadersMiddleware {
-    fn after(&self, _: &mut Request, mut res: Result<Response, Box<Error+Send>>)
-        -> Result<Response, Box<Error+Send>> {
+    fn after(
+        &self,
+        _: &mut Request,
+        mut res: Result<Response, Box<Error + Send>>,
+    ) -> Result<Response, Box<Error + Send>> {
         if let Ok(ref mut response) = res {
             response.headers.insert(
                 "Content-Security-Policy".into(),
-                vec!["default-src 'self'; \
+                vec![
+                    "default-src 'self'; \
                       script-src 'self' https://www.google-analytics.com https://www.google.com; \
                       style-src 'self' https://www.google.com; \
                       img-src *; \
-                      object-src 'none'".into()],
+                      object-src 'none'"
+                        .into(),
+                ],
             );
             response.headers.insert(
                 "X-Content-Type-Options".into(),
