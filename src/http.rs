@@ -91,6 +91,7 @@ pub fn token(token: String) -> Token {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct SecurityHeadersMiddleware;
 
 impl Middleware for SecurityHeadersMiddleware {
