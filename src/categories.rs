@@ -100,7 +100,7 @@ struct NewCategory {
 
 pub fn sync() -> CargoResult<()> {
     use diesel::pg::upsert::*;
-    use diesel::expression::dsl::any;
+    use diesel::expression::dsl::all;
 
     let conn = db::connect_now().unwrap();
 
@@ -136,7 +136,7 @@ pub fn sync() -> CargoResult<()> {
             .returning(categories::slug)
             .get_results::<String>(&conn)?;
 
-        let to_delete = categories::table.filter(categories::slug.ne(any(slugs)));
+        let to_delete = categories::table.filter(categories::slug.ne(all(slugs)));
         diesel::delete(to_delete).execute(&conn)?;
         Ok(())
     })
