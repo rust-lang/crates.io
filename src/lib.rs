@@ -42,6 +42,7 @@ extern crate tar;
 extern crate time;
 extern crate toml;
 extern crate url;
+extern crate lettre;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
@@ -191,6 +192,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(crate_owner_invitation::list),
     );
     api_router.get("/summary", C(krate::summary));
+    api_router.put("/confirm/:email_token", C(user::confirm_user_email));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
