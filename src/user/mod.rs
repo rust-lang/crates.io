@@ -536,8 +536,6 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     use self::emails::dsl::user_id;
     use self::tokens::dsl::email_id;
     use diesel::insert;
-    use diesel::expression::dsl::sql;
-    use diesel::types::Integer;
     use diesel::pg::upsert::*;
     use time;
 
