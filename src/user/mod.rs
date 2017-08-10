@@ -12,7 +12,8 @@ use db::RequestTransaction;
 use krate::Follow;
 use pagination::Paginate;
 use schema::*;
-use util::{RequestUtils, CargoResult, human};
+use util::errors::NotFound;
+use util::{RequestUtils, CargoResult, internal, ChainError, human, bad_request};
 use version::EncodableVersion;
 use {http, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
@@ -673,7 +674,7 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
+pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
     // to confirm, we must grab the token on the request as part of the URL
     // look up the token in the tokens table
     // find what user the token belongs to
@@ -684,11 +685,30 @@ fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let req_token = &req.params()["email_token"];
 
-    let token_info = tokens::table.filter(tokens::token.eq(req_token)).first::<Token>(&*conn)?;
-    let email_info = emails::table.filter(emails::id.eq(token_info.email_id)).first::<Email>(&*conn)?;
+    let token_info = tokens::table.filter(tokens::token.eq(req_token))
+        .first::<Token>(&*conn)
+        .map_err(|_| {
+            bad_request("Email token not found.")
+        })?;
 
-    update(emails::table.filter(emails::id.eq(email_info.id))).set(emails::verified.eq(true)).execute(&*conn)?;
-    delete(tokens::table.filter(tokens::id.eq(token_info.id))).execute(&*conn)?;
+    let email_info = emails::table.filter(emails::id.eq(token_info.email_id))
+        .first::<Email>(&*conn)
+        .map_err(|_| {
+            bad_request("Email belonging to token not found.")
+        })?;
+
+    update(emails::table.filter(emails::id.eq(email_info.id)))
+        .set(emails::verified.eq(true))
+        .execute(&*conn)
+        .map_err(|_| {
+            bad_request("Email verification could not be updated")
+        })?;
+
+    delete(tokens::table.filter(tokens::id.eq(token_info.id)))
+        .execute(&*conn)
+        .map_err(|_| {
+            bad_request("Email token could not be deleted")
+        })?;
 
     #[derive(Serialize)]
     struct R {
