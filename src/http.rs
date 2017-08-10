@@ -117,10 +117,6 @@ impl Middleware for SecurityHeadersMiddleware {
                 "X-XSS-Protection".into(),
                 vec!["1; mode=block".into()],
             );
-            response.headers.insert(
-                "Strict-Transport-Security".into(),
-                vec!["max-age=31536000; includeSubDomains".into()],
-            );
         }
         res
     }
