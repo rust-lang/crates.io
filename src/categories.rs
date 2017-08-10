@@ -3,6 +3,7 @@
 
 use diesel;
 use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use toml;
 
 use db;
@@ -99,10 +100,13 @@ struct NewCategory {
 }
 
 pub fn sync(toml_str: &str) -> CargoResult<()> {
+    let conn = db::connect_now().unwrap();
+    sync_with_connection(toml_str, &conn)
+}
+
+pub fn sync_with_connection(toml_str: &str, conn: &PgConnection)  -> CargoResult<()> {
     use diesel::pg::upsert::*;
     use diesel::expression::dsl::all;
-
-    let conn = db::connect_now().unwrap();
 
     let toml: toml::value::Table =
         toml::from_str(toml_str).expect("Could not parse categories toml");
@@ -133,10 +137,10 @@ pub fn sync(toml_str: &str) -> CargoResult<()> {
         let slugs = diesel::insert(&to_insert)
             .into(categories::table)
             .returning(categories::slug)
-            .get_results::<String>(&conn)?;
+            .get_results::<String>(&*conn)?;
 
         let to_delete = categories::table.filter(categories::slug.ne(all(slugs)));
-        diesel::delete(to_delete).execute(&conn)?;
+        diesel::delete(to_delete).execute(&*conn)?;
         Ok(())
     })
 }
