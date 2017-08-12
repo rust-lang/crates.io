@@ -91,7 +91,7 @@ fn categories_from_toml(
     Ok(result)
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name = "categories"]
 struct NewCategory {
     slug: String,
