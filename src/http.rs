@@ -107,7 +107,7 @@ impl Middleware for SecurityHeadersMiddleware {
                     "default-src 'self'; \
                       connect-src 'self' https://docs.rs; \
                       script-src 'self' https://www.google-analytics.com https://www.google.com; \
-                      style-src 'self' https://www.google.com; \
+                      style-src 'self' https://www.google.com https://ajax.googleapis.com; \
                       img-src *; \
                       object-src 'none'"
                         .into(),
