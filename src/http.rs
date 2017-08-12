@@ -105,6 +105,7 @@ impl Middleware for SecurityHeadersMiddleware {
                 "Content-Security-Policy".into(),
                 vec![
                     "default-src 'self'; \
+                      connect-src 'self' https://docs.rs; \
                       script-src 'self' https://www.google-analytics.com https://www.google.com; \
                       style-src 'self' https://www.google.com; \
                       img-src *; \
