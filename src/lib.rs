@@ -227,6 +227,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         cookie::Key::from_master(app.session_key.as_bytes()),
         env == Env::Production,
     ));
+    if env == Env::Production {
+        m.add(http::SecurityHeadersMiddleware);
+    }
     m.add(app::AppMiddleware::new(app));
 
     // Run each request in a transaction and roll back the transaction if the request results
