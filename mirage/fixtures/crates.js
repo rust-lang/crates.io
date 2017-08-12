@@ -1,6 +1,11 @@
 /* eslint-disable quotes */
 export default [{
-    "badges": [],
+    "badges": [{
+        "badge_type": "maintenance",
+        "attributes": {
+            "value": "actively-developed"
+        }
+    }],
     "categories": [],
     "created_at": "2014-12-08T02:08:06Z",
     "description": "A high-level, Rust idiomatic wrapper around nanomsg.",
@@ -191,6 +196,12 @@ export default [{
     "updated_at": "2015-11-11T00:10:43Z",
     "versions": null
 }, {
+    "badges": [{
+        "badge_type": "maintenance",
+        "attributes": {
+            "status": "actively-developed"
+        }
+    }],
     "created_at": "2014-11-23T09:01:21Z",
     "description": "A Kinetic protocol library written in Rust",
     "documentation": "https://icorderi.github.io/kinetic-rust/doc/kinetic/",

@@ -25,6 +25,7 @@ test('searching for "rust"', async function(assert) {
 
     hasText(assert, '#crates .row:first .desc .summary', 'A Kinetic protocol library written in Rust');
     hasText(assert, '#crates .row:first .downloads', 'All-Time: 225');
+    findWithAssert('#crates .row:first .desc .info img[alt="Maintenance intention for this crate"]');
 });
 
 test('pressing S key to focus the search bar', async function(assert) {
