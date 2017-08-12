@@ -119,7 +119,7 @@
         padding-top: 5px;
         @include display-flex;
         @include flex-direction(column);
-        width: 85%;
+        width: 75%;
     }
 
     .info a {
@@ -133,10 +133,18 @@
     }
 
     .stats {
-        width: 15%;
+        width: 25%;
         color: $main-color-light;
     }
-    .downloads { @include display-flex; @include align-items(center); }
+    .downloads {
+        @include display-flex;
+        @include align-items(center);
+        padding-bottom: 5px;
+    }
+    .recent-downloads {
+        @include display-flex;
+        @include align-items(center);
+    }
 
     .rev-dep-downloads {padding-left: 7px}
 }

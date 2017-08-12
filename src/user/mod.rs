@@ -7,6 +7,7 @@ use pg::GenericConnection;
 use pg::rows::Row;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
+use serde_json;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -25,7 +26,7 @@ pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -73,17 +74,49 @@ impl<'a> NewUser<'a> {
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
 
+        let update_user = NewUser {
+            email: None,
+            gh_id: self.gh_id,
+            gh_login: self.gh_login,
+            name: self.name,
+            gh_avatar: self.gh_avatar,
+            gh_access_token: self.gh_access_token.clone(),
+        };
+
+        // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+        // to `-1` indicates that we were unable to find a GitHub ID for
+        // the associated GitHub login at the time that we backfilled
+        // GitHub IDs. Therefore, there are multiple records in production
+        // that have a `gh_id` of `-1` so we need to exclude those when
+        // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+        // necessary for most fields in the database to be used as a conflict
+        // target :)
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        insert(&self.on_conflict(conflict_target, do_update().set(self)))
-            .into(users::table)
+        insert(&self.on_conflict(
+            conflict_target,
+            do_update().set(&update_user),
+        )).into(users::table)
             .get_result(conn)
             .map_err(Into::into)
     }
 }
 
 /// The serialization format for the `User` model.
+/// Same as private user, except no email field
 #[derive(Deserialize, Serialize, Debug)]
-pub struct EncodableUser {
+pub struct EncodablePublicUser {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+/// The serialization format for the `User` model.
+/// Same as public user, except for addition of
+/// email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePrivateUser {
     pub id: i32,
     pub login: String,
     pub email: Option<String>,
@@ -175,8 +208,8 @@ impl User {
         Ok(users.collect())
     }
 
-    /// Converts this `User` model into an `EncodableUser` for JSON serialization.
-    pub fn encodable(self) -> EncodableUser {
+    /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
+    pub fn encodable_private(self) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -186,9 +219,28 @@ impl User {
             ..
         } = self;
         let url = format!("https://github.com/{}", gh_login);
-        EncodableUser {
+        EncodablePrivateUser {
             id: id,
             email: email,
+            avatar: gh_avatar,
+            login: gh_login,
+            name: name,
+            url: Some(url),
+        }
+    }
+
+    /// Converts this`User` model into an `EncodablePublicUser` for JSON serialization.
+    pub fn encodable_public(self) -> EncodablePublicUser {
+        let User {
+            id,
+            name,
+            gh_login,
+            gh_avatar,
+            ..
+        } = self;
+        let url = format!("https://github.com/{}", gh_login);
+        EncodablePublicUser {
+            id: id,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
@@ -312,15 +364,14 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
 
-    let user = User::find_or_insert(
-        req.tx()?,
+    let user = NewUser::new(
         ghuser.id,
         &ghuser.login,
         ghuser.email.as_ref().map(|s| &s[..]),
         ghuser.name.as_ref().map(|s| &s[..]),
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
-    )?;
+    ).create_or_update(&*req.db_conn()?)?;
     req.session().insert(
         "user_id".to_string(),
         user.id.to_string(),
@@ -337,11 +388,26 @@ pub fn logout(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
+    // Changed to getting User information from database because in
+    // src/tests/user.rs, when testing put and get on updating email,
+    // request seems to be somehow 'cached'. When we try to get a
+    // request from the /me route with the just updated user (call
+    // this function) the user is the same as the initial GET request
+    // and does not seem to get the updated user information from the
+    // database
+    // This change is not preferable, we'd rather fix the request,
+    // perhaps adding `req.mut_extensions().insert(user)` to the
+    // update_user route, however this somehow does not seem to work
+    use self::users::dsl::{users, id};
+    let user_id = req.user()?.id;
+    let conn = req.db_conn()?;
+    let user = users.filter(id.eq(user_id)).first::<User>(&*conn)?;
+
     #[derive(Serialize)]
     struct R {
-        user: EncodableUser,
+        user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: req.user()?.clone().encodable() }))
+    Ok(req.json(&R { user: user.encodable_private() }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -354,9 +420,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
-        user: EncodableUser,
+        user: EncodablePublicUser,
     }
-    Ok(req.json(&R { user: user.encodable() }))
+    Ok(req.json(&R { user: user.encodable_public() }))
 }
 
 /// Handles the `GET /teams/:team_id` route.
@@ -438,4 +504,56 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
         total_downloads: i64,
     }
     Ok(req.json(&R { total_downloads: data }))
+}
+
+/// Handles the `PUT /user/:user_id` route.
+pub fn update_user(req: &mut Request) -> CargoResult<Response> {
+    use diesel::update;
+    use self::users::dsl::{users, gh_login, email};
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let user = req.user()?;
+    let name = &req.params()["user_id"];
+    let conn = req.db_conn()?;
+
+    // need to check if current user matches user to be updated
+    if &user.id.to_string() != name {
+        return Err(human("current user does not match requested user"));
+    }
+
+    #[derive(Deserialize)]
+    struct UserUpdate {
+        user: User,
+    }
+
+    #[derive(Deserialize)]
+    struct User {
+        email: Option<String>,
+    }
+
+    let user_update: UserUpdate = serde_json::from_str(&body).map_err(
+        |_| human("invalid json request"),
+    )?;
+
+    if user_update.user.email.is_none() {
+        return Err(human("empty email rejected"));
+    }
+
+    let user_email = user_update.user.email.unwrap();
+    let user_email = user_email.trim();
+
+    if user_email == "" {
+        return Err(human("empty email rejected"));
+    }
+
+    update(users.filter(gh_login.eq(&user.gh_login)))
+        .set(email.eq(user_email))
+        .execute(&*conn)?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
 }

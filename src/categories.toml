@@ -245,6 +245,20 @@ description = """
 Crates to interface with specific CPU or other hardware features.\
 """
 
+[internationalization]
+name = "Internationalization (i18n)"
+description = """
+Crates to help develop software capable of adapting to various \
+languages and regions.\
+"""
+
+[localization]
+name = "Localization (L10n)"
+description = """
+Crates to help adapting internationalized software to specific \
+languages and regions.\
+"""
+
 [memory-management]
 name = "Memory management"
 description = """
@@ -373,6 +387,13 @@ name = "Science"
 description = """
 Crates related to solving problems involving math, physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
+"""
+
+[simulation]
+name = "Simulation"
+description = """
+Crates used to model or construct models for some activity, e.g. to.\
+simulate a networking protocol.\
 """
 
 [template-engine]

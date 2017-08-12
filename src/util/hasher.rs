@@ -2,6 +2,8 @@ use std::io::prelude::*;
 use std::io;
 use openssl::hash::{Hasher, MessageDigest};
 
+// Can't derive debug because of Hasher.
+#[allow(missing_debug_implementations)]
 pub struct HashingReader<R> {
     inner: R,
     hasher: Hasher,

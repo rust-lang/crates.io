@@ -8,6 +8,7 @@ export default BaseSerializer.extend({
         'description',
         'documentation',
         'downloads',
+        'recent_downloads',
         'homepage',
         'id',
         'keywords',

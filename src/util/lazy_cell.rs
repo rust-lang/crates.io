@@ -11,6 +11,8 @@
 use std::cell::RefCell;
 use std::mem;
 
+// Don't want to only be able to store T: Debug things.
+#[allow(missing_debug_implementations)]
 pub struct LazyCell<T> {
     inner: RefCell<Option<T>>,
 }

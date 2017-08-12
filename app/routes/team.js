@@ -1,13 +1,13 @@
-import RSVP from 'rsvp';
-import { inject as service } from '@ember/service';
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+import RSVP from 'rsvp';
 
 export default Route.extend({
     flashMessages: service(),
 
     queryParams: {
-        page: { refreshedModel: true },
-        sort: { refreshedModel: true },
+        page: { refreshModel: true },
+        sort: { refreshModel: true },
     },
     data: {},
 

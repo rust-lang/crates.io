@@ -20,8 +20,4 @@ export default DS.Model.extend({
     crateName: computed('crate', function() {
         return this.belongsTo('crate').id();
     }),
-
-    getDownloadUrl() {
-        return this.store.adapterFor('version').getDownloadUrl(this.get('dl_path'));
-    },
 });

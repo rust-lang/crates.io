@@ -223,6 +223,7 @@ impl CargoError for ConcreteCargoError {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NotFound;
 
 impl CargoError for NotFound {
@@ -245,6 +246,7 @@ impl fmt::Display for NotFound {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Unauthorized;
 
 impl CargoError for Unauthorized {

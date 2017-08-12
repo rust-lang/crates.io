@@ -7,44 +7,55 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate postgres;
-extern crate time;
+extern crate chrono;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate rand;
 
-use std::env;
-use time::Duration;
+use chrono::{Utc, NaiveDate, Duration};
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use rand::{StdRng, Rng};
+use std::env;
 
-#[allow(dead_code)]
+use cargo_registry::schema::version_downloads;
+
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        update(&tx).unwrap();
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = cargo_registry::db::connect_now().unwrap();
+    conn.transaction(|| update(&conn)).unwrap();
 }
 
-fn update(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
+fn update(conn: &PgConnection) -> QueryResult<()> {
     let ids = env::args().skip(1).filter_map(
         |arg| arg.parse::<i32>().ok(),
     );
     for id in ids {
-        let now = time::now_utc().to_timespec();
         let mut rng = StdRng::new().unwrap();
         let mut dls = rng.gen_range(5000i32, 10000);
 
         for day in 0..90 {
-            let moment = now + Duration::days(-day);
+            let moment = Utc::now().date().naive_utc() + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
-            tx.execute(
-                "INSERT INTO version_downloads \
-                 (version_id, downloads, date) \
-                 VALUES ($1, $2, $3)",
-                &[&id, &dls, &moment],
-            )?;
+
+            let version_download = VersionDownload {
+                version_id: id,
+                downloads: dls,
+                date: moment,
+            };
+            diesel::insert(&version_download)
+                .into(version_downloads::table)
+                .execute(conn)?;
         }
     }
     Ok(())
+}
+
+#[derive(Insertable)]
+#[table_name = "version_downloads"]
+struct VersionDownload {
+    version_id: i32,
+    downloads: i32,
+    date: NaiveDate,
 }

@@ -8,7 +8,7 @@ use schema::*;
 use util::{CargoResult, human};
 use {Model, User, Crate};
 
-#[derive(Insertable, Associations, Identifiable, Debug)]
+#[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
 #[belongs_to(User, foreign_key = "owner_id")]
 #[belongs_to(Team, foreign_key = "owner_id")]
@@ -21,7 +21,7 @@ pub struct CrateOwner {
     pub owner_kind: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum OwnerKind {
     User = 0,
@@ -67,7 +67,6 @@ pub struct EncodableOwner {
     pub id: i32,
     pub login: String,
     pub kind: String,
-    pub email: Option<String>,
     pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
@@ -75,7 +74,7 @@ pub struct EncodableOwner {
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub enum Rights {
     None,
     Publish,
@@ -361,7 +360,6 @@ impl Owner {
         match self {
             Owner::User(User {
                             id,
-                            email,
                             name,
                             gh_login,
                             gh_avatar,
@@ -371,7 +369,6 @@ impl Owner {
                 EncodableOwner {
                     id: id,
                     login: gh_login,
-                    email: email,
                     avatar: gh_avatar,
                     url: Some(url),
                     name: name,
@@ -389,7 +386,6 @@ impl Owner {
                 EncodableOwner {
                     id: id,
                     login: login,
-                    email: None,
                     url: Some(url),
                     avatar: avatar,
                     name: name,

@@ -20,7 +20,11 @@
 <div class='stats'>
     <div class='downloads'>
         {{svg-jar "download"}}
-        <span class='num'>{{ format-num crate.downloads }}</span>
+        <span class='num'>All-Time: {{ format-num crate.downloads }}</span>
+    </div>
+    <div class="recent-downloads">
+        {{svg-jar "download"}}
+        <span class='num'>Recent: {{ format-num crate.recent_downloads }}</span>
     </div>
 </div>
 <div class="quick-links">

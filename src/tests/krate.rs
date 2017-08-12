@@ -22,7 +22,7 @@ use cargo_registry::owner::EncodableOwner;
 use cargo_registry::schema::versions;
 
 use cargo_registry::upload as u;
-use cargo_registry::user::EncodableUser;
+use cargo_registry::user::EncodablePublicUser;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::category::Category;
 
@@ -311,11 +311,13 @@ fn exact_match_on_queries_with_sort() {
         ::CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
+            .recent_downloads(50)
             .expect_build(&conn);
 
         ::CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
+            .recent_downloads(0)
             .expect_build(&conn);
 
         ::CrateBuilder::new("baz_sort", user.id)
@@ -323,6 +325,7 @@ fn exact_match_on_queries_with_sort() {
                 "foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const",
             )
             .downloads(100000)
+            .recent_downloads(10)
             .expect_build(&conn);
 
         ::CrateBuilder::new("other_sort", user.id)
@@ -331,6 +334,7 @@ fn exact_match_on_queries_with_sort() {
             .expect_build(&conn);
     }
 
+    // Sort by downloads
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
     let mut response = ok_resp!(middle.call(req.with_query("q=foo_sort&sort=downloads")));
     let json: CrateList = ::json(&mut response);
@@ -360,6 +364,27 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "bar_sort");
     assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Sort by recent-downloads
+    let mut response = ok_resp!(middle.call(
+        req.with_query("q=bar_sort&sort=recent-downloads"),
+    ));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "bar_sort");
+    assert_eq!(json.crates[1].name, "foo_sort");
+    assert_eq!(json.crates[2].name, "baz_sort");
+
+    // Test for bug with showing null results first when sorting
+    // by descending
+    // This has nothing to do with querying for exact match I'm sorry
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
 }
 
 #[test]
@@ -1191,7 +1216,7 @@ fn following() {
 fn owners() {
     #[derive(Deserialize)]
     struct R {
-        users: Vec<EncodableUser>,
+        users: Vec<EncodablePublicUser>,
     }
     #[derive(Deserialize)]
     struct O {
@@ -1919,4 +1944,174 @@ fn check_ownership_one_crate() {
 
     assert_eq!(json.users[0].kind, "user");
     assert_eq!(json.users[0].name, user.name);
+}
+
+/*  Given two crates, one with downloads less than 90 days ago, the
+    other with all downloads greater than 90 days ago, check that
+    the order returned is by recent downloads, descending. Check
+    also that recent download counts are returned in recent_downloads,
+    and total downloads counts are returned in downloads, and that
+    these numbers do not overlap.
+*/
+#[test]
+fn test_recent_download_count() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
+
+        // More than 90 days ago
+        ::CrateBuilder::new("green_ball", user.id)
+            .description("For fetching")
+            .downloads(10)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("sweet_potato_snack", user.id)
+            .description("For when better than usual")
+            .downloads(5)
+            .recent_downloads(2)
+            .expect_build(&conn);
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "sweet_potato_snack");
+    assert_eq!(json.crates[1].name, "green_ball");
+
+    assert_eq!(json.crates[0].recent_downloads, Some(2));
+    assert_eq!(json.crates[0].downloads, 5);
+
+    assert_eq!(json.crates[1].recent_downloads, Some(0));
+    assert_eq!(json.crates[1].downloads, 10);
+}
+
+/*  Given one crate with zero downloads, check that the crate
+    still shows up in index results, but that it displays 0
+    for both recent downloads and downloads.
+ */
+#[test]
+fn test_zero_downloads() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
+
+        // More than 90 days ago
+        ::CrateBuilder::new("green_ball", user.id)
+            .description("For fetching")
+            .downloads(0)
+            .recent_downloads(0)
+            .expect_build(&conn);
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 1);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[0].recent_downloads, Some(0));
+    assert_eq!(json.crates[0].downloads, 0);
+}
+
+/*  Given two crates, one with more all-time downloads, the other with
+    more downloads in the past 90 days, check that the index page for
+    categories and keywords is sorted by recent downlaods by default.
+*/
+#[test]
+fn test_default_sort_recent() {
+    let (_b, app, middle) = ::app();
+
+    let (green_crate, potato_crate) = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
+
+        // More than 90 days ago
+        let green_crate = ::CrateBuilder::new("green_ball", user.id)
+            .description("For fetching")
+            .keyword("dog")
+            .downloads(10)
+            .recent_downloads(10)
+            .expect_build(&conn);
+
+        let potato_crate = ::CrateBuilder::new("sweet_potato_snack", user.id)
+            .description("For when better than usual")
+            .keyword("dog")
+            .downloads(20)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        (green_crate, potato_crate)
+    };
+
+    // test that index for keywords is sorted by recent_downloads
+    // by default
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("keyword=dog")));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[1].name, "sweet_potato_snack");
+
+    assert_eq!(json.crates[0].recent_downloads, Some(10));
+    assert_eq!(json.crates[0].downloads, 10);
+
+    assert_eq!(json.crates[1].recent_downloads, Some(0));
+    assert_eq!(json.crates[1].downloads, 20);
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_category("Animal", "animal")
+            .create_or_update(&conn)
+            .unwrap();
+        Category::update_crate(&conn, &green_crate, &["animal"]).unwrap();
+        Category::update_crate(&conn, &potato_crate, &["animal"]).unwrap();
+    }
+
+    // test that index for categories is sorted by recent_downloads
+    // by default
+    let mut response = ok_resp!(middle.call(req.with_query("category=animal")));
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[1].name, "sweet_potato_snack");
+
+    assert_eq!(json.crates[0].recent_downloads, Some(10));
+    assert_eq!(json.crates[0].downloads, 10);
+
+    assert_eq!(json.crates[1].recent_downloads, Some(0));
+    assert_eq!(json.crates[1].downloads, 20);
+}
+
+#[test]
+fn block_blacklisted_documentation_url() {
+    let (_b, app, middle) = ::app();
+
+    let _ = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("foo_bad_doc_url", u.id)
+            .documentation(
+                "http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/",
+            )
+            .expect_build(&conn)
+    };
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates/foo_bad_doc_url");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: CrateResponse = ::json(&mut response);
+
+    assert_eq!(json.krate.documentation, None);
 }

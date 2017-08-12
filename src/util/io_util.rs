@@ -2,6 +2,7 @@ use std::io::prelude::*;
 use std::io;
 use std::mem;
 
+#[derive(Debug)]
 pub struct LimitErrorReader<R> {
     inner: io::Take<R>,
 }
