@@ -122,7 +122,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
 /// on Heroku, and they race against each other e.g. if 2 pushes occur,
 /// then one will succeed while the other will need to be rebased before
 /// being pushed.
-/// 
+///
 /// A maximum of 20 attempts to commit and push to the index currently
 /// accounts for the amount of traffic publishing crates, though this will
 /// eventually need to be changed past a certain point.
