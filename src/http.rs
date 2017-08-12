@@ -101,6 +101,11 @@ impl Middleware for SecurityHeadersMiddleware {
         mut res: Result<Response, Box<Error + Send>>,
     ) -> Result<Response, Box<Error + Send>> {
         if let Ok(ref mut response) = res {
+            // It would be better if we didn't have to have 'unsafe-eval' in the `script-src`
+            // policy, but google charts (used for the download graph on crate pages) uses `eval`
+            // to load scripts. Remove 'unsafe-eval' if google fixes the issue:
+            // https://github.com/google/google-visualization-issues/issues/1356
+            // or if we switch to a different graph generation library.
             response.headers.insert(
                 "Content-Security-Policy".into(),
                 vec![
