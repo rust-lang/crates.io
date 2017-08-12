@@ -104,7 +104,7 @@ pub fn sync(toml_str: &str) -> CargoResult<()> {
     sync_with_connection(toml_str, &conn)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &PgConnection)  -> CargoResult<()> {
+pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<()> {
     use diesel::pg::upsert::*;
     use diesel::expression::dsl::all;
 
