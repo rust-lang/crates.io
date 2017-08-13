@@ -232,7 +232,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         env == Env::Production,
     ));
     if env == Env::Production {
-        m.add(http::SecurityHeadersMiddleware);
+        m.add(http::SecurityHeadersMiddleware::new(&app.config.uploader));
     }
     m.add(app::AppMiddleware::new(app));
 
