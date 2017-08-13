@@ -137,7 +137,7 @@ impl SecurityHeadersMiddleware {
             "Content-Security-Policy".into(),
             vec![
                 format!("default-src 'self'; \
-                  connect-src 'self' https://docs.rs {}; \
+                  connect-src 'self' https://docs.rs https://{}; \
                   script-src 'self' 'unsafe-eval' \
                              https://www.google-analytics.com https://www.google.com; \
                   style-src 'self' https://www.google.com https://ajax.googleapis.com; \
