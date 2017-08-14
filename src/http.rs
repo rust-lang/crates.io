@@ -107,25 +107,20 @@ impl SecurityHeadersMiddleware {
     pub fn new(uploader: &Uploader) -> Self {
         let mut headers = HashMap::new();
 
-        headers.insert(
-            "X-Content-Type-Options".into(),
-            vec!["nosniff".into()],
-        );
+        headers.insert("X-Content-Type-Options".into(), vec!["nosniff".into()]);
 
-        headers.insert(
-            "X-Frame-Options".into(),
-            vec!["SAMEORIGIN".into()],
-        );
+        headers.insert("X-Frame-Options".into(), vec!["SAMEORIGIN".into()]);
 
-        headers.insert(
-            "X-XSS-Protection".into(),
-            vec!["1; mode=block".into()],
-        );
+        headers.insert("X-XSS-Protection".into(), vec!["1; mode=block".into()]);
 
         let s3_host = match *uploader {
             Uploader::S3 { ref bucket, .. } => bucket.host(),
-            _ => unreachable!("This middleware should only be used in the production environment, \
-                               which should also require an S3 uploader, QED"),
+            _ => {
+                unreachable!(
+                    "This middleware should only be used in the production environment, \
+                               which should also require an S3 uploader, QED"
+                )
+            }
         };
 
         // It would be better if we didn't have to have 'unsafe-eval' in the `script-src`
@@ -136,14 +131,15 @@ impl SecurityHeadersMiddleware {
         headers.insert(
             "Content-Security-Policy".into(),
             vec![
-                format!("default-src 'self'; \
+                format!(
+                    "default-src 'self'; \
                   connect-src 'self' https://docs.rs https://{}; \
                   script-src 'self' 'unsafe-eval' \
                              https://www.google-analytics.com https://www.google.com; \
                   style-src 'self' https://www.google.com https://ajax.googleapis.com; \
                   img-src *; \
                   object-src 'none'",
-                  s3_host
+                    s3_host
                 ),
             ],
         );
