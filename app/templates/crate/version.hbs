@@ -28,13 +28,28 @@
     <div class="quick-links">
     <ul>
         {{#if crate.homepage}}
-          <li><a href="{{crate.homepage}}">Homepage</a></li>
+            <li><a href="{{crate.homepage}}">Homepage</a></li>
+        {{/if}}
+        {{#if crate.wiki}}
+            <li><a href="{{crate.wiki}}">Wiki</a></li>
+        {{/if}}
+        {{#if crate.mailing_list}}
+            <li><a href="{{crate.mailing_list}}">Mailing list</a></li>
         {{/if}}
         {{#if crate.documentation}}
-          <li><a href="{{crate.documentation}}">Documentation</a></li>
+            <li><a href="{{crate.documentation}}">Documentation</a></li>
         {{/if}}
         {{#if crate.repository}}
-          <li><a href="{{crate.repository}}">Repository</a></li>
+            <li><a href="{{crate.repository}}">Repository</a></li>
+        {{/if}}
+        {{#if crate.reverse_dependencies}}
+            <li>
+              {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id)}}
+                Dependent crates
+              {{/link-to}}
+            </li>
+        {{else}}
+            <li>No dependent crates</li>
         {{/if}}
     </ul>
     </div>
@@ -165,88 +180,54 @@
                     {{/each}}
                 </ul>
             </div>
+
+            <div class='section' id='crate-versions'>
+                <h3>Versions</h3>
+                <ul>
+                    {{#each smallSortedVersions as |version|}}
+                        <li>
+                            {{#link-to 'crate.version' version.num}}
+                                {{ version.num }}
+                            {{/link-to}}
+                            <span class='date'>{{moment-format version.created_at 'll'}}</span>
+                            {{#if version.yanked}}
+                                <span class='yanked'>yanked</span>
+                            {{/if}}
+                        </li>
+                    {{/each}}
+                </ul>
+                <span class='small'>
+                    {{#if hasMoreVersions}}
+                        {{#link-to 'crate.versions' crate}}
+                            show all {{ crate.versions.length }} versions
+                        {{/link-to}}
+                    {{/if}}
+                </span>
+            </div>
+
+            <div class='section' id='crate-dependencies'>
+                <h3>Dependencies</h3>
+                    <ul>
+                        {{#each currentDependencies as |dep|}}
+                            {{link-to-dep dep=dep}}
+                        {{else}}
+                            <li>None</li>
+                        {{/each}}
+                    </ul>
+            </div>
+
+            {{#if currentDevDependencies}}
+                <div class='section' id='crate-dev-dependencies'>
+                    <h3>Dev-Dependencies</h3>
+                    <ul>
+                        {{#each currentDevDependencies as |dep|}}
+                            {{link-to-dep dep=dep}}
+                        {{/each}}
+                    </ul>
+                </div>
+            {{/if}}
         </div>
     </div>
-</div>
-
-<div id='crate-links'>
-    {{#if anyLinks}}
-        <div class='section'>
-          <h3>Links</h3>
-          <ul>
-            {{#if crate.homepage}}
-                <li><a href="{{crate.homepage}}">Homepage</a></li>
-            {{/if}}
-            {{#if crate.wiki}}
-                <li><a href="{{crate.wiki}}">Wiki</a></li>
-            {{/if}}
-            {{#if crate.mailing_list}}
-                <li><a href="{{crate.mailing_list}}">Mailing list</a></li>
-            {{/if}}
-            {{#if crate.documentation}}
-                <li><a href="{{crate.documentation}}">Documentation</a></li>
-            {{/if}}
-            {{#if crate.repository}}
-                <li><a href="{{crate.repository}}">Repository</a></li>
-            {{/if}}
-            {{#if crate.reverse_dependencies}}
-                <li>
-                  {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id)}}
-                    Dependent crates
-                  {{/link-to}}
-                </li>
-            {{else}}
-                <li>No dependent crates</li>
-            {{/if}}
-          </ul>
-        </div>
-    {{/if}}
-
-  <div class='section' id='crate-dependencies'>
-    <h3>Dependencies</h3>
-    <ul>
-      {{#each currentDependencies as |dep|}}
-        {{link-to-dep dep=dep}}
-      {{else}}
-          <li>None</li>
-      {{/each}}
-    </ul>
-  </div>
-
-  {{#if currentDevDependencies}}
-    <div class='section' id='crate-dev-dependencies'>
-      <h3>Dev-Dependencies</h3>
-      <ul>
-        {{#each currentDevDependencies as |dep|}}
-            {{link-to-dep dep=dep}}
-        {{/each}}
-      </ul>
-    </div>
-  {{/if}}
-
-  <div class='section' id='crate-versions'>
-    <h3>Versions</h3>
-    <ul>
-      {{#each smallSortedVersions as |version|}}
-      <li>
-        {{#link-to 'crate.version' version.num}}
-            {{ version.num }}
-        {{/link-to}}
-        <span class='date'>{{moment-format version.created_at 'll'}}</span>
-        {{#if version.yanked}}
-            <span class='yanked'>yanked</span>
-        {{/if}}
-      </li>
-      {{/each}}
-    </ul>
-    <span class='small'>
-      {{#if hasMoreVersions}}
-      {{#link-to 'crate.versions' crate}}
-          show all {{ crate.versions.length }} versions
-      {{/link-to}}
-      {{/if}}
-    </span>
-  </div>
 </div>
 
 <div id='crate-downloads'>
@@ -255,14 +236,14 @@
         <div class='stat'>
             <span class='num'>
                 {{svg-jar "download"}}
-                {{ format-num downloadsContext.downloads }}
+                {{format-num downloadsContext.downloads}}
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
                 {{svg-jar "crate"}}
-                {{ crate.versions.length }}
+                {{crate.versions.length}}
             </span>
             <span class='desc small'>Versions published</span>
         </div>
