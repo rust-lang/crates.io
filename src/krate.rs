@@ -1124,6 +1124,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
+///
+/// Currently blocks the HTTP thread, perhaps some function calls can spawn new
+/// threads and return completion or error through other methods  a `cargo publish
+/// --status` command, via crates.io's front end, or email.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
     let (new_crate, user) = parse_new_headers(req)?;

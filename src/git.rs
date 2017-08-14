@@ -124,13 +124,14 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
 /// being pushed.
 ///
 /// A maximum of 20 attempts to commit and push to the index currently
-/// accounts for the amount of traffic publishing crates, though this will
-/// eventually need to be changed past a certain point.
+/// accounts for the amount of traffic publishing crates, though this may 
+/// have to be changed in the future.
 ///
 /// Notes:
-/// Currently, this function is called from the HTTP thread and is blocking.
-/// This could be changed to run from a different thread and use a callback
-/// upon completion to the HTTP thread.
+/// Currently, this function is called on the HTTP thread and is blocking.
+/// Spawning a separate thread for this function means that the request
+/// can return without waiting for completion, and other methods of
+/// notifying upon completion or error can be used.
 fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 where
     F: FnMut() -> CargoResult<(String, PathBuf)>,
