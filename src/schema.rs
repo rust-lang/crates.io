@@ -40,6 +40,17 @@ table! {
 }
 
 table! {
+    crate_owner_invitations (id) {
+        id -> Int4,
+        invited_user_id -> Int4,
+        invited_by -> Int4,
+        crate_id -> Int4,
+        status -> Text,
+        created -> Timestamp,
+    }
+}
+
+table! {
     crate_owners (crate_id, owner_id, owner_kind) {
         crate_id -> Int4,
         owner_id -> Int4,
