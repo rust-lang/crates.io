@@ -77,7 +77,7 @@ as well.
 
 #### Frontend requirements
 
-In order to run the frontend, you will need to have installed:
+In order to run the frontend on Windows and macOS, you will need to have installed:
 
 - [node](https://nodejs.org/en/) >= 6.10.0
 - [npm](https://www.npmjs.com/get-npm) >= 4.0.0
@@ -86,7 +86,11 @@ Follow the links for each of these tools for their recommended installation
 instructions. If you already have these tools, or you have a different
 preferred method of installing packages like these, that should work fine.
 
-> Note that you may need to install these as root using `sudo` in some cases.
+If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md) 
+to install to ensure that the use of `npm` does not require the use of `sudo`.
+
+The front end should run fine after these steps. Please file an issue if you run
+into any trouble.
 
 #### Building and serving the frontend
 
