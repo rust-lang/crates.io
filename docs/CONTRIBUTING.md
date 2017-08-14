@@ -316,27 +316,6 @@ with `CTRL-C` and rerun this command every time you change the backend code):
 cargo run --bin server
 ```
 
-> If you get an error that looks like:
->
-> ```
-> thread 'main' panicked at 'must have `GIT_REPO_URL` defined', src/lib.rs:227
-> ```
->
-> Edit your `.env` and remove the comment after the `S3_REGION` variable. That
-> is, change this:
->
-> ```
-> export S3_REGION=      # not needed if the S3 bucket is in US standard
-> ```
->
-> to this:
->
-> ```
-> export S3_REGION=
-> ```
->
-> and then try running `cargo run --bin server` again.
-
 Then start a frontend that uses this backend by running this command in another
 terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
