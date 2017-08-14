@@ -45,6 +45,7 @@ Router.map(function() {
     this.route('catchAll', { path: '*path' });
     this.route('team', { path: '/teams/:team_id' });
     this.route('policies');
+    this.route('confirm', { path: '/confirm/:email_token' });
 });
 
 export default Router;
