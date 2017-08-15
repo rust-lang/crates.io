@@ -17,10 +17,10 @@ export default Ember.Route.extend({
                 if (error.payload) {
                     console.log("finding error in payload: " + error.payload.errors[0].detail);
                     this.get('flashMessages').queue(`Error in email confirmation: ${error.payload.errors[0].detail}`);
-                    return;
+                    return this.replaceWith('index');
                 } else {
                     this.get('flashMessages').queue(`Unknown error in email confirmation`);
-                    return;
+                    return this.replaceWith('index');
                 }
             });
     }
