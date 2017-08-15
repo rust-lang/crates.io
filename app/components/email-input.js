@@ -1,8 +1,11 @@
 import Component from '@ember/component';
 import { empty } from '@ember/object/computed';
 import { computed } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 export default Component.extend({
+    ajax: service(),
+
     type: '',
     value: '',
     isEditing: false,
@@ -68,6 +71,31 @@ export default Component.extend({
         cancelEdit() {
             this.set('isEditing', false);
             this.set('value', this.get('prevEmail'));
+        },
+
+        resendEmail() {
+            let userEmail = this.get('value');
+            let user = this.get('user');
+
+            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT',
+                user: {
+                    avatar: user.avatar,
+                    email: user.email,
+                    email_verified: user.email_verified,
+                    kind: user.kind,
+                    login: user.login,
+                    name: user.name,
+                    url: user.url
+                }
+            })
+            .then(({response}) => {})
+            .catch((error) => {
+                if (error.payload) {
+                    console.log("error payload: " + error.payload.errors[0].detail);
+                } else {
+                    console.log("unknown error");
+                }
+            });
         }
     }
 });

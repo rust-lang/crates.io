@@ -32,7 +32,7 @@
         </div>
         {{#if emailNotVerified }}
             <p class='small-text'>Your email has not yet been verified.</p>
-            <button class='small yellow-button space-left'>Resend</button>
+            <button class='small yellow-button space-left' {{action 'resendEmail'}}>Resend</button>
         {{/if}}
     </div>
 {{/if}}

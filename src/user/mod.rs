@@ -715,6 +715,57 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
+/// Handles `PUT /user/:user_id/resend` route
+pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
+    use diesel::update;
+    use diesel::pg::upsert::*;
+    use diesel::insert;
+    use time;
+    use self::tokens::dsl::email_id;
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let user = req.user()?;
+    let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
+    let conn = req.db_conn()?;
+
+    // need to check if current user matches user to be updated
+    if &user.id != name {
+        return Err(human("current user does not match requested user"));
+    }
+
+    let email_info = emails::table.filter(emails::user_id.eq(user.id))
+        .first::<Email>(&*conn)
+        .map_err(|_| {
+            bad_request("Email could not be found")
+        })?;
+
+    let token = generate_token();
+
+    let new_token = NewToken {
+        email_id: email_info.id,
+        token: token.clone(),
+        created_at: time::now_utc().to_timespec(),
+    };
+
+    let token_result : QueryResult<Token> = insert(&new_token
+        .on_conflict(
+            email_id,
+            do_update().set(&new_token)
+        ))
+        .into(tokens::table)
+        .get_result(&*conn)
+        .map_err(Into::into);
+
+    //send_user_confirm_email(email_info.email, user, token);
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
 fn generate_token() -> String {
     let token: String = thread_rng().gen_ascii_chars().take(26).collect();
     token
