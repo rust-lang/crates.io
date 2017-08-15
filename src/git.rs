@@ -124,7 +124,7 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
 /// being pushed.
 ///
 /// A maximum of 20 attempts to commit and push to the index currently
-/// accounts for the amount of traffic publishing crates, though this may 
+/// accounts for the amount of traffic publishing crates, though this may
 /// have to be changed in the future.
 ///
 /// Notes:
