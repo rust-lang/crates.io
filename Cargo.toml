@@ -60,7 +60,7 @@ conduit-middleware = "0.8"
 conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
-civet = "0.9"
+civet = { git = "https://github.com/kureuil/rust-civet", branch = "8-fix-windows-build" }
 
 [dev-dependencies]
 conduit-test = "0.8"
