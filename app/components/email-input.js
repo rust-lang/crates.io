@@ -1,5 +1,6 @@
 import Component from '@ember/component';
 import { empty } from '@ember/object/computed';
+import { computed } from '@ember/object';
 
 export default Component.extend({
     type: '',
@@ -10,6 +11,16 @@ export default Component.extend({
     notValidEmail: false,
     prevEmail: '',
     emailIsNull: true,
+    emailNotVerified: computed('user.email', 'user.email_verified', function() {
+        let email = this.get('user.email');
+        let verified = this.get('user.email_verified');
+
+        if (email != null && !verified) {
+            return true;
+        } else {
+            return false;
+        }
+    }),
 
     actions: {
         editEmail() {
