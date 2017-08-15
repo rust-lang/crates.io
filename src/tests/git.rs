@@ -9,10 +9,7 @@ use url::Url;
 
 fn root() -> PathBuf {
     env::current_dir().unwrap().join("tmp").join(
-        thread::current()
-            .name()
-            .unwrap()
-            .replace("::", "_"),
+        thread::current().name().unwrap().replace("::", "_"),
     )
 }
 
