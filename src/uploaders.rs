@@ -1,9 +1,11 @@
 use conduit::Request;
+use curl::easy::Easy;
 use krate::Crate;
 use util::{CargoResult, internal, ChainError};
 use util::{LimitErrorReader, HashingReader, read_le_u32};
 use s3;
 use semver;
+
 use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
@@ -98,7 +100,7 @@ impl Uploader {
     /// and its checksum.
     pub fn upload(
         &self,
-        app: Arc<App>,
+        mut handle: Easy,
         path: &str,
         body: &mut io::Read,
         content_type: &str,
@@ -106,7 +108,6 @@ impl Uploader {
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let mut handle = app.handle();
                 let (response, cksum) = {
                     let mut body = HashingReader::new(body);
                     let mut response = Vec::new();
@@ -167,7 +168,7 @@ impl Uploader {
             let length = read_le_u32(req.body())?;
             let mut body = LimitErrorReader::new(req.body(), max);
             self.upload(
-                app.clone(),
+                app.handle(),
                 &path,
                 &mut body,
                 "application/x-tar",
@@ -185,7 +186,7 @@ impl Uploader {
             let length = rendered.len();
             let mut body = io::Cursor::new(rendered.into_bytes());
             self.upload(
-                app.clone(),
+                app.handle(),
                 &path,
                 &mut body,
                 "text/html",

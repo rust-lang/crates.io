@@ -23,7 +23,7 @@ extern crate time;
 extern crate toml;
 extern crate url;
 
-use curl::easy::List;
+use curl::easy::{Easy, List};
 use diesel::prelude::*;
 use flate2::read::GzDecoder;
 use std::env;
@@ -91,7 +91,7 @@ fn main() {
                 app.config
                     .uploader
                     .upload(
-                        app.clone(),
+                        Easy::new(),
                         &readme_path,
                         &mut body,
                         "text/html",
@@ -115,7 +115,7 @@ fn main() {
 
 /// Renders the readme of an uploaded crate version.
 fn get_readme(app: Arc<App>, version: &EncodableVersion) -> Option<String> {
-    let mut handle = app.handle();
+    let mut handle = Easy::new();
     let location = match app.config.uploader.crate_location(
         &version.krate,
         &version.num,
