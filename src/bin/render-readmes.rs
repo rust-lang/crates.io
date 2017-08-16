@@ -29,12 +29,11 @@ use flate2::read::GzDecoder;
 use std::env;
 use std::io::{Cursor, Read};
 use std::path::Path;
-use std::sync::Arc;
 use std::thread;
 use tar::Archive;
 use url::Url;
 
-use cargo_registry::{App, Config, Version};
+use cargo_registry::{Config, Version};
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
@@ -43,7 +42,6 @@ const DEFAULT_PAGE_SIZE: i64 = 25;
 
 fn main() {
     let config: Config = Default::default();
-    let app = Arc::new(App::new(&config));
     let conn = cargo_registry::db::connect_now().unwrap();
     let versions_count = versions::table
         .select(versions::all_columns)
@@ -72,10 +70,10 @@ fn main() {
             .collect();
         let mut tasks = Vec::with_capacity(page_size as usize);
         for version in versions {
-            let app = app.clone();
+            let config = config.clone();
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", version.krate, version.num);
-                let readme = get_readme(app.clone(), &version);
+                let readme = get_readme(&config, &version);
                 if readme.is_none() {
                     return;
                 }
@@ -88,7 +86,7 @@ fn main() {
                 );
                 let readme_len = readme.len();
                 let mut body = Cursor::new(readme.into_bytes());
-                app.config
+                config
                     .uploader
                     .upload(
                         Easy::new(),
@@ -114,9 +112,9 @@ fn main() {
 }
 
 /// Renders the readme of an uploaded crate version.
-fn get_readme(app: Arc<App>, version: &EncodableVersion) -> Option<String> {
+fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let mut handle = Easy::new();
-    let location = match app.config.uploader.crate_location(
+    let location = match config.uploader.crate_location(
         &version.krate,
         &version.num,
     ) {
