@@ -132,8 +132,8 @@ impl<'a> NewUser<'a> {
         )).into(users::table)
             .get_result(conn)
             .map_err(Into::into);
-        println!("create_or_update upsert user: {:?}", result);
 
+        // To send the user an account verification email...
         if let Some(user_email) = self.email {
             let user_id = users::table.select(users::id).filter(users::gh_id.eq(&self.gh_id)).first(&*conn).unwrap();
 
@@ -147,22 +147,32 @@ impl<'a> NewUser<'a> {
                 .into(emails::table)
                 .get_result(conn)
                 .map_err(Into::into);
-            println!("create_or_update upsert email: {:?}", email_result);
 
             match email_result {
                 Ok(email) => {
                     let token = generate_token();
                     let new_token = NewToken {
                         email_id: email.id,
-                        token: token,
+                        token: token.clone(),
                         created_at: time::now_utc().to_timespec(),
                     };
 
                     let token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
-                    println!("create_or_update insert token: {:?}", token_result);
+
+                    let user = User {
+                        id: 0,
+                        email: None,
+                        gh_id: 0,
+                        gh_login: String::from(""),
+                        name: self.name.map(str::to_string),
+                        gh_avatar: None,
+                        gh_access_token: String::from(""),
+                    };
+                    send_user_confirm_email(user_email, &user, &token)
                 },
                 Err(Error::NotFound) => {
-                    // Pass, email had conflict, do nothing, this is expected
+                    // Pass, email had conflict, so it already exists in the database
+                    // We don't have to do anything
                 },
                 Err(err) => {
                     return Err(err);
@@ -621,13 +631,19 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         }
     }
 
-    //send_user_confirm_email(user_email, user, &token);
+    send_user_confirm_email(user_email, user, &token);
 
     #[derive(Serialize)]
     struct R {
         ok: bool,
     }
     Ok(req.json(&R { ok: true }))
+}
+
+pub struct MailgunConfigVars {
+    pub smtp_login: String,
+    pub smtp_password: String,
+    pub smtp_server: String,
 }
 
 fn send_user_confirm_email(email: &str, user: &User, token: &str) {
@@ -643,32 +659,45 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) {
     use lettre::transport::smtp::authentication::Mechanism;
     use lettre::transport::smtp::SUBMISSION_PORT;
     use lettre::transport::EmailTransport;
+    use lettre::transport::stub::StubEmailTransport;
+    use env_logger;
 
     dotenv().ok();
-    let mailgun_username = env::var("MAILGUN_SMTP_LOGIN").unwrap();
-    let mailgun_password = env::var("MAILGUN_SMTP_PASSWORD").unwrap();
-    let mailgun_server = env::var("MAILGUN_SMTP_SERVER").unwrap();
+    let mailgun_config = MailgunConfigVars {
+        smtp_login: env::var("MAILGUN_SMTP_LOGIN").unwrap_or(String::from("Not found")),
+        smtp_password: env::var("MAILGUN_SMTP_PASSWORD").unwrap_or(String::from("Not found")),
+        smtp_server: env::var("MAILGUN_SMTP_SERVER").unwrap_or(String::from("Not found")),
+    };
 
     let email = EmailBuilder::new()
-        .to(email)
-        .from(mailgun_username.as_str())
-        .subject("Please confirm your email address")
-        .body(format!("Hello {}! Welcome to Crates.io. Please click the
-                      link below to verify your email address. Thank you!
-                      \n\n
-                      crates.io/me/confirm/{}", user.name.as_ref().unwrap(), token).as_str())
-        .build()
-        .expect("Failed to build confirm email message");
+                    .to(email)
+                    .from(mailgun_config.smtp_login.as_str())
+                    .subject("Please confirm your email address")
+                    .body(format!("Hello {}! Welcome to Crates.io. Please click the
+                                link below to verify your email address. Thank you!
+                                \n\n
+                                https://crates.io/confirm/{}",
+                                user.name.as_ref().unwrap(), token).as_str())
+                    .build()
+                    .expect("Failed to build confirm email message");
 
-    let mut transport = SmtpTransportBuilder::new((mailgun_server.as_str(), SUBMISSION_PORT))
-        .expect("Failed to create message transport")
-        .credentials(&mailgun_username, &mailgun_password)
-        .security_level(SecurityLevel::AlwaysEncrypt)
-        .smtp_utf8(true)
-        .authentication_mechanism(Mechanism::Plain)
-        .build();
+    if mailgun_config.smtp_login == "Not found" {
+        // To engage run `RUST_LOG=lettre=info cargo run --bin server`
+        env_logger::init();
+        let mut sender = StubEmailTransport;
+        let result = sender.send(email);
+        println!("Sending your email now");
+    } else {
+        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
+            .expect("Failed to create message transport")
+            .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
+            .security_level(SecurityLevel::AlwaysEncrypt)
+            .smtp_utf8(true)
+            .authentication_mechanism(Mechanism::Plain)
+            .build();
 
-    transport.send(email);
+        transport.send(email);
+    }
 }
 
 /// Handles the `PUT /confirm/:email_token` route
@@ -717,7 +746,6 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles `PUT /user/:user_id/resend` route
 pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
-    use diesel::update;
     use diesel::pg::upsert::*;
     use diesel::insert;
     use time;
@@ -757,7 +785,7 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         .get_result(&*conn)
         .map_err(Into::into);
 
-    //send_user_confirm_email(email_info.email, user, token);
+    send_user_confirm_email(&email_info.email, user, &token);
 
     #[derive(Serialize)]
     struct R {

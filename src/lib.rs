@@ -43,6 +43,7 @@ extern crate time;
 extern crate toml;
 extern crate url;
 extern crate lettre;
+extern crate env_logger;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
