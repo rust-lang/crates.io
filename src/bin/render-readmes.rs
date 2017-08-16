@@ -44,11 +44,11 @@ const DEFAULT_PAGE_SIZE: i64 = 25;
 fn main() {
     let config: Config = Default::default();
     let app = Arc::new(App::new(&config));
-    let conn = app.diesel_database.get().unwrap();
+    let conn = cargo_registry::db::connect_now().unwrap();
     let versions_count = versions::table
         .select(versions::all_columns)
         .count()
-        .get_result::<i64>(&*conn)
+        .get_result::<i64>(&conn)
         .expect("error counting versions");
     let page_size = match env::args().nth(1) {
         None => DEFAULT_PAGE_SIZE,
@@ -65,7 +65,7 @@ fn main() {
             .select((versions::all_columns, crates::name))
             .limit(page_size)
             .offset(current_page * page_size)
-            .load::<(Version, String)>(&*conn)
+            .load::<(Version, String)>(&conn)
             .expect("error loading versions")
             .into_iter()
             .map(|(version, crate_name)| version.encodable(&crate_name))
