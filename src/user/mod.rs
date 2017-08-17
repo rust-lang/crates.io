@@ -655,12 +655,13 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) {
     use dotenv::dotenv;
     use std::env;
     use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
-    use lettre::email::EmailBuilder;
+    use lettre::email::{EmailBuilder, SendableEmail};
     use lettre::transport::smtp::authentication::Mechanism;
     use lettre::transport::smtp::SUBMISSION_PORT;
     use lettre::transport::EmailTransport;
-    use lettre::transport::stub::StubEmailTransport;
+    use lettre::transport::file::FileEmailTransport;
     use env_logger;
+    use std::path::Path;
 
     dotenv().ok();
     let mailgun_config = MailgunConfigVars {
@@ -674,19 +675,19 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) {
                     .from(mailgun_config.smtp_login.as_str())
                     .subject("Please confirm your email address")
                     .body(format!("Hello {}! Welcome to Crates.io. Please click the
-                                link below to verify your email address. Thank you!
-                                \n\n
-                                https://crates.io/confirm/{}",
-                                user.name.as_ref().unwrap(), token).as_str())
+link below to verify your email address. Thank you!\n
+https://crates.io/confirm/{}",
+                        user.name.as_ref().unwrap(), token).as_str())
                     .build()
                     .expect("Failed to build confirm email message");
 
     if mailgun_config.smtp_login == "Not found" {
-        // To engage run `RUST_LOG=lettre=info cargo run --bin server`
-        env_logger::init();
-        let mut sender = StubEmailTransport;
-        let result = sender.send(email);
         println!("Sending your email now");
+
+        let mut sender = FileEmailTransport::new(Path::new("/tmp"));
+        let result = sender.send(email.clone());
+        println!("result: {:?}", result);
+        println!("message id: {:?}", email.message_id());
     } else {
         let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
             .expect("Failed to create message transport")
