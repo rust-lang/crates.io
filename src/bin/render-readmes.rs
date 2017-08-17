@@ -114,10 +114,7 @@ fn main() {
 /// Renders the readme of an uploaded crate version.
 fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let mut handle = Easy::new();
-    let location = match config.uploader.crate_location(
-        &version.krate,
-        &version.num,
-    ) {
+    let location = match config.uploader.crate_location(&version.krate, &version.num) {
         Some(l) => l,
         None => return None,
     };
