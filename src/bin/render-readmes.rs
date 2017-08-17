@@ -16,7 +16,6 @@ extern crate cargo_registry;
 extern crate curl;
 extern crate diesel;
 extern crate flate2;
-extern crate postgres;
 extern crate s3;
 extern crate tar;
 extern crate time;
