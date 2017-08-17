@@ -12,8 +12,6 @@ use diesel::prelude::*;
 use diesel;
 use diesel_full_text_search::*;
 use license_exprs;
-use pg::GenericConnection;
-use pg::rows::Row;
 use hex::ToHex;
 use serde_json;
 use semver;
@@ -34,11 +32,10 @@ use pagination::Paginate;
 use schema::*;
 use upload;
 use user::RequestUser;
-use util::errors::NotFound;
 use util::{read_le_u32, read_fill};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
-use {Model, User, Keyword, Version, Category, Badge, Replica};
+use {User, Keyword, Version, Category, Badge, Replica};
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -294,178 +291,6 @@ impl Crate {
         crates::table.select(ALL_COLUMNS)
     }
 
-    pub fn find_by_name(conn: &GenericConnection, name: &str) -> CargoResult<Crate> {
-        let stmt = conn.prepare(
-            "SELECT * FROM crates \
-                                      WHERE canon_crate_name(name) =
-                                            canon_crate_name($1) LIMIT 1",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        let row = rows.iter().next();
-        let row = row.chain_error(|| NotFound)?;
-        Ok(Model::from_row(&row))
-    }
-
-    // This is cleaned up by the diesel port
-    #[cfg_attr(feature = "lint", allow(too_many_arguments))]
-    pub fn find_or_insert(
-        conn: &GenericConnection,
-        name: &str,
-        user_id: i32,
-        description: &Option<String>,
-        homepage: &Option<String>,
-        documentation: &Option<String>,
-        readme: &Option<String>,
-        repository: &Option<String>,
-        license: &Option<String>,
-        license_file: &Option<String>,
-        max_upload_size: Option<i32>,
-    ) -> CargoResult<Crate> {
-        let description = description.as_ref().map(|s| &s[..]);
-        let homepage = homepage.as_ref().map(|s| &s[..]);
-        let documentation = documentation.as_ref().map(|s| &s[..]);
-        let readme = readme.as_ref().map(|s| &s[..]);
-        let repository = repository.as_ref().map(|s| &s[..]);
-        let mut license = license.as_ref().map(|s| &s[..]);
-        let license_file = license_file.as_ref().map(|s| &s[..]);
-        validate_url(homepage, "homepage")?;
-        validate_url(documentation, "documentation")?;
-        validate_url(repository, "repository")?;
-
-        match license {
-            // If a license is given, validate it to make sure it's actually a
-            // valid license
-            Some(..) => validate_license(license)?,
-
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            None if license_file.is_some() => {
-                license = Some("non-standard");
-            }
-
-            None => {}
-        }
-
-        // TODO: like with users, this is sadly racy
-        let stmt = conn.prepare(
-            "UPDATE crates
-                                         SET documentation = $1,
-                                             homepage = $2,
-                                             description = $3,
-                                             readme = $4,
-                                             license = $5,
-                                             repository = $6
-                                       WHERE canon_crate_name(name) =
-                                             canon_crate_name($7)
-                                   RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[
-                &documentation,
-                &homepage,
-                &description,
-                &readme,
-                &license,
-                &repository,
-                &name,
-            ],
-        )?;
-        if let Some(row) = rows.iter().next() {
-            return Ok(Model::from_row(&row));
-        }
-
-        let stmt = conn.prepare(
-            "SELECT 1 FROM reserved_crate_names
-                                 WHERE canon_crate_name(name) =
-                                       canon_crate_name($1)",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        if !rows.is_empty() {
-            return Err(human("cannot upload a crate with a reserved name"));
-        }
-
-        let stmt = conn.prepare(
-            "INSERT INTO crates
-                                      (name, description, homepage,
-                                       documentation, readme,
-                                       repository, license, max_upload_size)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[
-                &name,
-                &description,
-                &homepage,
-                &documentation,
-                &readme,
-                &repository,
-                &license,
-                &max_upload_size,
-            ],
-        )?;
-        let ret: Crate = Model::from_row(&rows.iter().next().chain_error(
-            || internal("no crate returned"),
-        )?);
-
-        conn.execute(
-            "INSERT INTO crate_owners
-                           (crate_id, owner_id, created_by, owner_kind)
-                           VALUES ($1, $2, $2, $3)",
-            &[&ret.id, &user_id, &(OwnerKind::User as i32)],
-        )?;
-        return Ok(ret);
-
-        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
-            let url = match url {
-                Some(s) => s,
-                None => return Ok(()),
-            };
-            let url = Url::parse(url).map_err(|_| {
-                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-            })?;
-            match &url.scheme()[..] {
-                "http" | "https" => {}
-                s => {
-                    return Err(human(&format_args!(
-                        "`{}` has an invalid url \
-                         scheme: `{}`",
-                        field,
-                        s
-                    )))
-                }
-            }
-            if url.cannot_be_a_base() {
-                return Err(human(&format_args!(
-                    "`{}` must have relative scheme \
-                     data: {}",
-                    field,
-                    url
-                )));
-            }
-            Ok(())
-        }
-
-        fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            license
-                .iter()
-                .flat_map(|s| s.split('/'))
-                .map(license_exprs::validate_license_expr)
-                .collect::<Result<Vec<_>, _>>()
-                .map(|_| ())
-                .map_err(|e| {
-                    human(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })
-        }
-
-    }
-
     pub fn valid_name(name: &str) -> bool {
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
         Crate::valid_ident(name) && under_max_length
@@ -612,19 +437,6 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM versions \
-             WHERE crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        let mut ret = rows.iter()
-            .map(|r| Model::from_row(&r))
-            .collect::<Vec<Version>>();
-        ret.sort_by(|a, b| b.num.cmp(&a.num));
-        Ok(ret)
-    }
-
     pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
         let users = base_query
@@ -643,34 +455,6 @@ impl Crate {
             .map(Owner::Team);
 
         Ok(users.chain(teams).collect())
-    }
-
-    // TODO: Update bin/transfer_crates to use owners() then get rid of this
-    pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM users
-                                      INNER JOIN crate_owners
-                                         ON crate_owners.owner_id = users.id
-                                      WHERE crate_owners.crate_id = $1
-                                        AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = $2",
-        )?;
-        let user_rows = stmt.query(&[&self.id, &(OwnerKind::User as i32)])?;
-
-        let stmt = conn.prepare(
-            "SELECT * FROM teams
-                                      INNER JOIN crate_owners
-                                         ON crate_owners.owner_id = teams.id
-                                      WHERE crate_owners.crate_id = $1
-                                        AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = $2",
-        )?;
-        let team_rows = stmt.query(&[&self.id, &(OwnerKind::Team as i32)])?;
-
-        let mut owners = vec![];
-        owners.extend(user_rows.iter().map(|r| Owner::User(Model::from_row(&r))));
-        owners.extend(team_rows.iter().map(|r| Owner::Team(Model::from_row(&r))));
-        Ok(owners)
     }
 
     pub fn owner_add(
@@ -759,28 +543,6 @@ impl Crate {
         let (vec, counts): (_, Vec<_>) = rows.into_iter().unzip();
         let cnt = counts.into_iter().nth(0).unwrap_or(0i64);
         Ok((vec, cnt))
-    }
-}
-
-impl Model for Crate {
-    fn from_row(row: &Row) -> Crate {
-        Crate {
-            id: row.get("id"),
-            name: row.get("name"),
-            updated_at: row.get("updated_at"),
-            created_at: row.get("created_at"),
-            downloads: row.get("downloads"),
-            description: row.get("description"),
-            documentation: row.get("documentation"),
-            homepage: row.get("homepage"),
-            readme: row.get("readme"),
-            license: row.get("license"),
-            repository: row.get("repository"),
-            max_upload_size: row.get("max_upload_size"),
-        }
-    }
-    fn table_name(_: Option<Crate>) -> &'static str {
-        "crates"
     }
 }
 

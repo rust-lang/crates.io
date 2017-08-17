@@ -29,10 +29,8 @@ extern crate hex;
 extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
-extern crate postgres as pg;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate r2d2_postgres;
 extern crate rand;
 extern crate s3;
 extern crate semver;
@@ -60,7 +58,6 @@ pub use self::dependency::Dependency;
 pub use self::download::VersionDownload;
 pub use self::keyword::Keyword;
 pub use self::krate::Crate;
-pub use self::model::Model;
 pub use self::user::User;
 pub use self::version::Version;
 pub use self::uploaders::{Uploader, Bomb};
@@ -86,7 +83,6 @@ pub mod git;
 pub mod http;
 pub mod keyword;
 pub mod krate;
-pub mod model;
 pub mod owner;
 pub mod schema;
 pub mod token;
@@ -231,12 +227,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(http::SecurityHeadersMiddleware);
     }
     m.add(app::AppMiddleware::new(app));
-
-    // Run each request in a transaction and roll back the transaction if the request results
-    // in an error. Not used when running tests because each test is run in a transaction.
-    if env != Env::Test {
-        m.add(db::TransactionMiddleware);
-    }
 
     // Sets the current user on each request.
     m.add(user::Middleware);

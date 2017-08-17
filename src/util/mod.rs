@@ -9,7 +9,6 @@ use url;
 
 use conduit::{Request, Response, Handler};
 use conduit_router::{RouteBuilder, RequestParams};
-use db::RequestTransaction;
 use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, bad_request, internal_error};
@@ -17,14 +16,12 @@ pub use self::errors::{ChainError, std_error};
 pub use self::hasher::HashingReader;
 pub use self::head::Head;
 pub use self::io_util::{LimitErrorReader, read_le_u32, read_fill};
-pub use self::lazy_cell::LazyCell;
 pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
 mod hasher;
 mod head;
 mod io_util;
-mod lazy_cell;
 mod request_proxy;
 
 pub trait RequestUtils {
@@ -110,10 +107,7 @@ impl Handler for C {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         let C(f) = *self;
         match f(req) {
-            Ok(resp) => {
-                req.commit();
-                Ok(resp)
-            }
+            Ok(resp) => Ok(resp),
             Err(e) => {
                 match e.response() {
                     Some(response) => Ok(response),

@@ -1,10 +1,8 @@
 use diesel::prelude::*;
 use diesel::pg::{Pg, PgConnection};
 use diesel::types::{Integer, Text};
-use pg::rows::Row;
 use semver;
 
-use Model;
 use git;
 use krate::Crate;
 use schema::*;
@@ -187,31 +185,5 @@ impl Queryable<(dependencies::SqlType, Integer, Text), Pg> for ReverseDependency
             dependency: Dependency::build(dep_row),
             crate_downloads: downloads,
         }
-    }
-}
-
-impl Model for Dependency {
-    fn from_row(row: &Row) -> Dependency {
-        let req: String = row.get("req");
-        Dependency {
-            id: row.get("id"),
-            version_id: row.get("version_id"),
-            crate_id: row.get("crate_id"),
-            req: semver::VersionReq::parse(&req).unwrap(),
-            optional: row.get("optional"),
-            default_features: row.get("default_features"),
-            features: row.get("features"),
-            target: row.get("target"),
-            kind: match row.get("kind") {
-                0 => Kind::Normal,
-                1 => Kind::Build,
-                2 => Kind::Dev,
-                n => panic!("unknown kind: {}", n),
-            },
-        }
-    }
-
-    fn table_name(_: Option<Dependency>) -> &'static str {
-        "dependencies"
     }
 }

@@ -28,9 +28,7 @@ flate2 = "0.2"
 semver = "0.5"
 url = "1.2.1"
 
-postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json", "with-chrono"] }
 r2d2 = "0.7.0"
-r2d2_postgres = "0.12.0"
 openssl = "0.9.9"
 curl = "0.4"
 oauth2 = "0.3"
@@ -73,6 +71,3 @@ diesel = { version = "0.15.0", features = ["postgres"] }
 [features]
 unstable = []
 lint = ["clippy"]
-
-[replace]
-"postgres:0.14.2" = { git = "https://github.com/sfackler/rust-postgres.git" }
