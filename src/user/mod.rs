@@ -3,8 +3,6 @@ use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use pg::GenericConnection;
-use pg::rows::Row;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
@@ -14,10 +12,9 @@ use db::RequestTransaction;
 use krate::Follow;
 use pagination::Paginate;
 use schema::*;
-use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, internal, ChainError, human};
+use util::{RequestUtils, CargoResult, human};
 use version::EncodableVersion;
-use {http, Model, Version};
+use {http, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
 use krate::Crate;
 
@@ -126,17 +123,6 @@ pub struct EncodablePrivateUser {
 }
 
 impl User {
-    /// Queries the database for a user with a certain `gh_login` value.
-    pub fn find_by_login(conn: &GenericConnection, login: &str) -> CargoResult<User> {
-        let stmt = conn.prepare(
-            "SELECT * FROM users
-                                      WHERE gh_login = $1",
-        )?;
-        let rows = stmt.query(&[&login])?;
-        let row = rows.iter().next().chain_error(|| NotFound)?;
-        Ok(Model::from_row(&row))
-    }
-
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
         use diesel::update;
@@ -148,51 +134,6 @@ impl User {
             .returning(user_id)
             .get_result::<i32>(conn)?;
         Ok(users.filter(id.eq(user_id_)).get_result(conn)?)
-    }
-
-    /// Updates a user or inserts a new user into the database.
-    pub fn find_or_insert(
-        conn: &GenericConnection,
-        id: i32,
-        login: &str,
-        email: Option<&str>,
-        name: Option<&str>,
-        avatar: Option<&str>,
-        access_token: &str,
-    ) -> CargoResult<User> {
-        // TODO: this is racy, but it looks like any other solution is...
-        //       interesting! For now just do the racy thing which will report
-        //       more errors than it needs to.
-
-        let stmt = conn.prepare(
-            "UPDATE users
-                                      SET gh_access_token = $1,
-                                          email = $2,
-                                          name = $3,
-                                          gh_avatar = $4,
-                                          gh_login = $5
-                                      WHERE gh_id = $6
-                                      RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[&access_token, &email, &name, &avatar, &login, &id],
-        )?;
-        if let Some(ref row) = rows.iter().next() {
-            return Ok(Model::from_row(row));
-        }
-        let stmt = conn.prepare(
-            "INSERT INTO users
-                                      (email, gh_access_token,
-                                       gh_login, name, gh_avatar, gh_id)
-                                      VALUES ($1, $2, $3, $4, $5, $6)
-                                      RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[&email, &access_token, &login, &name, &avatar, &id],
-        )?;
-        Ok(Model::from_row(&rows.iter().next().chain_error(|| {
-            internal("no user with email we just found")
-        })?))
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
@@ -246,24 +187,6 @@ impl User {
             name: name,
             url: Some(url),
         }
-    }
-}
-
-impl Model for User {
-    fn from_row(row: &Row) -> User {
-        User {
-            id: row.get("id"),
-            email: row.get("email"),
-            gh_access_token: row.get("gh_access_token"),
-            gh_login: row.get("gh_login"),
-            gh_id: row.get("gh_id"),
-            name: row.get("name"),
-            gh_avatar: row.get("gh_avatar"),
-        }
-    }
-
-    fn table_name(_: Option<User>) -> &'static str {
-        "users"
     }
 }
 

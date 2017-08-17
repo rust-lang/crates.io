@@ -2,7 +2,6 @@ use std::sync::atomic::Ordering;
 
 use conduit::{Handler, Method};
 
-use cargo_registry::Model;
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
@@ -40,42 +39,14 @@ fn access_token_needs_data() {
 }
 
 #[test]
-fn user_insert() {
-    let (_b, app, _middle) = ::app();
-    let conn = t!(app.database.get());
-    let tx = t!(conn.transaction());
-
-    let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar"));
-    assert_eq!(t!(User::find(&tx, user.id)), user);
-
-    assert_eq!(
-        t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar")),
-        user
-    );
-    let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "baz"));
-    assert!(user != user2);
-    assert_eq!(user.id, user2.id);
-    assert_eq!(user2.gh_access_token, "baz");
-
-    let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None, "baz"));
-    assert!(user != user3);
-    assert_eq!(user.id, user3.id);
-    assert_eq!(user3.gh_login, "bar");
-}
-
-#[test]
 fn me() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Get, "/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
-        user
-    };
+    let user = ::sign_in(&mut req, &app);
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
 
