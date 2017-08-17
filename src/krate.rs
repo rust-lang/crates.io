@@ -29,6 +29,7 @@ use git;
 use keyword::{EncodableKeyword, CrateKeyword};
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use pagination::Paginate;
+use render;
 use schema::*;
 use upload;
 use user::RequestUser;
@@ -951,10 +952,22 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let max_version = krate.max_version(&conn)?;
 
+        // Render the README for this crate
+        let readme = match new_crate.readme.as_ref() {
+            Some(readme) => Some(render::markdown_to_html(&**readme)?),
+            None => None,
+        };
+
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload_crate(
+            req,
+            &krate,
+            readme,
+            max,
+            vers,
+        )?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -973,7 +986,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         })?;
 
         // Now that we've come this far, we're committed!
-        bomb.path = None;
+        crate_bomb.path = None;
+        readme_bomb.path = None;
 
         #[derive(Serialize)]
         struct Warnings<'a> {
@@ -1062,6 +1076,28 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         .uploader
         .crate_location(crate_name, version)
         .ok_or_else(|| human("crate files not found"))?;
+
+    if req.wants_json() {
+        #[derive(Serialize)]
+        struct R {
+            url: String,
+        }
+        Ok(req.json(&R { url: redirect_url }))
+    } else {
+        Ok(req.redirect(redirect_url))
+    }
+}
+
+/// Handles the `GET /crates/:crate_id/:version/readme` route.
+pub fn readme(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let version = &req.params()["version"];
+
+    let redirect_url = req.app()
+        .config
+        .uploader
+        .readme_location(crate_name, version)
+        .ok_or_else(|| human("crate readme not found"))?;
 
     if req.wants_json() {
         #[derive(Serialize)]

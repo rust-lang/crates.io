@@ -99,9 +99,28 @@ export default Route.extend({
                         `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
                 }
 
-                return version ||
+                const result = version ||
                     versions.find(version => version.get('num') === maxVersion) ||
                     versions.objectAt(0);
+                if (result.get('readme_path')) {
+                    this.get('ajax').request(result.get('readme_path'))
+                        .then((r) => this.get('ajax').raw(r.url, {
+                            method: 'GET',
+                            dataType: 'html',
+                            headers: {
+                                // We need to force the Accept header, otherwise crates.io won't return
+                                // the readme file when not using S3.
+                                Accept: '*/*',
+                            },
+                        }))
+                        .then((r) => {
+                            crate.set('readme', r.payload);
+                        })
+                        .catch(() => {
+                            crate.set('readme', null);
+                        });
+                }
+                return result;
             });
     },
 

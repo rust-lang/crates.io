@@ -208,6 +208,7 @@
         .docs {
             @include flex(7);
             padding-right: 40px;
+            max-width: 600px;
         }
         .authorship {
             @include flex(3);
@@ -300,6 +301,13 @@
         }
         .copy-failure {
             color: red;
+        }
+    }
+    .crate-readme {
+        line-height: 1.5;
+
+        pre {
+            overflow-x: scroll;
         }
     }
     .last-update {

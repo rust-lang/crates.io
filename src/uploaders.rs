@@ -1,9 +1,11 @@
 use conduit::Request;
+use curl::easy::Easy;
 use krate::Crate;
 use util::{CargoResult, internal, ChainError};
 use util::{LimitErrorReader, HashingReader, read_le_u32};
 use s3;
 use semver;
+
 use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
@@ -35,6 +37,10 @@ impl Uploader {
         }
     }
 
+    /// Returns the URL of an uploaded crate's version archive.
+    ///
+    /// The function doesn't check for the existence of the file.
+    /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
@@ -54,35 +60,60 @@ impl Uploader {
         }
     }
 
+    /// Returns the URL of an uploaded crate's version readme.
+    ///
+    /// The function doesn't check for the existence of the file.
+    /// It returns `None` if the current `Uploader` is `NoOp`.
+    pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
+        match *self {
+            Uploader::S3 { ref bucket, .. } => {
+                Some(format!(
+                    "https://{}/{}",
+                    bucket.host(),
+                    Uploader::readme_path(crate_name, version)
+                ))
+            }
+            Uploader::Local => {
+                Some(format!(
+                    "/local_uploads/{}",
+                    Uploader::readme_path(crate_name, version)
+                ))
+            }
+            Uploader::NoOp => None,
+        }
+    }
+
+    /// Returns the interna path of an uploaded crate's version archive.
     fn crate_path(name: &str, version: &str) -> String {
         // No slash in front so we can use join
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
+    /// Returns the interna path of an uploaded crate's version readme.
+    fn readme_path(name: &str, version: &str) -> String {
+        format!("readmes/{}/{}-{}.html", name, name, version)
+    }
+
+    /// Uploads a file using the configured uploader (either `S3`, `Local` or `NoOp`).
+    ///
+    /// It returns a a tuple containing the path of the uploaded file
+    /// and its checksum.
     pub fn upload(
         &self,
-        req: &mut Request,
-        krate: &Crate,
-        max: u64,
-        vers: &semver::Version,
-    ) -> CargoResult<(Vec<u8>, Bomb)> {
+        mut handle: Easy,
+        path: &str,
+        body: &mut io::Read,
+        content_type: &str,
+        content_length: u64,
+    ) -> CargoResult<(Option<String>, Vec<u8>)> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let mut handle = req.app().handle();
-                let path = format!("/{}", Uploader::crate_path(&krate.name, &vers.to_string()));
                 let (response, cksum) = {
-                    let length = read_le_u32(req.body())?;
-                    let body = LimitErrorReader::new(req.body(), max);
                     let mut body = HashingReader::new(body);
                     let mut response = Vec::new();
                     {
-                        let mut s3req = bucket.put(
-                            &mut handle,
-                            &path,
-                            &mut body,
-                            "application/x-tar",
-                            length as u64,
-                        );
+                        let mut s3req =
+                            bucket.put(&mut handle, path, &mut body, content_type, content_length);
                         s3req
                             .write_function(|data| {
                                 response.extend(data);
@@ -102,57 +133,79 @@ impl Uploader {
                         response
                     )));
                 }
-
-                Ok((
-                    cksum,
-                    Bomb {
-                        app: req.app().clone(),
-                        path: Some(path),
-                    },
-                ))
+                Ok((Some(String::from(path)), cksum))
             }
             Uploader::Local => {
-                let path = Uploader::crate_path(&krate.name, &vers.to_string());
-                let crate_filename = env::current_dir()
+                let filename = env::current_dir()
                     .unwrap()
                     .join("dist")
                     .join("local_uploads")
                     .join(path);
-
-                let crate_dir = crate_filename.parent().unwrap();
-                fs::create_dir_all(crate_dir)?;
-
-                let mut crate_file = File::create(&crate_filename)?;
-
-                let cksum = {
-                    read_le_u32(req.body())?;
-                    let body = LimitErrorReader::new(req.body(), max);
-                    let mut body = HashingReader::new(body);
-
-                    io::copy(&mut body, &mut crate_file)?;
-                    body.finalize()
-                };
-
-                Ok((
-                    cksum,
-                    Bomb {
-                        app: req.app().clone(),
-                        path: crate_filename.to_str().map(String::from),
-                    },
-                ))
+                let dir = filename.parent().unwrap();
+                fs::create_dir_all(dir)?;
+                let mut file = File::create(&filename)?;
+                let mut body = HashingReader::new(body);
+                io::copy(&mut body, &mut file)?;
+                Ok((filename.to_str().map(String::from), body.finalize()))
             }
-            Uploader::NoOp => {
-                Ok((
-                    vec![],
-                    Bomb {
-                        app: req.app().clone(),
-                        path: None,
-                    },
-                ))
-            }
+            Uploader::NoOp => Ok((None, vec![])),
         }
     }
 
+    /// Uploads a crate and its readme. Returns the checksum of the uploaded crate
+    /// file, and bombs for the uploaded crate and the uploaded readme.
+    pub fn upload_crate(
+        &self,
+        req: &mut Request,
+        krate: &Crate,
+        readme: Option<String>,
+        max: u64,
+        vers: &semver::Version,
+    ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
+        let app = req.app().clone();
+        let (crate_path, checksum) = {
+            let path = Uploader::crate_path(&krate.name, &vers.to_string());
+            let length = read_le_u32(req.body())?;
+            let mut body = LimitErrorReader::new(req.body(), max);
+            self.upload(
+                app.handle(),
+                &path,
+                &mut body,
+                "application/x-tar",
+                length as u64,
+            )?
+        };
+        // We create the bomb for the crate file before uploading the readme so that if the
+        // readme upload fails, the uploaded crate file is automatically deleted.
+        let crate_bomb = Bomb {
+            app: app.clone(),
+            path: crate_path,
+        };
+        let (readme_path, _) = if let Some(rendered) = readme {
+            let path = Uploader::readme_path(&krate.name, &vers.to_string());
+            let length = rendered.len();
+            let mut body = io::Cursor::new(rendered.into_bytes());
+            self.upload(
+                app.handle(),
+                &path,
+                &mut body,
+                "text/html",
+                length as u64,
+            )?
+        } else {
+            (None, vec![])
+        };
+        Ok((
+            checksum,
+            crate_bomb,
+            Bomb {
+                app: app.clone(),
+                path: readme_path,
+            },
+        ))
+    }
+
+    /// Deletes an uploaded file.
     fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {

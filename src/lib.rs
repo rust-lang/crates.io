@@ -19,6 +19,7 @@ extern crate log;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
+extern crate ammonia;
 extern crate chrono;
 extern crate curl;
 extern crate diesel_full_text_search;
@@ -29,6 +30,7 @@ extern crate hex;
 extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
+extern crate pulldown_cmark;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
@@ -84,6 +86,7 @@ pub mod http;
 pub mod keyword;
 pub mod krate;
 pub mod owner;
+pub mod render;
 pub mod schema;
 pub mod token;
 pub mod upload;
@@ -135,6 +138,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/new", C(krate::new));
     api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+    api_router.get("/crates/:crate_id/:version/readme", C(krate::readme));
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
         C(version::dependencies),
@@ -224,7 +228,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         env == Env::Production,
     ));
     if env == Env::Production {
-        m.add(http::SecurityHeadersMiddleware);
+        m.add(http::SecurityHeadersMiddleware::new(&app.config.uploader));
     }
     m.add(app::AppMiddleware::new(app));
 
