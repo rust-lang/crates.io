@@ -10,6 +10,7 @@ use std::env;
 fn main() {
     println!("cargo:rerun-if-env-changed=TEST_DATABASE_URL");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=migrations/");
     if env::var("PROFILE") == Ok("debug".into()) {
         let _ = dotenv();
         if let Ok(database_url) = env::var("TEST_DATABASE_URL") {
