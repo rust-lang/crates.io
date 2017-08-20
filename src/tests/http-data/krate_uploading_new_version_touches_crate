@@ -1,0 +1,42 @@
+===REQUEST 371
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_versions_updated_at/foo_versions_updated_at-1.0.0.crate HTTP/1.1
+Accept: */*
+Proxy-Connection: Keep-Alive
+Date: Sun, 28 Jun 2015 14:07:18 -0700
+Content-Type: application/x-tar
+Content-Length: 0
+Host: alexcrichton-test.s3.amazonaws.com
+Authorization: AWS AKIAJF3GEK7N44BACDZA:B6cKWtg9t24ej4DljrlsMnkgtdg=
+
+
+===RESPONSE 258
+HTTP/1.1 200
+x-amz-request-id: D72B3AB3755D34E3
+etag: "d41d8cd98f00b204e9800998ecf8427e"
+date: Sun, 28 Jun 2015 21:07:51 GMT
+x-amz-id-2: 4MEDTSaUXJ7J70JfbXTcfI2m1qoriY+OEOxVAmj2oARpllZTI+vCT52o9FZnVUzJzkchRL407nI=
+content-length: 0
+server: AmazonS3
+
+
+===REQUEST 371
+PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_versions_updated_at/foo_versions_updated_at-2.0.0.crate HTTP/1.1
+Accept: */*
+Proxy-Connection: Keep-Alive
+Date: Sun, 28 Jun 2015 14:07:18 -0700
+Content-Type: application/x-tar
+Content-Length: 0
+Host: alexcrichton-test.s3.amazonaws.com
+Authorization: AWS AKIAJF3GEK7N44BACDZA:B6cKWtg9t24ej4DljrlsMnkgtdg=
+
+
+===RESPONSE 258
+HTTP/1.1 200
+x-amz-request-id: D72B3AB3755D34E3
+etag: "d41d8cd98f00b204e9800998ecf8427e"
+date: Sun, 28 Jun 2015 21:07:51 GMT
+x-amz-id-2: 4MEDTSaUXJ7J70JfbXTcfI2m1qoriY+OEOxVAmj2oARpllZTI+vCT52o9FZnVUzJzkchRL407nI=
+content-length: 0
+server: AmazonS3
+
+

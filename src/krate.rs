@@ -548,6 +548,26 @@ impl Crate {
 }
 
 /// Handles the `GET /crates` route.
+/// Returns a list of crates. Called in a variety of scenarios in the
+/// front end, including:
+/// - Alphabetical listing of crates
+/// - List of crates under a specific owner
+/// - Listing a user's followed crates
+///
+/// Notes:
+/// The different use cases this function covers is handled through passing
+/// in parameters in the GET request.
+///
+/// We would like to stop adding functionality in here. It was built like
+/// this to keep the number of database queries low, though given Rust's
+/// low performance overhead, this is a soft goal to have, and can afford
+/// more database transactions if it aids understandability.
+///
+/// All of the edge cases for this function are not currently covered
+/// in testing, and if they fail, it is difficult to determine what
+/// caused the break. In the future, we should look at splitting this
+/// function out to cover the different use cases, and create unit tests
+/// for them.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
     use diesel::types::{Bool, BigInt, Nullable};
@@ -676,6 +696,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
+    // The database query returns a tuple within a tuple , with the root
+    // tuple containing 3 items.
     let data = query
         .paginate(limit, offset)
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
@@ -863,6 +885,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /crates/new` route.
+/// Used by `cargo publish` to publish a new crate or to publish a new version of an
+/// existing crate.
+///
+/// Currently blocks the HTTP thread, perhaps some function calls can spawn new
+/// threads and return completion or error through other methods  a `cargo publish
+/// --status` command, via crates.io's front end, or email.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
     let (new_crate, user) = parse_new_headers(req)?;
@@ -889,6 +917,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let categories: Vec<_> = categories.iter().map(|k| &**k).collect();
 
     let conn = req.db_conn()?;
+    // Create a transaction on the database, if there are no errors,
+    // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
@@ -1012,6 +1042,11 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     })
 }
 
+/// Used by the `krate::new` function.
+///
+/// This function parses the JSON headers to interpret the data and validates
+/// the data during and after the parsing. Returns crate metadata and user
+/// information.
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
     // Read the json upload request
     let amt = read_le_u32(req.body())? as u64;

@@ -19,7 +19,7 @@ use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::owner::EncodableOwner;
-use cargo_registry::schema::versions;
+use cargo_registry::schema::{versions, crates};
 
 use cargo_registry::upload as u;
 use cargo_registry::user::EncodablePublicUser;
@@ -461,6 +461,44 @@ fn versions() {
     assert_eq!(json.versions[0].num, "1.0.0");
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+}
+
+#[test]
+fn uploading_new_version_touches_crate() {
+    use diesel::expression::dsl::*;
+
+    let (_b, app, middle) = ::app();
+
+    let mut upload_req = ::new_req(app.clone(), "foo_versions_updated_at", "1.0.0");
+    let u = ::sign_in(&mut upload_req, &app);
+    ok_resp!(middle.call(&mut upload_req));
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        diesel::update(crates::table)
+            .set(crates::updated_at.eq(crates::updated_at - 1.hour()))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+    let mut show_req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/foo_versions_updated_at",
+    );
+    let mut response = ok_resp!(middle.call(&mut show_req));
+    let json: CrateResponse = ::json(&mut response);
+    let updated_at_before = json.krate.updated_at;
+
+    let mut upload_req = ::new_req(app.clone(), "foo_versions_updated_at", "2.0.0");
+    ::sign_in_as(&mut upload_req, &u);
+    ok_resp!(middle.call(&mut upload_req));
+
+    let mut response = ok_resp!(middle.call(&mut show_req));
+    let json: CrateResponse = ::json(&mut response);
+    let updated_at_after = json.krate.updated_at;
+
+    assert_ne!(updated_at_before, updated_at_after);
 }
 
 #[test]

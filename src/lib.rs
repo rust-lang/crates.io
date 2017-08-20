@@ -148,11 +148,14 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(version::downloads),
     );
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
+    // Used to generate download graphs
     api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
+    // This endpoint may now be redundant, check frontend to see if it is
+    // being used
     api_router.get("/crates/:crate_id/owners", C(krate::owners));
     api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
     api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));

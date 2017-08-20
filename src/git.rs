@@ -73,6 +73,10 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
     })
 }
 
+/// Yanks or unyanks a crate version. This requires finding the index
+/// file, deserlialise the crate from JSON, change the yank boolean to
+/// `true` or `false`, write all the lines back out, and commit and
+/// push the changes.
 pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> CargoResult<()> {
     let repo = app.git_repo.lock().unwrap();
     let repo_path = repo.workdir().unwrap();
@@ -112,6 +116,22 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
     })
 }
 
+/// Commits and pushes to the crates.io index.
+///
+/// There are currently 2 instances of the crates.io backend running
+/// on Heroku, and they race against each other e.g. if 2 pushes occur,
+/// then one will succeed while the other will need to be rebased before
+/// being pushed.
+///
+/// A maximum of 20 attempts to commit and push to the index currently
+/// accounts for the amount of traffic publishing crates, though this may
+/// have to be changed in the future.
+///
+/// Notes:
+/// Currently, this function is called on the HTTP thread and is blocking.
+/// Spawning a separate thread for this function means that the request
+/// can return without waiting for completion, and other methods of
+/// notifying upon completion or error can be used.
 fn commit_and_push<F>(repo: &git2::Repository, mut f: F) -> CargoResult<()>
 where
     F: FnMut() -> CargoResult<(String, PathBuf)>,
