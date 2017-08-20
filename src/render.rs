@@ -1,6 +1,5 @@
 use ammonia::Ammonia;
-use pulldown_cmark::Parser;
-use pulldown_cmark::html;
+use comrak;
 
 use util::CargoResult;
 
@@ -24,12 +23,13 @@ impl<'a> MarkdownRenderer<'a> {
             "dl",
             "dt",
             "em",
-            "i",
             "h1",
             "h2",
             "h3",
             "hr",
+            "i",
             "img",
+            "input",
             "kbd",
             "li",
             "ol",
@@ -61,6 +61,10 @@ impl<'a> MarkdownRenderer<'a> {
                     .cloned()
                     .collect(),
             ),
+            (
+                "input",
+                ["checked", "disabled", "type"].iter().cloned().collect(),
+            ),
         ].iter()
             .cloned()
             .collect();
@@ -75,9 +79,9 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     pub fn to_html(&self, text: &str) -> CargoResult<String> {
-        let mut rendered = String::with_capacity(text.len() * 3 / 2);
-        let parser = Parser::new(text);
-        html::push_html(&mut rendered, parser);
+        let mut options = comrak::ComrakOptions::default();
+        options.ext_tasklist = true;
+        let rendered = comrak::markdown_to_html(text, &options);
         Ok(self.html_sanitizer.clean(&rendered))
     }
 }
