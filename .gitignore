@@ -18,5 +18,3 @@ npm-debug.log
 yarn-error.log
 testem.log
 .env
-.vscode/
-.idea/
