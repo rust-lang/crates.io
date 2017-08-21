@@ -39,12 +39,12 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    Maintenance { value: MaintenanceValue },
+    Maintenance { status: MaintenanceStatus },
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum MaintenanceValue {
+pub enum MaintenanceStatus {
     ActivelyDeveloped,
     PassivelyMaintained,
     AsIs,
