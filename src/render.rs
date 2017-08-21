@@ -79,13 +79,14 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     pub fn to_html(&self, text: &str) -> CargoResult<String> {
-        let mut options = comrak::ComrakOptions::default();
-        options.ext_autolink = true;
-        options.ext_strikethrough = true;
-        options.ext_table = true;
-        options.ext_tagfilter = true;
-        options.ext_tasklist = true;
-
+        let options = comrak::ComrakOptions {
+            ext_autolink: true,
+            ext_strikethrough: true,
+            ext_table: true,
+            ext_tagfilter: true,
+            ext_tasklist: true,
+            ..comrak::ComrakOptions::default()
+        };
         let rendered = comrak::markdown_to_html(text, &options);
         Ok(self.html_sanitizer.clean(&rendered))
     }
