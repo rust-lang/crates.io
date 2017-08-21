@@ -1263,6 +1263,61 @@ fn following() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
 }
 
+// Ensures that so long as at least one owner remains associated with the crate,
+// a user can still remove their own login as an owner
+#[test]
+fn owners_can_remove_self() {
+    #[derive(Deserialize)]
+    struct R {
+        users: Vec<EncodablePublicUser>,
+    }
+    #[derive(Deserialize)]
+    struct O {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/owners_selfremove/owners",
+    );
+    {
+        let conn = app.diesel_database.get().unwrap();
+        ::new_user("secondowner").create_or_update(&conn).unwrap();
+        let user = ::new_user("firstowner").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        ::CrateBuilder::new("owners_selfremove", user.id).expect_build(&conn);
+    }
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 1);
+
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
+    let r: R = ::json(&mut response);
+    assert_eq!(r.users.len(), 1);
+
+    let body = r#"{"users":["secondowner"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
+        body.as_bytes(),
+    )));
+    assert!(::json::<O>(&mut response).ok);
+
+    // This is a self delete from owners
+    let body = r#"{"users":["firstowner"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
+        body.as_bytes(),
+    )));
+    assert!(::json::<O>(&mut response).ok);
+
+    let body = r#"{"users":["secondowner"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
+        body.as_bytes(),
+    )));
+    ::json::<::Bad>(&mut response);
+}
+
 #[test]
 fn owners() {
     #[derive(Deserialize)]
