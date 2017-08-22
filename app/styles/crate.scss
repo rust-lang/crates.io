@@ -313,6 +313,13 @@
         pre {
             overflow-x: auto;
         }
+
+        p {
+            code {
+                background-color: #fff;
+                padding: 0 2px;
+            }
+        }
     }
     .last-update {
         color: $main-color-light;
