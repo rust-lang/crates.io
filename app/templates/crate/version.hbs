@@ -95,6 +95,13 @@
             <div class="crate-readme">
                 {{crate-readme rendered=crate.readme}}
             </div>
+        {{else}}
+            {{#if crate.description}}
+                <div class='about'>
+                    <h3>About This Package</h3>
+                    <p>{{ crate.description }}</p>
+                </div>
+            {{/if}}
         {{/if}}
     </div>
     <div class='authorship'>
