@@ -8,7 +8,7 @@ online at [crates.io](https://crates.io).
 ## Status of crates.io
 
 Any known issues currently affecting the registry running at https://crates.io
-will be posted to [@cratesiostatus](https://twitter.com/cratesiostatus).
+will be posted to [@RustStatus](https://twitter.com/ruststatus).
 
 If you are experiencing an issue not addressed there, please contact us in one
 of the following ways:
