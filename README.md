@@ -8,7 +8,7 @@ online at [crates.io](https://crates.io).
 ## Status of crates.io
 
 Any known issues currently affecting the registry running at https://crates.io
-will be posted to [@cratesiostatus](https://twitter.com/cratesiostatus).
+will be posted to [@RustStatus](https://twitter.com/ruststatus).
 
 If you are experiencing an issue not addressed there, please contact us in one
 of the following ways:
@@ -27,6 +27,12 @@ variety of skill levels.
 
 Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
 environment.
+
+<a href="https://www.browserstack.com">
+    <img src="browserstack-logo.png" alt="BrowserStack" />
+</a>
+
+We also use [BrowserStack](https://www.browserstack.com) to help us verify that the frontend works in all of our supported browsers. Thanks, BrowserStack!
 
 ### Categories
 
