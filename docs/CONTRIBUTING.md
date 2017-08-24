@@ -402,10 +402,10 @@ sense as a name for this flag](https://github.com/rust-lang/cargo/issues/3797).
 
 Note that when you're running crates.io in development mode without the S3
 variables set (which is what we've done in these setup steps), the crate files
-will be stored in `dist/local_uploads/crates` and served from there when a
-crate is downloaded. This directory gets cleared out if you stop and restart
-the frontend. If you try to install a crate from your local crates.io and
-`cargo` can't find the crate files, that's probably why.
+will be stored in `local_uploads/crates` and served from there when a
+crate is downloaded.  If you try to install a crate from your local crates.io and
+`cargo` can't find the crate files, it is probably because this directory does not
+exist.
 
 ##### Downloading a crate from your local crates.io
 
