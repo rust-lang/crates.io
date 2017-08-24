@@ -1092,6 +1092,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
 }
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
+/// This returns a URL to the location where the crate is stored.
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
