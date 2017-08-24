@@ -1,0 +1,3 @@
+DROP TRIGGER trigger_ensure_single_crate_owner_invitation ON crate_owner_invitations;
+DROP FUNCTION ensure_single_crate_owner_invitation();
+DROP TABLE crate_owner_invitations;
