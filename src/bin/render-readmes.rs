@@ -212,7 +212,7 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
 
 /// Search an entry by its path in a Tar archive.
 fn find_file_by_path<R: Read>(
-    mut entries: &mut tar::Entries<R>,
+    entries: &mut tar::Entries<R>,
     path: &Path,
     version: &EncodableVersion,
 ) -> String {
