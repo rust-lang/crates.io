@@ -96,6 +96,7 @@ pub mod user;
 pub mod util;
 pub mod version;
 
+mod local_upload;
 mod pagination;
 
 /// Used for setting different values depending on whether the app is being run in production,
@@ -217,6 +218,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env == Env::Development {
         // DebugMiddleware is defined below to print logs for each request.
         m.add(DebugMiddleware);
+        m.around(local_upload::Middleware::default());
     }
 
     if env != Env::Test {

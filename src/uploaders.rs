@@ -52,7 +52,7 @@ impl Uploader {
             }
             Uploader::Local => {
                 Some(format!(
-                    "/local_uploads/{}",
+                    "/{}",
                     Uploader::crate_path(crate_name, version)
                 ))
             }
@@ -75,7 +75,7 @@ impl Uploader {
             }
             Uploader::Local => {
                 Some(format!(
-                    "/local_uploads/{}",
+                    "/{}",
                     Uploader::readme_path(crate_name, version)
                 ))
             }
@@ -138,7 +138,6 @@ impl Uploader {
             Uploader::Local => {
                 let filename = env::current_dir()
                     .unwrap()
-                    .join("dist")
                     .join("local_uploads")
                     .join(path);
                 let dir = filename.parent().unwrap();
