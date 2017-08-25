@@ -54,11 +54,9 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     let config: Config = Default::default();
     let conn = cargo_registry::db::connect_now().unwrap();
-    let versions_count = versions::table
-        .select(versions::all_columns)
-        .count()
-        .get_result::<i64>(&conn)
-        .expect("error counting versions");
+    let versions_count = versions::table.count().get_result::<i64>(&conn).expect(
+        "error counting versions",
+    );
 
     let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
 
