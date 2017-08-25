@@ -9,10 +9,12 @@
 extern crate serde_derive;
 
 extern crate cargo_registry;
+extern crate chrono;
 extern crate curl;
 extern crate diesel;
 extern crate docopt;
 extern crate flate2;
+extern crate itertools;
 extern crate s3;
 extern crate tar;
 extern crate time;
@@ -20,9 +22,12 @@ extern crate toml;
 extern crate url;
 
 use curl::easy::{Easy, List};
+use chrono::{Utc, TimeZone};
 use diesel::prelude::*;
+use diesel::expression::any;
 use docopt::Docopt;
 use flate2::read::GzDecoder;
+use itertools::Itertools;
 use std::io::{Cursor, Read};
 use std::path::Path;
 use std::thread;
@@ -33,7 +38,7 @@ use cargo_registry::{Config, Version};
 use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
 
-const DEFAULT_PAGE_SIZE: i64 = 25;
+const DEFAULT_PAGE_SIZE: usize = 25;
 const USAGE: &'static str = "
 Usage: render-readmes [options]
        render-readmes --help
@@ -41,11 +46,13 @@ Usage: render-readmes [options]
 Options:
     -h, --help         Show this message.
     --page-size NUM    How many versions should be queried and processed at a time.
+    --older-than DATE  Only rerender readmes that are older than this date.
 ";
 
 #[derive(Deserialize)]
 struct Args {
-    flag_page_size: Option<i64>,
+    flag_page_size: Option<usize>,
+    flag_older_than: Option<String>,
 }
 
 fn main() {
@@ -54,25 +61,50 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
     let config: Config = Default::default();
     let conn = cargo_registry::db::connect_now().unwrap();
-    let versions_count = versions::table.count().get_result::<i64>(&conn).expect(
-        "error counting versions",
-    );
+
+    let start_time = Utc::now();
+
+    let older_than = if let Some(ref time) = args.flag_older_than {
+        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S")
+            .expect("Could not parse --older-than argument as a time")
+    } else {
+        start_time
+    };
+    let older_than = older_than.naive_utc();
+
+    println!("Start time:                   {}", start_time);
+    println!("Rendering readmes older than: {}", older_than);
+
+    let version_ids = versions::table
+        .inner_join(readme_rendering::table)
+        .filter(readme_rendering::rendered_at.lt(older_than))
+        .select(versions::id)
+        .load::<(i32)>(&conn)
+        .expect("error loading version ids");
+
+    let total_versions = version_ids.len();
+    println!("Rendering {} versions", total_versions);
 
     let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
 
-    let pages = if versions_count % page_size == 0 {
-        versions_count / page_size
-    } else {
-        versions_count / page_size + 1
-    };
-    for current_page in 0..pages {
-        let versions: Vec<(Version, String)> = versions::table
+    let total_pages = total_versions / page_size;
+    let total_pages = if total_versions % page_size == 0 { total_pages } else { total_pages + 1 };
+
+    let mut page_num = 0;
+
+    for version_ids_chunk in &version_ids.into_iter().chunks(page_size) {
+        page_num += 1;
+        println!("= Page {} of {} ==================================", page_num, total_pages);
+
+        let ids: Vec<_> = version_ids_chunk.collect();
+
+        let versions = versions::table
             .inner_join(crates::table)
+            .filter(versions::id.eq(any(ids)))
             .select((versions::all_columns, crates::name))
-            .limit(page_size)
-            .offset(current_page * page_size)
             .load::<(Version, String)>(&conn)
             .expect("error loading versions");
+
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
             let config = config.clone();

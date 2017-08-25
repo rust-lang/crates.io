@@ -24,6 +24,7 @@ use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, human};
 use license_exprs;
 
+// Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
 pub struct Version {
@@ -71,8 +72,10 @@ pub struct VersionLinks {
     pub authors: String,
 }
 
-#[derive(Insertable, Debug, Clone, Copy)]
+#[derive(Insertable, Identifiable, Queryable, Associations, Debug, Clone, Copy)]
+#[belongs_to(Version)]
 #[table_name = "readme_rendering"]
+#[primary_key(version_id)]
 struct ReadmeRendering {
     version_id: i32,
     rendered_at: Timespec,
