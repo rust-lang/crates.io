@@ -8,6 +8,7 @@
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
+#![recursion_limit="128"]
 
 #[macro_use]
 extern crate diesel;
