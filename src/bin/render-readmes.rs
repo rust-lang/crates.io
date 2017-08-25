@@ -33,7 +33,6 @@ use tar::Archive;
 use url::Url;
 
 use cargo_registry::{Config, Version};
-use cargo_registry::version::EncodableVersion;
 use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
 
@@ -57,32 +56,25 @@ fn main() {
         versions_count / page_size + 1
     };
     for current_page in 0..pages {
-        let versions: Vec<EncodableVersion> = versions::table
+        let versions: Vec<(Version, String)> = versions::table
             .inner_join(crates::table)
             .select((versions::all_columns, crates::name))
             .limit(page_size)
             .offset(current_page * page_size)
             .load::<(Version, String)>(&conn)
-            .expect("error loading versions")
-            .into_iter()
-            .map(|(version, crate_name)| version.encodable(&crate_name))
-            .collect();
+            .expect("error loading versions");
         let mut tasks = Vec::with_capacity(page_size as usize);
-        for version in versions {
+        for (version, krate_name) in versions {
             let config = config.clone();
             let handle = thread::spawn(move || {
-                println!("[{}-{}] Rendering README...", version.krate, version.num);
-                let readme = get_readme(&config, &version);
+                println!("[{}-{}] Rendering README...", krate_name, version.num);
+                let readme = get_readme(&config, &version, &krate_name);
                 if readme.is_none() {
                     return;
                 }
                 let readme = readme.unwrap();
-                let readme_path = format!(
-                    "readmes/{}/{}-{}.html",
-                    version.krate,
-                    version.krate,
-                    version.num
-                );
+                let readme_path =
+                    format!("readmes/{}/{}-{}.html", krate_name, krate_name, version.num);
                 let readme_len = readme.len();
                 let mut body = Cursor::new(readme.into_bytes());
                 config
@@ -96,7 +88,7 @@ fn main() {
                     )
                     .expect(&format!(
                         "[{}-{}] Couldn't upload file to S3",
-                        version.krate,
+                        krate_name,
                         version.num
                     ));
             });
@@ -104,23 +96,26 @@ fn main() {
         }
         for handle in tasks {
             if let Err(err) = handle.join() {
-                println!("Thead panicked: {:?}", err);
+                println!("Thread panicked: {:?}", err);
             }
         }
     }
 }
 
 /// Renders the readme of an uploaded crate version.
-fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
+fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
     let mut handle = Easy::new();
-    let location = match config.uploader.crate_location(&version.krate, &version.num) {
+    let location = match config.uploader.crate_location(
+        &krate_name,
+        &version.num.to_string(),
+    ) {
         Some(l) => l,
         None => return None,
     };
     let date = time::now().rfc822z().to_string();
     let url = Url::parse(&location).expect(&format!(
         "[{}-{}] Couldn't parse crate URL",
-        version.krate,
+        krate_name,
         version.num
     ));
 
@@ -144,7 +139,7 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
         if let Err(err) = req.perform() {
             println!(
                 "[{}-{}] Unable to fetch crate: {}",
-                version.krate,
+                krate_name,
                 version.num,
                 err
             );
@@ -155,7 +150,7 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
         let response = String::from_utf8_lossy(&response);
         println!(
             "[{}-{}] Failed to get a 200 response: {}",
-            version.krate,
+            krate_name,
             version.num,
             response
         );
@@ -164,21 +159,21 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let reader = Cursor::new(response);
     let reader = GzDecoder::new(reader).expect(&format!(
         "[{}-{}] Invalid gzip header",
-        version.krate,
+        krate_name,
         version.num
     ));
     let mut archive = Archive::new(reader);
     let mut entries = archive.entries().expect(&format!(
         "[{}-{}] Invalid tar archive entries",
-        version.krate,
+        krate_name,
         version.num
     ));
     let manifest: Manifest = {
-        let path = format!("{}-{}/Cargo.toml", version.krate, version.num);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
+        let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
         toml::from_str(&contents).expect(&format!(
             "[{}-{}] Syntax error in manifest file",
-            version.krate,
+            krate_name,
             version.num
         ))
     };
@@ -188,14 +183,14 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let rendered = {
         let path = format!(
             "{}-{}/{}",
-            version.krate,
+            krate_name,
             version.num,
             manifest.package.readme.unwrap()
         );
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
         markdown_to_html(&contents).expect(&format!(
             "[{}-{}] Couldn't render README",
-            version.krate,
+            krate_name,
             version.num
         ))
     };
@@ -214,7 +209,8 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<R>,
     path: &Path,
-    version: &EncodableVersion,
+    version: &Version,
+    krate_name: &str,
 ) -> String {
     let mut file = entries
         .find(|entry| match *entry {
@@ -229,20 +225,20 @@ fn find_file_by_path<R: Read>(
         })
         .expect(&format!(
             "[{}-{}] couldn't open file: {}",
-            version.krate,
+            krate_name,
             version.num,
             path.display()
         ))
         .expect(&format!(
             "[{}-{}] file is not present: {}",
-            version.krate,
+            krate_name,
             version.num,
             path.display()
         ));
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect(&format!(
         "[{}-{}] Couldn't read file contents",
-        version.krate,
+        krate_name,
         version.num
     ));
     contents
