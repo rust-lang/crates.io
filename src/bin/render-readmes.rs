@@ -66,6 +66,11 @@ fn main() {
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
             let config = config.clone();
+            version.record_readme_rendering(&conn).expect(&format!(
+                "[{}-{}] Couldn't record rendering time",
+                krate_name,
+                version.num
+            ));
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(&config, &version, &krate_name);

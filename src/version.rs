@@ -4,6 +4,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
 use diesel::pg::{Pg, PgConnection};
+use diesel::pg::upsert::*;
 use diesel::prelude::*;
 use semver;
 use serde_json;
@@ -70,6 +71,13 @@ pub struct VersionLinks {
     pub authors: String,
 }
 
+#[derive(Insertable, Debug, Clone, Copy)]
+#[table_name = "readme_rendering"]
+struct ReadmeRendering {
+    version_id: i32,
+    rendered_at: Timespec,
+}
+
 impl Version {
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version {
@@ -126,6 +134,26 @@ impl Version {
                 build: vec![],
             }
         })
+    }
+
+    pub fn record_readme_rendering(&self, conn: &PgConnection) -> CargoResult<()> {
+        let rendered = ReadmeRendering {
+            version_id: self.id,
+            rendered_at: ::now(),
+        };
+
+        diesel::insert(&rendered.on_conflict(
+            readme_rendering::version_id,
+            do_update().set(
+                (readme_rendering::rendered_at.eq(
+                    excluded(
+                        readme_rendering::rendered_at,
+                    ),
+                )),
+            ),
+        )).into(readme_rendering::table)
+            .execute(&*conn)?;
+        Ok(())
     }
 }
 
