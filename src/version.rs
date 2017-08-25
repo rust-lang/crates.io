@@ -152,11 +152,11 @@ impl Version {
         diesel::insert(&rendered.on_conflict(
             readme_rendering::version_id,
             do_update().set(
-                (readme_rendering::rendered_at.eq(
+                readme_rendering::rendered_at.eq(
                     excluded(
                         readme_rendering::rendered_at,
                     ),
-                )),
+                ),
             ),
         )).into(readme_rendering::table)
             .execute(&*conn)?;
