@@ -47,12 +47,14 @@ Options:
     -h, --help         Show this message.
     --page-size NUM    How many versions should be queried and processed at a time.
     --older-than DATE  Only rerender readmes that are older than this date.
+    --crate NAME       Only rerender readmes for the specified crate.
 ";
 
 #[derive(Deserialize)]
 struct Args {
     flag_page_size: Option<usize>,
     flag_older_than: Option<String>,
+    flag_crate: Option<String>,
 }
 
 fn main() {
@@ -65,8 +67,9 @@ fn main() {
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = args.flag_older_than {
-        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S")
-            .expect("Could not parse --older-than argument as a time")
+        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S").expect(
+            "Could not parse --older-than argument as a time",
+        )
     } else {
         start_time
     };
@@ -75,12 +78,21 @@ fn main() {
     println!("Start time:                   {}", start_time);
     println!("Rendering readmes older than: {}", older_than);
 
-    let version_ids = versions::table
+    let mut query = versions::table
         .inner_join(readme_rendering::table)
+        .inner_join(crates::table)
         .filter(readme_rendering::rendered_at.lt(older_than))
         .select(versions::id)
-        .load::<(i32)>(&conn)
-        .expect("error loading version ids");
+        .into_boxed();
+
+    if let Some(crate_name) = args.flag_crate {
+        println!("Rendering readmes for {}", crate_name);
+        query = query.filter(crates::name.eq(crate_name));
+    }
+
+    let version_ids = query.load::<(i32)>(&conn).expect(
+        "error loading version ids",
+    );
 
     let total_versions = version_ids.len();
     println!("Rendering {} versions", total_versions);
@@ -88,13 +100,21 @@ fn main() {
     let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
 
     let total_pages = total_versions / page_size;
-    let total_pages = if total_versions % page_size == 0 { total_pages } else { total_pages + 1 };
+    let total_pages = if total_versions % page_size == 0 {
+        total_pages
+    } else {
+        total_pages + 1
+    };
 
     let mut page_num = 0;
 
     for version_ids_chunk in &version_ids.into_iter().chunks(page_size) {
         page_num += 1;
-        println!("= Page {} of {} ==================================", page_num, total_pages);
+        println!(
+            "= Page {} of {} ==================================",
+            page_num,
+            total_pages
+        );
 
         let ids: Vec<_> = version_ids_chunk.collect();
 

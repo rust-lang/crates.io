@@ -24,6 +24,10 @@ use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, human};
 use license_exprs;
 
+// This is necessary to allow joining version to both crates and readme_rendering
+// in the render-readmes script.
+enable_multi_table_joins!(crates, readme_rendering);
+
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
