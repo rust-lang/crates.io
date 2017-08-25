@@ -2,10 +2,6 @@
 // readme using the Markdown renderer from the cargo_registry crate.
 //
 // Warning: this can take a lot of time.
-//
-// Usage:
-//     cargo run --bin render-readmes [page-size: optional = 25]
-// The page-size argument dictate how much versions should be queried and processed at once.
 
 #![deny(warnings)]
 
@@ -15,6 +11,7 @@ extern crate serde_derive;
 extern crate cargo_registry;
 extern crate curl;
 extern crate diesel;
+extern crate docopt;
 extern crate flate2;
 extern crate s3;
 extern crate tar;
@@ -24,8 +21,8 @@ extern crate url;
 
 use curl::easy::{Easy, List};
 use diesel::prelude::*;
+use docopt::Docopt;
 use flate2::read::GzDecoder;
-use std::env;
 use std::io::{Cursor, Read};
 use std::path::Path;
 use std::thread;
@@ -37,8 +34,24 @@ use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
 
 const DEFAULT_PAGE_SIZE: i64 = 25;
+const USAGE: &'static str = "
+Usage: render-readmes [options]
+       render-readmes --help
+
+Options:
+    -h, --help         Show this message.
+    --page-size NUM    How many versions should be queried and processed at a time.
+";
+
+#[derive(Deserialize)]
+struct Args {
+    flag_page_size: Option<i64>,
+}
 
 fn main() {
+    let args: Args = Docopt::new(USAGE)
+        .and_then(|d| d.deserialize())
+        .unwrap_or_else(|e| e.exit());
     let config: Config = Default::default();
     let conn = cargo_registry::db::connect_now().unwrap();
     let versions_count = versions::table
@@ -46,10 +59,9 @@ fn main() {
         .count()
         .get_result::<i64>(&conn)
         .expect("error counting versions");
-    let page_size = match env::args().nth(1) {
-        None => DEFAULT_PAGE_SIZE,
-        Some(s) => s.parse::<i64>().unwrap_or(DEFAULT_PAGE_SIZE),
-    };
+
+    let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
+
     let pages = if versions_count % page_size == 0 {
         versions_count / page_size
     } else {
