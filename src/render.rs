@@ -1,6 +1,5 @@
 use ammonia::Ammonia;
-use pulldown_cmark::Parser;
-use pulldown_cmark::html;
+use comrak;
 
 use util::CargoResult;
 
@@ -24,12 +23,13 @@ impl<'a> MarkdownRenderer<'a> {
             "dl",
             "dt",
             "em",
-            "i",
             "h1",
             "h2",
             "h3",
             "hr",
+            "i",
             "img",
+            "input",
             "kbd",
             "li",
             "ol",
@@ -61,6 +61,10 @@ impl<'a> MarkdownRenderer<'a> {
                     .cloned()
                     .collect(),
             ),
+            (
+                "input",
+                ["checked", "disabled", "type"].iter().cloned().collect(),
+            ),
         ].iter()
             .cloned()
             .collect();
@@ -75,9 +79,15 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     pub fn to_html(&self, text: &str) -> CargoResult<String> {
-        let mut rendered = String::with_capacity(text.len() * 3 / 2);
-        let parser = Parser::new(text);
-        html::push_html(&mut rendered, parser);
+        let options = comrak::ComrakOptions {
+            ext_autolink: true,
+            ext_strikethrough: true,
+            ext_table: true,
+            ext_tagfilter: true,
+            ext_tasklist: true,
+            ..comrak::ComrakOptions::default()
+        };
+        let rendered = comrak::markdown_to_html(text, &options);
         Ok(self.html_sanitizer.clean(&rendered))
     }
 }
@@ -113,56 +123,44 @@ mod tests {
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered, "");
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "");
     }
 
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("script"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
+        );
     }
 
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("iframe"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
+        );
     }
 
     #[test]
-    fn text_with_unknwon_tag() {
+    fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("unknown"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("<a"), true);
-        assert_eq!(rendered.contains("href="), true);
-        assert_eq!(rendered.contains("onclick"), false);
-        assert_eq!(rendered.contains("window.alert"), false);
-        assert_eq!(rendered.contains("Crate page"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\">Crate page</a></p>\n"
+        );
     }
 }
