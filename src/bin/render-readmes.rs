@@ -106,13 +106,16 @@ fn main() {
         total_pages + 1
     };
 
-    let mut page_num = 0;
-
-    for version_ids_chunk in &version_ids.into_iter().chunks(page_size) {
-        page_num += 1;
+    for (page_num, version_ids_chunk) in
+        version_ids
+            .into_iter()
+            .chunks(page_size)
+            .into_iter()
+            .enumerate()
+    {
         println!(
             "= Page {} of {} ==================================",
-            page_num,
+            page_num + 1,
             total_pages
         );
 
