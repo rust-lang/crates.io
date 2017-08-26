@@ -7,7 +7,7 @@ export default Route.extend({
     ajax: service(),
 
     activate() {
-        this.get('ajax').request(`/logout`).then(() => {
+        this.get('ajax').delete(`/logout`).then(() => {
             run(() => {
                 this.session.logoutUser();
                 this.transitionTo('index');
