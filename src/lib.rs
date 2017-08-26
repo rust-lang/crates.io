@@ -194,7 +194,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     router.get("/authorize_url", C(user::github_authorize));
     router.get("/authorize", C(user::github_access_token));
-    router.get("/logout", C(user::logout));
+    router.delete("/logout", C(user::logout));
     router.get("/me", C(user::me));
     router.get("/me/updates", C(user::updates));
     router.get("/me/tokens", C(token::list));
