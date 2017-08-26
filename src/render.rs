@@ -123,10 +123,8 @@ mod tests {
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered, "");
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "");
     }
 
     #[test]
@@ -150,27 +148,19 @@ mod tests {
     }
 
     #[test]
-    fn text_with_unknwon_tag() {
+    fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("unknown"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("<a"), true);
-        assert_eq!(rendered.contains("href="), true);
-        assert_eq!(rendered.contains("onclick"), false);
-        assert_eq!(rendered.contains("window.alert"), false);
-        assert_eq!(rendered.contains("Crate page"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\">Crate page</a></p>\n"
+        );
     }
 }
