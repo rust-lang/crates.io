@@ -1,3 +1,5 @@
+//! This module implements middleware to serve the compiled emberjs
+//! frontend
 use std::error::Error;
 
 use conduit::{Request, Response, Handler};

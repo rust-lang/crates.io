@@ -93,6 +93,8 @@ These files are mostly only relevant when running crates.io's code in developmen
 * `.env.sample` - Example environment file checked into the repository
 * `.git/` - The git repository; not available in all deployments (e.g. Heroku)
 * `.gitignore` - Configures git to ignore certain files and folders
+* `local_uploads/` - Serves crates and readmes that are published to the
+local development environment
 * `script/init-local-index.sh` - Creates registry repositories used during development
 * `tmp/` - Temporary files created during development; when deployed on Heroku this is the only
   writable directory - (ignored in `.gitignore`)

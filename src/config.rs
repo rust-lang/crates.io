@@ -111,7 +111,9 @@ impl Default for Config {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
                     // uploader that makes it possible to run and publish to a locally-running
                     // crates.io instance without needing to set up an account and a bucket in S3.
-                    println!("Using local uploader, crate files will be in the dist directory");
+                    println!(
+                        "Using local uploader, crate files will be in the local_uploads directory"
+                    );
                     Uploader::Local
                 }
             }
