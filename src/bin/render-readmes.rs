@@ -79,9 +79,11 @@ fn main() {
     println!("Rendering readmes older than: {}", older_than);
 
     let mut query = versions::table
-        .inner_join(readme_rendering::table)
         .inner_join(crates::table)
-        .filter(readme_rendering::rendered_at.lt(older_than))
+        .left_join(readme_rendering::table)
+        .filter(readme_rendering::rendered_at.lt(older_than).or(
+            readme_rendering::rendered_at.is_null(),
+        ))
         .select(versions::id)
         .into_boxed();
 
