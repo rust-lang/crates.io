@@ -132,23 +132,21 @@ mod tests {
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("script"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
+        );
     }
 
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text);
-        assert_eq!(result.is_ok(), true);
-        let rendered = result.unwrap();
-        assert_eq!(rendered.contains("foo_readme"), true);
-        assert_eq!(rendered.contains("iframe"), false);
-        assert_eq!(rendered.contains("alert('Hello World')"), true);
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(
+            result,
+            "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
+        );
     }
 
     #[test]
