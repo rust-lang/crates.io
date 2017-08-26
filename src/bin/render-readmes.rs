@@ -143,8 +143,7 @@ fn main() {
                     return;
                 }
                 let readme = readme.unwrap();
-                let readme_path =
-                    format!("readmes/{}/{}-{}.html", krate_name, krate_name, version.num);
+                let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 let readme_len = readme.len();
                 let mut body = Cursor::new(readme.into_bytes());
                 config
