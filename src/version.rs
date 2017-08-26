@@ -4,6 +4,7 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
 use diesel::pg::{Pg, PgConnection};
+use diesel::pg::upsert::*;
 use diesel::prelude::*;
 use semver;
 use serde_json;
@@ -23,6 +24,11 @@ use util::errors::CargoError;
 use util::{RequestUtils, CargoResult, human};
 use license_exprs;
 
+// This is necessary to allow joining version to both crates and readme_rendering
+// in the render-readmes script.
+enable_multi_table_joins!(crates, readme_rendering);
+
+// Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
 pub struct Version {
@@ -68,6 +74,15 @@ pub struct VersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
+}
+
+#[derive(Insertable, Identifiable, Queryable, Associations, Debug, Clone, Copy)]
+#[belongs_to(Version)]
+#[table_name = "readme_rendering"]
+#[primary_key(version_id)]
+struct ReadmeRendering {
+    version_id: i32,
+    rendered_at: Timespec,
 }
 
 impl Version {
@@ -126,6 +141,24 @@ impl Version {
                 build: vec![],
             }
         })
+    }
+
+    pub fn record_readme_rendering(&self, conn: &PgConnection) -> CargoResult<()> {
+        let rendered = ReadmeRendering {
+            version_id: self.id,
+            rendered_at: ::now(),
+        };
+
+        diesel::insert(&rendered.on_conflict(
+            readme_rendering::version_id,
+            do_update().set(readme_rendering::rendered_at.eq(
+                excluded(
+                    readme_rendering::rendered_at,
+                ),
+            )),
+        )).into(readme_rendering::table)
+            .execute(&*conn)?;
+        Ok(())
     }
 }
 

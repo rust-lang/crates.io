@@ -998,6 +998,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             max,
             vers,
         )?;
+        version.record_readme_rendering(&conn)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {

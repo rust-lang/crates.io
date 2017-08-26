@@ -2,10 +2,6 @@
 // readme using the Markdown renderer from the cargo_registry crate.
 //
 // Warning: this can take a lot of time.
-//
-// Usage:
-//     cargo run --bin render-readmes [page-size: optional = 25]
-// The page-size argument dictate how much versions should be queried and processed at once.
 
 #![deny(warnings)]
 
@@ -13,9 +9,12 @@
 extern crate serde_derive;
 
 extern crate cargo_registry;
+extern crate chrono;
 extern crate curl;
 extern crate diesel;
+extern crate docopt;
 extern crate flate2;
+extern crate itertools;
 extern crate s3;
 extern crate tar;
 extern crate time;
@@ -23,9 +22,12 @@ extern crate toml;
 extern crate url;
 
 use curl::easy::{Easy, List};
+use chrono::{Utc, TimeZone};
 use diesel::prelude::*;
+use diesel::expression::any;
+use docopt::Docopt;
 use flate2::read::GzDecoder;
-use std::env;
+use itertools::Itertools;
 use std::io::{Cursor, Read};
 use std::path::Path;
 use std::thread;
@@ -33,56 +35,115 @@ use tar::Archive;
 use url::Url;
 
 use cargo_registry::{Config, Version};
-use cargo_registry::version::EncodableVersion;
 use cargo_registry::schema::*;
 use cargo_registry::render::markdown_to_html;
 
-const DEFAULT_PAGE_SIZE: i64 = 25;
+const DEFAULT_PAGE_SIZE: usize = 25;
+const USAGE: &'static str = "
+Usage: render-readmes [options]
+       render-readmes --help
+
+Options:
+    -h, --help         Show this message.
+    --page-size NUM    How many versions should be queried and processed at a time.
+    --older-than DATE  Only rerender readmes that are older than this date.
+    --crate NAME       Only rerender readmes for the specified crate.
+";
+
+#[derive(Deserialize)]
+struct Args {
+    flag_page_size: Option<usize>,
+    flag_older_than: Option<String>,
+    flag_crate: Option<String>,
+}
 
 fn main() {
+    let args: Args = Docopt::new(USAGE)
+        .and_then(|d| d.deserialize())
+        .unwrap_or_else(|e| e.exit());
     let config: Config = Default::default();
     let conn = cargo_registry::db::connect_now().unwrap();
-    let versions_count = versions::table
-        .select(versions::all_columns)
-        .count()
-        .get_result::<i64>(&conn)
-        .expect("error counting versions");
-    let page_size = match env::args().nth(1) {
-        None => DEFAULT_PAGE_SIZE,
-        Some(s) => s.parse::<i64>().unwrap_or(DEFAULT_PAGE_SIZE),
-    };
-    let pages = if versions_count % page_size == 0 {
-        versions_count / page_size
+
+    let start_time = Utc::now();
+
+    let older_than = if let Some(ref time) = args.flag_older_than {
+        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S").expect(
+            "Could not parse --older-than argument as a time",
+        )
     } else {
-        versions_count / page_size + 1
+        start_time
     };
-    for current_page in 0..pages {
-        let versions: Vec<EncodableVersion> = versions::table
-            .inner_join(crates::table)
-            .select((versions::all_columns, crates::name))
-            .limit(page_size)
-            .offset(current_page * page_size)
-            .load::<(Version, String)>(&conn)
-            .expect("error loading versions")
+    let older_than = older_than.naive_utc();
+
+    println!("Start time:                   {}", start_time);
+    println!("Rendering readmes older than: {}", older_than);
+
+    let mut query = versions::table
+        .inner_join(readme_rendering::table)
+        .inner_join(crates::table)
+        .filter(readme_rendering::rendered_at.lt(older_than))
+        .select(versions::id)
+        .into_boxed();
+
+    if let Some(crate_name) = args.flag_crate {
+        println!("Rendering readmes for {}", crate_name);
+        query = query.filter(crates::name.eq(crate_name));
+    }
+
+    let version_ids = query.load::<(i32)>(&conn).expect(
+        "error loading version ids",
+    );
+
+    let total_versions = version_ids.len();
+    println!("Rendering {} versions", total_versions);
+
+    let page_size = args.flag_page_size.unwrap_or(DEFAULT_PAGE_SIZE);
+
+    let total_pages = total_versions / page_size;
+    let total_pages = if total_versions % page_size == 0 {
+        total_pages
+    } else {
+        total_pages + 1
+    };
+
+    for (page_num, version_ids_chunk) in
+        version_ids
             .into_iter()
-            .map(|(version, crate_name)| version.encodable(&crate_name))
-            .collect();
+            .chunks(page_size)
+            .into_iter()
+            .enumerate()
+    {
+        println!(
+            "= Page {} of {} ==================================",
+            page_num + 1,
+            total_pages
+        );
+
+        let ids: Vec<_> = version_ids_chunk.collect();
+
+        let versions = versions::table
+            .inner_join(crates::table)
+            .filter(versions::id.eq(any(ids)))
+            .select((versions::all_columns, crates::name))
+            .load::<(Version, String)>(&conn)
+            .expect("error loading versions");
+
         let mut tasks = Vec::with_capacity(page_size as usize);
-        for version in versions {
+        for (version, krate_name) in versions {
             let config = config.clone();
+            version.record_readme_rendering(&conn).expect(&format!(
+                "[{}-{}] Couldn't record rendering time",
+                krate_name,
+                version.num
+            ));
             let handle = thread::spawn(move || {
-                println!("[{}-{}] Rendering README...", version.krate, version.num);
-                let readme = get_readme(&config, &version);
+                println!("[{}-{}] Rendering README...", krate_name, version.num);
+                let readme = get_readme(&config, &version, &krate_name);
                 if readme.is_none() {
                     return;
                 }
                 let readme = readme.unwrap();
-                let readme_path = format!(
-                    "readmes/{}/{}-{}.html",
-                    version.krate,
-                    version.krate,
-                    version.num
-                );
+                let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 let readme_len = readme.len();
                 let mut body = Cursor::new(readme.into_bytes());
                 config
@@ -96,7 +157,7 @@ fn main() {
                     )
                     .expect(&format!(
                         "[{}-{}] Couldn't upload file to S3",
-                        version.krate,
+                        krate_name,
                         version.num
                     ));
             });
@@ -104,23 +165,26 @@ fn main() {
         }
         for handle in tasks {
             if let Err(err) = handle.join() {
-                println!("Thead panicked: {:?}", err);
+                println!("Thread panicked: {:?}", err);
             }
         }
     }
 }
 
 /// Renders the readme of an uploaded crate version.
-fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
+fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
     let mut handle = Easy::new();
-    let location = match config.uploader.crate_location(&version.krate, &version.num) {
+    let location = match config.uploader.crate_location(
+        &krate_name,
+        &version.num.to_string(),
+    ) {
         Some(l) => l,
         None => return None,
     };
     let date = time::now().rfc822z().to_string();
     let url = Url::parse(&location).expect(&format!(
         "[{}-{}] Couldn't parse crate URL",
-        version.krate,
+        krate_name,
         version.num
     ));
 
@@ -144,7 +208,7 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
         if let Err(err) = req.perform() {
             println!(
                 "[{}-{}] Unable to fetch crate: {}",
-                version.krate,
+                krate_name,
                 version.num,
                 err
             );
@@ -155,7 +219,7 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
         let response = String::from_utf8_lossy(&response);
         println!(
             "[{}-{}] Failed to get a 200 response: {}",
-            version.krate,
+            krate_name,
             version.num,
             response
         );
@@ -164,21 +228,21 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let reader = Cursor::new(response);
     let reader = GzDecoder::new(reader).expect(&format!(
         "[{}-{}] Invalid gzip header",
-        version.krate,
+        krate_name,
         version.num
     ));
     let mut archive = Archive::new(reader);
     let mut entries = archive.entries().expect(&format!(
         "[{}-{}] Invalid tar archive entries",
-        version.krate,
+        krate_name,
         version.num
     ));
     let manifest: Manifest = {
-        let path = format!("{}-{}/Cargo.toml", version.krate, version.num);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
+        let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
         toml::from_str(&contents).expect(&format!(
             "[{}-{}] Syntax error in manifest file",
-            version.krate,
+            krate_name,
             version.num
         ))
     };
@@ -188,14 +252,14 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
     let rendered = {
         let path = format!(
             "{}-{}/{}",
-            version.krate,
+            krate_name,
             version.num,
             manifest.package.readme.unwrap()
         );
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
         markdown_to_html(&contents).expect(&format!(
             "[{}-{}] Couldn't render README",
-            version.krate,
+            krate_name,
             version.num
         ))
     };
@@ -214,7 +278,8 @@ fn get_readme(config: &Config, version: &EncodableVersion) -> Option<String> {
 fn find_file_by_path<R: Read>(
     entries: &mut tar::Entries<R>,
     path: &Path,
-    version: &EncodableVersion,
+    version: &Version,
+    krate_name: &str,
 ) -> String {
     let mut file = entries
         .find(|entry| match *entry {
@@ -229,20 +294,20 @@ fn find_file_by_path<R: Read>(
         })
         .expect(&format!(
             "[{}-{}] couldn't open file: {}",
-            version.krate,
+            krate_name,
             version.num,
             path.display()
         ))
         .expect(&format!(
             "[{}-{}] file is not present: {}",
-            version.krate,
+            krate_name,
             version.num,
             path.display()
         ));
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect(&format!(
         "[{}-{}] Couldn't read file contents",
-        version.krate,
+        krate_name,
         version.num
     ));
     contents
