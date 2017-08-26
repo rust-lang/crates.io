@@ -50,12 +50,7 @@ impl Uploader {
                     Uploader::crate_path(crate_name, version)
                 ))
             }
-            Uploader::Local => {
-                Some(format!(
-                    "/{}",
-                    Uploader::crate_path(crate_name, version)
-                ))
-            }
+            Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
             Uploader::NoOp => None,
         }
     }
@@ -73,12 +68,7 @@ impl Uploader {
                     Uploader::readme_path(crate_name, version)
                 ))
             }
-            Uploader::Local => {
-                Some(format!(
-                    "/{}",
-                    Uploader::readme_path(crate_name, version)
-                ))
-            }
+            Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
             Uploader::NoOp => None,
         }
     }
@@ -136,10 +126,7 @@ impl Uploader {
                 Ok((Some(String::from(path)), cksum))
             }
             Uploader::Local => {
-                let filename = env::current_dir()
-                    .unwrap()
-                    .join("local_uploads")
-                    .join(path);
+                let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
