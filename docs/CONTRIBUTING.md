@@ -20,6 +20,7 @@ If you'd like to work on something that isn't in a current issue, especially if
 it would be a big change, please open a new issue for discussion!
 
 ## Submitting a Pull Request
+
 As an initiative to improve the documentation of the crates.io codebase, we would
 like to see all new types and functions, public and private, to have documentation
 comments on them. If you change an existing type or function, and it doesn't have
@@ -43,6 +44,12 @@ may also be helpful to see which versions of these tools we're currently using.
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 We will try to review your pull requests as soon as possible!
+
+## Reviewing Pull Requests
+
+Another way to help out and to get to know the codebase is to review other people's
+pull requests! Take a look at [`docs/PR-REVIEW.md`](https://github.com/rust-lang/crates.io/blob/master/docs/PR-REVIEW.md)
+for guidelines on how to do that.
 
 ## Setting up a development environment
 
@@ -86,7 +93,7 @@ Follow the links for each of these tools for their recommended installation
 instructions. If you already have these tools, or you have a different
 preferred method of installing packages like these, that should work fine.
 
-If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md) 
+If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md)
 to install to ensure that the use of `npm` does not require the use of `sudo`.
 
 The front end should run fine after these steps. Please file an issue if you run
