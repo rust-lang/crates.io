@@ -55,6 +55,8 @@ When reviewing the code, look for:
 - Do the commit messages accurately describe what is changed in each commit (and why those changes
   are necessary)? If you were debugging something and looking back at these commits wondering if
   they were the cause of a bug, would the commit messages be helpful?
+- Are there commits merging upstream into this branch? These can be rebased out just before merging
+  this branch in to master.
 
 If any part of the code doesn't make sense, ask for an explanation! Be specific about what parts
 are confusing, and perhaps make a guess as to what the code is doing for the PR author to correct.
