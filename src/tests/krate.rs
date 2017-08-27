@@ -1294,24 +1294,38 @@ fn owners_can_remove_self() {
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
 
+    // Deleting yourself when you're the only owner isn't allowed.
+    let body = r#"{"users":["firstowner"]}"#;
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
+        body.as_bytes(),
+    )));
+    let json = ::json::<::Bad>(&mut response);
+    assert!(json.errors[0].detail.contains(
+        "cannot remove the sole owner of a crate",
+    ));
+
     let body = r#"{"users":["secondowner"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
         body.as_bytes(),
     )));
     assert!(::json::<O>(&mut response).ok);
 
-    // This is a self delete from owners
+    // Deleting yourself when there are other owners is allowed.
     let body = r#"{"users":["firstowner"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
         body.as_bytes(),
     )));
     assert!(::json::<O>(&mut response).ok);
 
+    // After you delete yourself, you no longer have permisions to manage the crate.
     let body = r#"{"users":["secondowner"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
         body.as_bytes(),
     )));
-    ::json::<::Bad>(&mut response);
+    let json = ::json::<::Bad>(&mut response);
+    assert!(json.errors[0].detail.contains(
+        "only owners have permission to modify owners",
+    ));
 }
 
 #[test]
