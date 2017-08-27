@@ -41,7 +41,6 @@ use cargo_registry::user::AuthenticationSource;
 use cargo_registry::{User, Crate, Version, Dependency, Replica};
 use conduit::{Request, Method};
 use conduit_test::MockRequest;
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::pg::upsert::*;
 use cargo_registry::schema::*;

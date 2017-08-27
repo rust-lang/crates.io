@@ -2,7 +2,6 @@ use conduit::{Request, Response};
 use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;

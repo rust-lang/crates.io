@@ -2,7 +2,6 @@ extern crate diesel;
 extern crate dotenv;
 
 use diesel::migrations::run_pending_migrations;
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;

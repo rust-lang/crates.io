@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
 use diesel::types::{Integer, Text};
 use semver;
 

@@ -7,7 +7,7 @@ use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
 use diesel::helper_types::Select;
 use diesel::pg::upsert::*;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel;
 use diesel_full_text_search::*;

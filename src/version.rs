@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
 use diesel::pg::upsert::*;
 use diesel::prelude::*;
 use semver;
