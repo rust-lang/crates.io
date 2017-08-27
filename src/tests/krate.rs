@@ -1294,10 +1294,6 @@ fn owners_can_remove_self() {
     let r: R = ::json(&mut response);
     assert_eq!(r.users.len(), 1);
 
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
     let body = r#"{"users":["secondowner"]}"#;
     let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
         body.as_bytes(),
