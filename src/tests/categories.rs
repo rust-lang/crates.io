@@ -1,6 +1,5 @@
 use cargo_registry::schema::categories;
 use diesel::*;
-use diesel::pg::PgConnection;
 use dotenv::dotenv;
 
 use std::env;

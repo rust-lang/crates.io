@@ -3,7 +3,6 @@ use time::Timespec;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
-use diesel::pg::PgConnection;
 
 use Crate;
 use db::RequestTransaction;

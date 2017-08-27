@@ -3,7 +3,6 @@ use time::Timespec;
 
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel;
 

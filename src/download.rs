@@ -1,7 +1,6 @@
 use chrono::NaiveDate;
 use diesel;
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 
 use schema::version_downloads;
 use version::Version;

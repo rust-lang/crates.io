@@ -1,8 +1,7 @@
 use std::env;
 
 use conduit::Request;
-use diesel::pg::PgConnection;
-use diesel::prelude::ConnectionResult;
+use diesel::prelude::{PgConnection, ConnectionResult};
 use r2d2;
 use r2d2_diesel::{self, ConnectionManager};
 use url::Url;

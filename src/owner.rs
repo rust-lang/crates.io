@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 
 use app::App;
 use http;

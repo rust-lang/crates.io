@@ -1,6 +1,5 @@
 use diesel;
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use conduit::{Request, Response};
 use time::Timespec;
 use conduit_router::RequestParams;

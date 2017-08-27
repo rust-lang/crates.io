@@ -1,7 +1,7 @@
 use krate::Crate;
 use schema::badges;
 
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde_json;
 use std::collections::HashMap;

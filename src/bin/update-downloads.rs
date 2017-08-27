@@ -12,7 +12,6 @@ extern crate time;
 
 use chrono::NaiveDate;
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use diesel::pg::upsert::*;
 use std::env;
 use std::time::Duration;
