@@ -41,7 +41,7 @@ fn access_token_needs_data() {
 #[test]
 fn me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
@@ -129,7 +129,9 @@ fn following() {
     }
 
     let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
+        req.with_path("/api/v1/me/updates").with_method(
+            Method::Get,
+        ),
     ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
@@ -149,7 +151,9 @@ fn following() {
     );
 
     let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
+        req.with_path("/api/v1/me/updates").with_method(
+            Method::Get,
+        ),
     ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
@@ -157,7 +161,7 @@ fn following() {
 
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("/me/updates")
+            req.with_path("/api/v1/me/updates")
                 .with_method(Method::Get)
                 .with_query("per_page=1"),
         )
@@ -174,7 +178,7 @@ fn following() {
     );
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("/me/updates")
+            req.with_path("/api/v1/me/updates")
                 .with_method(Method::Get)
                 .with_query("page=2&per_page=1"),
         )
@@ -290,7 +294,7 @@ fn test_github_login_does_not_overwrite_email() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -303,7 +307,9 @@ fn test_github_login_does_not_overwrite_email() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
@@ -331,7 +337,9 @@ fn test_github_login_does_not_overwrite_email() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
@@ -354,7 +362,7 @@ fn test_email_get_and_put() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("mango").create_or_update(&conn).unwrap();
@@ -362,7 +370,9 @@ fn test_email_get_and_put() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
@@ -377,7 +387,9 @@ fn test_email_get_and_put() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
@@ -396,7 +408,7 @@ fn test_email_get_and_put() {
 #[test]
 fn test_empty_email_not_added() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("papaya").create_or_update(&conn).unwrap();
@@ -446,7 +458,7 @@ fn test_empty_email_not_added() {
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
 
     let not_signed_in_user = {
         let conn = app.diesel_database.get().unwrap();
