@@ -1404,8 +1404,8 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
-            if *login == user.gh_login {
-                return Err(human("cannot remove yourself as an owner"));
+            if owners.len() == 1 {
+                return Err(human("cannot remove the sole owner of a crate"));
             }
             krate.owner_remove(&conn, user, login)?;
         }
