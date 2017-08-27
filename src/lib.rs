@@ -180,6 +180,12 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));
     api_router.get("/teams/:team_id", C(user::show_team));
+    api_router.get("/me", C(user::me));
+    api_router.get("/me/updates", C(user::updates));
+    api_router.get("/me/tokens", C(token::list));
+    api_router.post("/me/tokens", C(token::new));
+    api_router.delete("/me/tokens/:id", C(token::revoke));
+    api_router.get("/summary", C(krate::summary));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
@@ -195,12 +201,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.get("/authorize_url", C(user::github_authorize));
     router.get("/authorize", C(user::github_access_token));
     router.delete("/logout", C(user::logout));
-    router.get("/me", C(user::me));
-    router.get("/me/updates", C(user::updates));
-    router.get("/me/tokens", C(token::list));
-    router.post("/me/tokens", C(token::new));
-    router.delete("/me/tokens/:id", C(token::revoke));
-    router.get("/summary", C(krate::summary));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from

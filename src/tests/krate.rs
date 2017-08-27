@@ -1054,7 +1054,7 @@ fn new_krate_with_readme() {
 #[test]
 fn summary_doesnt_die() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/summary");
+    let mut req = ::req(app, Method::Get, "/api/v1/summary");
     ok_resp!(middle.call(&mut req));
 }
 

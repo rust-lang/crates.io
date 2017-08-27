@@ -20,7 +20,7 @@ export default Route.extend({
             }
         }
 
-        return this.get('ajax').request('/summary').then((data) => {
+        return this.get('ajax').request('/api/v1/summary').then((data) => {
             addCrates(this.store, data.new_crates);
             addCrates(this.store, data.most_downloaded);
             addCrates(this.store, data.just_updated);
