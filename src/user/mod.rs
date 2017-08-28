@@ -632,6 +632,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     }
 
     let email_result = send_user_confirm_email(user_email, user, &token);
+    println!("Email result: {:?}", email_result);
 
     #[derive(Serialize)]
     struct R {
@@ -690,9 +691,9 @@ https://crates.io/confirm/{}",
         });
     } else {
         println!("Actual email sent, maybe");
-        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
+        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), 200))
             .expect("Failed to create message transport")
-            .credentials(&mailgun_config.smtp_password, &mailgun_config.smtp_login)
+            .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
             .security_level(SecurityLevel::AlwaysEncrypt)
             .smtp_utf8(true)
             .authentication_mechanism(Mechanism::Plain)
