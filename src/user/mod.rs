@@ -682,13 +682,14 @@ https://crates.io/confirm/{}",
                     .expect("Failed to build confirm email message");
 
     if mailgun_config.smtp_login == "Not found" {
-
+        println!("Email file generated");
         let mut sender = FileEmailTransport::new(Path::new("/tmp"));
         let result = sender.send(email.clone());
         result.map_err(|_| {
             bad_request("Email file could not be generated")
         });
     } else {
+        println!("Actual email sent, maybe");
         let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
             .expect("Failed to create message transport")
             .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
