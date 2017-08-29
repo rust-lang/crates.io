@@ -19,7 +19,7 @@ export default Ember.Route.extend({
                     Suggestions of a more ideomatic way to fix/test this are welcome!
                 */
                 if (this.session.get('isLoggedIn')) {
-                    this.get('ajax').request('/me').then((response) => {
+                    this.get('ajax').request('/api/v1/me').then((response) => {
                         this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
                     })
                 }
