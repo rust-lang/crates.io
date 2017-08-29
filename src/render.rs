@@ -69,7 +69,7 @@ impl<'a> MarkdownRenderer<'a> {
             .cloned()
             .collect();
         let html_sanitizer = Ammonia {
-            link_rel: Some("nofollow"),
+            link_rel: Some("nofollow noopener noreferrer"),
             keep_cleaned_elements: true,
             tags: tags,
             tag_attributes: tag_attributes,
@@ -161,7 +161,7 @@ mod tests {
         let result = markdown_to_html(text).unwrap();
         assert_eq!(
             result,
-            "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow\">Crate page</a></p>\n"
+            "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
         );
     }
 }
