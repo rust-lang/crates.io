@@ -691,7 +691,7 @@ https://crates.io/confirm/{}",
         });
     } else {
         println!("Actual email sent, maybe");
-        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), 200))
+        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
             .expect("Failed to create message transport")
             .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
             .security_level(SecurityLevel::AlwaysEncrypt)
