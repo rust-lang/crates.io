@@ -5,6 +5,7 @@ import { inject as service } from '@ember/service';
 
 export default Component.extend({
     ajax: service(),
+    flashMessages: service(),
 
     type: '',
     value: '',
@@ -62,6 +63,8 @@ export default Component.extend({
                         msg = 'An unknown error occurred while saving this email.';
                     }
                     this.set('serverError', msg);
+                    this.get('flashMessages').queue(`Email error: ${err.errors[0].detail}`);
+                    return this.replaceWith('me');
                 });
 
             this.set('isEditing', false);
@@ -91,9 +94,13 @@ export default Component.extend({
             .then(({response}) => {})
             .catch((error) => {
                 if (error.payload) {
+                    this.get('flashMessages').queue(`Error in email confirmation: ${error.payload.errors[0].detail}`)
                     console.log("error payload: " + error.payload.errors[0].detail);
+                    return this.replaceWith('me');
                 } else {
+                    this.get('flashmessages').queue(`Unknown error in email confirmation`);
                     console.log("unknown error");
+                    return this.replaceWith('me');
                 }
             });
         }
