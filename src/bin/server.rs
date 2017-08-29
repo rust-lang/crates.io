@@ -1,11 +1,9 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate conduit_middleware;
 extern crate civet;
 extern crate git2;
 extern crate env_logger;
-extern crate s3;
 
 use cargo_registry::{env, Env};
 use civet::Server;

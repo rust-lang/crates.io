@@ -9,8 +9,6 @@
 
 extern crate cargo_registry;
 extern crate diesel;
-extern crate time;
-extern crate semver;
 
 use diesel::prelude::*;
 use std::env;

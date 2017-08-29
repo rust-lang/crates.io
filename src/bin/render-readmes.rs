@@ -15,7 +15,6 @@ extern crate diesel;
 extern crate docopt;
 extern crate flate2;
 extern crate itertools;
-extern crate s3;
 extern crate tar;
 extern crate time;
 extern crate toml;
