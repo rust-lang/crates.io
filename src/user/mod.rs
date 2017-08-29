@@ -6,15 +6,13 @@ use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
 use time::Timespec;
-use lettre;
 
 use app::RequestApp;
 use db::RequestTransaction;
 use krate::Follow;
 use pagination::Paginate;
 use schema::*;
-use util::errors::NotFound;
-use util::{RequestUtils, CargoResult, internal, ChainError, human, bad_request};
+use util::{RequestUtils, CargoResult, human, bad_request};
 use version::EncodableVersion;
 use {http, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
@@ -158,22 +156,21 @@ impl<'a> NewUser<'a> {
                         created_at: time::now_utc().to_timespec(),
                     };
 
-                    let token_result : QueryResult<Token> = insert(&new_token).into(tokens::table).get_result(conn).map_err(Into::into);
+                    insert(&new_token).into(tokens::table).execute(conn)?;
 
-                    let user = User {
-                        id: 0,
-                        email: None,
-                        gh_id: 0,
-                        gh_login: String::from(""),
-                        name: self.name.map(str::to_string),
-                        gh_avatar: None,
-                        gh_access_token: String::from(""),
+                    if let Err(_) = send_user_confirm_email(user_email, &self.gh_login, &token) {
+                        return Err(Error::NotFound);
                     };
-                    send_user_confirm_email(user_email, &user, &token);
                 },
                 Err(Error::NotFound) => {
-                    // Pass, email had conflict, so it already exists in the database
-                    // We don't have to do anything
+                    // This block is reached if a user already has an email stored
+                    // in the database. If an email already exists then we will
+                    // not overwrite it with the one received from GitHub. Doing
+                    // so would force us to resend a verification email each time
+                    // the user logs in, which doesn't make any sense.
+                    // Thus, we don't consider this case to actually be an error,
+                    // so we don't do anything with it, whereas the block below
+                    // will catch all other relevant errors.
                 },
                 Err(err) => {
                     return Err(err);
@@ -420,11 +417,9 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
     let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
 
-    println!("GET /me user_info: {:?}", user_info);
-    println!("GET /me email_result: {:?}", email_result);
     let (email, verified) : (Option<String>, bool) = match email_result {
         Ok(response) => (Some(response.email), response.verified),
-        Err(err) => (None, false)
+        Err(_) => (None, false)
     };
 
     let user = User {
@@ -604,7 +599,6 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .into(emails::table)
         .get_result(&*conn)
         .map_err(Into::into);
-    println!("update_user upsert email: {:?}", email_result);
 
     let token = generate_token();
 
@@ -616,23 +610,21 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 created_at: time::now_utc().to_timespec(),
             };
 
-            let token_result : QueryResult<Token> = insert(&new_token
+            insert(&new_token
                 .on_conflict(
                     email_id,
                     do_update().set(&new_token)        
                 ))
                 .into(tokens::table)
-                .get_result(&*conn)
-                .map_err(Into::into);
-            println!("update_user upsert token: {:?}", token_result);
+                .execute(&*conn)?;
         },
-        Err(err) => {
+        Err(_) => {
             return Err(human("Error in creating token"));
         }
     }
 
-    let email_result = send_user_confirm_email(user_email, user, &token);
-    println!("Email result: {:?}", email_result);
+    let email_result = send_user_confirm_email(user_email, &user.gh_login, &token);
+    email_result.map_err(|_| { bad_request("Email could not be sent") })?;
 
     #[derive(Serialize)]
     struct R {
@@ -647,7 +639,7 @@ pub struct MailgunConfigVars {
     pub smtp_server: String,
 }
 
-fn send_user_confirm_email(email: &str, user: &User, token: &str) -> CargoResult<()> {
+fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
     // perhaps use crate lettre and heroku service Mailgun
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
@@ -656,12 +648,11 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) -> CargoResult
     use dotenv::dotenv;
     use std::env;
     use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
-    use lettre::email::{SendableEmail, EmailBuilder};
+    use lettre::email::EmailBuilder;
     use lettre::transport::smtp::authentication::Mechanism;
     use lettre::transport::smtp::SUBMISSION_PORT;
     use lettre::transport::EmailTransport;
     use lettre::transport::file::FileEmailTransport;
-    use env_logger;
     use std::path::Path;
 
     dotenv().ok();
@@ -678,19 +669,17 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) -> CargoResult
                     .body(format!("Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://crates-mirror.herokuapp.com/confirm/{}",
-                        user.gh_login, token).as_str())
+                        user_name, token).as_str())
                     .build()
                     .expect("Failed to build confirm email message");
 
     if mailgun_config.smtp_login == "Not found" {
-        println!("Email file generated");
         let mut sender = FileEmailTransport::new(Path::new("/tmp"));
         let result = sender.send(email.clone());
         result.map_err(|_| {
             bad_request("Email file could not be generated")
-        });
+        })?;
     } else {
-        println!("Actual email sent, maybe");
         let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
             .expect("Failed to create message transport")
             .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
@@ -702,7 +691,7 @@ https://crates-mirror.herokuapp.com/confirm/{}",
         let result = transport.send(email.clone());
         result.map_err(|_| {
             bad_request("Error in sending email")
-        });
+        })?;
     }
 
     Ok(())
@@ -784,16 +773,16 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         created_at: time::now_utc().to_timespec(),
     };
 
-    let token_result : QueryResult<Token> = insert(&new_token
+    insert(&new_token
         .on_conflict(
             email_id,
             do_update().set(&new_token)
         ))
         .into(tokens::table)
-        .get_result(&*conn)
-        .map_err(Into::into);
+        .execute(&*conn)?;
 
-    send_user_confirm_email(&email_info.email, user, &token);
+    let email_result = send_user_confirm_email(&email_info.email, &user.gh_login, &token);
+    email_result.map_err(|_| { bad_request("Error in sending email") })?;
 
     #[derive(Serialize)]
     struct R {
