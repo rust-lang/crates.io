@@ -677,7 +677,7 @@ fn send_user_confirm_email(email: &str, user: &User, token: &str) -> CargoResult
                     .subject("Please confirm your email address")
                     .body(format!("Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
-https://crates.io/confirm/{}",
+https://crates-mirror.herokuapp.com/confirm/{}",
                         user.gh_login, token).as_str())
                     .build()
                     .expect("Failed to build confirm email message");
