@@ -522,14 +522,9 @@ fn test_insert_into_email_table() {
         user: EncodablePrivateUser,
     }
 
-    #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
-
     let (_b, app, middle) = ::app();
     let mut req = ::req(app.clone(), Method::Get, "/me");
-    let user = {
+    {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
@@ -539,10 +534,9 @@ fn test_insert_into_email_table() {
 
         let user = user.create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
-        user
-    };
+    }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
     assert_eq!(r.user.login, "potato");
@@ -571,7 +565,7 @@ fn test_insert_into_email_table() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
     assert_eq!(r.user.login, "potato");
@@ -626,7 +620,7 @@ fn test_confirm_user_email() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
     assert_eq!(r.user.login, "potato");
