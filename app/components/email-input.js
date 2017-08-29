@@ -25,6 +25,8 @@ export default Component.extend({
             return false;
         }
     }),
+    isError: false,
+    emailError: '',
 
     actions: {
         editEmail() {
@@ -94,13 +96,13 @@ export default Component.extend({
             .then(({response}) => {})
             .catch((error) => {
                 if (error.payload) {
-                    this.get('flashMessages').queue(`Error in email confirmation: ${error.payload.errors[0].detail}`)
+                    this.set('isError', true);
+                    this.set('emailError', `Error in sending message: ${error.payload.errors[0].detail}`)
                     console.log("error payload: " + error.payload.errors[0].detail);
-                    return this.replaceWith('me');
                 } else {
-                    this.get('flashmessages').queue(`Unknown error in email confirmation`);
+                    this.set('isError', true);
+                    this.set('emailError', 'Unknown error in resending message');
                     console.log("unknown error");
-                    return this.replaceWith('me');
                 }
             });
         }

@@ -34,5 +34,8 @@
             <p class='small-text'>Your email has not yet been verified.</p>
             <button class='small yellow-button space-left' {{action 'resendEmail'}}>Resend</button>
         {{/if}}
+        {{#if isError}}
+            <p class='small-text'>{{emailError}}</p>
+        {{/if}}
     </div>
 {{/if}}
