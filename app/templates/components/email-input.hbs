@@ -31,11 +31,15 @@
             <button class='small yellow-button space-left' {{action 'editEmail'}}>Edit</button>
         </div>
         {{#if emailNotVerified }}
-            <p class='small-text'>Your email has not yet been verified.</p>
-            <button class='small yellow-button space-left' {{action 'resendEmail'}}>Resend</button>
+            <div class='actions'>
+                <p class='small-text'>Your email has not yet been verified.</p>
+                <button class='small yellow-button space-left' {{action 'resendEmail'}}>Resend</button>
+            </div>
         {{/if}}
         {{#if isError}}
-            <p class='small-text'>{{emailError}}</p>
+            <div class='error'>
+                <p class='small-text'>{{emailError}}</p>
+            </div>
         {{/if}}
     </div>
 {{/if}}
