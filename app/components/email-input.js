@@ -65,8 +65,8 @@ export default Component.extend({
                         msg = 'An unknown error occurred while saving this email.';
                     }
                     this.set('serverError', msg);
-                    this.get('flashMessages').queue(`Email error: ${err.errors[0].detail}`);
-                    return this.replaceWith('me');
+                    this.set('isError', true);
+                    this.set('emailError', `Error in saving email: ${msg}`);
                 });
 
             this.set('isEditing', false);
