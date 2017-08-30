@@ -97,7 +97,7 @@ export default Component.extend({
             .catch((error) => {
                 if (error.payload) {
                     this.set('isError', true);
-                    this.set('emailError', `Error in sending message: ${error.payload.errors[0].detail}`)
+                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`)
                     console.log("error payload: " + error.payload.errors[0].detail);
                 } else {
                     this.set('isError', true);
