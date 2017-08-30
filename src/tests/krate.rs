@@ -404,6 +404,8 @@ fn show() {
             .version(::VersionBuilder::new("0.5.0"))
             .version(::VersionBuilder::new("0.5.1"))
             .keyword("kw1")
+            .downloads(20)
+            .recent_downloads(10)
             .expect_build(&conn);
     }
 
@@ -415,6 +417,7 @@ fn show() {
     assert_eq!(json.krate.homepage, krate.homepage);
     assert_eq!(json.krate.documentation, krate.documentation);
     assert_eq!(json.krate.keywords, Some(vec!["kw1".into()]));
+    assert_eq!(json.krate.recent_downloads, Some(10));
     let versions = json.krate.versions.as_ref().unwrap();
     assert_eq!(versions.len(), 3);
     assert_eq!(json.versions.len(), 3);

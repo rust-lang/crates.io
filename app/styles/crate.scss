@@ -320,6 +320,15 @@
                 padding: 0 2px;
             }
         }
+
+        table {
+            border-collapse: collapse;
+
+            th, td {
+                border: 1px solid #dfe2e5;
+                padding: 6px 13px;
+            }
+        }
     }
     .last-update {
         color: $main-color-light;

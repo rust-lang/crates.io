@@ -573,7 +573,6 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::types::{Bool, BigInt, Nullable};
     use diesel::expression::functions::date_and_time::{now, date};
     use diesel::expression::sql_literal::sql;
-    use diesel::query_source::joins::LeftOuter;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -585,13 +584,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
     let mut query = crates::table
-        .join(
-            crate_downloads::table,
-            LeftOuter,
+        .left_join(crate_downloads::table.on(
             crates::id.eq(crate_downloads::crate_id).and(
                 crate_downloads::date.gt(date(now - 90.days())),
             ),
-        )
+        ))
         .group_by(crates::id)
         .select((
             ALL_COLUMNS,
@@ -775,7 +772,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false, Some(0)))
+                Ok(krate.minimal_encodable(max_version, None, false, None))
             })
             .collect()
     };
@@ -833,6 +830,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::*;
+
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
@@ -849,6 +848,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         .inner_join(categories::table)
         .select(categories::all_columns)
         .load(&*conn)?;
+    let recent_downloads = CrateDownload::belonging_to(&krate)
+        .filter(crate_downloads::date.gt(date(now - 90.days())))
+        .select(sum(crate_downloads::downloads))
+        .get_result(&*conn)?;
 
     let badges = badges::table.filter(badges::crate_id.eq(krate.id)).load(
         &*conn,
@@ -872,7 +875,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
                 Some(&cats),
                 Some(badges),
                 false,
-                Some(0),
+                recent_downloads,
             ),
             versions: versions
                 .into_iter()
@@ -1037,7 +1040,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false, Some(0)),
+            krate: krate.minimal_encodable(max_version, None, false, None),
             warnings: warnings,
         }))
     })
