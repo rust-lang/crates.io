@@ -44,6 +44,7 @@ Router.map(function() {
     this.route('category_slugs');
     this.route('catchAll', { path: '*path' });
     this.route('team', { path: '/teams/:team_id' });
+    this.route('policies');
 });
 
 export default Router;
