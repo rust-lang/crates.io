@@ -1,3 +1,11 @@
+{{#if emailIsNull }}
+    <div class='friendly-message'>
+        <p class='small-text'> Please add your email address. We will only use
+        it to contact you about your account. We promise we'll never share it!
+        </p>
+    </div>
+{{/if}}
+
 {{#if isEditing }}
     <div class='row'>
         <div class='label'>
@@ -9,11 +17,6 @@
                 <div class='error'>
                     <p class='small-text error'>Whoops, that email format is invalid</p>
                 </div>
-            {{/if}}
-            {{#if emailIsNull }}
-                <p class='small-text'> Please add your email address. We will only use
-                it to contact you about your account. We promise we'll never share it!
-                </p>
             {{/if}}
             <div class='actions'>
                 <button type='submit' class='small yellow-button space-right' disabled={{disableSave}}>Save</button>
@@ -45,7 +48,9 @@
     {{/if}}
     {{#if isError}}
         <div class='row'>
-            <p class='small-text'>{{emailError}}</p>
+            <div class='label'>
+                <p class='small-text'>{{emailError}}</p>
+            </div>
         </div>
     {{/if}}
 {{/if}}
