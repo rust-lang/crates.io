@@ -76,6 +76,7 @@ pub mod badge;
 pub mod categories;
 pub mod category;
 pub mod config;
+pub mod crate_owner_invitation;
 pub mod db;
 pub mod dependency;
 pub mod dist;
@@ -183,6 +184,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/me/tokens", C(token::list));
     api_router.post("/me/tokens", C(token::new));
     api_router.delete("/me/tokens/:id", C(token::revoke));
+    api_router.get(
+        "/me/crate_owner_invitations",
+        C(crate_owner_invitation::list),
+    );
     api_router.get("/summary", C(krate::summary));
     let api_router = Arc::new(R404(api_router));
 
