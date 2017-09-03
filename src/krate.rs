@@ -673,6 +673,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 crate_owners::table
                     .select(crate_owners::crate_id)
                     .filter(crate_owners::owner_id.eq(user_id))
+                    .filter(crate_owners::deleted.eq(false))
                     .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
             ),
         );
@@ -682,6 +683,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 crate_owners::table
                     .select(crate_owners::crate_id)
                     .filter(crate_owners::owner_id.eq(team_id))
+                    .filter(crate_owners::deleted.eq(false))
                     .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32)),
             ),
         );

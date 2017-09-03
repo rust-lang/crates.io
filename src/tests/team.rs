@@ -2,6 +2,7 @@ use std::sync::ONCE_INIT;
 use conduit::{Handler, Method};
 
 use cargo_registry::user::NewUser;
+use cargo_registry::krate::EncodableCrate;
 use record::GhUser;
 
 // Users: `crates-tester-1` and `crates-tester-2`
@@ -350,4 +351,57 @@ fn add_owners_as_team_owner() {
         "{:?}",
         json.errors
     );
+}
+
+#[test]
+fn crates_by_team_id() {
+    let (_b, app, middle) = ::app();
+
+    let team = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        t
+    };
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    req.with_query(&format!("team_id={}", team.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(Deserialize)]
+    struct Response {
+        crates: Vec<EncodableCrate>,
+    }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.crates.len(), 1);
+}
+
+#[test]
+fn crates_by_team_id_not_including_deleted_owners() {
+    let (_b, app, middle) = ::app();
+
+    let team = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = ::new_team("github:org_foo:team_foo")
+            .create_or_update(&conn)
+            .unwrap();
+        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
+        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        krate.owner_remove(&conn, &u, &t.login).unwrap();
+        t
+    };
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    req.with_query(&format!("team_id={}", team.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(Deserialize)]
+    struct Response {
+        crates: Vec<EncodableCrate>,
+    }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.crates.len(), 0);
 }

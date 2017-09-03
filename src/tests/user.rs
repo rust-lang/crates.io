@@ -101,6 +101,29 @@ fn crates_by_user_id() {
 }
 
 #[test]
+fn crates_by_user_id_not_including_deleted_owners() {
+    let (_b, app, middle) = ::app();
+    let u;
+    {
+        let conn = app.diesel_database.get().unwrap();
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
+        krate.owner_remove(&conn, &u, "foo").unwrap();
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    req.with_query(&format!("user_id={}", u.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(Deserialize)]
+    struct Response {
+        crates: Vec<EncodableCrate>,
+    }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.crates.len(), 0);
+}
+
+#[test]
 fn following() {
     #[derive(Deserialize)]
     struct R {
