@@ -31,8 +31,8 @@ use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{NewCrate, CrateDownload};
-use cargo_registry::schema::dependencies;
+use cargo_registry::krate::{NewCrate, CrateDownload, EncodableCrate};
+use cargo_registry::schema::*;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
@@ -43,7 +43,6 @@ use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use diesel::pg::upsert::*;
-use cargo_registry::schema::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -89,12 +88,34 @@ mod category;
 mod git;
 mod keyword;
 mod krate;
+mod owners;
 mod record;
 mod schema_details;
 mod team;
 mod token;
 mod user;
 mod version;
+
+#[derive(Deserialize)]
+struct GoodCrate {
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
+    warnings: Warnings,
+}
+#[derive(Deserialize)]
+struct CrateList {
+    crates: Vec<EncodableCrate>,
+    meta: CrateMeta,
+}
+#[derive(Deserialize)]
+struct Warnings {
+    invalid_categories: Vec<String>,
+    invalid_badges: Vec<String>,
+}
+#[derive(Deserialize)]
+struct CrateMeta {
+    total: i32,
+}
 
 fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
     dotenv::dotenv().ok();
