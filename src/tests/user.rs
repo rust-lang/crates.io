@@ -512,9 +512,11 @@ fn test_this_user_cannot_change_that_user_email() {
 
 }
 
-// Test inserting into the email & token tables
-// TODO make test better/actually test what is being put in
-// and taken out of the tables
+// Given a new user, test that if they sign in with
+// one email, change their email on GitHub, then
+// sign in again, that the email will remain
+// consistant with the original email used on
+// GitHub.
 #[test]
 fn test_insert_into_email_table() {
     #[derive(Deserialize)]
@@ -528,7 +530,7 @@ fn test_insert_into_email_table() {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            email: Some("hi@hello.hey"),
+            email: Some("potato@example.com"),
             ..::new_user("potato")
         };
 
@@ -538,10 +540,67 @@ fn test_insert_into_email_table() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
 
-    /*let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
+    ::logout(&mut req);
+
+    // What if user changes their github user email
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("banana@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+}
+
+// Given a new user, check that when an email is added,
+// changed by user on GitHub, changed on crates.io,
+// that the email remains consistant with that which
+// the user has changed
+#[test]
+fn test_insert_into_email_table_with_email_change() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("potato@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+
+    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
@@ -549,15 +608,16 @@ fn test_insert_into_email_table() {
                 .with_body(body.as_bytes()),
         )
     );
-    assert!(::json::<S>(&mut response).ok);*/
+    assert!(::json::<S>(&mut response).ok);
 
     ::logout(&mut req);
 
+    // What if user changes their github user email
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            email: Some("hi@hello.hey"),
+            email: Some("banana@example.com"),
             ..::new_user("potato")
         };
 
@@ -567,11 +627,15 @@ fn test_insert_into_email_table() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "potato");
 }
 
-/* Given a new user
+/* Given a new user, test that their email can be added
+   to the email table and a token for the email is generated
+   and added to the token table. When /confirm/:email_token is
+   requested, check that the response back is ok, and that
+   the email_verified field on user is now set to true.
 */
 #[test]
 fn test_confirm_user_email() {
@@ -592,7 +656,7 @@ fn test_confirm_user_email() {
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            email: Some("hi@hello.hey"),
+            email: Some("potato@example.com"),
             ..::new_user("potato")
         };
 
@@ -622,7 +686,7 @@ fn test_confirm_user_email() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "hi@hello.hey");
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(r.user.email_verified);
 }
