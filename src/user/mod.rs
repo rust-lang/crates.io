@@ -663,8 +663,6 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
         smtp_server: env::var("MAILGUN_SMTP_SERVER").unwrap_or(String::from("Not found")),
     };
 
-    // TODO change URL back to crates.io, currently using my
-    // mirror's URL for testing purposes
     let email = EmailBuilder::new()
         .to(email)
         .from(mailgun_config.smtp_login.as_str())
@@ -673,7 +671,7 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
             format!(
                 "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
-https://crates-mirror.herokuapp.com/confirm/{}",
+https://crates.io/confirm/{}",
                 user_name,
                 token
             ).as_str(),
