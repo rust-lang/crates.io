@@ -82,7 +82,6 @@ export default Component.extend({
         },
 
         resendEmail() {
-            let userEmail = this.get('value');
             let user = this.get('user');
 
             this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT',
@@ -95,17 +94,13 @@ export default Component.extend({
                     name: user.name,
                     url: user.url
                 }
-            })
-            .then(({response}) => {})
-            .catch((error) => {
+            }).catch((error) => {
                 if (error.payload) {
                     this.set('isError', true);
-                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`)
-                    console.log("error payload: " + error.payload.errors[0].detail);
+                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
                 } else {
                     this.set('isError', true);
                     this.set('emailError', 'Unknown error in resending message');
-                    console.log("unknown error");
                 }
             });
         }
