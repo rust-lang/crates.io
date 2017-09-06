@@ -19,7 +19,7 @@ doctest = false
 name = "all"
 path = "src/tests/all.rs"
 
-[package.metadata.docs.rs]
+[project.metadata.docs.rs]
 rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"] 
 
 [dependencies]
