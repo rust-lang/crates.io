@@ -19,6 +19,9 @@ doctest = false
 name = "all"
 path = "src/tests/all.rs"
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"] 
+
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
 rand = "0.3"
