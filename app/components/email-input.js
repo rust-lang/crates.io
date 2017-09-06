@@ -14,7 +14,10 @@ export default Component.extend({
     disableSave: empty('user.email'),
     notValidEmail: false,
     prevEmail: '',
-    emailIsNull: true,
+    emailIsNull: computed('user.email', function() {
+        let email = this.get('user.email');
+        return (email == null);
+    }),
     emailNotVerified: computed('user.email', 'user.email_verified', function() {
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
