@@ -55,7 +55,7 @@ pub struct Email {
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
-#[table_name="emails"]
+#[table_name = "emails"]
 pub struct NewEmail {
     pub user_id: i32,
     pub email: String,
@@ -72,7 +72,7 @@ pub struct Token {
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
-#[table_name="tokens"]
+#[table_name = "tokens"]
 pub struct NewToken {
     pub email_id: i32,
     pub token: String,
@@ -134,7 +134,11 @@ impl<'a> NewUser<'a> {
 
         // To send the user an account verification email...
         if let Some(user_email) = self.email {
-            let user_id = users::table.select(users::id).filter(users::gh_id.eq(&self.gh_id)).first(&*conn).unwrap();
+            let user_id = users::table
+                .select(users::id)
+                .filter(users::gh_id.eq(&self.gh_id))
+                .first(&*conn)
+                .unwrap();
 
             let new_email = NewEmail {
                 user_id: user_id,
@@ -142,7 +146,7 @@ impl<'a> NewUser<'a> {
                 verified: false,
             };
 
-            let email_result : QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
+            let email_result: QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
                 .into(emails::table)
                 .get_result(conn)
                 .map_err(Into::into);
@@ -161,7 +165,7 @@ impl<'a> NewUser<'a> {
                     if let Err(_) = send_user_confirm_email(user_email, &self.gh_login, &token) {
                         return Err(Error::NotFound);
                     };
-                },
+                }
                 Err(Error::NotFound) => {
                     // This block is reached if a user already has an email stored
                     // in the database. If an email already exists then we will
@@ -171,7 +175,7 @@ impl<'a> NewUser<'a> {
                     // Thus, we don't consider this case to actually be an error,
                     // so we don't do anything with it, whereas the block below
                     // will catch all other relevant errors.
-                },
+                }
                 Err(err) => {
                     return Err(err);
                 }
@@ -235,7 +239,7 @@ impl User {
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn encodable_private(self, email_verified : bool) -> EncodablePrivateUser {
+    pub fn encodable_private(self, email_verified: bool) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -417,9 +421,9 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
     let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
 
-    let (email, verified) : (Option<String>, bool) = match email_result {
+    let (email, verified): (Option<String>, bool) = match email_result {
         Ok(response) => (Some(response.email), response.verified),
-        Err(_) => (None, false)
+        Err(_) => (None, false),
     };
 
     let user = User {
@@ -584,21 +588,18 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     update(users.filter(gh_login.eq(&user.gh_login)))
         .set(email.eq(user_email))
         .execute(&*conn)?;
- 
+
     let new_email = NewEmail {
         user_id: user.id,
         email: String::from(user_email),
         verified: false,
     };
 
-    let email_result : QueryResult<Email> = insert(&new_email
-        .on_conflict(
-            user_id,
-            do_update().set(&new_email)
-        ))
-        .into(emails::table)
-        .get_result(&*conn)
-        .map_err(Into::into);
+    let email_result: QueryResult<Email> =
+        insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
+            .into(emails::table)
+            .get_result(&*conn)
+            .map_err(Into::into);
 
     let token = generate_token();
 
@@ -610,21 +611,21 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 created_at: time::now_utc().to_timespec(),
             };
 
-            insert(&new_token
-                .on_conflict(
-                    email_id,
-                    do_update().set(&new_token)        
-                ))
-                .into(tokens::table)
+            insert(&new_token.on_conflict(
+                email_id,
+                do_update().set(&new_token),
+            )).into(tokens::table)
                 .execute(&*conn)?;
-        },
+        }
         Err(_) => {
             return Err(human("Error in creating token"));
         }
     }
 
     let email_result = send_user_confirm_email(user_email, &user.gh_login, &token);
-    email_result.map_err(|_| { bad_request("Email could not be sent") })?;
+    email_result.map_err(
+        |_| bad_request("Email could not be sent"),
+    )?;
 
     #[derive(Serialize)]
     struct R {
@@ -665,25 +666,31 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
     // TODO change URL back to crates.io, currently using my
     // mirror's URL for testing purposes
     let email = EmailBuilder::new()
-                    .to(email)
-                    .from(mailgun_config.smtp_login.as_str())
-                    .subject("Please confirm your email address")
-                    .body(format!("Hello {}! Welcome to Crates.io. Please click the
+        .to(email)
+        .from(mailgun_config.smtp_login.as_str())
+        .subject("Please confirm your email address")
+        .body(
+            format!(
+                "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://crates-mirror.herokuapp.com/confirm/{}",
-                        user_name, token).as_str())
-                    .build()
-                    .expect("Failed to build confirm email message");
+                user_name,
+                token
+            ).as_str(),
+        )
+        .build()
+        .expect("Failed to build confirm email message");
 
     if mailgun_config.smtp_login == "Not found" {
         let mut sender = FileEmailTransport::new(Path::new("/tmp"));
         let result = sender.send(email.clone());
-        result.map_err(|_| {
-            bad_request("Email file could not be generated")
-        })?;
+        result.map_err(
+            |_| bad_request("Email file could not be generated"),
+        )?;
     } else {
-        let mut transport = SmtpTransportBuilder::new((mailgun_config.smtp_server.as_str(), SUBMISSION_PORT))
-            .expect("Failed to create message transport")
+        let mut transport = SmtpTransportBuilder::new(
+            (mailgun_config.smtp_server.as_str(), SUBMISSION_PORT),
+        ).expect("Failed to create message transport")
             .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
             .security_level(SecurityLevel::AlwaysEncrypt)
             .smtp_utf8(true)
@@ -691,9 +698,7 @@ https://crates-mirror.herokuapp.com/confirm/{}",
             .build();
 
         let result = transport.send(email.clone());
-        result.map_err(|_| {
-            bad_request("Error in sending email")
-        })?;
+        result.map_err(|_| bad_request("Error in sending email"))?;
     }
 
     Ok(())
@@ -711,30 +716,24 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let req_token = &req.params()["email_token"];
 
-    let token_info = tokens::table.filter(tokens::token.eq(req_token))
+    let token_info = tokens::table
+        .filter(tokens::token.eq(req_token))
         .first::<Token>(&*conn)
-        .map_err(|_| {
-            bad_request("Email token not found.")
-        })?;
+        .map_err(|_| bad_request("Email token not found."))?;
 
-    let email_info = emails::table.filter(emails::id.eq(token_info.email_id))
+    let email_info = emails::table
+        .filter(emails::id.eq(token_info.email_id))
         .first::<Email>(&*conn)
-        .map_err(|_| {
-            bad_request("Email belonging to token not found.")
-        })?;
+        .map_err(|_| bad_request("Email belonging to token not found."))?;
 
     update(emails::table.filter(emails::id.eq(email_info.id)))
         .set(emails::verified.eq(true))
         .execute(&*conn)
-        .map_err(|_| {
-            bad_request("Email verification could not be updated")
-        })?;
+        .map_err(|_| bad_request("Email verification could not be updated"))?;
 
     delete(tokens::table.filter(tokens::id.eq(token_info.id)))
         .execute(&*conn)
-        .map_err(|_| {
-            bad_request("Email token could not be deleted")
-        })?;
+        .map_err(|_| bad_request("Email token could not be deleted"))?;
 
     #[derive(Serialize)]
     struct R {
@@ -761,11 +760,10 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         return Err(human("current user does not match requested user"));
     }
 
-    let email_info = emails::table.filter(emails::user_id.eq(user.id))
+    let email_info = emails::table
+        .filter(emails::user_id.eq(user.id))
         .first::<Email>(&*conn)
-        .map_err(|_| {
-            bad_request("Email could not be found")
-        })?;
+        .map_err(|_| bad_request("Email could not be found"))?;
 
     let token = generate_token();
 
@@ -775,16 +773,16 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         created_at: time::now_utc().to_timespec(),
     };
 
-    insert(&new_token
-        .on_conflict(
-            email_id,
-            do_update().set(&new_token)
-        ))
-        .into(tokens::table)
+    insert(&new_token.on_conflict(
+        email_id,
+        do_update().set(&new_token),
+    )).into(tokens::table)
         .execute(&*conn)?;
 
     let email_result = send_user_confirm_email(&email_info.email, &user.gh_login, &token);
-    email_result.map_err(|_| { bad_request("Error in sending email") })?;
+    email_result.map_err(
+        |_| bad_request("Error in sending email"),
+    )?;
 
     #[derive(Serialize)]
     struct R {

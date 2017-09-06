@@ -539,7 +539,9 @@ fn test_insert_into_email_table() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -559,7 +561,9 @@ fn test_insert_into_email_table() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -597,7 +601,9 @@ fn test_insert_into_email_table_with_email_change() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -627,7 +633,9 @@ fn test_insert_into_email_table_with_email_change() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "potato");
@@ -669,10 +677,12 @@ fn test_confirm_user_email() {
 
     let email_token = {
         let conn = app.diesel_database.get().unwrap();
-        let email_info = emails::table.filter(emails::user_id.eq(user.id))
+        let email_info = emails::table
+            .filter(emails::user_id.eq(user.id))
             .first::<Email>(&*conn)
             .unwrap();
-        let token_info = tokens::table.filter(tokens::email_id.eq(email_info.id))
+        let token_info = tokens::table
+            .filter(tokens::email_id.eq(email_info.id))
             .first::<Token>(&*conn)
             .unwrap();
         token_info.token
@@ -681,12 +691,14 @@ fn test_confirm_user_email() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/confirm/{}", email_token))
-                .with_method(Method::Put)
+                .with_method(Method::Put),
         )
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
