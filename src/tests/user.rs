@@ -512,11 +512,12 @@ fn test_this_user_cannot_change_that_user_email() {
 
 }
 
-// Given a new user, test that if they sign in with
-// one email, change their email on GitHub, then
-// sign in again, that the email will remain
-// consistant with the original email used on
-// GitHub.
+/* Given a new user, test that if they sign in with
+   one email, change their email on GitHub, then
+   sign in again, that the email will remain
+   consistent with the original email used on
+   GitHub.
+*/
 #[test]
 fn test_insert_into_email_table() {
     #[derive(Deserialize)]
@@ -564,10 +565,11 @@ fn test_insert_into_email_table() {
     assert_eq!(r.user.login, "potato");
 }
 
-// Given a new user, check that when an email is added,
-// changed by user on GitHub, changed on crates.io,
-// that the email remains consistant with that which
-// the user has changed
+/* Given a new user, check that when an email is added,
+   changed by user on GitHub, changed on crates.io,
+   that the email remains consistent with that which
+   the user has changed
+*/
 #[test]
 fn test_insert_into_email_table_with_email_change() {
     #[derive(Deserialize)]
