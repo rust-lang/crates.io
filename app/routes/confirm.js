@@ -6,8 +6,8 @@ export default Ember.Route.extend({
     ajax: service(),
 
     model(params) {
-        return this.get('ajax').raw(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', data: {}})
-            .then(({response}) => {
+        return this.get('ajax').raw(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', data: {} })
+            .then(() => {
                 /*  We need this block to reload the user model from the database,
                     without which if we haven't submitted another GET /me after
                     clicking the link and before checking their account info page,
@@ -21,7 +21,7 @@ export default Ember.Route.extend({
                 if (this.session.get('isLoggedIn')) {
                     this.get('ajax').request('/api/v1/me').then((response) => {
                         this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-                    })
+                    });
                 }
             })
             .catch((error) => {
