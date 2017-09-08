@@ -659,7 +659,9 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
     dotenv().ok();
     let mailgun_config = MailgunConfigVars {
         smtp_login: env::var("MAILGUN_SMTP_LOGIN").unwrap_or_else(|_| String::from("Not found")),
-        smtp_password: env::var("MAILGUN_SMTP_PASSWORD").unwrap_or_else(|_| String::from("Not found")),
+        smtp_password: env::var("MAILGUN_SMTP_PASSWORD").unwrap_or_else(|_| {
+            String::from("Not found")
+        }),
         smtp_server: env::var("MAILGUN_SMTP_SERVER").unwrap_or_else(|_| String::from("Not found")),
     };
 
