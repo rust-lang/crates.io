@@ -1,4 +1,4 @@
-[project]
+[package]
 name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 version = "0.2.0"
@@ -19,8 +19,12 @@ doctest = false
 name = "all"
 path = "src/tests/all.rs"
 
-[project.metadata.docs.rs]
-rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"]
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--no-defaults",
+    "--passes", "collapse-docs",
+    "--passes", "unindent-comments"
+]
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
