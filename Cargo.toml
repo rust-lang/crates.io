@@ -1,7 +1,7 @@
 [project]
 name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"
 description = "Backend of crates.io"
@@ -20,7 +20,7 @@ name = "all"
 path = "src/tests/all.rs"
 
 [project.metadata.docs.rs]
-rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"] 
+rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"]
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
