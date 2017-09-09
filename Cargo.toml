@@ -23,7 +23,7 @@ path = "src/tests/all.rs"
 rustdoc-args = ["--no-defaults --passes collapse-docs --passes unindent-comments"]
 
 [dependencies]
-cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
+cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 rand = "0.3"
 time = "0.1"
 git2 = "0.6.4"
