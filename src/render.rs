@@ -164,4 +164,13 @@ mod tests {
             "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
         );
     }
+
+    // See https://github.com/kivikakk/comrak/issues/37. This panic happened
+    // in comrak 0.1.8 but was fixed in 0.1.9.
+    #[test]
+    fn text_with_fancy_single_quotes() {
+        let text = r#"wb’"#;
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<p>wb’</p>\n");
+    }
 }
