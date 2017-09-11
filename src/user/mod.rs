@@ -162,7 +162,7 @@ impl<'a> NewUser<'a> {
 
                     insert(&new_token).into(tokens::table).execute(conn)?;
 
-                    if send_user_confirm_email(user_email, &self.gh_login, &token).is_err() {
+                    if send_user_confirm_email(user_email, self.gh_login, &token).is_err() {
                         return Err(Error::NotFound);
                     };
                 }
