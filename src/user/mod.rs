@@ -427,13 +427,8 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     };
 
     let user = User {
-        id: user_info.id,
         email: email,
-        gh_access_token: user_info.gh_access_token,
-        gh_login: user_info.gh_login,
-        name: user_info.name,
-        gh_avatar: user_info.gh_avatar,
-        gh_id: user_info.gh_id,
+        ..user_info
     };
 
     #[derive(Serialize)]
