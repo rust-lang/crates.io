@@ -634,6 +634,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
+#[derive(Debug)]
 pub struct MailgunConfigVars {
     pub smtp_login: String,
     pub smtp_password: String,
