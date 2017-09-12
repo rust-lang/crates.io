@@ -17,6 +17,7 @@ use version::EncodableVersion;
 use {http, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
 use krate::Crate;
+use email;
 
 pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 
@@ -633,12 +634,15 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match
-    use email;
 
     let subject = "Please confirm your email address";
-    let body =  format!("Hello {}! Welcome to Crates.io. Please click the
+    let body = format!(
+        "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
-https://crates.io/confirm/{}", user_name, token);
+https://crates.io/confirm/{}",
+        user_name,
+        token
+    );
 
     let result = email::send_email(email, subject, &body);
     result
