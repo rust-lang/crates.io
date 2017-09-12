@@ -634,75 +634,19 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
-#[derive(Debug)]
-pub struct MailgunConfigVars {
-    pub smtp_login: String,
-    pub smtp_password: String,
-    pub smtp_server: String,
-}
-
 fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
-    // perhaps use crate lettre and heroku service Mailgun
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match
+    use email;
 
-    use dotenv::dotenv;
-    use std::env;
-    use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
-    use lettre::email::EmailBuilder;
-    use lettre::transport::smtp::authentication::Mechanism;
-    use lettre::transport::smtp::SUBMISSION_PORT;
-    use lettre::transport::EmailTransport;
-    use lettre::transport::file::FileEmailTransport;
-    use std::path::Path;
-
-    dotenv().ok();
-    let mailgun_config = MailgunConfigVars {
-        smtp_login: env::var("MAILGUN_SMTP_LOGIN").unwrap_or_else(|_| String::from("Not found")),
-        smtp_password: env::var("MAILGUN_SMTP_PASSWORD").unwrap_or_else(|_| {
-            String::from("Not found")
-        }),
-        smtp_server: env::var("MAILGUN_SMTP_SERVER").unwrap_or_else(|_| String::from("Not found")),
-    };
-
-    let email = EmailBuilder::new()
-        .to(email)
-        .from(mailgun_config.smtp_login.as_str())
-        .subject("Please confirm your email address")
-        .body(
-            format!(
-                "Hello {}! Welcome to Crates.io. Please click the
+    let subject = "Please confirm your email address";
+    let body =  format!("Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
-https://crates.io/confirm/{}",
-                user_name,
-                token
-            ).as_str(),
-        )
-        .build()
-        .expect("Failed to build confirm email message");
+https://crates.io/confirm/{}", user_name, token);
 
-    if mailgun_config.smtp_login == "Not found" {
-        let mut sender = FileEmailTransport::new(Path::new("/tmp"));
-        let result = sender.send(email.clone());
-        result.map_err(
-            |_| bad_request("Email file could not be generated"),
-        )?;
-    } else {
-        let mut transport = SmtpTransportBuilder::new(
-            (mailgun_config.smtp_server.as_str(), SUBMISSION_PORT),
-        ).expect("Failed to create message transport")
-            .credentials(&mailgun_config.smtp_login, &mailgun_config.smtp_password)
-            .security_level(SecurityLevel::AlwaysEncrypt)
-            .smtp_utf8(true)
-            .authentication_mechanism(Mechanism::Plain)
-            .build();
-
-        let result = transport.send(email.clone());
-        result.map_err(|_| bad_request("Error in sending email"))?;
-    }
-
-    Ok(())
+    let result = email::send_email(email, subject, &body);
+    result
 }
 
 /// Handles the `PUT /confirm/:email_token` route

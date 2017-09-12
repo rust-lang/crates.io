@@ -96,6 +96,7 @@ pub mod uploaders;
 pub mod user;
 pub mod util;
 pub mod version;
+pub mod email;
 
 mod local_upload;
 mod pagination;
