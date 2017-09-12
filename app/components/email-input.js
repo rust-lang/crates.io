@@ -22,11 +22,7 @@ export default Component.extend({
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
 
-        if (email != null && !verified) {
-            return true;
-        } else {
-            return false;
-        }
+        return (email != null && !verified);
     }),
     isError: false,
     emailError: '',
