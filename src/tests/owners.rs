@@ -301,7 +301,7 @@ fn check_ownership_one_crate() {
 fn invitations_are_empty_by_default() {
     #[derive(Deserialize)]
     struct R {
-        invitations: Vec<EncodableCrateOwnerInvitation>,
+        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
 
     let (_b, app, middle) = ::app();
@@ -322,14 +322,14 @@ fn invitations_are_empty_by_default() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: R = ::json(&mut response);
 
-    assert_eq!(json.invitations.len(), 0);
+    assert_eq!(json.crate_owner_invitations.len(), 0);
 }
 
 #[test]
 fn invitations_list() {
     #[derive(Deserialize)]
     struct R {
-        invitations: Vec<EncodableCrateOwnerInvitation>,
+        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
 
     let (_b, app, middle) = ::app();
@@ -362,8 +362,8 @@ fn invitations_list() {
     let mut response = ok_resp!(middle.call(&mut req));
     let json: R = ::json(&mut response);
 
-    assert_eq!(json.invitations.len(), 1);
-    assert_eq!(json.invitations[0].invited_by_username, "inviting_user");
-    assert_eq!(json.invitations[0].crate_name, "invited_crate");
-    assert_eq!(json.invitations[0].crate_id, krate.id);
+    assert_eq!(json.crate_owner_invitations.len(), 1);
+    assert_eq!(json.crate_owner_invitations[0].invited_by_username, "inviting_user");
+    assert_eq!(json.crate_owner_invitations[0].crate_name, "invited_crate");
+    assert_eq!(json.crate_owner_invitations[0].crate_id, krate.id);
 }
