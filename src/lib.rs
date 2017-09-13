@@ -1,8 +1,8 @@
 //! This crate implements the backend server for https://crates.io/
 //!
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
-//! implemented in the [keyword](keyword/index.html), [krate](krate/index.html),
-//! [user](user/index.html) and [version](version/index.html) modules.
+//! implemented in the [category](category/index.html), [keyword](keyword/index.html),
+//! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
