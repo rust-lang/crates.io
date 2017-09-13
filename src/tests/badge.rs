@@ -37,6 +37,7 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
 
     let appveyor = Badge::Appveyor {
         service: Some(String::from("github")),
+        id: None,
         branch: None,
         repository: String::from("rust-lang/cargo"),
     };
