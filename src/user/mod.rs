@@ -644,8 +644,7 @@ https://crates.io/confirm/{}",
         token
     );
 
-    let result = email::send_email(email, subject, &body);
-    result
+    email::send_email(email, subject, &body)
 }
 
 /// Handles the `PUT /confirm/:email_token` route

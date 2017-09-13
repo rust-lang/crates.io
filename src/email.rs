@@ -19,7 +19,7 @@ pub struct MailgunConfigVars {
 pub fn init_config_vars() -> Option<MailgunConfigVars> {
     dotenv().ok();
 
-    let mailgun_config = match (
+    match (
         env::var("MAILGUN_SMTP_LOGIN"),
         env::var("MAILGUN_SMTP_PASSWORD"),
         env::var("MAILGUN_SMTP_SERVER"),
@@ -32,9 +32,7 @@ pub fn init_config_vars() -> Option<MailgunConfigVars> {
             })
         }
         _ => None,
-    };
-
-    mailgun_config
+    }
 }
 
 pub fn build_email(
