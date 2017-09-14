@@ -338,6 +338,35 @@ yarn run start:local
 
 And then you should be able to visit http://localhost:4200!
 
+##### Using Mailgun to Send Emails
+
+We currently have email functionality enabled for confirming a user's email
+address. In development, the sending of emails is simulated by a file
+representing the email being created in your local `/tmp/` directory. If
+you want to test sending real emails, you will have to either set the
+Mailgun environment variables in `.env` manually or run your app instance
+on Heroku and add the Mailgun app.
+
+To set the environment variables manually, create an account and configure
+Mailgun. [These quick start instructions]
+(http://mailgun-documentation.readthedocs.io/en/latest/quickstart.html)
+might be helpful. Once you get the environment variables for the app, you
+will have to add them to the bottom of the `.env` file. You will need to
+fill in the `MAILGUN_SMTP_LOGIN`, `MAILGUN_SMTP_PASSWORD`, and
+`MAILGUN_SMTP_SERVER` fields.
+
+If using Heroku, you should be able to add the app to your instance on your
+dashboard. When your code is pushed and run on Heroku, the environment
+variables should be detected and you should not have to set anything
+manually.
+
+In either case, you should be able to check in your Mailgun account to see
+if emails are being detected and sent. Relevant information should be under
+the 'logs' tab on your Mailgun dashboard. To access, if the variables were
+set up manually, log in to your account. If the variables were set through
+Heroku, you should be able to click on the Mailgun icon in your Heroku
+dashboard, which should take you to your Mailgun dashboard.
+
 #### Running the backend tests
 
 In your `.env` file, set `TEST_DATABASE_URL` to a value that's the same as
