@@ -1,8 +1,8 @@
 import DS from 'ember-data';
 
 export default DS.Model.extend({
-    invited_user_id: DS.attr('number'),
-    invited_by_user_id: DS.attr('number'),
+    invited_by_username: DS.attr('string'),
+    crate_name: DS.attr('string'),
     crate_id: DS.attr('number'),
-    created_at: DS.attr('date'),
+    created_at: DS.attr('date')
 });
