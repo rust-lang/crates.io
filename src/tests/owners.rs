@@ -20,7 +20,6 @@ struct UserResponse {
 }
 
 #[test]
-#[ignore]
 fn new_crate_owner() {
     #[derive(Deserialize)]
     struct O {
