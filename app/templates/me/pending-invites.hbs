@@ -10,17 +10,23 @@
         {{#each model as |invite|}}
             <div class='row'>
                 <div class='info'>
+                    <div class='name'>
                     <h3>
                         {{#link-to 'crate' invite.crate_name}}
                             {{invite.crate_name}}
                         {{/link-to}}
                     </h3>
-                    <p>
-                        Invited by: {{invite.invited_by_username}}
-                    </p>
-                    <button class='small yellow-button'>Accept</button>
-                    <button class='small yellow-button'>Deny</button>
-                    <span class='date small'>{{moment-from-now invite.created_at}}</span>
+                    </div>
+                    <div class='invite'>
+                        <p>Invited by: {{invite.invited_by_username}}</p>
+                    </div>
+                    <div class='sent'>
+                        <span class='small'>{{moment-from-now invite.created_at}}</span>
+                    </div>
+                    <div class='actions'>
+                        <button class='small yellow-button'>Accept</button>
+                        <button class='small yellow-button'>Deny</button>
+                    </div>
                 </div>
             </div>
         {{/each}}
