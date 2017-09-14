@@ -3,16 +3,15 @@ use std::collections::HashMap;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
+use diesel::pg::upsert::*;
 use diesel::prelude::*;
-use pg::GenericConnection;
-use pg::Result as PgResult;
-use pg::rows::Row;
 use semver;
 use serde_json;
 use time::{Duration, Timespec, now_utc, strptime};
 use url;
 
+use Crate;
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
@@ -22,10 +21,14 @@ use owner::{rights, Rights};
 use schema::*;
 use user::RequestUser;
 use util::errors::CargoError;
-use util::{RequestUtils, CargoResult, ChainError, internal, human};
-use {Model, Crate};
+use util::{RequestUtils, CargoResult, human};
 use license_exprs;
 
+// This is necessary to allow joining version to both crates and readme_rendering
+// in the render-readmes script.
+enable_multi_table_joins!(crates, readme_rendering);
+
+// Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
 #[belongs_to(Crate)]
 pub struct Version {
@@ -56,6 +59,7 @@ pub struct EncodableVersion {
     pub krate: String,
     pub num: String,
     pub dl_path: String,
+    pub readme_path: String,
     pub updated_at: String,
     pub created_at: String,
     pub downloads: i32,
@@ -72,46 +76,16 @@ pub struct VersionLinks {
     pub authors: String,
 }
 
+#[derive(Insertable, Identifiable, Queryable, Associations, Debug, Clone, Copy)]
+#[belongs_to(Version)]
+#[table_name = "readme_rendering"]
+#[primary_key(version_id)]
+struct ReadmeRendering {
+    version_id: i32,
+    rendered_at: Timespec,
+}
+
 impl Version {
-    pub fn find_by_num(
-        conn: &GenericConnection,
-        crate_id: i32,
-        num: &semver::Version,
-    ) -> PgResult<Option<Version>> {
-        let num = num.to_string();
-        let stmt = conn.prepare(
-            "SELECT * FROM versions \
-             WHERE crate_id = $1 AND num = $2",
-        )?;
-        let rows = stmt.query(&[&crate_id, &num])?;
-        Ok(rows.iter().next().map(|r| Model::from_row(&r)))
-    }
-
-    pub fn insert(
-        conn: &GenericConnection,
-        crate_id: i32,
-        num: &semver::Version,
-        features: &HashMap<String, Vec<String>>,
-        authors: &[String],
-    ) -> CargoResult<Version> {
-        let num = num.to_string();
-        let features = serde_json::to_string(features).unwrap();
-        let stmt = conn.prepare(
-            "INSERT INTO versions \
-             (crate_id, num, features) \
-             VALUES ($1, $2, $3) \
-             RETURNING *",
-        )?;
-        let rows = stmt.query(&[&crate_id, &num, &features])?;
-        let ret: Version = Model::from_row(&rows.iter().next().chain_error(
-            || internal("no version returned"),
-        )?);
-        for author in authors {
-            ret.add_author(conn, author)?;
-        }
-        Ok(ret)
-    }
-
     pub fn encodable(self, crate_name: &str) -> EncodableVersion {
         let Version {
             id,
@@ -127,6 +101,7 @@ impl Version {
         let num = num.to_string();
         EncodableVersion {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
+            readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
             num: num.clone(),
             id: id,
             krate: crate_name.to_string(),
@@ -153,15 +128,6 @@ impl Version {
             .load(conn)
     }
 
-    pub fn add_author(&self, conn: &GenericConnection, name: &str) -> PgResult<()> {
-        conn.execute(
-            "INSERT INTO version_authors (version_id, name)
-                           VALUES ($1, $2)",
-            &[&self.id, &name],
-        )?;
-        Ok(())
-    }
-
     pub fn max<T>(versions: T) -> semver::Version
     where
         T: IntoIterator<Item = semver::Version>,
@@ -175,6 +141,24 @@ impl Version {
                 build: vec![],
             }
         })
+    }
+
+    pub fn record_readme_rendering(&self, conn: &PgConnection) -> CargoResult<()> {
+        let rendered = ReadmeRendering {
+            version_id: self.id,
+            rendered_at: ::now(),
+        };
+
+        diesel::insert(&rendered.on_conflict(
+            readme_rendering::version_id,
+            do_update().set(readme_rendering::rendered_at.eq(
+                excluded(
+                    readme_rendering::rendered_at,
+                ),
+            )),
+        )).into(readme_rendering::table)
+            .execute(&*conn)?;
+        Ok(())
     }
 }
 
@@ -283,30 +267,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
             yanked: row.7,
             license: row.8,
         }
-    }
-}
-
-impl Model for Version {
-    fn from_row(row: &Row) -> Version {
-        let num: String = row.get("num");
-        let features: Option<String> = row.get("features");
-        let features = features
-            .map(|s| serde_json::from_str(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
-        Version {
-            id: row.get("id"),
-            crate_id: row.get("crate_id"),
-            num: semver::Version::parse(&num).unwrap(),
-            updated_at: row.get("updated_at"),
-            created_at: row.get("created_at"),
-            downloads: row.get("downloads"),
-            features: features,
-            yanked: row.get("yanked"),
-            license: row.get("license"),
-        }
-    }
-    fn table_name(_: Option<Version>) -> &'static str {
-        "versions"
     }
 }
 
@@ -461,6 +421,14 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
+/// This does not delete a crate version, it makes the crate
+/// version accessible only to crates that already have a
+/// `Cargo.lock` containing this version.
+///
+/// Notes:
+/// Crate deletion is not implemented to avoid breaking builds,
+/// and the goal of yanking a crate is to prevent crates
+/// beginning to depend on the yanked crate version.
 pub fn yank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, true)
 }
@@ -470,6 +438,7 @@ pub fn unyank(req: &mut Request) -> CargoResult<Response> {
     modify_yank(req, false)
 }
 
+/// Changes `yanked` flag on a crate version record
 fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let (version, krate) = version_and_crate(req)?;
     let user = req.user()?;

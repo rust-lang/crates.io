@@ -40,7 +40,7 @@ impl Bucket {
     pub fn put<'a, 'b>(&self,
                        easy: &'a mut Easy,
                        path: &str,
-                       content: &'b mut Read,
+                       mut content: &'b [u8],
                        content_type: &str,
                        content_length: u64)
                        -> Transfer<'a, 'b> {

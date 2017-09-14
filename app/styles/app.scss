@@ -330,7 +330,7 @@ ul.dropdown {
 h1 {
   span.subtitle {
     display: block;
-    font-size: small;
+    font-size: x-small;
   }
 }
 
@@ -341,4 +341,17 @@ h1 {
         width: 100%;
         padding: 5px;
     }
+}
+
+.arrow-in-list svg {
+    background: #fff;
+}
+
+a.arrow svg {
+    background: #EEECDD;
+}
+
+abbr[title] {
+    text-decoration: none;
+    border-bottom: 1px dotted;
 }

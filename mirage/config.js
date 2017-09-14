@@ -1,6 +1,8 @@
 import Response from 'ember-cli-mirage/response';
 
 export default function() {
+    this.namespace = '/api/v1';
+
     this.get('/summary', function(schema) {
         let crates = schema.crates.all();
 
@@ -27,8 +29,6 @@ export default function() {
             popular_keywords: this.serialize(popular_keywords).keywords,
         };
     });
-
-    this.namespace = '/api/v1';
 
     this.get('/crates', function(schema, request) {
         const { start, end } = pageParams(request);

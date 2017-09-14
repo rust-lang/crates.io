@@ -1,7 +1,7 @@
 import DS from 'ember-data';
 
 export default DS.RESTAdapter.extend({
-    namespace: 'me',
+    namespace: 'api/v1/me',
     pathForType() {
         return 'tokens';
     }

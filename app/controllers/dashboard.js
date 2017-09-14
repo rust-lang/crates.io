@@ -45,7 +45,7 @@ export default Controller.extend({
             this.set('loadingMore', true);
             let page = (this.get('myFeed').length / 10) + 1;
 
-            this.get('ajax').request(`/me/updates?page=${page}`).then((data) => {
+            this.get('ajax').request(`/api/v1/me/updates?page=${page}`).then((data) => {
                 let versions = data.versions.map(version =>
                     this.store.push(this.store.normalize('version', version)));
 

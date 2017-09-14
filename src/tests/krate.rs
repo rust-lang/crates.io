@@ -18,37 +18,17 @@ use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
 
 use cargo_registry::token::ApiToken;
-use cargo_registry::owner::EncodableOwner;
-use cargo_registry::schema::versions;
+use cargo_registry::schema::{versions, crates};
 
 use cargo_registry::upload as u;
-use cargo_registry::user::EncodablePublicUser;
 use cargo_registry::version::EncodableVersion;
 use cargo_registry::category::Category;
 
-#[derive(Deserialize)]
-struct CrateList {
-    crates: Vec<EncodableCrate>,
-    meta: CrateMeta,
-}
+use {CrateList, GoodCrate, CrateMeta};
+
 #[derive(Deserialize)]
 struct VersionsList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct CrateMeta {
-    total: i32,
-}
-#[derive(Deserialize)]
-struct Warnings {
-    invalid_categories: Vec<String>,
-    invalid_badges: Vec<String>,
-}
-#[derive(Deserialize)]
-struct GoodCrate {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
-    warnings: Warnings,
 }
 #[derive(Deserialize)]
 struct CrateResponse {
@@ -70,14 +50,6 @@ struct RevDeps {
 #[derive(Deserialize)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
-}
-#[derive(Deserialize)]
-struct TeamResponse {
-    teams: Vec<EncodableOwner>,
-}
-#[derive(Deserialize)]
-struct UserResponse {
-    users: Vec<EncodableOwner>,
 }
 
 fn new_crate(name: &str) -> u::NewCrate {
@@ -404,6 +376,8 @@ fn show() {
             .version(::VersionBuilder::new("0.5.0"))
             .version(::VersionBuilder::new("0.5.1"))
             .keyword("kw1")
+            .downloads(20)
+            .recent_downloads(10)
             .expect_build(&conn);
     }
 
@@ -415,6 +389,7 @@ fn show() {
     assert_eq!(json.krate.homepage, krate.homepage);
     assert_eq!(json.krate.documentation, krate.documentation);
     assert_eq!(json.krate.keywords, Some(vec!["kw1".into()]));
+    assert_eq!(json.krate.recent_downloads, Some(10));
     let versions = json.krate.versions.as_ref().unwrap();
     assert_eq!(versions.len(), 3);
     assert_eq!(json.versions.len(), 3);
@@ -464,6 +439,45 @@ fn versions() {
 }
 
 #[test]
+#[ignore]
+fn uploading_new_version_touches_crate() {
+    use diesel::expression::dsl::*;
+
+    let (_b, app, middle) = ::app();
+
+    let mut upload_req = ::new_req(app.clone(), "foo_versions_updated_at", "1.0.0");
+    let u = ::sign_in(&mut upload_req, &app);
+    ok_resp!(middle.call(&mut upload_req));
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        diesel::update(crates::table)
+            .set(crates::updated_at.eq(crates::updated_at - 1.hour()))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+    let mut show_req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/crates/foo_versions_updated_at",
+    );
+    let mut response = ok_resp!(middle.call(&mut show_req));
+    let json: CrateResponse = ::json(&mut response);
+    let updated_at_before = json.krate.updated_at;
+
+    let mut upload_req = ::new_req(app.clone(), "foo_versions_updated_at", "2.0.0");
+    ::sign_in_as(&mut upload_req, &u);
+    ok_resp!(middle.call(&mut upload_req));
+
+    let mut response = ok_resp!(middle.call(&mut show_req));
+    let json: CrateResponse = ::json(&mut response);
+    let updated_at_after = json.krate.updated_at;
+
+    assert_ne!(updated_at_before, updated_at_after);
+}
+
+#[test]
 fn new_wrong_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo", "1.0.0");
@@ -475,8 +489,8 @@ fn new_wrong_token() {
     bad_resp!(middle.call(&mut req));
     drop(req);
 
-    let mut req = ::new_req(app, "foo", "1.0.0");
-    ::mock_user(&mut req, ::user("foo"));
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    ::sign_in(&mut req, &app);
     ::logout(&mut req);
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
@@ -487,8 +501,8 @@ fn new_bad_names() {
     fn bad_name(name: &str) {
         println!("testing: `{}`", name);
         let (_b, app, middle) = ::app();
-        let mut req = ::new_req(app, name, "1.0.0");
-        ::mock_user(&mut req, ::user("foo"));
+        let mut req = ::new_req(app.clone(), name, "1.0.0");
+        ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
             json.errors[0].detail.contains(
@@ -505,6 +519,7 @@ fn new_bad_names() {
 }
 
 #[test]
+#[ignore]
 fn new_krate() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -516,6 +531,7 @@ fn new_krate() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_with_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -537,8 +553,8 @@ fn new_krate_with_token() {
 fn new_krate_with_reserved_name() {
     fn test_bad_name(name: &str) {
         let (_b, app, middle) = ::app();
-        let mut req = ::new_req(app, name, "1.0.0");
-        ::mock_user(&mut req, ::user("foo"));
+        let mut req = ::new_req(app.clone(), name, "1.0.0");
+        ::sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(json.errors[0].detail.contains(
             "cannot upload a crate with a reserved name",
@@ -553,6 +569,7 @@ fn new_krate_with_reserved_name() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_weird_version() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_weird", "0.0.0-pre");
@@ -564,6 +581,7 @@ fn new_krate_weird_version() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_with_dependency() {
     let (_b, app, middle) = ::app();
     let dep = u::CrateDependency {
@@ -601,6 +619,7 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
     let deps = vec![
@@ -655,6 +674,7 @@ fn new_krate_with_wildcard_dependency() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_twice() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo_twice");
@@ -728,68 +748,6 @@ fn new_krate_bad_name() {
 }
 
 #[test]
-fn new_crate_owner() {
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
-
-    let (_b, app, middle) = ::app();
-
-    // Create a crate under one user
-    let mut req = ::new_req(app.clone(), "foo_owner", "1.0.0");
-    ::sign_in(&mut req, &app);
-    let u2;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u2 = ::new_user("bar").create_or_update(&conn).unwrap();
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
-
-    // Flag the second user as an owner
-    let body = r#"{"users":["bar"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
-    assert!(::json::<O>(&mut response).ok);
-    bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
-
-    // Make sure this shows up as one of their crates.
-    let query = format!("user_id={}", u2.id);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates")
-                .with_method(Method::Get)
-                .with_query(&query),
-        )
-    );
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
-
-    // And upload a new crate as the first user
-    let body = ::new_req_body_version_2(::krate("foo_owner"));
-    ::sign_in_as(&mut req, &u2);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    ::json::<GoodCrate>(&mut response);
-}
-
-#[test]
 fn valid_feature_names() {
     assert!(Crate::valid_feature_name("foo"));
     assert!(!Crate::valid_feature_name(""));
@@ -808,6 +766,7 @@ fn new_krate_too_big() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_too_big_but_whitelisted() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_whitelist", "1.1.0");
@@ -900,6 +859,7 @@ fn new_crate_similar_name_underscore() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "fgt", "1.0.0");
@@ -925,6 +885,7 @@ fn new_krate_git_upload() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/fpp");
@@ -960,6 +921,7 @@ fn new_krate_git_upload_appends() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload_with_conflicts() {
     let (_b, app, middle) = ::app();
 
@@ -1001,9 +963,23 @@ fn new_krate_dependency_missing() {
 }
 
 #[test]
+#[ignore]
+fn new_krate_with_readme() {
+    let (_b, app, middle) = ::app();
+    let mut krate = ::krate("foo_readme");
+    krate.readme = Some("".to_owned());
+    let mut req = ::new_req_full(app.clone(), krate, "1.0.0", vec![]);
+    ::sign_in(&mut req, &app);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_readme");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
 fn summary_doesnt_die() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/summary");
+    let mut req = ::req(app, Method::Get, "/api/v1/summary");
     ok_resp!(middle.call(&mut req));
 }
 
@@ -1213,68 +1189,7 @@ fn following() {
 }
 
 #[test]
-fn owners() {
-    #[derive(Deserialize)]
-    struct R {
-        users: Vec<EncodablePublicUser>,
-    }
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
-
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_owners/owners");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        ::new_user("foobar").create_or_update(&conn).unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
-        ::CrateBuilder::new("foo_owners", user.id).expect_build(&conn);
-    }
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
-        body.as_bytes(),
-    )));
-    assert!(::json::<O>(&mut response).ok);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 2);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
-    assert!(::json::<O>(&mut response).ok);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let body = r#"{"users":["foo"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
-    ::json::<::Bad>(&mut response);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
-        body.as_bytes(),
-    )));
-    assert!(::json::<O>(&mut response).ok);
-}
-
-#[test]
+#[ignore]
 fn yank() {
     #[derive(Deserialize)]
     struct O {
@@ -1351,6 +1266,7 @@ fn yank_not_owner() {
 }
 
 #[test]
+#[ignore]
 fn yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1447,6 +1363,7 @@ fn yank_max_version() {
 }
 
 #[test]
+#[ignore]
 fn publish_after_yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1536,6 +1453,7 @@ fn bad_keywords() {
 }
 
 #[test]
+#[ignore]
 fn good_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_good_cat");
@@ -1556,6 +1474,7 @@ fn good_categories() {
 }
 
 #[test]
+#[ignore]
 fn ignored_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_ignored_cat");
@@ -1570,6 +1489,7 @@ fn ignored_categories() {
 }
 
 #[test]
+#[ignore]
 fn good_badges() {
     let krate = ::krate("foobadger");
     let mut badges = HashMap::new();
@@ -1605,6 +1525,7 @@ fn good_badges() {
 }
 
 #[test]
+#[ignore]
 fn ignored_badges() {
     let krate = ::krate("foo_ignored_badge");
     let mut badges = HashMap::new();
@@ -1855,95 +1776,6 @@ fn author_license_and_description_required() {
         "{:?}",
         json.errors
     );
-}
-
-/*  Testing the crate ownership between two crates and one team.
-    Given two crates, one crate owned by both a team and a user,
-    one only owned by a user, check that the CrateList returned
-    for the user_id contains only the crates owned by that user,
-    and that the CrateList returned for the team_id contains
-    only crates owned by that team.
-*/
-#[test]
-fn check_ownership_two_crates() {
-    let (_b, app, middle) = ::app();
-
-    let (krate_owned_by_team, team) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
-        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
-        (krate, t)
-    };
-
-    let (krate_not_owned_by_team, user) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_bar").create_or_update(&conn).unwrap();
-        (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
-    };
-
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
-
-    let query = format!("user_id={}", user.id);
-    let mut response = ok_resp!(middle.call(req.with_query(&query)));
-    let json: CrateList = ::json(&mut response);
-
-    assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
-    assert_eq!(json.crates.len(), 1);
-
-    let query = format!("team_id={}", team.id);
-    let mut response = ok_resp!(middle.call(req.with_query(&query)));
-
-    let json: CrateList = ::json(&mut response);
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.crates[0].name, krate_owned_by_team.name);
-}
-
-/*  Given a crate owned by both a team and a user, check that the
-    JSON returned by the /owner_team route and /owner_user route
-    contains the correct kind of owner
-
-    Note that in this case function new_team must take a team name
-    of form github:org_name:team_name as that is the format
-    EncodableOwner::encodable is expecting
-*/
-#[test]
-fn check_ownership_one_crate() {
-    let (_b, app, middle) = ::app();
-
-    let (team, user) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_cat").create_or_update(&conn).unwrap();
-        let t = ::new_team("github:test_org:team_sloth")
-            .create_or_update(&conn)
-            .unwrap();
-        let krate = ::CrateBuilder::new("best_crate", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
-        (t, u)
-    };
-
-    let mut req = ::req(
-        app.clone(),
-        Method::Get,
-        "/api/v1/crates/best_crate/owner_team",
-    );
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: TeamResponse = ::json(&mut response);
-
-    assert_eq!(json.teams[0].kind, "team");
-    assert_eq!(json.teams[0].name, team.name);
-
-    let mut req = ::req(
-        app.clone(),
-        Method::Get,
-        "/api/v1/crates/best_crate/owner_user",
-    );
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserResponse = ::json(&mut response);
-
-    assert_eq!(json.users[0].kind, "user");
-    assert_eq!(json.users[0].name, user.name);
 }
 
 /*  Given two crates, one with downloads less than 90 days ago, the

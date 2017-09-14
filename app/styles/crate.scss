@@ -208,6 +208,7 @@
         .docs {
             @include flex(7);
             padding-right: 40px;
+            max-width: 600px;
         }
         .authorship {
             @include flex(3);
@@ -300,6 +301,33 @@
         }
         .copy-failure {
             color: red;
+        }
+    }
+    .crate-readme {
+        line-height: 1.5;
+
+        img {
+            max-width: 100%;
+        }
+
+        pre {
+            overflow-x: auto;
+        }
+
+        p {
+            code {
+                background-color: #fff;
+                padding: 0 2px;
+            }
+        }
+
+        table {
+            border-collapse: collapse;
+
+            th, td {
+                border: 1px solid #dfe2e5;
+                padding: 6px 13px;
+            }
         }
     }
     .last-update {

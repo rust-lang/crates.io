@@ -1,5 +1,5 @@
 use cargo_registry::app::App;
-use cargo_registry::badge::{Badge, MaintenanceValue};
+use cargo_registry::badge::{Badge, MaintenanceStatus};
 use cargo_registry::krate::Crate;
 
 use std::collections::HashMap;
@@ -108,10 +108,10 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
-    let maintenance = Badge::Maintenance { value: MaintenanceValue::LookingForMaintainer };
+    let maintenance = Badge::Maintenance { status: MaintenanceStatus::LookingForMaintainer };
     let mut maintenance_attributes = HashMap::new();
     maintenance_attributes.insert(
-        String::from("value"),
+        String::from("status"),
         String::from("looking-for-maintainer"),
     );
 
@@ -514,8 +514,8 @@ fn maintenance_required_keys() {
 
     let mut badges = HashMap::new();
 
-    // Value is a required key
-    test_badges.maintenance_attributes.remove("value");
+    // Status is a required key
+    test_badges.maintenance_attributes.remove("status");
     badges.insert(
         String::from("maintenance"),
         test_badges.maintenance_attributes,
@@ -537,7 +537,7 @@ fn maintenance_invalid_values() {
 
     // "totes broken" is not a recognized value
     test_badges.maintenance_attributes.insert(
-        String::from("value"),
+        String::from("status"),
         String::from(
             "totes broken",
         ),

@@ -15,7 +15,6 @@ extern crate diesel_codegen;
 extern crate rand;
 
 use chrono::{Utc, NaiveDate, Duration};
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rand::{StdRng, Rng};
 use std::env;

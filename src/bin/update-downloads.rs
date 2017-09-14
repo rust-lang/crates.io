@@ -6,13 +6,9 @@ extern crate chrono;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_codegen;
-extern crate openssl;
-extern crate semver;
-extern crate time;
 
 use chrono::NaiveDate;
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use diesel::pg::upsert::*;
 use std::env;
 use std::time::Duration;
@@ -140,9 +136,9 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
+    extern crate semver;
 
-    use semver;
+    use std::collections::HashMap;
 
     use diesel::expression::dsl::sql;
     use diesel::types::Integer;

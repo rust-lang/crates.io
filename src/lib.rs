@@ -8,6 +8,7 @@
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
+#![recursion_limit="128"]
 
 #[macro_use]
 extern crate diesel;
@@ -19,7 +20,9 @@ extern crate log;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
+extern crate ammonia;
 extern crate chrono;
+extern crate comrak;
 extern crate curl;
 extern crate diesel_full_text_search;
 extern crate dotenv;
@@ -29,14 +32,13 @@ extern crate hex;
 extern crate license_exprs;
 extern crate oauth2;
 extern crate openssl;
-extern crate postgres as pg;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate r2d2_postgres;
 extern crate rand;
 extern crate s3;
 extern crate semver;
 extern crate serde;
+extern crate tar;
 extern crate time;
 extern crate toml;
 extern crate url;
@@ -46,7 +48,6 @@ extern crate conduit_conditional_get;
 extern crate conduit_cookie;
 extern crate cookie;
 extern crate conduit_git_http_backend;
-extern crate conduit_json_parser;
 extern crate conduit_log_requests;
 extern crate conduit_middleware;
 extern crate conduit_router;
@@ -60,7 +61,6 @@ pub use self::dependency::Dependency;
 pub use self::download::VersionDownload;
 pub use self::keyword::Keyword;
 pub use self::krate::Crate;
-pub use self::model::Model;
 pub use self::user::User;
 pub use self::version::Version;
 pub use self::uploaders::{Uploader, Bomb};
@@ -78,6 +78,7 @@ pub mod badge;
 pub mod categories;
 pub mod category;
 pub mod config;
+pub mod crate_owner_invitation;
 pub mod db;
 pub mod dependency;
 pub mod dist;
@@ -86,8 +87,8 @@ pub mod git;
 pub mod http;
 pub mod keyword;
 pub mod krate;
-pub mod model;
 pub mod owner;
+pub mod render;
 pub mod schema;
 pub mod token;
 pub mod upload;
@@ -96,6 +97,7 @@ pub mod user;
 pub mod util;
 pub mod version;
 
+mod local_upload;
 mod pagination;
 
 /// Used for setting different values depending on whether the app is being run in production,
@@ -139,6 +141,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/new", C(krate::new));
     api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+    api_router.get("/crates/:crate_id/:version/readme", C(krate::readme));
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
         C(version::dependencies),
@@ -148,11 +151,14 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(version::downloads),
     );
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
+    // Used to generate download graphs
     api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
+    // This endpoint may now be redundant, check frontend to see if it is
+    // being used
     api_router.get("/crates/:crate_id/owners", C(krate::owners));
     api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
     api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));
@@ -175,6 +181,16 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));
     api_router.get("/teams/:team_id", C(user::show_team));
+    api_router.get("/me", C(user::me));
+    api_router.get("/me/updates", C(user::updates));
+    api_router.get("/me/tokens", C(token::list));
+    api_router.post("/me/tokens", C(token::new));
+    api_router.delete("/me/tokens/:id", C(token::revoke));
+    api_router.get(
+        "/me/crate_owner_invitations",
+        C(crate_owner_invitation::list),
+    );
+    api_router.get("/summary", C(krate::summary));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
@@ -189,13 +205,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     router.get("/authorize_url", C(user::github_authorize));
     router.get("/authorize", C(user::github_access_token));
-    router.get("/logout", C(user::logout));
-    router.get("/me", C(user::me));
-    router.get("/me/updates", C(user::updates));
-    router.get("/me/tokens", C(token::list));
-    router.post("/me/tokens", C(token::new));
-    router.delete("/me/tokens/:id", C(token::revoke));
-    router.get("/summary", C(krate::summary));
+    router.delete("/logout", C(user::logout));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
@@ -213,6 +223,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env == Env::Development {
         // DebugMiddleware is defined below to print logs for each request.
         m.add(DebugMiddleware);
+        m.around(local_upload::Middleware::default());
     }
 
     if env != Env::Test {
@@ -227,13 +238,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         cookie::Key::from_master(app.session_key.as_bytes()),
         env == Env::Production,
     ));
-    m.add(app::AppMiddleware::new(app));
-
-    // Run each request in a transaction and roll back the transaction if the request results
-    // in an error. Not used when running tests because each test is run in a transaction.
-    if env != Env::Test {
-        m.add(db::TransactionMiddleware);
+    if env == Env::Production {
+        m.add(http::SecurityHeadersMiddleware::new(&app.config.uploader));
     }
+    m.add(app::AppMiddleware::new(app));
 
     // Sets the current user on each request.
     m.add(user::Middleware);

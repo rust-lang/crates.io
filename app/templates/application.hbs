@@ -12,8 +12,8 @@
     {{/link-to}}
     {{#link-to "index"}}
       <h1>
-        CARGO
-        <span class="subtitle">packages for Rust</span>
+        crates.io
+        <span class="subtitle">Rust Package Registry</span>
       </h1>
     {{/link-to}}
 
@@ -50,7 +50,7 @@
                 <li><a href='http://doc.crates.io/environment-variables.html'>Environment Variables</a></li>
                 <li><a href='http://doc.crates.io/source-replacement.html'>Source Replacement</a></li>
                 <li><a href='http://doc.crates.io/external-tools.html'>External Tools</a></li>
-                <li><a href='http://doc.crates.io/policies.html'>Policies</a></li>
+                <li>{{#link-to 'policies'}}Policies{{/link-to}}</li>
             {{/rl-dropdown}}
         {{/rl-dropdown-container}}
         <span class="sep">|</span>
@@ -123,5 +123,5 @@
     <span class="sep">|</span>
     <a href='mailto:help@crates.io'>Send us an email</a>
     <span class="sep">|</span>
-    <a href='http://doc.crates.io/policies.html'>Policies</a>
+    {{#link-to 'policies'}}Policies{{/link-to}}
 </div>

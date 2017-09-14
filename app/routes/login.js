@@ -18,7 +18,7 @@ export default Route.extend({
             // ignore error
         }
 
-        delete window.github_response;
+        window.github_response = undefined;
         let windowDimensions = [
             'width=1000',
             'height=450',
@@ -47,7 +47,7 @@ export default Route.extend({
             }
             window.clearInterval(oauthInterval);
             let json = window.github_response;
-            delete window.github_response;
+            window.github_response = undefined;
             if (!json) {
                 return;
             }

@@ -7,10 +7,8 @@
 
 extern crate cargo_registry;
 extern crate diesel;
-extern crate semver;
 
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use std::env;
 use std::io;
 use std::io::prelude::*;

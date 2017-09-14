@@ -20,9 +20,6 @@ use {db, Config};
 #[allow(missing_debug_implementations)]
 pub struct App {
     /// The database connection pool
-    pub database: db::Pool,
-
-    /// The diesel database connection pool
     pub diesel_database: db::DieselPool,
 
     /// The GitHub OAuth2 configuration
@@ -83,12 +80,6 @@ impl App {
             _ => 1,
         };
 
-        // We need two connection pools until we finish transitioning everything to use diesel.
-        let db_config = r2d2::Config::builder()
-            .pool_size(db_pool_size)
-            .min_idle(db_min_idle)
-            .helper_threads(db_helper_threads)
-            .build();
         let diesel_db_config = r2d2::Config::builder()
             .pool_size(db_pool_size)
             .min_idle(db_min_idle)
@@ -98,7 +89,6 @@ impl App {
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
 
         App {
-            database: db::pool(&config.db_url, db_config),
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
             github: github,
             session_key: config.session_key.clone(),

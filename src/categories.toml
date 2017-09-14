@@ -245,6 +245,20 @@ description = """
 Crates to interface with specific CPU or other hardware features.\
 """
 
+[internationalization]
+name = "Internationalization (i18n)"
+description = """
+Crates to help develop software capable of adapting to various \
+languages and regions.\
+"""
+
+[localization]
+name = "Localization (L10n)"
+description = """
+Crates to help adapting internationalized software to specific \
+languages and regions.\
+"""
+
 [memory-management]
 name = "Memory management"
 description = """

@@ -1,3 +1,7 @@
+//! This module handles the expected information a crate should have
+//! and manages the serialising and deserialising of this information
+//! to and from structs. The serlializing is only utilised in
+//! integration tests.
 use std::collections::HashMap;
 use std::ops::Deref;
 

@@ -2,7 +2,6 @@ use std::sync::atomic::Ordering;
 
 use conduit::{Handler, Method};
 
-use cargo_registry::Model;
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
 use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
@@ -40,42 +39,14 @@ fn access_token_needs_data() {
 }
 
 #[test]
-fn user_insert() {
-    let (_b, app, _middle) = ::app();
-    let conn = t!(app.database.get());
-    let tx = t!(conn.transaction());
-
-    let user = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar"));
-    assert_eq!(t!(User::find(&tx, user.id)), user);
-
-    assert_eq!(
-        t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "bar")),
-        user
-    );
-    let user2 = t!(User::find_or_insert(&tx, 1, "foo", None, None, None, "baz"));
-    assert!(user != user2);
-    assert_eq!(user.id, user2.id);
-    assert_eq!(user2.gh_access_token, "baz");
-
-    let user3 = t!(User::find_or_insert(&tx, 1, "bar", None, None, None, "baz"));
-    assert!(user != user3);
-    assert_eq!(user.id, user3.id);
-    assert_eq!(user3.gh_login, "bar");
-}
-
-#[test]
 fn me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
-        user
-    };
+    let user = ::sign_in(&mut req, &app);
+
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowResponse = ::json(&mut response);
 
@@ -130,6 +101,29 @@ fn crates_by_user_id() {
 }
 
 #[test]
+fn crates_by_user_id_not_including_deleted_owners() {
+    let (_b, app, middle) = ::app();
+    let u;
+    {
+        let conn = app.diesel_database.get().unwrap();
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
+        krate.owner_remove(&conn, &u, "foo").unwrap();
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    req.with_query(&format!("user_id={}", u.id));
+    let mut response = ok_resp!(middle.call(&mut req));
+
+    #[derive(Deserialize)]
+    struct Response {
+        crates: Vec<EncodableCrate>,
+    }
+    let response: Response = ::json(&mut response);
+    assert_eq!(response.crates.len(), 0);
+}
+
+#[test]
 fn following() {
     #[derive(Deserialize)]
     struct R {
@@ -158,7 +152,9 @@ fn following() {
     }
 
     let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
+        req.with_path("/api/v1/me/updates").with_method(
+            Method::Get,
+        ),
     ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
@@ -178,7 +174,9 @@ fn following() {
     );
 
     let mut response = ok_resp!(middle.call(
-        req.with_path("/me/updates").with_method(Method::Get),
+        req.with_path("/api/v1/me/updates").with_method(
+            Method::Get,
+        ),
     ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
@@ -186,7 +184,7 @@ fn following() {
 
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("/me/updates")
+            req.with_path("/api/v1/me/updates")
                 .with_method(Method::Get)
                 .with_query("per_page=1"),
         )
@@ -203,7 +201,7 @@ fn following() {
     );
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("/me/updates")
+            req.with_path("/api/v1/me/updates")
                 .with_method(Method::Get)
                 .with_query("page=2&per_page=1"),
         )
@@ -319,7 +317,7 @@ fn test_github_login_does_not_overwrite_email() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -332,7 +330,9 @@ fn test_github_login_does_not_overwrite_email() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
@@ -360,7 +360,9 @@ fn test_github_login_does_not_overwrite_email() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
@@ -383,7 +385,7 @@ fn test_email_get_and_put() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("mango").create_or_update(&conn).unwrap();
@@ -391,7 +393,9 @@ fn test_email_get_and_put() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
@@ -406,7 +410,9 @@ fn test_email_get_and_put() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/me").with_method(Method::Get)));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
@@ -425,7 +431,7 @@ fn test_email_get_and_put() {
 #[test]
 fn test_empty_email_not_added() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("papaya").create_or_update(&conn).unwrap();
@@ -475,7 +481,7 @@ fn test_empty_email_not_added() {
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
 
     let not_signed_in_user = {
         let conn = app.diesel_database.get().unwrap();

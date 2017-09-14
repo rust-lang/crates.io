@@ -7,13 +7,11 @@ use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
 use diesel::helper_types::Select;
 use diesel::pg::upsert::*;
-use diesel::pg::{Pg, PgConnection};
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel;
 use diesel_full_text_search::*;
 use license_exprs;
-use pg::GenericConnection;
-use pg::rows::Row;
 use hex::ToHex;
 use serde_json;
 use semver;
@@ -31,14 +29,14 @@ use git;
 use keyword::{EncodableKeyword, CrateKeyword};
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
 use pagination::Paginate;
+use render;
 use schema::*;
 use upload;
 use user::RequestUser;
-use util::errors::NotFound;
 use util::{read_le_u32, read_fill};
 use util::{RequestUtils, CargoResult, internal, ChainError, human};
 use version::{EncodableVersion, NewVersion};
-use {Model, User, Keyword, Version, Category, Badge, Replica};
+use {User, Keyword, Version, Category, Badge, Replica};
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -294,178 +292,6 @@ impl Crate {
         crates::table.select(ALL_COLUMNS)
     }
 
-    pub fn find_by_name(conn: &GenericConnection, name: &str) -> CargoResult<Crate> {
-        let stmt = conn.prepare(
-            "SELECT * FROM crates \
-                                      WHERE canon_crate_name(name) =
-                                            canon_crate_name($1) LIMIT 1",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        let row = rows.iter().next();
-        let row = row.chain_error(|| NotFound)?;
-        Ok(Model::from_row(&row))
-    }
-
-    // This is cleaned up by the diesel port
-    #[cfg_attr(feature = "lint", allow(too_many_arguments))]
-    pub fn find_or_insert(
-        conn: &GenericConnection,
-        name: &str,
-        user_id: i32,
-        description: &Option<String>,
-        homepage: &Option<String>,
-        documentation: &Option<String>,
-        readme: &Option<String>,
-        repository: &Option<String>,
-        license: &Option<String>,
-        license_file: &Option<String>,
-        max_upload_size: Option<i32>,
-    ) -> CargoResult<Crate> {
-        let description = description.as_ref().map(|s| &s[..]);
-        let homepage = homepage.as_ref().map(|s| &s[..]);
-        let documentation = documentation.as_ref().map(|s| &s[..]);
-        let readme = readme.as_ref().map(|s| &s[..]);
-        let repository = repository.as_ref().map(|s| &s[..]);
-        let mut license = license.as_ref().map(|s| &s[..]);
-        let license_file = license_file.as_ref().map(|s| &s[..]);
-        validate_url(homepage, "homepage")?;
-        validate_url(documentation, "documentation")?;
-        validate_url(repository, "repository")?;
-
-        match license {
-            // If a license is given, validate it to make sure it's actually a
-            // valid license
-            Some(..) => validate_license(license)?,
-
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            None if license_file.is_some() => {
-                license = Some("non-standard");
-            }
-
-            None => {}
-        }
-
-        // TODO: like with users, this is sadly racy
-        let stmt = conn.prepare(
-            "UPDATE crates
-                                         SET documentation = $1,
-                                             homepage = $2,
-                                             description = $3,
-                                             readme = $4,
-                                             license = $5,
-                                             repository = $6
-                                       WHERE canon_crate_name(name) =
-                                             canon_crate_name($7)
-                                   RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[
-                &documentation,
-                &homepage,
-                &description,
-                &readme,
-                &license,
-                &repository,
-                &name,
-            ],
-        )?;
-        if let Some(row) = rows.iter().next() {
-            return Ok(Model::from_row(&row));
-        }
-
-        let stmt = conn.prepare(
-            "SELECT 1 FROM reserved_crate_names
-                                 WHERE canon_crate_name(name) =
-                                       canon_crate_name($1)",
-        )?;
-        let rows = stmt.query(&[&name])?;
-        if !rows.is_empty() {
-            return Err(human("cannot upload a crate with a reserved name"));
-        }
-
-        let stmt = conn.prepare(
-            "INSERT INTO crates
-                                      (name, description, homepage,
-                                       documentation, readme,
-                                       repository, license, max_upload_size)
-                                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                      RETURNING *",
-        )?;
-        let rows = stmt.query(
-            &[
-                &name,
-                &description,
-                &homepage,
-                &documentation,
-                &readme,
-                &repository,
-                &license,
-                &max_upload_size,
-            ],
-        )?;
-        let ret: Crate = Model::from_row(&rows.iter().next().chain_error(
-            || internal("no crate returned"),
-        )?);
-
-        conn.execute(
-            "INSERT INTO crate_owners
-                           (crate_id, owner_id, created_by, owner_kind)
-                           VALUES ($1, $2, $2, $3)",
-            &[&ret.id, &user_id, &(OwnerKind::User as i32)],
-        )?;
-        return Ok(ret);
-
-        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
-            let url = match url {
-                Some(s) => s,
-                None => return Ok(()),
-            };
-            let url = Url::parse(url).map_err(|_| {
-                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-            })?;
-            match &url.scheme()[..] {
-                "http" | "https" => {}
-                s => {
-                    return Err(human(&format_args!(
-                        "`{}` has an invalid url \
-                         scheme: `{}`",
-                        field,
-                        s
-                    )))
-                }
-            }
-            if url.cannot_be_a_base() {
-                return Err(human(&format_args!(
-                    "`{}` must have relative scheme \
-                     data: {}",
-                    field,
-                    url
-                )));
-            }
-            Ok(())
-        }
-
-        fn validate_license(license: Option<&str>) -> CargoResult<()> {
-            license
-                .iter()
-                .flat_map(|s| s.split('/'))
-                .map(license_exprs::validate_license_expr)
-                .collect::<Result<Vec<_>, _>>()
-                .map(|_| ())
-                .map_err(|e| {
-                    human(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })
-        }
-
-    }
-
     pub fn valid_name(name: &str) -> bool {
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
         Crate::valid_ident(name) && under_max_length
@@ -612,19 +438,6 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn versions(&self, conn: &GenericConnection) -> CargoResult<Vec<Version>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM versions \
-             WHERE crate_id = $1",
-        )?;
-        let rows = stmt.query(&[&self.id])?;
-        let mut ret = rows.iter()
-            .map(|r| Model::from_row(&r))
-            .collect::<Vec<Version>>();
-        ret.sort_by(|a, b| b.num.cmp(&a.num));
-        Ok(ret)
-    }
-
     pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
         let users = base_query
@@ -643,34 +456,6 @@ impl Crate {
             .map(Owner::Team);
 
         Ok(users.chain(teams).collect())
-    }
-
-    // TODO: Update bin/transfer_crates to use owners() then get rid of this
-    pub fn owners_old(&self, conn: &GenericConnection) -> CargoResult<Vec<Owner>> {
-        let stmt = conn.prepare(
-            "SELECT * FROM users
-                                      INNER JOIN crate_owners
-                                         ON crate_owners.owner_id = users.id
-                                      WHERE crate_owners.crate_id = $1
-                                        AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = $2",
-        )?;
-        let user_rows = stmt.query(&[&self.id, &(OwnerKind::User as i32)])?;
-
-        let stmt = conn.prepare(
-            "SELECT * FROM teams
-                                      INNER JOIN crate_owners
-                                         ON crate_owners.owner_id = teams.id
-                                      WHERE crate_owners.crate_id = $1
-                                        AND crate_owners.deleted = FALSE
-                                        AND crate_owners.owner_kind = $2",
-        )?;
-        let team_rows = stmt.query(&[&self.id, &(OwnerKind::Team as i32)])?;
-
-        let mut owners = vec![];
-        owners.extend(user_rows.iter().map(|r| Owner::User(Model::from_row(&r))));
-        owners.extend(team_rows.iter().map(|r| Owner::Team(Model::from_row(&r))));
-        Ok(owners)
     }
 
     pub fn owner_add(
@@ -762,35 +547,32 @@ impl Crate {
     }
 }
 
-impl Model for Crate {
-    fn from_row(row: &Row) -> Crate {
-        Crate {
-            id: row.get("id"),
-            name: row.get("name"),
-            updated_at: row.get("updated_at"),
-            created_at: row.get("created_at"),
-            downloads: row.get("downloads"),
-            description: row.get("description"),
-            documentation: row.get("documentation"),
-            homepage: row.get("homepage"),
-            readme: row.get("readme"),
-            license: row.get("license"),
-            repository: row.get("repository"),
-            max_upload_size: row.get("max_upload_size"),
-        }
-    }
-    fn table_name(_: Option<Crate>) -> &'static str {
-        "crates"
-    }
-}
-
 /// Handles the `GET /crates` route.
+/// Returns a list of crates. Called in a variety of scenarios in the
+/// front end, including:
+/// - Alphabetical listing of crates
+/// - List of crates under a specific owner
+/// - Listing a user's followed crates
+///
+/// Notes:
+/// The different use cases this function covers is handled through passing
+/// in parameters in the GET request.
+///
+/// We would like to stop adding functionality in here. It was built like
+/// this to keep the number of database queries low, though given Rust's
+/// low performance overhead, this is a soft goal to have, and can afford
+/// more database transactions if it aids understandability.
+///
+/// All of the edge cases for this function are not currently covered
+/// in testing, and if they fail, it is difficult to determine what
+/// caused the break. In the future, we should look at splitting this
+/// function out to cover the different use cases, and create unit tests
+/// for them.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
     use diesel::types::{Bool, BigInt, Nullable};
     use diesel::expression::functions::date_and_time::{now, date};
     use diesel::expression::sql_literal::sql;
-    use diesel::query_source::joins::LeftOuter;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -802,13 +584,11 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
 
     let mut query = crates::table
-        .join(
-            crate_downloads::table,
-            LeftOuter,
+        .left_join(crate_downloads::table.on(
             crates::id.eq(crate_downloads::crate_id).and(
                 crate_downloads::date.gt(date(now - 90.days())),
             ),
-        )
+        ))
         .group_by(crates::id)
         .select((
             ALL_COLUMNS,
@@ -893,6 +673,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 crate_owners::table
                     .select(crate_owners::crate_id)
                     .filter(crate_owners::owner_id.eq(user_id))
+                    .filter(crate_owners::deleted.eq(false))
                     .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
             ),
         );
@@ -902,6 +683,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
                 crate_owners::table
                     .select(crate_owners::crate_id)
                     .filter(crate_owners::owner_id.eq(team_id))
+                    .filter(crate_owners::deleted.eq(false))
                     .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32)),
             ),
         );
@@ -913,6 +695,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
+    // The database query returns a tuple within a tuple , with the root
+    // tuple containing 3 items.
     let data = query
         .paginate(limit, offset)
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
@@ -990,7 +774,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false, Some(0)))
+                Ok(krate.minimal_encodable(max_version, None, false, None))
             })
             .collect()
     };
@@ -1048,6 +832,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::*;
+
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
@@ -1064,6 +850,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         .inner_join(categories::table)
         .select(categories::all_columns)
         .load(&*conn)?;
+    let recent_downloads = CrateDownload::belonging_to(&krate)
+        .filter(crate_downloads::date.gt(date(now - 90.days())))
+        .select(sum(crate_downloads::downloads))
+        .get_result(&*conn)?;
 
     let badges = badges::table.filter(badges::crate_id.eq(krate.id)).load(
         &*conn,
@@ -1087,7 +877,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
                 Some(&cats),
                 Some(badges),
                 false,
-                Some(0),
+                recent_downloads,
             ),
             versions: versions
                 .into_iter()
@@ -1100,6 +890,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /crates/new` route.
+/// Used by `cargo publish` to publish a new crate or to publish a new version of an
+/// existing crate.
+///
+/// Currently blocks the HTTP thread, perhaps some function calls can spawn new
+/// threads and return completion or error through other methods  a `cargo publish
+/// --status` command, via crates.io's front end, or email.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     let app = req.app().clone();
     let (new_crate, user) = parse_new_headers(req)?;
@@ -1126,6 +922,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let categories: Vec<_> = categories.iter().map(|k| &**k).collect();
 
     let conn = req.db_conn()?;
+    // Create a transaction on the database, if there are no errors,
+    // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
@@ -1189,10 +987,23 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let max_version = krate.max_version(&conn)?;
 
+        // Render the README for this crate
+        let readme = match new_crate.readme.as_ref() {
+            Some(readme) => Some(render::markdown_to_html(&**readme)?),
+            None => None,
+        };
+
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut bomb) = app.config.uploader.upload(req, &krate, max, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload_crate(
+            req,
+            &krate,
+            readme,
+            max,
+            vers,
+        )?;
+        version.record_readme_rendering(&conn)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
@@ -1211,7 +1022,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         })?;
 
         // Now that we've come this far, we're committed!
-        bomb.path = None;
+        crate_bomb.path = None;
+        readme_bomb.path = None;
 
         #[derive(Serialize)]
         struct Warnings<'a> {
@@ -1230,12 +1042,17 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false, Some(0)),
+            krate: krate.minimal_encodable(max_version, None, false, None),
             warnings: warnings,
         }))
     })
 }
 
+/// Used by the `krate::new` function.
+///
+/// This function parses the JSON headers to interpret the data and validates
+/// the data during and after the parsing. Returns crate metadata and user
+/// information.
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
     // Read the json upload request
     let amt = read_le_u32(req.body())? as u64;
@@ -1281,6 +1098,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
 }
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
+/// This returns a URL to the location where the crate is stored.
 pub fn download(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
@@ -1300,6 +1118,28 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         .uploader
         .crate_location(crate_name, version)
         .ok_or_else(|| human("crate files not found"))?;
+
+    if req.wants_json() {
+        #[derive(Serialize)]
+        struct R {
+            url: String,
+        }
+        Ok(req.json(&R { url: redirect_url }))
+    } else {
+        Ok(req.redirect(redirect_url))
+    }
+}
+
+/// Handles the `GET /crates/:crate_id/:version/readme` route.
+pub fn readme(req: &mut Request) -> CargoResult<Response> {
+    let crate_name = &req.params()["crate_id"];
+    let version = &req.params()["version"];
+
+    let redirect_url = req.app()
+        .config
+        .uploader
+        .readme_location(crate_name, version)
+        .ok_or_else(|| human("crate readme not found"))?;
 
     if req.wants_json() {
         #[derive(Serialize)]
@@ -1569,8 +1409,8 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
-            if *login == user.gh_login {
-                return Err(human("cannot remove yourself as an owner"));
+            if owners.len() == 1 {
+                return Err(human("cannot remove the sole owner of a crate"));
             }
             krate.owner_remove(&conn, user, login)?;
         }
