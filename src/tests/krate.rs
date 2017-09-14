@@ -778,6 +778,20 @@ fn new_krate_too_big_but_whitelisted() {
 }
 
 #[test]
+fn new_krate_wrong_files() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    ::sign_in(&mut req, &app);
+    let data: &[u8] = &[1];
+    let files = [
+        ("foo-1.0.0/a", data),
+        ("bar-1.0.0/a", data),
+    ];
+    let body = ::new_crate_to_body(&new_crate("foo"), &files);
+    bad_resp!(middle.call(req.with_body(&body)));
+}
+
+#[test]
 fn new_krate_duplicate_version() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_dupe", "1.0.0");
