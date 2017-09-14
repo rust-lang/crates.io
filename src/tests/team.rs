@@ -236,7 +236,9 @@ fn remove_team_as_team_owner() {
     );
 
     assert!(
-        json.errors[0].detail.contains("only owners have permission"),
+        json.errors[0].detail.contains(
+            "only owners have permission",
+        ),
         "{:?}",
         json.errors
     );
@@ -347,7 +349,9 @@ fn add_owners_as_team_owner() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("only owners have permission"),
+        json.errors[0].detail.contains(
+            "only owners have permission",
+        ),
         "{:?}",
         json.errors
     );
