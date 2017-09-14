@@ -154,7 +154,9 @@ impl Uploader {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
+            LimitErrorReader::new(req.body(), max).read_to_end(
+                &mut body,
+            )?;
             verify_tarball(krate, vers, &body)?;
             self.upload(
                 app.handle(),
@@ -227,9 +229,7 @@ impl Drop for Bomb {
     }
 }
 
-fn verify_tarball(krate: &Crate,
-                  vers: &semver::Version,
-                  tarball: &[u8]) -> CargoResult<()> {
+fn verify_tarball(krate: &Crate, vers: &semver::Version, tarball: &[u8]) -> CargoResult<()> {
     let decoder = GzDecoder::new(tarball)?;
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
@@ -242,7 +242,7 @@ fn verify_tarball(krate: &Crate,
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         if !entry.path()?.starts_with(&prefix) {
-            return Err(human("invalid tarball uploaded"))
+            return Err(human("invalid tarball uploaded"));
         }
     }
     Ok(())
