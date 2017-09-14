@@ -116,7 +116,7 @@ fn nonexistent_team() {
     );
     assert!(
         json.errors[0].detail.contains(
-            "could not find the github team",
+            "don't have permission to query a necessary property",
         ),
         "{:?}",
         json.errors
@@ -156,7 +156,7 @@ fn add_team_as_non_member() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("only members"),
+        json.errors[0].detail.contains("don't have permission"),
         "{:?}",
         json.errors
     );
@@ -207,7 +207,6 @@ fn remove_team_as_named_owner() {
 }
 
 #[test]
-#[ignore]
 fn remove_team_as_team_owner() {
     let (_b, app, middle) = ::app();
     let mut req =
@@ -237,7 +236,9 @@ fn remove_team_as_team_owner() {
     );
 
     assert!(
-        json.errors[0].detail.contains("don't have permission"),
+        json.errors[0].detail.contains(
+            "only owners have permission",
+        ),
         "{:?}",
         json.errors
     );
@@ -290,7 +291,6 @@ fn publish_not_owned() {
 
 // Test trying to publish a krate we do own (but only because of teams)
 #[test]
-#[ignore]
 fn publish_owned() {
     let (_b, app, middle) = ::app();
     let mut req =
@@ -349,7 +349,9 @@ fn add_owners_as_team_owner() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("don't have permission"),
+        json.errors[0].detail.contains(
+            "only owners have permission",
+        ),
         "{:?}",
         json.errors
     );

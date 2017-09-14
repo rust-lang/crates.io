@@ -74,7 +74,11 @@ civet = "0.9"
 
 [dev-dependencies]
 conduit-test = "0.8"
-bufstream = "0.1"
+hyper = "0.11"
+hyper-tls = "0.1"
+futures = "0.1"
+tokio-core = "0.1"
+tokio-service = "0.1"
 
 [build-dependencies]
 dotenv = "0.10"

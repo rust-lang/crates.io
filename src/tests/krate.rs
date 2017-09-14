@@ -439,7 +439,6 @@ fn versions() {
 }
 
 #[test]
-#[ignore]
 fn uploading_new_version_touches_crate() {
     use diesel::expression::dsl::*;
 
@@ -519,7 +518,6 @@ fn new_bad_names() {
 }
 
 #[test]
-#[ignore]
 fn new_krate() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -531,7 +529,6 @@ fn new_krate() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_with_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -569,7 +566,6 @@ fn new_krate_with_reserved_name() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_weird_version() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_weird", "0.0.0-pre");
@@ -581,7 +577,6 @@ fn new_krate_weird_version() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_with_dependency() {
     let (_b, app, middle) = ::app();
     let dep = u::CrateDependency {
@@ -619,7 +614,6 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
     let deps = vec![
@@ -674,7 +668,6 @@ fn new_krate_with_wildcard_dependency() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_twice() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo_twice");
@@ -761,12 +754,12 @@ fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_big", "1.0.0");
     ::sign_in(&mut req, &app);
-    let body = ::new_crate_to_body(&new_crate("foo_big"), &[b'a'; 2000]);
+    let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
+    let body = ::new_crate_to_body(&new_crate("foo_big"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
 #[test]
-#[ignore]
 fn new_krate_too_big_but_whitelisted() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_whitelist", "1.1.0");
@@ -778,9 +771,21 @@ fn new_krate_too_big_but_whitelisted() {
             .max_upload_size(2_000_000)
             .expect_build(&conn);
     }
-    let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &[b'a'; 2000]);
+    let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
+    let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &files);
     let mut response = ok_resp!(middle.call(req.with_body(&body)));
     ::json::<GoodCrate>(&mut response);
+}
+
+#[test]
+fn new_krate_wrong_files() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    ::sign_in(&mut req, &app);
+    let data: &[u8] = &[1];
+    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
+    let body = ::new_crate_to_body(&new_crate("foo"), &files);
+    bad_resp!(middle.call(req.with_body(&body)));
 }
 
 #[test]
@@ -859,7 +864,6 @@ fn new_crate_similar_name_underscore() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "fgt", "1.0.0");
@@ -880,12 +884,11 @@ fn new_krate_git_upload() {
     assert!(p.deps.is_empty());
     assert_eq!(
         p.cksum,
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "133f03a2cae3a0c56f47ece636aa784656df0f5b0956c0ea9f7ccee06eaf1ac9"
     );
 }
 
 #[test]
-#[ignore]
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/fpp");
@@ -921,7 +924,6 @@ fn new_krate_git_upload_appends() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_git_upload_with_conflicts() {
     let (_b, app, middle) = ::app();
 
@@ -963,7 +965,6 @@ fn new_krate_dependency_missing() {
 }
 
 #[test]
-#[ignore]
 fn new_krate_with_readme() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo_readme");
@@ -1189,7 +1190,6 @@ fn following() {
 }
 
 #[test]
-#[ignore]
 fn yank() {
     #[derive(Deserialize)]
     struct O {
@@ -1266,7 +1266,6 @@ fn yank_not_owner() {
 }
 
 #[test]
-#[ignore]
 fn yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1363,7 +1362,6 @@ fn yank_max_version() {
 }
 
 #[test]
-#[ignore]
 fn publish_after_yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1453,7 +1451,6 @@ fn bad_keywords() {
 }
 
 #[test]
-#[ignore]
 fn good_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_good_cat");
@@ -1474,7 +1471,6 @@ fn good_categories() {
 }
 
 #[test]
-#[ignore]
 fn ignored_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_ignored_cat");
@@ -1489,7 +1485,6 @@ fn ignored_categories() {
 }
 
 #[test]
-#[ignore]
 fn good_badges() {
     let krate = ::krate("foobadger");
     let mut badges = HashMap::new();
@@ -1525,7 +1520,6 @@ fn good_badges() {
 }
 
 #[test]
-#[ignore]
 fn ignored_badges() {
     let krate = ::krate("foo_ignored_badge");
     let mut badges = HashMap::new();
@@ -1947,3 +1941,14 @@ fn block_blacklisted_documentation_url() {
 
     assert_eq!(json.krate.documentation, None);
 }
+
+// #[test]
+// fn new_crate_bad_tarball() {
+//     let (_b, app, middle) = ::app();
+//     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
+//     ::sign_in(&mut req, &app);
+//     let mut response = ok_resp!(middle.call(&mut req));
+//     let json: GoodCrate = ::json(&mut response);
+//     assert_eq!(json.krate.name, "foo_new");
+//     assert_eq!(json.krate.max_version, "1.0.0");
+// }

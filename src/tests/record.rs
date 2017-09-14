@@ -1,29 +1,40 @@
+extern crate futures;
+extern crate hyper;
+extern crate hyper_tls;
+extern crate tokio_core;
+extern crate tokio_service;
+
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::fs;
 use std::io::prelude::*;
-use std::io::{self, BufReader};
-use std::net::{TcpListener, TcpStream};
+use std::io;
+use std::net;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::str;
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
 
-use bufstream::BufStream;
 use cargo_registry::user::NewUser;
-use curl::easy::{Easy, List, ReadError};
+use curl::easy::{Easy, List};
+use self::futures::{Future, Stream};
+use self::futures::sync::oneshot;
+use self::hyper::server::Http;
+use self::tokio_core::net::TcpListener;
+use self::tokio_core::reactor::Core;
+use self::tokio_service::Service;
 use serde_json;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
 pub struct Bomb {
-    accept: TcpListener,
-    quit: Sender<()>,
-    rx: Receiver<()>,
     iorx: Sink,
+    quittx: Option<oneshot::Sender<()>>,
+    thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
 }
 
 pub struct GhUser {
@@ -31,9 +42,10 @@ pub struct GhUser {
     pub init: Once,
 }
 
+#[derive(Clone)]
 struct Sink(Arc<Mutex<Vec<u8>>>);
 
-impl Write for Sink {
+impl<'a> Write for &'a Sink {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
         Write::write(&mut *self.0.lock().unwrap(), data)
     }
@@ -44,18 +56,22 @@ impl Write for Sink {
 
 impl Drop for Bomb {
     fn drop(&mut self) {
-        t!(self.quit.send(()));
-        drop(TcpStream::connect(&t!(self.accept.local_addr())));
-        let res = self.rx.recv();
+        drop(self.quittx.take());
+        let res = self.thread.take().unwrap().join();
         let stderr = str::from_utf8(&self.iorx.0.lock().unwrap())
             .unwrap()
             .to_string();
         match res {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
-            _ => {
+            Err(e) => {
                 if stderr.len() > 0 {
-                    println!("server subtask failed: {}", stderr)
+                    println!("server subtask failed ({:?}): {}", e, stderr)
                 }
+            }
+            Ok(_) if thread::panicking() => {}
+            Ok(None) => {}
+            Ok(Some((data, file))) => {
+                t!(t!(File::create(&file)).write_all(&data));
             }
         }
     }
@@ -69,221 +85,238 @@ fn cache_file(name: &str) -> PathBuf {
         .join(name)
 }
 
+enum Record {
+    Capture(Vec<Exchange>, PathBuf),
+    Replay(Vec<Exchange>),
+}
+
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
     let record = env::var("RECORD").is_ok();
 
-    let a = t!(TcpListener::bind("127.0.0.1:0"));
+    let a = t!(net::TcpListener::bind("127.0.0.1:0"));
     let ret = format!("http://{}", t!(a.local_addr()));
-    let (tx, rx) = channel();
 
     let data = cache_file(&me.replace("::", "_"));
-    let record = record && !data.exists();
-    let a2 = t!(a.try_clone());
+    let record = if record && !data.exists() {
+        Record::Capture(Vec::new(), data)
+    } else {
+        let mut body = Vec::new();
+        t!(t!(File::open(&data)).read_to_end(&mut body));
+        Record::Replay(serde_json::from_slice(&body).unwrap())
+    };
 
     let sink = Arc::new(Mutex::new(Vec::new()));
-    let mut sink2 = Sink(sink.clone());
+    let sink2 = Sink(sink.clone());
 
-    let (quittx, quitrx) = channel();
+    let (quittx, quitrx) = oneshot::channel();
 
-    thread::spawn(move || {
-        let mut file = None;
-        for socket in a.incoming() {
-            if quitrx.try_recv().is_ok() {
-                break;
+    let thread = thread::spawn(move || {
+        let mut core = t!(Core::new());
+        let handle = core.handle();
+        let addr = t!(a.local_addr());
+        let listener = t!(TcpListener::from_listener(a, &addr, &handle));
+        let client = hyper::Client::configure()
+            .connector(hyper_tls::HttpsConnector::new(4, &handle).unwrap())
+            .build(&handle);
+
+
+        let record = Rc::new(RefCell::new(record));
+        let srv = listener.incoming().for_each(|(socket, addr)| {
+            Http::new().bind_connection(
+                &handle,
+                socket,
+                addr,
+                Proxy {
+                    sink: sink2.clone(),
+                    record: record.clone(),
+                    client: client.clone(),
+                },
+            );
+            Ok(())
+        });
+        drop(core.run(srv.select2(quitrx)));
+
+        let record = record.borrow();
+        match *record {
+            Record::Capture(ref data, ref path) => {
+                let data = t!(serde_json::to_string(data));
+                Some((data.into_bytes(), path.clone()))
             }
-            let socket = t!(socket);
-
-            if file.is_none() {
-                let io = t!(if record {
-                    File::create(&data)
-                } else {
-                    File::open(&data)
-                });
-                file = Some(BufStream::new(io));
-            }
-
-            if record {
-                record_http(socket, file.as_mut().unwrap());
-            } else {
-                replay_http(socket, file.as_mut().unwrap(), &mut sink2);
-            }
+            Record::Replay(..) => None,
         }
-        if !record {
-            if let Some(mut f) = file {
-                let mut s = String::new();
-                t!(f.read_line(&mut s));
-                assert_eq!(s, "");
-            }
-        }
-        tx.send(()).unwrap();
     });
 
     (
         ret,
         Bomb {
-            accept: a2,
-            rx: rx,
             iorx: Sink(sink),
-            quit: quittx,
+            quittx: Some(quittx),
+            thread: Some(thread),
         },
     )
 }
 
-fn record_http(mut socket: TcpStream, data: &mut BufStream<File>) {
-    let mut request = Vec::new();
-    t!(socket.read_to_end(&mut request));
-    let (handle, headers, body) = send(&request[..]);
+struct Proxy {
+    sink: Sink,
+    record: Rc<RefCell<Record>>,
+    client: Client,
+}
 
-    let mut response = Vec::new();
-    respond(handle, headers, body, &mut response);
-    t!(socket.write_all(&response));
+impl Service for Proxy {
+    type Request = hyper::Request;
+    type Response = hyper::Response;
+    type Error = hyper::Error;
+    type Future = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
 
-    t!(write!(
-        data,
-        "===REQUEST {}\n{}\n===RESPONSE {}\n{}\n",
-        request.len(),
-        str::from_utf8(&request).unwrap(),
-        response.len(),
-        str::from_utf8(&response).unwrap()
-    ));
-
-    fn send<R: Read>(rdr: R) -> (Easy, Vec<Vec<u8>>, Vec<u8>) {
-        let mut socket = BufReader::new(rdr);
-        let method;
-        let url;
-        let mut headers = List::new();
-        {
-            let mut lines = (&mut socket).lines();
-            let line = t!(lines.next().unwrap());
-            let mut parts = line.split(' ');
-            method = parts.next().unwrap().to_string();
-            url = parts.next().unwrap().replace("http://", "https://");
-
-            for line in lines {
-                let line = t!(line);
-                if line.len() < 3 {
-                    break;
-                }
-                t!(headers.append(&line));
+    fn call(&self, req: hyper::Request) -> Self::Future {
+        match *self.record.borrow_mut() {
+            Record::Capture(_, _) => {
+                let record = self.record.clone();
+                Box::new(record_http(req, &self.client).map(
+                    move |(response, exchange)| {
+                        if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
+                            d.push(exchange);
+                        }
+                        response
+                    },
+                ))
+            }
+            Record::Replay(ref mut exchanges) => {
+                replay_http(req, exchanges.remove(0), &mut &self.sink)
             }
         }
-
-        let mut handle = Easy::new();
-        t!(handle.url(&url));
-        match &method[..] {
-            "PUT" => t!(handle.put(true)),
-            "POST" => t!(handle.post(true)),
-            "GET" => t!(handle.get(true)),
-            method => t!(handle.custom_request(method)),
-        }
-        t!(handle.http_headers(headers));
-
-        let mut headers = Vec::new();
-        let mut response = Vec::new();
-        {
-            let mut transfer = handle.transfer();
-            t!(transfer.header_function(|header| {
-                headers.push(header.to_owned());
-                true
-            }));
-            t!(transfer.write_function(|data| {
-                response.extend(data);
-                Ok(data.len())
-            }));
-            t!(transfer.read_function(
-                |buf| socket.read(buf).map_err(|_| ReadError::Abort),
-            ));
-
-            t!(transfer.perform());
-        }
-
-        (handle, headers, response)
-    }
-
-    fn respond<W: Write>(mut handle: Easy, headers: Vec<Vec<u8>>, body: Vec<u8>, mut socket: W) {
-        t!(socket.write_all(
-            format!("HTTP/1.1 {}\r\n", t!(handle.response_code())).as_bytes(),
-        ));
-        for header in headers {
-            if header.starts_with(b"Transfer-Encoding: ") {
-                continue;
-            }
-            t!(socket.write_all(&header));
-            t!(socket.write_all(b"\r\n"));
-        }
-        t!(socket.write_all(b"\r\n"));
-        t!(socket.write_all(&body));
     }
 }
 
-fn replay_http(socket: TcpStream, data: &mut BufStream<File>, stdout: &mut Write) {
-    let mut writer = socket.try_clone().unwrap();
-    let socket = BufReader::new(socket);
+#[derive(Serialize, Deserialize)]
+struct Exchange {
+    request: Request,
+    response: Response,
+}
 
-    let mut request = String::new();
-    t!(data.read_line(&mut request));
-    let mut request = request.split(' ');
-    assert_eq!(request.next().unwrap(), "===REQUEST");
-    let request_size = request.next().unwrap().trim().parse().unwrap();
+#[derive(Serialize, Deserialize)]
+struct Request {
+    uri: String,
+    method: String,
+    headers: HashSet<(String, String)>,
+    body: Vec<u8>,
+}
 
-    let mut expected = String::new();
-    t!(data.take(request_size).read_to_string(&mut expected));
-    let mut expected_lines = expected.lines().map(|s| s.to_string());
-    let mut actual_lines = socket.lines().map(|s| s.unwrap());
+#[derive(Serialize, Deserialize)]
+struct Response {
+    status: u16,
+    headers: HashSet<(String, String)>,
+    body: Vec<u8>,
+}
 
-    // validate the headers
-    let mut expected: HashSet<String> = expected_lines
-        .by_ref()
-        .take_while(|l| l.len() > 2)
-        .collect();
-    let mut found = HashSet::new();
-    t!(writeln!(stdout, "expecting: {:?}", expected));
-    for line in actual_lines.by_ref().take_while(|l| l.len() > 2) {
-        t!(writeln!(stdout, "received: {}", line.trim()));
-        if !found.insert(line.clone()) {
+type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
+
+fn record_http(
+    req: hyper::Request,
+    client: &Client,
+) -> Box<Future<Item = (hyper::Response, Exchange), Error = hyper::Error>> {
+    let (method, uri, _version, headers, body) = req.deconstruct();
+
+    let mut request = Request {
+        uri: uri.to_string(),
+        method: method.to_string(),
+        headers: headers
+            .iter()
+            .map(|h| (h.name().to_string(), h.value_string()))
+            .collect(),
+        body: Vec::new(),
+    };
+    let body = body.concat2();
+
+    let client = client.clone();
+    let response = body.and_then(move |body| {
+        request.body = body.to_vec();
+        let uri = uri.to_string().replace("http://", "https://");
+        let mut req = hyper::Request::new(method, uri.parse().unwrap());
+        *req.headers_mut() = headers;
+        req.set_body(body);
+        client.request(req).map(|r| (r, request))
+    });
+
+    Box::new(response.and_then(|(hyper_response, request)| {
+        let status = hyper_response.status();
+        let headers = hyper_response.headers().clone();
+        let mut response = Response {
+            status: status.as_u16(),
+            headers: headers
+                .iter()
+                .map(|h| (h.name().to_string(), h.value_string()))
+                .collect(),
+            body: Vec::new(),
+        };
+
+        hyper_response.body().concat2().map(move |body| {
+            response.body = body.to_vec();
+            let mut hyper_response = hyper::Response::new();
+            hyper_response.set_body(body);
+            hyper_response.set_status(status);
+            *hyper_response.headers_mut() = headers;
+            (
+                hyper_response,
+                Exchange {
+                    response: response,
+                    request: request,
+                },
+            )
+        })
+    }))
+}
+
+fn replay_http(
+    req: hyper::Request,
+    mut exchange: Exchange,
+    stdout: &mut Write,
+) -> Box<Future<Item = hyper::Response, Error = hyper::Error>> {
+    assert_eq!(req.uri().to_string(), exchange.request.uri);
+    assert_eq!(req.method().to_string(), exchange.request.method);
+    t!(writeln!(
+        stdout,
+        "expecting: {:?}",
+        exchange.request.headers
+    ));
+    for header in req.headers().iter() {
+        let pair = (header.name().to_string(), header.value_string());
+        t!(writeln!(stdout, "received: {:?}", pair));
+        if header.name().starts_with("Date") {
             continue;
         }
-        if expected.remove(&line) {
+        if header.name().starts_with("Authorization") {
             continue;
         }
-        if line.starts_with("Date:") {
-            continue;
+        if !exchange.request.headers.remove(&pair) {
+            panic!("found {:?} but didn't expect it", pair);
         }
-        if line.starts_with("Authorization:") {
-            continue;
-        }
-        panic!("unexpected header: {}", line);
     }
-    for line in expected.iter() {
-        if line.starts_with("Date:") {
+    for (name, value) in exchange.request.headers.drain() {
+        if name.starts_with("Date") {
             continue;
         }
-        if line.starts_with("Authorization:") {
+        if name.starts_with("Authorization") {
             continue;
         }
-        panic!("didn't receive header: {}", line);
+        panic!("didn't find header {:?}", (name, value));
     }
+    let req_body = exchange.request.body;
+    let verify_body = req.body().concat2().map(move |body| {
+        assert_eq!(&body[..], &req_body[..]);
+    });
 
-    // TODO: validate the body
-
-    data.read_line(&mut String::new()).unwrap();
-    let mut response = String::new();
-    data.read_line(&mut response).unwrap();
-    let mut response = response.split(' ');
-    assert_eq!(response.next().unwrap(), "===RESPONSE");
-    let response_size = response.next().unwrap().trim().parse().unwrap();
-    let mut response = Vec::new();
-    data.take(response_size).read_to_end(&mut response).unwrap();
-    let lines = <[_]>::split(&response[..], |b| *b == b'\n').map(|s| str::from_utf8(s).unwrap());
-    for line in lines {
-        if line.starts_with("Date:") {
-            continue;
-        }
-        writer.write_all(line.as_bytes()).unwrap();
-        writer.write_all(b"\r\n").unwrap();
+    let mut response = hyper::Response::new();
+    response.set_status(
+        hyper::StatusCode::try_from(exchange.response.status).unwrap(),
+    );
+    for (key, value) in exchange.response.headers.into_iter() {
+        response.headers_mut().append_raw(key, value);
     }
-    data.read_line(&mut String::new()).unwrap();
+    response.set_body(exchange.response.body);
+
+    Box::new(verify_body.map(|()| response))
 }
 
 impl GhUser {
@@ -321,11 +354,6 @@ impl GhUser {
             client_secret: String,
         }
         let mut handle = Easy::new();
-        let url = format!(
-            "https://{}:{}@api.github.com/authorizations",
-            self.login,
-            password
-        );
         let body = serde_json::to_string(&Authorization {
             scopes: vec!["read:org".to_string()],
             note: "crates.io test".to_string(),
@@ -333,20 +361,19 @@ impl GhUser {
             client_secret: ::env("GH_CLIENT_SECRET"),
         }).unwrap();
 
-        t!(handle.url(&url));
+        t!(handle.url("https://api.github.com/authorizations"));
+        t!(handle.username(self.login));
+        t!(handle.password(&password));
         t!(handle.post(true));
+        t!(handle.post_fields_copy(body.as_bytes()));
 
         let mut headers = List::new();
         headers.append("User-Agent: hello!").unwrap();
         t!(handle.http_headers(headers));
 
-        let mut body = body.as_bytes();
         let mut response = Vec::new();
         {
             let mut transfer = handle.transfer();
-            t!(transfer.read_function(
-                |buf| body.read(buf).map_err(|_| ReadError::Abort),
-            ));
             t!(transfer.write_function(|data| {
                 response.extend(data);
                 Ok(data.len())
