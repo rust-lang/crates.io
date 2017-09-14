@@ -754,7 +754,8 @@ fn new_krate_too_big() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_big", "1.0.0");
     ::sign_in(&mut req, &app);
-    let body = ::new_crate_to_body(&new_crate("foo_big"), &[b'a'; 2000]);
+    let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
+    let body = ::new_crate_to_body(&new_crate("foo_big"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
@@ -770,7 +771,8 @@ fn new_krate_too_big_but_whitelisted() {
             .max_upload_size(2_000_000)
             .expect_build(&conn);
     }
-    let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &[b'a'; 2000]);
+    let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
+    let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &files);
     let mut response = ok_resp!(middle.call(req.with_body(&body)));
     ::json::<GoodCrate>(&mut response);
 }
@@ -871,7 +873,7 @@ fn new_krate_git_upload() {
     assert!(p.deps.is_empty());
     assert_eq!(
         p.cksum,
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "133f03a2cae3a0c56f47ece636aa784656df0f5b0956c0ea9f7ccee06eaf1ac9"
     );
 }
 
@@ -1928,3 +1930,14 @@ fn block_blacklisted_documentation_url() {
 
     assert_eq!(json.krate.documentation, None);
 }
+
+// #[test]
+// fn new_crate_bad_tarball() {
+//     let (_b, app, middle) = ::app();
+//     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
+//     ::sign_in(&mut req, &app);
+//     let mut response = ok_resp!(middle.call(&mut req));
+//     let json: GoodCrate = ::json(&mut response);
+//     assert_eq!(json.krate.name, "foo_new");
+//     assert_eq!(json.krate.max_version, "1.0.0");
+// }

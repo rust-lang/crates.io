@@ -20,6 +20,8 @@ extern crate serde_json;
 extern crate time;
 extern crate url;
 extern crate s3;
+extern crate tar;
+extern crate flate2;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -43,6 +45,8 @@ use conduit::{Request, Method};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use diesel::pg::upsert::*;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 
 macro_rules! t {
     ($e:expr) => (
@@ -131,8 +135,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            String::new(),
-            String::new(),
+            std::env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+            std::env::var("S3_SECRET_KEY").unwrap_or(String::new()),
             &api_protocol,
         ),
         proxy: Some(proxy),
@@ -631,6 +635,7 @@ fn new_req_body(
 ) -> Vec<u8> {
     let kws = kws.into_iter().map(u::Keyword).collect();
     let cats = cats.into_iter().map(u::Category).collect();
+
     new_crate_to_body(
         &u::NewCrate {
             name: u::CrateName(krate.name),
@@ -653,7 +658,19 @@ fn new_req_body(
     )
 }
 
-fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
+fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut tarball = Vec::new();
+    {
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        for &(name, data) in files {
+            let mut header = tar::Header::new_gnu();
+            t!(header.set_path(name));
+            header.set_size(data.len() as u64);
+            header.set_cksum();
+            t!(ar.append(&header, &data[..]));
+        }
+        t!(ar.finish());
+    }
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
@@ -668,12 +685,12 @@ fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
     body.extend(json.as_bytes().iter().cloned());
     body.extend(
         &[
-            (krate.len() >> 0) as u8,
-            (krate.len() >> 8) as u8,
-            (krate.len() >> 16) as u8,
-            (krate.len() >> 24) as u8,
+            (tarball.len() >> 0) as u8,
+            (tarball.len() >> 8) as u8,
+            (tarball.len() >> 16) as u8,
+            (tarball.len() >> 24) as u8,
         ],
     );
-    body.extend(krate);
+    body.extend(tarball);
     body
 }
