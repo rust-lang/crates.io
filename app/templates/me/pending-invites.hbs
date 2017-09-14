@@ -18,7 +18,11 @@
                     </h3>
                     </div>
                     <div class='invite'>
-                        <p>Invited by: {{invite.invited_by_username}}</p>
+                        <p>Invited by: 
+                            {{#link-to 'user' invite.invited_by_username}}
+                                {{invite.invited_by_username}}
+                            {{/link-to}}
+                        </p>
                     </div>
                     <div class='sent'>
                         <span class='small'>{{moment-from-now invite.created_at}}</span>
