@@ -1,10 +1,12 @@
 use conduit::Request;
 use curl::easy::Easy;
+use flate2::read::GzDecoder;
 use krate::Crate;
-use util::{CargoResult, internal, ChainError};
-use util::{LimitErrorReader, read_le_u32, hash};
 use s3;
 use semver;
+use tar;
+use util::{CargoResult, internal, human, ChainError};
+use util::{LimitErrorReader, read_le_u32, hash};
 
 use app::{App, RequestApp};
 use std::sync::Arc;
@@ -153,6 +155,7 @@ impl Uploader {
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
+            verify_tarball(krate, vers, &body)?;
             self.upload(
                 app.handle(),
                 &path,
@@ -222,4 +225,25 @@ impl Drop for Bomb {
             }
         }
     }
+}
+
+fn verify_tarball(krate: &Crate,
+                  vers: &semver::Version,
+                  tarball: &[u8]) -> CargoResult<()> {
+    let decoder = GzDecoder::new(tarball)?;
+    let mut archive = tar::Archive::new(decoder);
+    let prefix = format!("{}-{}", krate.name, vers);
+    for entry in archive.entries()? {
+        let entry = entry?;
+
+        // Verify that all entries actually start with `$name-$vers/`.
+        // Historically Cargo didn't verify this on extraction so you could
+        // upload a tarball that contains both `foo-0.1.0/` source code as well
+        // as `bar-0.1.0/` source code, and this could overwrite other crates in
+        // the registry!
+        if !entry.path()?.starts_with(&prefix) {
+            return Err(human("invalid tarball uploaded"))
+        }
+    }
+    Ok(())
 }
