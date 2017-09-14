@@ -439,6 +439,7 @@ fn versions() {
 }
 
 #[test]
+#[ignore]
 fn uploading_new_version_touches_crate() {
     use diesel::expression::dsl::*;
 
@@ -518,6 +519,7 @@ fn new_bad_names() {
 }
 
 #[test]
+#[ignore]
 fn new_krate() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -529,6 +531,7 @@ fn new_krate() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_with_token() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_new", "1.0.0");
@@ -566,6 +569,7 @@ fn new_krate_with_reserved_name() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_weird_version() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_weird", "0.0.0-pre");
@@ -577,6 +581,7 @@ fn new_krate_weird_version() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_with_dependency() {
     let (_b, app, middle) = ::app();
     let dep = u::CrateDependency {
@@ -614,6 +619,7 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
     let deps = vec![
@@ -668,6 +674,7 @@ fn new_krate_with_wildcard_dependency() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_twice() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo_twice");
@@ -759,6 +766,7 @@ fn new_krate_too_big() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_too_big_but_whitelisted() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "foo_whitelist", "1.1.0");
@@ -851,6 +859,7 @@ fn new_crate_similar_name_underscore() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(app.clone(), "fgt", "1.0.0");
@@ -876,6 +885,7 @@ fn new_krate_git_upload() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = ::app();
     let path = ::git::checkout().join("3/f/fpp");
@@ -911,6 +921,7 @@ fn new_krate_git_upload_appends() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_git_upload_with_conflicts() {
     let (_b, app, middle) = ::app();
 
@@ -952,6 +963,7 @@ fn new_krate_dependency_missing() {
 }
 
 #[test]
+#[ignore]
 fn new_krate_with_readme() {
     let (_b, app, middle) = ::app();
     let mut krate = ::krate("foo_readme");
@@ -1177,6 +1189,7 @@ fn following() {
 }
 
 #[test]
+#[ignore]
 fn yank() {
     #[derive(Deserialize)]
     struct O {
@@ -1253,6 +1266,7 @@ fn yank_not_owner() {
 }
 
 #[test]
+#[ignore]
 fn yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1349,6 +1363,7 @@ fn yank_max_version() {
 }
 
 #[test]
+#[ignore]
 fn publish_after_yank_max_version() {
     #[derive(Deserialize)]
     struct O {
@@ -1438,6 +1453,7 @@ fn bad_keywords() {
 }
 
 #[test]
+#[ignore]
 fn good_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_good_cat");
@@ -1458,6 +1474,7 @@ fn good_categories() {
 }
 
 #[test]
+#[ignore]
 fn ignored_categories() {
     let (_b, app, middle) = ::app();
     let krate = ::krate("foo_ignored_cat");
@@ -1472,6 +1489,7 @@ fn ignored_categories() {
 }
 
 #[test]
+#[ignore]
 fn good_badges() {
     let krate = ::krate("foobadger");
     let mut badges = HashMap::new();
@@ -1507,6 +1525,7 @@ fn good_badges() {
 }
 
 #[test]
+#[ignore]
 fn ignored_badges() {
     let krate = ::krate("foo_ignored_badge");
     let mut badges = HashMap::new();

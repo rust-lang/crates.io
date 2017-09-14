@@ -207,6 +207,7 @@ fn remove_team_as_named_owner() {
 }
 
 #[test]
+#[ignore]
 fn remove_team_as_team_owner() {
     let (_b, app, middle) = ::app();
     let mut req =
@@ -289,6 +290,7 @@ fn publish_not_owned() {
 
 // Test trying to publish a krate we do own (but only because of teams)
 #[test]
+#[ignore]
 fn publish_owned() {
     let (_b, app, middle) = ::app();
     let mut req =
