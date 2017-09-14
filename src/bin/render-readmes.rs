@@ -146,13 +146,12 @@ fn main() {
                 let readme = readme.unwrap();
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 let readme_len = readme.len();
-                let mut body = Cursor::new(readme.into_bytes());
                 config
                     .uploader
                     .upload(
                         Easy::new(),
                         &readme_path,
-                        &mut body,
+                        readme.as_bytes(),
                         "text/html",
                         readme_len as u64,
                     )

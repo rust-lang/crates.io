@@ -2,6 +2,12 @@ use std::io::prelude::*;
 use std::io;
 use openssl::hash::{Hasher, MessageDigest};
 
+pub fn hash(data: &[u8]) -> Vec<u8> {
+    let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
+    hasher.update(data).unwrap();
+    hasher.finish2().unwrap().to_vec()
+}
+
 // Can't derive debug because of Hasher.
 #[allow(missing_debug_implementations)]
 pub struct HashingReader<R> {

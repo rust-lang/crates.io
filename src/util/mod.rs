@@ -13,7 +13,7 @@ use self::errors::NotFound;
 
 pub use self::errors::{CargoError, CargoResult, internal, human, bad_request, internal_error};
 pub use self::errors::{ChainError, std_error};
-pub use self::hasher::HashingReader;
+pub use self::hasher::{HashingReader, hash};
 pub use self::head::Head;
 pub use self::io_util::{LimitErrorReader, read_le_u32, read_fill};
 pub use self::request_proxy::RequestProxy;

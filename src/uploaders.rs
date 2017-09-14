@@ -2,7 +2,7 @@ use conduit::Request;
 use curl::easy::Easy;
 use krate::Crate;
 use util::{CargoResult, internal, ChainError};
-use util::{LimitErrorReader, HashingReader, read_le_u32};
+use util::{LimitErrorReader, read_le_u32, hash};
 use s3;
 use semver;
 
@@ -10,7 +10,7 @@ use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
-use std::io;
+use std::io::{Write, Read};
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -92,18 +92,18 @@ impl Uploader {
         &self,
         mut handle: Easy,
         path: &str,
-        body: &mut io::Read,
+        body: &[u8],
         content_type: &str,
         content_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
+        let hash = hash(body);
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let (response, cksum) = {
-                    let mut body = HashingReader::new(body);
                     let mut response = Vec::new();
                     {
                         let mut s3req =
-                            bucket.put(&mut handle, path, &mut body, content_type, content_length);
+                            bucket.put(&mut handle, path, body, content_type, content_length);
                         s3req
                             .write_function(|data| {
                                 response.extend(data);
@@ -114,7 +114,7 @@ impl Uploader {
                             internal(&format_args!("failed to upload to S3: `{}`", path))
                         })?;
                     }
-                    (response, body.finalize())
+                    (response, hash)
                 };
                 if handle.response_code().unwrap() != 200 {
                     let response = String::from_utf8_lossy(&response);
@@ -130,9 +130,8 @@ impl Uploader {
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                let mut body = HashingReader::new(body);
-                io::copy(&mut body, &mut file)?;
-                Ok((filename.to_str().map(String::from), body.finalize()))
+                file.write_all(body)?;
+                Ok((filename.to_str().map(String::from), hash))
             }
             Uploader::NoOp => Ok((None, vec![])),
         }
@@ -152,11 +151,12 @@ impl Uploader {
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
-            let mut body = LimitErrorReader::new(req.body(), max);
+            let mut body = Vec::new();
+            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
             self.upload(
                 app.handle(),
                 &path,
-                &mut body,
+                &body,
                 "application/x-tar",
                 length as u64,
             )?
@@ -170,11 +170,10 @@ impl Uploader {
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
             let length = rendered.len();
-            let mut body = io::Cursor::new(rendered.into_bytes());
             self.upload(
                 app.handle(),
                 &path,
-                &mut body,
+                rendered.as_bytes(),
                 "text/html",
                 length as u64,
             )?
