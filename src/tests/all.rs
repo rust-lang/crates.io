@@ -5,7 +5,6 @@ extern crate serde_derive;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_codegen;
-extern crate bufstream;
 extern crate cargo_registry;
 extern crate chrono;
 extern crate conduit;
