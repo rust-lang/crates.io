@@ -14,4 +14,4 @@ CREATE table tokens (
 );
 
 INSERT INTO emails (user_id, email)
-    SELECT id, email FROM users;
+    SELECT id, email FROM users WHERE email IS NOT NULL;
