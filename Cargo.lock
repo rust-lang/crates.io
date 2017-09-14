@@ -101,7 +101,7 @@ dependencies = [
  "bufstream 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo-registry-s3 0.2.0",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "civet 0.10.0 (git+https://github.com/wycats/rust-civet)",
  "clippy 0.0.142 (registry+https://github.com/rust-lang/crates.io-index)",
  "comrak 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -169,10 +169,10 @@ dependencies = [
 
 [[package]]
 name = "civet"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.10.0"
+source = "git+https://github.com/wycats/rust-civet#ee8fe4f0bee0bd63a3efe0e1d0394f387f9d5c99"
 dependencies = [
- "civet-sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "civet-sys 0.2.0 (git+https://github.com/wycats/rust-civet)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.29 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -180,8 +180,11 @@ dependencies = [
 
 [[package]]
 name = "civet-sys"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.2.0"
+source = "git+https://github.com/wycats/rust-civet#ee8fe4f0bee0bd63a3efe0e1d0394f387f9d5c99"
+dependencies = [
+ "cmake 0.1.24 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "clippy"
@@ -1354,8 +1357,8 @@ dependencies = [
 "checksum cargo_metadata 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "be1057b8462184f634c3a208ee35b0f935cfd94b694b26deadccd98732088d7b"
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c20ebe0b2b08b0aeddba49c609fe7957ba2e33449882cb186a180bc60682fa9"
-"checksum civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6263e7af767a5bf9e4d3d0a6c3ceb5f3940ec85cf2fbfee59024b8a264be180f"
-"checksum civet-sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
+"checksum civet 0.10.0 (git+https://github.com/wycats/rust-civet)" = "<none>"
+"checksum civet-sys 0.2.0 (git+https://github.com/wycats/rust-civet)" = "<none>"
 "checksum clippy 0.0.142 (registry+https://github.com/rust-lang/crates.io-index)" = "e82a66cfefcffef361a3ba150954563c5a1e151467e8bf4e28551f931200c7e3"
 "checksum clippy_lints 0.0.142 (registry+https://github.com/rust-lang/crates.io-index)" = "a8f0b1f90db91953dd03b115148df31427f006cf6d8958fa7582c4f9f2037df5"
 "checksum cmake 0.1.24 (registry+https://github.com/rust-lang/crates.io-index)" = "b8ebbb35d3dc9cd09497168f33de1acb79b265d350ab0ac34133b98f8509af1f"
