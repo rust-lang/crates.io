@@ -9,11 +9,9 @@ environment:
   global:
     PGUSER: postgres
     PGPASSWORD: Password12!
-    VCPKGRS_DYNAMIC: 1
-    VCPKG_ROOT: "c:\\projects\\vcpkg"
-    VCPKG_DEFAULT_TRIPLET: x64-windows
+    OPENSSL_VERSION: 1_1_0f
+    OPENSSL_DIR: "c:\\openssl"
     SSL_CERT_FILE: "c:\\openssl\\cacert.pem"
-    OPENSSL_DIR: "c:\\projects\\vcpkg\\installed\\x64-windows"
     TEST_DATABASE_URL: "postgres://postgres:Password12!@localhost/cargo_registry_test"
 
   matrix:
@@ -26,13 +24,11 @@ matrix:
     - APPVEYOR_RUST_CHANNEL: nightly
 
 install:
-  # Install system dependencies
+  # Install OpenSSL
   - mkdir c:\openssl
+  - ps: Start-FileDownload "http://slproweb.com/download/Win64OpenSSL-${env:OPENSSL_VERSION}.exe"
+  - Win64OpenSSL-%OPENSSL_VERSION%.exe /SILENT /VERYSILENT /SP- /DIR="C:\openssl"
   - appveyor DownloadFile https://curl.haxx.se/ca/cacert.pem -FileName c:\openssl\cacert.pem
-  - git clone https://github.com/Microsoft/vcpkg.git %VCPKG_ROOT%
-  - '%VCPKG_ROOT%\bootstrap-vcpkg.bat'
-  - echo yes > %VCPKG_ROOT%\Downloads\AlwaysAllowDownloads
-  - '%VCPKG_ROOT%\vcpkg.exe install openssl libpq'
   # Install rust and cargo
   - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init.exe -y --default-host x86_64-pc-windows-msvc --default-toolchain %APPVEYOR_RUST_CHANNEL%
@@ -52,5 +48,4 @@ test_script:
   - cargo test
 
 cache:
-  - target
-  - C:\Users\appveyor\.cargo\registry
+  - C:\Users\appveyor\.cargo\registry -> Cargo.lock
