@@ -4,7 +4,7 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
+use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser, Email, Token};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -16,7 +16,12 @@ struct AuthResponse {
 }
 
 #[derive(Deserialize)]
-pub struct UserShowResponse {
+pub struct UserShowPublicResponse {
+    pub user: EncodablePublicUser,
+}
+
+#[derive(Deserialize)]
+pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
 }
 
@@ -48,7 +53,7 @@ fn me() {
     let user = ::sign_in(&mut req, &app);
 
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowResponse = ::json(&mut response);
+    let json: UserShowPrivateResponse = ::json(&mut response);
 
     assert_eq!(json.user.email, user.email);
 }
@@ -65,15 +70,11 @@ fn show() {
 
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowResponse = ::json(&mut response);
-    // Emails should be None as when on the user/:user_id page, a user's email should
-    // not be accessible in order to keep private.
-    assert_eq!(None, json.user.email);
+    let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("foo", json.user.login);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
-    let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(None, json.user.email);
+    let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
 }
@@ -509,4 +510,197 @@ fn test_this_user_cannot_change_that_user_email() {
         json.errors
     );
 
+}
+
+/* Given a new user, test that if they sign in with
+   one email, change their email on GitHub, then
+   sign in again, that the email will remain
+   consistent with the original email used on
+   GitHub.
+*/
+#[test]
+fn test_insert_into_email_table() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("potato@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+
+    ::logout(&mut req);
+
+    // What if user changes their github user email
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("banana@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+}
+
+/* Given a new user, check that when an email is added,
+   changed by user on GitHub, changed on crates.io,
+   that the email remains consistent with that which
+   the user has changed
+*/
+#[test]
+fn test_insert_into_email_table_with_email_change() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("potato@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+
+    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    ::logout(&mut req);
+
+    // What if user changes their github user email
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("banana@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
+    assert_eq!(r.user.login, "potato");
+}
+
+/* Given a new user, test that their email can be added
+   to the email table and a token for the email is generated
+   and added to the token table. When /confirm/:email_token is
+   requested, check that the response back is ok, and that
+   the email_verified field on user is now set to true.
+*/
+#[test]
+fn test_confirm_user_email() {
+    use cargo_registry::schema::{emails, tokens};
+
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            email: Some("potato@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let email_token = {
+        let conn = app.diesel_database.get().unwrap();
+        let email_info = emails::table
+            .filter(emails::user_id.eq(user.id))
+            .first::<Email>(&*conn)
+            .unwrap();
+        let token_info = tokens::table
+            .filter(tokens::email_id.eq(email_info.id))
+            .first::<Token>(&*conn)
+            .unwrap();
+        token_info.token
+    };
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/confirm/{}", email_token))
+                .with_method(Method::Put),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+    assert!(r.user.email_verified);
 }

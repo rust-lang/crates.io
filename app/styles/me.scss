@@ -65,6 +65,47 @@
     }
 }
 
+#me-email {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    @include display-flex;
+    @include flex-direction(column);
+    .row {
+        width: 100%;
+        border: 1px solid #d5d3cb;
+        border-bottom-width: 0px;
+        &:last-child { border-bottom-width: 1px; }
+        padding: 10px 20px;
+        @include display-flex;
+        @include align-items(center);
+        .label {
+            @include flex(1);
+            margin-right: 0.4em;
+            font-weight: bold;
+        }
+        .email {
+            @include flex(20);
+        }
+        .actions {
+            @include display-flex;
+            @include align-items(center);
+            img { margin-left: 10px }
+        }
+        .email-form {
+            display: inline-flex;
+        }
+        .space-right {
+            margin-right: 10px;
+        }
+    }
+    .friendly-message {
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 #me-api {
     @media only screen and (max-width: 350px) {
         .api { display: none; }

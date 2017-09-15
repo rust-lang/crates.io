@@ -5,24 +5,26 @@ use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
+use time::Timespec;
 
 use app::RequestApp;
 use db::RequestTransaction;
 use krate::Follow;
 use pagination::Paginate;
 use schema::*;
-use util::{RequestUtils, CargoResult, human};
+use util::{RequestUtils, CargoResult, human, bad_request};
 use version::EncodableVersion;
 use {http, Version};
 use owner::{Owner, OwnerKind, CrateOwner};
 use krate::Crate;
+use email;
 
 pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
 
 pub mod middleware;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -42,6 +44,40 @@ pub struct NewUser<'a> {
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: Cow<'a, str>,
+}
+
+#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
+#[belongs_to(User)]
+pub struct Email {
+    pub id: i32,
+    pub user_id: i32,
+    pub email: String,
+    pub verified: bool,
+}
+
+#[derive(Debug, Insertable, AsChangeset)]
+#[table_name = "emails"]
+pub struct NewEmail {
+    pub user_id: i32,
+    pub email: String,
+    pub verified: bool,
+}
+
+#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
+#[belongs_to(Email)]
+pub struct Token {
+    pub id: i32,
+    pub email_id: i32,
+    pub token: String,
+    pub created_at: Timespec,
+}
+
+#[derive(Debug, Insertable, AsChangeset)]
+#[table_name = "tokens"]
+pub struct NewToken {
+    pub email_id: i32,
+    pub token: String,
+    pub created_at: Timespec,
 }
 
 impl<'a> NewUser<'a> {
@@ -69,6 +105,8 @@ impl<'a> NewUser<'a> {
         use diesel::expression::dsl::sql;
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
+        use time;
+        use diesel::result::Error;
 
         let update_user = NewUser {
             email: None,
@@ -88,12 +126,64 @@ impl<'a> NewUser<'a> {
         // necessary for most fields in the database to be used as a conflict
         // target :)
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        insert(&self.on_conflict(
+        let result = insert(&self.on_conflict(
             conflict_target,
             do_update().set(&update_user),
         )).into(users::table)
             .get_result(conn)
-            .map_err(Into::into)
+            .map_err(Into::into);
+
+        // To send the user an account verification email...
+        if let Some(user_email) = self.email {
+            let user_id = users::table
+                .select(users::id)
+                .filter(users::gh_id.eq(&self.gh_id))
+                .first(&*conn)
+                .unwrap();
+
+            let new_email = NewEmail {
+                user_id: user_id,
+                email: String::from(user_email),
+                verified: false,
+            };
+
+            let email_result: QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
+                .into(emails::table)
+                .get_result(conn)
+                .map_err(Into::into);
+
+            match email_result {
+                Ok(email) => {
+                    let token = generate_token();
+                    let new_token = NewToken {
+                        email_id: email.id,
+                        token: token.clone(),
+                        created_at: time::now_utc().to_timespec(),
+                    };
+
+                    insert(&new_token).into(tokens::table).execute(conn)?;
+
+                    if send_user_confirm_email(user_email, self.gh_login, &token).is_err() {
+                        return Err(Error::NotFound);
+                    };
+                }
+                Err(Error::NotFound) => {
+                    // This block is reached if a user already has an email stored
+                    // in the database. If an email already exists then we will
+                    // not overwrite it with the one received from GitHub. Doing
+                    // so would force us to resend a verification email each time
+                    // the user logs in, which doesn't make any sense.
+                    // Thus, we don't consider this case to actually be an error,
+                    // so we don't do anything with it, whereas the block below
+                    // will catch all other relevant errors.
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
+        }
+
+        result
     }
 }
 
@@ -116,6 +206,7 @@ pub struct EncodablePrivateUser {
     pub id: i32,
     pub login: String,
     pub email: Option<String>,
+    pub email_verified: bool,
     pub name: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
@@ -149,7 +240,7 @@ impl User {
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn encodable_private(self) -> EncodablePrivateUser {
+    pub fn encodable_private(self, email_verified: bool) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -162,6 +253,7 @@ impl User {
         EncodablePrivateUser {
             id: id,
             email: email,
+            email_verified,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
@@ -320,16 +412,31 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     // This change is not preferable, we'd rather fix the request,
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
+
     use self::users::dsl::{users, id};
-    let user_id = req.user()?.id;
+    use self::emails::dsl::{emails, user_id};
+
+    let u_id = req.user()?.id;
     let conn = req.db_conn()?;
-    let user = users.filter(id.eq(user_id)).first::<User>(&*conn)?;
+
+    let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
+    let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
+
+    let (email, verified): (Option<String>, bool) = match email_result {
+        Ok(response) => (Some(response.email), response.verified),
+        Err(_) => (None, false),
+    };
+
+    let user = User {
+        email: email,
+        ..user_info
+    };
 
     #[derive(Serialize)]
     struct R {
         user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: user.encodable_private() }))
+    Ok(req.json(&R { user: user.encodable_private(verified) }))
 }
 
 /// Handles the `GET /users/:user_id` route.
@@ -432,6 +539,11 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     use diesel::update;
     use self::users::dsl::{users, gh_login, email};
+    use self::emails::dsl::user_id;
+    use self::tokens::dsl::email_id;
+    use diesel::insert;
+    use diesel::pg::upsert::*;
+    use time;
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -473,9 +585,156 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         .set(email.eq(user_email))
         .execute(&*conn)?;
 
+    let new_email = NewEmail {
+        user_id: user.id,
+        email: String::from(user_email),
+        verified: false,
+    };
+
+    let email_result: QueryResult<Email> =
+        insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
+            .into(emails::table)
+            .get_result(&*conn)
+            .map_err(Into::into);
+
+    let token = generate_token();
+
+    match email_result {
+        Ok(email_response) => {
+            let new_token = NewToken {
+                email_id: email_response.id,
+                token: token.clone(),
+                created_at: time::now_utc().to_timespec(),
+            };
+
+            insert(&new_token.on_conflict(
+                email_id,
+                do_update().set(&new_token),
+            )).into(tokens::table)
+                .execute(&*conn)?;
+        }
+        Err(_) => {
+            return Err(human("Error in creating token"));
+        }
+    }
+
+    let email_result = send_user_confirm_email(user_email, &user.gh_login, &token);
+    email_result.map_err(
+        |_| bad_request("Email could not be sent"),
+    )?;
+
     #[derive(Serialize)]
     struct R {
         ok: bool,
     }
     Ok(req.json(&R { ok: true }))
+}
+
+fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
+    // Create a URL with token string as path to send to user
+    // If user clicks on path, look email/user up in database,
+    // make sure tokens match
+
+    let subject = "Please confirm your email address";
+    let body = format!(
+        "Hello {}! Welcome to Crates.io. Please click the
+link below to verify your email address. Thank you!\n
+https://crates.io/confirm/{}",
+        user_name,
+        token
+    );
+
+    email::send_email(email, subject, &body)
+}
+
+/// Handles the `PUT /confirm/:email_token` route
+pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
+    // to confirm, we must grab the token on the request as part of the URL
+    // look up the token in the tokens table
+    // find what user the token belongs to
+    // on the email table, change 'verified' to true
+    // delete the token from the tokens table
+    use diesel::{update, delete};
+
+    let conn = req.db_conn()?;
+    let req_token = &req.params()["email_token"];
+
+    let token_info = tokens::table
+        .filter(tokens::token.eq(req_token))
+        .first::<Token>(&*conn)
+        .map_err(|_| bad_request("Email token not found."))?;
+
+    let email_info = emails::table
+        .filter(emails::id.eq(token_info.email_id))
+        .first::<Email>(&*conn)
+        .map_err(|_| bad_request("Email belonging to token not found."))?;
+
+    update(emails::table.filter(emails::id.eq(email_info.id)))
+        .set(emails::verified.eq(true))
+        .execute(&*conn)
+        .map_err(|_| bad_request("Email verification could not be updated"))?;
+
+    delete(tokens::table.filter(tokens::id.eq(token_info.id)))
+        .execute(&*conn)
+        .map_err(|_| bad_request("Email token could not be deleted"))?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles `PUT /user/:user_id/resend` route
+pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
+    use diesel::pg::upsert::*;
+    use diesel::insert;
+    use time;
+    use self::tokens::dsl::email_id;
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let user = req.user()?;
+    let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
+    let conn = req.db_conn()?;
+
+    // need to check if current user matches user to be updated
+    if &user.id != name {
+        return Err(human("current user does not match requested user"));
+    }
+
+    let email_info = emails::table
+        .filter(emails::user_id.eq(user.id))
+        .first::<Email>(&*conn)
+        .map_err(|_| bad_request("Email could not be found"))?;
+
+    let token = generate_token();
+
+    let new_token = NewToken {
+        email_id: email_info.id,
+        token: token.clone(),
+        created_at: time::now_utc().to_timespec(),
+    };
+
+    insert(&new_token.on_conflict(
+        email_id,
+        do_update().set(&new_token),
+    )).into(tokens::table)
+        .execute(&*conn)?;
+
+    let email_result = send_user_confirm_email(&email_info.email, &user.gh_login, &token);
+    email_result.map_err(
+        |_| bad_request("Error in sending email"),
+    )?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
+fn generate_token() -> String {
+    let token: String = thread_rng().gen_ascii_chars().take(26).collect();
+    token
 }

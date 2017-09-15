@@ -385,7 +385,7 @@ fn token_gives_access_to_me() {
     req.header("Authorization", &token.token);
 
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: ::user::UserShowResponse = ::json(&mut response);
+    let json: ::user::UserShowPrivateResponse = ::json(&mut response);
 
     assert_eq!(json.user.email, user.email);
 }

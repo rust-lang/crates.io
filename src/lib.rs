@@ -3,7 +3,6 @@
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
-
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
@@ -42,6 +41,7 @@ extern crate tar;
 extern crate time;
 extern crate toml;
 extern crate url;
+extern crate lettre;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
@@ -96,6 +96,7 @@ pub mod uploaders;
 pub mod user;
 pub mod util;
 pub mod version;
+pub mod email;
 
 mod local_upload;
 mod pagination;
@@ -191,6 +192,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(crate_owner_invitation::list),
     );
     api_router.get("/summary", C(krate::summary));
+    api_router.put("/confirm/:email_token", C(user::confirm_user_email));
+    api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();

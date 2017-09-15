@@ -16,9 +16,13 @@
             <dd>{{ model.user.name }}</dd>
             <dt>GitHub Account</dt>
             <dd>{{ model.user.login }}</dd>
-            {{email-input type='email' value=model.user.email user=model.user}}
         </dl>
     </div>
+</div>
+
+<div id='me-email'>
+    <h2>User Email</h2>
+    {{email-input type='email' value=model.user.email user=model.user}}
 </div>
 
 <div id='me-api'>
