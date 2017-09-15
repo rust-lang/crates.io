@@ -884,7 +884,7 @@ fn new_krate_git_upload() {
     assert!(p.deps.is_empty());
     assert_eq!(
         p.cksum,
-        "133f03a2cae3a0c56f47ece636aa784656df0f5b0956c0ea9f7ccee06eaf1ac9"
+        "acb5604b126ac894c1eb11c4575bf2072fea61232a888e453770c79d7ed56419"
     );
 }
 
