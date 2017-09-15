@@ -363,7 +363,10 @@ fn invitations_list() {
     let json: R = ::json(&mut response);
 
     assert_eq!(json.crate_owner_invitations.len(), 1);
-    assert_eq!(json.crate_owner_invitations[0].invited_by_username, "inviting_user");
+    assert_eq!(
+        json.crate_owner_invitations[0].invited_by_username,
+        "inviting_user"
+    );
     assert_eq!(json.crate_owner_invitations[0].crate_name, "invited_crate");
     assert_eq!(json.crate_owner_invitations[0].crate_id, krate.id);
 }
