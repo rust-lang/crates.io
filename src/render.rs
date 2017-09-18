@@ -56,7 +56,7 @@ impl<'a> MarkdownRenderer<'a> {
             ("a", ["href", "target"].iter().cloned().collect()),
             (
                 "img",
-                ["width", "height", "src", "alt", "align", "width"]
+                ["width", "height", "src", "alt", "align"]
                     .iter()
                     .cloned()
                     .collect(),
