@@ -138,6 +138,7 @@
         #my-crates, #my-following { margin: 0; }
     }
 }
+
 #my-feed {
     @include flex-grow(5);
     h2 { font-size: 105%; }
@@ -167,6 +168,23 @@
         background-color: $bg;
         color: white;
         &:hover { background-color: darken($bg, 10%); }
+    }
+}
+
+#my-invites {
+    @include flex-grow(5);
+
+    .row {
+        @include display-flex;
+        @include flex-direction(column);
+    }
+
+    .info {
+        @include display-flex;
+        @include align-items(baseline);
+        @include justify-content(space-between);
+
+        .date { @include flex-grow(2); text-align: right; }
     }
 }
 

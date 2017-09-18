@@ -28,6 +28,7 @@ Router.map(function() {
     this.route('me', function() {
         this.route('crates');
         this.route('following');
+        this.route('pending-invites');
     });
     this.route('user', { path: '/users/:user_id' });
     this.route('install');

@@ -1,0 +1,38 @@
+{{ title 'Pending Invites' }}
+
+<div id='crates-heading'>
+    {{svg-jar "gear"}}
+    <h1>Pending Owner Invites</h1>
+</div>
+
+<div id='my-invites'>
+    <div class='white-rows'>
+        {{#each model as |invite|}}
+            <div class='row'>
+                <div class='info'>
+                    <div class='name'>
+                        <h3>
+                            {{#link-to 'crate' invite.crate_name}}
+                                {{invite.crate_name}}
+                            {{/link-to}}
+                        </h3>
+                    </div>
+                    <div class='invite'>
+                        <p>Invited by: 
+                            {{#link-to 'user' invite.invited_by_username}}
+                                {{invite.invited_by_username}}
+                            {{/link-to}}
+                        </p>
+                    </div>
+                    <div class='sent'>
+                        <span class='small'>{{moment-from-now invite.created_at}}</span>
+                    </div>
+                    <div class='actions'>
+                        <button class='small yellow-button'>Accept</button>
+                        <button class='small yellow-button'>Deny</button>
+                    </div>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>

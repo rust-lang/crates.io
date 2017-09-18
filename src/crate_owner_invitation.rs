@@ -67,7 +67,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     let conn = &*req.db_conn()?;
     let user_id = req.user()?.id;
 
-    let invitations = crate_owner_invitations::table
+    let crate_owner_invitations = crate_owner_invitations::table
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
         .load::<CrateOwnerInvitation>(&*conn)?
         .into_iter()
@@ -76,7 +76,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
-        invitations: Vec<EncodableCrateOwnerInvitation>,
+        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
-    Ok(req.json(&R { invitations }))
+    Ok(req.json(&R { crate_owner_invitations }))
 }
