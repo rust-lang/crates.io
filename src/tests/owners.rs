@@ -370,3 +370,57 @@ fn invitations_list() {
     assert_eq!(json.crate_owner_invitations[0].crate_name, "invited_crate");
     assert_eq!(json.crate_owner_invitations[0].crate_id, krate.id);
 }
+
+#[test]
+fn test_accept_invitation() {
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/me/crate_owner_invitations",
+    );
+    let (krate, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let owner = ::new_user("inviting_user").create_or_update(&conn).unwrap();
+        let user = ::new_user("invited_user").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+
+        // This should be replaced by an actual call to the route that `owner --add` hits once
+        // that route creates an invitation.
+        let invitation = NewCrateOwnerInvitation {
+            invited_by_user_id: owner.id,
+            invited_user_id: user.id,
+            crate_id: krate.id,
+        };
+        diesel::insert(&invitation)
+            .into(crate_owner_invitations::table)
+            .execute(&*conn)
+            .unwrap();
+        (krate, user)
+    };
+    ::sign_in_as(&mut req, &user);
+
+    let body = json!({
+        "crate_owner_invitation": {
+            "invited_by_username": "inviting_user",
+            "crate_name": "invited_crate",
+            "crate_id": krate.id,
+            "created_at":""
+        }
+    });
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("api/v1/me/accept_owner_invite")
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes()),
+        )
+    );
+
+    assert!(::json::<S>(&mut response).ok);
+}
