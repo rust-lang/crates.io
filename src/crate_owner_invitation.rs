@@ -91,9 +91,17 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
-    let crate_invite: EncodableCrateOwnerInvitation = serde_json::from_str(&body).map_err(
+
+    #[derive(Deserialize)]
+    struct OwnerInvitation {
+        crate_owner_invitation: EncodableCrateOwnerInvitation,
+    }
+
+    let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(
         |_| human("invalid json request"),
     )?;
+
+    let crate_invite = crate_invite.crate_owner_invitation;
 
     let pending_crate_owner = crate_owner_invitations::table
         .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
@@ -107,13 +115,15 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
         owner_kind: OwnerKind::User as i32,
     };
 
-    insert(&owner).into(crate_owners::table).execute(conn)?;
-    delete(crate_owner_invitations::table.filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id)))
-        .execute(conn)?;
+    conn.transaction(|| {
+        insert(&owner).into(crate_owners::table).execute(conn)?;
+        delete(crate_owner_invitations::table.filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id)))
+            .execute(conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+        #[derive(Serialize)]
+        struct R {
+            ok: bool,
+        }
+        Ok(req.json(&R { ok: true }))
+    })
 }
