@@ -195,6 +195,11 @@
         @include justify-content(space-between);
 
         .date { @include flex-grow(2); text-align: right; }
+        .label {
+            .small-text {
+                font-size: 90%;
+            }
+        }
     }
 }
 

@@ -28,11 +28,18 @@
                         <span class='small'>{{moment-from-now invite.created_at}}</span>
                     </div>
                     <div class='actions'>
-                        <button class='small yellow-button'>Accept</button>
+                        <button class='small yellow-button' {{action 'acceptInvitation' invite}}>Accept</button>
                         <button class='small yellow-button'>Deny</button>
                     </div>
+                    {{#if isError}}
+                        <div class='label'>
+                            <p class='small-text'>{{inviteError}}</p>
+                        </div>
+                    {{/if}}
                 </div>
             </div>
+        {{else}}
+            <p>You don't seem to have any pending invitations.</p>
         {{/each}}
     </div>
 </div>
