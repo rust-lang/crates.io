@@ -35,7 +35,7 @@ body {
 
 .ember-application > div {
     width: 960px;
-    @media only screen and (max-width: 900px) {
+    @media only screen and (max-width: 960px) {
         width: 100%;
     }
 }
