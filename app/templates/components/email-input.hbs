@@ -50,7 +50,7 @@
                 <p class='small-text'>Your email has not yet been verified.</p>
             </div>
             <div class='actions'>
-                <button class='small yellow-button space-left' {{action 'resendEmail'}}>{{resendButtonText}}</button>
+                <button class='small yellow-button space-left' {{action 'resendEmail'}} disabled={{disableResend}}>{{resendButtonText}}</button>
             </div>
         </div>
     {{/if}}

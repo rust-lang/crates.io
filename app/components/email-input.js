@@ -26,8 +26,11 @@ export default Component.extend({
     }),
     isError: false,
     emailError: '',
-    resendButtonText: computed('user.email_verification_sent', function() {
-        if (this.get('user.email_verification_sent')) {
+    disableResend: false,
+    resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
+        if (this.get('disableResend')) {
+            return 'Sent!';
+        } else if (this.get('user.email_verification_sent')) {
             return 'Resend';
         } else {
             return 'Send verification email';
@@ -81,6 +84,7 @@ export default Component.extend({
 
             this.set('isEditing', false);
             this.set('notValidEmail', false);
+            this.set('disableResend', false);
         },
 
         cancelEdit() {
@@ -93,15 +97,17 @@ export default Component.extend({
 
             this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, {
                 method: 'PUT'
-            }).catch((error) => {
-                if (error.payload) {
-                    this.set('isError', true);
-                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
-                } else {
-                    this.set('isError', true);
-                    this.set('emailError', 'Unknown error in resending message');
-                }
-            });
+            })
+                .then(() => this.set('disableResend', true))
+                .catch((error) => {
+                    if (error.payload) {
+                        this.set('isError', true);
+                        this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
+                    } else {
+                        this.set('isError', true);
+                        this.set('emailError', 'Unknown error in resending message');
+                    }
+                });
         }
     }
 });
