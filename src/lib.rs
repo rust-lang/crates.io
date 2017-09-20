@@ -137,11 +137,25 @@ pub enum Replica {
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 
+    // Route used by both `cargo search` and the frontend
     api_router.get("/crates", C(krate::index));
-    api_router.get("/crates/:crate_id", C(krate::show));
+
+    // Routes used by `cargo`
     api_router.put("/crates/new", C(krate::new));
-    api_router.get("/crates/:crate_id/:version", C(version::show));
+    api_router.get("/crates/:crate_id/owners", C(krate::owners));
+    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
+    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
+    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
+    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+
+    // Routes that appear to be unused
+    api_router.get("/versions", C(version::index));
+    api_router.get("/versions/:version_id", C(version::show));
+
+    // Routes used by the frontend
+    api_router.get("/crates/:crate_id", C(krate::show));
+    api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/readme", C(krate::readme));
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
@@ -152,27 +166,17 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(version::downloads),
     );
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
-    // Used to generate download graphs
     api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
-    // This endpoint may now be redundant, check frontend to see if it is
-    // being used
-    api_router.get("/crates/:crate_id/owners", C(krate::owners));
     api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
     api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));
-    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
-    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get(
         "/crates/:crate_id/reverse_dependencies",
         C(krate::reverse_dependencies),
     );
-    api_router.get("/versions", C(version::index));
-    api_router.get("/versions/:version_id", C(version::show));
     api_router.get("/keywords", C(keyword::index));
     api_router.get("/keywords/:keyword_id", C(keyword::show));
     api_router.get("/categories", C(category::index));
