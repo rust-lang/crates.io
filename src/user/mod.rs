@@ -692,8 +692,6 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
     use time;
     use self::tokens::dsl::email_id;
 
-    let mut body = String::new();
-    req.body().read_to_string(&mut body)?;
     let user = req.user()?;
     let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;

@@ -80,16 +80,8 @@ export default Component.extend({
         resendEmail() {
             let user = this.get('user');
 
-            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT',
-                user: {
-                    avatar: user.avatar,
-                    email: user.email,
-                    email_verified: user.email_verified,
-                    kind: user.kind,
-                    login: user.login,
-                    name: user.name,
-                    url: user.url
-                }
+            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, {
+                method: 'PUT'
             }).catch((error) => {
                 if (error.payload) {
                     this.set('isError', true);
