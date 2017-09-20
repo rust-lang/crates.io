@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use app::App;
-use http;
+use github;
 use schema::*;
 use util::{human, CargoResult};
 use {Crate, User};
@@ -184,9 +184,9 @@ impl Team {
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
-        let token = http::token(req_user.gh_access_token.clone());
-        let (handle, data) = http::github(app, &url, &token)?;
-        let teams: Vec<GithubTeam> = http::parse_github_response(handle, &data)?;
+        let token = github::token(req_user.gh_access_token.clone());
+        let (handle, data) = github::github(app, &url, &token)?;
+        let teams: Vec<GithubTeam> = github::parse_github_response(handle, &data)?;
 
         let team = teams
             .into_iter()
@@ -209,8 +209,8 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let (handle, resp) = http::github(app, &url, &token)?;
-        let org: Org = http::parse_github_response(handle, &resp)?;
+        let (handle, resp) = github::github(app, &url, &token)?;
+        let org: Org = github::parse_github_response(handle, &resp)?;
 
         NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(conn)
     }
@@ -276,15 +276,15 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     }
 
     let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
-    let token = http::token(user.gh_access_token.clone());
-    let (mut handle, resp) = http::github(app, &url, &token)?;
+    let token = github::token(user.gh_access_token.clone());
+    let (mut handle, resp) = github::github(app, &url, &token)?;
 
     // Officially how `false` is returned
     if handle.response_code().unwrap() == 404 {
         return Ok(false);
     }
 
-    let membership: Membership = http::parse_github_response(handle, &resp)?;
+    let membership: Membership = github::parse_github_response(handle, &resp)?;
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.

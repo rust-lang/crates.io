@@ -14,7 +14,7 @@ use pagination::Paginate;
 use schema::*;
 use util::{bad_request, human, CargoResult, RequestUtils};
 use version::EncodableVersion;
-use {http, Version};
+use {github, Version};
 use owner::{CrateOwner, Owner, OwnerKind};
 use krate::Crate;
 use email;
@@ -375,8 +375,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         .exchange(code.clone())
         .map_err(|s| human(&s))?;
 
-    let (handle, resp) = http::github(req.app(), "/user", &token)?;
-    let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
+    let (handle, resp) = github::github(req.app(), "/user", &token)?;
+    let ghuser: GithubUser = github::parse_github_response(handle, &resp)?;
 
     let user = NewUser::new(
         ghuser.id,

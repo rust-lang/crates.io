@@ -84,6 +84,7 @@ pub mod dependency;
 pub mod dist;
 pub mod download;
 pub mod git;
+pub mod github;
 pub mod http;
 pub mod keyword;
 pub mod krate;
