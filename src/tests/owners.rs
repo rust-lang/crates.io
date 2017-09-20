@@ -539,7 +539,7 @@ fn test_decline_invitation() {
 
     assert!(::json::<S>(&mut response).ok);
 
-    // then check to make sure that accept_invite did what it
+    // then check to make sure that decline_invite did what it
     // was supposed to
     // crate_owner_invitation was deleted
     let mut response = ok_resp!(
@@ -551,7 +551,7 @@ fn test_decline_invitation() {
     let json: R = ::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
-    // new crate owner was inserted
+    // new crate owner was not inserted
     let mut response = ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/invited_crate/owners")
