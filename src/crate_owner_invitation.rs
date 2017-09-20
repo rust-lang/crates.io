@@ -97,9 +97,9 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
         crate_owner_invitation: EncodableCrateOwnerInvitation,
     }
 
-    let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(
-        |_| human("invalid json request"),
-    )?;
+    let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(|_| {
+        human("invalid json request")
+    })?;
 
     let crate_invite = crate_invite.crate_owner_invitation;
 
@@ -117,10 +117,11 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
 
     conn.transaction(|| {
         insert(&owner).into(crate_owners::table).execute(conn)?;
-        delete(crate_owner_invitations::table
-            .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
-            .filter(crate_owner_invitations::invited_user_id.eq(user_id)))
-            .execute(conn)?;
+        delete(
+            crate_owner_invitations::table
+                .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
+                .filter(crate_owner_invitations::invited_user_id.eq(user_id)),
+        ).execute(conn)?;
 
         #[derive(Serialize)]
         struct R {

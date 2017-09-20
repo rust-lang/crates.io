@@ -381,7 +381,7 @@ fn invitations_list() {
 fn test_accept_invitation() {
     #[derive(Deserialize)]
     struct S {
-        ok: bool
+        ok: bool,
     }
 
     #[derive(Deserialize)]
