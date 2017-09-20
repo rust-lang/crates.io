@@ -75,7 +75,7 @@ use util::{R404, C, R};
 
 pub mod app;
 pub mod badge;
-pub mod categories;
+pub mod boot;
 pub mod category;
 pub mod config;
 pub mod crate_owner_invitation;
