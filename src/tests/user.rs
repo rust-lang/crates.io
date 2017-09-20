@@ -4,7 +4,8 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser, Email, Token};
+use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser, Email,
+                           NewEmail, Token};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -417,6 +418,8 @@ fn test_email_get_and_put() {
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
 }
 
 /*  Given a crates.io user, check to make sure that the user
@@ -607,6 +610,8 @@ fn test_insert_into_email_table_with_email_change() {
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
 
     let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
     let mut response = ok_resp!(
@@ -638,6 +643,8 @@ fn test_insert_into_email_table_with_email_change() {
     ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
     assert_eq!(r.user.login, "potato");
 }
 
@@ -703,4 +710,55 @@ fn test_confirm_user_email() {
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(r.user.email_verified);
+    assert!(r.user.email_verification_sent);
+}
+
+/* Given a user who existed before we added email confirmation,
+   test that `email_verification_sent` is false so that we don't
+   make the user think we've sent an email when we haven't.
+*/
+#[test]
+fn test_existing_user_email() {
+    use cargo_registry::schema::{emails, users};
+    use diesel::insert;
+
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("potahto");
+
+        // Deliberately not using User::create_or_update since that
+        // will try to send a verification email; we want to simulate
+        // a user who already had an email before we added verification.
+        let user = insert(&user)
+            .into(users::table)
+            .get_result::<User>(&*conn)
+            .unwrap();
+
+        println!("{:?}", user);
+
+        let email = NewEmail {
+            user_id: user.id,
+            email: String::from("potahto@example.com"),
+            verified: false,
+        };
+
+        insert(&email).into(emails::table).execute(&*conn).unwrap();
+
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me").with_method(Method::Get),
+    ));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potahto@example.com");
+    assert!(!r.user.email_verified);
+    assert!(!r.user.email_verification_sent);
 }

@@ -207,6 +207,7 @@ pub struct EncodablePrivateUser {
     pub login: String,
     pub email: Option<String>,
     pub email_verified: bool,
+    pub email_verification_sent: bool,
     pub name: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,
@@ -240,7 +241,11 @@ impl User {
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn encodable_private(self, email_verified: bool) -> EncodablePrivateUser {
+    pub fn encodable_private(
+        self,
+        email_verified: bool,
+        email_verification_sent: bool,
+    ) -> EncodablePrivateUser {
         let User {
             id,
             email,
@@ -254,6 +259,7 @@ impl User {
             id: id,
             email: email,
             email_verified,
+            email_verification_sent,
             avatar: gh_avatar,
             login: gh_login,
             name: name,
@@ -415,6 +421,8 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
     use self::users::dsl::{users, id};
     use self::emails::dsl::{emails, user_id};
+    use diesel::select;
+    use diesel::expression::dsl::exists;
 
     let u_id = req.user()?.id;
     let conn = req.db_conn()?;
@@ -422,9 +430,22 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
     let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
 
-    let (email, verified): (Option<String>, bool) = match email_result {
-        Ok(response) => (Some(response.email), response.verified),
-        Err(_) => (None, false),
+    let (email, verified, verification_sent): (Option<String>, bool, bool) = match email_result {
+        Ok(email_record) => {
+            let verification_sent = if email_record.verified {
+                true
+            } else {
+                select(exists(Token::belonging_to(&email_record)))
+                    .get_result(&*conn)
+                    .unwrap_or(false)
+            };
+            (
+                Some(email_record.email),
+                email_record.verified,
+                verification_sent,
+            )
+        }
+        Err(_) => (None, false, false),
     };
 
     let user = User {
@@ -436,7 +457,9 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     struct R {
         user: EncodablePrivateUser,
     }
-    Ok(req.json(&R { user: user.encodable_private(verified) }))
+    Ok(req.json(&R {
+        user: user.encodable_private(verified, verification_sent),
+    }))
 }
 
 /// Handles the `GET /users/:user_id` route.

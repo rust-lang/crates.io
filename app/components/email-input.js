@@ -26,6 +26,13 @@ export default Component.extend({
     }),
     isError: false,
     emailError: '',
+    resendButtonText: computed('user.email_verification_sent', function() {
+        if (this.get('user.email_verification_sent')) {
+            return 'Resend';
+        } else {
+            return 'Send verification email';
+        }
+    }),
 
     actions: {
         editEmail() {
@@ -55,7 +62,11 @@ export default Component.extend({
 
             user.set('email', userEmail);
             user.save()
-                .then(() => this.set('serverError', null))
+                .then(() => {
+                    this.set('serverError', null);
+                    this.set('user.email_verification_sent', true);
+                    this.set('user.email_verified', false);
+                })
                 .catch(err => {
                     let msg;
                     if (err.errors && err.errors[0] && err.errors[0].detail) {

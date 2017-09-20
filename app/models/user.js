@@ -3,6 +3,7 @@ import DS from 'ember-data';
 export default DS.Model.extend({
     email: DS.attr('string'),
     email_verified: DS.attr('boolean'),
+    email_verification_sent: DS.attr('boolean'),
     name: DS.attr('string'),
     login: DS.attr('string'),
     avatar: DS.attr('string'),
