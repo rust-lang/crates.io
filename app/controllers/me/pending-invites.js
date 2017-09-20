@@ -26,7 +26,7 @@ export default Ember.Controller.extend({
                 this.set('isError', true);
                 if (error.payload) {
                     this.set('inviteError',
-                             `Error in accepting invite: ${error.payload.errors[0].detail}`
+                        `Error in accepting invite: ${error.payload.errors[0].detail}`
                     );
                 } else {
                     this.set('inviteError', 'Error in accepting invite');
