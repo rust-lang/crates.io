@@ -175,7 +175,9 @@ pub fn decline_invite(req: &mut Request) -> CargoResult<Response> {
 
     let crate_invite = crate_invite.crate_owner_invitation;
 
-    delete(crate_owner_invitations::table.filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id)))
+    delete(crate_owner_invitations::table
+        .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
+        .filter(crate_owner_invitations::invited_user_id.eq(user_id)))
         .execute(conn)?;
 
     #[derive(Serialize)]
