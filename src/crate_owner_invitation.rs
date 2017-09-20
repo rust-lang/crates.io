@@ -117,7 +117,9 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
 
     conn.transaction(|| {
         insert(&owner).into(crate_owners::table).execute(conn)?;
-        delete(crate_owner_invitations::table.filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id)))
+        delete(crate_owner_invitations::table
+            .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
+            .filter(crate_owner_invitations::invited_user_id.eq(user_id)))
             .execute(conn)?;
 
         #[derive(Serialize)]
