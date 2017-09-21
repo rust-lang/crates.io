@@ -100,6 +100,8 @@ pub fn proxy() -> (String, Bomb) {
     let data = cache_file(&me.replace("::", "_"));
     let record = if record && !data.exists() {
         Record::Capture(Vec::new(), data)
+    } else if !data.exists() {
+        Record::Replay(serde_json::from_slice("[]".as_bytes()).unwrap())
     } else {
         let mut body = Vec::new();
         t!(t!(File::open(&data)).read_to_end(&mut body));
