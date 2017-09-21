@@ -54,6 +54,7 @@ impl<'a> MarkdownRenderer<'a> {
             .collect();
         let tag_attributes = [
             ("a", ["href", "target"].iter().cloned().collect()),
+            ("code", ["class"].iter().cloned().collect()),
             (
                 "img",
                 ["width", "height", "src", "alt", "align"]
@@ -68,11 +69,37 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
+        let allowed_classes = [
+            (
+                "code",
+                [
+                    "language-bash",
+                    "language-clike",
+                    "language-glsl",
+                    "language-go",
+                    "language-ini",
+                    "language-javascript",
+                    "language-json",
+                    "language-markup",
+                    "language-protobuf",
+                    "language-ruby",
+                    "language-rust",
+                    "language-scss",
+                    "language-sql",
+                    "yaml",
+                ].iter()
+                    .cloned()
+                    .collect(),
+            ),
+        ].iter()
+            .cloned()
+            .collect();
         let html_sanitizer = Ammonia {
             link_rel: Some("nofollow noopener noreferrer"),
             keep_cleaned_elements: true,
             tags: tags,
             tag_attributes: tag_attributes,
+            allowed_classes: allowed_classes,
             ..Ammonia::default()
         };
         MarkdownRenderer { html_sanitizer: html_sanitizer }
@@ -172,5 +199,21 @@ mod tests {
         let text = r#"wb’"#;
         let result = markdown_to_html(text).unwrap();
         assert_eq!(result, "<p>wb’</p>\n");
+    }
+
+    #[test]
+    fn code_block_with_syntax_highlighting() {
+        let code_block = r#"```rust \
+                            println!("Hello World"); \
+                           ```"#;
+        let result = markdown_to_html(code_block).unwrap();
+        assert!(result.contains("<code class=\"language-rust\">"));
+    }
+
+    #[test]
+    fn text_with_forbidden_class_attribute() {
+        let text = "<p class='bad-class'>Hello World!</p>";
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<p>Hello World!</p>\n");
     }
 }
