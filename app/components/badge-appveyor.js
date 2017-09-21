@@ -12,7 +12,7 @@ export default Component.extend({
     imageUrl: computed('badge.attributes.id', function() {
         let id = this.get('badge.attributes.id');
         let branch = this.get('branch');
-        if (id === undefined || id === null) {
+        if (id !== undefined || id !== null) {
             return `https://ci.appveyor.com/api/projects/status/${id}/branch/${branch}?svg=true`;
         } else {
             let service = this.get('service');
