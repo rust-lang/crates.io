@@ -9,19 +9,19 @@ export default Ember.Component.extend({
         acceptInvitation(invite) {
             invite.set('accepted', true);
             invite.save()
-            .then(() => {
-                this.set('isSuccess', true);
-            })
-            .catch((error) => {
-                this.set('isError', true);
-                if (error.payload) {
-                    this.set('inviteError',
-                        `Error in accepting invite: ${error.payload.errors[0].detail}`
-                    );
-                } else {
-                    this.set('inviteError', 'Error in accepting invite');
-                }
-            });
+                .then(() => {
+                    this.set('isSuccess', true);
+                })
+                .catch((error) => {
+                    this.set('isError', true);
+                    if (error.payload) {
+                        this.set('inviteError',
+                            `Error in accepting invite: ${error.payload.errors[0].detail}`
+                        );
+                    } else {
+                        this.set('inviteError', 'Error in accepting invite');
+                    }
+                });
         }
     }
 });
