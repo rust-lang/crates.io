@@ -88,10 +88,10 @@ struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
-#[derive(Deserialize, Serialize)]
-struct InvitationResponse {
-    crate_id: i32,
-    accepted: bool,
+#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+pub struct InvitationResponse {
+    pub crate_id: i32,
+    pub accepted: bool,
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
@@ -102,8 +102,6 @@ pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
-
-    println!("body: {:?}", body);
 
     let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(|_| {
         human("invalid json request")

@@ -3,7 +3,7 @@ use {CrateList, GoodCrate};
 use cargo_registry::owner::EncodableOwner;
 use cargo_registry::user::EncodablePublicUser;
 use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation,
-                                             NewCrateOwnerInvitation};
+                                             NewCrateOwnerInvitation, InvitationResponse};
 use cargo_registry::schema::crate_owner_invitations;
 
 use conduit::{Handler, Method};
@@ -380,11 +380,6 @@ fn invitations_list() {
 #[test]
 fn test_accept_invitation() {
     #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
-
-    #[derive(Deserialize)]
     struct R {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
@@ -392,6 +387,11 @@ fn test_accept_invitation() {
     #[derive(Deserialize)]
     struct Q {
         users: Vec<EncodablePublicUser>,
+    }
+
+    #[derive(Deserialize)]
+    struct T {
+        crate_owner_invitation: InvitationResponse,
     }
 
     let (_b, app, middle) = ::app();
@@ -422,25 +422,28 @@ fn test_accept_invitation() {
     ::sign_in_as(&mut req, &user);
 
     let body = json!({
-        "crate_owner_invitation": {
+        "crate_owner_invite": {
             "invited_by_username": "inviting_user",
             "crate_name": "invited_crate",
             "crate_id": krate.id,
-            "created_at": ""
+            "created_at": "",
+            "accepted": true
         }
     });
 
     // first check that response from inserting new crate owner
-    // and deleting crate_owner_inviitation is okay
+    // and deleting crate_owner_invitation is okay
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("api/v1/me/accept_owner_invite")
+            req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
             .with_method(Method::Put)
             .with_body(body.to_string().as_bytes()),
         )
     );
 
-    assert!(::json::<S>(&mut response).ok);
+    let json: T = ::json(&mut response);
+    assert_eq!(json.crate_owner_invitation.accepted, true);
+    assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
 
     // then check to make sure that accept_invite did what it
     // was supposed to
