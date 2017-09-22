@@ -477,11 +477,6 @@ fn test_accept_invitation() {
 #[test]
 fn test_decline_invitation() {
     #[derive(Deserialize)]
-    struct S {
-        ok: bool
-    }
-
-    #[derive(Deserialize)]
     struct R {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
@@ -489,6 +484,11 @@ fn test_decline_invitation() {
     #[derive(Deserialize)]
     struct Q {
         users: Vec<EncodablePublicUser>,
+    }
+
+    #[derive(Deserialize)]
+    struct T {
+        crate_owner_invitation: InvitationResponse,
     }
 
     let (_b, app, middle) = ::app();
@@ -519,11 +519,12 @@ fn test_decline_invitation() {
     ::sign_in_as(&mut req, &user);
 
     let body = json!({
-        "crate_owner_invitation": {
+        "crate_owner_invite": {
             "invited_by_username": "inviting_user",
             "crate_name": "invited_crate",
             "crate_id": krate.id,
-            "created_at": ""
+            "created_at": "",
+            "accepted": false
         }
     });
 
@@ -531,13 +532,16 @@ fn test_decline_invitation() {
     // crate_owner_invitation is okay
     let mut response = ok_resp!(
         middle.call(
-            req.with_path("api/v1/me/decline_owner_invite")
+            req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
             .with_method(Method::Put)
             .with_body(body.to_string().as_bytes()),
         )
     );
 
-    assert!(::json::<S>(&mut response).ok);
+    let json: T = ::json(&mut response);
+    assert_eq!(json.crate_owner_invitation.accepted, false);
+    assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
+
 
     // then check to make sure that decline_invite did what it
     // was supposed to
