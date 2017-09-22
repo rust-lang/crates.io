@@ -57,9 +57,9 @@ pub struct Email {
 
 #[derive(Debug, Insertable, AsChangeset)]
 #[table_name = "emails"]
-pub struct NewEmail {
+pub struct NewEmail<'a> {
     pub user_id: i32,
-    pub email: String,
+    pub email: &'a str,
     pub verified: bool,
 }
 
@@ -75,9 +75,35 @@ pub struct Token {
 #[derive(Debug, Insertable, AsChangeset)]
 #[table_name = "tokens"]
 pub struct NewToken {
-    pub email_id: i32,
-    pub token: String,
-    pub created_at: Timespec,
+    email_id: i32,
+    token: String,
+}
+
+impl NewToken {
+    fn generate(email_id: i32) -> Self {
+        NewToken {
+            token: generate_token(),
+            email_id,
+        }
+    }
+
+    fn regenerate(id: i32, conn: &PgConnection) -> QueryResult<String> {
+        use diesel::insert;
+        use diesel::expression::now;
+        use diesel::pg::upsert::*;
+        use schema::tokens::dsl::{tokens, token, created_at, email_id};
+
+        let new_token = Self::generate(id);
+        insert(&new_token.on_conflict(
+            email_id,
+            do_update().set((
+                token.eq(&new_token.token),
+                created_at.eq(now),
+            )),
+        )).into(tokens)
+            .returning(token)
+            .get_result(conn)
+    }
 }
 
 impl<'a> NewUser<'a> {
@@ -105,8 +131,7 @@ impl<'a> NewUser<'a> {
         use diesel::expression::dsl::sql;
         use diesel::types::Integer;
         use diesel::pg::upsert::*;
-        use time;
-        use diesel::result::Error;
+        use diesel::NotFound;
 
         let update_user = NewUser {
             email: None,
@@ -117,73 +142,48 @@ impl<'a> NewUser<'a> {
             gh_access_token: self.gh_access_token.clone(),
         };
 
-        // We need the `WHERE gh_id > 0` condition here because `gh_id` set
-        // to `-1` indicates that we were unable to find a GitHub ID for
-        // the associated GitHub login at the time that we backfilled
-        // GitHub IDs. Therefore, there are multiple records in production
-        // that have a `gh_id` of `-1` so we need to exclude those when
-        // considering uniqueness of `gh_id` values. The `> 0` condition isn't
-        // necessary for most fields in the database to be used as a conflict
-        // target :)
-        let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        let result = insert(&self.on_conflict(
-            conflict_target,
-            do_update().set(&update_user),
-        )).into(users::table)
-            .get_result(conn)
-            .map_err(Into::into);
+        conn.transaction(|| {
+            // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+            // to `-1` indicates that we were unable to find a GitHub ID for
+            // the associated GitHub login at the time that we backfilled
+            // GitHub IDs. Therefore, there are multiple records in production
+            // that have a `gh_id` of `-1` so we need to exclude those when
+            // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+            // necessary for most fields in the database to be used as a conflict
+            // target :)
+            let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
+            let user = insert(&self.on_conflict(
+                conflict_target,
+                do_update().set(&update_user),
+            )).into(users::table)
+                .get_result::<User>(conn)?;
 
-        // To send the user an account verification email...
-        if let Some(user_email) = self.email {
-            let user_id = users::table
-                .select(users::id)
-                .filter(users::gh_id.eq(&self.gh_id))
-                .first(&*conn)
-                .unwrap();
+            // To send the user an account verification email...
+            if let Some(user_email) = user.email.as_ref() {
+                let new_email = NewEmail {
+                    user_id: user.id,
+                    email: user_email,
+                    verified: false,
+                };
 
-            let new_email = NewEmail {
-                user_id: user_id,
-                email: String::from(user_email),
-                verified: false,
-            };
+                let email_id = insert(&new_email.on_conflict_do_nothing())
+                    .into(emails::table)
+                    .returning(emails::id)
+                    .get_result(conn)
+                    .optional()?;
 
-            let email_result: QueryResult<Email> = insert(&new_email.on_conflict_do_nothing())
-                .into(emails::table)
-                .get_result(conn)
-                .map_err(Into::into);
-
-            match email_result {
-                Ok(email) => {
-                    let token = generate_token();
-                    let new_token = NewToken {
-                        email_id: email.id,
-                        token: token.clone(),
-                        created_at: time::now_utc().to_timespec(),
-                    };
+                if let Some(id) = email_id {
+                    let new_token = NewToken::generate(id);
 
                     insert(&new_token).into(tokens::table).execute(conn)?;
 
-                    if send_user_confirm_email(user_email, self.gh_login, &token).is_err() {
-                        return Err(Error::NotFound);
-                    };
-                }
-                Err(Error::NotFound) => {
-                    // This block is reached if a user already has an email stored
-                    // in the database. If an email already exists then we will
-                    // not overwrite it with the one received from GitHub. Doing
-                    // so would force us to resend a verification email each time
-                    // the user logs in, which doesn't make any sense.
-                    // Thus, we don't consider this case to actually be an error,
-                    // so we don't do anything with it, whereas the block below
-                    // will catch all other relevant errors.
-                }
-                Err(err) => {
-                    return Err(err);
+                    send_user_confirm_email(user_email, &user.gh_login, &new_token.token)
+                        .map_err(|_| NotFound)?;
                 }
             }
-        }
 
-        result
+            Ok(user)
+        })
     }
 }
 
@@ -560,13 +560,10 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `PUT /user/:user_id` route.
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
-    use diesel::update;
-    use self::users::dsl::{users, gh_login, email};
-    use self::emails::dsl::user_id;
-    use self::tokens::dsl::email_id;
-    use diesel::insert;
+    use diesel::{insert, update};
     use diesel::pg::upsert::*;
-    use time;
+    use self::emails::dsl::user_id;
+    use self::users::dsl::{users, gh_login, email};
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -604,47 +601,27 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         return Err(human("empty email rejected"));
     }
 
-    update(users.filter(gh_login.eq(&user.gh_login)))
-        .set(email.eq(user_email))
-        .execute(&*conn)?;
+    conn.transaction(|| {
+        update(users.filter(gh_login.eq(&user.gh_login)))
+            .set(email.eq(user_email))
+            .execute(&*conn)?;
 
-    let new_email = NewEmail {
-        user_id: user.id,
-        email: String::from(user_email),
-        verified: false,
-    };
+        let new_email = NewEmail {
+            user_id: user.id,
+            email: user_email,
+            verified: false,
+        };
 
-    let email_result: QueryResult<Email> =
-        insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
+        let email_id = insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
             .into(emails::table)
+            .returning(emails::id)
             .get_result(&*conn)
-            .map_err(Into::into);
+            .map_err(|_| human("Error in creating token"))?;
+        let token = NewToken::regenerate(email_id, &conn)?;
 
-    let token = generate_token();
-
-    match email_result {
-        Ok(email_response) => {
-            let new_token = NewToken {
-                email_id: email_response.id,
-                token: token.clone(),
-                created_at: time::now_utc().to_timespec(),
-            };
-
-            insert(&new_token.on_conflict(
-                email_id,
-                do_update().set(&new_token),
-            )).into(tokens::table)
-                .execute(&*conn)?;
-        }
-        Err(_) => {
-            return Err(human("Error in creating token"));
-        }
-    }
-
-    let email_result = send_user_confirm_email(user_email, &user.gh_login, &token);
-    email_result.map_err(
-        |_| bad_request("Email could not be sent"),
-    )?;
+        send_user_confirm_email(user_email, &user.gh_login, &token)
+            .map_err(|_| bad_request("Email could not be sent"))
+    })?;
 
     #[derive(Serialize)]
     struct R {
@@ -710,11 +687,6 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles `PUT /user/:user_id/resend` route
 pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
-    use diesel::pg::upsert::*;
-    use diesel::insert;
-    use time;
-    use self::tokens::dsl::email_id;
-
     let user = req.user()?;
     let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
@@ -724,29 +696,17 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         return Err(human("current user does not match requested user"));
     }
 
-    let email_info = emails::table
-        .filter(emails::user_id.eq(user.id))
-        .first::<Email>(&*conn)
-        .map_err(|_| bad_request("Email could not be found"))?;
+    conn.transaction(|| {
+        let email_info = emails::table
+            .filter(emails::user_id.eq(user.id))
+            .first::<Email>(&*conn)
+            .map_err(|_| bad_request("Email could not be found"))?;
 
-    let token = generate_token();
+        let token = NewToken::regenerate(email_info.id, &conn)?;
 
-    let new_token = NewToken {
-        email_id: email_info.id,
-        token: token.clone(),
-        created_at: time::now_utc().to_timespec(),
-    };
-
-    insert(&new_token.on_conflict(
-        email_id,
-        do_update().set(&new_token),
-    )).into(tokens::table)
-        .execute(&*conn)?;
-
-    let email_result = send_user_confirm_email(&email_info.email, &user.gh_login, &token);
-    email_result.map_err(
-        |_| bad_request("Error in sending email"),
-    )?;
+        send_user_confirm_email(&email_info.email, &user.gh_login, &token)
+            .map_err(|_| bad_request("Error in sending email"))
+    })?;
 
     #[derive(Serialize)]
     struct R {
