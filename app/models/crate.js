@@ -21,10 +21,7 @@ export default DS.Model.extend({
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),
     enhanced_badges: map('badges', badge => ({
-        // jshint ignore:start
-        // needed until https://github.com/jshint/jshint/issues/2991 is fixed
         ...badge,
-        // jshint ignore:end
         component_name: `badge-${badge.badge_type}`
     })),
     badge_sort: ['badge_type'],
