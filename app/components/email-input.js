@@ -26,6 +26,16 @@ export default Component.extend({
     }),
     isError: false,
     emailError: '',
+    disableResend: false,
+    resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
+        if (this.get('disableResend')) {
+            return 'Sent!';
+        } else if (this.get('user.email_verification_sent')) {
+            return 'Resend';
+        } else {
+            return 'Send verification email';
+        }
+    }),
 
     actions: {
         editEmail() {
@@ -55,7 +65,11 @@ export default Component.extend({
 
             user.set('email', userEmail);
             user.save()
-                .then(() => this.set('serverError', null))
+                .then(() => {
+                    this.set('serverError', null);
+                    this.set('user.email_verification_sent', true);
+                    this.set('user.email_verified', false);
+                })
                 .catch(err => {
                     let msg;
                     if (err.errors && err.errors[0] && err.errors[0].detail) {
@@ -70,6 +84,7 @@ export default Component.extend({
 
             this.set('isEditing', false);
             this.set('notValidEmail', false);
+            this.set('disableResend', false);
         },
 
         cancelEdit() {
@@ -80,25 +95,19 @@ export default Component.extend({
         resendEmail() {
             let user = this.get('user');
 
-            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT',
-                user: {
-                    avatar: user.avatar,
-                    email: user.email,
-                    email_verified: user.email_verified,
-                    kind: user.kind,
-                    login: user.login,
-                    name: user.name,
-                    url: user.url
-                }
-            }).catch((error) => {
-                if (error.payload) {
-                    this.set('isError', true);
-                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
-                } else {
-                    this.set('isError', true);
-                    this.set('emailError', 'Unknown error in resending message');
-                }
-            });
+            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, {
+                method: 'PUT'
+            })
+                .then(() => this.set('disableResend', true))
+                .catch((error) => {
+                    if (error.payload) {
+                        this.set('isError', true);
+                        this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
+                    } else {
+                        this.set('isError', true);
+                        this.set('emailError', 'Unknown error in resending message');
+                    }
+                });
         }
     }
 });

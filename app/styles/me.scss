@@ -86,6 +86,10 @@
         }
         .email {
             @include flex(20);
+            .verified {
+                color: green;
+                font-weight: bold;
+            }
         }
         .actions {
             @include display-flex;
@@ -93,7 +97,13 @@
             img { margin-left: 10px }
         }
         .email-form {
+            @include flex(10);
             display: inline-flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            input.ember-text-field {
+                width: 400px;
+            }
         }
         .space-right {
             margin-right: 10px;
