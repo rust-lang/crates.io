@@ -1,4 +1,5 @@
 import { helper } from '@ember/component/helper';
+import { htmlSafe } from '@ember/string';
 import Ember from 'ember';
 
 const escape = Ember.Handlebars.Utils.escapeExpression;
@@ -13,7 +14,7 @@ export function formatEmail(email) {
         ret = `<a href='mailto:${escape(formatted[2])}'>${ret}</a>`;
     }
 
-    return ret.htmlSafe();
+    return htmlSafe(ret);
 }
 
 export default helper(params => formatEmail(params[0]));
