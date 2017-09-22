@@ -151,14 +151,19 @@ fn accept_invite(
     })
 }
 
-fn decline_invite(req: &mut Request, conn: &PgConnection, crate_invite: InvitationResponse) -> CargoResult<Response> {
+fn decline_invite(
+    req: &mut Request,
+    conn: &PgConnection,
+    crate_invite: InvitationResponse,
+) -> CargoResult<Response> {
     use diesel::delete;
     let user_id = req.user()?.id;
 
-    delete(crate_owner_invitations::table
-        .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
-        .filter(crate_owner_invitations::invited_user_id.eq(user_id)))
-        .execute(conn)?;
+    delete(
+        crate_owner_invitations::table
+            .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
+            .filter(crate_owner_invitations::invited_user_id.eq(user_id)),
+    ).execute(conn)?;
 
     #[derive(Serialize)]
     struct R {
