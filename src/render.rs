@@ -115,6 +115,7 @@ impl<'a> MarkdownRenderer<'a> {
             ext_table: true,
             ext_tagfilter: true,
             ext_tasklist: true,
+            ext_header_ids: Some("user-content-".to_string()),
             ..comrak::ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
