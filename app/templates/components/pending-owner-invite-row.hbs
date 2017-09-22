@@ -1,8 +1,12 @@
 <div class='row'>
-    {{#if isSuccess }}
+    {{#if isAccepted }}
         <p>Success! You've been added as an owner of crate
             {{#link-to 'crate' invite.crate_name}}{{invite.crate_name}}{{/link-to}}.
-            </p>
+        </p>
+    {{else if isDeclined}}
+        <p>Declined. You have not been added as an owner of crate
+            {{#link-to 'crate' invite.crate_name}}{{invite.crate_name}}{{/link-to}}.
+        </p>
     {{else}}
     <div class='info'>
         <div class='name'>
@@ -24,7 +28,7 @@
         </div>
         <div class='actions'>
             <button class='small yellow-button' {{action 'acceptInvitation' invite}}>Accept</button>
-            <button class='small yellow-button'>Deny</button>
+            <button class='small yellow-button' {{action 'declineInvitation' invite}}>Deny</button>
         </div>
         {{#if isError}}
             <div class='label'>
