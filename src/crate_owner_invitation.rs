@@ -109,17 +109,15 @@ pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
 
     let crate_invite = crate_invite.crate_owner_invite;
 
-    let response = if crate_invite.accepted {
+    if crate_invite.accepted {
         accept_invite(req, conn, crate_invite)
     } else {
         #[derive(Serialize)]
         struct R {
             crate_owner_invitation: InvitationResponse,
         }
-        Ok((req.json(&R { crate_owner_invitation: crate_invite })))
-    };
-
-    response
+        Ok(req.json(&R { crate_owner_invitation: crate_invite }))
+    }
 }
 
 fn accept_invite(
