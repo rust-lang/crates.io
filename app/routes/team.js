@@ -31,7 +31,7 @@ export default Route.extend({
             },
             (e) => {
                 if (e.errors.some(e => e.detail === 'Not Found')) {
-                    this.get('flashMessages').queue(`User '${params.team_id}' does not exist`);
+                    this.get('flashMessages').queue(`Team '${params.team_id}' does not exist`);
                     return this.replaceWith('index');
                 }
             }
