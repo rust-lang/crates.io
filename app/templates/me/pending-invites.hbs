@@ -9,6 +9,13 @@
     <div class='white-rows'>
         {{#each model as |invite|}}
             <div class='row'>
+                {{#if isSuccess }}
+                    <p>Success! You've been added as an owner of crate 
+                        {{#link-to 'crate' invite.crate_name}}
+                            {{invite.crate_name}}
+                        {{/link-to}}.
+                        </p>
+                {{else}}
                 <div class='info'>
                     <div class='name'>
                         <h3>
@@ -37,6 +44,7 @@
                         </div>
                     {{/if}}
                 </div>
+                {{/if}}
             </div>
         {{else}}
             <p>You don't seem to have any pending invitations.</p>

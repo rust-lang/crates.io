@@ -83,26 +83,54 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { crate_owner_invitations }))
 }
 
-/// Handles the `PUT /me/accept_owner_invite` route.
-pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
-    use diesel::{insert, delete};
+#[derive(Deserialize)]
+struct OwnerInvitation {
+    crate_owner_invite: InvitationResponse,
+}
+
+#[derive(Deserialize, Serialize)]
+struct InvitationResponse {
+    crate_id: i32,
+    accepted: bool,
+}
+
+/// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
+pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
+
     let conn = &*req.db_conn()?;
-    let user_id = req.user()?.id;
+
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
-    #[derive(Deserialize)]
-    struct OwnerInvitation {
-        crate_owner_invitation: EncodableCrateOwnerInvitation,
-    }
+    println!("body: {:?}", body);
 
     let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(|_| {
         human("invalid json request")
     })?;
 
-    let crate_invite = crate_invite.crate_owner_invitation;
+    let crate_invite = crate_invite.crate_owner_invite;
 
+    let response = if crate_invite.accepted {
+        accept_invite(req, conn, crate_invite)
+    } else {
+        #[derive(Serialize)]
+        struct R {
+            crate_owner_invitation: InvitationResponse,
+        }
+        Ok((req.json(&R { crate_owner_invitation: crate_invite })))
+    };
+
+    response
+}
+
+fn accept_invite(
+    req: &mut Request,
+    conn: &PgConnection,
+    crate_invite: InvitationResponse,
+) -> CargoResult<Response> {
+    let user_id = req.user()?.id;
+    use diesel::{insert, delete};
     let pending_crate_owner = crate_owner_invitations::table
         .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
@@ -125,8 +153,8 @@ pub fn accept_invite(req: &mut Request) -> CargoResult<Response> {
 
         #[derive(Serialize)]
         struct R {
-            ok: bool,
+            crate_owner_invitation: InvitationResponse,
         }
-        Ok(req.json(&R { ok: true }))
+        Ok(req.json(&R { crate_owner_invitation: crate_invite }))
     })
 }
