@@ -8,44 +8,7 @@
 <div id='my-invites'>
     <div class='white-rows'>
         {{#each model as |invite|}}
-            <div class='row'>
-                {{#if isSuccess }}
-                    <p>Success! You've been added as an owner of crate 
-                        {{#link-to 'crate' invite.crate_name}}
-                            {{invite.crate_name}}
-                        {{/link-to}}.
-                        </p>
-                {{else}}
-                <div class='info'>
-                    <div class='name'>
-                        <h3>
-                            {{#link-to 'crate' invite.crate_name}}
-                                {{invite.crate_name}}
-                            {{/link-to}}
-                        </h3>
-                    </div>
-                    <div class='invite'>
-                        <p>Invited by: 
-                            {{#link-to 'user' invite.invited_by_username}}
-                                {{invite.invited_by_username}}
-                            {{/link-to}}
-                        </p>
-                    </div>
-                    <div class='sent'>
-                        <span class='small'>{{moment-from-now invite.created_at}}</span>
-                    </div>
-                    <div class='actions'>
-                        <button class='small yellow-button' {{action 'acceptInvitation' invite}}>Accept</button>
-                        <button class='small yellow-button'>Deny</button>
-                    </div>
-                    {{#if isError}}
-                        <div class='label'>
-                            <p class='small-text'>{{inviteError}}</p>
-                        </div>
-                    {{/if}}
-                </div>
-                {{/if}}
-            </div>
+            {{pending-owner-invite-row invite=invite}}
         {{else}}
             <p>You don't seem to have any pending invitations.</p>
         {{/each}}

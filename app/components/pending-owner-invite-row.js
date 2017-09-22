@@ -1,8 +1,6 @@
 import Ember from 'ember';
-import { inject as service } from '@ember/service';
 
-export default Ember.Controller.extend({
-    ajax: service(),
+export default Ember.Component.extend({
     isSuccess: false,
     isError: false,
     inviteError: 'default error message',
@@ -11,6 +9,9 @@ export default Ember.Controller.extend({
         acceptInvitation(invite) {
             invite.set('accepted', true);
             invite.save()
+            .then(() => {
+                this.set('isSuccess', true);
+            })
             .catch((error) => {
                 this.set('isError', true);
                 if (error.payload) {
