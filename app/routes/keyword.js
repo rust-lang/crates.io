@@ -6,7 +6,7 @@ export default Route.extend({
 
     model({ keyword_id }) {
         return this.store.find('keyword', keyword_id).catch(e => {
-            if (e.errors.any(e => e.detail === 'Not Found')) {
+            if (e.errors.some(e => e.detail === 'Not Found')) {
                 this.get('flashMessages').show(`Keyword '${keyword_id}' does not exist`);
             }
         });
