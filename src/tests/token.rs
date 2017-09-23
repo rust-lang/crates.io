@@ -1,12 +1,18 @@
+use diesel::prelude::*;
 use std::collections::HashSet;
 
 use conduit::{Handler, Method};
 
-use cargo_registry::token::{ApiToken, EncodableApiToken, EncodableApiTokenWithToken};
+use cargo_registry::token::{ApiToken, EncodableApiTokenWithToken};
+
+#[derive(Deserialize)]
+struct DecodableApiToken {
+    name: String,
+}
 
 #[derive(Deserialize)]
 struct ListResponse {
-    api_tokens: Vec<EncodableApiToken>,
+    api_tokens: Vec<DecodableApiToken>,
 }
 #[derive(Deserialize)]
 struct NewResponse {
@@ -188,7 +194,7 @@ fn create_token_success() {
     assert!(!json.api_token.token.is_empty());
 
     let conn = t!(app.diesel_database.get());
-    let tokens = t!(ApiToken::find_for_user(&conn, user.id));
+    let tokens = t!(ApiToken::belonging_to(&user).load::<ApiToken>(&*conn));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert_eq!(tokens[0].token, json.api_token.token);
@@ -309,7 +315,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
     // List tokens for first user contains the token
     {
         let conn = t!(app.diesel_database.get());
-        let tokens = t!(ApiToken::find_for_user(&conn, user1.id));
+        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(&*conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     }
@@ -325,7 +331,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
     // List tokens for first user still contains the token
     {
         let conn = t!(app.diesel_database.get());
-        let tokens = t!(ApiToken::find_for_user(&conn, user1.id));
+        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(&*conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     }
@@ -347,7 +353,7 @@ fn revoke_token_success() {
     // List tokens contains the token
     {
         let conn = t!(app.diesel_database.get());
-        let tokens = ApiToken::find_for_user(&conn, user.id).unwrap();
+        let tokens = t!(ApiToken::belonging_to(&user).load::<ApiToken>(&*conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
     }
@@ -363,8 +369,8 @@ fn revoke_token_success() {
     // List tokens no longer contains the token
     {
         let conn = t!(app.diesel_database.get());
-        let tokens = ApiToken::find_for_user(&conn, user.id).unwrap();
-        assert_eq!(tokens.len(), 0);
+        let tokens = ApiToken::belonging_to(&user).count().get_result(&*conn);
+        assert_eq!(tokens, Ok(0));
     }
 }
 
@@ -410,32 +416,11 @@ fn using_token_updates_last_used_at() {
 
     let token = {
         let conn = t!(app.diesel_database.get());
-        t!(ApiToken::find_for_user(&conn, user.id)).pop().unwrap()
+        t!(ApiToken::belonging_to(&user).first::<ApiToken>(&*conn))
     };
     assert!(token.last_used_at.is_some());
 
     // Would check that it updates the timestamp here, but the timestamp is
     // based on the start of the database transaction so it doesn't work in
     // this test framework.
-}
-
-#[test]
-fn deleted_token_does_not_give_access_to_me() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
-
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 403);
-
-    let token;
-    {
-        let conn = t!(app.diesel_database.get());
-        let user = t!(::new_user("foo").create_or_update(&conn));
-        token = t!(ApiToken::insert(&conn, user.id, "bar"));
-        t!(ApiToken::delete(&conn, user.id, token.id));
-    }
-    req.header("Authorization", &token.token);
-
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 403);
 }
