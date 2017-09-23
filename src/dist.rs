@@ -2,7 +2,7 @@
 //! frontend
 use std::error::Error;
 
-use conduit::{Request, Response, Handler};
+use conduit::{Handler, Request, Response};
 use conduit_static::Static;
 use conduit_middleware::AroundMiddleware;
 

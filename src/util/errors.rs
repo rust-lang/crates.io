@@ -28,7 +28,11 @@ pub trait CargoError: Send + fmt::Display + 'static {
     fn response(&self) -> Option<Response> {
         if self.human() {
             Some(json_response(&Bad {
-                errors: vec![StringError { detail: self.description().to_string() }],
+                errors: vec![
+                    StringError {
+                        detail: self.description().to_string(),
+                    },
+                ],
             }))
         } else {
             self.cause().and_then(|cause| cause.response())
@@ -233,7 +237,11 @@ impl CargoError for NotFound {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![StringError { detail: "Not Found".to_string() }],
+            errors: vec![
+                StringError {
+                    detail: "Not Found".to_string(),
+                },
+            ],
         });
         response.status = (404, "Not Found");
         Some(response)
@@ -282,7 +290,11 @@ impl CargoError for BadRequest {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![StringError { detail: self.0.clone() }],
+            errors: vec![
+                StringError {
+                    detail: self.0.clone(),
+                },
+            ],
         });
         response.status = (400, "Bad Request");
         Some(response)

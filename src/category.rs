@@ -7,7 +7,7 @@ use diesel::*;
 use Crate;
 use db::RequestTransaction;
 use schema::*;
-use util::{RequestUtils, CargoResult};
+use util::{CargoResult, RequestUtils};
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 #[table_name = "categories"]
@@ -150,15 +150,15 @@ impl Category {
 
         sql(
             "SELECT c.id, c.category, c.slug, c.description, \
-            COALESCE (( \
-                SELECT sum(c2.crates_cnt)::int \
-                FROM categories as c2 \
-                WHERE c2.slug = c.slug \
-                OR c2.slug LIKE c.slug || '::%' \
-            ), 0) as crates_cnt, c.created_at \
-            FROM categories as c \
-            WHERE c.category ILIKE $1 || '::%' \
-            AND c.category NOT ILIKE $1 || '::%::%'",
+             COALESCE (( \
+             SELECT sum(c2.crates_cnt)::int \
+             FROM categories as c2 \
+             WHERE c2.slug = c.slug \
+             OR c2.slug LIKE c.slug || '::%' \
+             ), 0) as crates_cnt, c.created_at \
+             FROM categories as c \
+             WHERE c.category ILIKE $1 || '::%' \
+             AND c.category NOT ILIKE $1 || '::%::%'",
         ).bind::<Text, _>(&self.category)
             .load(conn)
     }
@@ -240,7 +240,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         category: EncodableCategoryWithSubcategories,
     }
-    Ok(req.json(&R { category: cat_with_subcats }))
+    Ok(req.json(&R {
+        category: cat_with_subcats,
+    }))
 }
 
 /// Handles the `GET /category_slugs` route.
@@ -261,7 +263,9 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     struct R {
         category_slugs: Vec<Slug>,
     }
-    Ok(req.json(&R { category_slugs: slugs }))
+    Ok(req.json(&R {
+        category_slugs: slugs,
+    }))
 }
 
 #[cfg(test)]

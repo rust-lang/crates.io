@@ -5,14 +5,14 @@ use krate::Crate;
 use s3;
 use semver;
 use tar;
-use util::{CargoResult, internal, human, ChainError};
-use util::{LimitErrorReader, read_le_u32, hash};
+use util::{human, internal, CargoResult, ChainError};
+use util::{hash, LimitErrorReader, read_le_u32};
 
 use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -45,13 +45,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                Some(format!(
-                    "https://{}/{}",
-                    bucket.host(),
-                    Uploader::crate_path(crate_name, version)
-                ))
-            }
+            Uploader::S3 { ref bucket, .. } => Some(format!(
+                "https://{}/{}",
+                bucket.host(),
+                Uploader::crate_path(crate_name, version)
+            )),
             Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
             Uploader::NoOp => None,
         }
@@ -63,13 +61,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                Some(format!(
-                    "https://{}/{}",
-                    bucket.host(),
-                    Uploader::readme_path(crate_name, version)
-                ))
-            }
+            Uploader::S3 { ref bucket, .. } => Some(format!(
+                "https://{}/{}",
+                bucket.host(),
+                Uploader::readme_path(crate_name, version)
+            )),
             Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
             Uploader::NoOp => None,
         }
@@ -149,27 +145,25 @@ impl Uploader {
         max: u64,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
-        let app = req.app().clone();
+        let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(
-                &mut body,
-            )?;
+            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body)?;
             self.upload(
                 app.handle(),
                 &path,
                 &body,
                 "application/x-tar",
-                length as u64,
+                u64::from(length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
         let crate_bomb = Bomb {
-            app: app.clone(),
+            app: Arc::clone(&app),
             path: crate_path,
         };
         let (readme_path, _) = if let Some(rendered) = readme {
@@ -189,7 +183,7 @@ impl Uploader {
             checksum,
             crate_bomb,
             Bomb {
-                app: app.clone(),
+                app: Arc::clone(&app),
                 path: readme_path,
             },
         ))
@@ -222,7 +216,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(self.app.clone(), path) {
+            if let Err(e) = self.app.config.uploader.delete(Arc::clone(&self.app), path) {
                 println!("unable to delete {}, {:?}", path, e);
             }
         }
