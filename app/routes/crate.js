@@ -6,7 +6,7 @@ export default Route.extend({
 
     model(params) {
         return this.store.find('crate', params.crate_id).catch(e => {
-            if (e.errors.any(e => e.detail === 'Not Found')) {
+            if (e.errors.some(e => e.detail === 'Not Found')) {
                 this.get('flashMessages').show(`Crate '${params.crate_id}' does not exist`);
                 return;
             }
