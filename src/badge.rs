@@ -15,6 +15,7 @@ pub enum Badge {
     },
     Appveyor {
         repository: String,
+        id: Option<String>,
         branch: Option<String>,
         service: Option<String>,
     },
