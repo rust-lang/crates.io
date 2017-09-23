@@ -2,6 +2,7 @@ use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
 
+use chrono::{NaiveDate, NaiveDateTime};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
@@ -15,9 +16,7 @@ use license_exprs;
 use hex::ToHex;
 use serde_json;
 use semver;
-use time::Timespec;
 use url::Url;
-use chrono::NaiveDate;
 
 use app::{App, RequestApp};
 use badge::EncodableBadge;
@@ -56,8 +55,8 @@ pub struct CrateDownload {
 pub struct Crate {
     pub id: i32,
     pub name: String,
-    pub updated_at: Timespec,
-    pub created_at: Timespec,
+    pub updated_at: NaiveDateTime,
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub description: Option<String>,
     pub homepage: Option<String>,
@@ -108,12 +107,12 @@ type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::Sql
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    pub updated_at: String,
+    pub updated_at: NaiveDateTime,
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub badges: Option<Vec<EncodableBadge>>,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub recent_downloads: Option<i64>,
     pub max_version: String,
@@ -370,8 +369,8 @@ impl Crate {
         EncodableCrate {
             id: name.clone(),
             name: name.clone(),
-            updated_at: ::encode_time(updated_at),
-            created_at: ::encode_time(created_at),
+            updated_at: updated_at,
+            created_at: created_at,
             downloads: downloads,
             recent_downloads: recent_downloads,
             versions: versions,

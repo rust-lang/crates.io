@@ -1,6 +1,6 @@
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use diesel::prelude::*;
-use time::Timespec;
 use serde_json;
 
 use db::RequestTransaction;
@@ -17,7 +17,7 @@ pub struct CrateOwnerInvitation {
     pub invited_user_id: i32,
     pub invited_by_user_id: i32,
     pub crate_id: i32,
-    pub created_at: Timespec,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Insertable, Clone, Copy, Debug)]
@@ -50,7 +50,7 @@ impl CrateOwnerInvitation {
             invited_by_username: self.invited_by_username(conn),
             crate_name: self.crate_name(conn),
             crate_id: self.crate_id,
-            created_at: ::encode_time(self.created_at),
+            created_at: self.created_at,
         }
     }
 }
@@ -61,7 +61,7 @@ pub struct EncodableCrateOwnerInvitation {
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
 }
 
 /// Handles the `GET /me/crate_owner_invitations` route.

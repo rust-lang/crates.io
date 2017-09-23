@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
@@ -7,7 +8,6 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use semver;
 use serde_json;
-use time::{now_utc, strptime, Duration, Timespec};
 use url;
 
 use Crate;
@@ -30,8 +30,8 @@ pub struct Version {
     pub id: i32,
     pub crate_id: i32,
     pub num: semver::Version,
-    pub updated_at: Timespec,
-    pub created_at: Timespec,
+    pub updated_at: NaiveDateTime,
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
@@ -54,8 +54,8 @@ pub struct EncodableVersion {
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    pub updated_at: String,
-    pub created_at: String,
+    pub updated_at: NaiveDateTime,
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
@@ -90,8 +90,8 @@ impl Version {
             num: num.clone(),
             id: id,
             krate: crate_name.to_string(),
-            updated_at: ::encode_time(updated_at),
-            created_at: ::encode_time(created_at),
+            updated_at: updated_at,
+            created_at: created_at,
             downloads: downloads,
             features: features,
             yanked: yanked,
@@ -231,13 +231,13 @@ impl Queryable<versions::SqlType, Pg> for Version {
         i32,
         i32,
         String,
-        Timespec,
-        Timespec,
+        NaiveDateTime,
+        NaiveDateTime,
         i32,
         Option<String>,
         bool,
         Option<String>,
-        Option<Timespec>,
+        Option<NaiveDateTime>,
     );
 
     fn build(row: Self::Row) -> Self {
@@ -354,18 +354,16 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::date;
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let cutoff_end_date = req.query()
         .get("before_date")
-        .and_then(|d| strptime(d, "%Y-%m-%d").ok())
-        .unwrap_or_else(now_utc)
-        .to_timespec();
-    let cutoff_start_date = cutoff_end_date + Duration::days(-89);
+        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
+        .unwrap_or_else(|| Utc::today().naive_utc());
+    let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
     let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(date(cutoff_start_date)..date(cutoff_end_date)))
+        .filter(version_downloads::date.between(cutoff_start_date..cutoff_end_date))
         .order(version_downloads::date)
         .load(&*conn)?
         .into_iter()

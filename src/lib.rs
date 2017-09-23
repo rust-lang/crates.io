@@ -39,7 +39,6 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate tar;
-extern crate time;
 extern crate toml;
 extern crate url;
 
@@ -296,18 +295,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             })
         }
     }
-}
-
-/// Convenience function for getting the current server time in UTC.
-pub fn now() -> time::Timespec {
-    time::now_utc().to_timespec()
-}
-
-/// Convenience function for getting a time in RFC 3339 format.
-///
-/// Example: `2012-02-22T14:53:18Z`. Used for returning time values in JSON API responses.
-pub fn encode_time(ts: time::Timespec) -> String {
-    time::at_utc(ts).rfc3339().to_string()
 }
 
 /// Convenience function requiring that an environment variable is set.
