@@ -4,8 +4,7 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{Email, EncodablePrivateUser, EncodablePublicUser, NewEmail, NewUser,
-                           Token, User};
+use cargo_registry::user::{Email, EncodablePrivateUser, EncodablePublicUser, NewUser, User};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -658,7 +657,7 @@ fn test_insert_into_email_table_with_email_change() {
 */
 #[test]
 fn test_confirm_user_email() {
-    use cargo_registry::schema::{emails, tokens};
+    use cargo_registry::schema::emails;
 
     #[derive(Deserialize)]
     struct R {
@@ -675,7 +674,7 @@ fn test_confirm_user_email() {
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            email: Some("potato@example.com"),
+            email: Some("potato2@example.com"),
             ..::new_user("potato")
         };
 
@@ -686,15 +685,10 @@ fn test_confirm_user_email() {
 
     let email_token = {
         let conn = app.diesel_database.get().unwrap();
-        let email_info = emails::table
-            .filter(emails::user_id.eq(user.id))
-            .first::<Email>(&*conn)
-            .unwrap();
-        let token_info = tokens::table
-            .filter(tokens::email_id.eq(email_info.id))
-            .first::<Token>(&*conn)
-            .unwrap();
-        token_info.token
+        Email::belonging_to(&user)
+            .select(emails::token)
+            .first::<String>(&*conn)
+            .unwrap()
     };
 
     let mut response = ok_resp!(
@@ -707,7 +701,7 @@ fn test_confirm_user_email() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.email.unwrap(), "potato2@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(r.user.email_verified);
     assert!(r.user.email_verification_sent);
@@ -719,8 +713,9 @@ fn test_confirm_user_email() {
 */
 #[test]
 fn test_existing_user_email() {
-    use cargo_registry::schema::{emails, users};
-    use diesel::insert;
+    use cargo_registry::schema::emails;
+    use chrono::NaiveDateTime;
+    use diesel::update;
 
     #[derive(Deserialize)]
     struct R {
@@ -731,24 +726,17 @@ fn test_existing_user_email() {
     let mut req = ::req(app.clone(), Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("potahto");
-
-        // Deliberately not using User::create_or_update since that
-        // will try to send a verification email; we want to simulate
-        // a user who already had an email before we added verification.
-        let user = insert(&user)
-            .into(users::table)
-            .get_result::<User>(&*conn)
-            .unwrap();
-
-        let email = NewEmail {
-            user_id: user.id,
-            email: "potahto@example.com",
-            verified: false,
+        let new_user = NewUser {
+            email: Some("potahto@example.com"),
+            ..::new_user("potahto")
         };
-
-        insert(&email).into(emails::table).execute(&*conn).unwrap();
-
+        let user = new_user.create_or_update(&conn).unwrap();
+        update(Email::belonging_to(&user))
+            // Users created before we added verification will have
+            // `NULL` in the `token_generated_at` column.
+            .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
+            .execute(&*conn)
+            .unwrap();
         ::sign_in_as(&mut req, &user);
     }
 
