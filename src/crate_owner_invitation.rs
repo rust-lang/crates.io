@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use time::Timespec;
 
 use db::RequestTransaction;
-use schema::{crate_owner_invitations, users, crates};
+use schema::{crate_owner_invitations, crates, users};
 use user::RequestUser;
 use util::errors::CargoResult;
 use util::RequestUtils;
@@ -78,5 +78,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     struct R {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
-    Ok(req.json(&R { crate_owner_invitations }))
+    Ok(req.json(&R {
+        crate_owner_invitations,
+    }))
 }

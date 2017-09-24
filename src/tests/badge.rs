@@ -61,25 +61,19 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     badge_attributes_gitlab.insert(String::from("branch"), String::from("beta"));
     badge_attributes_gitlab.insert(String::from("repository"), String::from("rust-lang/rust"));
 
-    let isitmaintained_issue_resolution =
-        Badge::IsItMaintainedIssueResolution { repository: String::from("rust-lang/rust") };
+    let isitmaintained_issue_resolution = Badge::IsItMaintainedIssueResolution {
+        repository: String::from("rust-lang/rust"),
+    };
     let mut badge_attributes_isitmaintained_issue_resolution = HashMap::new();
-    badge_attributes_isitmaintained_issue_resolution.insert(
-        String::from("repository"),
-        String::from("rust-lang/rust"),
-    );
+    badge_attributes_isitmaintained_issue_resolution
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
 
-    let isitmaintained_open_issues =
-        Badge::IsItMaintainedOpenIssues { repository: String::from("rust-lang/rust") };
+    let isitmaintained_open_issues = Badge::IsItMaintainedOpenIssues {
+        repository: String::from("rust-lang/rust"),
+    };
     let mut badge_attributes_isitmaintained_open_issues = HashMap::new();
-    badge_attributes_isitmaintained_open_issues.insert(
-        String::from(
-            "repository",
-        ),
-        String::from(
-            "rust-lang/rust",
-        ),
-    );
+    badge_attributes_isitmaintained_open_issues
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
 
     let codecov = Badge::Codecov {
         service: Some(String::from("github")),
@@ -109,7 +103,9 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
-    let maintenance = Badge::Maintenance { status: MaintenanceStatus::LookingForMaintainer };
+    let maintenance = Badge::Maintenance {
+        status: MaintenanceStatus::LookingForMaintainer,
+    };
     let mut maintenance_attributes = HashMap::new();
     maintenance_attributes.insert(
         String::from("status"),
@@ -439,9 +435,9 @@ fn isitmaintained_open_issues_required_keys() {
     let mut badges = HashMap::new();
 
     // Repository is a required key
-    test_badges.isitmaintained_open_issues_attributes.remove(
-        "repository",
-    );
+    test_badges
+        .isitmaintained_open_issues_attributes
+        .remove("repository");
     badges.insert(
         String::from("isitmaintained_open_issues"),
         test_badges.isitmaintained_open_issues_attributes,
@@ -537,12 +533,9 @@ fn maintenance_invalid_values() {
     let mut badges = HashMap::new();
 
     // "totes broken" is not a recognized value
-    test_badges.maintenance_attributes.insert(
-        String::from("status"),
-        String::from(
-            "totes broken",
-        ),
-    );
+    test_badges
+        .maintenance_attributes
+        .insert(String::from("status"), String::from("totes broken"));
     badges.insert(
         String::from("maintenance"),
         test_badges.maintenance_attributes,

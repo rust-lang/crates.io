@@ -7,7 +7,7 @@ use toml;
 
 use db;
 use schema::categories;
-use util::errors::{CargoResult, ChainError, internal};
+use util::errors::{internal, CargoResult, ChainError};
 
 #[derive(Debug)]
 struct Category {
@@ -24,20 +24,16 @@ impl Category {
         parent: Option<&Category>,
     ) -> Category {
         match parent {
-            Some(parent) => {
-                Category {
-                    slug: format!("{}::{}", parent.slug, slug),
-                    name: format!("{}::{}", parent.name, name),
-                    description: description.into(),
-                }
-            }
-            None => {
-                Category {
-                    slug: slug.into(),
-                    name: name.into(),
-                    description: description.into(),
-                }
-            }
+            Some(parent) => Category {
+                slug: format!("{}::{}", parent.slug, slug),
+                name: format!("{}::{}", parent.name, name),
+                description: description.into(),
+            },
+            None => Category {
+                slug: slug.into(),
+                name: name.into(),
+                description: description.into(),
+            },
         }
     }
 }
@@ -126,9 +122,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<
         categories::slug,
         do_update().set((
             categories::category.eq(excluded(categories::category)),
-            categories::description.eq(
-                excluded(categories::description),
-            ),
+            categories::description.eq(excluded(categories::description)),
         )),
     );
 

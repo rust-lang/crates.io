@@ -1,8 +1,8 @@
 use dotenv::dotenv;
 use std::env;
 use std::path::Path;
-use util::{CargoResult, bad_request};
-use lettre::email::{EmailBuilder, Email};
+use util::{bad_request, CargoResult};
+use lettre::email::{Email, EmailBuilder};
 use lettre::transport::file::FileEmailTransport;
 use lettre::transport::EmailTransport;
 use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
@@ -24,13 +24,11 @@ pub fn init_config_vars() -> Option<MailgunConfigVars> {
         env::var("MAILGUN_SMTP_PASSWORD"),
         env::var("MAILGUN_SMTP_SERVER"),
     ) {
-        (Ok(login), Ok(password), Ok(server)) => {
-            Some(MailgunConfigVars {
-                smtp_login: login,
-                smtp_password: password,
-                smtp_server: server,
-            })
-        }
+        (Ok(login), Ok(password), Ok(server)) => Some(MailgunConfigVars {
+            smtp_login: login,
+            smtp_password: password,
+            smtp_server: server,
+        }),
         _ => None,
     }
 }
@@ -76,9 +74,7 @@ pub fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()>
         None => {
             let mut sender = FileEmailTransport::new(Path::new("/tmp"));
             let result = sender.send(email.clone());
-            result.map_err(
-                |_| bad_request("Email file could not be generated"),
-            )?;
+            result.map_err(|_| bad_request("Email file could not be generated"))?;
         }
     }
 

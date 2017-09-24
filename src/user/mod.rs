@@ -12,14 +12,14 @@ use db::RequestTransaction;
 use krate::Follow;
 use pagination::Paginate;
 use schema::*;
-use util::{RequestUtils, CargoResult, human, bad_request};
+use util::{bad_request, human, CargoResult, RequestUtils};
 use version::EncodableVersion;
 use {http, Version};
-use owner::{Owner, OwnerKind, CrateOwner};
+use owner::{CrateOwner, Owner, OwnerKind};
 use krate::Crate;
 use email;
 
-pub use self::middleware::{Middleware, RequestUser, AuthenticationSource};
+pub use self::middleware::{AuthenticationSource, Middleware, RequestUser};
 
 pub mod middleware;
 
@@ -126,10 +126,8 @@ impl<'a> NewUser<'a> {
         // necessary for most fields in the database to be used as a conflict
         // target :)
         let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-        let result = insert(&self.on_conflict(
-            conflict_target,
-            do_update().set(&update_user),
-        )).into(users::table)
+        let result = insert(&self.on_conflict(conflict_target, do_update().set(&update_user)))
+            .into(users::table)
             .get_result(conn)
             .map_err(Into::into);
 
@@ -218,8 +216,8 @@ impl User {
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
         use diesel::update;
         use diesel::expression::now;
-        use schema::api_tokens::dsl::{api_tokens, token, user_id, last_used_at};
-        use schema::users::dsl::{users, id};
+        use schema::api_tokens::dsl::{api_tokens, last_used_at, token, user_id};
+        use schema::users::dsl::{id, users};
         let user_id_ = update(api_tokens.filter(token.eq(token_)))
             .set(last_used_at.eq(now.nullable()))
             .returning(user_id)
@@ -305,10 +303,8 @@ impl User {
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
-    req.session().insert(
-        "github_oauth_state".to_string(),
-        state.clone(),
-    );
+    req.session()
+        .insert("github_oauth_state".to_string(), state.clone());
 
     let url = req.app().github.authorize_url(state.clone());
 
@@ -377,9 +373,10 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req.app().github.exchange(code.clone()).map_err(
-        |s| human(&s),
-    )?;
+    let token = req.app()
+        .github
+        .exchange(code.clone())
+        .map_err(|s| human(&s))?;
 
     let (handle, resp) = http::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = http::parse_github_response(handle, &resp)?;
@@ -392,10 +389,8 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
     ).create_or_update(&*req.db_conn()?)?;
-    req.session().insert(
-        "user_id".to_string(),
-        user.id.to_string(),
-    );
+    req.session()
+        .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     me(req)
 }
@@ -419,7 +414,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
 
-    use self::users::dsl::{users, id};
+    use self::users::dsl::{id, users};
     use self::emails::dsl::{emails, user_id};
     use diesel::select;
     use diesel::expression::dsl::exists;
@@ -464,7 +459,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    use self::users::dsl::{users, gh_login};
+    use self::users::dsl::{gh_login, users};
 
     let name = &req.params()["user_id"];
     let conn = req.db_conn()?;
@@ -474,12 +469,14 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         user: EncodablePublicUser,
     }
-    Ok(req.json(&R { user: user.encodable_public() }))
+    Ok(req.json(&R {
+        user: user.encodable_public(),
+    }))
 }
 
 /// Handles the `GET /teams/:team_id` route.
 pub fn show_team(req: &mut Request) -> CargoResult<Response> {
-    use self::teams::dsl::{teams, login};
+    use self::teams::dsl::{login, teams};
     use owner::Team;
     use owner::EncodableTeam;
 
@@ -491,7 +488,9 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
     struct R {
         team: EncodableTeam,
     }
-    Ok(req.json(&R { team: team.encodable() }))
+    Ok(req.json(&R {
+        team: team.encodable(),
+    }))
 }
 
 /// Handles the `GET /me/updates` route.
@@ -544,9 +543,11 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 
     let data = crate_owners::table
         .inner_join(crates::table)
-        .filter(crate_owners::owner_id.eq(user_id).and(
-            crate_owners::owner_kind.eq(OwnerKind::User as i32),
-        ))
+        .filter(
+            crate_owners::owner_id
+                .eq(user_id)
+                .and(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
+        )
         .select(sum(crates::downloads))
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
@@ -555,13 +556,15 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
     struct R {
         total_downloads: i64,
     }
-    Ok(req.json(&R { total_downloads: data }))
+    Ok(req.json(&R {
+        total_downloads: data,
+    }))
 }
 
 /// Handles the `PUT /user/:user_id` route.
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     use diesel::update;
-    use self::users::dsl::{users, gh_login, email};
+    use self::users::dsl::{email, gh_login, users};
     use self::emails::dsl::user_id;
     use self::tokens::dsl::email_id;
     use diesel::insert;
@@ -589,9 +592,8 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         email: Option<String>,
     }
 
-    let user_update: UserUpdate = serde_json::from_str(&body).map_err(
-        |_| human("invalid json request"),
-    )?;
+    let user_update: UserUpdate =
+        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
 
     if user_update.user.email.is_none() {
         return Err(human("empty email rejected"));
@@ -614,11 +616,11 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         verified: false,
     };
 
-    let email_result: QueryResult<Email> =
-        insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
-            .into(emails::table)
-            .get_result(&*conn)
-            .map_err(Into::into);
+    let email_result: QueryResult<Email> = insert(
+        &new_email.on_conflict(user_id, do_update().set(&new_email)),
+    ).into(emails::table)
+        .get_result(&*conn)
+        .map_err(Into::into);
 
     let token = generate_token();
 
@@ -630,10 +632,9 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
                 created_at: time::now_utc().to_timespec(),
             };
 
-            insert(&new_token.on_conflict(
-                email_id,
-                do_update().set(&new_token),
-            )).into(tokens::table)
+            insert(&new_token
+                .on_conflict(email_id, do_update().set(&new_token)))
+                .into(tokens::table)
                 .execute(&*conn)?;
         }
         Err(_) => {
@@ -642,9 +643,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     }
 
     let email_result = send_user_confirm_email(user_email, &user.gh_login, &token);
-    email_result.map_err(
-        |_| bad_request("Email could not be sent"),
-    )?;
+    email_result.map_err(|_| bad_request("Email could not be sent"))?;
 
     #[derive(Serialize)]
     struct R {
@@ -677,7 +676,7 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
     // find what user the token belongs to
     // on the email table, change 'verified' to true
     // delete the token from the tokens table
-    use diesel::{update, delete};
+    use diesel::{delete, update};
 
     let conn = req.db_conn()?;
     let req_token = &req.params()["email_token"];
@@ -737,16 +736,13 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         created_at: time::now_utc().to_timespec(),
     };
 
-    insert(&new_token.on_conflict(
-        email_id,
-        do_update().set(&new_token),
-    )).into(tokens::table)
+    insert(&new_token
+        .on_conflict(email_id, do_update().set(&new_token)))
+        .into(tokens::table)
         .execute(&*conn)?;
 
     let email_result = send_user_confirm_email(&email_info.email, &user.gh_login, &token);
-    email_result.map_err(
-        |_| bad_request("Error in sending email"),
-    )?;
+    email_result.map_err(|_| bad_request("Error in sending email"))?;
 
     #[derive(Serialize)]
     struct R {
