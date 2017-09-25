@@ -112,11 +112,7 @@ pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
     if crate_invite.accepted {
         accept_invite(req, conn, crate_invite)
     } else {
-        #[derive(Serialize)]
-        struct R {
-            crate_owner_invitation: InvitationResponse,
-        }
-        Ok(req.json(&R { crate_owner_invitation: crate_invite }))
+        decline_invite(req, conn, crate_invite)
     }
 }
 
@@ -153,4 +149,26 @@ fn accept_invite(
         }
         Ok(req.json(&R { crate_owner_invitation: crate_invite }))
     })
+}
+
+fn decline_invite(
+    req: &mut Request,
+    conn: &PgConnection,
+    crate_invite: InvitationResponse,
+) -> CargoResult<Response> {
+    use diesel::delete;
+    let user_id = req.user()?.id;
+
+    delete(
+        crate_owner_invitations::table
+            .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
+            .filter(crate_owner_invitations::invited_user_id.eq(user_id)),
+    ).execute(conn)?;
+
+    #[derive(Serialize)]
+    struct R {
+        crate_owner_invitation: InvitationResponse,
+    }
+
+    Ok(req.json(&R { crate_owner_invitation: crate_invite }))
 }

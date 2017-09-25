@@ -467,3 +467,101 @@ fn test_accept_invitation() {
     let json: Q = ::json(&mut response);
     assert_eq!(json.users.len(), 2);
 }
+
+
+/*  Given a user inviting a different user to be a crate
+    owner, check that the user invited can decline their
+    invitation and the invitation will be deleted from
+    the invitations table.
+*/
+#[test]
+fn test_decline_invitation() {
+    #[derive(Deserialize)]
+    struct R {
+        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
+    }
+
+    #[derive(Deserialize)]
+    struct Q {
+        users: Vec<EncodablePublicUser>,
+    }
+
+    #[derive(Deserialize)]
+    struct T {
+        crate_owner_invitation: InvitationResponse,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(
+        app.clone(),
+        Method::Get,
+        "/api/v1/me/crate_owner_invitations",
+    );
+    let (krate, user) = {
+        let conn = app.diesel_database.get().unwrap();
+        let owner = ::new_user("inviting_user").create_or_update(&conn).unwrap();
+        let user = ::new_user("invited_user").create_or_update(&conn).unwrap();
+        let krate = ::CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+
+        // This should be replaced by an actual call to the route that `owner --add` hits once
+        // that route creates an invitation.
+        let invitation = NewCrateOwnerInvitation {
+            invited_by_user_id: owner.id,
+            invited_user_id: user.id,
+            crate_id: krate.id,
+        };
+        diesel::insert(&invitation)
+            .into(crate_owner_invitations::table)
+            .execute(&*conn)
+            .unwrap();
+        (krate, user)
+    };
+    ::sign_in_as(&mut req, &user);
+
+    let body = json!({
+        "crate_owner_invite": {
+            "invited_by_username": "inviting_user",
+            "crate_name": "invited_crate",
+            "crate_id": krate.id,
+            "created_at": "",
+            "accepted": false
+        }
+    });
+
+    // first check that response from deleting
+    // crate_owner_invitation is okay
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes()),
+        )
+    );
+
+    let json: T = ::json(&mut response);
+    assert_eq!(json.crate_owner_invitation.accepted, false);
+    assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
+
+
+    // then check to make sure that decline_invite did what it
+    // was supposed to
+    // crate_owner_invitation was deleted
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("api/v1/me/crate_owner_invitations")
+            .with_method(Method::Get)
+        )
+    );
+    let json: R = ::json(&mut response);
+    assert_eq!(json.crate_owner_invitations.len(), 0);
+
+    // new crate owner was not inserted
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/invited_crate/owners")
+            .with_method(Method::Get)
+        )
+    );
+    let json: Q = ::json(&mut response);
+    assert_eq!(json.users.len(), 1);
+}
