@@ -94,7 +94,7 @@ instructions. If you already have these tools, or you have a different
 preferred method of installing packages like these, that should work fine.
 
 If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md)
-to install to ensure that the use of `npm` does not require the use of `sudo`.
+to ensure that the use of `npm` does not require the use of `sudo`.
 
 The front end should run fine after these steps. Please file an issue if you run
 into any trouble.
