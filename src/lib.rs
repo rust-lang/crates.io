@@ -191,6 +191,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/me/crate_owner_invitations",
         C(crate_owner_invitation::list),
     );
+    api_router.put(
+        "/me/crate_owner_invitations/:crate_id",
+        C(crate_owner_invitation::handle_invite),
+    );
     api_router.get("/summary", C(krate::summary));
     api_router.put("/confirm/:email_token", C(user::confirm_user_email));
     api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));

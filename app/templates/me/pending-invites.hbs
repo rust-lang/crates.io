@@ -8,31 +8,9 @@
 <div id='my-invites'>
     <div class='white-rows'>
         {{#each model as |invite|}}
-            <div class='row'>
-                <div class='info'>
-                    <div class='name'>
-                        <h3>
-                            {{#link-to 'crate' invite.crate_name}}
-                                {{invite.crate_name}}
-                            {{/link-to}}
-                        </h3>
-                    </div>
-                    <div class='invite'>
-                        <p>Invited by: 
-                            {{#link-to 'user' invite.invited_by_username}}
-                                {{invite.invited_by_username}}
-                            {{/link-to}}
-                        </p>
-                    </div>
-                    <div class='sent'>
-                        <span class='small'>{{moment-from-now invite.created_at}}</span>
-                    </div>
-                    <div class='actions'>
-                        <button class='small yellow-button'>Accept</button>
-                        <button class='small yellow-button'>Deny</button>
-                    </div>
-                </div>
-            </div>
+            {{pending-owner-invite-row invite=invite}}
+        {{else}}
+            <p>You don't seem to have any pending invitations.</p>
         {{/each}}
     </div>
 </div>
