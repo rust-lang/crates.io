@@ -122,7 +122,9 @@ fn accept_invite(
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
     let user_id = req.user()?.id;
-    use diesel::{delete, insert};
+    use diesel::{insert, delete};
+    use diesel::pg::upsert::do_update;
+    use diesel::pg::upsert::OnConflictExtension;
     let pending_crate_owner = crate_owner_invitations::table
         .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
@@ -136,7 +138,11 @@ fn accept_invite(
     };
 
     conn.transaction(|| {
-        insert(&owner).into(crate_owners::table).execute(conn)?;
+        insert(&owner.on_conflict(
+                crate_owners::table.primary_key(),
+                do_update().set(crate_owners::deleted.eq(false)),
+        )).into(crate_owners::table)
+            .execute(conn)?;
         delete(
             crate_owner_invitations::table
                 .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
