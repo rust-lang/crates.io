@@ -741,11 +741,9 @@ fn test_existing_user_email() {
             .get_result::<User>(&*conn)
             .unwrap();
 
-        println!("{:?}", user);
-
         let email = NewEmail {
             user_id: user.id,
-            email: String::from("potahto@example.com"),
+            email: "potahto@example.com",
             verified: false,
         };
 
