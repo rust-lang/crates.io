@@ -460,7 +460,7 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<()> {
+    ) -> CargoResult<String> {
         let owner = match Owner::find_by_login(conn, login) {
             Ok(owner @ Owner::User(_)) => owner,
             Ok(Owner::Team(team)) => if team.contains_user(app, req_user)? {
@@ -491,7 +491,7 @@ impl Crate {
         )).into(crate_owners::table)
             .execute(conn)?;
 
-        Ok(())
+        Ok(format!("User {} has been invited to be an owner of crate {}.", crate_owner.owner_id, crate_owner.crate_id))
     }
 
     pub fn owner_remove(
