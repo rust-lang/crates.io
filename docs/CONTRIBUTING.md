@@ -431,6 +431,8 @@ In your crate directory, run:
 cargo publish --index file:///path/to/your/crates.io/checkout/tmp/index-co
 ```
 
+> If you're using an older version of cargo you should use `--host` instead of `--index`.
+
 where `file:///path/to/your/crates.io/checkout` is the directory that you have
 crates.io's code in, and `tmp/index-co` is the directory with the git index
 that `./script/init-local-index.sh` set up.
