@@ -51,10 +51,10 @@ matrix:
     - cargo build
     - cargo test
     - npm test
-  - rust: nightly-2017-07-04
+  - rust: nightly-2017-09-20
     env: CLIPPY=YESPLEASE
     script:
-    - cargo rustc --lib --features "lint" -- -Zno-trans
+    - cargo check --features "lint"
   - rust: beta
     script:
     - cargo build
