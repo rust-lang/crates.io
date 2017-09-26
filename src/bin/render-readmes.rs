@@ -79,9 +79,8 @@ fn main() {
 
     let mut query = versions::table
         .inner_join(crates::table)
-        .left_join(readme_rendering::table)
-        .filter(readme_rendering::rendered_at.lt(older_than).or(
-            readme_rendering::rendered_at.is_null(),
+        .filter(versions::readme_rendered_at.lt(older_than).or(
+            versions::readme_rendered_at.is_null(),
         ))
         .select(versions::id)
         .into_boxed();
