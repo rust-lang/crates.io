@@ -616,7 +616,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
             .into(emails::table)
             .returning(emails::id)
             .get_result(&*conn)
-            .map_err(|_| human("Error in creating token"))?;
+            .map_err(|_| human("Error in updating email"))?;
         let token = NewToken::regenerate(email_id, &conn)?;
 
         send_user_confirm_email(user_email, &user.gh_login, &token)
