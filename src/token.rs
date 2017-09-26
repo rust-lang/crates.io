@@ -1,33 +1,27 @@
 use diesel;
 use diesel::prelude::*;
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
-use time::Timespec;
 use conduit_router::RequestParams;
 use serde_json as json;
 
 use db::RequestTransaction;
-use user::{RequestUser, AuthenticationSource};
+use user::{RequestUser, AuthenticationSource, User};
 use util::{RequestUtils, CargoResult, ChainError, bad_request, read_fill};
 use schema::api_tokens;
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable)]
+#[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]
+#[belongs_to(User)]
 pub struct ApiToken {
     pub id: i32,
+    #[serde(skip)]
     pub user_id: i32,
+    #[serde(skip)]
     pub token: String,
     pub name: String,
-    pub created_at: Timespec,
-    pub last_used_at: Option<Timespec>,
-}
-
-/// The serialization format for the `ApiToken` model without its token value.
-#[derive(Deserialize, Serialize, Debug)]
-pub struct EncodableApiToken {
-    pub id: i32,
-    pub name: String,
-    pub created_at: String,
-    pub last_used_at: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 /// The serialization format for the `ApiToken` model with its token value.
@@ -38,13 +32,14 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    pub created_at: String,
-    pub last_used_at: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
     /// Generates a new named API token for a user
     pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> QueryResult<ApiToken> {
+        // FIXME: Replace this with an ad-hoc insert when upgraded to Diesel 1.0
         #[table_name = "api_tokens"]
         #[derive(Insertable, AsChangeset, Debug)]
         struct NewApiToken<'a> {
@@ -60,42 +55,6 @@ impl ApiToken {
             .map_err(From::from)
     }
 
-    /// Deletes the provided API token if it belongs to the provided user
-    pub fn delete(conn: &PgConnection, user_id: i32, id: i32) -> QueryResult<()> {
-        diesel::delete(api_tokens::table.find(id).filter(
-            api_tokens::user_id.eq(user_id),
-        )).execute(conn)?;
-        Ok(())
-    }
-
-    pub fn find_for_user(conn: &PgConnection, user_id: i32) -> QueryResult<Vec<ApiToken>> {
-        api_tokens::table
-            .filter(api_tokens::user_id.eq(user_id))
-            .order(api_tokens::created_at.desc())
-            .load::<ApiToken>(conn)
-            .map_err(From::from)
-    }
-
-    pub fn count_for_user(conn: &PgConnection, user_id: i32) -> CargoResult<u64> {
-        api_tokens::table
-            .filter(api_tokens::user_id.eq(user_id))
-            .count()
-            .get_result::<i64>(conn)
-            .map(|count| count as u64)
-            .map_err(From::from)
-    }
-
-    /// Converts this `ApiToken` model into an `EncodableApiToken` for JSON
-    /// serialization.
-    pub fn encodable(self) -> EncodableApiToken {
-        EncodableApiToken {
-            id: self.id,
-            name: self.name,
-            created_at: ::encode_time(self.created_at),
-            last_used_at: self.last_used_at.map(::encode_time),
-        }
-    }
-
     /// Converts this `ApiToken` model into an `EncodableApiToken` including
     /// the actual token value for JSON serialization.  This should only be
     /// used when initially creating a new token to minimize the chance of
@@ -105,23 +64,20 @@ impl ApiToken {
             id: self.id,
             name: self.name,
             token: self.token,
-            created_at: ::encode_time(self.created_at),
-            last_used_at: self.last_used_at.map(::encode_time),
+            created_at: self.created_at,
+            last_used_at: self.last_used_at,
         }
     }
 }
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut Request) -> CargoResult<Response> {
-    let db_conn = &*req.db_conn()?;
-    let user_id = req.user()?.id;
-    let tokens = ApiToken::find_for_user(db_conn, user_id)?
-        .into_iter()
-        .map(ApiToken::encodable)
-        .collect();
+    let tokens = ApiToken::belonging_to(req.user()?)
+        .order(api_tokens::created_at.desc())
+        .load(&*req.db_conn()?)?;
     #[derive(Serialize)]
     struct R {
-        api_tokens: Vec<EncodableApiToken>,
+        api_tokens: Vec<ApiToken>,
     }
     Ok(req.json(&R { api_tokens: tokens }))
 }
@@ -174,7 +130,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
 
     let max_token_per_user = 500;
-    let count = ApiToken::count_for_user(&*req.db_conn()?, user.id)?;
+    let count = ApiToken::belonging_to(user).count().get_result::<i64>(
+        &*req.db_conn()?,
+    )?;
     if count >= max_token_per_user {
         return Err(bad_request(&format!(
             "maximum tokens per user is: {}",
@@ -193,12 +151,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub fn revoke(req: &mut Request) -> CargoResult<Response> {
-    let user = req.user()?;
-    let id = req.params()["id"].parse().map_err(|e| {
+    let id = req.params()["id"].parse::<i32>().map_err(|e| {
         bad_request(&format!("invalid token id: {:?}", e))
     })?;
 
-    ApiToken::delete(&*req.db_conn()?, user.id, id)?;
+    diesel::delete(ApiToken::belonging_to(req.user()?).find(id))
+        .execute(&*req.db_conn()?)?;
 
     #[derive(Serialize)]
     struct R {}
