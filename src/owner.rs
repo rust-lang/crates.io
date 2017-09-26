@@ -3,8 +3,8 @@ use diesel::prelude::*;
 use app::App;
 use http;
 use schema::*;
-use util::{CargoResult, human};
-use {User, Crate};
+use util::{human, CargoResult};
+use {Crate, User};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -137,12 +137,10 @@ impl Team {
                 })?;
                 Team::create_github_team(app, conn, login, org, team, req_user)
             }
-            _ => {
-                Err(human(
-                    "unknown organization handler, \
-                     only 'github:org:team' is supported",
-                ))
-            }
+            _ => Err(human(
+                "unknown organization handler, \
+                 only 'github:org:team' is supported",
+            )),
         }
     }
 
@@ -178,8 +176,8 @@ impl Team {
 
         #[derive(Deserialize)]
         struct GithubTeam {
-            slug: String, // the name we want to find
-            id: i32, // unique GH id (needed for membership queries)
+            slug: String,         // the name we want to find
+            id: i32,              // unique GH id (needed for membership queries)
             name: Option<String>, // Pretty name
         }
 
@@ -341,12 +339,12 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User {
-                            id,
-                            name,
-                            gh_login,
-                            gh_avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                gh_login,
+                gh_avatar,
+                ..
+            }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
@@ -358,12 +356,12 @@ impl Owner {
                 }
             }
             Owner::Team(Team {
-                            id,
-                            name,
-                            login,
-                            avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                login,
+                avatar,
+                ..
+            }) => {
                 let url = Team::github_url(&login);
                 EncodableOwner {
                     id: id,
@@ -390,16 +388,12 @@ pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
     let mut best = Rights::None;
     for owner in owners {
         match *owner {
-            Owner::User(ref other_user) => {
-                if other_user.id == user.id {
-                    return Ok(Rights::Full);
-                }
-            }
-            Owner::Team(ref team) => {
-                if team.contains_user(app, user)? {
-                    best = Rights::Publish;
-                }
-            }
+            Owner::User(ref other_user) => if other_user.id == user.id {
+                return Ok(Rights::Full);
+            },
+            Owner::Team(ref team) => if team.contains_user(app, user)? {
+                best = Rights::Publish;
+            },
         }
     }
     Ok(best)

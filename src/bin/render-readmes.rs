@@ -21,7 +21,7 @@ extern crate toml;
 extern crate url;
 
 use curl::easy::{Easy, List};
-use chrono::{Utc, TimeZone};
+use chrono::{TimeZone, Utc};
 use diesel::prelude::*;
 use diesel::expression::any;
 use docopt::Docopt;
@@ -66,9 +66,8 @@ fn main() {
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = args.flag_older_than {
-        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S").expect(
-            "Could not parse --older-than argument as a time",
-        )
+        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S")
+            .expect("Could not parse --older-than argument as a time")
     } else {
         start_time
     };
@@ -79,9 +78,11 @@ fn main() {
 
     let mut query = versions::table
         .inner_join(crates::table)
-        .filter(versions::readme_rendered_at.lt(older_than).or(
-            versions::readme_rendered_at.is_null(),
-        ))
+        .filter(
+            versions::readme_rendered_at
+                .lt(older_than)
+                .or(versions::readme_rendered_at.is_null()),
+        )
         .select(versions::id)
         .into_boxed();
 
@@ -90,9 +91,9 @@ fn main() {
         query = query.filter(crates::name.eq(crate_name));
     }
 
-    let version_ids = query.load::<(i32)>(&conn).expect(
-        "error loading version ids",
-    );
+    let version_ids = query
+        .load::<(i32)>(&conn)
+        .expect("error loading version ids");
 
     let total_versions = version_ids.len();
     println!("Rendering {} versions", total_versions);
@@ -106,12 +107,11 @@ fn main() {
         total_pages + 1
     };
 
-    for (page_num, version_ids_chunk) in
-        version_ids
-            .into_iter()
-            .chunks(page_size)
-            .into_iter()
-            .enumerate()
+    for (page_num, version_ids_chunk) in version_ids
+        .into_iter()
+        .chunks(page_size)
+        .into_iter()
+        .enumerate()
     {
         println!(
             "= Page {} of {} ==================================",
@@ -173,10 +173,10 @@ fn main() {
 /// Renders the readme of an uploaded crate version.
 fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
     let mut handle = Easy::new();
-    let location = match config.uploader.crate_location(
-        &krate_name,
-        &version.num.to_string(),
-    ) {
+    let location = match config
+        .uploader
+        .crate_location(&krate_name, &version.num.to_string())
+    {
         Some(l) => l,
         None => return None,
     };

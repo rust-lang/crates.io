@@ -4,8 +4,8 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodablePrivateUser, EncodablePublicUser, Email,
-                           NewEmail, Token};
+use cargo_registry::user::{Email, EncodablePrivateUser, EncodablePublicUser, NewEmail, NewUser,
+                           Token, User};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -153,11 +153,12 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me/updates").with_method(
-            Method::Get,
-        ),
-    ));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/me/updates",)
+                .with_method(Method::Get,),
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
@@ -175,11 +176,12 @@ fn following() {
         )
     );
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me/updates").with_method(
-            Method::Get,
-        ),
-    ));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/me/updates",)
+                .with_method(Method::Get,),
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
@@ -236,8 +238,8 @@ fn user_total_downloads() {
 
         let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
 
-        let mut another_krate = ::CrateBuilder::new("bar_krate1", another_user.id)
-            .expect_build(&conn);
+        let mut another_krate =
+            ::CrateBuilder::new("bar_krate1", another_user.id).expect_build(&conn);
         another_krate.downloads = 2;
         update(&another_krate)
             .set(&another_krate)
@@ -332,9 +334,7 @@ fn test_github_login_does_not_overwrite_email() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
@@ -362,9 +362,7 @@ fn test_github_login_does_not_overwrite_email() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
@@ -395,9 +393,7 @@ fn test_email_get_and_put() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
@@ -412,9 +408,7 @@ fn test_email_get_and_put() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
@@ -506,13 +500,12 @@ fn test_this_user_cannot_change_that_user_email() {
     );
 
     assert!(
-        json.errors[0].detail.contains(
-            "current user does not match requested user",
-        ),
+        json.errors[0]
+            .detail
+            .contains("current user does not match requested user",),
         "{:?}",
         json.errors
     );
-
 }
 
 /* Given a new user, test that if they sign in with
@@ -542,9 +535,7 @@ fn test_insert_into_email_table() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -564,9 +555,7 @@ fn test_insert_into_email_table() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -604,9 +593,7 @@ fn test_insert_into_email_table_with_email_change() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -638,9 +625,7 @@ fn test_insert_into_email_table_with_email_change() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert!(!r.user.email_verified);
@@ -703,9 +688,7 @@ fn test_confirm_user_email() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato@example.com");
     assert_eq!(r.user.login, "potato");
@@ -752,9 +735,7 @@ fn test_existing_user_email() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potahto@example.com");
     assert!(!r.user.email_verified);

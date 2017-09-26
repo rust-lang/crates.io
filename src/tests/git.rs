@@ -8,11 +8,10 @@ use git2;
 use url::Url;
 
 fn root() -> PathBuf {
-    env::current_dir().unwrap().join("tmp").join(
-        thread::current()
-            .name()
-            .unwrap(),
-    )
+    env::current_dir()
+        .unwrap()
+        .join("tmp")
+        .join(thread::current().name().unwrap())
 }
 
 pub fn checkout() -> PathBuf {

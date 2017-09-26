@@ -1,7 +1,7 @@
 use std::io;
 use std::error::Error;
 
-use conduit::{Request, Response, Handler, Method};
+use conduit::{Handler, Method, Request, Response};
 use conduit_middleware::AroundMiddleware;
 
 use util::RequestProxy;

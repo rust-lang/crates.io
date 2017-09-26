@@ -2,8 +2,8 @@ use {CrateList, GoodCrate};
 
 use cargo_registry::owner::EncodableOwner;
 use cargo_registry::user::EncodablePublicUser;
-use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation,
-                                             NewCrateOwnerInvitation, InvitationResponse};
+use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation, InvitationResponse,
+                                             NewCrateOwnerInvitation};
 use cargo_registry::schema::crate_owner_invitations;
 
 use conduit::{Handler, Method};
@@ -114,36 +114,36 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when you're the only owner isn't allowed.
     let body = r#"{"users":["firstowner"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<::Bad>(&mut response);
-    assert!(json.errors[0].detail.contains(
-        "cannot remove the sole owner of a crate",
-    ));
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("cannot remove the sole owner of a crate",)
+    );
 
     let body = r#"{"users":["secondowner"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 
     // Deleting yourself when there are other owners is allowed.
     let body = r#"{"users":["firstowner"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 
     // After you delete yourself, you no longer have permisions to manage the crate.
     let body = r#"{"users":["secondowner"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<::Bad>(&mut response);
-    assert!(json.errors[0].detail.contains(
-        "only owners have permission to modify owners",
-    ));
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("only owners have permission to modify owners",)
+    );
 }
 
 #[test]
@@ -176,9 +176,8 @@ fn owners() {
     assert_eq!(r.users.len(), 1);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -186,9 +185,8 @@ fn owners() {
     assert_eq!(r.users.len(), 2);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
@@ -196,15 +194,13 @@ fn owners() {
     assert_eq!(r.users.len(), 1);
 
     let body = r#"{"users":["foo"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     ::json::<::Bad>(&mut response);
 
     let body = r#"{"users":["foobar"]}"#;
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Put).with_body(
-        body.as_bytes(),
-    )));
+    let mut response =
+        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 }
 
@@ -436,8 +432,8 @@ fn test_accept_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
-            .with_method(Method::Put)
-            .with_body(body.to_string().as_bytes()),
+                .with_method(Method::Put)
+                .with_body(body.to_string().as_bytes()),
         )
     );
 
@@ -451,7 +447,7 @@ fn test_accept_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path("api/v1/me/crate_owner_invitations")
-            .with_method(Method::Get)
+                .with_method(Method::Get)
         )
     );
     let json: R = ::json(&mut response);
@@ -461,7 +457,7 @@ fn test_accept_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/invited_crate/owners")
-            .with_method(Method::Get)
+                .with_method(Method::Get)
         )
     );
     let json: Q = ::json(&mut response);
@@ -533,8 +529,8 @@ fn test_decline_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
-            .with_method(Method::Put)
-            .with_body(body.to_string().as_bytes()),
+                .with_method(Method::Put)
+                .with_body(body.to_string().as_bytes()),
         )
     );
 
@@ -549,7 +545,7 @@ fn test_decline_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path("api/v1/me/crate_owner_invitations")
-            .with_method(Method::Get)
+                .with_method(Method::Get)
         )
     );
     let json: R = ::json(&mut response);
@@ -559,7 +555,7 @@ fn test_decline_invitation() {
     let mut response = ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/invited_crate/owners")
-            .with_method(Method::Get)
+                .with_method(Method::Get)
         )
     );
     let json: Q = ::json(&mut response);
