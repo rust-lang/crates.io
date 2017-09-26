@@ -14,7 +14,7 @@ use std::error::Error;
 use std::collections::HashMap;
 
 use app::App;
-use util::{CargoResult, internal, ChainError, human};
+use util::{human, internal, CargoResult, ChainError};
 use Uploader;
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
@@ -58,7 +58,8 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
     data: &'a [u8],
 ) -> CargoResult<T> {
     match resp.response_code().unwrap() {
-        200 => {} // Ok!
+        200 => {}
+        // Ok!
         403 => {
             return Err(human(
                 "It looks like you don't have permission \
@@ -81,9 +82,9 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
         }
     }
 
-    let json = str::from_utf8(data).ok().chain_error(|| {
-        internal("github didn't send a utf8-response")
-    })?;
+    let json = str::from_utf8(data)
+        .ok()
+        .chain_error(|| internal("github didn't send a utf8-response"))?;
 
     serde_json::from_str(json).chain_error(|| internal("github didn't send a valid json response"))
 }
@@ -115,12 +116,10 @@ impl SecurityHeadersMiddleware {
 
         let s3_host = match *uploader {
             Uploader::S3 { ref bucket, .. } => bucket.host(),
-            _ => {
-                unreachable!(
-                    "This middleware should only be used in the production environment, \
-                               which should also require an S3 uploader, QED"
-                )
-            }
+            _ => unreachable!(
+                "This middleware should only be used in the production environment, \
+                 which should also require an S3 uploader, QED"
+            ),
         };
 
         // It would be better if we didn't have to have 'unsafe-eval' in the `script-src`
@@ -133,12 +132,12 @@ impl SecurityHeadersMiddleware {
             vec![
                 format!(
                     "default-src 'self'; \
-                  connect-src 'self' https://docs.rs https://{}; \
-                  script-src 'self' 'unsafe-eval' \
-                             https://www.google-analytics.com https://www.google.com; \
-                  style-src 'self' https://www.google.com https://ajax.googleapis.com; \
-                  img-src *; \
-                  object-src 'none'",
+                     connect-src 'self' https://docs.rs https://{}; \
+                     script-src 'self' 'unsafe-eval' \
+                     https://www.google-analytics.com https://www.google.com; \
+                     style-src 'self' https://www.google.com https://ajax.googleapis.com; \
+                     img-src *; \
+                     object-src 'none'",
                     s3_host
                 ),
             ],

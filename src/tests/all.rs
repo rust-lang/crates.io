@@ -1,47 +1,47 @@
 #![deny(warnings)]
 
-#[macro_use]
-extern crate serde_derive;
-extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
 extern crate cargo_registry;
 extern crate chrono;
 extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
+extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate dotenv;
+extern crate flate2;
 extern crate git2;
+extern crate s3;
 extern crate semver;
 extern crate serde;
 #[macro_use]
+extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
+extern crate tar;
 extern crate time;
 extern crate url;
-extern crate s3;
-extern crate tar;
-extern crate flate2;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::sync::Arc;
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{NewCrate, CrateDownload, EncodableCrate};
+use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
 use cargo_registry::schema::*;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{User, Crate, Version, Dependency, Replica};
-use conduit::{Request, Method};
+use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use diesel::pg::upsert::*;
@@ -102,8 +102,7 @@ mod version;
 
 #[derive(Deserialize)]
 struct GoodCrate {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
+    #[serde(rename = "crate")] krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -121,7 +120,11 @@ struct CrateMeta {
     total: i32,
 }
 
-fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn app() -> (
+    record::Bomb,
+    Arc<App>,
+    conduit_middleware::MiddlewareBuilder,
+) {
     dotenv::dotenv().ok();
     git::init();
 
@@ -303,8 +306,7 @@ impl<'a> VersionBuilder<'a> {
             &self.features,
             license,
             self.license_file,
-        )?
-            .save(connection, &[])?;
+        )?.save(connection, &[])?;
 
         let new_deps = self.dependencies
             .into_iter()
@@ -318,9 +320,9 @@ impl<'a> VersionBuilder<'a> {
                 }
             })
             .collect::<Vec<_>>();
-        insert(&new_deps).into(dependencies::table).execute(
-            connection,
-        )?;
+        insert(&new_deps)
+            .into(dependencies::table)
+            .execute(connection)?;
 
         Ok(vers)
     }
@@ -486,9 +488,8 @@ fn krate(name: &str) -> Crate {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
-    req.mut_extensions().insert(
-        AuthenticationSource::SessionCookie,
-    );
+    req.mut_extensions()
+        .insert(AuthenticationSource::SessionCookie);
 }
 
 fn sign_in(req: &mut Request, app: &App) -> User {
@@ -683,14 +684,12 @@ fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8
             .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());
-    body.extend(
-        &[
-            (tarball.len() >> 0) as u8,
-            (tarball.len() >> 8) as u8,
-            (tarball.len() >> 16) as u8,
-            (tarball.len() >> 24) as u8,
-        ],
-    );
+    body.extend(&[
+        (tarball.len() >> 0) as u8,
+        (tarball.len() >> 8) as u8,
+        (tarball.len() >> 16) as u8,
+        (tarball.len() >> 24) as u8,
+    ]);
     body.extend(tarball);
     body
 }

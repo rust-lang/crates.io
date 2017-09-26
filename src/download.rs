@@ -18,10 +18,7 @@ pub struct VersionDownload {
 
 #[derive(Insertable, Debug, Clone, Copy)]
 #[table_name = "version_downloads"]
-struct NewVersionDownload(
-    #[column_name(version_id)]
-    i32
-);
+struct NewVersionDownload(#[column_name(version_id)] i32);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersionDownload {

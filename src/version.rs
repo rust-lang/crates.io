@@ -7,20 +7,20 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use semver;
 use serde_json;
-use time::{Duration, Timespec, now_utc, strptime};
+use time::{now_utc, strptime, Duration, Timespec};
 use url;
 
 use Crate;
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
-use download::{VersionDownload, EncodableVersionDownload};
+use download::{EncodableVersionDownload, VersionDownload};
 use git;
 use owner::{rights, Rights};
 use schema::*;
 use user::RequestUser;
 use util::errors::CargoError;
-use util::{RequestUtils, CargoResult, human};
+use util::{human, CargoResult, RequestUtils};
 use license_exprs;
 
 // Queryable has a custom implementation below
@@ -50,8 +50,7 @@ pub struct NewVersion {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
-    #[serde(rename = "crate")]
-    pub krate: String,
+    #[serde(rename = "crate")] pub krate: String,
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
@@ -162,13 +161,13 @@ impl NewVersion {
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
-        use diesel::{select, insert};
+        use diesel::{insert, select};
         use diesel::expression::dsl::exists;
         use schema::versions::dsl::*;
 
-        let already_uploaded = versions.filter(crate_id.eq(self.crate_id)).filter(
-            num.eq(&self.num),
-        );
+        let already_uploaded = versions
+            .filter(crate_id.eq(self.crate_id))
+            .filter(num.eq(&self.num));
         if select(exists(already_uploaded)).get_result(conn)? {
             return Err(human(&format_args!(
                 "crate version `{}` is already \
@@ -190,9 +189,9 @@ impl NewVersion {
                 })
                 .collect::<Vec<_>>();
 
-            insert(&new_authors).into(version_authors::table).execute(
-                conn,
-            )?;
+            insert(&new_authors)
+                .into(version_authors::table)
+                .execute(conn)?;
             Ok(version)
         })
     }
@@ -228,16 +227,18 @@ struct NewAuthor<'a> {
 
 impl Queryable<versions::SqlType, Pg> for Version {
     #[cfg_attr(feature = "clippy", allow(type_complexity))]
-    type Row = (i32,
-     i32,
-     String,
-     Timespec,
-     Timespec,
-     i32,
-     Option<String>,
-     bool,
-     Option<String>,
-     Option<Timespec>);
+    type Row = (
+        i32,
+        i32,
+        String,
+        Timespec,
+        Timespec,
+        i32,
+        Option<String>,
+        bool,
+        Option<String>,
+        Option<Timespec>,
+    );
 
     fn build(row: Self::Row) -> Self {
         let features = row.6
@@ -309,7 +310,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         version: EncodableVersion,
     }
-    Ok(req.json(&R { version: version.encodable(&krate.name) }))
+    Ok(req.json(&R {
+        version: version.encodable(&krate.name),
+    }))
 }
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
@@ -362,10 +365,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let cutoff_start_date = cutoff_end_date + Duration::days(-89);
 
     let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(
-            date(cutoff_start_date)..
-                date(cutoff_end_date),
-        ))
+        .filter(version_downloads::date.between(date(cutoff_start_date)..date(cutoff_end_date)))
         .order(version_downloads::date)
         .load(&*conn)?
         .into_iter()
@@ -376,7 +376,9 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     struct R {
         version_downloads: Vec<EncodableVersionDownload>,
     }
-    Ok(req.json(&R { version_downloads: downloads }))
+    Ok(req.json(&R {
+        version_downloads: downloads,
+    }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.

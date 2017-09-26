@@ -2,8 +2,8 @@
 
 extern crate cargo_registry;
 extern crate civet;
-extern crate git2;
 extern crate env_logger;
+extern crate git2;
 
 use cargo_registry::{env, Env};
 use civet::Server;

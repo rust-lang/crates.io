@@ -7,15 +7,15 @@ use serde_json;
 use serde::Serialize;
 use url;
 
-use conduit::{Request, Response, Handler};
-use conduit_router::{RouteBuilder, RequestParams};
+use conduit::{Handler, Request, Response};
+use conduit_router::{RequestParams, RouteBuilder};
 use self::errors::NotFound;
 
-pub use self::errors::{CargoError, CargoResult, internal, human, bad_request, internal_error};
-pub use self::errors::{ChainError, std_error};
-pub use self::hasher::{HashingReader, hash};
+pub use self::errors::{bad_request, human, internal, internal_error, CargoError, CargoResult};
+pub use self::errors::{std_error, ChainError};
+pub use self::hasher::{hash, HashingReader};
 pub use self::head::Head;
-pub use self::io_util::{LimitErrorReader, read_le_u32, read_fill};
+pub use self::io_util::{read_fill, LimitErrorReader, read_le_u32};
 pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
@@ -108,12 +108,10 @@ impl Handler for C {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
-            Err(e) => {
-                match e.response() {
-                    Some(response) => Ok(response),
-                    None => Err(std_error(e)),
-                }
-            }
+            Err(e) => match e.response() {
+                Some(response) => Ok(response),
+                None => Err(std_error(e)),
+            },
         }
     }
 }

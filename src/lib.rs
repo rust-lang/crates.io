@@ -7,28 +7,25 @@
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
-#![recursion_limit="128"]
+#![recursion_limit = "128"]
 
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 extern crate ammonia;
 extern crate chrono;
 extern crate comrak;
 extern crate curl;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate diesel_full_text_search;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
 extern crate hex;
+extern crate lettre;
 extern crate license_exprs;
+#[macro_use]
+extern crate log;
 extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
@@ -37,21 +34,24 @@ extern crate rand;
 extern crate s3;
 extern crate semver;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
 extern crate tar;
 extern crate time;
 extern crate toml;
 extern crate url;
-extern crate lettre;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
 extern crate conduit_cookie;
-extern crate cookie;
 extern crate conduit_git_http_backend;
 extern crate conduit_log_requests;
 extern crate conduit_middleware;
 extern crate conduit_router;
 extern crate conduit_static;
+extern crate cookie;
 
 pub use app::App;
 pub use self::badge::Badge;
@@ -63,7 +63,7 @@ pub use self::keyword::Keyword;
 pub use self::krate::Crate;
 pub use self::user::User;
 pub use self::version::Version;
-pub use self::uploaders::{Uploader, Bomb};
+pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
 use std::error::Error;
@@ -71,7 +71,7 @@ use std::error::Error;
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
-use util::{C, R, R404};
+use util::{R404, C, R};
 
 pub mod app;
 pub mod badge;

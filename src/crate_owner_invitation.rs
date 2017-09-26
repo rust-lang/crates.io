@@ -4,9 +4,9 @@ use time::Timespec;
 use serde_json;
 
 use db::RequestTransaction;
-use schema::{crate_owner_invitations, users, crates, crate_owners};
+use schema::{crate_owner_invitations, crate_owners, crates, users};
 use user::RequestUser;
-use util::errors::{CargoResult, human};
+use util::errors::{human, CargoResult};
 use util::RequestUtils;
 use owner::{CrateOwner, OwnerKind};
 
@@ -80,7 +80,9 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     struct R {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
-    Ok(req.json(&R { crate_owner_invitations }))
+    Ok(req.json(&R {
+        crate_owner_invitations,
+    }))
 }
 
 #[derive(Deserialize)]
@@ -96,16 +98,14 @@ pub struct InvitationResponse {
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
 pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
-
     let conn = &*req.db_conn()?;
 
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
-    let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(|_| {
-        human("invalid json request")
-    })?;
+    let crate_invite: OwnerInvitation =
+        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 
@@ -122,7 +122,7 @@ fn accept_invite(
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
     let user_id = req.user()?.id;
-    use diesel::{insert, delete};
+    use diesel::{delete, insert};
     let pending_crate_owner = crate_owner_invitations::table
         .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
@@ -147,7 +147,9 @@ fn accept_invite(
         struct R {
             crate_owner_invitation: InvitationResponse,
         }
-        Ok(req.json(&R { crate_owner_invitation: crate_invite }))
+        Ok(req.json(&R {
+            crate_owner_invitation: crate_invite,
+        }))
     })
 }
 
@@ -170,5 +172,7 @@ fn decline_invite(
         crate_owner_invitation: InvitationResponse,
     }
 
-    Ok(req.json(&R { crate_owner_invitation: crate_invite }))
+    Ok(req.json(&R {
+        crate_owner_invitation: crate_invite,
+    }))
 }

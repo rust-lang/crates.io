@@ -14,9 +14,9 @@ extern crate diesel;
 extern crate diesel_codegen;
 extern crate rand;
 
-use chrono::{Utc, NaiveDate, Duration};
+use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
-use rand::{StdRng, Rng};
+use rand::{Rng, StdRng};
 use std::env;
 
 use cargo_registry::schema::version_downloads;
@@ -27,9 +27,9 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
-    let ids = env::args().skip(1).filter_map(
-        |arg| arg.parse::<i32>().ok(),
-    );
+    let ids = env::args()
+        .skip(1)
+        .filter_map(|arg| arg.parse::<i32>().ok());
     for id in ids {
         let mut rng = StdRng::new().unwrap();
         let mut dls = rng.gen_range(5000i32, 10000);
