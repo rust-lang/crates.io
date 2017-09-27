@@ -1,3 +1,6 @@
+//! This module implements middleware for adding secuirty headers to
+//! http responses in production.
+
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
 

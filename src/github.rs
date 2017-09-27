@@ -1,3 +1,5 @@
+//! This module implements functionality for interacting with GitHub.
+
 use curl;
 use curl::easy::{Easy, List};
 

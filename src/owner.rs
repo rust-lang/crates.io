@@ -147,7 +147,7 @@ impl Team {
     /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(
+    fn create_github_team(
         app: &App,
         conn: &PgConnection,
         login: &str,
