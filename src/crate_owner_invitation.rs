@@ -139,8 +139,8 @@ fn accept_invite(
 
     conn.transaction(|| {
         insert(&owner.on_conflict(
-                crate_owners::table.primary_key(),
-                do_update().set(crate_owners::deleted.eq(false)),
+            crate_owners::table.primary_key(),
+            do_update().set(crate_owners::deleted.eq(false)),
         )).into(crate_owners::table)
             .execute(conn)?;
         delete(

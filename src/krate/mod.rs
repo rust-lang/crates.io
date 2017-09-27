@@ -27,7 +27,7 @@ use download::{EncodableVersionDownload, VersionDownload};
 use git;
 use keyword::{EncodableKeyword, CrateKeyword};
 use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
-use crate_owner_invitation::{NewCrateOwnerInvitation};
+use crate_owner_invitation::NewCrateOwnerInvitation;
 use pagination::Paginate;
 use render;
 use schema::*;
@@ -486,9 +486,15 @@ impl Crate {
             crate_id: self.id,
         };
 
-        diesel::insert(&owner_invitation.on_conflict_do_nothing()).into(crate_owner_invitations::table).execute(conn)?;
+        diesel::insert(&owner_invitation.on_conflict_do_nothing())
+            .into(crate_owner_invitations::table)
+            .execute(conn)?;
 
-        Ok(format!("User {} has been invited to be an owner of crate {}", owner_invitation.invited_user_id, owner_invitation.crate_id))
+        Ok(format!(
+            "User {} has been invited to be an owner of crate {}",
+            owner_invitation.invited_user_id,
+            owner_invitation.crate_id
+        ))
     }
 
     pub fn owner_remove(
@@ -1402,7 +1408,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             }
             krate.owner_remove(&conn, user, login)?;
         }
-    };
+    }
 
     let comma_sep_msg = msgs.join(",");
 
