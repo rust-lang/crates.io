@@ -492,8 +492,8 @@ impl Crate {
 
         Ok(format!(
             "User {} has been invited to be an owner of crate {}",
-            owner_invitation.invited_user_id,
-            owner_invitation.crate_id
+            owner.login(),
+            self.name
         ))
     }
 
