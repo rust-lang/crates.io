@@ -81,6 +81,23 @@ fn show() {
 }
 
 #[test]
+fn show_case_insensitive() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = t!(app.diesel_database.get());
+
+        t!(
+            NewUser::new(1, "foobar", Some("foo@bar.com"), None, None, "bar")
+                .create_or_update(&conn)
+        );
+    }
+    let mut req = ::req(app.clone(), Method::Get, "api/v1/users/fOObAr");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: UserShowPublicResponse = ::json(&mut response);
+    assert_eq!("foobar", json.user.login);
+}
+
+#[test]
 fn crates_by_user_id() {
     let (_b, app, middle) = ::app();
     let u;

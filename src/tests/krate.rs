@@ -489,7 +489,7 @@ fn new_wrong_token() {
 }
 
 #[test]
-fn new_bad_names() {
+fn new_bd_names() {
     fn bad_name(name: &str) {
         println!("testing: `{}`", name);
         let (_b, app, middle) = ::app();
@@ -708,10 +708,11 @@ fn new_krate_wrong_user() {
 #[test]
 fn new_krate_bad_name() {
     let (_b, app, middle) = ::app();
-
+    let mut req = ::new_req(app.clone(), "foobar", "2.0.0");
+    let user = ::sign_in(&mut req, &app);
     {
         let mut req = ::new_req(app.clone(), "snow☃", "2.0.0");
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
             json.errors[0]
@@ -723,7 +724,7 @@ fn new_krate_bad_name() {
     }
     {
         let mut req = ::new_req(app.clone(), "áccênts", "2.0.0");
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
             json.errors[0]
@@ -1467,11 +1468,13 @@ fn publish_after_yank_max_version() {
 #[test]
 fn bad_keywords() {
     let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foobar", "1.0.0");
+    let user = ::sign_in(&mut req, &app);
     {
         let krate = ::krate("foo_bad_key");
         let kws = vec!["super-long-keyword-name-oh-no".into()];
         let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
@@ -1479,7 +1482,7 @@ fn bad_keywords() {
         let krate = ::krate("foo_bad_key2");
         let kws = vec!["?@?%".into()];
         let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
@@ -1487,7 +1490,7 @@ fn bad_keywords() {
         let krate = ::krate("foo_bad_key_3");
         let kws = vec!["?@?%".into()];
         let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
@@ -1495,7 +1498,7 @@ fn bad_keywords() {
         let krate = ::krate("foo_bad_key4");
         let kws = vec!["áccênts".into()];
         let mut req = ::new_req_with_keywords(app.clone(), krate, "1.0.0", kws);
-        ::sign_in(&mut req, &app);
+        ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         ::json::<::Bad>(&mut response);
     }
