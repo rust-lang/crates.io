@@ -491,7 +491,7 @@ impl Crate {
             .execute(conn)?;
 
         Ok(format!(
-            "User {} has been invited to be an owner of crate {}",
+            "user {} has been invited to be an owner of crate {}",
             owner.login(),
             self.name
         ))
