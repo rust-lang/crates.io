@@ -25,8 +25,9 @@ use db::RequestTransaction;
 use dependency::{self, EncodableDependency, ReverseDependency};
 use download::{EncodableVersionDownload, VersionDownload};
 use git;
-use keyword::{CrateKeyword, EncodableKeyword};
-use owner::{rights, CrateOwner, EncodableOwner, Owner, OwnerKind, Rights, Team};
+use keyword::{EncodableKeyword, CrateKeyword};
+use owner::{EncodableOwner, Owner, Rights, OwnerKind, Team, rights, CrateOwner};
+use crate_owner_invitation::{NewCrateOwnerInvitation};
 use pagination::Paginate;
 use render;
 use schema::*;
@@ -479,19 +480,15 @@ impl Crate {
             },
         };
 
-        let crate_owner = CrateOwner {
+        let owner_invitation = NewCrateOwnerInvitation {
+            invited_user_id: owner.id(),
+            invited_by_user_id: req_user.id,
             crate_id: self.id,
-            owner_id: owner.id(),
-            created_by: req_user.id,
-            owner_kind: owner.kind() as i32,
         };
-        diesel::insert(&crate_owner.on_conflict(
-            crate_owners::table.primary_key(),
-            do_update().set(crate_owners::deleted.eq(false)),
-        )).into(crate_owners::table)
-            .execute(conn)?;
 
-        Ok(format!("User {} has been invited to be an owner of crate {}.", crate_owner.owner_id, crate_owner.crate_id))
+        diesel::insert(&owner_invitation.on_conflict_do_nothing()).into(crate_owner_invitations::table).execute(conn)?;
+
+        Ok(format!("User {} has been invited to be an owner of crate {}", owner_invitation.invited_user_id, owner_invitation.crate_id))
     }
 
     pub fn owner_remove(
@@ -1388,12 +1385,15 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         .or(request.users)
         .ok_or_else(|| human("invalid json request"))?;
 
+    let mut msgs = Vec::new();
+
     for login in &logins {
         if add {
             if owners.iter().any(|owner| owner.login() == *login) {
                 return Err(human(&format_args!("`{}` is already an owner", login)));
             }
-            krate.owner_add(req.app(), &conn, user, login)?;
+            let msg = krate.owner_add(req.app(), &conn, user, login)?;
+            msgs.push(msg);
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
@@ -1402,13 +1402,15 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             }
             krate.owner_remove(&conn, user, login)?;
         }
-    }
+    };
+
+    let comma_sep_msg = msgs.join(",");
 
     #[derive(Serialize)]
     struct R {
-        ok: bool,
+        ok: String,
     }
-    Ok(req.json(&R { ok: true }))
+    Ok(req.json(&R { ok: comma_sep_msg }))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
