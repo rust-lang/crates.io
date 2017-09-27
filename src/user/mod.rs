@@ -468,9 +468,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
-    let user = users.filter(::lower(gh_login).eq(name)).first::<User>(
-        &*conn,
-    )?;
+    let user = users
+        .filter(::lower(gh_login).eq(name))
+        .first::<User>(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
