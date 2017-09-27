@@ -693,6 +693,17 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         );
     }
 
+    if vec![params.get("user_id"), params.get("team_id")]
+        .iter()
+        .any(|s| s.is_some())
+    {
+        let not_yanked_versions = sql::<Bool>(
+            "crates.id = ANY (SELECT vs.crate_id FROM versions vs WHERE vs.crate_id = crates.id AND vs.yanked IS FALSE)",
+        );
+
+        query = query.filter(not_yanked_versions.clone())
+    }
+
     // The database query returns a tuple within a tuple , with the root
     // tuple containing 3 items.
     let data = query

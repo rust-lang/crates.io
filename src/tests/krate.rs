@@ -1,4 +1,5 @@
 extern crate diesel;
+extern crate conduit;
 
 use std::collections::HashMap;
 use std::io::prelude::*;
@@ -1781,6 +1782,7 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     assert_eq!(deps.dependencies[0].crate_id, "c1");
 
     // TODO: have this test call `version.yank()` once the yank method is converted to diesel
+
     diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
         .set(versions::yanked.eq(true))
         .execute(&*app.diesel_database.get().unwrap())
@@ -1982,6 +1984,117 @@ fn test_default_sort_recent() {
 
     assert_eq!(json.crates[1].recent_downloads, Some(0));
     assert_eq!(json.crates[1].downloads, 20);
+}
+
+/*  Given two crates, one with all versions yanked and another
+    with a good version only the one that doesn't have all versions
+    yanked is returned if a user_id or team_id is provided.
+ */
+#[test]
+fn test_hides_yanked_crate() {
+    let (_b, app, middle) = ::app();
+
+    let (user, team) = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
+        let team = ::new_team("github:test_org:team_sloth")
+            .create_or_update(&conn)
+            .unwrap();
+
+        let green_ball = ::CrateBuilder::new("green_ball", user.id)
+            .description("For fetching")
+            .downloads(0)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        ::add_team_to_crate(&team, &green_ball, &user, &conn).unwrap();
+
+        let yanked_crate = ::CrateBuilder::new("fully_yanked", user.id)
+            .description("Not here anymore")
+            .expect_build(&conn);
+
+        ::add_team_to_crate(&team, &yanked_crate, &user, &conn).unwrap();
+
+        diesel::update(versions::table.filter(
+            versions::crate_id.eq(yanked_crate.id),
+        )).set(versions::yanked.eq(true))
+            .execute(&*conn)
+            .unwrap();
+
+        (user, team)
+    };
+
+    {
+        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+        let mut response = ok_resp!(middle.call(req.with_query(
+            format!("sort=recent-downloads&user_id={}", user.id).as_str(),
+        )));
+        assert_crate_yanked(&mut response);
+    }
+
+    {
+        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+        let mut response = ok_resp!(middle.call(req.with_query(
+            format!("sort=recent-downloads&team_id={}", team.id).as_str(),
+        )));
+        assert_crate_yanked(&mut response);
+    }
+}
+
+fn assert_crate_yanked(response: &mut conduit::Response) {
+    let json: CrateList = ::json(response);
+
+    assert_eq!(json.meta.total, 1);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[0].recent_downloads, Some(0));
+    assert_eq!(json.crates[0].downloads, 0);
+}
+
+/*  Given two crates, one with all versions yanked and another
+    with a good version, both crates are returned if there is
+    no user_id or team_id provided.
+ */
+#[test]
+fn test_shows_yanked_crate_without_user_or_team() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("Oskar").create_or_update(&conn).unwrap();
+
+        ::CrateBuilder::new("green_ball", user.id)
+            .description("For fetching")
+            .downloads(0)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        let yanked_crate = ::CrateBuilder::new("fully_yanked", user.id)
+            .description("Not here anymore")
+            .expect_build(&conn);
+
+        diesel::update(versions::table.filter(
+            versions::crate_id.eq(yanked_crate.id),
+        )).set(versions::yanked.eq(true))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+
+    let json: CrateList = ::json(&mut response);
+
+    assert_eq!(json.meta.total, 2);
+
+    assert_eq!(json.crates[0].name, "green_ball");
+    assert_eq!(json.crates[0].recent_downloads, Some(0));
+    assert_eq!(json.crates[0].downloads, 0);
+
+    assert_eq!(json.crates[1].name, "fully_yanked");
+    assert_eq!(json.crates[1].recent_downloads, Some(0));
+    assert_eq!(json.crates[1].downloads, 0);
 }
 
 #[test]
