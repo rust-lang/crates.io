@@ -50,8 +50,8 @@ fn main() {
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.
-    let categories_toml = include_str!("../categories.toml");
-    cargo_registry::categories::sync(&categories_toml).unwrap();
+    let categories_toml = include_str!("../boot/categories.toml");
+    cargo_registry::boot::categories::sync(&categories_toml).unwrap();
 
     let heroku = env::var("HEROKU").is_ok();
     let port = if heroku {
