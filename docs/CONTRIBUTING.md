@@ -428,13 +428,14 @@ live crates.io, you won't be able to publish that crate locally.
 In your crate directory, run:
 
 ```
-cargo publish --host file:///path/to/your/crates.io/checkout/tmp/index-co
+cargo publish --index file:///path/to/your/crates.io/checkout/tmp/index-co
 ```
+
+> If you're using an older version of cargo you should use `--host` instead of `--index`.
 
 where `file:///path/to/your/crates.io/checkout` is the directory that you have
 crates.io's code in, and `tmp/index-co` is the directory with the git index
-that `./script/init-local-index.sh` set up. [Yes, `host` dosen't really make
-sense as a name for this flag](https://github.com/rust-lang/cargo/issues/3797).
+that `./script/init-local-index.sh` set up.
 
 Note that when you're running crates.io in development mode without the S3
 variables set (which is what we've done in these setup steps), the crate files
