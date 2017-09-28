@@ -1,5 +1,4 @@
-use time::Timespec;
-
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
@@ -17,7 +16,7 @@ pub struct Category {
     pub slug: String,
     pub description: String,
     pub crates_cnt: i32,
-    pub created_at: Timespec,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
@@ -36,7 +35,7 @@ pub struct EncodableCategory {
     pub category: String,
     pub slug: String,
     pub description: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
 
@@ -46,7 +45,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub category: String,
     pub slug: String,
     pub description: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
 }
@@ -65,7 +64,7 @@ impl Category {
             id: slug.clone(),
             slug: slug.clone(),
             description: description.clone(),
-            created_at: ::encode_time(created_at),
+            created_at: created_at,
             crates_cnt: crates_cnt,
             category: category,
         }
@@ -148,7 +147,7 @@ impl Category {
         use diesel::expression::dsl::*;
         use diesel::types::Text;
 
-        sql(
+        sql::<categories::SqlType>(
             "SELECT c.id, c.category, c.slug, c.description, \
              COALESCE (( \
              SELECT sum(c2.crates_cnt)::int \

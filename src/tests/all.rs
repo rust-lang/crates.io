@@ -20,7 +20,6 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate tar;
-extern crate time;
 extern crate url;
 
 use std::borrow::Cow;
@@ -41,6 +40,7 @@ use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
 use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
@@ -412,7 +412,7 @@ impl<'a> CrateBuilder<'a> {
         // crate properties in a single DB call.
 
         let old_downloads = self.downloads.unwrap_or(0) - self.recent_downloads.unwrap_or(0);
-        let now = chrono::Utc::now();
+        let now = Utc::now();
         let old_date = now.naive_utc().date() - chrono::Duration::days(91);
 
         if let Some(downloads) = self.downloads {
@@ -473,8 +473,8 @@ fn krate(name: &str) -> Crate {
     cargo_registry::krate::Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
-        updated_at: time::now().to_timespec(),
-        created_at: time::now().to_timespec(),
+        updated_at: Utc::now().naive_utc(),
+        created_at: Utc::now().naive_utc(),
         downloads: 10,
         documentation: None,
         homepage: None,

@@ -1,11 +1,12 @@
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
+use diesel::expression::now;
 use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
-use time::Timespec;
 
 use app::RequestApp;
 use db::RequestTransaction;
@@ -69,7 +70,7 @@ pub struct Token {
     pub id: i32,
     pub email_id: i32,
     pub token: String,
-    pub created_at: Timespec,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
@@ -212,7 +213,6 @@ impl User {
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
         use diesel::update;
-        use diesel::expression::now;
         use schema::api_tokens::dsl::{api_tokens, last_used_at, token, user_id};
         use schema::users::dsl::{id, users};
         let user_id_ = update(api_tokens.filter(token.eq(token_)))

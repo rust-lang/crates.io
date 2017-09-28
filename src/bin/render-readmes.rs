@@ -16,7 +16,6 @@ extern crate docopt;
 extern crate flate2;
 extern crate itertools;
 extern crate tar;
-extern crate time;
 extern crate toml;
 extern crate url;
 
@@ -180,7 +179,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         Some(l) => l,
         None => return None,
     };
-    let date = time::now().rfc822z().to_string();
+    let date = Utc::now().to_rfc2822();
     let url = Url::parse(&location).expect(&format!(
         "[{}-{}] Couldn't parse crate URL",
         krate_name,

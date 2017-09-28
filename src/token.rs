@@ -1,8 +1,8 @@
-use diesel;
-use diesel::prelude::*;
 use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
+use diesel::prelude::*;
+use diesel;
 use serde_json as json;
 
 use db::RequestTransaction;
