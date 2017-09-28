@@ -943,8 +943,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {
             return Err(human(
-                "crate name has already been claimed by \
-                 another user",
+                "this crate exists but you don't seem to be an owner. \
+                 If you believe this is a mistake, perhaps you need \
+                 to accept an invitation to be an owner before \
+                 publishing.",
             ));
         }
 
@@ -1414,9 +1416,10 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
-        ok: String,
+        ok: bool,
+        msg: String,
     }
-    Ok(req.json(&R { ok: comma_sep_msg }))
+    Ok(req.json(&R { ok: true, msg: comma_sep_msg }))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
