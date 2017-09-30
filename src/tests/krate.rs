@@ -232,12 +232,12 @@ fn exact_match_first_on_queries() {
             .description("bar_exact baz_exact")
             .expect_build(&conn);
 
-        ::CrateBuilder::new("bar_exact", user.id)
-            .description("foo_exact baz_exact foo_exact baz_exact")
+        ::CrateBuilder::new("bar-exact", user.id)
+            .description("foo_exact baz_exact foo-exact baz_exact")
             .expect_build(&conn);
 
         ::CrateBuilder::new("baz_exact", user.id)
-            .description("foo_exact bar_exact foo_exact bar_exact foo_exact bar_exact")
+            .description("foo-exact bar_exact foo-exact bar_exact foo_exact bar_exact")
             .expect_build(&conn);
 
         ::CrateBuilder::new("other_exact", user.id)
@@ -247,17 +247,17 @@ fn exact_match_first_on_queries() {
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo_exact")));
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo-exact")));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "foo_exact");
     assert_eq!(json.crates[1].name, "baz_exact");
-    assert_eq!(json.crates[2].name, "bar_exact");
+    assert_eq!(json.crates[2].name, "bar-exact");
 
     let mut response = ok_resp!(middle.call(req.with_query("q=bar_exact")));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 3);
-    assert_eq!(json.crates[0].name, "bar_exact");
+    assert_eq!(json.crates[0].name, "bar-exact");
     assert_eq!(json.crates[1].name, "baz_exact");
     assert_eq!(json.crates[2].name, "foo_exact");
 
@@ -265,7 +265,7 @@ fn exact_match_first_on_queries() {
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_exact");
-    assert_eq!(json.crates[1].name, "bar_exact");
+    assert_eq!(json.crates[1].name, "bar-exact");
     assert_eq!(json.crates[2].name, "foo_exact");
 }
 

@@ -602,18 +602,19 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if let Some(q_string) = params.get("q") {
         let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
+        let canon_q_string = canon_crate_name(q_string);
         let q = plainto_tsquery(q_string);
         query = query.filter(
             q.matches(crates::textsearchable_index_col)
-                .or(crates::name.eq(q_string)),
+                .or(canon_crate_name(crates::name).eq(canon_q_string)),
         );
 
         query = query.select((
             ALL_COLUMNS,
-            crates::name.eq(q_string),
+            canon_crate_name(crates::name).eq(canon_q_string),
             recent_downloads.clone(),
         ));
-        let perfect_match = crates::name.eq(q_string).desc();
+        let perfect_match = canon_crate_name(crates::name).eq(canon_q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
