@@ -388,13 +388,13 @@ fn crates_by_team_id_not_including_deleted_owners() {
 
     let team = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
-        let t = ::new_team("github:org_foo:team_foo")
+        let u = ::new_user(GH_USER_2.login).create_or_update(&conn).unwrap();
+        let t = ::new_team("github:crates-test-org:core")
             .create_or_update(&conn)
             .unwrap();
         let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
         ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
-        krate.owner_remove(&conn, &u, &t.login).unwrap();
+        krate.owner_remove(&app, &conn, &u, &t.login).unwrap();
         t
     };
 

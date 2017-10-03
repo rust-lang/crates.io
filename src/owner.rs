@@ -44,7 +44,8 @@ pub struct Team {
     /// We only query membership with github using the github_id, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,
-    /// We're assuming these are stable
+    /// The GitHub API works on team ID numbers. This can change, if a team
+    /// is deleted and then recreated with the same name!!!
     pub github_id: i32,
     /// Sugary goodness
     pub name: Option<String>,
@@ -107,7 +108,7 @@ impl<'a> NewTeam<'a> {
         use diesel::insert;
         use diesel::pg::upsert::*;
 
-        insert(&self.on_conflict(teams::github_id, do_update().set(self)))
+        insert(&self.on_conflict(teams::login, do_update().set(self)))
             .into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
@@ -116,7 +117,7 @@ impl<'a> NewTeam<'a> {
 
 impl Team {
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(
+    pub fn create_or_update(
         app: &App,
         conn: &PgConnection,
         login: &str,
@@ -135,7 +136,7 @@ impl Team {
                          format is github:org:team",
                     )
                 })?;
-                Team::create_github_team(app, conn, login, org, team, req_user)
+                Team::create_or_update_github_team(app, conn, login, org, team, req_user)
             }
             _ => Err(human(
                 "unknown organization handler, \
@@ -144,10 +145,10 @@ impl Team {
         }
     }
 
-    /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
+    /// Tries to create or update a Github Team. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    fn create_github_team(
+    fn create_or_update_github_team(
         app: &App,
         conn: &PgConnection,
         login: &str,
@@ -292,18 +293,22 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
 }
 
 impl Owner {
-    /// Finds the owner by name, failing out if it doesn't exist.
-    /// May be a user's GH login, or a full team name. This is case
+    /// Finds the owner by name. Always recreates teams to get the most
+    /// up-to-date GitHub ID. Fails out if the user isn't found in the
+    /// database, the team isn't found on GitHub, or if the user isn't a member
+    /// of the team on GitHub.
+    /// May be a user's GH login or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &PgConnection, name: &str) -> CargoResult<Owner> {
+    pub fn find_or_create_by_login(
+        app: &App,
+        conn: &PgConnection,
+        req_user: &User,
+        name: &str,
+    ) -> CargoResult<Owner> {
         if name.contains(':') {
-            teams::table
-                .filter(teams::login.eq(name))
-                .first(conn)
-                .map(Owner::Team)
-                .map_err(|_| {
-                    human(&format_args!("could not find team with name {}", name))
-                })
+            Ok(Owner::Team(
+                Team::create_or_update(app, conn, name, req_user)?,
+            ))
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
