@@ -699,7 +699,7 @@ fn new_krate_wrong_user() {
 
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("another user"),
+        json.errors[0].detail.contains("this crate exists but you don't seem to be an owner."),
         "{:?}",
         json.errors
     );
