@@ -7,8 +7,8 @@ use record::GhUser;
 
 // Users: `crates-tester-1` and `crates-tester-2`
 // Passwords: ask acrichto or gankro
-// Teams: `crates-test-org:owners`, `crates-test-org:just-for-crates-2`
-// tester-1 is on owners only, tester-2 is on both
+// Teams: `crates-test-org:core`, `crates-test-org:just-for-crates-2`
+// tester-1 is on core only, tester-2 is on both
 
 static GH_USER_1: GhUser = GhUser {
     login: "crates-tester-1",
@@ -31,7 +31,7 @@ fn body_for_team_y() -> &'static str {
 }
 
 fn body_for_team_x() -> &'static str {
-    r#"{"users":["github:crates-test-org:owners"]}"#
+    r#"{"users":["github:crates-test-org:core"]}"#
 }
 
 // Test adding team without `github:`
