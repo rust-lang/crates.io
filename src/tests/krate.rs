@@ -1040,12 +1040,15 @@ fn summary_new_crates() {
     let json: SummaryResponse = ::json(&mut response);
 
     assert_eq!(json.num_crates, 4);
-    assert_eq!(json.num_downloads, 0);  // need to add a record to metadata
+    assert_eq!(json.num_downloads, 0); // need to add a record to metadata
     assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
-    assert_eq!(json.most_recently_downloaded[0].name, "most_recent_downloads");
+    assert_eq!(
+        json.most_recently_downloaded[0].name,
+        "most_recent_downloads"
+    );
     assert_eq!(json.popular_keywords[0].keyword, "popular");
     assert_eq!(json.popular_categories[0].category, "Category 1");
-    assert_eq!(json.just_updated.len(), 0);  // update a couple before running this request...
+    assert_eq!(json.just_updated.len(), 0); // update a couple before running this request...
     assert_eq!(json.new_crates.len(), 4);
 }
 

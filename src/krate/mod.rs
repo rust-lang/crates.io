@@ -756,9 +756,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     use schema::crates::dsl::*;
-    use diesel::expression::{DayAndMonthIntervalDsl};
+    use diesel::expression::DayAndMonthIntervalDsl;
     use diesel::types::{BigInt, Nullable};
-    use diesel::expression::functions::date_and_time::{now, date};
+    use diesel::expression::functions::date_and_time::{date, now};
     use diesel::expression::sql_literal::sql;
 
     let conn = req.db_conn()?;
@@ -800,11 +800,12 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
     let most_recently_downloaded = crates
-        .left_join(crate_downloads::table.on(
-            id.eq(crate_downloads::crate_id).and(
-                crate_downloads::date.gt(date(now - 90.days())),
+        .left_join(
+            crate_downloads::table.on(
+                id.eq(crate_downloads::crate_id)
+                    .and(crate_downloads::date.gt(date(now - 90.days()))),
             ),
-        ))
+        )
         .group_by(id)
         .order(recent_downloads.clone().desc().nulls_last())
         .limit(10)
