@@ -1,8 +1,9 @@
 use std::sync::ONCE_INIT;
 use conduit::{Handler, Method};
+use diesel::*;
 
 use cargo_registry::user::NewUser;
-use cargo_registry::krate::EncodableCrate;
+use cargo_registry::krate::{Crate, EncodableCrate};
 use record::GhUser;
 
 // Users: `crates-tester-1` and `crates-tester-2`
@@ -138,6 +139,14 @@ fn add_team_as_member() {
                 .with_body(body.as_bytes()),
         )
     );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_team_member")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+    }
 }
 
 // Test adding team as owner when not on in
@@ -176,6 +185,14 @@ fn remove_team_as_named_owner() {
                 .with_body(body.as_bytes()),
         )
     );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_remove_team")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+    }
 
     let body = body_for_team_x();
     ok_resp!(
@@ -223,6 +240,12 @@ fn remove_team_as_team_owner() {
 
     {
         let conn = app.diesel_database.get().unwrap();
+
+        let krate = Crate::by_name("foo_remove_team_owner")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
     }
@@ -271,6 +294,12 @@ fn publish_not_owned() {
 
     {
         let conn = app.diesel_database.get().unwrap();
+
+        let krate = Crate::by_name("foo_not_owned")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
     }
@@ -307,6 +336,12 @@ fn publish_owned() {
 
     {
         let conn = app.diesel_database.get().unwrap();
+
+        let krate = Crate::by_name("foo_team_owned")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
     }
@@ -337,6 +372,12 @@ fn add_owners_as_team_owner() {
 
     {
         let conn = app.diesel_database.get().unwrap();
+
+        let krate = Crate::by_name("foo_add_owner")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
         ::sign_in_as(&mut req, &user);
     }
