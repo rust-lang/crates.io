@@ -5,7 +5,6 @@ use std::io::prelude::*;
 use std::fs::{self, File};
 
 use conduit::{Handler, Method};
-
 use git2;
 use self::diesel::prelude::*;
 use serde_json;
@@ -82,6 +81,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         badges: None,
     }
 }
+
 
 #[test]
 fn index() {
@@ -1000,8 +1000,6 @@ fn summary_new_crates() {
     let u;
     let krate;
     let krate2;
-    let krate3;
-    let krate4;
     {
         let conn = app.diesel_database.get().unwrap();
         u = ::new_user("foo").create_or_update(&conn).unwrap();
@@ -1021,12 +1019,12 @@ fn summary_new_crates() {
             .recent_downloads(50)
             .expect_build(&conn);
 
-        krate3 = ::CrateBuilder::new("with_downloads", u.id)
+        ::CrateBuilder::new("with_downloads", u.id)
             .version(::VersionBuilder::new("0.3.0"))
             .keyword("popular")
             .downloads(1000)
             .expect_build(&conn);
-        krate4 = ::CrateBuilder::new("just_updated", u.id)
+        ::CrateBuilder::new("just_updated", u.id)
             .version(::VersionBuilder::new("0.4.0"))
             .expect_build(&conn);
 
@@ -1036,21 +1034,19 @@ fn summary_new_crates() {
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
         Category::update_crate(&conn, &krate2, &["cat1"]).unwrap();
     }
+
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/summary");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: SummaryResponse = ::json(&mut response);
 
     assert_eq!(json.num_crates, 4);
-    assert_eq!(json.num_downloads, 6020);
-    assert_eq!(json.new_crates[0].name, krate4.name);
-    assert_eq!(json.just_updated[0].name, krate4.name);
-    assert_eq!(json.most_downloaded[0].name, krate2.name);
-    assert_eq!(json.most_downloaded[1].name, krate3.name);
-    assert_eq!(json.most_recently_downloaded[0].name, krate2.name);
-    assert_eq!(json.most_recently_downloaded[1].name, krate.name);
+    assert_eq!(json.num_downloads, 0);  // need to add a record to metadata
+    assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
+    assert_eq!(json.most_recently_downloaded[0].name, "most_recent_downloads");
     assert_eq!(json.popular_keywords[0].keyword, "popular");
-    assert_eq!(json.popular_categories[0].category, "cat1");
-
+    assert_eq!(json.popular_categories[0].category, "Category 1");
+    assert_eq!(json.just_updated.len(), 0);  // update a couple before running this request...
+    assert_eq!(json.new_crates.len(), 4);
 }
 
 #[test]
