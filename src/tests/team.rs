@@ -118,7 +118,7 @@ fn nonexistent_team() {
     assert!(
         json.errors[0]
             .detail
-            .contains("don't have permission to query a necessary property",),
+            .contains("could not find the github team crates-test-org/this-does-not-exist",),
         "{:?}",
         json.errors
     );
@@ -149,7 +149,7 @@ fn add_team_as_member() {
     }
 }
 
-// Test adding team as owner when not on in
+// Test adding team as owner when not on it
 #[test]
 fn add_team_as_non_member() {
     let (_b, app, middle) = ::app();
@@ -165,7 +165,9 @@ fn add_team_as_non_member() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("don't have permission"),
+        json.errors[0]
+            .detail
+            .contains("only members of a team can add it as an owner"),
         "{:?}",
         json.errors
     );
@@ -261,7 +263,7 @@ fn remove_team_as_team_owner() {
     assert!(
         json.errors[0]
             .detail
-            .contains("only owners have permission",),
+            .contains("team members don't have permission to modify owners",),
         "{:?}",
         json.errors
     );
@@ -392,7 +394,7 @@ fn add_owners_as_team_owner() {
     assert!(
         json.errors[0]
             .detail
-            .contains("only owners have permission",),
+            .contains("team members don't have permission to modify owners",),
         "{:?}",
         json.errors
     );
