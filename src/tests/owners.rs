@@ -5,6 +5,7 @@ use cargo_registry::user::EncodablePublicUser;
 use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation, InvitationResponse,
                                              NewCrateOwnerInvitation};
 use cargo_registry::schema::crate_owner_invitations;
+use cargo_registry::krate::Crate;
 
 use conduit::{Handler, Method};
 use diesel;
@@ -49,13 +50,48 @@ fn new_crate_owner() {
         )
     );
     assert!(::json::<O>(&mut response).ok);
-    bad_resp!(
+
+    let krate_id = {
+        let conn = app.diesel_database.get().unwrap();
+        Crate::by_name("foo_owner").first::<Crate>(&*conn).unwrap().id
+    };
+
+    let body = json!({
+        "crate_owner_invite": {
+            "invited_by_username": "foo",
+            "crate_name": "foo_owner",
+            "crate_id": krate_id,
+            "created_at": "",
+            "accepted": true
+        }
+    });
+
+    ::logout(&mut req);
+    ::sign_in_as(&mut req, &u2);
+
+    // accept invitation for user to be added as owner
+    let mut response = ok_resp!(
         middle.call(
-            req.with_path("/api/v1/crates/foo_owner/owners")
+            req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
                 .with_method(Method::Put)
-                .with_body(body.as_bytes()),
+                .with_body(body.to_string().as_bytes()),
         )
     );
+
+    #[derive(Deserialize)]
+    struct CrateOwnerInvitation {
+        crate_owner_invitation: InvitationResponse,
+    }
+
+    #[derive(Deserialize)]
+    struct InvitationResponse {
+        crate_id: i32,
+        accepted: bool,
+    }
+
+    let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
+    assert!(crate_owner_invite.crate_owner_invitation.accepted);
+    assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
 
     // Make sure this shows up as one of their crates.
     let query = format!("user_id={}", u2.id);
@@ -144,64 +180,6 @@ fn owners_can_remove_self() {
             .detail
             .contains("only owners have permission to modify owners",)
     );
-}
-
-#[test]
-fn owners() {
-    #[derive(Deserialize)]
-    struct R {
-        users: Vec<EncodablePublicUser>,
-    }
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
-
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/foo_owners/owners");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        ::new_user("foobar").create_or_update(&conn).unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
-        ::CrateBuilder::new("foo_owners", user.id).expect_build(&conn);
-    }
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
-    assert!(::json::<O>(&mut response).ok);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 2);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    assert!(::json::<O>(&mut response).ok);
-
-    let mut response = ok_resp!(middle.call(req.with_method(Method::Get)));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
-
-    let body = r#"{"users":["foo"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    ::json::<::Bad>(&mut response);
-
-    let body = r#"{"users":["foobar"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
-    assert!(::json::<O>(&mut response).ok);
 }
 
 /*  Testing the crate ownership between two crates and one team.
