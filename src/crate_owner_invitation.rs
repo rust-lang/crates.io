@@ -121,10 +121,10 @@ fn accept_invite(
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
-    let user_id = req.user()?.id;
     use diesel::{insert, delete};
-    use diesel::pg::upsert::do_update;
-    use diesel::pg::upsert::OnConflictExtension;
+    use diesel::pg::upsert::{OnConflictExtension, do_update};
+
+    let user_id = req.user()?.id;
     let pending_crate_owner = crate_owner_invitations::table
         .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
         .filter(crate_owner_invitations::invited_user_id.eq(user_id))
