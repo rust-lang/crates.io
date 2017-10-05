@@ -102,9 +102,7 @@ impl<'a> MarkdownRenderer<'a> {
             allowed_classes: allowed_classes,
             ..Ammonia::default()
         };
-        MarkdownRenderer {
-            html_sanitizer: html_sanitizer,
-        }
+        MarkdownRenderer { html_sanitizer: html_sanitizer }
     }
 
     /// Renders the given markdown to HTML using the current settings.

@@ -157,7 +157,9 @@ fn update_crate() {
     // Add a category and its subcategory
     {
         let conn = t!(app.diesel_database.get());
-        t!(::new_category("cat1::bar", "cat1::bar").create_or_update(&conn,));
+        t!(::new_category("cat1::bar", "cat1::bar").create_or_update(
+            &conn,
+        ));
         Category::update_crate(&conn, &krate, &["cat1", "cat1::bar"]).unwrap();
     }
     assert_eq!(cnt!(&mut req, "cat1"), 1);

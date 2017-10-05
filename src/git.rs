@@ -56,7 +56,9 @@ pub fn add_crate(app: &App, krate: &Crate) -> CargoResult<()> {
         fs::create_dir_all(dst.parent().unwrap())?;
         let mut prev = String::new();
         if fs::metadata(&dst).is_ok() {
-            File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
+            File::open(&dst).and_then(
+                |mut f| f.read_to_string(&mut prev),
+            )?;
         }
         let s = serde_json::to_string(krate).unwrap();
         let new = prev + &s;
@@ -82,11 +84,14 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
 
     commit_and_push(&repo, || {
         let mut prev = String::new();
-        File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
+        File::open(&dst).and_then(
+            |mut f| f.read_to_string(&mut prev),
+        )?;
         let new = prev.lines()
             .map(|line| {
-                let mut git_crate = serde_json::from_str::<Crate>(line)
-                    .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
+                let mut git_crate = serde_json::from_str::<Crate>(line).map_err(|_| {
+                    internal(&format_args!("couldn't decode: `{}`", line))
+                })?;
                 if git_crate.name != krate || git_crate.vers != version.to_string() {
                     return Ok(line.to_string());
                 }
@@ -155,7 +160,14 @@ where
         let head = repo.head()?;
         let parent = repo.find_commit(head.target().unwrap())?;
         let sig = repo.signature()?;
-        repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
+        repo.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            &msg,
+            &tree,
+            &[&parent],
+        )?;
 
         // git push
         let mut ref_status = None;

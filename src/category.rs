@@ -239,9 +239,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         category: EncodableCategoryWithSubcategories,
     }
-    Ok(req.json(&R {
-        category: cat_with_subcats,
-    }))
+    Ok(req.json(&R { category: cat_with_subcats }))
 }
 
 /// Handles the `GET /category_slugs` route.
@@ -262,9 +260,7 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     struct R {
         category_slugs: Vec<Slug>,
     }
-    Ok(req.json(&R {
-        category_slugs: slugs,
-    }))
+    Ok(req.json(&R { category_slugs: slugs }))
 }
 
 #[cfg(test)]

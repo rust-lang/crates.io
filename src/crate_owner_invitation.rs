@@ -80,9 +80,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     struct R {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
-    Ok(req.json(&R {
-        crate_owner_invitations,
-    }))
+    Ok(req.json(&R { crate_owner_invitations }))
 }
 
 #[derive(Deserialize)]
@@ -104,8 +102,9 @@ pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
-    let crate_invite: OwnerInvitation =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+    let crate_invite: OwnerInvitation = serde_json::from_str(&body).map_err(|_| {
+        human("invalid json request")
+    })?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 
@@ -153,9 +152,7 @@ fn accept_invite(
         struct R {
             crate_owner_invitation: InvitationResponse,
         }
-        Ok(req.json(&R {
-            crate_owner_invitation: crate_invite,
-        }))
+        Ok(req.json(&R { crate_owner_invitation: crate_invite }))
     })
 }
 
@@ -178,7 +175,5 @@ fn decline_invite(
         crate_owner_invitation: InvitationResponse,
     }
 
-    Ok(req.json(&R {
-        crate_owner_invitation: crate_invite,
-    }))
+    Ok(req.json(&R { crate_owner_invitation: crate_invite }))
 }

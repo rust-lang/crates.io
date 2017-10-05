@@ -63,9 +63,11 @@ impl Drop for Bomb {
             .to_string();
         match res {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
-            Err(e) => if stderr.len() > 0 {
-                println!("server subtask failed ({:?}): {}", e, stderr)
-            },
+            Err(e) => {
+                if stderr.len() > 0 {
+                    println!("server subtask failed ({:?}): {}", e, stderr)
+                }
+            }
             Ok(_) if thread::panicking() => {}
             Ok(None) => {}
             Ok(Some((data, file))) => {
@@ -308,7 +310,9 @@ fn replay_http(
     });
 
     let mut response = hyper::Response::new();
-    response.set_status(hyper::StatusCode::try_from(exchange.response.status).unwrap());
+    response.set_status(
+        hyper::StatusCode::try_from(exchange.response.status).unwrap(),
+    );
     for (key, value) in exchange.response.headers.into_iter() {
         response.headers_mut().append_raw(key, value);
     }

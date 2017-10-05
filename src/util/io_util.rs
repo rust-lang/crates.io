@@ -9,9 +9,7 @@ pub struct LimitErrorReader<R> {
 
 impl<R: Read> LimitErrorReader<R> {
     pub fn new(r: R, limit: u64) -> LimitErrorReader<R> {
-        LimitErrorReader {
-            inner: r.take(limit),
-        }
+        LimitErrorReader { inner: r.take(limit) }
     }
 }
 
@@ -30,7 +28,9 @@ impl<R: Read> Read for LimitErrorReader<R> {
 pub fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
     let mut b = [0; 4];
     read_fill(r, &mut b)?;
-    Ok((b[0] as u32) | ((b[1] as u32) << 8) | ((b[2] as u32) << 16) | ((b[3] as u32) << 24))
+    Ok(
+        (b[0] as u32) | ((b[1] as u32) << 8) | ((b[2] as u32) << 16) | ((b[3] as u32) << 24),
+    )
 }
 
 pub fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8]) -> io::Result<()> {

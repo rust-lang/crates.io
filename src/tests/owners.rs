@@ -53,7 +53,10 @@ fn new_crate_owner() {
 
     let krate_id = {
         let conn = app.diesel_database.get().unwrap();
-        Crate::by_name("foo_owner").first::<Crate>(&*conn).unwrap().id
+        Crate::by_name("foo_owner")
+            .first::<Crate>(&*conn)
+            .unwrap()
+            .id
     };
 
     let body = json!({
@@ -151,8 +154,7 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when you're the only owner isn't allowed.
     let body = r#"{"users":["firstowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<::Bad>(&mut response);
     assert!(
         json.errors[0]
@@ -161,14 +163,16 @@ fn owners_can_remove_self() {
     );
 
     let body = r#"{"users":["secondowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
     assert!(::json::<O>(&mut response).ok);
 
     // Need to accept owner invitation to add secondowner as owner
     let krate_id = {
         let conn = app.diesel_database.get().unwrap();
-        Crate::by_name("owners_selfremove").first::<Crate>(&*conn).unwrap().id
+        Crate::by_name("owners_selfremove")
+            .first::<Crate>(&*conn)
+            .unwrap()
+            .id
     };
 
     let body = json!({
@@ -223,8 +227,7 @@ fn owners_can_remove_self() {
 
     // After you delete yourself, you no longer have permisions to manage the crate.
     let body = r#"{"users":["secondowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
+    let mut response = ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<::Bad>(&mut response);
     assert!(
         json.errors[0]

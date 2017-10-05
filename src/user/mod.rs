@@ -97,7 +97,10 @@ impl NewToken {
         let new_token = Self::generate(id);
         insert(&new_token.on_conflict(
             email_id,
-            do_update().set((token.eq(&new_token.token), created_at.eq(now))),
+            do_update().set((
+                token.eq(&new_token.token),
+                created_at.eq(now),
+            )),
         )).into(tokens)
             .returning(token)
             .get_result(conn)
@@ -150,8 +153,10 @@ impl<'a> NewUser<'a> {
             // necessary for most fields in the database to be used as a conflict
             // target :)
             let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-            let user = insert(&self.on_conflict(conflict_target, do_update().set(&update_user)))
-                .into(users::table)
+            let user = insert(&self.on_conflict(
+                conflict_target,
+                do_update().set(&update_user),
+            )).into(users::table)
                 .get_result::<User>(conn)?;
 
             // To send the user an account verification email...
@@ -300,8 +305,10 @@ impl User {
 pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
-    req.session()
-        .insert("github_oauth_state".to_string(), state.clone());
+    req.session().insert(
+        "github_oauth_state".to_string(),
+        state.clone(),
+    );
 
     let url = req.app().github.authorize_url(state.clone());
 
@@ -370,10 +377,9 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req.app()
-        .github
-        .exchange(code.clone())
-        .map_err(|s| human(&s))?;
+    let token = req.app().github.exchange(code.clone()).map_err(
+        |s| human(&s),
+    )?;
 
     let (handle, resp) = github::github(req.app(), "/user", &token)?;
     let ghuser: GithubUser = github::parse_github_response(handle, &resp)?;
@@ -386,8 +392,10 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
     ).create_or_update(&*req.db_conn()?)?;
-    req.session()
-        .insert("user_id".to_string(), user.id.to_string());
+    req.session().insert(
+        "user_id".to_string(),
+        user.id.to_string(),
+    );
     req.mut_extensions().insert(user);
     me(req)
 }
@@ -460,17 +468,15 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
-    let user = users
-        .filter(::lower(gh_login).eq(name))
-        .first::<User>(&*conn)?;
+    let user = users.filter(::lower(gh_login).eq(name)).first::<User>(
+        &*conn,
+    )?;
 
     #[derive(Serialize)]
     struct R {
         user: EncodablePublicUser,
     }
-    Ok(req.json(&R {
-        user: user.encodable_public(),
-    }))
+    Ok(req.json(&R { user: user.encodable_public() }))
 }
 
 /// Handles the `GET /teams/:team_id` route.
@@ -487,9 +493,7 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
     struct R {
         team: EncodableTeam,
     }
-    Ok(req.json(&R {
-        team: team.encodable(),
-    }))
+    Ok(req.json(&R { team: team.encodable() }))
 }
 
 /// Handles the `GET /me/updates` route.
@@ -542,11 +546,9 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 
     let data = crate_owners::table
         .inner_join(crates::table)
-        .filter(
-            crate_owners::owner_id
-                .eq(user_id)
-                .and(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
-        )
+        .filter(crate_owners::owner_id.eq(user_id).and(
+            crate_owners::owner_kind.eq(OwnerKind::User as i32),
+        ))
         .select(sum(crates::downloads))
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
@@ -555,9 +557,7 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
     struct R {
         total_downloads: i64,
     }
-    Ok(req.json(&R {
-        total_downloads: data,
-    }))
+    Ok(req.json(&R { total_downloads: data }))
 }
 
 /// Handles the `PUT /user/:user_id` route.
@@ -588,8 +588,9 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         email: Option<String>,
     }
 
-    let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+    let user_update: UserUpdate = serde_json::from_str(&body).map_err(
+        |_| human("invalid json request"),
+    )?;
 
     if user_update.user.email.is_none() {
         return Err(human("empty email rejected"));

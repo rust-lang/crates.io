@@ -108,10 +108,12 @@ impl Handler for C {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
-            Err(e) => match e.response() {
-                Some(response) => Ok(response),
-                None => Err(std_error(e)),
-            },
+            Err(e) => {
+                match e.response() {
+                    Some(response) => Ok(response),
+                    None => Err(std_error(e)),
+                }
+            }
         }
     }
 }

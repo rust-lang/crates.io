@@ -111,7 +111,8 @@ impl Badge {
         }
 
         conn.transaction(|| {
-            delete(badges::table.filter(badges::crate_id.eq(krate.id))).execute(conn)?;
+            delete(badges::table.filter(badges::crate_id.eq(krate.id)))
+                .execute(conn)?;
             insert(&new_badges).into(badges::table).execute(conn)?;
             Ok(invalid_badges)
         })

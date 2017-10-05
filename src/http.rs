@@ -26,10 +26,12 @@ impl SecurityHeadersMiddleware {
 
         let s3_host = match *uploader {
             Uploader::S3 { ref bucket, .. } => bucket.host(),
-            _ => unreachable!(
-                "This middleware should only be used in the production environment, \
+            _ => {
+                unreachable!(
+                    "This middleware should only be used in the production environment, \
                  which should also require an S3 uploader, QED"
-            ),
+                )
+            }
         };
 
         // It would be better if we didn't have to have 'unsafe-eval' in the `script-src`

@@ -150,7 +150,9 @@ impl Uploader {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
+            LimitErrorReader::new(req.body(), max).read_to_end(
+                &mut body,
+            )?;
             verify_tarball(krate, vers, &body)?;
             self.upload(
                 app.handle(),
