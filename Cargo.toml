@@ -87,3 +87,7 @@ diesel = { version = "0.16.0", features = ["postgres"] }
 [features]
 unstable = []
 lint = ["clippy"]
+
+[replace]
+"diesel:0.16.0" = { git = "https://github.com/diesel-rs/diesel.git" }
+"diesel_codegen:0.16.0" = { git = "https://github.com/diesel-rs/diesel.git" }

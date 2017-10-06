@@ -7,10 +7,6 @@ use chrono::{NaiveDate, NaiveDateTime};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
-use diesel::expression::helper_types::Eq;
-use diesel::helper_types::Select;
-use diesel::pg::upsert::*;
-use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel;
 use diesel_full_text_search::*;
@@ -104,7 +100,9 @@ pub const ALL_COLUMNS: AllColumns = (
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
-type CrateQuery<'a> = crates::BoxedQuery<'a, Pg, <AllColumns as Expression>::SqlType>;
+type All = diesel::dsl::Select<crates::table, AllColumns>;
+type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
+type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCrate {
@@ -170,9 +168,8 @@ impl<'a> NewCrate<'a> {
                 return Ok(krate);
             }
 
-            let target = crates::table
-                .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)));
-            update(target)
+            update(crates::table)
+                .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
                 .set(&self)
                 .returning(ALL_COLUMNS)
                 .get_result(conn)
@@ -242,7 +239,7 @@ impl<'a> NewCrate<'a> {
     fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
         use schema::reserved_crate_names::dsl::*;
         use diesel::select;
-        use diesel::expression::dsl::exists;
+        use diesel::dsl::exists;
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
@@ -256,11 +253,11 @@ impl<'a> NewCrate<'a> {
 
     fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
         use schema::crates::dsl::*;
-        use diesel::insert;
 
         conn.transaction(|| {
-            let maybe_inserted = insert(&self.on_conflict_do_nothing())
-                .into(crates)
+            let maybe_inserted = diesel::insert_into(crates)
+                .values(self)
+                .on_conflict_do_nothing()
                 .returning(ALL_COLUMNS)
                 .get_result::<Crate>(conn)
                 .optional()?;
@@ -272,7 +269,9 @@ impl<'a> NewCrate<'a> {
                     created_by: user_id,
                     owner_kind: OwnerKind::User as i32,
                 };
-                insert(&owner).into(crate_owners::table).execute(conn)?;
+                diesel::insert_into(crate_owners::table)
+                    .values(&owner)
+                    .execute(conn)?;
             }
 
             Ok(maybe_inserted)
@@ -281,20 +280,16 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
-    pub fn by_name(name: &str) -> CrateQuery {
-        Crate::all()
-            .filter(Crate::name_canonically_equals(name))
-            .into_boxed()
+    pub fn with_name(name: &str) -> WithName {
+        canon_crate_name(crates::name).eq(canon_crate_name(name))
     }
 
-    pub fn all() -> Select<crates::table, AllColumns> {
+    pub fn by_name(name: &str) -> ByName {
+        Crate::all().filter(Self::with_name(name))
+    }
+
+    pub fn all() -> All {
         crates::table.select(ALL_COLUMNS)
-    }
-
-    fn name_canonically_equals(
-        s: &str,
-    ) -> Eq<canon_crate_name<crates::name>, canon_crate_name<&str>> {
-        canon_crate_name(crates::name).eq(canon_crate_name(s))
     }
 
     pub fn valid_name(name: &str) -> bool {
@@ -470,23 +465,21 @@ impl Crate {
         req_user: &User,
         login: &str,
     ) -> CargoResult<String> {
-        use diesel::insert;
+        use diesel::insert_into;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
         match owner {
             // Users are invited and must accept before being added
             owner @ Owner::User(_) => {
-                let owner_invitation = NewCrateOwnerInvitation {
-                    invited_user_id: owner.id(),
-                    invited_by_user_id: req_user.id,
-                    crate_id: self.id,
-                };
-
-                diesel::insert(&owner_invitation.on_conflict_do_nothing())
-                    .into(crate_owner_invitations::table)
+                insert_into(crate_owner_invitations::table)
+                    .values(&NewCrateOwnerInvitation {
+                        invited_user_id: owner.id(),
+                        invited_by_user_id: req_user.id,
+                        crate_id: self.id,
+                    })
+                    .on_conflict_do_nothing()
                     .execute(conn)?;
-
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
                     owner.login(),
@@ -495,17 +488,16 @@ impl Crate {
             }
             // Teams are added as owners immediately
             owner @ Owner::Team(_) => {
-                let crate_owner = CrateOwner {
-                    crate_id: self.id,
-                    owner_id: owner.id(),
-                    created_by: req_user.id,
-                    owner_kind: OwnerKind::Team as i32,
-                };
-
-                insert(&crate_owner.on_conflict(
-                    crate_owners::table.primary_key(),
-                    do_update().set(crate_owners::deleted.eq(false)),
-                )).into(crate_owners::table)
+                insert_into(crate_owners::table)
+                    .values(&CrateOwner {
+                        crate_id: self.id,
+                        owner_id: owner.id(),
+                        created_by: req_user.id,
+                        owner_kind: OwnerKind::Team as i32,
+                    })
+                    .on_conflict(crate_owners::table.primary_key())
+                    .do_update()
+                    .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;
 
                 Ok(format!(
@@ -546,7 +538,7 @@ impl Crate {
         offset: i64,
         limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
-        use diesel::expression::dsl::sql;
+        use diesel::dsl::sql;
         use diesel::types::{BigInt, Integer, Text};
 
         type SqlType = ((dependencies::SqlType, Integer, Text), BigInt);
@@ -584,10 +576,8 @@ impl Crate {
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
+    use diesel::dsl::*;
     use diesel::types::{BigInt, Bool, Nullable};
-    use diesel::expression::functions::date_and_time::{date, now};
-    use diesel::expression::sql_literal::sql;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -610,7 +600,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         .group_by(crates::id)
         .select((
             ALL_COLUMNS,
-            AsExpression::<Bool>::as_expression(false),
+            false.into_sql::<Bool>(),
             recent_downloads.clone(),
         ))
         .into_boxed();
@@ -628,15 +618,15 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         let q = plainto_tsquery(q_string);
         query = query.filter(
             q.matches(crates::textsearchable_index_col)
-                .or(Crate::name_canonically_equals(q_string)),
+                .or(Crate::with_name(q_string)),
         );
 
         query = query.select((
             ALL_COLUMNS,
-            Crate::name_canonically_equals(q_string),
+            Crate::with_name(q_string),
             recent_downloads.clone(),
         ));
-        let perfect_match = Crate::name_canonically_equals(q_string).desc();
+        let perfect_match = Crate::with_name(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
@@ -778,7 +768,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::{date, now, sql, DayAndMonthIntervalDsl};
+    use diesel::dsl::*;
     use diesel::types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
@@ -871,7 +861,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::*;
+    use diesel::dsl::*;
 
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
@@ -1200,7 +1190,7 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::*;
+    use diesel::dsl::*;
     use diesel::types::BigInt;
 
     let crate_name = &req.params()["crate_id"];
@@ -1277,8 +1267,9 @@ fn follow_target(req: &mut Request) -> CargoResult<Follow> {
 pub fn follow(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
-    diesel::insert(&follow.on_conflict_do_nothing())
-        .into(follows::table)
+    diesel::insert_into(follows::table)
+        .values(&follow)
+        .on_conflict_do_nothing()
         .execute(&*conn)?;
     #[derive(Serialize)]
     struct R {
@@ -1301,7 +1292,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/following` route.
 pub fn following(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::exists;
+    use diesel::dsl::exists;
 
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
@@ -1466,7 +1457,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
+    use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;

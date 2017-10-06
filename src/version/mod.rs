@@ -130,7 +130,7 @@ impl Version {
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
         use schema::versions::dsl::readme_rendered_at;
-        use diesel::expression::now;
+        use diesel::dsl::now;
 
         diesel::update(self)
             .set(readme_rendered_at.eq(now.nullable()))
@@ -161,36 +161,34 @@ impl NewVersion {
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
-        use diesel::{insert, select};
-        use diesel::expression::dsl::exists;
+        use diesel::{insert_into, select};
+        use diesel::dsl::exists;
         use schema::versions::dsl::*;
-
-        let already_uploaded = versions
-            .filter(crate_id.eq(self.crate_id))
-            .filter(num.eq(&self.num));
-        if select(exists(already_uploaded)).get_result(conn)? {
-            return Err(human(&format_args!(
-                "crate version `{}` is already \
-                 uploaded",
-                self.num
-            )));
-        }
+        use schema::version_authors::{name, version_id};
 
         conn.transaction(|| {
-            let version = insert(self).into(versions).get_result::<Version>(conn)?;
+            let already_uploaded = versions
+                .filter(crate_id.eq(self.crate_id))
+                .filter(num.eq(&self.num));
+            if select(exists(already_uploaded)).get_result(conn)? {
+                return Err(human(&format_args!(
+                    "crate version `{}` is already \
+                     uploaded",
+                    self.num
+                )));
+            }
+
+            let version = insert_into(versions)
+                .values(self)
+                .get_result::<Version>(conn)?;
 
             let new_authors = authors
                 .iter()
-                .map(|s| {
-                    NewAuthor {
-                        version_id: version.id,
-                        name: &*s,
-                    }
-                })
+                .map(|s| (version_id.eq(version.id), name.eq(s)))
                 .collect::<Vec<_>>();
 
-            insert(&new_authors)
-                .into(version_authors::table)
+            insert_into(version_authors::table)
+                .values(&new_authors)
                 .execute(conn)?;
             Ok(version)
         })
@@ -216,13 +214,6 @@ impl NewVersion {
         }
         Ok(())
     }
-}
-
-#[derive(Insertable, Debug)]
-#[table_name = "version_authors"]
-struct NewAuthor<'a> {
-    version_id: i32,
-    name: &'a str,
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
@@ -261,7 +252,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
 /// Handles the `GET /versions` route.
 // FIXME: where/how is this used?
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
+    use diesel::dsl::any;
     let conn = req.db_conn()?;
 
     // Extract all ids requested.

@@ -626,7 +626,7 @@ fn test_insert_into_email_table_with_email_change() {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            email: Some("potato@example.com"),
+            email: Some("test_insert_with_change@example.com"),
             ..::new_user("potato")
         };
 
@@ -637,7 +637,7 @@ fn test_insert_into_email_table_with_email_change() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.email.unwrap(), "test_insert_with_change@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(!r.user.email_verified);
     assert!(r.user.email_verification_sent);
@@ -659,7 +659,7 @@ fn test_insert_into_email_table_with_email_change() {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            email: Some("banana@example.com"),
+            email: Some("banana2@example.com"),
             ..::new_user("potato")
         };
 
