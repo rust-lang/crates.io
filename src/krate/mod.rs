@@ -484,7 +484,7 @@ impl Crate {
                     owner.login(),
                     self.name
                 ))
-            },
+            }
             // Teams are added as owners immediately
             owner @ Owner::Team(_) => {
                 let crate_owner = CrateOwner {
