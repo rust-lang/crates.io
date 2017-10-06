@@ -699,7 +699,9 @@ fn new_krate_wrong_user() {
 
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("another user"),
+        json.errors[0]
+            .detail
+            .contains("this crate exists but you don't seem to be an owner.",),
         "{:?}",
         json.errors
     );
@@ -2001,6 +2003,56 @@ fn block_blacklisted_documentation_url() {
     let json: CrateResponse = ::json(&mut response);
 
     assert_eq!(json.krate.documentation, None);
+}
+
+// This is testing Cargo functionality! ! !
+// specifically functions modify_owners and add_owners
+// which call the `PUT /crates/:crate_id/owners` route
+#[test]
+fn test_cargo_invite_owners() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/");
+
+    let new_user = {
+        let conn = app.diesel_database.get().unwrap();
+        let owner = ::new_user("avocado").create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &owner);
+        ::CrateBuilder::new("guacamole", owner.id).expect_build(&conn);
+        ::new_user("cilantro").create_or_update(&conn).unwrap()
+    };
+
+    #[derive(Serialize)]
+    struct OwnerReq {
+        owners: Option<Vec<String>>,
+    }
+    #[derive(Deserialize, Debug)]
+    struct OwnerResp {
+        ok: bool,
+        msg: String,
+    }
+
+    let body = serde_json::to_string(&OwnerReq {
+        owners: Some(vec![new_user.gh_login]),
+    });
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/guacamole/owners")
+                .with_method(Method::Put)
+                .with_body(body.unwrap().as_bytes()),
+        )
+    );
+
+    let r = ::json::<OwnerResp>(&mut response);
+    // this ok:true field is what old versions of Cargo
+    // need - do not remove unless you're cool with
+    // dropping support for old versions
+    assert!(r.ok);
+    // msg field is what is sent and used in updated
+    // version of cargo
+    assert_eq!(
+        r.msg,
+        "user cilantro has been invited to be an owner of crate guacamole"
+    )
 }
 
 // #[test]

@@ -544,8 +544,8 @@ fn test_insert_into_email_table() {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            email: Some("potato@example.com"),
-            ..::new_user("potato")
+            email: Some("apple@example.com"),
+            ..::new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
@@ -554,8 +554,8 @@ fn test_insert_into_email_table() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potato@example.com");
-    assert_eq!(r.user.login, "potato");
+    assert_eq!(r.user.email.unwrap(), "apple@example.com");
+    assert_eq!(r.user.login, "apple");
 
     ::logout(&mut req);
 
@@ -565,7 +565,7 @@ fn test_insert_into_email_table() {
         let user = NewUser {
             gh_id: 1,
             email: Some("banana@example.com"),
-            ..::new_user("potato")
+            ..::new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
@@ -574,8 +574,8 @@ fn test_insert_into_email_table() {
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potato@example.com");
-    assert_eq!(r.user.login, "potato");
+    assert_eq!(r.user.email.unwrap(), "apple@example.com");
+    assert_eq!(r.user.login, "apple");
 }
 
 /* Given a new user, check that when an email is added,

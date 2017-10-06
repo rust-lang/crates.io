@@ -219,7 +219,9 @@ fn remove_team_as_named_owner() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("another user"),
+        json.errors[0]
+            .detail
+            .contains("this crate exists but you don't seem to be an owner.",),
         "{:?}",
         json.errors
     );
@@ -314,7 +316,9 @@ fn publish_not_owned() {
         )
     );
     assert!(
-        json.errors[0].detail.contains("another user"),
+        json.errors[0]
+            .detail
+            .contains("this crate exists but you don't seem to be an owner.",),
         "{:?}",
         json.errors
     );

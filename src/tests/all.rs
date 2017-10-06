@@ -100,7 +100,7 @@ mod token;
 mod user;
 mod version;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct GoodCrate {
     #[serde(rename = "crate")] krate: EncodableCrate,
     warnings: Warnings,
@@ -110,7 +110,7 @@ struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Warnings {
     invalid_categories: Vec<String>,
     invalid_badges: Vec<String>,

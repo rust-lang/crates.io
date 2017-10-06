@@ -27,6 +27,7 @@ use download::{EncodableVersionDownload, VersionDownload};
 use git;
 use keyword::{CrateKeyword, EncodableKeyword};
 use owner::{rights, CrateOwner, EncodableOwner, Owner, OwnerKind, Rights, Team};
+use crate_owner_invitation::NewCrateOwnerInvitation;
 use pagination::Paginate;
 use render;
 use schema::*;
@@ -460,22 +461,52 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<()> {
+    ) -> CargoResult<String> {
+        use diesel::insert;
+
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
-        let crate_owner = CrateOwner {
-            crate_id: self.id,
-            owner_id: owner.id(),
-            created_by: req_user.id,
-            owner_kind: owner.kind() as i32,
-        };
-        diesel::insert(&crate_owner.on_conflict(
-            crate_owners::table.primary_key(),
-            do_update().set(crate_owners::deleted.eq(false)),
-        )).into(crate_owners::table)
-            .execute(conn)?;
+        match owner {
+            // Users are invited and must accept before being added
+            owner @ Owner::User(_) => {
+                let owner_invitation = NewCrateOwnerInvitation {
+                    invited_user_id: owner.id(),
+                    invited_by_user_id: req_user.id,
+                    crate_id: self.id,
+                };
 
-        Ok(())
+                diesel::insert(&owner_invitation.on_conflict_do_nothing())
+                    .into(crate_owner_invitations::table)
+                    .execute(conn)?;
+
+                Ok(format!(
+                    "user {} has been invited to be an owner of crate {}",
+                    owner.login(),
+                    self.name
+                ))
+            }
+            // Teams are added as owners immediately
+            owner @ Owner::Team(_) => {
+                let crate_owner = CrateOwner {
+                    crate_id: self.id,
+                    owner_id: owner.id(),
+                    created_by: req_user.id,
+                    owner_kind: OwnerKind::Team as i32,
+                };
+
+                insert(&crate_owner.on_conflict(
+                    crate_owners::table.primary_key(),
+                    do_update().set(crate_owners::deleted.eq(false)),
+                )).into(crate_owners::table)
+                    .execute(conn)?;
+
+                Ok(format!(
+                    "team {} has been added as an owner of crate {}",
+                    owner.login(),
+                    self.name
+                ))
+            }
+        }
     }
 
     pub fn owner_remove(
@@ -924,8 +955,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         let owners = krate.owners(&conn)?;
         if rights(req.app(), &owners, &user)? < Rights::Publish {
             return Err(human(
-                "crate name has already been claimed by \
-                 another user",
+                "this crate exists but you don't seem to be an owner. \
+                 If you believe this is a mistake, perhaps you need \
+                 to accept an invitation to be an owner before \
+                 publishing.",
             ));
         }
 
@@ -1373,12 +1406,15 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         .or(request.users)
         .ok_or_else(|| human("invalid json request"))?;
 
+    let mut msgs = Vec::new();
+
     for login in &logins {
         if add {
             if owners.iter().any(|owner| owner.login() == *login) {
                 return Err(human(&format_args!("`{}` is already an owner", login)));
             }
-            krate.owner_add(req.app(), &conn, user, login)?;
+            let msg = krate.owner_add(req.app(), &conn, user, login)?;
+            msgs.push(msg);
         } else {
             // Removing the team that gives you rights is prevented because
             // team members only have Rights::Publish
@@ -1389,11 +1425,17 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
         }
     }
 
+    let comma_sep_msg = msgs.join(",");
+
     #[derive(Serialize)]
     struct R {
         ok: bool,
+        msg: String,
     }
-    Ok(req.json(&R { ok: true }))
+    Ok(req.json(&R {
+        ok: true,
+        msg: comma_sep_msg,
+    }))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
