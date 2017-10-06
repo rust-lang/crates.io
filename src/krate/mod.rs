@@ -461,23 +461,7 @@ impl Crate {
         req_user: &User,
         login: &str,
     ) -> CargoResult<()> {
-        let owner = match Owner::find_by_login(conn, login) {
-            Ok(owner @ Owner::User(_)) => owner,
-            Ok(Owner::Team(team)) => if team.contains_user(app, req_user)? {
-                Owner::Team(team)
-            } else {
-                return Err(human(&format_args!(
-                    "only members of {} can add it as \
-                     an owner",
-                    login
-                )));
-            },
-            Err(err) => if login.contains(':') {
-                Owner::Team(Team::create(app, conn, login, req_user)?)
-            } else {
-                return Err(err);
-            },
-        };
+        let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
         let crate_owner = CrateOwner {
             crate_id: self.id,
@@ -496,13 +480,13 @@ impl Crate {
 
     pub fn owner_remove(
         &self,
+        app: &App,
         conn: &PgConnection,
-        _req_user: &User,
+        req_user: &User,
         login: &str,
     ) -> CargoResult<()> {
-        let owner = Owner::find_by_login(conn, login).map_err(|_| {
-            human(&format_args!("could not find owner with login `{}`", login))
-        })?;
+        let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
+
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind() as i32));
         diesel::update(target)
             .set(crate_owners::deleted.eq(true))
@@ -1358,6 +1342,7 @@ pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
 fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
+
     let user = req.user()?;
     let conn = req.db_conn()?;
     let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
@@ -1400,7 +1385,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
             if owners.len() == 1 {
                 return Err(human("cannot remove the sole owner of a crate"));
             }
-            krate.owner_remove(&conn, user, login)?;
+            krate.owner_remove(req.app(), &conn, user, login)?;
         }
     }
 

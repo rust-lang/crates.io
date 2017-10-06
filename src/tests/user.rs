@@ -127,7 +127,7 @@ fn crates_by_user_id_not_including_deleted_owners() {
         let conn = app.diesel_database.get().unwrap();
         u = ::new_user("foo").create_or_update(&conn).unwrap();
         let krate = ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
-        krate.owner_remove(&conn, &u, "foo").unwrap();
+        krate.owner_remove(&app, &conn, &u, "foo").unwrap();
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
