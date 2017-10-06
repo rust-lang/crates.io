@@ -5,12 +5,10 @@ fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
     for (table_name, constraint) in get_fk_constraint_definitions("crate_id") {
         let constraint = match constraint {
             Some(c) => c,
-            None => {
-                panic!(
-                    "Column called crate_id on {} has no foreign key",
-                    table_name
-                )
-            }
+            None => panic!(
+                "Column called crate_id on {} has no foreign key",
+                table_name
+            ),
         };
         if !constraint.definition.contains("ON DELETE CASCADE") {
             panic!(
@@ -28,12 +26,10 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
     for (table_name, constraint) in get_fk_constraint_definitions("version_id") {
         let constraint = match constraint {
             Some(c) => c,
-            None => {
-                panic!(
-                    "Column called version_id on {} has no foreign key",
-                    table_name
-                )
-            }
+            None => panic!(
+                "Column called version_id on {} has no foreign key",
+                table_name
+            ),
         };
         if !constraint.definition.contains("ON DELETE CASCADE") {
             panic!(

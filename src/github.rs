@@ -78,9 +78,9 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
         }
     }
 
-    let json = str::from_utf8(data).ok().chain_error(|| {
-        internal("github didn't send a utf8-response")
-    })?;
+    let json = str::from_utf8(data)
+        .ok()
+        .chain_error(|| internal("github didn't send a utf8-response"))?;
 
     serde_json::from_str(json).chain_error(|| internal("github didn't send a valid json response"))
 }

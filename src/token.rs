@@ -15,10 +15,8 @@ use schema::api_tokens;
 #[belongs_to(User)]
 pub struct ApiToken {
     pub id: i32,
-    #[serde(skip)]
-    pub user_id: i32,
-    #[serde(skip)]
-    pub token: String,
+    #[serde(skip)] pub user_id: i32,
+    #[serde(skip)] pub token: String,
     pub name: String,
     pub created_at: NaiveDateTime,
     pub last_used_at: Option<NaiveDateTime>,
@@ -103,9 +101,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     let max_post_size = 2000;
-    let length = req.content_length().chain_error(|| {
-        bad_request("missing header: Content-Length")
-    })?;
+    let length = req.content_length()
+        .chain_error(|| bad_request("missing header: Content-Length"))?;
 
     if length > max_post_size {
         return Err(bad_request(&format!("max post size is: {}", max_post_size)));
@@ -114,9 +111,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
 
-    let json = String::from_utf8(json).map_err(|_| {
-        bad_request(&"json body was not valid utf-8")
-    })?;
+    let json = String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
 
     let new: NewApiTokenRequest = json::from_str(&json).map_err(|e| {
         bad_request(&format!("invalid new token request: {:?}", e))
@@ -130,9 +125,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
 
     let max_token_per_user = 500;
-    let count = ApiToken::belonging_to(user).count().get_result::<i64>(
-        &*req.db_conn()?,
-    )?;
+    let count = ApiToken::belonging_to(user)
+        .count()
+        .get_result::<i64>(&*req.db_conn()?)?;
     if count >= max_token_per_user {
         return Err(bad_request(&format!(
             "maximum tokens per user is: {}",
@@ -146,17 +141,18 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     struct R {
         api_token: EncodableApiTokenWithToken,
     }
-    Ok(req.json(&R { api_token: api_token.encodable_with_token() }))
+    Ok(req.json(&R {
+        api_token: api_token.encodable_with_token(),
+    }))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub fn revoke(req: &mut Request) -> CargoResult<Response> {
-    let id = req.params()["id"].parse::<i32>().map_err(|e| {
-        bad_request(&format!("invalid token id: {:?}", e))
-    })?;
+    let id = req.params()["id"]
+        .parse::<i32>()
+        .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;
 
-    diesel::delete(ApiToken::belonging_to(req.user()?).find(id))
-        .execute(&*req.db_conn()?)?;
+    diesel::delete(ApiToken::belonging_to(req.user()?).find(id)).execute(&*req.db_conn()?)?;
 
     #[derive(Serialize)]
     struct R {}

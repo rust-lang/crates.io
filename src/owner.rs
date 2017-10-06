@@ -176,8 +176,8 @@ impl Team {
 
         #[derive(Deserialize)]
         struct GithubTeam {
-            slug: String, // the name we want to find
-            id: i32, // unique GH id (needed for membership queries)
+            slug: String,         // the name we want to find
+            id: i32,              // unique GH id (needed for membership queries)
             name: Option<String>, // Pretty name
         }
 
@@ -339,12 +339,12 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User {
-                            id,
-                            name,
-                            gh_login,
-                            gh_avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                gh_login,
+                gh_avatar,
+                ..
+            }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
@@ -356,12 +356,12 @@ impl Owner {
                 }
             }
             Owner::Team(Team {
-                            id,
-                            name,
-                            login,
-                            avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                login,
+                avatar,
+                ..
+            }) => {
                 let url = Team::github_url(&login);
                 EncodableOwner {
                     id: id,
@@ -388,16 +388,12 @@ pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
     let mut best = Rights::None;
     for owner in owners {
         match *owner {
-            Owner::User(ref other_user) => {
-                if other_user.id == user.id {
-                    return Ok(Rights::Full);
-                }
-            }
-            Owner::Team(ref team) => {
-                if team.contains_user(app, user)? {
-                    best = Rights::Publish;
-                }
-            }
+            Owner::User(ref other_user) => if other_user.id == user.id {
+                return Ok(Rights::Full);
+            },
+            Owner::Team(ref team) => if team.contains_user(app, user)? {
+                best = Rights::Publish;
+            },
         }
     }
     Ok(best)

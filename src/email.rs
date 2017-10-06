@@ -74,9 +74,7 @@ pub fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()>
         None => {
             let mut sender = FileEmailTransport::new(Path::new("/tmp"));
             let result = sender.send(email.clone());
-            result.map_err(
-                |_| bad_request("Email file could not be generated"),
-            )?;
+            result.map_err(|_| bad_request("Email file could not be generated"))?;
         }
     }
 

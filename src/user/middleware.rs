@@ -23,9 +23,9 @@ impl conduit_middleware::Middleware for Middleware {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {
-            req.session().get("user_id").and_then(
-                |s| s.parse::<i32>().ok(),
-            )
+            req.session()
+                .get("user_id")
+                .and_then(|s| s.parse::<i32>().ok())
         };
 
         let conn = req.db_conn().map_err(std_error)?;
@@ -36,9 +36,8 @@ impl conduit_middleware::Middleware for Middleware {
             if let Ok(user) = maybe_user {
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
-                req.mut_extensions().insert(
-                    AuthenticationSource::SessionCookie,
-                );
+                req.mut_extensions()
+                    .insert(AuthenticationSource::SessionCookie);
             }
         } else {
             // Otherwise, look for an `Authorization` header on the request
@@ -66,9 +65,9 @@ pub trait RequestUser {
 
 impl<'a> RequestUser for Request + 'a {
     fn user(&self) -> CargoResult<&User> {
-        self.extensions().find::<User>().chain_error(
-            || Unauthorized,
-        )
+        self.extensions()
+            .find::<User>()
+            .chain_error(|| Unauthorized)
     }
 
     fn authentication_source(&self) -> CargoResult<AuthenticationSource> {

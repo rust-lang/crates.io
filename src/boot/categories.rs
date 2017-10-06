@@ -122,9 +122,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<
         categories::slug,
         do_update().set((
             categories::category.eq(excluded(categories::category)),
-            categories::description.eq(
-                excluded(categories::description),
-            ),
+            categories::description.eq(excluded(categories::description)),
         )),
     );
 

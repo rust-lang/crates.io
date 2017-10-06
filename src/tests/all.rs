@@ -102,8 +102,7 @@ mod version;
 
 #[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
+    #[serde(rename = "crate")] krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -121,7 +120,11 @@ struct CrateMeta {
     total: i32,
 }
 
-fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn app() -> (
+    record::Bomb,
+    Arc<App>,
+    conduit_middleware::MiddlewareBuilder,
+) {
     dotenv::dotenv().ok();
     git::init();
 
@@ -303,8 +306,7 @@ impl<'a> VersionBuilder<'a> {
             &self.features,
             license,
             self.license_file,
-        )?
-            .save(connection, &[])?;
+        )?.save(connection, &[])?;
 
         let new_deps = self.dependencies
             .into_iter()
@@ -318,9 +320,9 @@ impl<'a> VersionBuilder<'a> {
                 }
             })
             .collect::<Vec<_>>();
-        insert(&new_deps).into(dependencies::table).execute(
-            connection,
-        )?;
+        insert(&new_deps)
+            .into(dependencies::table)
+            .execute(connection)?;
 
         Ok(vers)
     }
@@ -486,9 +488,8 @@ fn krate(name: &str) -> Crate {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
-    req.mut_extensions().insert(
-        AuthenticationSource::SessionCookie,
-    );
+    req.mut_extensions()
+        .insert(AuthenticationSource::SessionCookie);
 }
 
 fn sign_in(req: &mut Request, app: &App) -> User {
@@ -683,14 +684,12 @@ fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8
             .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());
-    body.extend(
-        &[
-            (tarball.len() >> 0) as u8,
-            (tarball.len() >> 8) as u8,
-            (tarball.len() >> 16) as u8,
-            (tarball.len() >> 24) as u8,
-        ],
-    );
+    body.extend(&[
+        (tarball.len() >> 0) as u8,
+        (tarball.len() >> 8) as u8,
+        (tarball.len() >> 16) as u8,
+        (tarball.len() >> 24) as u8,
+    ]);
     body.extend(tarball);
     body
 }

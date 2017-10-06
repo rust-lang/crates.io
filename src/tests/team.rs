@@ -71,9 +71,9 @@ fn weird_name() {
         )
     );
     assert!(
-        json.errors[0].detail.contains(
-            "organization cannot contain",
-        ),
+        json.errors[0]
+            .detail
+            .contains("organization cannot contain",),
         "{:?}",
         json.errors
     );
@@ -115,9 +115,9 @@ fn nonexistent_team() {
         )
     );
     assert!(
-        json.errors[0].detail.contains(
-            "don't have permission to query a necessary property",
-        ),
+        json.errors[0]
+            .detail
+            .contains("don't have permission to query a necessary property",),
         "{:?}",
         json.errors
     );
@@ -200,9 +200,9 @@ fn remove_team_as_named_owner() {
         )
     );
     assert!(
-        json.errors[0].detail.contains(
-            "this crate exists but you don't seem to be an owner.",
-        ),
+        json.errors[0]
+            .detail
+            .contains("this crate exists but you don't seem to be an owner.",),
         "{:?}",
         json.errors
     );
@@ -238,9 +238,9 @@ fn remove_team_as_team_owner() {
     );
 
     assert!(
-        json.errors[0].detail.contains(
-            "only owners have permission",
-        ),
+        json.errors[0]
+            .detail
+            .contains("only owners have permission",),
         "{:?}",
         json.errors
     );
@@ -285,9 +285,9 @@ fn publish_not_owned() {
         )
     );
     assert!(
-        json.errors[0].detail.contains(
-            "this crate exists but you don't seem to be an owner.",
-        ),
+        json.errors[0]
+            .detail
+            .contains("this crate exists but you don't seem to be an owner.",),
         "{:?}",
         json.errors
     );
@@ -353,9 +353,9 @@ fn add_owners_as_team_owner() {
         )
     );
     assert!(
-        json.errors[0].detail.contains(
-            "only owners have permission",
-        ),
+        json.errors[0]
+            .detail
+            .contains("only owners have permission",),
         "{:?}",
         json.errors
     );
