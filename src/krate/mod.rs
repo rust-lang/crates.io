@@ -6,6 +6,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
+use diesel::expression::helper_types::Eq;
 use diesel::helper_types::Select;
 use diesel::pg::upsert::*;
 use diesel::pg::Pg;
@@ -280,12 +281,18 @@ impl<'a> NewCrate<'a> {
 impl Crate {
     pub fn by_name(name: &str) -> CrateQuery {
         Crate::all()
-            .filter(canon_crate_name(crates::name).eq(canon_crate_name(name)))
+            .filter(Crate::name_canonically_equals(name))
             .into_boxed()
     }
 
     pub fn all() -> Select<crates::table, AllColumns> {
         crates::table.select(ALL_COLUMNS)
+    }
+
+    fn name_canonically_equals(
+        s: &str,
+    ) -> Eq<canon_crate_name<crates::name>, canon_crate_name<&str>> {
+        canon_crate_name(crates::name).eq(canon_crate_name(s))
     }
 
     pub fn valid_name(name: &str) -> bool {
@@ -602,19 +609,18 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     if let Some(q_string) = params.get("q") {
         let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
-        let canon_q_string = canon_crate_name(q_string);
         let q = plainto_tsquery(q_string);
         query = query.filter(
             q.matches(crates::textsearchable_index_col)
-                .or(canon_crate_name(crates::name).eq(canon_q_string)),
+                .or(Crate::name_canonically_equals(q_string)),
         );
 
         query = query.select((
             ALL_COLUMNS,
-            canon_crate_name(crates::name).eq(canon_q_string),
+            Crate::name_canonically_equals(q_string),
             recent_downloads.clone(),
         ));
-        let perfect_match = canon_crate_name(crates::name).eq(canon_q_string).desc();
+        let perfect_match = Crate::name_canonically_equals(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
