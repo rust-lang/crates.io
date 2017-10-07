@@ -81,20 +81,46 @@ fn show() {
 }
 
 #[test]
-fn show_case_insensitive() {
+fn show_latest_user_case_insensitively() {
     let (_b, app, middle) = ::app();
     {
         let conn = t!(app.diesel_database.get());
 
+        // Please do not delete or modify the setup of this test in order to get it to pass.
+        // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
+        // available for anyone to take. We need to support having multiple user accounts
+        // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
+        // should be used for uniquely identifying GitHub accounts whenever possible. For the
+        // crates.io/user/:username pages, the best we can do is show the last crates.io account
+        // created with that username.
         t!(
-            NewUser::new(1, "foobar", Some("foo@bar.com"), None, None, "bar")
-                .create_or_update(&conn)
+            NewUser::new(
+                1,
+                "foobar",
+                Some("foo@bar.com"),
+                Some("I was first then deleted my github account"),
+                None,
+                "bar"
+            ).create_or_update(&conn)
+        );
+        t!(
+            NewUser::new(
+                2,
+                "FOOBAR",
+                Some("later-foo@bar.com"),
+                Some("I was second, I took the foobar username on github"),
+                None,
+                "bar"
+            ).create_or_update(&conn)
         );
     }
     let mut req = ::req(app.clone(), Method::Get, "api/v1/users/fOObAr");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPublicResponse = ::json(&mut response);
-    assert_eq!("foobar", json.user.login);
+    assert_eq!(
+        "I was second, I took the foobar username on github",
+        json.user.name.unwrap()
+    );
 }
 
 #[test]
