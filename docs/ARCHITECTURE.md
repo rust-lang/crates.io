@@ -67,7 +67,7 @@ These files have to do with the frontend:
 
 ## Deployment - Heroku
 
-Crates.io is deployed on [Heroku][https://heroku.com/]. See [`docs/MIRROR.md`][] for info about
+Crates.io is deployed on [Heroku](https://heroku.com/). See [`docs/MIRROR.md`][] for info about
 setting up your own instance on Heroku!
 
 [`docs/MIRROR.md`]: https://github.com/rust-lang/crates.io/blob/master/docs/MIRROR.md
