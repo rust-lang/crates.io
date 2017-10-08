@@ -44,6 +44,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         .into_iter()
         .map(Category::encodable)
         .collect();
+    let parents = cat.parent_categories(&conn)?
+        .into_iter()
+        .map(Category::encodable)
+        .collect();
 
     let cat = cat.encodable();
     let cat_with_subcats = EncodableCategoryWithSubcategories {
@@ -54,6 +58,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         created_at: cat.created_at,
         crates_cnt: cat.crates_cnt,
         subcategories: subcats,
+        parent_categories: parents,
     };
 
     #[derive(Serialize)]

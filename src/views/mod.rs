@@ -30,6 +30,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
+    pub parent_categories: Vec<EncodableCategory>,
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
