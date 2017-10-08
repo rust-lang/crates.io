@@ -17,6 +17,7 @@ pub enum Badge {
         repository: String,
         id: Option<String>,
         branch: Option<String>,
+        project_name: Option<String>,
         service: Option<String>,
     },
     #[serde(rename = "gitlab")]
