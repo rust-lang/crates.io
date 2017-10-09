@@ -456,12 +456,13 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    use self::users::dsl::{gh_login, users};
+    use self::users::dsl::{gh_login, id, users};
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
     let user = users
         .filter(::lower(gh_login).eq(name))
+        .order(id.desc())
         .first::<User>(&*conn)?;
 
     #[derive(Serialize)]
