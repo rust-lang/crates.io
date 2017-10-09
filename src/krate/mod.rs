@@ -777,6 +777,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::{date, now, sql, DayAndMonthIntervalDsl};
+    use diesel::types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -816,6 +818,20 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .limit(10)
         .load(&*conn)?;
 
+    let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
+    let most_recently_downloaded = crates
+        .left_join(
+            crate_downloads::table.on(
+                id.eq(crate_downloads::crate_id)
+                    .and(crate_downloads::date.gt(date(now - 90.days()))),
+            ),
+        )
+        .group_by(id)
+        .order(recent_downloads.desc().nulls_last())
+        .limit(10)
+        .select(ALL_COLUMNS)
+        .load::<Crate>(&*conn)?;
+
     let popular_keywords = keywords::table
         .order(keywords::crates_cnt.desc())
         .limit(10)
@@ -835,6 +851,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         num_crates: i64,
         new_crates: Vec<EncodableCrate>,
         most_downloaded: Vec<EncodableCrate>,
+        most_recently_downloaded: Vec<EncodableCrate>,
         just_updated: Vec<EncodableCrate>,
         popular_keywords: Vec<EncodableKeyword>,
         popular_categories: Vec<EncodableCategory>,
@@ -844,6 +861,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         num_crates: num_crates,
         new_crates: encode_crates(new_crates)?,
         most_downloaded: encode_crates(most_downloaded)?,
+        most_recently_downloaded: encode_crates(most_recently_downloaded)?,
         just_updated: encode_crates(just_updated)?,
         popular_keywords: popular_keywords,
         popular_categories: popular_categories,

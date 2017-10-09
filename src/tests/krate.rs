@@ -4,12 +4,13 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::fs::{self, File};
 
+use chrono::Utc;
 use conduit::{Handler, Method};
-
-use git2;
+use diesel::update;
 use self::diesel::prelude::*;
-use serde_json;
+use git2;
 use semver;
+use serde_json;
 
 use cargo_registry::dependency::EncodableDependency;
 use cargo_registry::download::EncodableVersionDownload;
@@ -18,11 +19,11 @@ use cargo_registry::keyword::EncodableKeyword;
 use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
 
 use cargo_registry::token::ApiToken;
-use cargo_registry::schema::{crates, versions};
+use cargo_registry::schema::{crates, metadata, versions};
 
 use cargo_registry::upload as u;
 use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::Category;
+use cargo_registry::category::{Category, EncodableCategory};
 
 use {CrateList, CrateMeta, GoodCrate};
 
@@ -49,6 +50,18 @@ struct RevDeps {
 #[derive(Deserialize)]
 struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
+}
+
+#[derive(Deserialize)]
+struct SummaryResponse {
+    num_downloads: i64,
+    num_crates: i64,
+    new_crates: Vec<EncodableCrate>,
+    most_downloaded: Vec<EncodableCrate>,
+    most_recently_downloaded: Vec<EncodableCrate>,
+    just_updated: Vec<EncodableCrate>,
+    popular_keywords: Vec<EncodableKeyword>,
+    popular_categories: Vec<EncodableCategory>,
 }
 
 fn new_crate(name: &str) -> u::NewCrate {
@@ -982,6 +995,80 @@ fn summary_doesnt_die() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(app, Method::Get, "/api/v1/summary");
     ok_resp!(middle.call(&mut req));
+}
+
+#[test]
+fn summary_new_crates() {
+    let (_b, app, middle) = ::app();
+    let u;
+    let krate;
+    let krate2;
+    let krate3;
+    {
+        let conn = app.diesel_database.get().unwrap();
+        u = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        krate = ::CrateBuilder::new("some_downloads", u.id)
+            .version(::VersionBuilder::new("0.1.0"))
+            .description("description")
+            .keyword("popular")
+            .downloads(20)
+            .recent_downloads(10)
+            .expect_build(&conn);
+
+        krate2 = ::CrateBuilder::new("most_recent_downloads", u.id)
+            .version(::VersionBuilder::new("0.2.0"))
+            .keyword("popular")
+            .downloads(5000)
+            .recent_downloads(50)
+            .expect_build(&conn);
+
+        krate3 = ::CrateBuilder::new("just_updated", u.id)
+            .version(::VersionBuilder::new("0.1.0"))
+            .expect_build(&conn);
+
+        ::CrateBuilder::new("with_downloads", u.id)
+            .version(::VersionBuilder::new("0.3.0"))
+            .keyword("popular")
+            .downloads(1000)
+            .expect_build(&conn);
+
+        ::new_category("Category 1", "cat1")
+            .create_or_update(&conn)
+            .unwrap();
+        Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
+        Category::update_crate(&conn, &krate2, &["cat1"]).unwrap();
+
+        // set total_downloads global value for `num_downloads` prop
+        update(metadata::table)
+            .set(metadata::total_downloads.eq(6000))
+            .execute(&*conn)
+            .unwrap();
+
+        // update 'just_updated' krate. Others won't appear because updated_at == created_at.
+        let updated = Utc::now().naive_utc();
+        update(&krate3)
+            .set(crates::updated_at.eq(updated))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+    let mut req = ::req(app.clone(), Method::Get, "/api/v1/summary");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: SummaryResponse = ::json(&mut response);
+
+    assert_eq!(json.num_crates, 4);
+    assert_eq!(json.num_downloads, 6000);
+    assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
+    assert_eq!(
+        json.most_recently_downloaded[0].name,
+        "most_recent_downloads"
+    );
+    assert_eq!(json.popular_keywords[0].keyword, "popular");
+    assert_eq!(json.popular_categories[0].category, "Category 1");
+    assert_eq!(json.just_updated.len(), 1);
+    assert_eq!(json.just_updated[0].name, "just_updated");
+    assert_eq!(json.new_crates.len(), 4);
 }
 
 #[test]
