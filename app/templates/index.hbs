@@ -48,6 +48,10 @@
         <h2>Just Updated</h2>
         {{crate-list crates=model.just_updated}}
     </div>
+    <div id='most-recently-downloaded'>
+        <h2>Most Recent Downloads</h2>
+        {{crate-list crates=model.most_recently_downloaded}}
+    </div>
     <div id='keywords'>
         <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}}</h2>
         {{keyword-list keywords=model.popular_keywords}}
