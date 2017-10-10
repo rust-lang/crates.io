@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
-use time::Timespec;
 
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::prelude::*;
@@ -10,14 +10,14 @@ use Crate;
 use db::RequestTransaction;
 use pagination::Paginate;
 use schema::*;
-use util::{RequestUtils, CargoResult};
+use util::{CargoResult, RequestUtils};
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
     pub crates_cnt: i32,
-    pub created_at: Timespec,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
@@ -34,7 +34,7 @@ pub struct CrateKeyword {
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
 
@@ -77,10 +77,10 @@ impl Keyword {
         if name.is_empty() {
             return false;
         }
-        name.chars().next().unwrap().is_alphanumeric() &&
-            name.chars().all(
-                |c| c.is_alphanumeric() || c == '_' || c == '-',
-            ) && name.chars().all(|c| c.is_ascii())
+        name.chars().next().unwrap().is_alphanumeric()
+            && name.chars()
+                .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+            && name.chars().all(|c| c.is_ascii())
     }
 
     pub fn encodable(self) -> EncodableKeyword {
@@ -92,7 +92,7 @@ impl Keyword {
         } = self;
         EncodableKeyword {
             id: keyword.clone(),
-            created_at: ::encode_time(created_at),
+            created_at: created_at,
             crates_cnt: crates_cnt,
             keyword: keyword,
         }
@@ -101,9 +101,7 @@ impl Keyword {
     pub fn update_crate(conn: &PgConnection, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
         conn.transaction(|| {
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
-            diesel::delete(CrateKeyword::belonging_to(krate)).execute(
-                conn,
-            )?;
+            diesel::delete(CrateKeyword::belonging_to(krate)).execute(conn)?;
             let crate_keywords = keywords
                 .into_iter()
                 .map(|kw| {
@@ -171,7 +169,9 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     struct R {
         keyword: EncodableKeyword,
     }
-    Ok(req.json(&R { keyword: kw.encodable() }))
+    Ok(req.json(&R {
+        keyword: kw.encodable(),
+    }))
 }
 
 #[cfg(test)]

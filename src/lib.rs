@@ -3,33 +3,29 @@
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
-
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
-#![recursion_limit="128"]
+#![recursion_limit = "128"]
 
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 extern crate ammonia;
 extern crate chrono;
 extern crate comrak;
 extern crate curl;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate diesel_full_text_search;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
 extern crate hex;
+extern crate lettre;
 extern crate license_exprs;
+#[macro_use]
+extern crate log;
 extern crate oauth2;
 extern crate openssl;
 extern crate r2d2;
@@ -38,20 +34,23 @@ extern crate rand;
 extern crate s3;
 extern crate semver;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
 extern crate tar;
-extern crate time;
 extern crate toml;
 extern crate url;
 
 extern crate conduit;
 extern crate conduit_conditional_get;
 extern crate conduit_cookie;
-extern crate cookie;
 extern crate conduit_git_http_backend;
 extern crate conduit_log_requests;
 extern crate conduit_middleware;
 extern crate conduit_router;
 extern crate conduit_static;
+extern crate cookie;
 
 pub use app::App;
 pub use self::badge::Badge;
@@ -63,7 +62,7 @@ pub use self::keyword::Keyword;
 pub use self::krate::Crate;
 pub use self::user::User;
 pub use self::version::Version;
-pub use self::uploaders::{Uploader, Bomb};
+pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
 use std::error::Error;
@@ -71,11 +70,11 @@ use std::error::Error;
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
 
-use util::{C, R, R404};
+use util::{R404, C, R};
 
 pub mod app;
 pub mod badge;
-pub mod categories;
+pub mod boot;
 pub mod category;
 pub mod config;
 pub mod crate_owner_invitation;
@@ -84,6 +83,7 @@ pub mod dependency;
 pub mod dist;
 pub mod download;
 pub mod git;
+pub mod github;
 pub mod http;
 pub mod keyword;
 pub mod krate;
@@ -96,6 +96,7 @@ pub mod uploaders;
 pub mod user;
 pub mod util;
 pub mod version;
+pub mod email;
 
 mod local_upload;
 mod pagination;
@@ -136,11 +137,25 @@ pub enum Replica {
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 
+    // Route used by both `cargo search` and the frontend
     api_router.get("/crates", C(krate::index));
-    api_router.get("/crates/:crate_id", C(krate::show));
+
+    // Routes used by `cargo`
     api_router.put("/crates/new", C(krate::new));
-    api_router.get("/crates/:crate_id/:version", C(version::show));
+    api_router.get("/crates/:crate_id/owners", C(krate::owners));
+    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
+    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
+    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
+    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+
+    // Routes that appear to be unused
+    api_router.get("/versions", C(version::index));
+    api_router.get("/versions/:version_id", C(version::show));
+
+    // Routes used by the frontend
+    api_router.get("/crates/:crate_id", C(krate::show));
+    api_router.get("/crates/:crate_id/:version", C(version::show));
     api_router.get("/crates/:crate_id/:version/readme", C(krate::readme));
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
@@ -151,27 +166,17 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(version::downloads),
     );
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
-    // Used to generate download graphs
     api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
-    // This endpoint may now be redundant, check frontend to see if it is
-    // being used
-    api_router.get("/crates/:crate_id/owners", C(krate::owners));
     api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
     api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));
-    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
-    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get(
         "/crates/:crate_id/reverse_dependencies",
         C(krate::reverse_dependencies),
     );
-    api_router.get("/versions", C(version::index));
-    api_router.get("/versions/:version_id", C(version::show));
     api_router.get("/keywords", C(keyword::index));
     api_router.get("/keywords/:keyword_id", C(keyword::show));
     api_router.get("/categories", C(category::index));
@@ -190,7 +195,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/me/crate_owner_invitations",
         C(crate_owner_invitation::list),
     );
+    api_router.put(
+        "/me/crate_owner_invitations/:crate_id",
+        C(crate_owner_invitation::handle_invite),
+    );
     api_router.get("/summary", C(krate::summary));
+    api_router.put("/confirm/:email_token", C(user::confirm_user_email));
+    api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
@@ -284,18 +295,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
             })
         }
     }
-}
-
-/// Convenience function for getting the current server time in UTC.
-pub fn now() -> time::Timespec {
-    time::now_utc().to_timespec()
-}
-
-/// Convenience function for getting a time in RFC 3339 format.
-///
-/// Example: `2012-02-22T14:53:18Z`. Used for returning time values in JSON API responses.
-pub fn encode_time(ts: time::Timespec) -> String {
-    time::at_utc(ts).rfc3339().to_string()
 }
 
 /// Convenience function requiring that an environment variable is set.

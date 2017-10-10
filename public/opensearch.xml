@@ -2,6 +2,6 @@
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
     <ShortName>Cargo</ShortName>
     <Description>Search for crates on crates.io</Description>
-    <Image width="16" height="16" type="image/x-icon">https://crates.io/favicon.ico</Image>
+    <Image type="image/png">https://crates.io/cargo.png</Image>
     <Url type="text/html" method="get" template="https://crates.io/search?q={searchTerms}"/>
 </OpenSearchDescription>

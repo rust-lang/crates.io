@@ -5,14 +5,14 @@ use krate::Crate;
 use s3;
 use semver;
 use tar;
-use util::{CargoResult, internal, human, ChainError};
-use util::{LimitErrorReader, read_le_u32, hash};
+use util::{human, internal, CargoResult, ChainError};
+use util::{hash, LimitErrorReader, read_le_u32};
 
 use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -45,13 +45,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                Some(format!(
-                    "https://{}/{}",
-                    bucket.host(),
-                    Uploader::crate_path(crate_name, version)
-                ))
-            }
+            Uploader::S3 { ref bucket, .. } => Some(format!(
+                "https://{}/{}",
+                bucket.host(),
+                Uploader::crate_path(crate_name, version)
+            )),
             Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
             Uploader::NoOp => None,
         }
@@ -63,13 +61,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                Some(format!(
-                    "https://{}/{}",
-                    bucket.host(),
-                    Uploader::readme_path(crate_name, version)
-                ))
-            }
+            Uploader::S3 { ref bucket, .. } => Some(format!(
+                "https://{}/{}",
+                bucket.host(),
+                Uploader::readme_path(crate_name, version)
+            )),
             Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
             Uploader::NoOp => None,
         }
@@ -154,9 +150,7 @@ impl Uploader {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(
-                &mut body,
-            )?;
+            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body)?;
             self.upload(
                 app.handle(),

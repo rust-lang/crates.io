@@ -1,10 +1,10 @@
 use diesel::prelude::*;
 
 use app::App;
-use http;
+use github;
 use schema::*;
-use util::{CargoResult, human};
-use {User, Crate};
+use util::{human, CargoResult};
+use {Crate, User};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -44,7 +44,8 @@ pub struct Team {
     /// We only query membership with github using the github_id, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,
-    /// We're assuming these are stable
+    /// The GitHub API works on team ID numbers. This can change, if a team
+    /// is deleted and then recreated with the same name!!!
     pub github_id: i32,
     /// Sugary goodness
     pub name: Option<String>,
@@ -107,7 +108,7 @@ impl<'a> NewTeam<'a> {
         use diesel::insert;
         use diesel::pg::upsert::*;
 
-        insert(&self.on_conflict(teams::github_id, do_update().set(self)))
+        insert(&self.on_conflict(teams::login, do_update().set(self)))
             .into(teams::table)
             .get_result(conn)
             .map_err(Into::into)
@@ -116,7 +117,7 @@ impl<'a> NewTeam<'a> {
 
 impl Team {
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    pub fn create(
+    pub fn create_or_update(
         app: &App,
         conn: &PgConnection,
         login: &str,
@@ -135,21 +136,19 @@ impl Team {
                          format is github:org:team",
                     )
                 })?;
-                Team::create_github_team(app, conn, login, org, team, req_user)
+                Team::create_or_update_github_team(app, conn, login, org, team, req_user)
             }
-            _ => {
-                Err(human(
-                    "unknown organization handler, \
-                     only 'github:org:team' is supported",
-                ))
-            }
+            _ => Err(human(
+                "unknown organization handler, \
+                 only 'github:org:team' is supported",
+            )),
         }
     }
 
-    /// Tries to create a Github Team from scratch. Assumes `org` and `team` are
+    /// Tries to create or update a Github Team. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    pub fn create_github_team(
+    fn create_or_update_github_team(
         app: &App,
         conn: &PgConnection,
         login: &str,
@@ -178,17 +177,17 @@ impl Team {
 
         #[derive(Deserialize)]
         struct GithubTeam {
-            slug: String, // the name we want to find
-            id: i32, // unique GH id (needed for membership queries)
+            slug: String,         // the name we want to find
+            id: i32,              // unique GH id (needed for membership queries)
             name: Option<String>, // Pretty name
         }
 
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
-        let token = http::token(req_user.gh_access_token.clone());
-        let (handle, data) = http::github(app, &url, &token)?;
-        let teams: Vec<GithubTeam> = http::parse_github_response(handle, &data)?;
+        let token = github::token(req_user.gh_access_token.clone());
+        let (handle, data) = github::github(app, &url, &token)?;
+        let teams: Vec<GithubTeam> = github::parse_github_response(handle, &data)?;
 
         let team = teams
             .into_iter()
@@ -211,8 +210,8 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let (handle, resp) = http::github(app, &url, &token)?;
-        let org: Org = http::parse_github_response(handle, &resp)?;
+        let (handle, resp) = github::github(app, &url, &token)?;
+        let org: Org = github::parse_github_response(handle, &resp)?;
 
         NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(conn)
     }
@@ -278,15 +277,15 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     }
 
     let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
-    let token = http::token(user.gh_access_token.clone());
-    let (mut handle, resp) = http::github(app, &url, &token)?;
+    let token = github::token(user.gh_access_token.clone());
+    let (mut handle, resp) = github::github(app, &url, &token)?;
 
     // Officially how `false` is returned
     if handle.response_code().unwrap() == 404 {
         return Ok(false);
     }
 
-    let membership: Membership = http::parse_github_response(handle, &resp)?;
+    let membership: Membership = github::parse_github_response(handle, &resp)?;
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
@@ -294,18 +293,22 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
 }
 
 impl Owner {
-    /// Finds the owner by name, failing out if it doesn't exist.
-    /// May be a user's GH login, or a full team name. This is case
+    /// Finds the owner by name. Always recreates teams to get the most
+    /// up-to-date GitHub ID. Fails out if the user isn't found in the
+    /// database, the team isn't found on GitHub, or if the user isn't a member
+    /// of the team on GitHub.
+    /// May be a user's GH login or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &PgConnection, name: &str) -> CargoResult<Owner> {
+    pub fn find_or_create_by_login(
+        app: &App,
+        conn: &PgConnection,
+        req_user: &User,
+        name: &str,
+    ) -> CargoResult<Owner> {
         if name.contains(':') {
-            teams::table
-                .filter(teams::login.eq(name))
-                .first(conn)
-                .map(Owner::Team)
-                .map_err(|_| {
-                    human(&format_args!("could not find team with name {}", name))
-                })
+            Ok(Owner::Team(
+                Team::create_or_update(app, conn, name, req_user)?,
+            ))
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
@@ -341,12 +344,12 @@ impl Owner {
     pub fn encodable(self) -> EncodableOwner {
         match self {
             Owner::User(User {
-                            id,
-                            name,
-                            gh_login,
-                            gh_avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                gh_login,
+                gh_avatar,
+                ..
+            }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
                     id: id,
@@ -358,12 +361,12 @@ impl Owner {
                 }
             }
             Owner::Team(Team {
-                            id,
-                            name,
-                            login,
-                            avatar,
-                            ..
-                        }) => {
+                id,
+                name,
+                login,
+                avatar,
+                ..
+            }) => {
                 let url = Team::github_url(&login);
                 EncodableOwner {
                     id: id,
@@ -390,16 +393,12 @@ pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
     let mut best = Rights::None;
     for owner in owners {
         match *owner {
-            Owner::User(ref other_user) => {
-                if other_user.id == user.id {
-                    return Ok(Rights::Full);
-                }
-            }
-            Owner::Team(ref team) => {
-                if team.contains_user(app, user)? {
-                    best = Rights::Publish;
-                }
-            }
+            Owner::User(ref other_user) => if other_user.id == user.id {
+                return Ok(Rights::Full);
+            },
+            Owner::Team(ref team) => if team.contains_user(app, user)? {
+                best = Rights::Publish;
+            },
         }
     }
     Ok(best)

@@ -28,6 +28,7 @@ Router.map(function() {
     this.route('me', function() {
         this.route('crates');
         this.route('following');
+        this.route('pending-invites');
     });
     this.route('user', { path: '/users/:user_id' });
     this.route('install');
@@ -45,6 +46,7 @@ Router.map(function() {
     this.route('catchAll', { path: '*path' });
     this.route('team', { path: '/teams/:team_id' });
     this.route('policies');
+    this.route('confirm', { path: '/confirm/:email_token' });
 });
 
 export default Router;

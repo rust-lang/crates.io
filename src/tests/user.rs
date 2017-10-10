@@ -4,7 +4,7 @@ use conduit::{Handler, Method};
 
 use cargo_registry::token::ApiToken;
 use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{User, NewUser, EncodablePrivateUser};
+use cargo_registry::user::{Email, EncodablePrivateUser, EncodablePublicUser, NewUser, User};
 use cargo_registry::version::EncodableVersion;
 
 use diesel::prelude::*;
@@ -16,7 +16,12 @@ struct AuthResponse {
 }
 
 #[derive(Deserialize)]
-pub struct UserShowResponse {
+pub struct UserShowPublicResponse {
+    pub user: EncodablePublicUser,
+}
+
+#[derive(Deserialize)]
+pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
 }
 
@@ -48,7 +53,7 @@ fn me() {
     let user = ::sign_in(&mut req, &app);
 
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowResponse = ::json(&mut response);
+    let json: UserShowPrivateResponse = ::json(&mut response);
 
     assert_eq!(json.user.email, user.email);
 }
@@ -65,17 +70,56 @@ fn show() {
 
     let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowResponse = ::json(&mut response);
-    // Emails should be None as when on the user/:user_id page, a user's email should
-    // not be accessible in order to keep private.
-    assert_eq!(None, json.user.email);
+    let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("foo", json.user.login);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
-    let json: UserShowResponse = ::json(&mut response);
-    assert_eq!(None, json.user.email);
+    let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
+}
+
+#[test]
+fn show_latest_user_case_insensitively() {
+    let (_b, app, middle) = ::app();
+    {
+        let conn = t!(app.diesel_database.get());
+
+        // Please do not delete or modify the setup of this test in order to get it to pass.
+        // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
+        // available for anyone to take. We need to support having multiple user accounts
+        // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
+        // should be used for uniquely identifying GitHub accounts whenever possible. For the
+        // crates.io/user/:username pages, the best we can do is show the last crates.io account
+        // created with that username.
+        t!(
+            NewUser::new(
+                1,
+                "foobar",
+                Some("foo@bar.com"),
+                Some("I was first then deleted my github account"),
+                None,
+                "bar"
+            ).create_or_update(&conn)
+        );
+        t!(
+            NewUser::new(
+                2,
+                "FOOBAR",
+                Some("later-foo@bar.com"),
+                Some("I was second, I took the foobar username on github"),
+                None,
+                "bar"
+            ).create_or_update(&conn)
+        );
+    }
+    let mut req = ::req(app.clone(), Method::Get, "api/v1/users/fOObAr");
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: UserShowPublicResponse = ::json(&mut response);
+    assert_eq!(
+        "I was second, I took the foobar username on github",
+        json.user.name.unwrap()
+    );
 }
 
 #[test]
@@ -108,7 +152,7 @@ fn crates_by_user_id_not_including_deleted_owners() {
         let conn = app.diesel_database.get().unwrap();
         u = ::new_user("foo").create_or_update(&conn).unwrap();
         let krate = ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
-        krate.owner_remove(&conn, &u, "foo").unwrap();
+        krate.owner_remove(&app, &conn, &u, "foo").unwrap();
     }
 
     let mut req = ::req(app, Method::Get, "/api/v1/crates");
@@ -151,11 +195,12 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me/updates").with_method(
-            Method::Get,
-        ),
-    ));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/me/updates",)
+                .with_method(Method::Get,),
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
@@ -173,11 +218,12 @@ fn following() {
         )
     );
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me/updates").with_method(
-            Method::Get,
-        ),
-    ));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/me/updates",)
+                .with_method(Method::Get,),
+        )
+    );
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
@@ -234,8 +280,8 @@ fn user_total_downloads() {
 
         let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
 
-        let mut another_krate = ::CrateBuilder::new("bar_krate1", another_user.id)
-            .expect_build(&conn);
+        let mut another_krate =
+            ::CrateBuilder::new("bar_krate1", another_user.id).expect_build(&conn);
         another_krate.downloads = 2;
         update(&another_krate)
             .set(&another_krate)
@@ -330,9 +376,7 @@ fn test_github_login_does_not_overwrite_email() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
@@ -360,9 +404,7 @@ fn test_github_login_does_not_overwrite_email() {
         ::sign_in_as(&mut req, &user);
     }
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
@@ -393,9 +435,7 @@ fn test_email_get_and_put() {
         user
     };
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
@@ -410,12 +450,12 @@ fn test_email_get_and_put() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path("/api/v1/me").with_method(Method::Get),
-    ));
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
 }
 
 /*  Given a crates.io user, check to make sure that the user
@@ -502,11 +542,233 @@ fn test_this_user_cannot_change_that_user_email() {
     );
 
     assert!(
-        json.errors[0].detail.contains(
-            "current user does not match requested user",
-        ),
+        json.errors[0]
+            .detail
+            .contains("current user does not match requested user",),
         "{:?}",
         json.errors
     );
+}
 
+/* Given a new user, test that if they sign in with
+   one email, change their email on GitHub, then
+   sign in again, that the email will remain
+   consistent with the original email used on
+   GitHub.
+*/
+#[test]
+fn test_insert_into_email_table() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("apple@example.com"),
+            ..::new_user("apple")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apple@example.com");
+    assert_eq!(r.user.login, "apple");
+
+    ::logout(&mut req);
+
+    // What if user changes their github user email
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("banana@example.com"),
+            ..::new_user("apple")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apple@example.com");
+    assert_eq!(r.user.login, "apple");
+}
+
+/* Given a new user, check that when an email is added,
+   changed by user on GitHub, changed on crates.io,
+   that the email remains consistent with that which
+   the user has changed
+*/
+#[test]
+fn test_insert_into_email_table_with_email_change() {
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("potato@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato@example.com");
+    assert_eq!(r.user.login, "potato");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
+
+    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/users/{}", user.id))
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    ::logout(&mut req);
+
+    // What if user changes their github user email
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            gh_id: 1,
+            email: Some("banana@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
+    assert!(!r.user.email_verified);
+    assert!(r.user.email_verification_sent);
+    assert_eq!(r.user.login, "potato");
+}
+
+/* Given a new user, test that their email can be added
+   to the email table and a token for the email is generated
+   and added to the token table. When /confirm/:email_token is
+   requested, check that the response back is ok, and that
+   the email_verified field on user is now set to true.
+*/
+#[test]
+fn test_confirm_user_email() {
+    use cargo_registry::schema::emails;
+
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    #[derive(Deserialize)]
+    struct S {
+        ok: bool,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let user = {
+        let conn = app.diesel_database.get().unwrap();
+        let user = NewUser {
+            email: Some("potato2@example.com"),
+            ..::new_user("potato")
+        };
+
+        let user = user.create_or_update(&conn).unwrap();
+        ::sign_in_as(&mut req, &user);
+        user
+    };
+
+    let email_token = {
+        let conn = app.diesel_database.get().unwrap();
+        Email::belonging_to(&user)
+            .select(emails::token)
+            .first::<String>(&*conn)
+            .unwrap()
+    };
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/confirm/{}", email_token))
+                .with_method(Method::Put),
+        )
+    );
+    assert!(::json::<S>(&mut response).ok);
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potato2@example.com");
+    assert_eq!(r.user.login, "potato");
+    assert!(r.user.email_verified);
+    assert!(r.user.email_verification_sent);
+}
+
+/* Given a user who existed before we added email confirmation,
+   test that `email_verification_sent` is false so that we don't
+   make the user think we've sent an email when we haven't.
+*/
+#[test]
+fn test_existing_user_email() {
+    use cargo_registry::schema::emails;
+    use chrono::NaiveDateTime;
+    use diesel::update;
+
+    #[derive(Deserialize)]
+    struct R {
+        user: EncodablePrivateUser,
+    }
+
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app.clone(), Method::Get, "/me");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let new_user = NewUser {
+            email: Some("potahto@example.com"),
+            ..::new_user("potahto")
+        };
+        let user = new_user.create_or_update(&conn).unwrap();
+        update(Email::belonging_to(&user))
+            // Users created before we added verification will have
+            // `NULL` in the `token_generated_at` column.
+            .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
+            .execute(&*conn)
+            .unwrap();
+        ::sign_in_as(&mut req, &user);
+    }
+
+    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
+    let r = ::json::<R>(&mut response);
+    assert_eq!(r.user.email.unwrap(), "potahto@example.com");
+    assert!(!r.user.email_verified);
+    assert!(!r.user.email_verification_sent);
 }

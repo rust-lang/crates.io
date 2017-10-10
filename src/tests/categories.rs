@@ -60,7 +60,7 @@ fn select_slugs(conn: &PgConnection) -> Vec<String> {
 fn sync_adds_new_categories() {
     let conn = pg_connection();
 
-    ::cargo_registry::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
 
     let categories = select_slugs(&conn);
     assert_eq!(categories, vec!["algorithms", "algorithms::such"]);
@@ -70,8 +70,8 @@ fn sync_adds_new_categories() {
 fn sync_removes_missing_categories() {
     let conn = pg_connection();
 
-    ::cargo_registry::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
-    ::cargo_registry::categories::sync_with_connection(ALGORITHMS, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS, &conn).unwrap();
 
     let categories = select_slugs(&conn);
     assert_eq!(categories, vec!["algorithms"]);
@@ -81,8 +81,9 @@ fn sync_removes_missing_categories() {
 fn sync_adds_and_removes() {
     let conn = pg_connection();
 
-    ::cargo_registry::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
-    ::cargo_registry::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &conn).unwrap();
+    ::cargo_registry::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &conn)
+        .unwrap();
 
     let categories = select_slugs(&conn);
     assert_eq!(categories, vec!["algorithms", "another"]);

@@ -94,7 +94,7 @@ instructions. If you already have these tools, or you have a different
 preferred method of installing packages like these, that should work fine.
 
 If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md)
-to install to ensure that the use of `npm` does not require the use of `sudo`.
+to ensure that the use of `npm` does not require the use of `sudo`.
 
 The front end should run fine after these steps. Please file an issue if you run
 into any trouble.
@@ -344,6 +344,35 @@ npm run start:local
 
 And then you should be able to visit http://localhost:4200!
 
+##### Using Mailgun to Send Emails
+
+We currently have email functionality enabled for confirming a user's email
+address. In development, the sending of emails is simulated by a file
+representing the email being created in your local `/tmp/` directory. If
+you want to test sending real emails, you will have to either set the
+Mailgun environment variables in `.env` manually or run your app instance
+on Heroku and add the Mailgun app.
+
+To set the environment variables manually, create an account and configure
+Mailgun. [These quick start instructions]
+(http://mailgun-documentation.readthedocs.io/en/latest/quickstart.html)
+might be helpful. Once you get the environment variables for the app, you
+will have to add them to the bottom of the `.env` file. You will need to
+fill in the `MAILGUN_SMTP_LOGIN`, `MAILGUN_SMTP_PASSWORD`, and
+`MAILGUN_SMTP_SERVER` fields.
+
+If using Heroku, you should be able to add the app to your instance on your
+dashboard. When your code is pushed and run on Heroku, the environment
+variables should be detected and you should not have to set anything
+manually.
+
+In either case, you should be able to check in your Mailgun account to see
+if emails are being detected and sent. Relevant information should be under
+the 'logs' tab on your Mailgun dashboard. To access, if the variables were
+set up manually, log in to your account. If the variables were set through
+Heroku, you should be able to click on the Mailgun icon in your Heroku
+dashboard, which should take you to your Mailgun dashboard.
+
 #### Running the backend tests
 
 In your `.env` file, set `TEST_DATABASE_URL` to a value that's the same as
@@ -405,13 +434,14 @@ live crates.io, you won't be able to publish that crate locally.
 In your crate directory, run:
 
 ```
-cargo publish --host file:///path/to/your/crates.io/checkout/tmp/index-co
+cargo publish --index file:///path/to/your/crates.io/checkout/tmp/index-co
 ```
+
+> If you're using an older version of cargo you should use `--host` instead of `--index`.
 
 where `file:///path/to/your/crates.io/checkout` is the directory that you have
 crates.io's code in, and `tmp/index-co` is the directory with the git index
-that `./script/init-local-index.sh` set up. [Yes, `host` dosen't really make
-sense as a name for this flag](https://github.com/rust-lang/cargo/issues/3797).
+that `./script/init-local-index.sh` set up.
 
 Note that when you're running crates.io in development mode without the S3
 variables set (which is what we've done in these setup steps), the crate files

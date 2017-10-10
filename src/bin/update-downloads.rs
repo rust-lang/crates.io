@@ -85,9 +85,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
         update(version_downloads::table.find(download.id))
             .set((
                 version_downloads::processed.eq(download.date < cutoff),
-                version_downloads::counted.eq(
-                    version_downloads::counted + amt,
-                ),
+                version_downloads::counted.eq(version_downloads::counted + amt),
             ))
             .execute(conn)?;
 
@@ -109,16 +107,8 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
             date: download.date,
         };
         insert(&crate_download.on_conflict(
-            (
-                crate_downloads::crate_id,
-                crate_downloads::date,
-            ),
-            do_update().set(
-                crate_downloads::downloads.eq(
-                    crate_downloads::downloads +
-                        amt,
-                ),
-            ),
+            (crate_downloads::crate_id, crate_downloads::date),
+            do_update().set(crate_downloads::downloads.eq(crate_downloads::downloads + amt)),
         )).into(crate_downloads::table)
             .execute(conn)?;
     }
@@ -126,9 +116,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     // After everything else is done, update the global counter of total
     // downloads.
     update(metadata::table)
-        .set(metadata::total_downloads.eq(
-            metadata::total_downloads + total,
-        ))
+        .set(metadata::total_downloads.eq(metadata::total_downloads + total))
         .execute(conn)?;
 
     Ok(())
@@ -145,8 +133,8 @@ mod test {
     use super::*;
     use cargo_registry::env;
     use cargo_registry::krate::{Crate, NewCrate};
-    use cargo_registry::user::{User, NewUser};
-    use cargo_registry::version::{Version, NewVersion};
+    use cargo_registry::user::{NewUser, User};
+    use cargo_registry::version::{NewVersion, Version};
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();

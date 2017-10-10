@@ -1,48 +1,52 @@
 #![deny(warnings)]
 
-#[macro_use]
-extern crate serde_derive;
-extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
-extern crate bufstream;
 extern crate cargo_registry;
 extern crate chrono;
 extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
+extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 extern crate dotenv;
+extern crate flate2;
 extern crate git2;
+extern crate s3;
 extern crate semver;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
-extern crate time;
+extern crate tar;
 extern crate url;
-extern crate s3;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::sync::Arc;
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
 use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{NewCrate, CrateDownload, EncodableCrate};
+use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
 use cargo_registry::schema::*;
 use cargo_registry::upload as u;
 use cargo_registry::user::NewUser;
 use cargo_registry::owner::{CrateOwner, NewTeam, Team};
 use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{User, Crate, Version, Dependency, Replica};
-use conduit::{Request, Method};
+use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use chrono::Utc;
+use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use diesel::pg::upsert::*;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 
 macro_rules! t {
     ($e:expr) => (
@@ -96,10 +100,9 @@ mod token;
 mod user;
 mod version;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
+    #[serde(rename = "crate")] krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -107,7 +110,7 @@ struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Warnings {
     invalid_categories: Vec<String>,
     invalid_badges: Vec<String>,
@@ -117,7 +120,11 @@ struct CrateMeta {
     total: i32,
 }
 
-fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn app() -> (
+    record::Bomb,
+    Arc<App>,
+    conduit_middleware::MiddlewareBuilder,
+) {
     dotenv::dotenv().ok();
     git::init();
 
@@ -131,8 +138,8 @@ fn app() -> (record::Bomb, Arc<App>, conduit_middleware::MiddlewareBuilder) {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            String::new(),
-            String::new(),
+            std::env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
+            std::env::var("S3_SECRET_KEY").unwrap_or(String::new()),
             &api_protocol,
         ),
         proxy: Some(proxy),
@@ -299,8 +306,7 @@ impl<'a> VersionBuilder<'a> {
             &self.features,
             license,
             self.license_file,
-        )?
-            .save(connection, &[])?;
+        )?.save(connection, &[])?;
 
         let new_deps = self.dependencies
             .into_iter()
@@ -314,9 +320,9 @@ impl<'a> VersionBuilder<'a> {
                 }
             })
             .collect::<Vec<_>>();
-        insert(&new_deps).into(dependencies::table).execute(
-            connection,
-        )?;
+        insert(&new_deps)
+            .into(dependencies::table)
+            .execute(connection)?;
 
         Ok(vers)
     }
@@ -406,7 +412,7 @@ impl<'a> CrateBuilder<'a> {
         // crate properties in a single DB call.
 
         let old_downloads = self.downloads.unwrap_or(0) - self.recent_downloads.unwrap_or(0);
-        let now = chrono::Utc::now();
+        let now = Utc::now();
         let old_date = now.naive_utc().date() - chrono::Duration::days(91);
 
         if let Some(downloads) = self.downloads {
@@ -467,8 +473,8 @@ fn krate(name: &str) -> Crate {
     cargo_registry::krate::Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
-        updated_at: time::now().to_timespec(),
-        created_at: time::now().to_timespec(),
+        updated_at: Utc::now().naive_utc(),
+        created_at: Utc::now().naive_utc(),
         downloads: 10,
         documentation: None,
         homepage: None,
@@ -482,9 +488,8 @@ fn krate(name: &str) -> Crate {
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
-    req.mut_extensions().insert(
-        AuthenticationSource::SessionCookie,
-    );
+    req.mut_extensions()
+        .insert(AuthenticationSource::SessionCookie);
 }
 
 fn sign_in(req: &mut Request, app: &App) -> User {
@@ -631,6 +636,7 @@ fn new_req_body(
 ) -> Vec<u8> {
     let kws = kws.into_iter().map(u::Keyword).collect();
     let cats = cats.into_iter().map(u::Category).collect();
+
     new_crate_to_body(
         &u::NewCrate {
             name: u::CrateName(krate.name),
@@ -653,7 +659,19 @@ fn new_req_body(
     )
 }
 
-fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
+fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut tarball = Vec::new();
+    {
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        for &(name, data) in files {
+            let mut header = tar::Header::new_gnu();
+            t!(header.set_path(name));
+            header.set_size(data.len() as u64);
+            header.set_cksum();
+            t!(ar.append(&header, &data[..]));
+        }
+        t!(ar.finish());
+    }
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
@@ -666,14 +684,12 @@ fn new_crate_to_body(new_crate: &u::NewCrate, krate: &[u8]) -> Vec<u8> {
             .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());
-    body.extend(
-        &[
-            (krate.len() >> 0) as u8,
-            (krate.len() >> 8) as u8,
-            (krate.len() >> 16) as u8,
-            (krate.len() >> 24) as u8,
-        ],
-    );
-    body.extend(krate);
+    body.extend(&[
+        (tarball.len() >> 0) as u8,
+        (tarball.len() >> 8) as u8,
+        (tarball.len() >> 16) as u8,
+        (tarball.len() >> 24) as u8,
+    ]);
+    body.extend(tarball);
     body
 }

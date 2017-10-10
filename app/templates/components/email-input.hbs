@@ -1,17 +1,22 @@
+{{#if emailIsNull }}
+    <div class='friendly-message'>
+        <p class='small-text'> Please add your email address. We will only use
+        it to contact you about your account. We promise we'll never share it!
+        </p>
+    </div>
+{{/if}}
+
 {{#if isEditing }}
     <div class='row'>
         <div class='label'>
             <dt>Email</dt>
         </div>
-        <form {{action 'saveEmail' on='submit'}}>
-            {{input type=type value=value placeholder='Email' class='form-control space-bottom'}}
+        <form class='email-form' {{action 'saveEmail' on='submit'}}>
+            {{input type=type value=value placeholder='Email' class='form-control space-right'}}
             {{#if notValidEmail }}
-                <p class='small-text error'>Invalid email format. Please try again.</p>
-            {{/if}}
-            {{#if emailIsNull }}
-                <p class='small-text'> Please add your email address. We will only use
-                it to contact you about your account. We promise we'll never share it!
-                </p>
+                <div class='error'>
+                    <p class='small-text error'>Whoops, that email format is invalid</p>
+                </div>
             {{/if}}
             <div class='actions'>
                 <button type='submit' class='small yellow-button space-right' disabled={{disableSave}}>Save</button>
@@ -20,15 +25,40 @@
         </form>
     </div>
 {{else}}
-    <div class='row align-center'>
+    <div class='row'>
         <div class='label'>
             <dt>Email</dt>
         </div>
         <div class='email'>
-            <dd class='no-space-left'>{{ user.email }}</dd>
+            <dd class='no-space-left'>
+                {{ user.email }}
+                {{#if user.email_verified}}
+                    <span class='verified'>Verified!</span>
+                {{/if}}
+            </dd>
         </div>
         <div class='actions'>
             <button class='small yellow-button space-left' {{action 'editEmail'}}>Edit</button>
         </div>
     </div>
+    {{#if emailNotVerified }}
+        <div class='row'>
+            <div class='label'>
+                {{#if user.email_verification_sent}}
+                    <p class='small-text'>We have sent a verification email to your address.</p>
+                {{/if}}
+                <p class='small-text'>Your email has not yet been verified.</p>
+            </div>
+            <div class='actions'>
+                <button class='small yellow-button space-left' {{action 'resendEmail'}} disabled={{disableResend}}>{{resendButtonText}}</button>
+            </div>
+        </div>
+    {{/if}}
+    {{#if isError}}
+        <div class='row'>
+            <div class='label'>
+                <p class='small-text'>{{emailError}}</p>
+            </div>
+        </div>
+    {{/if}}
 {{/if}}

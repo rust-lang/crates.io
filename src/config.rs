@@ -3,7 +3,7 @@ use s3;
 use std::env;
 use std::path::PathBuf;
 
-use {Env, env, Uploader, Replica};
+use {env, Env, Replica, Uploader};
 
 #[derive(Clone, Debug)]
 pub struct Config {
