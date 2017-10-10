@@ -54,54 +54,15 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
+    pub token: String,
+    pub token_generated_at: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
 #[table_name = "emails"]
-pub struct NewEmail<'a> {
-    pub user_id: i32,
-    pub email: &'a str,
-    pub verified: bool,
-}
-
-#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
-#[belongs_to(Email)]
-pub struct Token {
-    pub id: i32,
-    pub email_id: i32,
-    pub token: String,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Debug, Insertable, AsChangeset)]
-#[table_name = "tokens"]
-pub struct NewToken {
-    email_id: i32,
-    token: String,
-}
-
-impl NewToken {
-    fn generate(email_id: i32) -> Self {
-        NewToken {
-            token: generate_token(),
-            email_id,
-        }
-    }
-
-    fn regenerate(id: i32, conn: &PgConnection) -> QueryResult<String> {
-        use diesel::insert;
-        use diesel::expression::now;
-        use diesel::pg::upsert::*;
-        use schema::tokens::dsl::{created_at, email_id, token, tokens};
-
-        let new_token = Self::generate(id);
-        insert(&new_token.on_conflict(
-            email_id,
-            do_update().set((token.eq(&new_token.token), created_at.eq(now))),
-        )).into(tokens)
-            .returning(token)
-            .get_result(conn)
-    }
+struct NewEmail<'a> {
+    user_id: i32,
+    email: &'a str,
 }
 
 impl<'a> NewUser<'a> {
@@ -159,21 +120,16 @@ impl<'a> NewUser<'a> {
                 let new_email = NewEmail {
                     user_id: user.id,
                     email: user_email,
-                    verified: false,
                 };
 
-                let email_id = insert(&new_email.on_conflict_do_nothing())
+                let token = insert(&new_email.on_conflict_do_nothing())
                     .into(emails::table)
-                    .returning(emails::id)
-                    .get_result(conn)
+                    .returning(emails::token)
+                    .get_result::<String>(conn)
                     .optional()?;
 
-                if let Some(id) = email_id {
-                    let new_token = NewToken::generate(id);
-
-                    insert(&new_token).into(tokens::table).execute(conn)?;
-
-                    send_user_confirm_email(user_email, &user.gh_login, &new_token.token)
+                if let Some(token) = token {
+                    send_user_confirm_email(user_email, &user.gh_login, &token)
                         .map_err(|_| NotFound)?;
                 }
             }
@@ -411,38 +367,25 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
 
-    use self::users::dsl::{id, users};
-    use self::emails::dsl::{emails, user_id};
-    use diesel::select;
-    use diesel::expression::dsl::exists;
-
-    let u_id = req.user()?.id;
+    let id = req.user()?.id;
     let conn = req.db_conn()?;
 
-    let user_info = users.filter(id.eq(u_id)).first::<User>(&*conn)?;
-    let email_result = emails.filter(user_id.eq(u_id)).first::<Email>(&*conn);
+    let (user, verified, email, verification_sent) = users::table
+        .find(id)
+        .left_join(emails::table)
+        .select((
+            users::all_columns,
+            emails::verified.nullable(),
+            emails::email.nullable(),
+            emails::token_generated_at.nullable().is_not_null(),
+        ))
+        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
-    let (email, verified, verification_sent): (Option<String>, bool, bool) = match email_result {
-        Ok(email_record) => {
-            let verification_sent = if email_record.verified {
-                true
-            } else {
-                select(exists(Token::belonging_to(&email_record)))
-                    .get_result(&*conn)
-                    .unwrap_or(false)
-            };
-            (
-                Some(email_record.email),
-                email_record.verified,
-                verification_sent,
-            )
-        }
-        Err(_) => (None, false, false),
-    };
-
+    let verified = verified.unwrap_or(false);
+    let verification_sent = verified || verification_sent;
     let user = User {
         email: email,
-        ..user_info
+        ..user
     };
 
     #[derive(Serialize)]
@@ -611,15 +554,13 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         let new_email = NewEmail {
             user_id: user.id,
             email: user_email,
-            verified: false,
         };
 
-        let email_id = insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
+        let token = insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
             .into(emails::table)
-            .returning(emails::id)
-            .get_result(&*conn)
-            .map_err(|_| human("Error in updating email"))?;
-        let token = NewToken::regenerate(email_id, &conn)?;
+            .returning(emails::token)
+            .get_result::<String>(&*conn)
+            .map_err(|_| human("Error in creating token"))?;
 
         send_user_confirm_email(user_email, &user.gh_login, &token)
             .map_err(|_| bad_request("Email could not be sent"))
@@ -651,34 +592,18 @@ https://crates.io/confirm/{}",
 
 /// Handles the `PUT /confirm/:email_token` route
 pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
-    // to confirm, we must grab the token on the request as part of the URL
-    // look up the token in the tokens table
-    // find what user the token belongs to
-    // on the email table, change 'verified' to true
-    // delete the token from the tokens table
-    use diesel::{delete, update};
+    use diesel::update;
 
     let conn = req.db_conn()?;
     let req_token = &req.params()["email_token"];
 
-    let token_info = tokens::table
-        .filter(tokens::token.eq(req_token))
-        .first::<Token>(&*conn)
-        .map_err(|_| bad_request("Email token not found."))?;
-
-    let email_info = emails::table
-        .filter(emails::id.eq(token_info.email_id))
-        .first::<Email>(&*conn)
-        .map_err(|_| bad_request("Email belonging to token not found."))?;
-
-    update(emails::table.filter(emails::id.eq(email_info.id)))
+    let updated_rows = update(emails::table.filter(emails::token.eq(req_token)))
         .set(emails::verified.eq(true))
-        .execute(&*conn)
-        .map_err(|_| bad_request("Email verification could not be updated"))?;
+        .execute(&*conn)?;
 
-    delete(tokens::table.filter(tokens::id.eq(token_info.id)))
-        .execute(&*conn)
-        .map_err(|_| bad_request("Email token could not be deleted"))?;
+    if updated_rows == 0 {
+        return Err(bad_request("Email belonging to token not found."));
+    }
 
     #[derive(Serialize)]
     struct R {
@@ -689,6 +614,9 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles `PUT /user/:user_id/resend` route
 pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
+    use diesel::update;
+    use diesel::expression::sql;
+
     let user = req.user()?;
     let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
@@ -699,14 +627,12 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
     }
 
     conn.transaction(|| {
-        let email_info = emails::table
-            .filter(emails::user_id.eq(user.id))
-            .first::<Email>(&*conn)
+        let email = update(Email::belonging_to(user))
+            .set(emails::token.eq(sql("DEFAULT")))
+            .get_result::<Email>(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        let token = NewToken::regenerate(email_info.id, &conn)?;
-
-        send_user_confirm_email(&email_info.email, &user.gh_login, &token)
+        send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
 
@@ -715,9 +641,4 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
         ok: bool,
     }
     Ok(req.json(&R { ok: true }))
-}
-
-fn generate_token() -> String {
-    let token: String = thread_rng().gen_ascii_chars().take(26).collect();
-    token
 }
