@@ -8,7 +8,6 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use semver;
 use serde_json;
-use url;
 
 use Crate;
 use app::RequestApp;
@@ -22,6 +21,7 @@ use util::errors::CargoError;
 use util::{human, CargoResult, RequestUtils};
 use license_exprs;
 
+pub mod deprecated;
 pub mod downloads;
 
 // Queryable has a custom implementation below
@@ -257,63 +257,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
             license: row.8,
         }
     }
-}
-
-/// Handles the `GET /versions` route.
-// FIXME: where/how is this used?
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
-    let conn = req.db_conn()?;
-
-    // Extract all ids requested.
-    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
-    let ids = query
-        .filter_map(|(ref a, ref b)| if *a == "ids[]" {
-            b.parse().ok()
-        } else {
-            None
-        })
-        .collect::<Vec<i32>>();
-
-    let versions = versions::table
-        .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
-        .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String)>(&*conn)?
-        .into_iter()
-        .map(|(version, crate_name)| version.encodable(&crate_name))
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        versions: Vec<EncodableVersion>,
-    }
-    Ok(req.json(&R { versions: versions }))
-}
-
-/// Handles the `GET /versions/:version_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let (version, krate) = match req.params().find("crate_id") {
-        Some(..) => version_and_crate(req)?,
-        None => {
-            let id = &req.params()["version_id"];
-            let id = id.parse().unwrap_or(0);
-            let conn = req.db_conn()?;
-            versions::table
-                .find(id)
-                .inner_join(crates::table)
-                .select((versions::all_columns, ::krate::ALL_COLUMNS))
-                .first(&*conn)?
-        }
-    };
-
-    #[derive(Serialize)]
-    struct R {
-        version: EncodableVersion,
-    }
-    Ok(req.json(&R {
-        version: version.encodable(&krate.name),
-    }))
 }
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {

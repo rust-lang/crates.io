@@ -153,12 +153,12 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     );
 
     // Routes that appear to be unused
-    api_router.get("/versions", C(version::index));
-    api_router.get("/versions/:version_id", C(version::show));
+    api_router.get("/versions", C(version::deprecated::index));
+    api_router.get("/versions/:version_id", C(version::deprecated::show));
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::show));
+    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
         C(krate::metadata::readme),
