@@ -138,7 +138,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(krate::index));
+    api_router.get("/crates", C(krate::search::search));
 
     // Routes used by `cargo`
     api_router.put("/crates/new", C(krate::new));
