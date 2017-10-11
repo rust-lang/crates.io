@@ -25,7 +25,6 @@ use keyword::{CrateKeyword, EncodableKeyword};
 use owner::{CrateOwner, Owner, OwnerKind};
 use crate_owner_invitation::NewCrateOwnerInvitation;
 use schema::*;
-use user::RequestUser;
 use util::{human, CargoResult, RequestUtils};
 use version::EncodableVersion;
 use {Badge, Category, Keyword, Replica, User, Version};
@@ -33,6 +32,7 @@ use {Badge, Category, Keyword, Replica, User, Version};
 pub mod search;
 pub mod publish;
 pub mod owners;
+pub mod follow;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -838,59 +838,6 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
 pub struct Follow {
     user_id: i32,
     crate_id: i32,
-}
-
-fn follow_target(req: &mut Request) -> CargoResult<Follow> {
-    let user = req.user()?;
-    let conn = req.db_conn()?;
-    let crate_name = &req.params()["crate_id"];
-    let crate_id = Crate::by_name(crate_name).select(crates::id).first(&*conn)?;
-    Ok(Follow {
-        user_id: user.id,
-        crate_id: crate_id,
-    })
-}
-
-/// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: &mut Request) -> CargoResult<Response> {
-    let follow = follow_target(req)?;
-    let conn = req.db_conn()?;
-    diesel::insert(&follow.on_conflict_do_nothing())
-        .into(follows::table)
-        .execute(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
-}
-
-/// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
-    let follow = follow_target(req)?;
-    let conn = req.db_conn()?;
-    diesel::delete(&follow).execute(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
-}
-
-/// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::exists;
-
-    let follow = follow_target(req)?;
-    let conn = req.db_conn()?;
-    let following = diesel::select(exists(follows::table.find(follow.id()))).get_result(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        following: bool,
-    }
-    Ok(req.json(&R {
-        following: following,
-    }))
 }
 
 /// Handles the `GET /crates/:crate_id/versions` route.
