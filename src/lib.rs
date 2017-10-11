@@ -147,7 +147,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
     api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
-    api_router.get("/crates/:crate_id/:version/download", C(krate::download));
+    api_router.get(
+        "/crates/:crate_id/:version/download",
+        C(version::downloads::download),
+    );
 
     // Routes that appear to be unused
     api_router.get("/versions", C(version::index));
@@ -163,10 +166,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     );
     api_router.get(
         "/crates/:crate_id/:version/downloads",
-        C(version::downloads),
+        C(version::downloads::downloads),
     );
     api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
-    api_router.get("/crates/:crate_id/downloads", C(krate::downloads));
+    api_router.get(
+        "/crates/:crate_id/downloads",
+        C(krate::downloads::downloads),
+    );
     api_router.get("/crates/:crate_id/versions", C(krate::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));

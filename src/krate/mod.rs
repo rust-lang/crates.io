@@ -1,5 +1,4 @@
 use std::ascii::AsciiExt;
-use std::cmp;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use conduit::{Request, Response};
@@ -20,19 +19,19 @@ use badge::EncodableBadge;
 use category::{CrateCategory, EncodableCategory};
 use db::RequestTransaction;
 use dependency::{EncodableDependency, ReverseDependency};
-use download::{EncodableVersionDownload, VersionDownload};
 use keyword::{CrateKeyword, EncodableKeyword};
 use owner::{CrateOwner, Owner, OwnerKind};
 use crate_owner_invitation::NewCrateOwnerInvitation;
 use schema::*;
 use util::{human, CargoResult, RequestUtils};
 use version::EncodableVersion;
-use {Badge, Category, Keyword, Replica, User, Version};
+use {Badge, Category, Keyword, User, Version};
 
 pub mod search;
 pub mod publish;
 pub mod owners;
 pub mod follow;
+pub mod downloads;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -707,39 +706,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     )
 }
 
-/// Handles the `GET /crates/:crate_id/:version/download` route.
-/// This returns a URL to the location where the crate is stored.
-pub fn download(req: &mut Request) -> CargoResult<Response> {
-    let crate_name = &req.params()["crate_id"];
-    let version = &req.params()["version"];
-
-    // If we are a mirror, ignore failure to update download counts.
-    // API-only mirrors won't have any crates in their database, and
-    // incrementing the download count will look up the crate in the
-    // database. Mirrors just want to pass along a redirect URL.
-    if req.app().config.mirror == Replica::ReadOnlyMirror {
-        let _ = increment_download_counts(req, crate_name, version);
-    } else {
-        increment_download_counts(req, crate_name, version)?;
-    }
-
-    let redirect_url = req.app()
-        .config
-        .uploader
-        .crate_location(crate_name, version)
-        .ok_or_else(|| human("crate files not found"))?;
-
-    if req.wants_json() {
-        #[derive(Serialize)]
-        struct R {
-            url: String,
-        }
-        Ok(req.json(&R { url: redirect_url }))
-    } else {
-        Ok(req.redirect(redirect_url))
-    }
-}
-
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
 pub fn readme(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
@@ -760,75 +726,6 @@ pub fn readme(req: &mut Request) -> CargoResult<Response> {
     } else {
         Ok(req.redirect(redirect_url))
     }
-}
-
-fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
-    use self::versions::dsl::*;
-
-    let conn = req.db_conn()?;
-    let version_id = versions
-        .select(id)
-        .filter(crate_id.eq_any(Crate::by_name(crate_name).select(crates::id)))
-        .filter(num.eq(version))
-        .first(&*conn)?;
-
-    VersionDownload::create_or_increment(version_id, &conn)?;
-    Ok(())
-}
-
-/// Handles the `GET /crates/:crate_id/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::*;
-    use diesel::types::BigInt;
-
-    let crate_name = &req.params()["crate_id"];
-    let conn = req.db_conn()?;
-    let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
-
-    let downloads = VersionDownload::belonging_to(latest_five)
-        .filter(version_downloads::date.gt(date(now - 90.days())))
-        .order(version_downloads::date.asc())
-        .load(&*conn)?
-        .into_iter()
-        .map(VersionDownload::encodable)
-        .collect::<Vec<_>>();
-
-    let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-    let extra = VersionDownload::belonging_to(rest)
-        .select((
-            to_char(version_downloads::date, "YYYY-MM-DD"),
-            sum_downloads,
-        ))
-        .filter(version_downloads::date.gt(date(now - 90.days())))
-        .group_by(version_downloads::date)
-        .order(version_downloads::date.asc())
-        .load::<ExtraDownload>(&*conn)?;
-
-    #[derive(Serialize, Queryable)]
-    struct ExtraDownload {
-        date: String,
-        downloads: i64,
-    }
-    #[derive(Serialize)]
-    struct R {
-        version_downloads: Vec<EncodableVersionDownload>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        extra_downloads: Vec<ExtraDownload>,
-    }
-    let meta = Meta {
-        extra_downloads: extra,
-    };
-    Ok(req.json(&R {
-        version_downloads: downloads,
-        meta: meta,
-    }))
 }
 
 #[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]

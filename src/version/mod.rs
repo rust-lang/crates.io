@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel;
@@ -14,7 +14,6 @@ use Crate;
 use app::RequestApp;
 use db::RequestTransaction;
 use dependency::{Dependency, EncodableDependency};
-use download::{EncodableVersionDownload, VersionDownload};
 use git;
 use owner::{rights, Rights};
 use schema::*;
@@ -22,6 +21,8 @@ use user::RequestUser;
 use util::errors::CargoError;
 use util::{human, CargoResult, RequestUtils};
 use license_exprs;
+
+pub mod downloads;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
@@ -350,33 +351,6 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
         dependencies: Vec<EncodableDependency>,
     }
     Ok(req.json(&R { dependencies: deps }))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let cutoff_end_date = req.query()
-        .get("before_date")
-        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
-        .unwrap_or_else(|| Utc::today().naive_utc());
-    let cutoff_start_date = cutoff_end_date - Duration::days(89);
-
-    let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(cutoff_start_date..cutoff_end_date))
-        .order(version_downloads::date)
-        .load(&*conn)?
-        .into_iter()
-        .map(VersionDownload::encodable)
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        version_downloads: Vec<EncodableVersionDownload>,
-    }
-    Ok(req.json(&R {
-        version_downloads: downloads,
-    }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
