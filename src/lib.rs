@@ -141,7 +141,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/crates", C(krate::search::search));
 
     // Routes used by `cargo`
-    api_router.put("/crates/new", C(krate::new));
+    api_router.put("/crates/new", C(krate::publish::publish));
     api_router.get("/crates/:crate_id/owners", C(krate::owners));
     api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
     api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
