@@ -142,9 +142,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     // Routes used by `cargo`
     api_router.put("/crates/new", C(krate::publish::publish));
-    api_router.get("/crates/:crate_id/owners", C(krate::owners));
-    api_router.put("/crates/:crate_id/owners", C(krate::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::remove_owners));
+    api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
+    api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
+    api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
     api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
     api_router.get("/crates/:crate_id/:version/download", C(krate::download));
@@ -171,8 +171,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.put("/crates/:crate_id/follow", C(krate::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::unfollow));
     api_router.get("/crates/:crate_id/following", C(krate::following));
-    api_router.get("/crates/:crate_id/owner_team", C(krate::owner_team));
-    api_router.get("/crates/:crate_id/owner_user", C(krate::owner_user));
+    api_router.get("/crates/:crate_id/owner_team", C(krate::owners::owner_team));
+    api_router.get("/crates/:crate_id/owner_user", C(krate::owners::owner_user));
     api_router.get(
         "/crates/:crate_id/reverse_dependencies",
         C(krate::reverse_dependencies),
