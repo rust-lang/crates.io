@@ -145,8 +145,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
     api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
     api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank));
-    api_router.put("/crates/:crate_id/:version/unyank", C(version::unyank));
+    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
+    api_router.put(
+        "/crates/:crate_id/:version/unyank",
+        C(version::yank::unyank),
+    );
     api_router.get(
         "/crates/:crate_id/:version/download",
         C(version::downloads::download),
