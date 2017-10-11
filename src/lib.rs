@@ -208,10 +208,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     // Mount the router under the /api/v1 path so we're at least somewhat at the
     // liberty to change things in the future!
-    router.get("/api/v1/*path", R(api_router.clone()));
-    router.put("/api/v1/*path", R(api_router.clone()));
-    router.post("/api/v1/*path", R(api_router.clone()));
-    router.head("/api/v1/*path", R(api_router.clone()));
+    router.get("/api/v1/*path", R(Arc::clone(&api_router)));
+    router.put("/api/v1/*path", R(Arc::clone(&api_router)));
+    router.post("/api/v1/*path", R(Arc::clone(&api_router)));
+    router.head("/api/v1/*path", R(Arc::clone(&api_router)));
     router.delete("/api/v1/*path", R(api_router));
 
     router.get("/authorize_url", C(user::github_authorize));
@@ -225,7 +225,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env == Env::Development {
         let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
         let s = Arc::new(s);
-        router.get("/git/index/*path", R(s.clone()));
+        router.get("/git/index/*path", R(Arc::clone(&s)));
         router.post("/git/index/*path", R(s));
     }
 

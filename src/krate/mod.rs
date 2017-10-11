@@ -1,6 +1,7 @@
 use std::ascii::AsciiExt;
 use std::cmp;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use conduit::{Request, Response};
@@ -934,7 +935,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
-    let app = req.app().clone();
+    let app = Arc::clone(req.app());
     let (new_crate, user) = parse_new_headers(req)?;
 
     let name = &*new_crate.name;
@@ -1089,7 +1090,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 /// information.
 fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
     // Read the json upload request
-    let amt = read_le_u32(req.body())? as u64;
+    let amt = u64::from(read_le_u32(req.body())?);
     let max = req.app().config.max_upload_size;
     if amt > max {
         return Err(human(&format_args!("max upload size is: {}", max)));

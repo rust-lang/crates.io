@@ -145,7 +145,7 @@ impl Uploader {
         max: u64,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
-        let app = req.app().clone();
+        let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
@@ -157,13 +157,13 @@ impl Uploader {
                 &path,
                 &body,
                 "application/x-tar",
-                length as u64,
+                u64::from(length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
         let crate_bomb = Bomb {
-            app: app.clone(),
+            app: Arc::clone(&app),
             path: crate_path,
         };
         let (readme_path, _) = if let Some(rendered) = readme {
@@ -183,7 +183,7 @@ impl Uploader {
             checksum,
             crate_bomb,
             Bomb {
-                app: app.clone(),
+                app: Arc::clone(&app),
                 path: readme_path,
             },
         ))
@@ -216,7 +216,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(self.app.clone(), path) {
+            if let Err(e) = self.app.config.uploader.delete(Arc::clone(&self.app), path) {
                 println!("unable to delete {}, {:?}", path, e);
             }
         }
