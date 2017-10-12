@@ -133,8 +133,11 @@ impl Category {
             .load(conn)
     }
 
+    /// Gathers the parent categories from the top-level Category to the direct parent of this Category.
+    /// Returns categories as a Vector in order of traversal, not including this Category.
+    /// The intention is to be able to have slugs or parent categories arrayed in order, to
+    /// offer the frontend, for examples, slugs to create links to each parent category in turn.
     pub fn parent_categories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        // Path from top-level Category to this Category, not including this Category.
         use diesel::expression::dsl::*;
         use diesel::types::Text;
 
@@ -307,5 +310,31 @@ mod tests {
             .collect::<Vec<_>>();
         let expected = vec![("Cat 3".to_string(), 6), ("Cat 1".to_string(), 3)];
         assert_eq!(expected, categories);
+    }
+
+    #[test]
+    fn category_parent_categories_includes_path_to_node_with_count() {
+        let conn = pg_connection();
+        conn.batch_execute(
+            "INSERT INTO categories (category, slug, crates_cnt) VALUES
+            ('Cat 1', 'cat1', 1), ('Cat 1::sub1', 'cat1::sub1', 2),
+            ('Cat 1::sub2', 'cat1::sub2', 2), ('Cat 1::sub1::subsub1', 'cat1::sub1::subsub1', 2),
+            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
+            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 200)
+            ",
+        ).unwrap();
+
+        let cat = categories::table
+            .filter(categories::slug.eq("cat1::sub1"))
+            .first::<Category>(&conn)
+            .unwrap();
+        let subcats = cat.subcategories(&conn).unwrap();
+        let parents = cat.parent_categories(&conn).unwrap();
+
+        assert_eq!(parents.len(), 1);
+        assert_eq!(parents[0].slug, "cat1");
+        assert_eq!(parents[0].crates_cnt, 7);
+        assert_eq!(subcats.len(), 1);
+        assert_eq!(subcats[0].slug, "cat1::sub1::subsub1");
     }
 }
