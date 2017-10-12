@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
-use conduit::{Request, Response};
+use conduit::Request;
 use conduit_router::RequestParams;
 use diesel;
 use diesel::pg::Pg;
@@ -11,13 +11,14 @@ use serde_json;
 
 use Crate;
 use db::RequestTransaction;
-use dependency::{Dependency, EncodableDependency};
+use dependency::Dependency;
 use schema::*;
-use util::{human, CargoResult, RequestUtils};
+use util::{human, CargoResult};
 use license_exprs;
 
 pub mod deprecated;
 pub mod downloads;
+pub mod metadata;
 pub mod yank;
 
 // Queryable has a custom implementation below
@@ -274,48 +275,4 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
             ))
         })?;
     Ok((version, krate))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/dependencies` route.
-pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let deps = version.dependencies(&*conn)?;
-    let deps = deps.into_iter()
-        .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        dependencies: Vec<EncodableDependency>,
-    }
-    Ok(req.json(&R { dependencies: deps }))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let names = version_authors::table
-        .filter(version_authors::version_id.eq(version.id))
-        .select(version_authors::name)
-        .order(version_authors::name)
-        .load(&*conn)?;
-
-    // It was imagined that we wold associate authors with users.
-    // This was never implemented. This complicated return struct
-    // is all that is left, hear for backwards compatibility.
-    #[derive(Serialize)]
-    struct R {
-        users: Vec<::user::EncodablePublicUser>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        names: Vec<String>,
-    }
-    Ok(req.json(&R {
-        users: vec![],
-        meta: Meta { names: names },
-    }))
 }

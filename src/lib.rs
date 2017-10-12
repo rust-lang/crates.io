@@ -168,13 +168,16 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     );
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
-        C(version::dependencies),
+        C(version::metadata::dependencies),
     );
     api_router.get(
         "/crates/:crate_id/:version/downloads",
         C(version::downloads::downloads),
     );
-    api_router.get("/crates/:crate_id/:version/authors", C(version::authors));
+    api_router.get(
+        "/crates/:crate_id/:version/authors",
+        C(version::metadata::authors),
+    );
     api_router.get(
         "/crates/:crate_id/downloads",
         C(krate::downloads::downloads),
