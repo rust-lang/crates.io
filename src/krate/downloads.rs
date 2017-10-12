@@ -1,3 +1,8 @@
+//! Endpoint for exposing crate download counts
+//!
+//! The enpoints for download a crate and exposing version specific
+//! download counts are located in `krate::downloads`.
+
 use std::cmp;
 
 use conduit::{Request, Response};

@@ -1,3 +1,9 @@
+//! Endpoints that expose metadata about a crate
+//!
+//! These endpoints provide data that could be obtained direclty from the
+//! index or cached metadata which was extracted (client side) from the
+//! `Cargo.toml` file.
+
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::prelude::*;

@@ -1,3 +1,7 @@
+//! Functionality for downloading crates and maintaining download counts
+//!
+//! Crate level functionality is located in `krate::downloads`.
+
 use chrono::{Duration, NaiveDate, Utc};
 use conduit::{Request, Response};
 use conduit_router::RequestParams;

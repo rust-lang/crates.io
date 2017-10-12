@@ -1,3 +1,5 @@
+//! Endpoints for yanking and unyanking specific versions of crates
+
 use conduit::{Request, Response};
 use diesel;
 use diesel::prelude::*;

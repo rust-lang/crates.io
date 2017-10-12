@@ -1,3 +1,5 @@
+//! Functionality related to publishing a new crate or version of a crate.
+
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -1,3 +1,5 @@
+//! Endpoint for searching and discovery functionality
+
 use conduit::{Request, Response};
 use diesel::prelude::*;
 use diesel_full_text_search::*;
