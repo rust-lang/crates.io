@@ -472,3 +472,90 @@ this crate's `Cargo.toml`, and `cargo build` should display output like this:
    Compiling thiscrate v0.1.0 (file:///path/to/thiscrate)
     Finished dev [unoptimized + debuginfo] target(s) in 0.56 secs
 ```
+
+### Running crates.io with Docker
+
+There are Dockerfiles to build both the backend and the frontend,
+(`backend.Dockerfile` and `frontend.Dockerfile`) respectively, but it is most
+useful to just use docker-compose to bring up everything that's needed all in
+one go:
+
+```
+docker-compose up -d
+```
+
+The Compose file is filled out with a sane set of defaults that should Just
+Work™ out of the box without any modification. Individual settings can be
+overridden by creating a `docker-compose.override.yml` with the updated config.
+For example, in order to specify a set of Github OAuth Client credentials, a
+`docker-compose.override.yml` file might look like this:
+
+```yaml
+version: "3"
+services:
+  backend:
+    environment:
+      GH_CLIENT_ID: blahblah_ID
+      GH_CLIENT_SECRET: blahblah_secret
+```
+
+#### Accessing services
+
+By default, the services will be exposed on their normal ports:
+
+* `5432` for Postgres
+* `8888` for the crates.io backend
+* `4200` for the crates.io frontend
+
+These can be changed with the `docker-compose.override.yml` file.
+
+#### Publishing crates
+
+Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
+order to publish to the Dockerized crates.io, run
+
+```
+cargo publish --index http://localhost:4200/git/index
+```
+
+#### Changing code
+
+The `app/` directory is mounted directly into the frontend Docker container,
+which means that the Ember live-reload server will still just work. If
+anything outside of `app/` is changed, the base Docker image will have to be
+rebuilt:
+
+```sh
+# Rebuild frontend Docker image
+docker-compose build frontend
+
+# Restart running frontend container (if it's already running)
+docker-compose stop frontend
+docker-compose rm frontend
+docker-compose up -d
+```
+
+Similarly, the `src/` directory is mounted into the backend Docker container,
+so in order to recompile the backend, run:
+
+```
+docker-compose restart backend
+```
+
+If anything outside of `src/` is changed, the base Docker image will have to be
+rebuilt:
+
+```sh
+# Rebuild backend Docker image
+docker-compose build backend
+
+# Restart running backend container (if it's already running)
+docker-compose stop backend
+docker-compose rm backend
+docker-compose up -d
+```
+
+#### Volumes
+
+A number of names volumes are created, as can be seen in the `volumes` section
+of the `docker-compose.yml` file.
