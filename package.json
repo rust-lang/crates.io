@@ -62,7 +62,8 @@
     "emberx-select": "^3.0.1",
     "eslint-plugin-ember-suave": "^1.0.0",
     "loader.js": "^4.5.1",
-    "normalize.css": "^7.0.0"
+    "normalize.css": "^7.0.0",
+    "qunit-dom": "^0.3.2"
   },
   "engines": {
     "node": "^8.1.3",

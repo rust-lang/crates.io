@@ -1,6 +1,5 @@
 import { test } from 'qunit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | categories');
 
@@ -11,9 +10,9 @@ test('listing categories', async function(assert) {
 
     await visit('/categories');
 
-    hasText(assert, '.row:eq(0) .desc .info span', '0 crates');
-    hasText(assert, '.row:eq(1) .desc .info span', '1 crate');
-    hasText(assert, '.row:eq(2) .desc .info span', '3,910 crates');
+    assert.dom('.desc .info span', find('.row').get(0)).hasText('0 crates');
+    assert.dom('.desc .info span', find('.row').get(1)).hasText('1 crate');
+    assert.dom('.desc .info span', find('.row').get(2)).hasText('3,910 crates');
 });
 
 test('category/:category_id index default sort is recent-downloads', async function(assert) {
@@ -21,6 +20,5 @@ test('category/:category_id index default sort is recent-downloads', async funct
 
     await visit('/categories/algorithms');
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Recent Downloads');
+    assert.dom('div.sort div.dropdown-container a.dropdown').hasText('Recent Downloads');
 });
