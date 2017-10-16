@@ -1,4 +1,4 @@
-use ammonia::Ammonia;
+use ammonia::{Ammonia, UrlRelative};
 use comrak;
 
 use util::CargoResult;
@@ -11,7 +11,7 @@ pub struct MarkdownRenderer<'a> {
 
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
-    pub fn new() -> MarkdownRenderer<'a> {
+    pub fn new(repo: Option<&'a str>) -> MarkdownRenderer<'a> {
         let tags = [
             "a",
             "b",
@@ -94,12 +94,18 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
+        let url_relative = if let Some(repo) = repo {
+            UrlRelative::RewriteWithBase(repo)
+        } else {
+            UrlRelative::Deny
+        };
         let html_sanitizer = Ammonia {
             link_rel: Some("nofollow noopener noreferrer"),
             keep_cleaned_elements: true,
             tags: tags,
             tag_attributes: tag_attributes,
             allowed_classes: allowed_classes,
+            url_relative: url_relative,
             ..Ammonia::default()
         };
         MarkdownRenderer {
@@ -122,12 +128,6 @@ impl<'a> MarkdownRenderer<'a> {
     }
 }
 
-impl<'a> Default for MarkdownRenderer<'a> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Renders a markdown text to sanitized HTML.
 ///
 /// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
@@ -139,10 +139,13 @@ impl<'a> Default for MarkdownRenderer<'a> {
 /// use render::markdown_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = markdown_to_html(text)?;
+/// let rendered = markdown_to_html(text, None)?;
 /// ```
-pub fn markdown_to_html(text: &str) -> CargoResult<String> {
-    let renderer = MarkdownRenderer::new();
+pub fn markdown_to_html(text: &str, repo: Option<&str>) -> CargoResult<String> {
+    let repo = repo.map(|r|
+        format!("{}{}blob/master/", r, if r.ends_with("/") { "" } else { "/" }));
+
+    let renderer = MarkdownRenderer::new(repo.as_ref().map(|s| &**s));
     renderer.to_html(text)
 }
 
@@ -153,14 +156,14 @@ mod tests {
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(result, "");
     }
 
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
@@ -170,7 +173,7 @@ mod tests {
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
@@ -180,14 +183,14 @@ mod tests {
     #[test]
     fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(
             result,
             "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
@@ -199,7 +202,7 @@ mod tests {
     #[test]
     fn text_with_fancy_single_quotes() {
         let text = r#"wb’"#;
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(result, "<p>wb’</p>\n");
     }
 
@@ -208,14 +211,32 @@ mod tests {
         let code_block = r#"```rust \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block).unwrap();
+        let result = markdown_to_html(code_block, None).unwrap();
         assert!(result.contains("<code class=\"language-rust\">"));
     }
 
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        let result = markdown_to_html(text).unwrap();
+        let result = markdown_to_html(text, None).unwrap();
         assert_eq!(result, "<p>Hello World!</p>\n");
+    }
+
+    #[test]
+    fn relative_links() {
+        // The commented out behaviour is desirable, but not possible
+        // with what ammonia currently offers.
+
+        // let absolute = "[hi](/hi)";
+        let relative = "[there](there)";
+
+        for url in &["https://github.com/rust-lang/test",
+                     "https://github.com/rust-lang/test/"] {
+            // let result = markdown_to_html(absolute, Some(url)).unwrap();
+            // assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a>");
+
+            let result = markdown_to_html(relative, Some(url)).unwrap();
+            assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n");
+        }
     }
 }
