@@ -94,7 +94,8 @@ impl<'a> MarkdownRenderer<'a> {
             .cloned()
             .collect();
         let mut html_sanitizer = Builder::new();
-        html_sanitizer.link_rel(Some("nofollow noopener noreferrer"))
+        html_sanitizer
+            .link_rel(Some("nofollow noopener noreferrer"))
             .tags(tags)
             .tag_attributes(tag_attributes)
             .allowed_classes(allowed_classes)
@@ -221,13 +222,19 @@ mod tests {
     fn header_has_tags() {
         let text = "# My crate\n\nHello, world!\n";
         let result = markdown_to_html(text).unwrap();
-        assert_eq!(result, "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n");
+        assert_eq!(
+            result,
+            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
+        );
     }
 
     #[test]
     fn manual_anchor_is_sanitized() {
         let text = "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
         let result = markdown_to_html(text).unwrap();
-        assert_eq!(result, "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n");
+        assert_eq!(
+            result,
+            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
+        );
     }
 }
