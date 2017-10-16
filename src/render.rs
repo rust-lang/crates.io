@@ -265,21 +265,32 @@ mod tests {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
 
-        for url in &[
-            "https://github.com/rust-lang/test",
-            "https://github.com/rust-lang/test/",
-        ] {
-            let result = markdown_to_html(absolute, Some(url)).unwrap();
-            assert_eq!(
-                result,
-                "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
-            );
+        for host in &["github.com", "gitlab.com", "bitbucket.org"] {
+            for &extra_slash in &[true, false] {
+                let url = format!(
+                    "https://{}/rust-lang/test{}",
+                    host,
+                    if extra_slash { "/" } else { "" }
+                );
 
-            let result = markdown_to_html(relative, Some(url)).unwrap();
-            assert_eq!(
-                result,
-                "<p><a href=\"https://github.com/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n"
-            );
+                let result = markdown_to_html(absolute, Some(&url)).unwrap();
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><a href=\"https://{}/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(relative, Some(&url)).unwrap();
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><a href=\"https://{}/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
+                        host
+                    )
+                );
+            }
         }
 
         let result = markdown_to_html(absolute, Some("https://google.com/")).unwrap();
