@@ -1,4 +1,4 @@
-use ammonia::Ammonia;
+use ammonia::Builder;
 use comrak;
 
 use util::CargoResult;
@@ -6,7 +6,7 @@ use util::CargoResult;
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
 pub struct MarkdownRenderer<'a> {
-    html_sanitizer: Ammonia<'a>,
+    html_sanitizer: Builder<'a>,
 }
 
 impl<'a> MarkdownRenderer<'a> {
@@ -53,8 +53,7 @@ impl<'a> MarkdownRenderer<'a> {
             .cloned()
             .collect();
         let tag_attributes = [
-            ("a", ["href", "target"].iter().cloned().collect()),
-            ("code", ["class"].iter().cloned().collect()),
+            ("a", ["href", "id", "target"].iter().cloned().collect()),
             (
                 "img",
                 ["width", "height", "src", "alt", "align"]
@@ -94,14 +93,12 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
-        let html_sanitizer = Ammonia {
-            link_rel: Some("nofollow noopener noreferrer"),
-            keep_cleaned_elements: true,
-            tags: tags,
-            tag_attributes: tag_attributes,
-            allowed_classes: allowed_classes,
-            ..Ammonia::default()
-        };
+        let mut html_sanitizer = Builder::new();
+        html_sanitizer.link_rel(Some("nofollow noopener noreferrer"))
+            .tags(tags)
+            .tag_attributes(tag_attributes)
+            .allowed_classes(allowed_classes)
+            .id_prefix(Some("user-content-"));
         MarkdownRenderer {
             html_sanitizer: html_sanitizer,
         }
@@ -119,7 +116,7 @@ impl<'a> MarkdownRenderer<'a> {
             ..comrak::ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
-        Ok(self.html_sanitizer.clean(&rendered))
+        Ok(self.html_sanitizer.clean(&rendered).to_string())
     }
 }
 
@@ -218,5 +215,19 @@ mod tests {
         let text = "<p class='bad-class'>Hello World!</p>";
         let result = markdown_to_html(text).unwrap();
         assert_eq!(result, "<p>Hello World!</p>\n");
+    }
+
+    #[test]
+    fn header_has_tags() {
+        let text = "# My crate\n\nHello, world!\n";
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n");
+    }
+
+    #[test]
+    fn manual_anchor_is_sanitized() {
+        let text = "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
+        let result = markdown_to_html(text).unwrap();
+        assert_eq!(result, "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n");
     }
 }
