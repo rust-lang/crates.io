@@ -115,9 +115,7 @@ mod test {
 
     use std::collections::HashMap;
 
-    use diesel::dsl::sql;
     use diesel::insert_into;
-    use diesel::types::Integer;
     use super::*;
     use cargo_registry::env;
     use cargo_registry::krate::{Crate, NewCrate};
@@ -230,14 +228,18 @@ mod test {
 
     #[test]
     fn dont_process_recent_row() {
+        use diesel::dsl::*;
         let conn = conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, DATE(NOW() - INTERVAL '2 hours'), false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(2),
+                version_downloads::date.eq(date(now - 2.hours())),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
         ::update(&conn).unwrap();
@@ -264,18 +266,21 @@ mod test {
             .set(crates::updated_at.eq(now - 2.hours()))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 1, current_date, false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(1),
+                version_downloads::date.eq(date(now)),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, date)
-                    VALUES ($1, current_date - interval '1 day')",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::date.eq(date(now - 1.day())),
+            ))
             .execute(&conn)
             .unwrap();
 
@@ -325,11 +330,14 @@ mod test {
             .set(crates::updated_at.eq(now - 2.days()))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, current_date - interval '2 days', false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(2),
+                version_downloads::date.eq(date(now - 2.days())),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
 
