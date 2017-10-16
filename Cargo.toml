@@ -55,7 +55,7 @@ serde = "1.0.0"
 clippy = { version = "=0.0.162", optional = true }
 chrono = { version = "0.4.0", features = ["serde"] }
 comrak = { version = "0.1.9", default-features = false }
-ammonia = { git = "https://github.com/notriddle/ammonia" }
+ammonia = { git = "https://github.com/notriddle/ammonia", rev = "46054ff857f45a0c0a39b2794ba5361f014e6d90" }
 docopt = "0.8.1"
 itertools = "0.6.0"
 lettre = "0.6"

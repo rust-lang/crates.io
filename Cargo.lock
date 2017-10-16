@@ -36,7 +36,7 @@ dependencies = [
 [[package]]
 name = "ammonia"
 version = "1.0.0-rc1"
-source = "git+https://github.com/notriddle/ammonia#00f39f4fdbf7bf0540f58bd92d2dddddb2e63f4d"
+source = "git+https://github.com/notriddle/ammonia?rev=46054ff857f45a0c0a39b2794ba5361f014e6d90#46054ff857f45a0c0a39b2794ba5361f014e6d90"
 dependencies = [
  "html5ever 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -124,7 +124,7 @@ dependencies = [
 name = "cargo-registry"
 version = "0.2.1"
 dependencies = [
- "ammonia 1.0.0-rc1 (git+https://github.com/notriddle/ammonia)",
+ "ammonia 1.0.0-rc1 (git+https://github.com/notriddle/ammonia?rev=46054ff857f45a0c0a39b2794ba5361f014e6d90)",
  "cargo-registry-s3 0.2.0",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1823,7 +1823,7 @@ dependencies = [
 "checksum advapi32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e06588080cb19d0acb6739808aafa5f26bfb2ca015b2b6370028b44cf7cb8a9a"
 "checksum aho-corasick 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ca972c2ea5f742bfce5687b9aef75506a764f61d37f8f649047846a9686ddb66"
 "checksum aho-corasick 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "500909c4f87a9e52355b26626d890833e9e1d53ac566db76c36faa984b889699"
-"checksum ammonia 1.0.0-rc1 (git+https://github.com/notriddle/ammonia)" = "<none>"
+"checksum ammonia 1.0.0-rc1 (git+https://github.com/notriddle/ammonia?rev=46054ff857f45a0c0a39b2794ba5361f014e6d90)" = "<none>"
 "checksum antidote 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "34fde25430d87a9388dadbe6e34d7f72a462c8b43ac8d309b42b0a8505d7e2a5"
 "checksum backtrace 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "99f2ce94e22b8e664d95c57fff45b98a966c2252b60691d0b7aeeccd88d70983"
 "checksum backtrace-sys 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "afccc5772ba333abccdf60d55200fa3406f8c59dcf54d5f7998c9107d3799c7c"
