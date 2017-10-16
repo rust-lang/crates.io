@@ -255,7 +255,10 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
             manifest.package.readme.unwrap()
         );
         let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
-        markdown_to_html(&contents, manifest.package.repository.as_ref().map(|e| &**e)).expect(&format!(
+        markdown_to_html(
+            &contents,
+            manifest.package.repository.as_ref().map(|e| &**e),
+        ).expect(&format!(
             "[{}-{}] Couldn't render README",
             krate_name,
             version.num

@@ -101,7 +101,10 @@ impl<'a> MarkdownRenderer<'a> {
 
         let sanitizer_base_url = base_url.map(|s| s.to_string());
 
-        fn constrain_closure<F>(f: F) -> F where F: for<'a> Fn(&'a str) -> Option<Cow<'a, str>> + Send + Sync {
+        fn constrain_closure<F>(f: F) -> F
+        where
+            F: for<'a> Fn(&'a str) -> Option<Cow<'a, str>> + Send + Sync,
+        {
             f
         }
 
@@ -120,9 +123,8 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com") ||
-                    url.host_str() == Some("gitlab.com") ||
-                    url.host_str() == Some("bitbucket.org")
+                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
+                    || url.host_str() == Some("bitbucket.org")
             } else {
                 false
             }
@@ -131,7 +133,8 @@ impl<'a> MarkdownRenderer<'a> {
         };
 
         let mut html_sanitizer = Builder::new();
-        html_sanitizer.link_rel(Some("nofollow noopener noreferrer"))
+        html_sanitizer
+            .link_rel(Some("nofollow noopener noreferrer"))
             .tags(tags)
             .tag_attributes(tag_attributes)
             .allowed_classes(allowed_classes)
@@ -262,16 +265,27 @@ mod tests {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
 
-        for url in &["https://github.com/rust-lang/test",
-                     "https://github.com/rust-lang/test/"] {
+        for url in &[
+            "https://github.com/rust-lang/test",
+            "https://github.com/rust-lang/test/",
+        ] {
             let result = markdown_to_html(absolute, Some(url)).unwrap();
-            assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n");
+            assert_eq!(
+                result,
+                "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
+            );
 
             let result = markdown_to_html(relative, Some(url)).unwrap();
-            assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n");
+            assert_eq!(
+                result,
+                "<p><a href=\"https://github.com/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n"
+            );
         }
 
         let result = markdown_to_html(absolute, Some("https://google.com/")).unwrap();
-        assert_eq!(result, "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n");
+        assert_eq!(
+            result,
+            "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
+        );
     }
 }
