@@ -173,4 +173,8 @@ export default Controller.extend({
         },
     },
 
+    report: Ember.observer('crate.readme', function() {
+        setTimeout(() => $(window).trigger('hashchange'));
+    }),
+
 });
