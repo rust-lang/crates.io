@@ -163,7 +163,8 @@ impl Category {
              FROM categories as c \
              WHERE c.category ILIKE split_part($1, '::', 1)",
         ).bind::<Text, _>(&self.category)
-            .get_result(conn).into()
+            .get_result(conn)
+            .into()
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
