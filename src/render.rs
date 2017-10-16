@@ -1,17 +1,22 @@
-use ammonia::{Ammonia, UrlRelative};
+use ammonia::{Builder, UrlRelative};
 use comrak;
+use std::borrow::Cow;
+use url::Url;
 
 use util::CargoResult;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
 pub struct MarkdownRenderer<'a> {
-    html_sanitizer: Ammonia<'a>,
+    html_sanitizer: Builder<'a>,
 }
 
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
-    pub fn new(repo: Option<&'a str>) -> MarkdownRenderer<'a> {
+    ///
+    /// Per `markdown_to_html`, `base_url` is the base URL prepended to any
+    /// relative links in the input document.  See that function for more detail.
+    fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
         let tags = [
             "a",
             "b",
@@ -54,7 +59,6 @@ impl<'a> MarkdownRenderer<'a> {
             .collect();
         let tag_attributes = [
             ("a", ["href", "target"].iter().cloned().collect()),
-            ("code", ["class"].iter().cloned().collect()),
             (
                 "img",
                 ["width", "height", "src", "alt", "align"]
@@ -94,27 +98,56 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
-        let url_relative = if let Some(repo) = repo {
-            UrlRelative::RewriteWithBase(repo)
+
+        let sanitizer_base_url = base_url.map(|s| s.to_string());
+
+        fn constrain_closure<F>(f: F) -> F where F: for<'a> Fn(&'a str) -> Option<Cow<'a, str>> + Send + Sync {
+            f
+        }
+
+        let relative_url_sanitizer = constrain_closure(move |url| {
+            let mut new_url = sanitizer_base_url.clone().unwrap();
+            if !new_url.ends_with('/') {
+                new_url.push('/');
+            }
+            new_url += "blob/master";
+            if !url.starts_with('/') {
+                new_url.push('/');
+            }
+            new_url += url;
+            Some(Cow::Owned(new_url))
+        });
+
+        let use_relative = if let Some(base_url) = base_url {
+            if let Ok(url) = Url::parse(base_url) {
+                url.host_str() == Some("github.com") ||
+                    url.host_str() == Some("gitlab.com") ||
+                    url.host_str() == Some("bitbucket.org")
+            } else {
+                false
+            }
         } else {
-            UrlRelative::Deny
+            false
         };
-        let html_sanitizer = Ammonia {
-            link_rel: Some("nofollow noopener noreferrer"),
-            keep_cleaned_elements: true,
-            tags: tags,
-            tag_attributes: tag_attributes,
-            allowed_classes: allowed_classes,
-            url_relative: url_relative,
-            ..Ammonia::default()
-        };
+
+        let mut html_sanitizer = Builder::new();
+        html_sanitizer.link_rel(Some("nofollow noopener noreferrer"))
+            .tags(tags)
+            .tag_attributes(tag_attributes)
+            .allowed_classes(allowed_classes)
+            .url_relative(if use_relative {
+                UrlRelative::Custom(Box::new(relative_url_sanitizer))
+            } else {
+                UrlRelative::Deny
+            });
+
         MarkdownRenderer {
             html_sanitizer: html_sanitizer,
         }
     }
 
     /// Renders the given markdown to HTML using the current settings.
-    pub fn to_html(&self, text: &str) -> CargoResult<String> {
+    fn to_html(&self, text: &str) -> CargoResult<String> {
         let options = comrak::ComrakOptions {
             ext_autolink: true,
             ext_strikethrough: true,
@@ -124,7 +157,7 @@ impl<'a> MarkdownRenderer<'a> {
             ..comrak::ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
-        Ok(self.html_sanitizer.clean(&rendered))
+        Ok(self.html_sanitizer.clean(&rendered).to_string())
     }
 }
 
@@ -132,6 +165,11 @@ impl<'a> MarkdownRenderer<'a> {
 ///
 /// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
 /// onclick, onmouseover, etc.).
+///
+/// The `base_url` parameter will be used as the base for any relative links found in the
+/// Markdown, as long as its host part is github.com, gitlab.com, or bitbucket.org.  The
+/// supplied URL will be used as a directory base whether or not the relative link is
+/// prefixed with '/'.  If `None` is passed, relative links will be omitted.
 ///
 /// # Examples
 ///
@@ -141,11 +179,8 @@ impl<'a> MarkdownRenderer<'a> {
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = markdown_to_html(text, None)?;
 /// ```
-pub fn markdown_to_html(text: &str, repo: Option<&str>) -> CargoResult<String> {
-    let repo = repo.map(|r|
-        format!("{}{}blob/master/", r, if r.ends_with("/") { "" } else { "/" }));
-
-    let renderer = MarkdownRenderer::new(repo.as_ref().map(|s| &**s));
+pub fn markdown_to_html(text: &str, base_url: Option<&str>) -> CargoResult<String> {
+    let renderer = MarkdownRenderer::new(base_url);
     renderer.to_html(text)
 }
 
@@ -224,19 +259,19 @@ mod tests {
 
     #[test]
     fn relative_links() {
-        // The commented out behaviour is desirable, but not possible
-        // with what ammonia currently offers.
-
-        // let absolute = "[hi](/hi)";
+        let absolute = "[hi](/hi)";
         let relative = "[there](there)";
 
         for url in &["https://github.com/rust-lang/test",
                      "https://github.com/rust-lang/test/"] {
-            // let result = markdown_to_html(absolute, Some(url)).unwrap();
-            // assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a>");
+            let result = markdown_to_html(absolute, Some(url)).unwrap();
+            assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/hi\" rel=\"nofollow noopener noreferrer\">hi</a></p>\n");
 
             let result = markdown_to_html(relative, Some(url)).unwrap();
             assert_eq!(result, "<p><a href=\"https://github.com/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n");
         }
+
+        let result = markdown_to_html(absolute, Some("https://google.com/")).unwrap();
+        assert_eq!(result, "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n");
     }
 }
