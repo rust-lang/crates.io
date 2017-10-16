@@ -1,8 +1,11 @@
 {{ title category.category ' - Categories' }}
 
 <div id='crates-heading'>
-    {{svg-jar "crate"}}
-    <h1>{{ category.category }}</h1>
+    {{#link-to "categories"}}{{svg-jar "crate"}}{{/link-to}}
+    <h1>
+        {{#if category.parent}}{{link-to category.parent.category "category" category.parent.slug}}::{{/if}}
+        {{~ category.category }}
+    </h1>
 </div>
 
 <div>

@@ -48,6 +48,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
+    pub parent: Option<EncodableCategory>,
 }
 
 impl Category {
@@ -143,6 +144,28 @@ impl Category {
         ))).load(conn)
     }
 
+    pub fn parent(&self, conn: &PgConnection) -> Option<QueryResult<Category>> {
+        use diesel::expression::dsl::*;
+        use diesel::types::Text;
+
+        if !self.category.contains("::") {
+            return None;
+        }
+
+        sql::<categories::SqlType>(
+            "SELECT c.id, c.category, c.slug, c.description, \
+             COALESCE (( \
+             SELECT sum(c2.crates_cnt)::int \
+             FROM categories as c2 \
+             WHERE c2.slug = c.slug \
+             OR c2.slug LIKE c.slug || '::%' \
+             ), 0) as crates_cnt, c.created_at \
+             FROM categories as c \
+             WHERE c.category ILIKE split_part($1, '::', 1)",
+        ).bind::<Text, _>(&self.category)
+            .get_result(conn).into()
+    }
+
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
         use diesel::expression::dsl::*;
         use diesel::types::Text;
@@ -223,16 +246,27 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         .into_iter()
         .map(Category::encodable)
         .collect();
+    let parent = if let Some(qr) = cat.parent(&conn) {
+        Some(qr?.encodable())
+    } else {
+        None
+    };
 
     let cat = cat.encodable();
+    let category = if parent.is_some() {
+        cat.category.rsplit("::").collect::<Vec<_>>()[0].to_string()
+    } else {
+        cat.category
+    };
     let cat_with_subcats = EncodableCategoryWithSubcategories {
         id: cat.id,
-        category: cat.category,
+        category: category,
         slug: cat.slug,
         description: cat.description,
         created_at: cat.created_at,
         crates_cnt: cat.crates_cnt,
         subcategories: subcats,
+        parent: parent,
     };
 
     #[derive(Serialize)]
