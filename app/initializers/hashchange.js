@@ -1,7 +1,9 @@
+import $ from 'jquery';
+
 function decodeFragmentValue(hash) {
     try {
         return decodeURIComponent(hash.slice(1));
-    } catch (_) {
+    } catch(_) {
         return '';
     }
 }
@@ -26,7 +28,7 @@ function hashchange() {
     }
 }
 
-export function initialize(application) {
+export function initialize() {
     $(window).on('hashchange', hashchange);
 
     // If clicking on a link to the same fragment as currently in the address bar,
