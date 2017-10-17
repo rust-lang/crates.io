@@ -7,23 +7,25 @@ test('searching for "rust"', async function(assert) {
     server.loadFixtures();
 
     await visit('/');
-    await fillIn('input.search', 'rust');
+    await fillIn('[data-test-search-input]', 'rust');
 
-    findWithAssert('form.search').submit();
+    findWithAssert('[data-test-search-form]').submit();
 
     await wait();
 
     assert.equal(currentURL(), '/search?q=rust');
     assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
 
-    assert.dom('#crates-heading').hasText('Search Results for \'rust\'');
-    assert.dom('#results').hasText('Displaying 1-8 of 8 total results Sort by Relevance Relevance All-Time Downloads Recent Downloads');
-    assert.dom('#crates .row .desc .info').hasText('kinetic-rust');
-    assert.dom('#crates .row .desc .info .vers img[alt="0.0.16"]').exists();
+    assert.dom('[data-test-heading]')
+        .hasText('Search Results for \'rust\'');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    assert.dom('[data-test-search-sort]').hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads');
+    assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
+    assert.dom('[data-test-crate-row="0"] [data-test-version-badge]').hasAttribute('alt', '0.0.16');
 
-    assert.dom('#crates .row .desc .summary').hasText('A Kinetic protocol library written in Rust');
-    assert.dom('#crates .row .downloads').hasText('All-Time: 225');
-    assert.dom('#crates .row .desc .info img[alt="Maintenance intention for this crate"]').exists();
+    assert.dom('[data-test-crate-row="0"] [data-test-description]').hasText('A Kinetic protocol library written in Rust');
+    assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
+    assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
 });
 
 test('pressing S key to focus the search bar', async function(assert) {
@@ -33,17 +35,17 @@ test('pressing S key to focus the search bar', async function(assert) {
     const KEYCODE_A = 65;
 
     function assertSearchBarIsFocused() {
-        assert.dom('#cargo-desktop-search').isFocused();
-        find('#cargo-desktop-search').blur();
+        assert.dom('[data-test-search-input]').isFocused();
+        find('[data-test-search-input]').blur();
     }
 
     await visit('/');
 
-    findWithAssert('#cargo-desktop-search').blur();
+    findWithAssert('[data-test-search-input]').blur();
 
     await keyEvent(document, 'keypress', KEYCODE_A);
-    assert.dom('#cargo-desktop-search').isNotFocused();
-    find('#cargo-desktop-search').blur();
+    assert.dom('[data-test-search-input]').isNotFocused();
+    find('[data-test-search-input]').blur();
 
     await keyEvent(document, 'keypress', KEYCODE_S);
     assertSearchBarIsFocused();
@@ -56,11 +58,11 @@ test('check search results are by default displayed by relevance', async functio
     server.loadFixtures();
 
     await visit('/');
-    await fillIn('input.search', 'rust');
+    await fillIn('[data-test-search-input]', 'rust');
 
-    findWithAssert('form.search').submit();
+    findWithAssert('[data-test-search-form]').submit();
 
     await wait();
 
-    assert.dom('div.sort div.dropdown-container a.dropdown').hasText('Relevance');
+    assert.dom('[data-test-search-sort] [data-test-current-order]').hasText('Relevance');
 });
