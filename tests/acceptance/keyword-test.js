@@ -8,5 +8,5 @@ test('keyword/:keyword_id index default sort is recent-downloads', async functio
 
     await visit('/keywords/network');
 
-    assert.dom('div.sort div.dropdown-container a.dropdown').hasText('Recent Downloads');
+    assert.dom('[data-test-keyword-sort] [data-test-current-order]').hasText('Recent Downloads');
 });
