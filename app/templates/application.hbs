@@ -28,7 +28,7 @@
     </form>
 
     <div class='nav'>
-        {{#link-to "crates" (query-params letter="null" page=1)}}
+        {{#link-to "crates" (query-params letter="null" page=1) data-test-all-crates-link}}
             Browse All Crates
         {{/link-to}}
         <span class="sep">|</span>
@@ -71,7 +71,7 @@
                 {{/rl-dropdown}}
             {{/rl-dropdown-container}}
         {{else}}
-            {{#link-to "login"}}
+            {{#link-to "login" data-test-login-link}}
                     {{svg-jar "lock"}}
                     Log in with GitHub
             {{/link-to}}
