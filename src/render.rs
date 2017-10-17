@@ -6,13 +6,13 @@ use util::CargoResult;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
-pub struct MarkdownRenderer<'a> {
+struct MarkdownRenderer<'a> {
     html_sanitizer: Ammonia<'a>,
 }
 
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
-    pub fn new() -> MarkdownRenderer<'a> {
+    fn new() -> MarkdownRenderer<'a> {
         let tags = [
             "a",
             "b",
@@ -109,7 +109,7 @@ impl<'a> MarkdownRenderer<'a> {
     }
 
     /// Renders the given markdown to HTML using the current settings.
-    pub fn to_html(&self, text: &str) -> CargoResult<String> {
+    fn to_html(&self, text: &str) -> CargoResult<String> {
         let options = comrak::ComrakOptions {
             ext_autolink: true,
             ext_strikethrough: true,
@@ -129,24 +129,13 @@ impl<'a> Default for MarkdownRenderer<'a> {
     }
 }
 
-/// Renders a markdown text to sanitized HTML.
-///
-/// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
-/// onclick, onmouseover, etc.).
-///
-/// # Examples
-///
-/// ```
-/// use render::markdown_to_html;
-///
-/// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = markdown_to_html(text)?;
-/// ```
+/// Renders Markdown text to sanitized HTML.
 fn markdown_to_html(text: &str) -> CargoResult<String> {
     let renderer = MarkdownRenderer::new();
     renderer.to_html(text)
 }
 
+/// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
 static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
     ".md",
     ".markdown",
@@ -157,6 +146,20 @@ static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
     ".mkdown",
 ];
 
+/// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
+/// on the extension of the supplied filename.
+///
+/// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
+/// onclick, onmouseover, etc.).
+///
+/// # Examples
+///
+/// ```
+/// use render::render_to_html;
+///
+/// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
+/// let rendered = readme_to_html(text, "README.md")?;
+/// ```
 pub fn readme_to_html(text: &str, filename: &str) -> CargoResult<String> {
     for e in &MARKDOWN_EXTENSIONS {
         if filename.to_lowercase().ends_with(e) {
