@@ -158,7 +158,7 @@ static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
 ];
 
 pub fn readme_to_html(text: &str, filename: &str) -> CargoResult<String> {
-    for e in MARKDOWN_EXTENSIONS.iter() {
+    for e in &MARKDOWN_EXTENSIONS {
         if filename.to_lowercase().ends_with(e) {
             return markdown_to_html(text);
         }
