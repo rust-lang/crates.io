@@ -1033,7 +1033,10 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
         // Render the README for this crate
         let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::readme_to_html(&**readme, new_crate.readme_file.as_ref().map_or("README.md", |s| &**s))?),
+            Some(readme) => Some(render::readme_to_html(
+                &**readme,
+                new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+            )?),
             None => None,
         };
 

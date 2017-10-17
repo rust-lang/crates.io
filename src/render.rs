@@ -1,5 +1,6 @@
 use ammonia::Ammonia;
 use comrak;
+use htmlescape::encode_minimal;
 
 use util::CargoResult;
 
@@ -146,9 +147,24 @@ fn markdown_to_html(text: &str) -> CargoResult<String> {
     renderer.to_html(text)
 }
 
+static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
+    ".md",
+    ".markdown",
+    ".mdown",
+    ".mdwn",
+    ".mkd",
+    ".mkdn",
+    ".mkdown",
+];
+
 pub fn readme_to_html(text: &str, filename: &str) -> CargoResult<String> {
-    // Passthrough for now.
-    markdown_to_html(text)
+    for e in MARKDOWN_EXTENSIONS.iter() {
+        if filename.to_lowercase().ends_with(e) {
+            return markdown_to_html(text);
+        }
+    }
+
+    Ok(encode_minimal(text).replace("\n", "<br>\n"))
 }
 
 #[cfg(test)]
@@ -222,5 +238,25 @@ mod tests {
         let text = "<p class='bad-class'>Hello World!</p>";
         let result = markdown_to_html(text).unwrap();
         assert_eq!(result, "<p>Hello World!</p>\n");
+    }
+
+    #[test]
+    fn readme_to_html_renders_markdown() {
+        for f in &["readme.md", "README.MARKDOWN", "whatever.mkd"] {
+            assert_eq!(
+                readme_to_html("*lobster*", f).unwrap(),
+                "<p><em>lobster</em></p>\n"
+            );
+        }
+    }
+
+    #[test]
+    fn readme_to_html_renders_other_things() {
+        for f in &["readme", "readem.org", "blah.adoc"] {
+            assert_eq!(
+                readme_to_html("<script>lobster</script>\n\nis my friend\n", f).unwrap(),
+                "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
+            );
+        }
     }
 }
