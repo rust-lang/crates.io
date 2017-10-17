@@ -141,9 +141,14 @@ impl<'a> Default for MarkdownRenderer<'a> {
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = markdown_to_html(text)?;
 /// ```
-pub fn markdown_to_html(text: &str) -> CargoResult<String> {
+fn markdown_to_html(text: &str) -> CargoResult<String> {
     let renderer = MarkdownRenderer::new();
     renderer.to_html(text)
+}
+
+pub fn readme_to_html(text: &str, filename: &str) -> CargoResult<String> {
+    // Passthrough for now.
+    markdown_to_html(text)
 }
 
 #[cfg(test)]

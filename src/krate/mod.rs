@@ -65,6 +65,7 @@ pub struct Crate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
+    pub readme_file: Option<String>,
     pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
@@ -82,6 +83,7 @@ type AllColumns = (
     crates::homepage,
     crates::documentation,
     crates::readme,
+    crates::readme_file,
     crates::license,
     crates::repository,
     crates::max_upload_size,
@@ -97,6 +99,7 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::homepage,
     crates::documentation,
     crates::readme,
+    crates::readme_file,
     crates::license,
     crates::repository,
     crates::max_upload_size,
@@ -146,6 +149,7 @@ pub struct NewCrate<'a> {
     pub homepage: Option<&'a str>,
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
+    pub readme_file: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
     pub license: Option<&'a str>,
@@ -970,6 +974,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
+            readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
             repository: new_crate.repository.as_ref().map(|s| &**s),
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
@@ -1028,7 +1033,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
         // Render the README for this crate
         let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::markdown_to_html(&**readme)?),
+            Some(readme) => Some(render::readme_to_html(&**readme, new_crate.readme_file.as_ref().map_or("README.md", |s| &**s))?),
             None => None,
         };
 
