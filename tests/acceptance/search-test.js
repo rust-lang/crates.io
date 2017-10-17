@@ -1,4 +1,5 @@
 import { test } from 'qunit';
+import { fillIn, keyEvent, visit, triggerEvent, currentURL, blur } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
 moduleForAcceptance('Acceptance | search');
@@ -8,10 +9,7 @@ test('searching for "rust"', async function(assert) {
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
-
-    findWithAssert('[data-test-search-form]').submit();
-
-    await wait();
+    await triggerEvent('[data-test-search-form]', 'submit');
 
     assert.equal(currentURL(), '/search?q=rust');
     assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
@@ -31,27 +29,19 @@ test('searching for "rust"', async function(assert) {
 test('pressing S key to focus the search bar', async function(assert) {
     server.loadFixtures();
 
-    const KEYCODE_S = 83;
-    const KEYCODE_A = 65;
-
-    function assertSearchBarIsFocused() {
-        assert.dom('[data-test-search-input]').isFocused();
-        find('[data-test-search-input]').blur();
-    }
-
     await visit('/');
 
-    findWithAssert('[data-test-search-input]').blur();
-
-    await keyEvent(document, 'keypress', KEYCODE_A);
+    await blur('[data-test-search-input]');
+    await keyEvent(document, 'keypress', 'a');
     assert.dom('[data-test-search-input]').isNotFocused();
-    find('[data-test-search-input]').blur();
 
-    await keyEvent(document, 'keypress', KEYCODE_S);
-    assertSearchBarIsFocused();
+    await blur('[data-test-search-input]');
+    await keyEvent(document, 'keypress', 's');
+    assert.dom('[data-test-search-input]').isFocused();
 
-    await keyEvent(document, 'keydown', KEYCODE_S);
-    assertSearchBarIsFocused();
+    await blur('[data-test-search-input]');
+    await keyEvent(document, 'keydown', 's');
+    assert.dom('[data-test-search-input]').isFocused();
 });
 
 test('check search results are by default displayed by relevance', async function(assert) {
@@ -59,10 +49,7 @@ test('check search results are by default displayed by relevance', async functio
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
-
-    findWithAssert('[data-test-search-form]').submit();
-
-    await wait();
+    await triggerEvent('[data-test-search-form]', 'submit');
 
     assert.dom('[data-test-search-sort] [data-test-current-order]').hasText('Relevance');
 });
