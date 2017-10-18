@@ -97,6 +97,7 @@ pub mod user;
 pub mod util;
 pub mod version;
 pub mod email;
+pub mod site_metadata;
 
 mod local_upload;
 mod pagination;
@@ -217,6 +218,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/summary", C(krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::confirm_user_email));
     api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
+    api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();
