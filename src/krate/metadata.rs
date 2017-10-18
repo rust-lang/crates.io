@@ -22,7 +22,7 @@ use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::{date, now, sql, DayAndMonthIntervalDsl};
+    use diesel::dsl::*;
     use diesel::types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
@@ -115,7 +115,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::*;
+    use diesel::dsl::*;
 
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
@@ -216,7 +216,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
 pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
+    use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;

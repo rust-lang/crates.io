@@ -19,7 +19,7 @@ use super::{to_char, Crate};
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::*;
+    use diesel::dsl::*;
     use diesel::types::BigInt;
 
     let crate_name = &req.params()["crate_id"];

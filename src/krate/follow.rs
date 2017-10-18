@@ -3,7 +3,6 @@
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
-use diesel::pg::upsert::*;
 use diesel::prelude::*;
 use diesel;
 
@@ -29,8 +28,9 @@ fn follow_target(req: &mut Request) -> CargoResult<Follow> {
 pub fn follow(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
-    diesel::insert(&follow.on_conflict_do_nothing())
-        .into(follows::table)
+    diesel::insert_into(follows::table)
+        .values(&follow)
+        .on_conflict_do_nothing()
         .execute(&*conn)?;
     #[derive(Serialize)]
     struct R {
@@ -53,7 +53,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id/following` route.
 pub fn following(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::exists;
+    use diesel::dsl::exists;
 
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;

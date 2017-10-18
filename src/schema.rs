@@ -783,3 +783,26 @@ joinable!(version_authors -> users (user_id));
 joinable!(version_authors -> versions (version_id));
 joinable!(version_downloads -> versions (version_id));
 joinable!(versions -> crates (crate_id));
+
+allow_tables_to_appear_in_same_query!(
+    api_tokens,
+    badges,
+    categories,
+    crate_downloads,
+    crate_owner_invitations,
+    crate_owners,
+    crates,
+    crates_categories,
+    crates_keywords,
+    dependencies,
+    emails,
+    follows,
+    keywords,
+    metadata,
+    reserved_crate_names,
+    teams,
+    users,
+    version_authors,
+    version_downloads,
+    versions,
+);

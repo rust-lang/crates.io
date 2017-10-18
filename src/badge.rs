@@ -81,15 +81,7 @@ impl Badge {
         krate: &Crate,
         badges: Option<&'a HashMap<String, HashMap<String, String>>>,
     ) -> QueryResult<Vec<&'a str>> {
-        use diesel::{delete, insert};
-
-        #[derive(Insertable, Debug)]
-        #[table_name = "badges"]
-        struct NewBadge<'a> {
-            crate_id: i32,
-            badge_type: &'a str,
-            attributes: serde_json::Value,
-        }
+        use diesel::{delete, insert_into};
 
         let mut invalid_badges = vec![];
         let mut new_badges = vec![];
@@ -100,11 +92,11 @@ impl Badge {
 
                 let json = json!({"badge_type": k, "attributes": attributes_json});
                 if serde_json::from_value::<Badge>(json).is_ok() {
-                    new_badges.push(NewBadge {
-                        crate_id: krate.id,
-                        badge_type: &**k,
-                        attributes: attributes_json,
-                    });
+                    new_badges.push((
+                        badges::crate_id.eq(krate.id),
+                        badges::badge_type.eq(k),
+                        badges::attributes.eq(attributes_json),
+                    ));
                 } else {
                     invalid_badges.push(&**k);
                 }
@@ -112,8 +104,10 @@ impl Badge {
         }
 
         conn.transaction(|| {
-            delete(badges::table.filter(badges::crate_id.eq(krate.id))).execute(conn)?;
-            insert(&new_badges).into(badges::table).execute(conn)?;
+            delete(badges::table)
+                .filter(badges::crate_id.eq(krate.id))
+                .execute(conn)?;
+            insert_into(badges::table).values(&new_badges).execute(conn)?;
             Ok(invalid_badges)
         })
     }

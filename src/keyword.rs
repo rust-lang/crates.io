@@ -46,28 +46,19 @@ impl Keyword {
     }
 
     pub fn find_or_create_all(conn: &PgConnection, names: &[&str]) -> QueryResult<Vec<Keyword>> {
-        use diesel::pg::upsert::*;
-        use diesel::expression::dsl::any;
-
-        #[derive(Insertable, Debug, Clone, Copy)]
-        #[table_name = "keywords"]
-        struct NewKeyword<'a> {
-            keyword: &'a str,
-        }
+        use diesel::dsl::any;
 
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
         let new_keywords: Vec<_> = lowercase_names
             .iter()
-            .map(|s| NewKeyword { keyword: s })
+            .map(|s| keywords::keyword.eq(s))
             .collect();
 
-        // https://github.com/diesel-rs/diesel/issues/797
-        if !new_keywords.is_empty() {
-            diesel::insert(&new_keywords.on_conflict_do_nothing())
-                .into(keywords::table)
-                .execute(conn)?;
-        }
+        diesel::insert_into(keywords::table)
+            .values(&new_keywords)
+            .on_conflict_do_nothing()
+            .execute(conn)?;
         keywords::table
             .filter(keywords::keyword.eq(any(&lowercase_names)))
             .load(conn)
@@ -111,8 +102,8 @@ impl Keyword {
                     }
                 })
                 .collect::<Vec<_>>();
-            diesel::insert(&crate_keywords)
-                .into(crates_keywords::table)
+            diesel::insert_into(crates_keywords::table)
+                .values(&crate_keywords)
                 .execute(conn)?;
             Ok(())
         })
@@ -182,12 +173,6 @@ mod tests {
     use diesel;
     use diesel::connection::SimpleConnection;
 
-    #[derive(Insertable, Debug, Clone, Copy)]
-    #[table_name = "keywords"]
-    struct NewKeyword<'a> {
-        keyword: &'a str,
-    }
-
     fn pg_connection() -> PgConnection {
         let _ = dotenv();
         let database_url =
@@ -203,10 +188,9 @@ mod tests {
         let conn = pg_connection();
         // The code should be preventing lowercased keywords from existing,
         // but if one happens to sneak in there, don't associate crates with it.
-        let bad_keyword = NewKeyword { keyword: "NO" };
 
-        diesel::insert(&bad_keyword)
-            .into(keywords::table)
+        diesel::insert_into(keywords::table)
+            .values(keywords::keyword.eq("NO"))
             .execute(&conn)
             .unwrap();
 

@@ -36,10 +36,8 @@ use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::{AsExpression, DayAndMonthIntervalDsl};
+    use diesel::dsl::*;
     use diesel::types::{BigInt, Bool, Nullable};
-    use diesel::expression::functions::date_and_time::{date, now};
-    use diesel::expression::sql_literal::sql;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -62,7 +60,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .group_by(crates::id)
         .select((
             ALL_COLUMNS,
-            AsExpression::<Bool>::as_expression(false),
+            false.into_sql::<Bool>(),
             recent_downloads.clone(),
         ))
         .into_boxed();
@@ -80,15 +78,15 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         let q = plainto_tsquery(q_string);
         query = query.filter(
             q.matches(crates::textsearchable_index_col)
-                .or(Crate::name_canonically_equals(q_string)),
+                .or(Crate::with_name(q_string)),
         );
 
         query = query.select((
             ALL_COLUMNS,
-            Crate::name_canonically_equals(q_string),
+            Crate::with_name(q_string),
             recent_downloads.clone(),
         ));
-        let perfect_match = Crate::name_canonically_equals(q_string).desc();
+        let perfect_match = Crate::with_name(q_string).desc();
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {

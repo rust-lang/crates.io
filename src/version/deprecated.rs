@@ -18,7 +18,7 @@ use super::{version_and_crate, EncodableVersion, Version};
 
 /// Handles the `GET /versions` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
+    use diesel::dsl::any;
     let conn = req.db_conn()?;
 
     // Extract all ids requested.
