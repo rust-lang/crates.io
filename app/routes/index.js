@@ -24,6 +24,7 @@ export default Route.extend({
             addCrates(this.store, data.new_crates);
             addCrates(this.store, data.most_downloaded);
             addCrates(this.store, data.just_updated);
+            addCrates(this.store, data.most_recently_downloaded);
 
             return data;
         });
