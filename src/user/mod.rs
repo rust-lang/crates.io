@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_cookie::RequestSession;
 use conduit_router::RequestParams;
-use diesel::expression::now;
+use diesel::dsl::now;
 use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 use std::borrow::Cow;
@@ -36,7 +36,7 @@ pub struct User {
     pub gh_id: i32,
 }
 
-#[derive(Insertable, AsChangeset, Debug)]
+#[derive(Insertable, Debug)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
@@ -86,33 +86,32 @@ impl<'a> NewUser<'a> {
 
     /// Inserts the user into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
-        use diesel::insert;
-        use diesel::expression::dsl::sql;
+        use diesel::insert_into;
+        use diesel::dsl::sql;
         use diesel::types::Integer;
-        use diesel::pg::upsert::*;
+        use diesel::pg::upsert::excluded;
         use diesel::NotFound;
-
-        let update_user = NewUser {
-            email: None,
-            gh_id: self.gh_id,
-            gh_login: self.gh_login,
-            name: self.name,
-            gh_avatar: self.gh_avatar,
-            gh_access_token: self.gh_access_token.clone(),
-        };
+        use schema::users::dsl::*;
 
         conn.transaction(|| {
-            // We need the `WHERE gh_id > 0` condition here because `gh_id` set
-            // to `-1` indicates that we were unable to find a GitHub ID for
-            // the associated GitHub login at the time that we backfilled
-            // GitHub IDs. Therefore, there are multiple records in production
-            // that have a `gh_id` of `-1` so we need to exclude those when
-            // considering uniqueness of `gh_id` values. The `> 0` condition isn't
-            // necessary for most fields in the database to be used as a conflict
-            // target :)
-            let conflict_target = sql::<Integer>("(gh_id) WHERE gh_id > 0");
-            let user = insert(&self.on_conflict(conflict_target, do_update().set(&update_user)))
-                .into(users::table)
+            let user = insert_into(users)
+                .values(self)
+                // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+                // to `-1` indicates that we were unable to find a GitHub ID for
+                // the associated GitHub login at the time that we backfilled
+                // GitHub IDs. Therefore, there are multiple records in production
+                // that have a `gh_id` of `-1` so we need to exclude those when
+                // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+                // necessary for most fields in the database to be used as a conflict
+                // target :)
+                .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
+                .do_update()
+                .set((
+                    gh_login.eq(excluded(gh_login)),
+                    name.eq(excluded(name)),
+                    gh_avatar.eq(excluded(gh_avatar)),
+                    gh_access_token.eq(excluded(gh_access_token)),
+                ))
                 .get_result::<User>(conn)?;
 
             // To send the user an account verification email...
@@ -122,8 +121,9 @@ impl<'a> NewUser<'a> {
                     email: user_email,
                 };
 
-                let token = insert(&new_email.on_conflict_do_nothing())
-                    .into(emails::table)
+                let token = insert_into(emails::table)
+                    .values(&new_email)
+                    .on_conflict_do_nothing()
                     .returning(emails::token)
                     .get_result::<String>(conn)
                     .optional()?;
@@ -438,7 +438,7 @@ pub fn show_team(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
+    use diesel::dsl::any;
 
     let user = req.user()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -478,7 +478,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `GET /users/:user_id/stats` route.
 pub fn stats(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::sum;
+    use diesel::dsl::sum;
     use owner::OwnerKind;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
@@ -506,9 +506,8 @@ pub fn stats(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `PUT /user/:user_id` route.
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
-    use diesel::{insert, update};
-    use diesel::pg::upsert::*;
-    use self::emails::dsl::user_id;
+    use diesel::{insert_into, update};
+    use self::emails::user_id;
     use self::users::dsl::{email, gh_login, users};
 
     let mut body = String::new();
@@ -556,8 +555,11 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
             email: user_email,
         };
 
-        let token = insert(&new_email.on_conflict(user_id, do_update().set(&new_email)))
-            .into(emails::table)
+        let token = insert_into(emails::table)
+            .values(&new_email)
+            .on_conflict(user_id)
+            .do_update()
+            .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
             .map_err(|_| human("Error in creating token"))?;
@@ -615,7 +617,7 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 /// Handles `PUT /user/:user_id/resend` route
 pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
     use diesel::update;
-    use diesel::expression::sql;
+    use diesel::dsl::sql;
 
     let user = req.user()?;
     let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();

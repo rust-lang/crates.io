@@ -447,7 +447,7 @@ fn versions() {
 
 #[test]
 fn uploading_new_version_touches_crate() {
-    use diesel::expression::dsl::*;
+    use diesel::dsl::*;
 
     let (_b, app, middle) = ::app();
 

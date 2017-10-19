@@ -44,7 +44,6 @@ use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use diesel::pg::upsert::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 
@@ -248,10 +247,11 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
         owner_kind: 1, // Team owner kind is 1 according to owner.rs
     };
 
-    diesel::insert(&crate_owner.on_conflict(
-        crate_owners::table.primary_key(),
-        do_update().set(crate_owners::deleted.eq(false)),
-    )).into(crate_owners::table)
+    diesel::insert_into(crate_owners::table)
+        .values(&crate_owner)
+        .on_conflict(crate_owners::table.primary_key())
+        .do_update()
+        .set(crate_owners::deleted.eq(false))
         .execute(conn)?;
 
     Ok(())
@@ -293,7 +293,7 @@ impl<'a> VersionBuilder<'a> {
     }
 
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert;
+        use diesel::insert_into;
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
@@ -320,8 +320,8 @@ impl<'a> VersionBuilder<'a> {
                 }
             })
             .collect::<Vec<_>>();
-        insert(&new_deps)
-            .into(dependencies::table)
+        insert_into(dependencies::table)
+            .values(&new_deps)
             .execute(connection)?;
 
         Ok(vers)
@@ -404,7 +404,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::{insert, update};
+        use diesel::{insert_into, update};
 
         let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
 
@@ -422,8 +422,8 @@ impl<'a> CrateBuilder<'a> {
                 date: old_date,
             };
 
-            insert(&crate_download)
-                .into(crate_downloads::table)
+            insert_into(crate_downloads::table)
+                .values(&crate_download)
                 .execute(connection)?;
             krate.downloads = downloads;
             update(&krate).set(&krate).execute(connection)?;
@@ -436,8 +436,8 @@ impl<'a> CrateBuilder<'a> {
                 date: now.naive_utc().date(),
             };
 
-            insert(&crate_download)
-                .into(crate_downloads::table)
+            insert_into(crate_downloads::table)
+                .values(&crate_download)
                 .execute(connection)?;
         }
 
@@ -501,18 +501,17 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
-    use diesel::insert;
+    use diesel::insert_into;
     use cargo_registry::schema::dependencies;
 
-    let dep = NewDependency {
-        version_id: version.id,
-        crate_id: krate.id,
-        req: ">= 0".into(),
-        optional: false,
-        ..Default::default()
-    };
-    insert(&dep)
-        .into(dependencies::table)
+    insert_into(dependencies::table)
+        .values(&NewDependency {
+            version_id: version.id,
+            crate_id: krate.id,
+            req: ">= 0".into(),
+            optional: false,
+            ..Default::default()
+        })
         .get_result(conn)
         .unwrap()
 }
