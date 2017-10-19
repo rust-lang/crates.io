@@ -1,11 +1,11 @@
 {{title crate.name}}
 
-<div id='crates-heading'>
+<div id='crates-heading' data-test-heading>
     <div class="wide">
         <div class='info'>
             {{svg-jar "crate"}}
-            <h1>{{ crate.name }}</h1>
-            <h2>{{ currentVersion.num }}</h2>
+            <h1 data-test-crate-name>{{ crate.name }}</h1>
+            <h2 data-test-crate-version>{{ currentVersion.num }}</h2>
         </div>
 
         <div class='right'>
@@ -44,7 +44,7 @@
         {{/if}}
         {{#if crate.reverse_dependencies}}
             <li>
-              {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id)}}
+              {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
                 Dependent crates
               {{/link-to}}
             </li>
@@ -137,7 +137,7 @@
             {{#if currentVersion.license}}
                 <div>
                     <h3>License</h3>
-                    <p class="license">{{ currentVersion.license }}</p>
+                    <p class="license" data-test-license>{{ currentVersion.license }}</p>
                 </div>
             {{/if}}
 
@@ -169,10 +169,10 @@
 
             <div>
                 <h3>Owners</h3>
-                <ul class='owners'>
+                <ul class='owners' data-test-owners>
                    {{#each crate.owner_team as |team|}}
                         <li>
-                            {{#link-to team.kind team.login}}
+                            {{#link-to team.kind team.login data-test-team-link=team.login}}
                                 {{user-avatar user=team size='medium-small'}}
                             {{/link-to}}
                         </li>
@@ -180,7 +180,7 @@
 
                     {{#each crate.owner_user as |user|}}
                         <li>
-                            {{#link-to user.kind user.login}}
+                            {{#link-to user.kind user.login data-test-user-link=user.login}}
                                 {{user-avatar user=user size='medium-small'}}
                             {{/link-to}}
                         </li>
@@ -205,7 +205,7 @@
                 </ul>
                 <span class='small'>
                     {{#if hasMoreVersions}}
-                        {{#link-to 'crate.versions' crate}}
+                        {{#link-to 'crate.versions' crate data-test-all-versions-link=true}}
                             show all {{ crate.versions.length }} versions
                         {{/link-to}}
                     {{/if}}
