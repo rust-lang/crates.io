@@ -59,6 +59,7 @@
     "ember-router-scroll": "^0.2.0",
     "ember-source": "~2.13.3",
     "ember-svg-jar": "^0.10.3",
+    "ember-test-selectors": "^0.3.7",
     "emberx-select": "^3.0.1",
     "eslint-plugin-ember-suave": "^1.0.0",
     "loader.js": "^4.5.1",
