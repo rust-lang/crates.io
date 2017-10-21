@@ -17,7 +17,6 @@ use diesel_full_text_search::*;
 use license_exprs;
 use hex::ToHex;
 use serde_json;
-use semver;
 use url::Url;
 
 use app::{App, RequestApp};
@@ -125,6 +124,7 @@ pub struct EncodableCrate {
     pub repository: Option<String>,
     pub links: CrateLinks,
     pub exact_match: bool,
+    pub all_versions_yanked: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -328,14 +328,13 @@ impl Crate {
 
     pub fn minimal_encodable(
         self,
-        max_version: semver::Version,
+        versions: Vec<Version>,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> EncodableCrate {
         self.encodable(
-            max_version,
-            None,
+            versions,
             None,
             None,
             badges,
@@ -347,8 +346,7 @@ impl Crate {
     #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
     pub fn encodable(
         self,
-        max_version: semver::Version,
-        versions: Option<Vec<i32>>,
+        versions: Vec<Version>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
         badges: Option<Vec<Badge>>,
@@ -366,10 +364,16 @@ impl Crate {
             repository,
             ..
         } = self;
-        let versions_link = match versions {
-            Some(..) => None,
-            None => Some(format!("/api/v1/crates/{}/versions", name)),
-        };
+
+        let (live_versions, yanked_versions): (Vec<Version>, Vec<Version>) =
+            versions.into_iter().partition(|v| !v.yanked);
+
+        let live_versions = live_versions.into_iter();
+        let version_ids = live_versions.clone().map(|v| v.id);
+        let max_version = Version::max(live_versions.clone().map(|v| v.num));
+
+        let all_versions_yanked = yanked_versions.len() > 0 && live_versions.len() == 0;
+
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
@@ -382,19 +386,20 @@ impl Crate {
             created_at: created_at,
             downloads: downloads,
             recent_downloads: recent_downloads,
-            versions: versions,
+            versions: Some(version_ids.collect()),
             keywords: keyword_ids,
             categories: category_ids,
-            badges: badges,
-            max_version: max_version.to_string(),
-            documentation: documentation,
-            homepage: homepage,
             exact_match: exact_match,
-            description: description,
-            repository: repository,
+            all_versions_yanked: all_versions_yanked,
+            max_version:   if all_versions_yanked { "0.0.0".to_string() } else { max_version.to_string() },
+            badges:        if all_versions_yanked { None } else { badges },
+            documentation: if all_versions_yanked { None } else { documentation },
+            homepage:      if all_versions_yanked { None } else { homepage },
+            description:   if all_versions_yanked { None } else { description },
+            repository:    if all_versions_yanked { None } else { repository },
             links: CrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
-                versions: versions_link,
+                versions: Some(format!("/api/v1/crates/{}/versions", name)),
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
                 owner_team: Some(format!("/api/v1/crates/{}/owner_team", name)),
                 owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
@@ -429,18 +434,6 @@ impl Crate {
         } else {
             Some(url)
         }
-    }
-
-    pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
-        use schema::versions::dsl::*;
-
-        let vs = Version::belonging_to(self)
-            .select(num)
-            .filter(yanked.eq(false))
-            .load::<String>(conn)?
-            .into_iter()
-            .map(|s| semver::Version::parse(&s).unwrap());
-        Ok(Version::max(vs))
     }
 
     pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
@@ -588,6 +581,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     use diesel::types::{BigInt, Bool, Nullable};
     use diesel::expression::functions::date_and_time::{date, now};
     use diesel::expression::sql_literal::sql;
+    use std::iter::FromIterator;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -736,22 +730,21 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
-        .into_iter()
-        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
+        .into_iter();
 
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
         .zip(recent_downloads)
         .map(
-            |(((max_version, krate), perfect_match), recent_downloads)| {
+            |(((versions, krate), perfect_match), recent_downloads)| {
                 // FIXME: If we add crate_id to the Badge enum we can eliminate
                 // this N+1
                 let badges = badges::table
                     .filter(badges::crate_id.eq(krate.id))
                     .load::<Badge>(&*conn)?;
                 Ok(krate.minimal_encodable(
-                    max_version,
+                    Vec::from_iter(versions),
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
@@ -790,14 +783,12 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 
     let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
         Version::belonging_to(&krates)
-            .filter(versions::yanked.eq(false))
             .load::<Version>(&*conn)?
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
-            .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false, None))
+            .map(|(versions, krate)| {
+                Ok(krate.minimal_encodable(versions, None, false, None))
             })
             .collect()
     };
@@ -879,7 +870,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let ids = versions.iter().map(|v| v.id).collect();
 
     let kws = CrateKeyword::belonging_to(&krate)
         .inner_join(keywords::table)
@@ -897,7 +887,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))
         .load(&*conn)?;
-    let max_version = krate.max_version(&conn)?;
 
     #[derive(Serialize)]
     struct R {
@@ -909,8 +898,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(
         req.json(&R {
             krate: krate.clone().encodable(
-                max_version,
-                Some(ids),
+                versions.clone(),
                 Some(&kws),
                 Some(&cats),
                 Some(badges),
@@ -1024,7 +1012,9 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         // Update all badges for this crate, collecting any invalid badges in
         // order to be able to warn about them
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
-        let max_version = krate.max_version(&conn)?;
+
+        let versions = Version::belonging_to(&krate)
+            .load::<Version>(&*conn)?;
 
         // Render the README for this crate
         let readme = match new_crate.readme.as_ref() {
@@ -1077,7 +1067,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false, None),
+            krate: krate.minimal_encodable(versions, None, false, None),
             warnings: warnings,
         }))
     })
