@@ -3,4 +3,34 @@
 <div id='crates-heading'>
     {{svg-jar "gear"}}
     <h1>Manage Crate Owners</h1>
+    <h2>{{ crate.name }}</h2>
+</div>
+
+<div id='me-email'>
+    <h2>Add Owner</h2>
+    {{validated-input type='email' value='' placeholder='Enter user email'}}
+    <button class='small yellow-button' {{action 'addUser' user}}>Add</button>
+</div>
+
+<div class='white-rows'>
+    {{#each crate.owner_user as |user|}}
+        <div class='crate row'>
+            <div>
+              {{#link-to user.kind user.login}}
+                  {{user-avatar user=user size='medium-small'}}
+              {{/link-to}}
+            </div>
+            <div>
+                {{#link-to user.kind user.login}}
+                    {{ user.name }}
+                {{/link-to}}
+            </div>
+            <div class='stats'>
+                {{{ if user.email user.email "&nbsp;" }}}
+            </div>
+            <div class='stats downloads'>
+                <button class='small yellow-button' {{action 'removeOwner' user}}>Remove</button>
+            </div>
+        </div>
+    {{/each}}
 </div>
