@@ -1,4 +1,5 @@
 import { test } from 'qunit';
+import { visit, currentURL } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
 moduleForAcceptance('Acceptance | front page');

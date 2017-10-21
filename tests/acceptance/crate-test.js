@@ -1,4 +1,5 @@
 import { test } from 'qunit';
+import { click, visit, currentURL, currentRouteName } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
 moduleForAcceptance('Acceptance | crate page');
@@ -123,6 +124,6 @@ test('crates license is supplied by version', async function(assert) {
     await visit('/crates/nanomsg');
     assert.dom('[data-test-license]').hasText('Apache-2.0');
 
-    await click('#crate-versions a:contains("0.5.0")');
+    await click('[data-test-version-link="0.5.0"]');
     assert.dom('[data-test-license]').hasText('MIT/Apache-2.0');
 });

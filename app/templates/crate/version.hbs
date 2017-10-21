@@ -188,12 +188,12 @@
                 </ul>
             </div>
 
-            <div class='section' id='crate-versions'>
+            <div class='section' id='crate-versions' data-test-versions>
                 <h3>Versions</h3>
                 <ul>
                     {{#each smallSortedVersions as |version|}}
                         <li>
-                            {{#link-to 'crate.version' version.num}}
+                            {{#link-to 'crate.version' version.num data-test-version-link=version.num}}
                                 {{ version.num }}
                             {{/link-to}}
                             <span class='date'>{{moment-format version.created_at 'll'}}</span>
