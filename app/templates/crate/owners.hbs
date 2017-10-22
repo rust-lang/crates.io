@@ -31,6 +31,12 @@
     </div>
 </div>
 
+{{#if removed}}
+  <div class='removed'>
+      <p>{{ removed }}</p>
+  </div>
+{{/if}}
+
 <div class='owners white-rows'>
     {{#each crate.owner_user as |user|}}
         <div class='crate row'>
@@ -48,7 +54,7 @@
                 {{{ if user.email user.email "&nbsp;" }}}
             </div>
             <div class='stats downloads'>
-                <button class='small yellow-button' {{action 'removeOwner' user}}>Remove</button>
+                <button class='remove-owner small yellow-button' {{action 'removeOwner' user}}>Remove</button>
             </div>
         </div>
     {{/each}}

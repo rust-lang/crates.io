@@ -225,6 +225,25 @@ export default function() {
 
         return { ok: true };
     });
+
+    this.delete('/crates/:crate_id/owners', (schema, request) => {
+        const crateId = request.params.crate_id;
+        const crate = schema.crates.find(crateId);
+
+        if (!crate) {
+            return notFound();
+        }
+
+        const body = JSON.parse(request.requestBody);
+        const [ownerId] = body.owners;
+        const user = schema.users.findBy({ login: ownerId });
+
+        if (!user) {
+            return notFound();
+        }
+
+        return { ok: true };
+    });
 }
 
 function notFound() {

@@ -178,3 +178,13 @@ test('add a new owner', async function(assert) {
     assert.dom('.invited').hasText('An invite has been sent to iain8');
     assert.dom('.owners .row').exists({ count: 2 });
 });
+
+test('remove a crate owner', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await click('.owners .row:first-child .remove-owner');
+
+    assert.dom('.removed').exists();
+    assert.dom('.owners .row').exists({ count: 1 });
+});
