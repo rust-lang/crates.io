@@ -1,5 +1,6 @@
 import { test } from 'qunit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import Ember from 'ember';
 
 moduleForAcceptance('Acceptance | crate page');
 
@@ -125,8 +126,40 @@ test('crates license is supplied by version', async function(assert) {
     assert.dom('.license').hasText('MIT/Apache-2.0');
 });
 
+test('navigating to the owners page when not logged in', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg');
+
+    assert.dom('#crate-owners p a').doesNotExist();
+});
+
+test('navigating to the owners page when not an owner', async function(assert) {
+    server.loadFixtures();
+
+    this.application.register('service:session-b', Ember.Service.extend({
+        currentUser: {
+            id: 'iain8'
+        }
+    }));
+
+    this.application.inject('controller', 'session', 'service:session-b');
+
+    await visit('/crates/nanomsg');
+
+    assert.dom('#crate-owners p a').doesNotExist();
+});
+
 test('navigating to the owners page', async function(assert) {
     server.loadFixtures();
+
+    this.application.register('service:session-b', Ember.Service.extend({
+        currentUser: {
+            id: 'thehydroimpulse'
+        }
+    }));
+
+    this.application.inject('controller', 'session', 'service:session-b');
 
     await visit('/crates/nanomsg');
     await click('#crate-owners p a');
