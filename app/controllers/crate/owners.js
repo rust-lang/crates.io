@@ -35,19 +35,19 @@ export default Controller.extend({
         },
 
         removeOwner(user) {
-            this.set('error', false);
             this.set('removed', false);
 
             return this.get('crate').removeOwner(user.get('login')).then(() => {
+                this.set('removed', `User ${user.get('login')} removed as crate owner`);
+
                 this.get('crate.owner_user').removeObject(user);
-                this.set('removed', `The user ${user.get('login')} has been removed as an owner`);
             }).catch((error) => {
                 if (error.payload) {
-                    this.set('error',
+                    this.set('removed',
                         `Error removing owner: ${error.payload.errors[0].detail}`
                     );
                 } else {
-                    this.set('error', 'Error removing owner');
+                    this.set('removed', 'Error removing owner');
                 }
             });
         }

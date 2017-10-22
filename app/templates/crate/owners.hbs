@@ -6,44 +6,51 @@
     <h2>{{ crate.name }}</h2>
 </div>
 
-<div id='me-email'>
+<div id="me-email">
     <h2>Add Owner</h2>
 
-    <div class='form-group'>
-        {{input type='text' value=username placeholder='Enter username' class='form-control' name='username'}}
-        <button id='add-owner' class='small yellow-button' {{action 'addOwner'}}>Add</button>
+    <div class="row">
+        <div class="label">
+            <dt>Username</dt>
+        </div>
 
-        <div class='input-error'>
+        <form class="email-form" {{action 'addOwner' on='submit'}}>
+            {{input type='text' value=username placeholder='Username' class='form-control space-right' name='username'}}
+
             {{#if error}}
                 <div class='error'>
-                    {{error}}
+                    <p class='small-text error'>{{error}}</p>
                 </div>
             {{/if}}
-        </div>
 
-        <div class='input-success'>
             {{#if invited}}
                 <div class='invited'>
-                    {{invited}}
+                    <p>{{invited}}</p>
                 </div>
             {{/if}}
-        </div>
+
+            <div class="actions">
+                <button id="add-owner" type="submit" class="small yellow-button space-right">Save</button>
+            </div>
+        </form>
     </div>
 </div>
 
+<h2>Owners</h2>
+
 {{#if removed}}
-  <div class='removed'>
-      <p>{{ removed }}</p>
-  </div>
+<div class='removed'>
+    <p>{{removed}}</p>
+</div>
 {{/if}}
 
 <div class='owners white-rows'>
     {{#each crate.owner_user as |user|}}
         <div class='crate row'>
             <div>
-              {{#link-to user.kind user.login}}
-                  {{user-avatar user=user size='medium-small'}}
-              {{/link-to}}
+                {{#link-to user.kind user.login}}
+                    {{user-avatar user=user size='medium-small'}}
+                {{/link-to}}
             </div>
             <div>
                 {{#link-to user.kind user.login}}

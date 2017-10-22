@@ -242,7 +242,7 @@ export default function() {
             return notFound();
         }
 
-        return { ok: true };
+        return {};
     });
 }
 
