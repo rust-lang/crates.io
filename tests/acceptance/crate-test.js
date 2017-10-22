@@ -124,3 +124,57 @@ test('crates license is supplied by version', async function(assert) {
     await click('#crate-versions a:contains("0.5.0")');
     assert.dom('.license').hasText('MIT/Apache-2.0');
 });
+
+test('navigating to the owners page', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg');
+    await click('#crate-owners p a');
+
+    assert.dom('#crates-heading h1').hasText('Manage Crate Owners');
+});
+
+test('listing crate owners', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+
+    assert.dom('.owners .row').exists({ count: 2 });
+    assert.dom('a[href="/users/thehydroimpulse"]').exists();
+    assert.dom('a[href="/users/blabaere"]').exists();
+});
+
+test('attempting to add owner without username', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await click('#add-owner');
+
+    assert.dom('.error').exists();
+    assert.dom('.error').hasText('Please enter a username');
+    assert.dom('.owners .row').exists({ count: 2 });
+});
+
+test('attempting to add non-existent owner', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await fillIn('input[name="username"]', 'spookyghostboo');
+    await click('#add-owner');
+
+    assert.dom('.error').exists();
+    assert.dom('.error').hasText('Error sending invite');
+    assert.dom('.owners .row').exists({ count: 2 });
+});
+
+test('add a new owner', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await fillIn('input[name="username"]', 'iain8');
+    await click('#add-owner');
+
+    assert.dom('.invited').exists();
+    assert.dom('.invited').hasText('An invite has been sent to iain8');
+    assert.dom('.owners .row').exists({ count: 2 });
+});

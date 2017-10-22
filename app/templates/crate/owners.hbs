@@ -8,11 +8,30 @@
 
 <div id='me-email'>
     <h2>Add Owner</h2>
-    {{validated-input type='email' value='' placeholder='Enter user email'}}
-    <button class='small yellow-button' {{action 'addUser' user}}>Add</button>
+
+    <div class='form-group'>
+        {{input type='text' value=username placeholder='Enter username' class='form-control' name='username'}}
+        <button id='add-owner' class='small yellow-button' {{action 'addOwner'}}>Add</button>
+
+        <div class='input-error'>
+            {{#if error}}
+                <div class='error'>
+                    {{error}}
+                </div>
+            {{/if}}
+        </div>
+
+        <div class='input-success'>
+            {{#if invited}}
+                <div class='invited'>
+                    {{invited}}
+                </div>
+            {{/if}}
+        </div>
+    </div>
 </div>
 
-<div class='white-rows'>
+<div class='owners white-rows'>
     {{#each crate.owner_user as |user|}}
         <div class='crate row'>
             <div>
