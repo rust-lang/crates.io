@@ -299,4 +299,16 @@ mod tests {
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
         );
     }
+
+    #[test]
+    fn absolute_links_dont_get_resolved() {
+        let readme_text = "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
+        let repository = "https://github.com/kbknapp/clap-rs/";
+
+        let result = markdown_to_html(readme_text, Some(&repository)).unwrap();
+        assert_eq!(
+            result,
+            "<a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\" /></a>\n"
+        );
+    }
 }
