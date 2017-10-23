@@ -1,6 +1,5 @@
 use diesel::prelude::*;
 use diesel::pg::Pg;
-use diesel::types::{Integer, Text};
 use semver;
 
 use git;
@@ -25,10 +24,11 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Queryable)]
 pub struct ReverseDependency {
     dependency: Dependency,
     crate_downloads: i32,
+    name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -98,7 +98,7 @@ pub fn add_dependencies(
     deps: &[::upload::CrateDependency],
     version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
-    use diesel::insert;
+    use diesel::insert_into;
 
     let git_and_new_dependencies = deps.iter()
         .map(|dep| {
@@ -144,8 +144,8 @@ pub fn add_dependencies(
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();
 
-    insert(&new_dependencies)
-        .into(dependencies::table)
+    insert_into(dependencies::table)
+        .values(&new_dependencies)
         .execute(conn)?;
 
     Ok(git_deps)
@@ -180,22 +180,6 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
                 2 => Kind::Dev,
                 n => panic!("unknown kind: {}", n),
             },
-        }
-    }
-}
-
-// FIXME: We can derive this in the next release of Diesel
-impl Queryable<(dependencies::SqlType, Integer, Text), Pg> for ReverseDependency {
-    type Row = (
-        <Dependency as Queryable<dependencies::SqlType, Pg>>::Row,
-        i32,
-        String,
-    );
-
-    fn build((dep_row, downloads, _name): Self::Row) -> Self {
-        ReverseDependency {
-            dependency: Dependency::build(dep_row),
-            crate_downloads: downloads,
         }
     }
 }

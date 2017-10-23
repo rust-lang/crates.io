@@ -1,6 +1,6 @@
 {{title (concat "Search Results for '" q "'")}}
 
-<div id='crates-heading' class='crate-search'>
+<div id='crates-heading' class='crate-search' data-test-heading>
     <div class='info'>
         {{svg-jar "magnifier" width=32 height=32}}
         <h1>Search Results</h1>
@@ -12,7 +12,7 @@
 
 {{#if hasItems}}
     <div id='results'>
-        <div class='nav'>
+        <div class='nav' data-test-search-nav>
             <span class='amt'>
                 Displaying
                 <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
@@ -20,11 +20,11 @@
             </span>
         </div>
 
-        <div class='sort'>
+        <div class='sort' data-test-search-sort>
             <span class='small'>Sort by </span>
 
             {{#rl-dropdown-container class="dropdown-container"}}
-                {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+                {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
                     {{svg-jar "sort"}}
                     {{ currentSortBy }}
                     <span class='arrow'></span>
@@ -52,17 +52,17 @@
     </div>
 
     <div id='crates' class='white-rows'>
-        {{#each model as |crate|}}
+        {{#each model as |crate index|}}
             {{#if crate.exact_match}}
                 <div class='exact-match'>
                     {{#link-to "crate" crate}}
                         <h1>Exact Match</h1>
                     {{/link-to}}
-                    {{crate-row crate=crate}}
+                    {{crate-row crate=crate data-test-crate-row=index}}
                 </div>
             {{else}}
                 <div>
-                    {{crate-row crate=crate}}
+                    {{crate-row crate=crate data-test-crate-row=index}}
                 </div>
             {{/if}}
         {{/each}}

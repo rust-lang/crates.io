@@ -104,14 +104,16 @@ impl<'a> NewTeam<'a> {
         }
     }
 
-    pub fn create_or_update(&self, conn: &PgConnection) -> CargoResult<Team> {
-        use diesel::insert;
-        use diesel::pg::upsert::*;
+    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Team> {
+        use diesel::insert_into;
+        use schema::teams::dsl::*;
 
-        insert(&self.on_conflict(teams::login, do_update().set(self)))
-            .into(teams::table)
+        insert_into(teams)
+            .values(self)
+            .on_conflict(login)
+            .do_update()
+            .set(self)
             .get_result(conn)
-            .map_err(Into::into)
     }
 }
 
@@ -213,7 +215,9 @@ impl Team {
         let (handle, resp) = github::github(app, &url, &token)?;
         let org: Org = github::parse_github_response(handle, &resp)?;
 
-        NewTeam::new(login, team.id, team.name, org.avatar_url).create_or_update(conn)
+        NewTeam::new(login, team.id, team.name, org.avatar_url)
+            .create_or_update(conn)
+            .map_err(Into::into)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.

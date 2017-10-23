@@ -75,7 +75,7 @@ impl Category {
         krate: &Crate,
         slugs: &[&'a str],
     ) -> QueryResult<Vec<&'a str>> {
-        use diesel::expression::dsl::any;
+        use diesel::dsl::any;
 
         conn.transaction(|| {
             let categories = categories::table
@@ -97,8 +97,8 @@ impl Category {
                 .collect::<Vec<_>>();
 
             delete(CrateCategory::belonging_to(krate)).execute(conn)?;
-            insert(&crate_categories)
-                .into(crates_categories::table)
+            insert_into(crates_categories::table)
+                .values(&crate_categories)
                 .execute(conn)?;
             Ok(invalid_categories)
         })
@@ -120,7 +120,7 @@ impl Category {
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
         use diesel::select;
-        use diesel::expression::dsl::*;
+        use diesel::dsl::*;
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -144,7 +144,7 @@ impl Category {
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        use diesel::expression::dsl::*;
+        use diesel::dsl::*;
         use diesel::types::Text;
 
         sql::<categories::SqlType>(
@@ -173,13 +173,14 @@ pub struct NewCategory<'a> {
 impl<'a> NewCategory<'a> {
     /// Inserts the category into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
-        use diesel::insert;
-        use diesel::pg::upsert::*;
+        use schema::categories::dsl::*;
 
-        insert(&self.on_conflict(categories::slug, do_update().set(self)))
-            .into(categories::table)
+        insert_into(categories)
+            .values(self)
+            .on_conflict(slug)
+            .do_update()
+            .set(self)
             .get_result(conn)
-            .map_err(Into::into)
     }
 }
 

@@ -49,7 +49,7 @@ struct FkConstraint {
 }
 
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<(String, Option<FkConstraint>)> {
-    use diesel::expression::dsl::sql;
+    use diesel::dsl::sql;
     use diesel::types::Text;
 
     let (_r, app, _) = ::app();

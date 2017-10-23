@@ -1,4 +1,5 @@
 import Controller from '@ember/controller';
+import { A } from '@ember/array';
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
 
@@ -14,9 +15,9 @@ export default Controller.extend({
         this.fetchingFeed = true;
         this.loadingMore = false;
         this.hasMore = false;
-        this.myCrates = [];
-        this.myFollowing = [];
-        this.myFeed = [];
+        this.myCrates = A();
+        this.myFollowing = A();
+        this.myFeed = A();
         this.myStats = 0;
     },
 

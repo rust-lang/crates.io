@@ -7,14 +7,9 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate chrono;
-#[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
 extern crate rand;
 
-use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
 use rand::{Rng, StdRng};
 use std::env;
@@ -27,6 +22,8 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use diesel::dsl::*;
+
     let ids = env::args()
         .skip(1)
         .filter_map(|arg| arg.parse::<i32>().ok());
@@ -35,26 +32,16 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         let mut dls = rng.gen_range(5000i32, 10000);
 
         for day in 0..90 {
-            let moment = Utc::now().date().naive_utc() + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
 
-            let version_download = VersionDownload {
-                version_id: id,
-                downloads: dls,
-                date: moment,
-            };
-            diesel::insert(&version_download)
-                .into(version_downloads::table)
+            diesel::insert_into(version_downloads::table)
+                .values((
+                    version_downloads::version_id.eq(id),
+                    version_downloads::downloads.eq(dls),
+                    version_downloads::date.eq(date(now - day.days())),
+                ))
                 .execute(conn)?;
         }
     }
     Ok(())
-}
-
-#[derive(Insertable)]
-#[table_name = "version_downloads"]
-struct VersionDownload {
-    version_id: i32,
-    downloads: i32,
-    date: NaiveDate,
 }

@@ -100,7 +100,6 @@ pub struct InvitationResponse {
 pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
     let conn = &*req.db_conn()?;
 
-
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
@@ -121,33 +120,28 @@ fn accept_invite(
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
-    use diesel::{delete, insert};
-    use diesel::pg::upsert::{do_update, OnConflictExtension};
+    use diesel::{delete, insert_into};
 
     let user_id = req.user()?.id;
-    let pending_crate_owner = crate_owner_invitations::table
-        .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
-        .filter(crate_owner_invitations::invited_user_id.eq(user_id))
-        .first::<CrateOwnerInvitation>(&*conn)?;
-
-    let owner = CrateOwner {
-        crate_id: crate_invite.crate_id,
-        owner_id: user_id,
-        created_by: pending_crate_owner.invited_by_user_id,
-        owner_kind: OwnerKind::User as i32,
-    };
 
     conn.transaction(|| {
-        insert(&owner.on_conflict(
-            crate_owners::table.primary_key(),
-            do_update().set(crate_owners::deleted.eq(false)),
-        )).into(crate_owners::table)
+        let pending_crate_owner = crate_owner_invitations::table
+            .find((user_id, crate_invite.crate_id))
+            .first::<CrateOwnerInvitation>(&*conn)?;
+
+        insert_into(crate_owners::table)
+            .values(&CrateOwner {
+                crate_id: crate_invite.crate_id,
+                owner_id: user_id,
+                created_by: pending_crate_owner.invited_by_user_id,
+                owner_kind: OwnerKind::User as i32,
+            })
+            .on_conflict(crate_owners::table.primary_key())
+            .do_update()
+            .set(crate_owners::deleted.eq(false))
             .execute(conn)?;
-        delete(
-            crate_owner_invitations::table
-                .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
-                .filter(crate_owner_invitations::invited_user_id.eq(user_id)),
-        ).execute(conn)?;
+        delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id)))
+            .execute(conn)?;
 
         #[derive(Serialize)]
         struct R {
@@ -165,13 +159,10 @@ fn decline_invite(
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
     use diesel::delete;
+
     let user_id = req.user()?.id;
 
-    delete(
-        crate_owner_invitations::table
-            .filter(crate_owner_invitations::crate_id.eq(crate_invite.crate_id))
-            .filter(crate_owner_invitations::invited_user_id.eq(user_id)),
-    ).execute(conn)?;
+    delete(crate_owner_invitations::table.find((user_id, crate_invite.crate_id))).execute(conn)?;
 
     #[derive(Serialize)]
     struct R {

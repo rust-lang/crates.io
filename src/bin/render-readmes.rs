@@ -22,7 +22,7 @@ extern crate url;
 use curl::easy::{Easy, List};
 use chrono::{TimeZone, Utc};
 use diesel::prelude::*;
-use diesel::expression::any;
+use diesel::dsl::any;
 use docopt::Docopt;
 use flate2::read::GzDecoder;
 use itertools::Itertools;
