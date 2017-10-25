@@ -1,13 +1,3 @@
-[root]
-name = "cargo-registry-s3"
-version = "0.2.0"
-dependencies = [
- "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "curl 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "openssl 0.9.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "advapi32-sys"
 version = "0.2.0"
@@ -128,7 +118,7 @@ dependencies = [
  "cargo-registry-s3 0.2.0",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.162 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.169 (registry+https://github.com/rust-lang/crates.io-index)",
  "comrak 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -173,6 +163,16 @@ dependencies = [
  "tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cargo-registry-s3"
+version = "0.2.0"
+dependencies = [
+ "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "curl 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl 0.9.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -227,18 +227,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "clippy"
-version = "0.0.162"
+version = "0.0.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cargo_metadata 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy_lints 0.0.162 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy_lints 0.0.169 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "clippy_lints"
-version = "0.0.162"
+version = "0.0.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
+ "if_chain 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -250,6 +251,7 @@ dependencies = [
  "serde_derive 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-normalization 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -809,6 +811,11 @@ dependencies = [
  "unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-normalization 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "if_chain"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "iovec"
@@ -1867,8 +1874,8 @@ dependencies = [
 "checksum chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c20ebe0b2b08b0aeddba49c609fe7957ba2e33449882cb186a180bc60682fa9"
 "checksum civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6263e7af767a5bf9e4d3d0a6c3ceb5f3940ec85cf2fbfee59024b8a264be180f"
 "checksum civet-sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
-"checksum clippy 0.0.162 (registry+https://github.com/rust-lang/crates.io-index)" = "fcdb42cab913b8eb5d390ba612400ec581813fb59af29afd39333d7a550f332c"
-"checksum clippy_lints 0.0.162 (registry+https://github.com/rust-lang/crates.io-index)" = "b1c0da7936c88883ac09bc3b29584c275551eff961b2d0d87a22b60205088e55"
+"checksum clippy 0.0.169 (registry+https://github.com/rust-lang/crates.io-index)" = "a4058d4c76590a351844378fd20a8ccfcbf411771957f3d4772d2b1e4a5c5194"
+"checksum clippy_lints 0.0.169 (registry+https://github.com/rust-lang/crates.io-index)" = "768bae4e989596d7aa787fb8578f2c6b2071ac32aeb1cab7e3cb1af906fff50d"
 "checksum cmake 0.1.25 (registry+https://github.com/rust-lang/crates.io-index)" = "0c8a6541a55bcd72d3de4faee2d101a5a66df29790282c7f797082a7228a9b3d"
 "checksum coco 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c06169f5beb7e31c7c67ebf5540b8b472d23e3eade3b2ec7d1f5b504a85f91bd"
 "checksum comrak 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d6e2837c1814c4dc781f73697fdaaf9d5e2f2b137735dda2baad3d73dc684980"
@@ -1931,6 +1938,7 @@ dependencies = [
 "checksum hyper 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "641abc3e3fcf0de41165595f801376e01106bca1fd876dda937730e477ca004c"
 "checksum hyper-tls 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9c81fa95203e2a6087242c38691a0210f23e9f3f8f944350bd676522132e2985"
 "checksum idna 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "014b298351066f1512874135335d62a789ffe78a9974f94b43ed5621951eaf7d"
+"checksum if_chain 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "61bb90bdd39e3af69b0172dfc6130f6cd6332bf040fbb9bdd4401d37adbd48b8"
 "checksum iovec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "29d062ee61fccdf25be172e70f34c9f6efc597e1fb8f6526e8437b2046ab26be"
 "checksum itertools 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "22c285d60139cf413244894189ca52debcfd70b57966feed060da76802e415a0"
 "checksum itoa 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "8324a32baf01e2ae060e9de58ed0bc2320c9a2833491ee36cd3b4c414de4db8c"

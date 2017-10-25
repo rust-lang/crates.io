@@ -1,3 +1,4 @@
+#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
 use std::ascii::AsciiExt;
 
 use chrono::NaiveDateTime;

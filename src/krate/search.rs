@@ -201,7 +201,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
                     .filter(badges::crate_id.eq(krate.id))
                     .load::<Badge>(&*conn)?;
                 Ok(krate.minimal_encodable(
-                    max_version,
+                    &max_version,
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
