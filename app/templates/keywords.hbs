@@ -6,7 +6,7 @@
 </div>
 
 <div id='results'>
-    <div class='nav'>
+    <div class='nav' data-test-keywords-nav>
         <span class='amt small'>
             Displaying
             <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
@@ -14,10 +14,10 @@
         </span>
     </div>
 
-    <div class='sort'>
+    <div class='sort' data-test-keywords-sort>
         <span class='small'>Sort by</span>
         {{#rl-dropdown-container class="dropdown-container"}}
-            {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+            {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
                 {{svg-jar "sort"}}
                 {{ currentSortBy }}
                 <span class='arrow'></span>

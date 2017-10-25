@@ -1,4 +1,5 @@
 import { test } from 'qunit';
+import { visit } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
 moduleForAcceptance('Acceptance | categories');
@@ -10,9 +11,9 @@ test('listing categories', async function(assert) {
 
     await visit('/categories');
 
-    assert.dom('.desc .info span', find('.row').get(0)).hasText('0 crates');
-    assert.dom('.desc .info span', find('.row').get(1)).hasText('1 crate');
-    assert.dom('.desc .info span', find('.row').get(2)).hasText('3,910 crates');
+    assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
+    assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
+    assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
 });
 
 test('category/:category_id index default sort is recent-downloads', async function(assert) {
@@ -20,5 +21,5 @@ test('category/:category_id index default sort is recent-downloads', async funct
 
     await visit('/categories/algorithms');
 
-    assert.dom('div.sort div.dropdown-container a.dropdown').hasText('Recent Downloads');
+    assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
 });
