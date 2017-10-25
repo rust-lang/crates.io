@@ -19,6 +19,7 @@ pub use self::io_util::{read_fill, LimitErrorReader, read_le_u32};
 pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
+pub mod rfc3339;
 mod hasher;
 mod head;
 mod io_util;

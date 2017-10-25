@@ -34,7 +34,7 @@ pub struct CrateKeyword {
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
-    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
 
