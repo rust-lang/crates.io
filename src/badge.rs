@@ -107,7 +107,9 @@ impl Badge {
             delete(badges::table)
                 .filter(badges::crate_id.eq(krate.id))
                 .execute(conn)?;
-            insert_into(badges::table).values(&new_badges).execute(conn)?;
+            insert_into(badges::table)
+                .values(&new_badges)
+                .execute(conn)?;
             Ok(invalid_badges)
         })
     }

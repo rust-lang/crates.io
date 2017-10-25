@@ -24,11 +24,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Extract all ids requested.
     let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
     let ids = query
-        .filter_map(|(ref a, ref b)| if *a == "ids[]" {
-            b.parse().ok()
-        } else {
-            None
-        })
+        .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
         .collect::<Vec<i32>>();
 
     let versions = versions::table
