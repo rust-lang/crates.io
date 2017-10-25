@@ -1,17 +1,18 @@
 use ammonia::Builder;
 use comrak;
+use htmlescape::encode_minimal;
 
 use util::CargoResult;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
-pub struct MarkdownRenderer<'a> {
+struct MarkdownRenderer<'a> {
     html_sanitizer: Builder<'a>,
 }
 
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
-    pub fn new() -> MarkdownRenderer<'a> {
+    fn new() -> MarkdownRenderer<'a> {
         let tags = [
             "a",
             "b",
@@ -106,7 +107,7 @@ impl<'a> MarkdownRenderer<'a> {
     }
 
     /// Renders the given markdown to HTML using the current settings.
-    pub fn to_html(&self, text: &str) -> CargoResult<String> {
+    fn to_html(&self, text: &str) -> CargoResult<String> {
         let options = comrak::ComrakOptions {
             ext_autolink: true,
             ext_strikethrough: true,
@@ -127,7 +128,26 @@ impl<'a> Default for MarkdownRenderer<'a> {
     }
 }
 
-/// Renders a markdown text to sanitized HTML.
+/// Renders Markdown text to sanitized HTML.
+fn markdown_to_html(text: &str) -> CargoResult<String> {
+    let renderer = MarkdownRenderer::new();
+    renderer.to_html(text)
+}
+
+/// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
+/// Note we also render a readme as Markdown if _no_ extension is on the filename.
+static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
+    ".md",
+    ".markdown",
+    ".mdown",
+    ".mdwn",
+    ".mkd",
+    ".mkdn",
+    ".mkdown",
+];
+
+/// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
+/// on the extension of the supplied filename.
 ///
 /// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
 /// onclick, onmouseover, etc.).
@@ -135,14 +155,19 @@ impl<'a> Default for MarkdownRenderer<'a> {
 /// # Examples
 ///
 /// ```
-/// use render::markdown_to_html;
+/// use render::render_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = markdown_to_html(text)?;
+/// let rendered = readme_to_html(text, "README.md")?;
 /// ```
-pub fn markdown_to_html(text: &str) -> CargoResult<String> {
-    let renderer = MarkdownRenderer::new();
-    renderer.to_html(text)
+pub fn readme_to_html(text: &str, filename: &str) -> CargoResult<String> {
+    let filename = filename.to_lowercase();
+
+    if !filename.contains('.') || MARKDOWN_EXTENSIONS.iter().any(|e| filename.ends_with(e)) {
+        return markdown_to_html(text);
+    }
+
+    Ok(encode_minimal(text).replace("\n", "<br>\n"))
 }
 
 #[cfg(test)]
@@ -216,6 +241,26 @@ mod tests {
         let text = "<p class='bad-class'>Hello World!</p>";
         let result = markdown_to_html(text).unwrap();
         assert_eq!(result, "<p>Hello World!</p>\n");
+    }
+
+    #[test]
+    fn readme_to_html_renders_markdown() {
+        for f in &["README", "readme.md", "README.MARKDOWN", "whatever.mkd"] {
+            assert_eq!(
+                readme_to_html("*lobster*", f).unwrap(),
+                "<p><em>lobster</em></p>\n"
+            );
+        }
+    }
+
+    #[test]
+    fn readme_to_html_renders_other_things() {
+        for f in &["readme.exe", "readem.org", "blah.adoc"] {
+            assert_eq!(
+                readme_to_html("<script>lobster</script>\n\nis my friend\n", f).unwrap(),
+                "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
+            );
+        }
     }
 
     #[test]
