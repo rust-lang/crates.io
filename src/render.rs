@@ -15,7 +15,7 @@ struct MarkdownRenderer<'a> {
 impl<'a> MarkdownRenderer<'a> {
     /// Creates a new renderer instance.
     ///
-    /// Per `markdown_to_html`, `base_url` is the base URL prepended to any
+    /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
         let tags = [
@@ -102,6 +102,7 @@ impl<'a> MarkdownRenderer<'a> {
 
         let sanitizer_base_url = base_url.map(|s| s.to_string());
 
+        // Constrain the type of the closures given to the HTML sanitizer.
         fn constrain_closure<F>(f: F) -> F
         where
             F: for<'a> Fn(&'a str) -> Option<Cow<'a, str>> + Send + Sync,
@@ -110,6 +111,7 @@ impl<'a> MarkdownRenderer<'a> {
         }
 
         let unrelative_url_sanitizer = constrain_closure(|url| {
+            // We have no base URL; allow fragment links only.
             if url.starts_with('#') {
                 return Some(Cow::Borrowed(url));
             }
@@ -118,6 +120,7 @@ impl<'a> MarkdownRenderer<'a> {
         });
 
         let relative_url_sanitizer = constrain_closure(move |url| {
+            // sanitizer_base_url is Some(String); use it to fix the relative URL.
             if url.starts_with('#') {
                 return Some(Cow::Borrowed(url));
             }
@@ -179,7 +182,8 @@ impl<'a> MarkdownRenderer<'a> {
     }
 }
 
-/// Renders Markdown text to sanitized HTML.
+/// Renders Markdown text to sanitized HTML with a given `base_url`.
+/// See `readme_to_html` for the interpretation of `base_url`.
 fn markdown_to_html(text: &str, base_url: Option<&str>) -> CargoResult<String> {
     let renderer = MarkdownRenderer::new(base_url);
     renderer.to_html(text)
@@ -198,9 +202,9 @@ static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
 ];
 
 /// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
-/// on the extension of the supplied filename.
+/// on the extension of the supplied `filename`.
 ///
-/// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
+/// The returned text will not contain any harmful HTML tag or attribute (such as iframe,
 /// onclick, onmouseover, etc.).
 ///
 /// The `base_url` parameter will be used as the base for any relative links found in the
