@@ -257,7 +257,11 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
         readme_to_html(
             &contents,
-            manifest.package.readme_file.as_ref().map_or("README.md", |e| &**e),
+            manifest
+                .package
+                .readme_file
+                .as_ref()
+                .map_or("README.md", |e| &**e),
             manifest.package.repository.as_ref().map(|e| &**e),
         ).expect(&format!(
             "[{}-{}] Couldn't render README",

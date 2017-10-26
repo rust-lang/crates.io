@@ -110,7 +110,7 @@ impl<'a> MarkdownRenderer<'a> {
         }
 
         let unrelative_url_sanitizer = constrain_closure(|url| {
-            if url.starts_with("#") {
+            if url.starts_with('#') {
                 return Some(Cow::Borrowed(url));
             }
 
@@ -136,8 +136,7 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com")
-                    || url.host_str() == Some("gitlab.com")
+                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
                     || url.host_str() == Some("bitbucket.org")
             } else {
                 false
