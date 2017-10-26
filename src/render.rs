@@ -1,5 +1,6 @@
 use ammonia::{Builder, UrlRelative};
 use comrak;
+use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use url::Url;
 
@@ -7,7 +8,7 @@ use util::CargoResult;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
-pub struct MarkdownRenderer<'a> {
+struct MarkdownRenderer<'a> {
     html_sanitizer: Builder<'a>,
 }
 
@@ -58,7 +59,7 @@ impl<'a> MarkdownRenderer<'a> {
             .cloned()
             .collect();
         let tag_attributes = [
-            ("a", ["href", "target"].iter().cloned().collect()),
+            ("a", ["href", "id", "target"].iter().cloned().collect()),
             (
                 "img",
                 ["width", "height", "src", "alt", "align"]
@@ -108,7 +109,19 @@ impl<'a> MarkdownRenderer<'a> {
             f
         }
 
+        let unrelative_url_sanitizer = constrain_closure(|url| {
+            if url.starts_with("#") {
+                return Some(Cow::Borrowed(url));
+            }
+
+            return None;
+        });
+
         let relative_url_sanitizer = constrain_closure(move |url| {
+            if url.starts_with("#") {
+                return Some(Cow::Borrowed(url));
+            }
+
             let mut new_url = sanitizer_base_url.clone().unwrap();
             if !new_url.ends_with('/') {
                 new_url.push('/');
@@ -123,7 +136,8 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
+                url.host_str() == Some("github.com")
+                    || url.host_str() == Some("gitlab.com")
                     || url.host_str() == Some("bitbucket.org")
             } else {
                 false
@@ -141,8 +155,9 @@ impl<'a> MarkdownRenderer<'a> {
             .url_relative(if use_relative {
                 UrlRelative::Custom(Box::new(relative_url_sanitizer))
             } else {
-                UrlRelative::Deny
-            });
+                UrlRelative::Custom(Box::new(unrelative_url_sanitizer))
+            })
+            .id_prefix(Some("user-content-"));
 
         MarkdownRenderer {
             html_sanitizer: html_sanitizer,
@@ -157,6 +172,7 @@ impl<'a> MarkdownRenderer<'a> {
             ext_table: true,
             ext_tagfilter: true,
             ext_tasklist: true,
+            ext_header_ids: Some("user-content-".to_string()),
             ..comrak::ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
@@ -164,7 +180,26 @@ impl<'a> MarkdownRenderer<'a> {
     }
 }
 
-/// Renders a markdown text to sanitized HTML.
+/// Renders Markdown text to sanitized HTML.
+fn markdown_to_html(text: &str, base_url: Option<&str>) -> CargoResult<String> {
+    let renderer = MarkdownRenderer::new(base_url);
+    renderer.to_html(text)
+}
+
+/// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
+/// Note we also render a readme as Markdown if _no_ extension is on the filename.
+static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
+    ".md",
+    ".markdown",
+    ".mdown",
+    ".mdwn",
+    ".mkd",
+    ".mkdn",
+    ".mkdown",
+];
+
+/// Renders a readme to sanitized HTML.  An appropriate rendering method is chosen depending
+/// on the extension of the supplied filename.
 ///
 /// The returned text should not contain any harmful HTML tag or attribute (such as iframe,
 /// onclick, onmouseover, etc.).
@@ -177,14 +212,19 @@ impl<'a> MarkdownRenderer<'a> {
 /// # Examples
 ///
 /// ```
-/// use render::markdown_to_html;
+/// use render::render_to_html;
 ///
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
-/// let rendered = markdown_to_html(text, None)?;
+/// let rendered = readme_to_html(text, "README.md", None)?;
 /// ```
-pub fn markdown_to_html(text: &str, base_url: Option<&str>) -> CargoResult<String> {
-    let renderer = MarkdownRenderer::new(base_url);
-    renderer.to_html(text)
+pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> CargoResult<String> {
+    let filename = filename.to_lowercase();
+
+    if !filename.contains('.') || MARKDOWN_EXTENSIONS.iter().any(|e| filename.ends_with(e)) {
+        return markdown_to_html(text, base_url);
+    }
+
+    Ok(encode_minimal(text).replace("\n", "<br>\n"))
 }
 
 #[cfg(test)]
@@ -304,11 +344,51 @@ mod tests {
     fn absolute_links_dont_get_resolved() {
         let readme_text = "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-
         let result = markdown_to_html(readme_text, Some(&repository)).unwrap();
+
         assert_eq!(
             result,
-            "<a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\" /></a>\n"
+            "<p><a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\"></a></p>\n"
+        );
+    }
+
+    #[test]
+    fn readme_to_html_renders_markdown() {
+        for f in &["README", "readme.md", "README.MARKDOWN", "whatever.mkd"] {
+            assert_eq!(
+                readme_to_html("*lobster*", f, None).unwrap(),
+                "<p><em>lobster</em></p>\n"
+            );
+        }
+    }
+
+    #[test]
+    fn readme_to_html_renders_other_things() {
+        for f in &["readme.exe", "readem.org", "blah.adoc"] {
+            assert_eq!(
+                readme_to_html("<script>lobster</script>\n\nis my friend\n", f, None).unwrap(),
+                "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
+            );
+        }
+    }
+
+    #[test]
+    fn header_has_tags() {
+        let text = "# My crate\n\nHello, world!\n";
+        let result = markdown_to_html(text, None).unwrap();
+        assert_eq!(
+            result,
+            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
+        );
+    }
+
+    #[test]
+    fn manual_anchor_is_sanitized() {
+        let text = "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
+        let result = markdown_to_html(text, None).unwrap();
+        assert_eq!(
+            result,
+            "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
         );
     }
 }

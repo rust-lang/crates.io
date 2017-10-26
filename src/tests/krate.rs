@@ -75,6 +75,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         homepage: None,
         documentation: None,
         readme: None,
+        readme_file: None,
         keywords: None,
         categories: None,
         license: Some("MIT".to_string()),

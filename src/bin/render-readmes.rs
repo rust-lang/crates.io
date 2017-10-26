@@ -1,5 +1,5 @@
 // Iterates over every crate versions ever uploaded and (re-)renders their
-// readme using the Markdown renderer from the cargo_registry crate.
+// readme using the readme renderer from the cargo_registry crate.
 //
 // Warning: this can take a lot of time.
 
@@ -34,7 +34,7 @@ use url::Url;
 
 use cargo_registry::{Config, Version};
 use cargo_registry::schema::*;
-use cargo_registry::render::markdown_to_html;
+use cargo_registry::render::readme_to_html;
 
 const DEFAULT_PAGE_SIZE: usize = 25;
 const USAGE: &'static str = "
@@ -255,8 +255,9 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
             manifest.package.readme.unwrap()
         );
         let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
-        markdown_to_html(
+        readme_to_html(
             &contents,
+            manifest.package.readme_file.as_ref().map_or("README.md", |e| &**e),
             manifest.package.repository.as_ref().map(|e| &**e),
         ).expect(&format!(
             "[{}-{}] Couldn't render README",
@@ -268,6 +269,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     #[derive(Deserialize)]
     struct Package {
         readme: Option<String>,
+        readme_file: Option<String>,
         repository: Option<String>,
     }
     #[derive(Deserialize)]

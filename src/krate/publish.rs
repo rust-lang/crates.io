@@ -67,6 +67,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
+            readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
             repository: repo,
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
@@ -125,7 +126,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
         // Render the README for this crate
         let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::markdown_to_html(&**readme, repo)?),
+            Some(readme) => Some(render::readme_to_html(
+                &**readme,
+                new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+                repo,
+            )?),
             None => None,
         };
 
