@@ -114,11 +114,11 @@ impl<'a> MarkdownRenderer<'a> {
                 return Some(Cow::Borrowed(url));
             }
 
-            return None;
+            None
         });
 
         let relative_url_sanitizer = constrain_closure(move |url| {
-            if url.starts_with("#") {
+            if url.starts_with('#') {
                 return Some(Cow::Borrowed(url));
             }
 
@@ -348,7 +348,7 @@ mod tests {
 
         assert_eq!(
             result,
-            "<p><a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\"></a></p>\n"
+            "<p><a href=\"https://crates.io/crates/clap\" rel=\"nofollow noopener noreferrer\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"Crates.io\"></a></p>\n"
         );
     }
 
