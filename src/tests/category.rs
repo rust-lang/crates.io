@@ -1,6 +1,7 @@
 use conduit::{Handler, Method};
 
-use cargo_registry::category::{Category, EncodableCategory, EncodableCategoryWithSubcategories};
+use views::{EncodableCategory, EncodableCategoryWithSubcategories};
+use models::Category;
 
 #[derive(Deserialize)]
 struct CategoryList {

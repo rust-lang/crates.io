@@ -9,10 +9,7 @@ use diesel::prelude::*;
 use semver;
 use serde_json;
 
-use Crate;
 use db::RequestTransaction;
-use dependency::Dependency;
-use schema::*;
 use util::{human, CargoResult};
 use license_exprs;
 
@@ -20,6 +17,9 @@ pub mod deprecated;
 pub mod downloads;
 pub mod metadata;
 pub mod yank;
+
+use models::{Crate, Dependency};
+use schema::*;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]

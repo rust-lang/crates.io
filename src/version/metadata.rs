@@ -8,9 +8,10 @@ use conduit::{Request, Response};
 
 use diesel::prelude::*;
 use db::RequestTransaction;
-use dependency::EncodableDependency;
-use schema::*;
 use util::{CargoResult, RequestUtils};
+
+use views::{EncodableDependency, EncodablePublicUser};
+use schema::*;
 
 use super::version_and_crate;
 
@@ -51,7 +52,7 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     // is all that is left, hear for backwards compatibility.
     #[derive(Serialize)]
     struct R {
-        users: Vec<::user::EncodablePublicUser>,
+        users: Vec<EncodablePublicUser>,
         meta: Meta,
     }
     #[derive(Serialize)]

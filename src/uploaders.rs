@@ -1,7 +1,6 @@
 use conduit::Request;
 use curl::easy::Easy;
 use flate2::read::GzDecoder;
-use krate::Crate;
 use s3;
 use semver;
 use tar;
@@ -13,6 +12,8 @@ use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
 use std::io::{Read, Write};
+
+use models::Crate;
 
 #[derive(Clone, Debug)]
 pub enum Uploader {

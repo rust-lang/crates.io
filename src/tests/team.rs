@@ -1,10 +1,10 @@
 use std::sync::ONCE_INIT;
 use conduit::{Handler, Method};
 use diesel::*;
-
-use cargo_registry::user::NewUser;
-use cargo_registry::krate::{Crate, EncodableCrate};
 use record::GhUser;
+
+use views::EncodableCrate;
+use models::{Crate, NewUser};
 
 // Users: `crates-tester-1` and `crates-tester-2`
 // Passwords: ask acrichto or gankro

@@ -14,20 +14,16 @@ use git2;
 use semver;
 use serde_json;
 
-use cargo_registry::dependency::EncodableDependency;
-use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
-use cargo_registry::keyword::EncodableKeyword;
-use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
-
-use cargo_registry::token::ApiToken;
-use cargo_registry::schema::{crates, metadata, versions};
-
-use cargo_registry::upload as u;
-use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::{Category, EncodableCategory};
+use cargo_registry::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
+
+use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
+            EncodableVersion, EncodableVersionDownload};
+use views::krate_publish as u;
+use models::{ApiToken, Category, Crate};
+use schema::{crates, metadata, versions};
 
 #[derive(Deserialize)]
 struct VersionsList {

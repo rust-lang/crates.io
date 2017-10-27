@@ -1,6 +1,3 @@
-#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
-use std::ascii::AsciiExt;
-
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::associations::Identifiable;
 use diesel::prelude::*;
@@ -10,14 +7,14 @@ use semver;
 use url::Url;
 
 use app::App;
-use badge::EncodableBadge;
-use crate_owner_invitation::NewCrateOwnerInvitation;
-use dependency::ReverseDependency;
-use owner::{CrateOwner, Owner, OwnerKind};
-use schema::*;
 use util::{human, CargoResult};
+
+use views::EncodableBadge;
+use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
+             ReverseDependency, User, Version};
+
+use schema::*;
 use with_count::*;
-use {Badge, Category, Keyword, User, Version};
 
 pub mod search;
 pub mod publish;
@@ -560,6 +557,7 @@ mod tests {
     use super::*;
     use chrono::NaiveDate;
     use serde_json;
+    use models::Crate;
 
     #[test]
     fn documentation_blacklist_no_url_provided() {

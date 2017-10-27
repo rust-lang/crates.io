@@ -8,8 +8,8 @@ use serde_json::Value;
 use conduit::{Handler, Method};
 use self::diesel::prelude::*;
 
-use cargo_registry::version::EncodableVersion;
-use cargo_registry::schema::versions;
+use views::EncodableVersion;
+use schema::versions;
 
 #[derive(Deserialize)]
 struct VersionList {

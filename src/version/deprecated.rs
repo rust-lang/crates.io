@@ -11,10 +11,13 @@ use diesel::prelude::*;
 use url;
 
 use db::RequestTransaction;
-use schema::*;
 use util::{CargoResult, RequestUtils};
 
-use super::{version_and_crate, EncodableVersion, Version};
+use views::EncodableVersion;
+use models::Version;
+use schema::*;
+
+use super::version_and_crate;
 
 /// Handles the `GET /versions` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {

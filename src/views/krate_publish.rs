@@ -6,10 +6,12 @@ use std::collections::HashMap;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use semver;
-use dependency::Kind as DependencyKind;
 
-use keyword::Keyword as CrateKeyword;
-use krate::{Crate, MAX_NAME_LENGTH};
+use krate::MAX_NAME_LENGTH;
+
+use models::Keyword as CrateKeyword;
+use models::Kind as DependencyKind;
+use models::Crate;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewCrate {

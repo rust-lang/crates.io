@@ -10,12 +10,13 @@ use conduit_router::RequestParams;
 use diesel::prelude::*;
 
 use db::RequestTransaction;
-use download::{EncodableVersionDownload, VersionDownload};
-use schema::*;
 use util::{CargoResult, RequestUtils};
-use Version;
 
-use super::{to_char, Crate};
+use views::EncodableVersionDownload;
+use models::{Crate, Version, VersionDownload};
+use schema::*;
+
+use super::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {

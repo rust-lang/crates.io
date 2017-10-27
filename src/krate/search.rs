@@ -5,14 +5,15 @@ use diesel::prelude::*;
 use diesel_full_text_search::*;
 
 use db::RequestTransaction;
-use owner::OwnerKind;
 use pagination::Paginate;
-use schema::*;
 use user::RequestUser;
 use util::{CargoResult, RequestUtils};
-use {Badge, Version};
 
-use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
+use views::EncodableCrate;
+use models::{Badge, Crate, OwnerKind, Version};
+use schema::*;
+
+use super::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the

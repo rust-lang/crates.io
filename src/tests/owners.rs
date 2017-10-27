@@ -2,16 +2,13 @@ use std::sync::Arc;
 
 use {CrateList, GoodCrate};
 
-use cargo_registry::owner::EncodableOwner;
-use cargo_registry::user::EncodablePublicUser;
-use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation, InvitationResponse,
-                                             NewCrateOwnerInvitation};
-use cargo_registry::schema::crate_owner_invitations;
-use cargo_registry::krate::Crate;
-
 use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
+
+use views::{EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse};
+use models::{Crate, NewCrateOwnerInvitation};
+use schema::crate_owner_invitations;
 
 #[derive(Deserialize)]
 struct TeamResponse {

@@ -5,10 +5,10 @@ use diesel::row::NamedRow;
 use semver;
 
 use git;
-use krate::Crate;
-use schema::*;
 use util::{human, CargoResult};
-use version::Version;
+
+use models::{Crate, Version};
+use schema::*;
 
 #[derive(Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
@@ -86,7 +86,7 @@ impl ReverseDependency {
 
 pub fn add_dependencies(
     conn: &PgConnection,
-    deps: &[::upload::CrateDependency],
+    deps: &[::views::EncodableCrateDependency],
     target_version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
     use diesel::insert_into;

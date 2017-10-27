@@ -1,10 +1,10 @@
-use krate::Crate;
-use schema::badges;
-
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde_json;
 use std::collections::HashMap;
+
+use models::Crate;
+use schema::badges;
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]

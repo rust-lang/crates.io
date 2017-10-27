@@ -3,10 +3,11 @@ use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::*;
 
-use Crate;
 use db::RequestTransaction;
-use schema::*;
 use util::{CargoResult, RequestUtils};
+
+use models::Crate;
+use schema::*;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]

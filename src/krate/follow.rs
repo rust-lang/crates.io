@@ -7,11 +7,11 @@ use diesel::prelude::*;
 use diesel;
 
 use db::RequestTransaction;
-use schema::*;
 use user::RequestUser;
 use util::{CargoResult, RequestUtils};
 
-use super::{Crate, Follow};
+use models::{Crate, Follow};
+use schema::*;
 
 fn follow_target(req: &mut Request) -> CargoResult<Follow> {
     let user = req.user()?;

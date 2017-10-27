@@ -8,8 +8,7 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
-use std::fs::File;
-use std::fs;
+use std::fs::{self, File};
 use std::io::prelude::*;
 use std::io;
 use std::net;
@@ -19,7 +18,6 @@ use std::str;
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
 
-use cargo_registry::user::NewUser;
 use curl::easy::{Easy, List};
 use self::futures::{Future, Stream};
 use self::futures::sync::oneshot;
@@ -28,6 +26,8 @@ use self::tokio_core::net::TcpListener;
 use self::tokio_core::reactor::Core;
 use self::tokio_service::Service;
 use serde_json;
+
+use models::NewUser;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.

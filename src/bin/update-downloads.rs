@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use std::env;
 use std::time::Duration;
 
-use cargo_registry::VersionDownload;
+use cargo_registry::models::VersionDownload;
 use cargo_registry::schema::*;
 
 static LIMIT: i64 = 1000;
@@ -118,9 +118,7 @@ mod test {
     use diesel::insert_into;
     use super::*;
     use cargo_registry::env;
-    use cargo_registry::krate::{Crate, NewCrate};
-    use cargo_registry::user::{NewUser, User};
-    use cargo_registry::version::{NewVersion, Version};
+    use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();

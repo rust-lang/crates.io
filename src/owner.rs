@@ -2,9 +2,10 @@ use diesel::prelude::*;
 
 use app::App;
 use github;
-use schema::*;
 use util::{human, CargoResult};
-use {Crate, User};
+
+use models::{Crate, User};
+use schema::*;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
