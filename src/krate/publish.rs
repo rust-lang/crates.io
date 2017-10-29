@@ -36,6 +36,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
     let name = &*new_crate.name;
     let vers = &*new_crate.vers;
+    let repo = new_crate.repository.as_ref().map(|s| &**s);
     let features = new_crate
         .features
         .iter()
@@ -67,7 +68,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
             readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
-            repository: new_crate.repository.as_ref().map(|s| &**s),
+            repository: repo,
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
@@ -128,6 +129,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             Some(readme) => Some(render::readme_to_html(
                 &**readme,
                 new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+                repo,
             )?),
             None => None,
         };
