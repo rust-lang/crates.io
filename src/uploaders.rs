@@ -20,6 +20,7 @@ pub enum Uploader {
     /// For test usage with a proxy.
     S3 {
         bucket: s3::Bucket,
+        cdn: Option<String>,
         proxy: Option<String>,
     },
 
@@ -45,11 +46,14 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => Some(format!(
-                "https://{}/{}",
-                bucket.host(),
-                Uploader::crate_path(crate_name, version)
-            )),
+            Uploader::S3 { ref bucket, ref cdn, .. } => {
+                let host = match *cdn {
+                    Some(ref s) => s.clone(),
+                    None => bucket.host(),
+                };
+                let path = Uploader::crate_path(crate_name, version);
+                Some(format!("https://{}/{}", host, path))
+            }
             Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
             Uploader::NoOp => None,
         }
@@ -61,11 +65,14 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => Some(format!(
-                "https://{}/{}",
-                bucket.host(),
-                Uploader::readme_path(crate_name, version)
-            )),
+            Uploader::S3 { ref bucket, ref cdn, .. } => {
+                let host = match *cdn {
+                    Some(ref s) => s.clone(),
+                    None => bucket.host(),
+                };
+                let path = Uploader::readme_path(crate_name, version);
+                Some(format!("https://{}/{}", host, path))
+            }
             Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
             Uploader::NoOp => None,
         }

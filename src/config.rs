@@ -66,6 +66,7 @@ impl Default for Config {
                         env("S3_SECRET_KEY"),
                         &api_protocol,
                     ),
+                    cdn: env::var("S3_CDN").ok(),
                     proxy: None,
                 }
             }
@@ -86,6 +87,7 @@ impl Default for Config {
                         env::var("S3_SECRET_KEY").unwrap_or_default(),
                         &api_protocol,
                     ),
+                    cdn: env::var("S3_CDN").ok(),
                     proxy: None,
                 }
             }
@@ -105,6 +107,7 @@ impl Default for Config {
                             env::var("S3_SECRET_KEY").unwrap_or_default(),
                             &api_protocol,
                         ),
+                        cdn: env::var("S3_CDN").ok(),
                         proxy: None,
                     }
                 } else {
