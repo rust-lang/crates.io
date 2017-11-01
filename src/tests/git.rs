@@ -6,6 +6,7 @@ use std::thread;
 
 use git2;
 use url::Url;
+use uuid::Uuid;
 
 fn root() -> PathBuf {
     env::current_dir()
@@ -23,6 +24,23 @@ pub fn bare() -> PathBuf {
 
 #[cfg(target_os = "windows")]
 fn remove_dir_all(path: &Path) -> Result<(), io::Error> {
+    fn rename_temp(path: &Path) -> Result<PathBuf, io::Error> {
+        let temp_name = Uuid::new_v4().hyphenated().to_string();
+        let temp_path = env::temp_dir().join(temp_name);
+        fs::rename(path, &temp_path)?;
+        Ok(temp_path)
+    }
+
+    fn remove_file(path: &Path) -> Result<(), io::Error> {
+        let temp_path = rename_temp(path)?;
+        fs::remove_file(&temp_path)
+    }
+
+    fn remove_dir(path: &Path) -> Result<(), io::Error> {
+        let temp_path = rename_temp(path)?;
+        fs::remove_dir(&temp_path)
+    }
+
     for cursor in fs::read_dir(path)? {
         let entry = cursor?;
         let file_type = entry.file_type()?;
@@ -34,10 +52,10 @@ fn remove_dir_all(path: &Path) -> Result<(), io::Error> {
                 permissions.set_readonly(false);
                 fs::set_permissions(entry.path(), permissions)?;
             }
-            fs::remove_file(&entry.path())?;
+            remove_file(&entry.path())?;
         }
     }
-    fs::remove_dir(path)
+    remove_dir(path)
 }
 
 #[cfg(not(target_os = "windows"))]

@@ -21,6 +21,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tar;
 extern crate url;
+extern crate uuid;
 
 use std::borrow::Cow;
 use std::collections::HashMap;

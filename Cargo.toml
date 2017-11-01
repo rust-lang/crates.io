@@ -79,6 +79,7 @@ hyper-tls = "0.1"
 futures = "0.1"
 tokio-core = "0.1"
 tokio-service = "0.1"
+uuid = { version = "0.5", features = ["v4"] }
 
 [build-dependencies]
 dotenv = "0.10"
