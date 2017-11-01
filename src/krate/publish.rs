@@ -1,5 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -137,10 +138,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
+        let max_unpack = cmp::max(app.config.max_unpack_size, max);
         let (cksum, mut crate_bomb, mut readme_bomb) =
             app.config
                 .uploader
-                .upload_crate(req, &krate, readme, max, vers)?;
+                .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
 
         // Register this crate in our local git repo.

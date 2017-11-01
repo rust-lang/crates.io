@@ -143,6 +143,7 @@ impl Uploader {
         krate: &Crate,
         readme: Option<String>,
         max: u64,
+        max_unpack: u64,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = Arc::clone(req.app());
@@ -151,7 +152,7 @@ impl Uploader {
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body)?;
+            verify_tarball(krate, vers, &body, max_unpack)?;
             self.upload(
                 app.handle(),
                 &path,
@@ -223,12 +224,24 @@ impl Drop for Bomb {
     }
 }
 
-fn verify_tarball(krate: &Crate, vers: &semver::Version, tarball: &[u8]) -> CargoResult<()> {
+fn verify_tarball(krate: &Crate,
+                  vers: &semver::Version,
+                  tarball: &[u8],
+                  max_unpack: u64) -> CargoResult<()> {
+    // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball)?;
+
+    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
+    // which point we say the decompressed source is "too large".
+    let decoder = LimitErrorReader::new(decoder, max_unpack);
+
+    // Use this I/O object now to take a peek inside
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry?;
+        let entry = entry.chain_error(|| {
+            human("uploaded tarball is malformed or too large when decompressed")
+        })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could

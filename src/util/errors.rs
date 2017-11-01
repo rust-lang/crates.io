@@ -195,6 +195,12 @@ impl CargoError for ::serde_json::Error {
     }
 }
 
+impl CargoError for ::std::io::Error {
+    fn description(&self) -> &str {
+        Error::description(self)
+    }
+}
+
 // =============================================================================
 // Concrete errors
 

@@ -25,8 +25,9 @@ extern crate url;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::io::Read;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
@@ -153,6 +154,7 @@ fn app() -> (
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
+        max_unpack_size: 2000,
         mirror: Replica::Primary,
         api_protocol: api_protocol,
     };
@@ -661,15 +663,29 @@ fn new_req_body(
 }
 
 fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
+    let mut files = files.iter().zip(&mut slices).map(|(&(name, _), data)| {
+        let len = data.len() as u64;
+        (name, data as &mut Read, len)
+    }).collect::<Vec<_>>();
+    new_crate_to_body_with_io(new_crate, &mut files)
+}
+
+fn new_crate_to_body_with_io(
+    new_crate: &u::NewCrate,
+    files: &mut [(&str, &mut Read, u64)],
+)
+    -> Vec<u8>
+{
     let mut tarball = Vec::new();
     {
         let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
-        for &(name, data) in files {
+        for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));
-            header.set_size(data.len() as u64);
+            header.set_size(size);
             header.set_cksum();
-            t!(ar.append(&header, &data[..]));
+            t!(ar.append(&header, data));
         }
         t!(ar.finish());
     }
