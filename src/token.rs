@@ -37,20 +37,9 @@ pub struct EncodableApiTokenWithToken {
 impl ApiToken {
     /// Generates a new named API token for a user
     pub fn insert(conn: &PgConnection, user_id: i32, name: &str) -> QueryResult<ApiToken> {
-        // FIXME: Replace this with an ad-hoc insert when upgraded to Diesel 1.0
-        #[table_name = "api_tokens"]
-        #[derive(Insertable, AsChangeset, Debug)]
-        struct NewApiToken<'a> {
-            user_id: i32,
-            name: &'a str,
-        }
-
-        diesel::insert(&NewApiToken {
-            user_id: user_id,
-            name: name,
-        }).into(api_tokens::table)
+        diesel::insert_into(api_tokens::table)
+            .values((api_tokens::user_id.eq(user_id), api_tokens::name.eq(name)))
             .get_result::<ApiToken>(conn)
-            .map_err(From::from)
     }
 
     /// Converts this `ApiToken` model into an `EncodableApiToken` including

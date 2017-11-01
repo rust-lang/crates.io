@@ -15,6 +15,7 @@ pub struct Config {
     pub db_url: String,
     pub env: ::Env,
     pub max_upload_size: u64,
+    pub max_unpack_size: u64,
     pub mirror: Replica,
     pub api_protocol: String,
 }
@@ -127,6 +128,7 @@ impl Default for Config {
             db_url: env("DATABASE_URL"),
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
+            max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             mirror: mirror,
             api_protocol: api_protocol,
         }

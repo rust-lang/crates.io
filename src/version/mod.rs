@@ -1,27 +1,25 @@
 use std::collections::HashMap;
 
-use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
-use conduit::{Request, Response};
+use chrono::NaiveDateTime;
+use conduit::Request;
 use conduit_router::RequestParams;
 use diesel;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use semver;
 use serde_json;
-use url;
 
 use Crate;
-use app::RequestApp;
 use db::RequestTransaction;
-use dependency::{Dependency, EncodableDependency};
-use download::{EncodableVersionDownload, VersionDownload};
-use git;
-use owner::{rights, Rights};
+use dependency::Dependency;
 use schema::*;
-use user::RequestUser;
-use util::errors::CargoError;
-use util::{human, CargoResult, RequestUtils};
+use util::{human, CargoResult};
 use license_exprs;
+
+pub mod deprecated;
+pub mod downloads;
+pub mod metadata;
+pub mod yank;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
@@ -130,7 +128,7 @@ impl Version {
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
         use schema::versions::dsl::readme_rendered_at;
-        use diesel::expression::now;
+        use diesel::dsl::now;
 
         diesel::update(self)
             .set(readme_rendered_at.eq(now.nullable()))
@@ -161,36 +159,34 @@ impl NewVersion {
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
-        use diesel::{insert, select};
-        use diesel::expression::dsl::exists;
+        use diesel::{insert_into, select};
+        use diesel::dsl::exists;
         use schema::versions::dsl::*;
-
-        let already_uploaded = versions
-            .filter(crate_id.eq(self.crate_id))
-            .filter(num.eq(&self.num));
-        if select(exists(already_uploaded)).get_result(conn)? {
-            return Err(human(&format_args!(
-                "crate version `{}` is already \
-                 uploaded",
-                self.num
-            )));
-        }
+        use schema::version_authors::{name, version_id};
 
         conn.transaction(|| {
-            let version = insert(self).into(versions).get_result::<Version>(conn)?;
+            let already_uploaded = versions
+                .filter(crate_id.eq(self.crate_id))
+                .filter(num.eq(&self.num));
+            if select(exists(already_uploaded)).get_result(conn)? {
+                return Err(human(&format_args!(
+                    "crate version `{}` is already \
+                     uploaded",
+                    self.num
+                )));
+            }
+
+            let version = insert_into(versions)
+                .values(self)
+                .get_result::<Version>(conn)?;
 
             let new_authors = authors
                 .iter()
-                .map(|s| {
-                    NewAuthor {
-                        version_id: version.id,
-                        name: &*s,
-                    }
-                })
+                .map(|s| (version_id.eq(version.id), name.eq(s)))
                 .collect::<Vec<_>>();
 
-            insert(&new_authors)
-                .into(version_authors::table)
+            insert_into(version_authors::table)
+                .values(&new_authors)
                 .execute(conn)?;
             Ok(version)
         })
@@ -216,13 +212,6 @@ impl NewVersion {
         }
         Ok(())
     }
-}
-
-#[derive(Insertable, Debug)]
-#[table_name = "version_authors"]
-struct NewAuthor<'a> {
-    version_id: i32,
-    name: &'a str,
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
@@ -258,63 +247,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
     }
 }
 
-/// Handles the `GET /versions` route.
-// FIXME: where/how is this used?
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use diesel::expression::dsl::any;
-    let conn = req.db_conn()?;
-
-    // Extract all ids requested.
-    let query = url::form_urlencoded::parse(req.query_string().unwrap_or("").as_bytes());
-    let ids = query
-        .filter_map(|(ref a, ref b)| if *a == "ids[]" {
-            b.parse().ok()
-        } else {
-            None
-        })
-        .collect::<Vec<i32>>();
-
-    let versions = versions::table
-        .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
-        .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String)>(&*conn)?
-        .into_iter()
-        .map(|(version, crate_name)| version.encodable(&crate_name))
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        versions: Vec<EncodableVersion>,
-    }
-    Ok(req.json(&R { versions: versions }))
-}
-
-/// Handles the `GET /versions/:version_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let (version, krate) = match req.params().find("crate_id") {
-        Some(..) => version_and_crate(req)?,
-        None => {
-            let id = &req.params()["version_id"];
-            let id = id.parse().unwrap_or(0);
-            let conn = req.db_conn()?;
-            versions::table
-                .find(id)
-                .inner_join(crates::table)
-                .select((versions::all_columns, ::krate::ALL_COLUMNS))
-                .first(&*conn)?
-        }
-    };
-
-    #[derive(Serialize)]
-    struct R {
-        version: EncodableVersion,
-    }
-    Ok(req.json(&R {
-        version: version.encodable(&krate.name),
-    }))
-}
-
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
@@ -334,120 +266,4 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
             ))
         })?;
     Ok((version, krate))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/dependencies` route.
-pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let deps = version.dependencies(&*conn)?;
-    let deps = deps.into_iter()
-        .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        dependencies: Vec<EncodableDependency>,
-    }
-    Ok(req.json(&R { dependencies: deps }))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let cutoff_end_date = req.query()
-        .get("before_date")
-        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
-        .unwrap_or_else(|| Utc::today().naive_utc());
-    let cutoff_start_date = cutoff_end_date - Duration::days(89);
-
-    let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(cutoff_start_date..cutoff_end_date))
-        .order(version_downloads::date)
-        .load(&*conn)?
-        .into_iter()
-        .map(VersionDownload::encodable)
-        .collect();
-
-    #[derive(Serialize)]
-    struct R {
-        version_downloads: Vec<EncodableVersionDownload>,
-    }
-    Ok(req.json(&R {
-        version_downloads: downloads,
-    }))
-}
-
-/// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: &mut Request) -> CargoResult<Response> {
-    let (version, _) = version_and_crate(req)?;
-    let conn = req.db_conn()?;
-    let names = version_authors::table
-        .filter(version_authors::version_id.eq(version.id))
-        .select(version_authors::name)
-        .order(version_authors::name)
-        .load(&*conn)?;
-
-    // It was imagined that we wold associate authors with users.
-    // This was never implemented. This complicated return struct
-    // is all that is left, hear for backwards compatibility.
-    #[derive(Serialize)]
-    struct R {
-        users: Vec<::user::EncodablePublicUser>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        names: Vec<String>,
-    }
-    Ok(req.json(&R {
-        users: vec![],
-        meta: Meta { names: names },
-    }))
-}
-
-/// Handles the `DELETE /crates/:crate_id/:version/yank` route.
-/// This does not delete a crate version, it makes the crate
-/// version accessible only to crates that already have a
-/// `Cargo.lock` containing this version.
-///
-/// Notes:
-/// Crate deletion is not implemented to avoid breaking builds,
-/// and the goal of yanking a crate is to prevent crates
-/// beginning to depend on the yanked crate version.
-pub fn yank(req: &mut Request) -> CargoResult<Response> {
-    modify_yank(req, true)
-}
-
-/// Handles the `PUT /crates/:crate_id/:version/unyank` route.
-pub fn unyank(req: &mut Request) -> CargoResult<Response> {
-    modify_yank(req, false)
-}
-
-/// Changes `yanked` flag on a crate version record
-fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
-    let (version, krate) = version_and_crate(req)?;
-    let user = req.user()?;
-    let conn = req.db_conn()?;
-    let owners = krate.owners(&conn)?;
-    if rights(req.app(), &owners, user)? < Rights::Publish {
-        return Err(human("must already be an owner to yank or unyank"));
-    }
-
-    if version.yanked != yanked {
-        conn.transaction::<_, Box<CargoError>, _>(|| {
-            diesel::update(&version)
-                .set(versions::yanked.eq(yanked))
-                .execute(&*conn)?;
-            git::yank(&**req.app(), &krate.name, &version.num, yanked)?;
-            Ok(())
-        })?;
-    }
-
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
 }

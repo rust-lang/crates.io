@@ -30,7 +30,10 @@ impl<R: Read> Read for LimitErrorReader<R> {
 pub fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
     let mut b = [0; 4];
     read_fill(r, &mut b)?;
-    Ok((b[0] as u32) | ((b[1] as u32) << 8) | ((b[2] as u32) << 16) | ((b[3] as u32) << 24))
+    Ok(
+        u32::from(b[0]) | (u32::from(b[1]) << 8) | (u32::from(b[2]) << 16)
+            | (u32::from(b[3]) << 24),
+    )
 }
 
 pub fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8]) -> io::Result<()> {

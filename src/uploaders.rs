@@ -143,27 +143,28 @@ impl Uploader {
         krate: &Crate,
         readme: Option<String>,
         max: u64,
+        max_unpack: u64,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
-        let app = req.app().clone();
+        let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body)?;
+            verify_tarball(krate, vers, &body, max_unpack)?;
             self.upload(
                 app.handle(),
                 &path,
                 &body,
                 "application/x-tar",
-                length as u64,
+                u64::from(length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
         let crate_bomb = Bomb {
-            app: app.clone(),
+            app: Arc::clone(&app),
             path: crate_path,
         };
         let (readme_path, _) = if let Some(rendered) = readme {
@@ -183,7 +184,7 @@ impl Uploader {
             checksum,
             crate_bomb,
             Bomb {
-                app: app.clone(),
+                app: Arc::clone(&app),
                 path: readme_path,
             },
         ))
@@ -216,19 +217,33 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(self.app.clone(), path) {
+            if let Err(e) = self.app.config.uploader.delete(Arc::clone(&self.app), path) {
                 println!("unable to delete {}, {:?}", path, e);
             }
         }
     }
 }
 
-fn verify_tarball(krate: &Crate, vers: &semver::Version, tarball: &[u8]) -> CargoResult<()> {
+fn verify_tarball(
+    krate: &Crate,
+    vers: &semver::Version,
+    tarball: &[u8],
+    max_unpack: u64,
+) -> CargoResult<()> {
+    // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball)?;
+
+    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
+    // which point we say the decompressed source is "too large".
+    let decoder = LimitErrorReader::new(decoder, max_unpack);
+
+    // Use this I/O object now to take a peek inside
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry?;
+        let entry = entry.chain_error(|| {
+            human("uploaded tarball is malformed or too large when decompressed")
+        })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could

@@ -23,6 +23,7 @@ pub struct NewCrate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
+    pub readme_file: Option<String>,
     pub keywords: Option<KeywordList>,
     pub categories: Option<CategoryList>,
     pub license: Option<String>,

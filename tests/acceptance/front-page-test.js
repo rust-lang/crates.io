@@ -1,6 +1,6 @@
 import { test } from 'qunit';
+import { visit, currentURL } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | front page');
 
@@ -12,22 +12,19 @@ test('visiting /', async function(assert) {
     assert.equal(currentURL(), '/');
     assert.equal(document.title, 'Cargo: packages for Rust');
 
-    findWithAssert('a[href="/install"]');
-    findWithAssert('a[href="/crates"]');
-    findWithAssert('a[href="/login"]');
+    assert.dom('[data-test-install-cargo-link]').exists();
+    assert.dom('[data-test-all-crates-link]').exists();
+    assert.dom('[data-test-login-link]').exists();
 
-    hasText(assert, '.downloads .num', '122,669');
-    hasText(assert, '.crates .num', '19');
+    assert.dom('[data-test-total-downloads]').hasText('122,669');
+    assert.dom('[data-test-total-crates]').hasText('19');
 
-    const $newCrate = findWithAssert('#new-crates ul > li:first a');
-    hasText(assert, $newCrate, 'Inflector (0.1.6)');
-    assert.equal($newCrate.attr('href').trim(), '/crates/Inflector');
+    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (0.1.6)');
+    assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector');
 
-    const $mostDownloaded = findWithAssert('#most-downloaded ul > li:first a');
-    hasText(assert, $mostDownloaded, 'serde (0.6.1)');
-    assert.equal($mostDownloaded.attr('href').trim(), '/crates/serde');
+    assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasText('serde (0.6.1)');
+    assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasAttribute('href', '/crates/serde');
 
-    const $justUpdated = findWithAssert('#just-updated ul > li:first a');
-    hasText(assert, $justUpdated, 'nanomsg (0.7.0-alpha)');
-    assert.equal($justUpdated.attr('href').trim(), '/crates/nanomsg');
+    assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.7.0-alpha)');
+    assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
 });

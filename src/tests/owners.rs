@@ -377,13 +377,12 @@ fn invitations_list() {
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
-        let invitation = NewCrateOwnerInvitation {
-            invited_by_user_id: owner.id,
-            invited_user_id: user.id,
-            crate_id: krate.id,
-        };
-        diesel::insert(&invitation)
-            .into(crate_owner_invitations::table)
+        diesel::insert_into(crate_owner_invitations::table)
+            .values(&NewCrateOwnerInvitation {
+                invited_by_user_id: owner.id,
+                invited_user_id: user.id,
+                crate_id: krate.id,
+            })
             .execute(&*conn)
             .unwrap();
         (krate, user)
@@ -439,13 +438,12 @@ fn test_accept_invitation() {
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
-        let invitation = NewCrateOwnerInvitation {
-            invited_by_user_id: owner.id,
-            invited_user_id: user.id,
-            crate_id: krate.id,
-        };
-        diesel::insert(&invitation)
-            .into(crate_owner_invitations::table)
+        diesel::insert_into(crate_owner_invitations::table)
+            .values(&NewCrateOwnerInvitation {
+                invited_by_user_id: owner.id,
+                invited_user_id: user.id,
+                crate_id: krate.id,
+            })
             .execute(&*conn)
             .unwrap();
         (krate, user)
@@ -536,13 +534,12 @@ fn test_decline_invitation() {
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
-        let invitation = NewCrateOwnerInvitation {
-            invited_by_user_id: owner.id,
-            invited_user_id: user.id,
-            crate_id: krate.id,
-        };
-        diesel::insert(&invitation)
-            .into(crate_owner_invitations::table)
+        diesel::insert_into(crate_owner_invitations::table)
+            .values(&NewCrateOwnerInvitation {
+                invited_by_user_id: owner.id,
+                invited_user_id: user.id,
+                crate_id: krate.id,
+            })
             .execute(&*conn)
             .unwrap();
         (krate, user)

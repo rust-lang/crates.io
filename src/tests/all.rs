@@ -26,8 +26,9 @@ extern crate uuid;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::io::Read;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
@@ -45,7 +46,6 @@ use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use diesel::pg::upsert::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 
@@ -155,6 +155,7 @@ fn app() -> (
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
+        max_unpack_size: 2000,
         mirror: Replica::Primary,
         api_protocol: api_protocol,
     };
@@ -249,10 +250,11 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
         owner_kind: 1, // Team owner kind is 1 according to owner.rs
     };
 
-    diesel::insert(&crate_owner.on_conflict(
-        crate_owners::table.primary_key(),
-        do_update().set(crate_owners::deleted.eq(false)),
-    )).into(crate_owners::table)
+    diesel::insert_into(crate_owners::table)
+        .values(&crate_owner)
+        .on_conflict(crate_owners::table.primary_key())
+        .do_update()
+        .set(crate_owners::deleted.eq(false))
         .execute(conn)?;
 
     Ok(())
@@ -294,7 +296,7 @@ impl<'a> VersionBuilder<'a> {
     }
 
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert;
+        use diesel::insert_into;
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
@@ -321,8 +323,8 @@ impl<'a> VersionBuilder<'a> {
                 }
             })
             .collect::<Vec<_>>();
-        insert(&new_deps)
-            .into(dependencies::table)
+        insert_into(dependencies::table)
+            .values(&new_deps)
             .execute(connection)?;
 
         Ok(vers)
@@ -405,7 +407,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::{insert, update};
+        use diesel::{insert_into, update};
 
         let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
 
@@ -423,8 +425,8 @@ impl<'a> CrateBuilder<'a> {
                 date: old_date,
             };
 
-            insert(&crate_download)
-                .into(crate_downloads::table)
+            insert_into(crate_downloads::table)
+                .values(&crate_download)
                 .execute(connection)?;
             krate.downloads = downloads;
             update(&krate).set(&krate).execute(connection)?;
@@ -437,8 +439,8 @@ impl<'a> CrateBuilder<'a> {
                 date: now.naive_utc().date(),
             };
 
-            insert(&crate_download)
-                .into(crate_downloads::table)
+            insert_into(crate_downloads::table)
+                .values(&crate_download)
                 .execute(connection)?;
         }
 
@@ -481,6 +483,7 @@ fn krate(name: &str) -> Crate {
         homepage: None,
         description: None,
         readme: None,
+        readme_file: None,
         license: None,
         repository: None,
         max_upload_size: None,
@@ -501,18 +504,17 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
-    use diesel::insert;
+    use diesel::insert_into;
     use cargo_registry::schema::dependencies;
 
-    let dep = NewDependency {
-        version_id: version.id,
-        crate_id: krate.id,
-        req: ">= 0".into(),
-        optional: false,
-        ..Default::default()
-    };
-    insert(&dep)
-        .into(dependencies::table)
+    insert_into(dependencies::table)
+        .values(&NewDependency {
+            version_id: version.id,
+            crate_id: krate.id,
+            req: ">= 0".into(),
+            optional: false,
+            ..Default::default()
+        })
         .get_result(conn)
         .unwrap()
 }
@@ -649,6 +651,7 @@ fn new_req_body(
             homepage: krate.homepage,
             documentation: krate.documentation,
             readme: krate.readme,
+            readme_file: krate.readme_file,
             keywords: Some(u::KeywordList(kws)),
             categories: Some(u::CategoryList(cats)),
             license: Some("MIT".to_string()),
@@ -661,15 +664,31 @@ fn new_req_body(
 }
 
 fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
+    let mut files = files
+        .iter()
+        .zip(&mut slices)
+        .map(|(&(name, _), data)| {
+            let len = data.len() as u64;
+            (name, data as &mut Read, len)
+        })
+        .collect::<Vec<_>>();
+    new_crate_to_body_with_io(new_crate, &mut files)
+}
+
+fn new_crate_to_body_with_io(
+    new_crate: &u::NewCrate,
+    files: &mut [(&str, &mut Read, u64)],
+) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
         let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
-        for &(name, data) in files {
+        for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));
-            header.set_size(data.len() as u64);
+            header.set_size(size);
             header.set_cksum();
-            t!(ar.append(&header, &data[..]));
+            t!(ar.append(&header, data));
         }
         t!(ar.finish());
     }

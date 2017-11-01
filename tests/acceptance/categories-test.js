@@ -1,6 +1,6 @@
 import { test } from 'qunit';
+import { visit } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | categories');
 
@@ -11,9 +11,9 @@ test('listing categories', async function(assert) {
 
     await visit('/categories');
 
-    hasText(assert, '.row:eq(0) .desc .info span', '0 crates');
-    hasText(assert, '.row:eq(1) .desc .info span', '1 crate');
-    hasText(assert, '.row:eq(2) .desc .info span', '3,910 crates');
+    assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
+    assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
+    assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
 });
 
 test('category/:category_id index default sort is recent-downloads', async function(assert) {
@@ -21,6 +21,5 @@ test('category/:category_id index default sort is recent-downloads', async funct
 
     await visit('/categories/algorithms');
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Recent Downloads');
+    assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
 });

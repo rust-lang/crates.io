@@ -1,6 +1,6 @@
 import { test } from 'qunit';
+import { visit } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
 
 moduleForAcceptance('Acceptance | keywords');
 
@@ -9,6 +9,5 @@ test('keyword/:keyword_id index default sort is recent-downloads', async functio
 
     await visit('/keywords/network');
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Recent Downloads');
+    assert.dom('[data-test-keyword-sort] [data-test-current-order]').hasText('Recent Downloads');
 });

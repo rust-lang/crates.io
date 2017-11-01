@@ -137,7 +137,7 @@ export default Component.extend({
                 pointShape: 'square'
             };
             seriesOption[i * 2 + 1] = {
-                type: 'line',
+                type: 'area',
                 color: COLORS[i % COLORS.length],
                 lineWidth: 2,
                 curveType: 'function',
@@ -156,7 +156,7 @@ export default Component.extend({
                 minorGridlines: { count: 5 },
                 viewWindow: { min: 0, },
             },
-            isStacked: false,
+            isStacked: true,
             focusTarget: 'category',
             seriesType: 'scatter',
             series: seriesOption
