@@ -224,10 +224,12 @@ impl Drop for Bomb {
     }
 }
 
-fn verify_tarball(krate: &Crate,
-                  vers: &semver::Version,
-                  tarball: &[u8],
-                  max_unpack: u64) -> CargoResult<()> {
+fn verify_tarball(
+    krate: &Crate,
+    vers: &semver::Version,
+    tarball: &[u8],
+    max_unpack: u64
+) -> CargoResult<()> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball)?;
 

@@ -808,12 +808,13 @@ fn new_krate_gzip_bomb() {
     ::sign_in(&mut req, &app);
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
-    let body = ::new_crate_to_body_with_io(&new_crate("foo"), &mut [
-        ("foo-1.1.0/a", &mut body, len),
-    ]);
+    let body =
+        ::new_crate_to_body_with_io(&new_crate("foo"), &mut [("foo-1.1.0/a", &mut body, len)]);
     let json = bad_resp!(middle.call(req.with_body(&body)));
     assert!(
-        json.errors[0].detail.contains("too large when decompressed"),
+        json.errors[0]
+            .detail
+            .contains("too large when decompressed"),
         "{:?}",
         json.errors
     );

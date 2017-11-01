@@ -664,19 +664,21 @@ fn new_req_body(
 
 fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
     let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
-    let mut files = files.iter().zip(&mut slices).map(|(&(name, _), data)| {
-        let len = data.len() as u64;
-        (name, data as &mut Read, len)
-    }).collect::<Vec<_>>();
+    let mut files = files
+        .iter()
+        .zip(&mut slices)
+        .map(|(&(name, _), data)| {
+            let len = data.len() as u64;
+            (name, data as &mut Read, len)
+        })
+        .collect::<Vec<_>>();
     new_crate_to_body_with_io(new_crate, &mut files)
 }
 
 fn new_crate_to_body_with_io(
     new_crate: &u::NewCrate,
     files: &mut [(&str, &mut Read, u64)],
-)
-    -> Vec<u8>
-{
+) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
         let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
