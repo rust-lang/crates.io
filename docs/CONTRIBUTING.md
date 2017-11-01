@@ -26,7 +26,7 @@ like to see all new types and functions, public and private, to have documentati
 comments on them. If you change an existing type or function, and it doesn't have
 a documentation comment on it, it'd be great if you could add one to it too.
 
-When you submit a pull request, it will be automatically tested on TravisCI. In
+When you submit a pull request, it will be automatically tested on TravisCI and Appveyor. In
 addition to running both the frontend and the backend tests described below,
 Travis runs [jslint], [clippy], and [rustfmt] on each PR.
 
@@ -312,10 +312,16 @@ diesel migration run
 
 ##### Setting up the git index
 
-Set up the git repo for the crate index by running:
+If you're running Linux or macOS, you can set up the git repo for the crate index by running:
 
 ```
 ./script/init-local-index.sh
+```
+
+If you're running Windows, you can set up the git repo for the crate index by running the following command in PowerShell:
+
+```
+.\script\init-local-index.ps1
 ```
 
 ##### Starting the server and the frontend

@@ -1,0 +1,51 @@
+version: '0.1.{build}'
+
+platform: x64
+
+services:
+  - postgresql96
+
+environment:
+  global:
+    PGUSER: postgres
+    PGPASSWORD: Password12!
+    OPENSSL_VERSION: 1_1_0f
+    OPENSSL_DIR: "c:\\openssl"
+    SSL_CERT_FILE: "c:\\openssl\\cacert.pem"
+    TEST_DATABASE_URL: "postgres://postgres:Password12!@localhost/cargo_registry_test"
+
+  matrix:
+    - APPVEYOR_RUST_CHANNEL: stable
+    - APPVEYOR_RUST_CHANNEL: beta
+    - APPVEYOR_RUST_CHANNEL: nightly
+
+matrix:
+  allow_failures:
+    - APPVEYOR_RUST_CHANNEL: nightly
+
+install:
+  # Install OpenSSL
+  - mkdir c:\openssl
+  - ps: Start-FileDownload "http://slproweb.com/download/Win64OpenSSL-${env:OPENSSL_VERSION}.exe"
+  - Win64OpenSSL-%OPENSSL_VERSION%.exe /SILENT /VERYSILENT /SP- /DIR="C:\openssl"
+  - appveyor DownloadFile https://curl.haxx.se/ca/cacert.pem -FileName c:\openssl\cacert.pem
+  # Install rust and cargo
+  - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - rustup-init.exe -y --default-host x86_64-pc-windows-msvc --default-toolchain %APPVEYOR_RUST_CHANNEL%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  # Debug information
+  - rustc -V
+  - cargo -V
+
+build: false
+
+before_test:
+  # Setup test database
+  - set PATH=%PATH%;C:\Program Files\PostgreSQL\9.6\bin
+  - createdb cargo_registry_test
+
+test_script:
+  - cargo test
+
+cache:
+  - C:\Users\appveyor\.cargo\registry -> Cargo.lock

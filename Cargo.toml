@@ -71,7 +71,7 @@ conduit-middleware = "0.8"
 conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
-civet = "0.9"
+civet = "0.10"
 
 [dev-dependencies]
 conduit-test = "0.8"
@@ -80,6 +80,7 @@ hyper-tls = "0.1"
 futures = "0.1"
 tokio-core = "0.1"
 tokio-service = "0.1"
+uuid = { version = "0.5", features = ["v4"] }
 
 [build-dependencies]
 dotenv = "0.10"
