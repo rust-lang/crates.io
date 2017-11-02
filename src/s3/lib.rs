@@ -3,10 +3,11 @@
 extern crate base64;
 extern crate curl;
 extern crate openssl;
-extern crate time;
+extern crate chrono;
 
 use std::io::prelude::*;
 
+use chrono::prelude::Utc;
 use curl::easy::{Easy, List, ReadError, Transfer};
 use openssl::hash::MessageDigest;
 use openssl::sign::Signer;
@@ -53,7 +54,7 @@ impl Bucket {
             path
         };
         let host = self.host();
-        let date = time::now().rfc822z().to_string();
+        let date = Utc::now().to_rfc2822().to_string();
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = format!("{}://{}/{}", self.proto, host, path);
 
@@ -91,7 +92,7 @@ impl Bucket {
             path
         };
         let host = self.host();
-        let date = time::now().rfc822z().to_string();
+        let date = Utc::now().to_rfc2822().to_string();
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = format!("{}://{}/{}", self.proto, host, path);
 
