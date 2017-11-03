@@ -1,5 +1,5 @@
 import { test } from 'qunit';
-import { click, visit, currentURL, currentRouteName } from 'ember-native-dom-helpers';
+import { click, visit, currentURL, currentRouteName, fillIn } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 import Ember from 'ember';
 
