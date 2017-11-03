@@ -27,7 +27,7 @@ export default Controller.extend({
     categories: computed.alias('crate.categories'),
     badges: computed.alias('crate.badges'),
     isOwner: computed('crate.owner_user', function() {
-        return this.get('crate.owner_user').findBy('login', this.session.get('currentUser.id'));
+        return this.get('crate.owner_user').findBy('login', this.session.get('currentUser.login'));
     }),
 
     sortedVersions: computed.readOnly('crate.versions'),

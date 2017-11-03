@@ -142,7 +142,7 @@ test('navigating to the owners page when not an owner', async function(assert) {
 
     this.application.register('service:session-b', Ember.Service.extend({
         currentUser: {
-            id: 'iain8'
+            login: 'iain8'
         }
     }));
 
@@ -158,7 +158,7 @@ test('navigating to the owners page', async function(assert) {
 
     this.application.register('service:session-b', Ember.Service.extend({
         currentUser: {
-            id: 'thehydroimpulse'
+            login: 'thehydroimpulse'
         }
     }));
 
