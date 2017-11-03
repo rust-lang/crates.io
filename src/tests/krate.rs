@@ -1,8 +1,9 @@
 extern crate diesel;
 
 use std::collections::HashMap;
-use std::io::prelude::*;
 use std::fs::{self, File};
+use std::io::prelude::*;
+use std::io;
 
 use chrono::Utc;
 use conduit::{Handler, Method};
@@ -75,6 +76,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         homepage: None,
         documentation: None,
         readme: None,
+        readme_file: None,
         keywords: None,
         categories: None,
         license: Some("MIT".to_string()),
@@ -791,12 +793,31 @@ fn new_krate_too_big_but_whitelisted() {
 #[test]
 fn new_krate_wrong_files() {
     let (_b, app, middle) = ::app();
-    let mut req = ::new_req(app.clone(), "foo", "1.0.0");
+    let mut req = ::new_req(app.clone(), "foo", "1.1.0");
     ::sign_in(&mut req, &app);
     let data: &[u8] = &[1];
-    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
+    let files = [("foo-1.1.0/a", data), ("bar-1.1.0/a", data)];
     let body = ::new_crate_to_body(&new_crate("foo"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
+}
+
+#[test]
+fn new_krate_gzip_bomb() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(app.clone(), "foo", "1.1.0");
+    ::sign_in(&mut req, &app);
+    let len = 512 * 1024;
+    let mut body = io::repeat(0).take(len);
+    let body =
+        ::new_crate_to_body_with_io(&new_crate("foo"), &mut [("foo-1.1.0/a", &mut body, len)]);
+    let json = bad_resp!(middle.call(req.with_body(&body)));
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("too large when decompressed"),
+        "{:?}",
+        json.errors
+    );
 }
 
 #[test]

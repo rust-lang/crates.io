@@ -1,5 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -36,6 +37,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
     let name = &*new_crate.name;
     let vers = &*new_crate.vers;
+    let repo = new_crate.repository.as_ref().map(|s| &**s);
     let features = new_crate
         .features
         .iter()
@@ -66,7 +68,8 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
-            repository: new_crate.repository.as_ref().map(|s| &**s),
+            readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
+            repository: repo,
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
@@ -124,17 +127,22 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
         // Render the README for this crate
         let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::markdown_to_html(&**readme)?),
+            Some(readme) => Some(render::readme_to_html(
+                &**readme,
+                new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+                repo,
+            )?),
             None => None,
         };
 
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
+        let max_unpack = cmp::max(app.config.max_unpack_size, max);
         let (cksum, mut crate_bomb, mut readme_bomb) =
             app.config
                 .uploader
-                .upload_crate(req, &krate, readme, max, vers)?;
+                .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
 
         // Register this crate in our local git repo.

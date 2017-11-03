@@ -1,8 +1,9 @@
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
-import { computed } from '@ember/object';
+import { computed, observer } from '@ember/object';
 import { later } from '@ember/runloop';
+import $ from 'jquery';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -175,5 +176,9 @@ export default Controller.extend({
             return op.finally(() => this.set('fetchingFollowing', false));
         },
     },
+
+    report: observer('crate.readme', function() {
+        setTimeout(() => $(window).trigger('hashchange'));
+    }),
 
 });

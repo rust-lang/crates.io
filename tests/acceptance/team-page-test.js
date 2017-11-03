@@ -1,4 +1,5 @@
 import { test } from 'qunit';
+import { visit } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 
 moduleForAcceptance('Acceptance | team page');
@@ -8,8 +9,8 @@ test('has team organization display', async function(assert) {
 
     await visit('/teams/github:org:thehydroimpulse');
 
-    assert.dom('.team-info h1').hasText('org');
-    assert.dom('.team-info h2').hasText('thehydroimpulseteam');
+    assert.dom('[data-test-heading] [data-test-org-name]').hasText('org');
+    assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
 });
 
 test('has link to github in team header', async function(assert) {
@@ -17,7 +18,8 @@ test('has link to github in team header', async function(assert) {
 
     await visit('/teams/github:org:thehydroimpulse');
 
-    assert.dom('.info a').hasAttribute('href', 'https://github.com/org_test');
+    assert.dom('[data-test-heading] [data-test-github-link]')
+        .hasAttribute('href', 'https://github.com/org_test');
 });
 
 test('github link has image in team header', async function(assert) {
@@ -25,7 +27,8 @@ test('github link has image in team header', async function(assert) {
 
     await visit('/teams/github:org:thehydroimpulse');
 
-    assert.dom('.info a img').hasAttribute('src', '/assets/GitHub-Mark-32px.png');
+    assert.dom('[data-test-heading] [data-test-github-link] img')
+        .hasAttribute('src', '/assets/GitHub-Mark-32px.png');
 });
 
 test('team organization details has github profile icon', async function(assert) {
@@ -33,5 +36,6 @@ test('team organization details has github profile icon', async function(assert)
 
     await visit('/teams/github:org:thehydroimpulse');
 
-    assert.dom('.info img').hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+    assert.dom('[data-test-heading] [data-test-avatar]')
+        .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
 });

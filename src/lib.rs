@@ -22,6 +22,7 @@ extern crate dotenv;
 extern crate flate2;
 extern crate git2;
 extern crate hex;
+extern crate htmlescape;
 extern crate lettre;
 extern crate license_exprs;
 #[macro_use]
