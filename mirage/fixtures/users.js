@@ -13,4 +13,11 @@ export default [{
     "login": "thehydroimpulse",
     "name": "Daniel Fagnan",
     "url": "https://github.com/thehydroimpulse"
+}, {
+    "avatar": "https://avatars3.githubusercontent.com/u/1179195?v=3",
+    "email": "iain@fastmail.com",
+    "id": 10982,
+    "login": "iain8",
+    "name": "Iain Buchanan",
+    "url": "https://github.com/iain8"
 }];
