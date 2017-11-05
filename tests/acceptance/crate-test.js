@@ -59,6 +59,53 @@ test('visiting /crates/nanomsg/0.6.0', async function(assert) {
     assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
 });
 
+test('crate page with all versions yanked has yanked message', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0', yanked: true });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1', yanked: true });
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
+    assert.dom('.crate-info').hasText(/This crate has been yanked/);
+});
+
+test('crate page with max version in prerelease version shows max stable', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1-pre' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1-pre' });
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
+});
+
+test('crate page with only prerelease versions shows max prerelease', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.0-pre.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0-pre.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0-pre.1' });
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0-pre.1');
+});
+
+test('crate page with all stable versions yanked shows max prerelease', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1-pre' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0', yanked: true });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1-pre' });
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1-pre');
+});
+
+test('crate page with yanked max stable version shows latest non-yanked stable', async function(assert) {
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.2-pre' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1', yanked: true });
+    server.create('version', { crate: 'nanomsg', num: '0.6.2-pre' });
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');
+});
+
 test('navigating to the all versions page', async function(assert) {
     server.loadFixtures();
 
