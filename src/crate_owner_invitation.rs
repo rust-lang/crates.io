@@ -61,7 +61,7 @@ pub struct EncodableCrateOwnerInvitation {
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
-    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
 }
 
 /// Handles the `GET /me/crate_owner_invitations` route.
