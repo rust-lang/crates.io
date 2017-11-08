@@ -142,6 +142,7 @@ fn app() -> (
             &api_protocol,
         ),
         proxy: Some(proxy),
+        cdn: None,
     };
 
     let config = cargo_registry::Config {
