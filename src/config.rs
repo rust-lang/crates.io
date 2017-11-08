@@ -24,10 +24,12 @@ impl Default for Config {
     /// Returns a default value for the application's config
     ///
     /// Sets the following default values:
+    ///
     /// - `Config::max_upload_size`: 10MiB
     /// - `Config::api_protocol`: `https`
     ///
     /// Pulls values from the following environment variables:
+    ///
     /// - `GIT_REPO_CHECKOUT`: The directory where the registry index was cloned.
     /// - `MIRROR`: Is this instance of cargo_registry a mirror of crates.io.
     /// - `HEROKU`: Is this instance of cargo_registry currently running on Heroku.
