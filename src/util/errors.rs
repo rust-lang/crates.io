@@ -342,7 +342,7 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
 
 /// This is intended to be used for errors being sent back to the Ember
 /// frontend, not to cargo as cargo does not handle non-200 response codes well
-/// (see https://github.com/rust-lang/cargo/issues/3995), but Ember requires
+/// (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
 /// non-200 response codes for its stores to work properly.
 ///
 /// Since this is going back to the UI these errors are treated the same as

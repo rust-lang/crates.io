@@ -1,4 +1,4 @@
-//! This crate implements the backend server for https://crates.io/
+//! This crate implements the backend server for <https://crates.io/>
 //!
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),

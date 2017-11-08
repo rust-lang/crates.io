@@ -408,7 +408,8 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, update};
 
-        let mut krate = self.krate.create_or_update(connection, None, self.owner_id)?;
+        let mut krate = self.krate
+            .create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.

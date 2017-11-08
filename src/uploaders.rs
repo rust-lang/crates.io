@@ -191,7 +191,7 @@ impl Uploader {
     }
 
     /// Deletes an uploaded file.
-    fn delete(&self, app: Arc<App>, path: &str) -> CargoResult<()> {
+    fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 let mut handle = app.handle();
@@ -217,7 +217,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(Arc::clone(&self.app), path) {
+            if let Err(e) = self.app.config.uploader.delete(&self.app, path) {
                 println!("unable to delete {}, {:?}", path, e);
             }
         }

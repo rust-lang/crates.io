@@ -270,7 +270,8 @@ mod tests {
 
     #[test]
     fn text_with_inline_javascript() {
-        let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
+        let text =
+            r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
         let result = markdown_to_html(text, None).unwrap();
         assert_eq!(
             result,
@@ -345,7 +346,8 @@ mod tests {
 
     #[test]
     fn absolute_links_dont_get_resolved() {
-        let readme_text = "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
+        let readme_text =
+            "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
         let result = markdown_to_html(readme_text, Some(&repository)).unwrap();
 
@@ -387,7 +389,8 @@ mod tests {
 
     #[test]
     fn manual_anchor_is_sanitized() {
-        let text = "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
+        let text =
+            "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
         let result = markdown_to_html(text, None).unwrap();
         assert_eq!(
             result,
