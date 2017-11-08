@@ -1,9 +1,9 @@
 #![deny(warnings)]
 
 extern crate base64;
+extern crate chrono;
 extern crate curl;
 extern crate openssl;
-extern crate chrono;
 
 use std::io::prelude::*;
 
