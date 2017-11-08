@@ -46,7 +46,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, ref cdn, .. } => {
+            Uploader::S3 {
+                ref bucket,
+                ref cdn,
+                ..
+            } => {
                 let host = match *cdn {
                     Some(ref s) => s.clone(),
                     None => bucket.host(),
@@ -65,7 +69,11 @@ impl Uploader {
     /// It returns `None` if the current `Uploader` is `NoOp`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
-            Uploader::S3 { ref bucket, ref cdn, .. } => {
+            Uploader::S3 {
+                ref bucket,
+                ref cdn,
+                ..
+            } => {
                 let host = match *cdn {
                     Some(ref s) => s.clone(),
                     None => bucket.host(),
