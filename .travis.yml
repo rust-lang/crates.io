@@ -39,10 +39,10 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-  - rust: nightly-2017-09-20
+  - rust: nightly-2017-11-07
     env: RUSTFMT=YESPLEASE
     script:
-    - cargo install --force rustfmt-nightly --vers 0.2.7
+    - cargo install --force rustfmt-nightly --vers 0.2.15
     - export LD_LIBRARY_PATH=$(rustc --print sysroot)/lib:$LD_LIBRARY_PATH
     - rustfmt --version
     - cargo fmt -- --write-mode=diff
@@ -51,7 +51,7 @@ matrix:
     - cargo build
     - cargo test
     - npm test
-  - rust: nightly-2017-09-20
+  - rust: nightly-2017-11-07
     env: CLIPPY=YESPLEASE
     script:
     - cargo check --features "lint"

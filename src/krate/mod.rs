@@ -1,3 +1,4 @@
+#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
 use std::ascii::AsciiExt;
 
 use chrono::{NaiveDate, NaiveDateTime};
@@ -26,7 +27,7 @@ pub mod metadata;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLACKLIST: [&'static str; 1] = ["rust-ci.org"];
+const DOCUMENTATION_BLACKLIST: [&str; 1] = ["rust-ci.org"];
 
 #[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -315,7 +316,7 @@ impl Crate {
 
     pub fn minimal_encodable(
         self,
-        max_version: semver::Version,
+        max_version: &semver::Version,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
@@ -334,7 +335,7 @@ impl Crate {
     #[cfg_attr(feature = "clippy", allow(too_many_arguments))]
     pub fn encodable(
         self,
-        max_version: semver::Version,
+        max_version: &semver::Version,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,

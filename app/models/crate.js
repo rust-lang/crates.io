@@ -38,6 +38,14 @@ export default DS.Model.extend({
         return this.store.adapterFor('crate').follow(this.get('id'));
     },
 
+    inviteOwner(username) {
+        return this.store.adapterFor('crate').inviteOwner(this.get('id'), username);
+    },
+
+    removeOwner(username) {
+        return this.store.adapterFor('crate').removeOwner(this.get('id'), username);
+    },
+
     unfollow() {
         return this.store.adapterFor('crate').unfollow(this.get('id'));
     },

@@ -181,7 +181,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
-            krate: krate.minimal_encodable(max_version, None, false, None),
+            krate: krate.minimal_encodable(&max_version, None, false, None),
             warnings: warnings,
         }))
     })

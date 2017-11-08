@@ -167,8 +167,17 @@
                 {{/if}}
             {{/unless}}
 
-            <div>
+            <div id='crate-owners'>
                 <h3>Owners</h3>
+
+                {{#if isOwner}}
+                <p>
+                    {{#link-to 'crate.owners' crate}}
+                        Manage owners
+                    {{/link-to}}
+                </p>
+                {{/if}}
+
                 <ul class='owners' data-test-owners>
                    {{#each crate.owner_team as |team|}}
                         <li>

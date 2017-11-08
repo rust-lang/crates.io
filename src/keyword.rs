@@ -1,3 +1,4 @@
+#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
 use std::ascii::AsciiExt;
 
 use chrono::NaiveDateTime;
@@ -127,7 +128,9 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
         query = query.order(keywords::keyword.asc());
     }
 
-    let data = query.paginate(limit, offset).load::<(Keyword, i64)>(&*conn)?;
+    let data = query
+        .paginate(limit, offset)
+        .load::<(Keyword, i64)>(&*conn)?;
     let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
     let kws = data.into_iter()
         .map(|(k, _)| k.encodable())

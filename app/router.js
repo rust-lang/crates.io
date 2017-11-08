@@ -21,6 +21,8 @@ Router.map(function() {
 
         this.route('reverse_dependencies');
 
+        this.route('owners');
+
         // Well-known routes
         this.route('docs');
         this.route('repo');

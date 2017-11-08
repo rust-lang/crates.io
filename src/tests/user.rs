@@ -381,7 +381,8 @@ fn test_github_login_does_not_overwrite_email() {
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
 
-    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
@@ -440,7 +441,8 @@ fn test_email_get_and_put() {
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
 
-    let body = r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
@@ -479,7 +481,8 @@ fn test_empty_email_not_added() {
         user
     };
 
-    let body = r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
     let json = bad_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
@@ -494,7 +497,8 @@ fn test_empty_email_not_added() {
         json.errors
     );
 
-    let body = r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
     let json = bad_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))
@@ -531,7 +535,8 @@ fn test_this_user_cannot_change_that_user_email() {
         unsigned_user
     };
 
-    let body = r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
 
     let json = bad_resp!(
         middle.call(
@@ -642,7 +647,8 @@ fn test_insert_into_email_table_with_email_change() {
     assert!(!r.user.email_verified);
     assert!(r.user.email_verification_sent);
 
-    let body = r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
+    let body =
+        r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
     let mut response = ok_resp!(
         middle.call(
             req.with_path(&format!("/api/v1/users/{}", user.id))

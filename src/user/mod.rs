@@ -243,7 +243,7 @@ impl User {
 /// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
 ///
-/// see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
+/// see <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>
 ///
 /// ## Response Body Example
 ///
@@ -279,7 +279,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 /// to exchange the temporary `code` for an API token. The API token is returned together with
 /// the corresponding user information.
 ///
-/// see https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site
+/// see <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>
 ///
 /// ## Query Parameters
 ///

@@ -41,7 +41,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
             .zip(krates)
             .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(max_version, None, false, None))
+                Ok(krate.minimal_encodable(&max_version, None, false, None))
             })
             .collect()
     };
@@ -153,7 +153,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     Ok(
         req.json(&R {
             krate: krate.clone().encodable(
-                max_version,
+                &max_version,
                 Some(ids),
                 Some(&kws),
                 Some(&cats),
