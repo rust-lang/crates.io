@@ -25,7 +25,14 @@ impl SecurityHeadersMiddleware {
         headers.insert("X-XSS-Protection".into(), vec!["1; mode=block".into()]);
 
         let s3_host = match *uploader {
-            Uploader::S3 { ref bucket, .. } => bucket.host(),
+            Uploader::S3 {
+                ref bucket,
+                ref cdn,
+                ..
+            } => match *cdn {
+                Some(ref s) => s.clone(),
+                None => bucket.host(),
+            },
             _ => unreachable!(
                 "This middleware should only be used in the production environment, \
                  which should also require an S3 uploader, QED"
