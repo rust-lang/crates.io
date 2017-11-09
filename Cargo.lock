@@ -104,7 +104,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-registry"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ammonia 1.0.0-rc3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo-registry-s3 0.2.0",
