@@ -215,7 +215,7 @@ impl NewVersion {
 }
 
 impl Queryable<versions::SqlType, Pg> for Version {
-    #[cfg_attr(feature = "clippy", allow(type_complexity))]
+    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
     type Row = (
         i32,
         i32,

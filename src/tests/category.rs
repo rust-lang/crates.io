@@ -20,10 +20,13 @@ struct CategoryWithSubcategories {
     category: EncodableCategoryWithSubcategories,
 }
 
+#[cfg(test)]
+use std::sync::Arc;
+
 #[test]
 fn index() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/categories");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/categories");
 
     // List 0 categories if none exist
     let mut response = ok_resp!(middle.call(&mut req));
@@ -56,7 +59,7 @@ fn show() {
     let (_b, app, middle) = ::app();
 
     // Return not found if a category doesn't exist
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/categories/foo-bar");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/categories/foo-bar");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 404);
 
@@ -80,7 +83,7 @@ fn show() {
 #[test]
 fn update_crate() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/categories/foo");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/categories/foo");
     macro_rules! cnt {
         ($req: expr, $cat: expr) => {{
             $req.with_path(&format!("/api/v1/categories/{}", $cat));

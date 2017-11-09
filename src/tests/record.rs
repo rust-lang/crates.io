@@ -34,6 +34,7 @@ use serde_json;
 pub struct Bomb {
     iorx: Sink,
     quittx: Option<oneshot::Sender<()>>,
+    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
     thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
 }
 
@@ -63,7 +64,7 @@ impl Drop for Bomb {
             .to_string();
         match res {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
-            Err(e) => if stderr.len() > 0 {
+            Err(e) => if !stderr.is_empty() {
                 println!("server subtask failed ({:?}): {}", e, stderr)
             },
             Ok(_) if thread::panicking() => {}
@@ -99,7 +100,7 @@ pub fn proxy() -> (String, Bomb) {
     let record = if record && !data.exists() {
         Record::Capture(Vec::new(), data)
     } else if !data.exists() {
-        Record::Replay(serde_json::from_slice("[]".as_bytes()).unwrap())
+        Record::Replay(serde_json::from_slice(b"[]").unwrap())
     } else {
         let mut body = Vec::new();
         t!(t!(File::open(&data)).read_to_end(&mut body));
@@ -107,7 +108,7 @@ pub fn proxy() -> (String, Bomb) {
     };
 
     let sink = Arc::new(Mutex::new(Vec::new()));
-    let sink2 = Sink(sink.clone());
+    let sink2 = Sink(Arc::clone(&sink));
 
     let (quittx, quitrx) = oneshot::channel();
 
@@ -129,7 +130,7 @@ pub fn proxy() -> (String, Bomb) {
                 addr,
                 Proxy {
                     sink: sink2.clone(),
-                    record: record.clone(),
+                    record: Rc::clone(&record),
                     client: client.clone(),
                 },
             );
@@ -172,7 +173,7 @@ impl Service for Proxy {
     fn call(&self, req: hyper::Request) -> Self::Future {
         match *self.record.borrow_mut() {
             Record::Capture(_, _) => {
-                let record = self.record.clone();
+                let record = Rc::clone(&self.record);
                 Box::new(record_http(req, &self.client).map(
                     move |(response, exchange)| {
                         if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
@@ -309,7 +310,7 @@ fn replay_http(
 
     let mut response = hyper::Response::new();
     response.set_status(hyper::StatusCode::try_from(exchange.response.status).unwrap());
-    for (key, value) in exchange.response.headers.into_iter() {
+    for (key, value) in exchange.response.headers {
         response.headers_mut().append_raw(key, value);
     }
     response.set_body(exchange.response.body);
@@ -322,7 +323,7 @@ impl GhUser {
         self.init.call_once(|| self.init());
         let mut u = ::new_user(self.login);
         u.gh_access_token = Cow::Owned(self.token());
-        return u;
+        u
     }
 
     fn filename(&self) -> PathBuf {
@@ -335,7 +336,7 @@ impl GhUser {
             .unwrap()
             .read_to_string(&mut token)
             .unwrap();
-        return token;
+        token
     }
 
     fn init(&self) {
@@ -390,7 +391,7 @@ impl GhUser {
         let resp: Response = serde_json::from_str(str::from_utf8(&response).unwrap()).unwrap();
         File::create(&self.filename())
             .unwrap()
-            .write_all(&resp.token.as_bytes())
+            .write_all(resp.token.as_bytes())
             .unwrap();
     }
 }

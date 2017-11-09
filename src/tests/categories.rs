@@ -1,10 +1,10 @@
+use std::env;
+
 use cargo_registry::schema::categories;
 use diesel::*;
 use dotenv::dotenv;
 
-use std::env;
-
-const ALGORITHMS: &'static str = r#"
+const ALGORITHMS: &str = r#"
 [algorithms]
 name = "Algorithms"
 description = """
@@ -12,7 +12,7 @@ Rust implementations of core algorithms such as hashing, sorting, \
 searching, and more.\
 """"#;
 
-const ALGORITHMS_AND_SUCH: &'static str = r#"
+const ALGORITHMS_AND_SUCH: &str = r#"
 [algorithms]
 name = "Algorithms"
 description = """
@@ -26,7 +26,7 @@ description = """
 Other stuff
 """"#;
 
-const ALGORITHMS_AND_ANOTHER: &'static str = r#"
+const ALGORITHMS_AND_ANOTHER: &str = r#"
 [algorithms]
 name = "Algorithms"
 description = """

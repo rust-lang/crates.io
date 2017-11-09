@@ -1,6 +1,7 @@
-use diesel::prelude::*;
 use std::collections::HashSet;
+use std::sync::Arc;
 
+use diesel::prelude::*;
 use conduit::{Handler, Method};
 
 use cargo_registry::token::{ApiToken, EncodableApiTokenWithToken};
@@ -32,7 +33,7 @@ macro_rules! assert_contains {
 #[test]
 fn list_logged_out() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me/tokens");
 
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
@@ -41,7 +42,7 @@ fn list_logged_out() {
 #[test]
 fn list_empty() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me/tokens");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -58,7 +59,7 @@ fn list_empty() {
 #[test]
 fn list_tokens() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me/tokens");
 
     let (user, tokens);
     {
@@ -87,7 +88,7 @@ fn list_tokens() {
 #[test]
 fn create_token_logged_out() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
 
@@ -98,7 +99,7 @@ fn create_token_logged_out() {
 #[test]
 fn create_token_invalid_request() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -117,7 +118,7 @@ fn create_token_invalid_request() {
 #[test]
 fn create_token_no_name() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -136,7 +137,7 @@ fn create_token_no_name() {
 #[test]
 fn create_token_long_body() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -155,7 +156,7 @@ fn create_token_long_body() {
 #[test]
 fn create_token_exceeded_tokens_per_user() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let user;
     {
@@ -178,7 +179,7 @@ fn create_token_exceeded_tokens_per_user() {
 #[test]
 fn create_token_success() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -206,19 +207,19 @@ fn create_token_multiple_have_different_values() {
     let (_b, app, middle) = ::app();
 
     let user = {
-        let conn = t!(app.clone().diesel_database.get());
+        let conn = t!(Arc::clone(&app).diesel_database.get());
         t!(::new_user("foo").create_or_update(&conn))
     };
 
     let first = {
-        let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+        let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
         ::sign_in_as(&mut req, &user);
         req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
         ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
     };
 
     let second = {
-        let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+        let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
         ::sign_in_as(&mut req, &user);
         req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
         ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
@@ -232,24 +233,24 @@ fn create_token_multiple_users_have_different_values() {
     let (_b, app, middle) = ::app();
 
     let first_user = {
-        let conn = t!(app.clone().diesel_database.get());
+        let conn = t!(Arc::clone(&app).diesel_database.get());
         t!(::new_user("foo").create_or_update(&conn))
     };
 
     let second_user = {
-        let conn = t!(app.clone().diesel_database.get());
+        let conn = t!(Arc::clone(&app).diesel_database.get());
         t!(::new_user("bar").create_or_update(&conn))
     };
 
     let first_token = {
-        let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+        let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
         ::sign_in_as(&mut req, &first_user);
         req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
         ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
     };
 
     let second_token = {
-        let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+        let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
         ::sign_in_as(&mut req, &second_user);
         req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
         ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
@@ -261,7 +262,7 @@ fn create_token_multiple_users_have_different_values() {
 #[test]
 fn create_token_with_token() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Put, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Put, "/api/v1/me/tokens");
 
     let (user, token);
     {
@@ -285,7 +286,7 @@ fn create_token_with_token() {
 #[test]
 fn revoke_token_non_existing() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Delete, "/api/v1/me/tokens/5");
+    let mut req = ::req(Arc::clone(&app), Method::Delete, "/api/v1/me/tokens/5");
 
     let user = {
         let conn = t!(app.diesel_database.get());
@@ -300,7 +301,7 @@ fn revoke_token_non_existing() {
 #[test]
 fn revoke_token_doesnt_revoke_other_users_token() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Delete, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Delete, "/api/v1/me/tokens");
 
     // Create one user with a token and sign in with a different user
     let (user1, token, user2);
@@ -340,7 +341,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 #[test]
 fn revoke_token_success() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Delete, "/api/v1/me/tokens");
+    let mut req = ::req(Arc::clone(&app), Method::Delete, "/api/v1/me/tokens");
 
     let (user, token);
     {
@@ -377,7 +378,7 @@ fn revoke_token_success() {
 #[test]
 fn token_gives_access_to_me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
 
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
@@ -399,7 +400,7 @@ fn token_gives_access_to_me() {
 #[test]
 fn using_token_updates_last_used_at() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 

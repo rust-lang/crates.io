@@ -57,7 +57,7 @@ fn delete(conn: &PgConnection) {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         return;
     }
 
@@ -70,7 +70,7 @@ fn delete(conn: &PgConnection) {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         panic!("aborting transaction");
     }
 }

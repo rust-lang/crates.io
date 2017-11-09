@@ -1,4 +1,5 @@
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
 use conduit::{Handler, Method};
 
@@ -46,7 +47,7 @@ fn access_token_needs_data() {
 #[test]
 fn me() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
@@ -68,7 +69,7 @@ fn show() {
         t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar").create_or_update(&conn));
     }
 
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/users/foo");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("foo", json.user.login);
@@ -113,7 +114,7 @@ fn show_latest_user_case_insensitively() {
             ).create_or_update(&conn)
         );
     }
-    let mut req = ::req(app.clone(), Method::Get, "api/v1/users/fOObAr");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "api/v1/users/fOObAr");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!(
@@ -180,7 +181,7 @@ fn following() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/");
     {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
@@ -363,7 +364,7 @@ fn test_github_login_does_not_overwrite_email() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -428,7 +429,7 @@ fn test_email_get_and_put() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("mango").create_or_update(&conn).unwrap();
@@ -473,7 +474,7 @@ fn test_email_get_and_put() {
 #[test]
 fn test_empty_email_not_added() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("papaya").create_or_update(&conn).unwrap();
@@ -525,7 +526,7 @@ fn test_empty_email_not_added() {
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
 
     let not_signed_in_user = {
         let conn = app.diesel_database.get().unwrap();
@@ -569,7 +570,7 @@ fn test_insert_into_email_table() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -626,7 +627,7 @@ fn test_insert_into_email_table_with_email_change() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -702,7 +703,7 @@ fn test_confirm_user_email() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
@@ -755,7 +756,7 @@ fn test_existing_user_email() {
     }
 
     let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/me");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
         let new_user = NewUser {
