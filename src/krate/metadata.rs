@@ -22,11 +22,14 @@ use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
+    Ok(req.json(&summary_json(&*req.db_conn()?).unwrap()))
+}
+
+pub fn summary_json(conn: &PgConnection) -> CargoResult<SummaryResponse> {
     use diesel::dsl::*;
     use diesel::types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
-    let conn = req.db_conn()?;
     let num_crates = crates.count().get_result(&*conn)?;
     let num_downloads = metadata::table
         .select(metadata::total_downloads)
@@ -90,18 +93,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .map(Category::encodable)
         .collect();
 
-    #[derive(Serialize)]
-    struct R {
-        num_downloads: i64,
-        num_crates: i64,
-        new_crates: Vec<EncodableCrate>,
-        most_downloaded: Vec<EncodableCrate>,
-        most_recently_downloaded: Vec<EncodableCrate>,
-        just_updated: Vec<EncodableCrate>,
-        popular_keywords: Vec<EncodableKeyword>,
-        popular_categories: Vec<EncodableCategory>,
-    }
-    Ok(req.json(&R {
+    Ok(SummaryResponse {
         num_downloads: num_downloads,
         num_crates: num_crates,
         new_crates: encode_crates(new_crates)?,
@@ -110,7 +102,19 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         just_updated: encode_crates(just_updated)?,
         popular_keywords: popular_keywords,
         popular_categories: popular_categories,
-    }))
+    })
+}
+
+#[derive(Serialize, Debug)]
+pub struct SummaryResponse {
+    num_downloads: i64,
+    num_crates: i64,
+    new_crates: Vec<EncodableCrate>,
+    most_downloaded: Vec<EncodableCrate>,
+    most_recently_downloaded: Vec<EncodableCrate>,
+    just_updated: Vec<EncodableCrate>,
+    popular_keywords: Vec<EncodableKeyword>,
+    popular_categories: Vec<EncodableCategory>,
 }
 
 /// Handles the `GET /crates/:crate_id` route.

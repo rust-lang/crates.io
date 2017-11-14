@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {{!content-for "head"}}
+
+    <link rel="stylesheet" href="/assets/vendor.css">
+    <link rel="stylesheet" href="/assets/cargo.css">
+
+    <title>Cargo: packages for Rust</title>
+
+    {{!content-for "head-footer"}}
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/cargo.png" type="image/png">
+    <link rel="search" href="/opensearch.xml" type="application/opensearchdescription+xml" title="Cargo">
+  </head>
+  <body>
+    {{!content-for "body"}}
+
+    {{!google-jsapi}}
+
+    <div>
+        <a href="https://github.com/rust-lang/crates.io" class="fork-me">
+            <img src="/assets/forkme.png"/>
+        </a>
+        
+        <div id="header">
+            <a href="/">
+                <img src="/assets/Cargo-Logo-Small.png" id="logo" height=100 width=100 />
+            </a>
+            <a href="/">
+            <h1>
+                crates.io
+                <span class="subtitle">Rust Package Registry</span>
+            </h1>
+            </a>
+        
+            <form class="search" action="/search">
+                <input type="text" class="search" name="q" id="cargo-desktop-search"
+                    placeholder="Search for packages..."
+                    autofocus="autofocus"
+                    tabindex="1"
+                    required=true>
+            </form>
+        
+            <div class="nav">
+                <a href="/crates">
+                    Browse All Crates
+                </a>
+
+                <span class="sep">|</span>
+
+                <div class="dropdown-container">
+                    <button class="dropdown">
+                        Docs
+                        <span class="arrow"></span>
+                    </button>
+        
+                    <ul id="doc-links" class="dropdown">
+                        <li><a href="http://doc.crates.io/index.html">Getting Started</a></li>
+                        <li><a href="http://doc.crates.io/guide.html">Guide</a></li>
+                        <li><a href="http://doc.crates.io/specifying-dependencies.html">Specifying Dependencies</a></li>
+                        <li><a href="http://doc.crates.io/crates-io.html">Publishing on crates.io</a></li>
+                        <li><a href="http://doc.crates.io/faq.html">FAQ</a></li>
+                        <li><a href="http://doc.crates.io/manifest.html">Cargo.toml Format</a></li>
+                        <li><a href="http://doc.crates.io/build-script.html">Build Scripts</a></li>
+                        <li><a href="http://doc.crates.io/config.html">Configuration</a></li>
+                        <li><a href="http://doc.crates.io/pkgid-spec.html">Package ID specs</a></li>
+                        <li><a href="http://doc.crates.io/environment-variables.html">Environment Variables</a></li>
+                        <li><a href="http://doc.crates.io/source-replacement.html">Source Replacement</a></li>
+                        <li><a href="http://doc.crates.io/external-tools.html">External Tools</a></li>
+                        <li><a href="/policies">Policies</a></li>
+                    </ul>
+                </div>
+
+                <span class="sep">|</span>
+
+                {{#if current_user}}
+                    <div class="dropdown-container">
+                        <button class="dropdown">
+                            {{!user-avatar user=current_user size="small"}}
+                            {{current_user.name}}
+                            <span class="arrow"></span>
+                        </button>
+
+                        <ul class="dropdown current-user-links">
+                            <li><a href="/dashboard">Dashboard</a></li>
+                            <li><a href="/me">Account Settings</a></li>
+                            <li><a href="/me/pending-invites">Owner Invites</a></li>
+                            <li class="last"><a href="/logout">Sign Out</a></li>
+                        </ul>
+                    </div>
+                {{else}}
+                    <a href="/login">
+                        {{!svg-jar "lock"}}
+                        Log in with GitHub
+                    </a>
+                {{/if}}
+            </div>
+        
+            <div class="menu">
+                <div class="dropdown-container">
+                    <button class="dropdown">
+                        Menu
+                        <span class="arrow"></span>
+                    </button>
+                    <ul class="dropdown current-user-links">
+                        <li><a href="/crates">Browse All Crates</a></li>
+                        {{#if current_user}}
+                            <li><a href="/dashboard">Dashboard</a></li>
+                            <li><a href="/me">Account Settings</a></li>
+                            <li class="last"><a href="/logout">Sign Out</a></li>
+                        {{else}}
+                            <li><a href="/login">Log in with GitHub</a></li>
+                        {{/if}}
+                    </ul>
+                </div>
+            </div>
+        
+            <div class="links">
+            </div>
+        </div>
+        
+        <form id="mobile-search" class="search" action="/search">
+            <input type="text" class="search" name="q"
+                placeholder="Search for packages..."
+                autofocus="autofocus"
+                autocorrect="off"
+                tabindex="1"
+                required=true>
+        </form>
+        
+        <div id="main" class="inner-content">
+            {{!flash-message}}
+
+            <div id="title-header">
+                <h1>The Rust community&rsquo;s crate registry</h1>
+            
+                <div class="links">
+                    <a href="/install" class="yellow-button">
+                        {{!svg-jar "button-download"}}
+                        Install Cargo
+                    </a>
+            
+                    <a href="http://doc.crates.io/guide.html" class="yellow-button">
+                        {{!svg-jar "flag"}}
+                        Getting Started
+                    </a>
+                </div>
+            </div>
+            
+            <div id="blurb">
+                <div id="intro">
+                    Instantly publish your crates and install them. Use the API to
+                    interact and find out more information about available crates. Become
+                    a contributor and enhance the site with your work.
+                </div>
+            
+                <div id="stats">
+                    <div class="downloads">
+                        {{!svg-jar "download"}}
+                        <span class="num">{{format_num num_downloads}}</span>
+                        <span class="desc small">Downloads</span>
+                    </div>
+                    <div class="crates">
+                        {{!svg-jar "crate"}}
+                        <span class="num">{{format_num num_crates}}</span>
+                        <span class="desc small">Crates in stock</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="home-crates" class="crate-lists">
+                <div id="new-crates">
+                    <h2>New Crates</h2>
+                    {{>crates crates=new_crates}}
+                </div>
+                <div id="most-downloaded">
+                    <h2>Most Downloaded</h2>
+                    {{>crates crates=most_downloaded}}
+                </div>
+                <div id="just-updated">
+                    <h2>Just Updated</h2>
+                    {{>crates crates=just_updated}}
+                </div>
+                <div id="most-recently-downloaded">
+                    <h2>Most Recent Downloads</h2>
+                    {{>crates crates=most_recently_downloaded}}
+                </div>
+                <div id="keywords">
+                    <h2>Popular Keywords <a href="/keywords">(see all)</a></h2>
+                    {{>keywords keywords=popular_keywords}}
+                </div>
+                <div id="categories">
+                    <h2>Popular Categories <a href="/categories">(see all)</a></h2>
+                    {{>categories categories=popular_categories}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="after-main-links">
+            <a href="/install">Install</a>
+            <span class="sep">|</span>
+            <a href="http://doc.crates.io">Getting Started</a>
+            <span class="sep">|</span>
+            <a href="http://doc.crates.io/guide.html">Guide</a>
+            <span class="sep">|</span>
+            <a href="mailto:help@crates.io">Send us an email</a>
+            <span class="sep">|</span>
+            <a href="/policies">Policies</a>
+        </div>
+    </div>
+
+    <!-- <script src="/assets/vendor.js"></script>
+    <script src="/assets/cargo.js"></script> -->
+
+    {{!content-for "body-footer"}}
+  </body>
+</html>

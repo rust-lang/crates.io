@@ -1,0 +1,12 @@
+<ul>
+    {{#each crates as |crate|}}
+        <li>
+            <a href="/crate/{{crate.id}}" class="name">
+                <span>{{crate.name}} ({{crate.max_version}})</span>
+                <div class="arrow-in-list">
+                    {{!svg-jar "right-arrow"}}
+                </div>
+            </a>
+        </li>
+    {{/each}}
+</ul>

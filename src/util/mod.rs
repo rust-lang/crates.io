@@ -29,6 +29,7 @@ pub trait RequestUtils {
     fn redirect(&self, url: String) -> Response;
 
     fn json<T: Serialize>(&self, t: &T) -> Response;
+    fn html(&self, &str) -> Response;
     fn query(&self) -> HashMap<String, String>;
     fn wants_json(&self) -> bool;
     fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
@@ -49,6 +50,16 @@ pub fn json_response<T: Serialize>(t: &T) -> Response {
     }
 }
 
+pub fn html_response(html: &str) -> Response {
+    let mut headers = HashMap::new();
+    headers.insert("Content-Type".to_string(), vec!["text/html; charset=utf-8".to_string()]);
+    headers.insert("Content-Length".to_string(), vec![html.len().to_string()]);
+    Response {
+        status: (200, "OK"),
+        headers: headers,
+        body: Box::new(Cursor::new(html.to_string())),
+    }
+}
 
 impl<'a> RequestUtils for Request + 'a {
     fn json<T: Serialize>(&self, t: &T) -> Response {
@@ -97,6 +108,10 @@ impl<'a> RequestUtils for Request + 'a {
             return Err(human("page indexing starts from 1, page 0 is invalid"));
         }
         Ok((((page - 1) * limit) as i64, limit as i64))
+    }
+
+    fn html(&self, html: &str) -> Response {
+        html_response(html)
     }
 }
 
