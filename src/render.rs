@@ -129,6 +129,10 @@ impl<'a> MarkdownRenderer<'a> {
             if !new_url.ends_with('/') {
                 new_url.push('/');
             }
+            if new_url.ends_with(".git/") {
+                let offset = new_url.len() - 5;
+                new_url.drain(offset..offset + 4);
+            }
             new_url += "blob/master";
             if !url.starts_with('/') {
                 new_url.push('/');
