@@ -310,11 +310,12 @@ mod tests {
         let relative = "[there](there)";
 
         for host in &["github.com", "gitlab.com", "bitbucket.org"] {
-            for &extra_slash in &[true, false] {
+            for (&extra_slash, &dot_git) in [true, false].iter().zip(&[true, false]) {
                 let url = format!(
-                    "https://{}/rust-lang/test{}",
+                    "https://{}/rust-lang/test{}{}",
                     host,
-                    if extra_slash { "/" } else { "" }
+                    if dot_git { ".git" } else { "" },
+                    if extra_slash { "/" } else { "" },
                 );
 
                 let result = markdown_to_html(absolute, Some(&url)).unwrap();
