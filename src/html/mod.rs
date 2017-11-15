@@ -11,25 +11,26 @@ use krate;
 
 use db::RequestTransaction;
 
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let html = include_str!("index.hbs");
+pub mod categories;
 
+pub fn index(req: &mut Request) -> CargoResult<Response> {
     let mut handlebars = Handlebars::new();
     handlebars.register_helper("format_num", Box::new(format_num));
-    handlebars.register_helper("embed_svg", Box::new(embed_svg));
+    handlebars.register_helper("embed_svg",  Box::new(embed_svg));
+    handlebars.register_template_string("layout",     include_str!("layout.hbs"))?;
+    handlebars.register_template_string("index",      include_str!("index.hbs"))?;
     handlebars.register_template_string("categories", include_str!("_categories.hbs"))?;
-    handlebars.register_template_string("crates", include_str!("_crates.hbs"))?;
-    handlebars.register_template_string("keywords", include_str!("_keywords.hbs"))?;
+    handlebars.register_template_string("crates",     include_str!("_crates.hbs"))?;
+    handlebars.register_template_string("keywords",   include_str!("_keywords.hbs"))?;
 
-    let mut json = json!(&krate::metadata::summary_json(&*req.db_conn()?).unwrap());
+    let mut json = json!(&krate::metadata::summary_json(&*req.db_conn()?)?);
     json["current_user"] = json!({"id": 1, "name": "Sean Linsley"});
     // TODO: flash message
-    // TODO: global layout, that other pages can render into
     // TODO: user image in header
 
-    let rendered = handlebars.template_render(html, &json).expect("failed to render");
+    let html = handlebars.render("index", &json).expect("failed to render");
 
-    Ok(req.html(&String::from(rendered)))
+    Ok(req.html(&html))
 }
 
 fn format_num(h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
