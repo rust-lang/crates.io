@@ -125,6 +125,32 @@ fn nonexistent_team() {
     );
 }
 
+// Test adding team names with mixed case
+#[test]
+fn add_team_mixed_case() {
+    let (_b, app, middle) = ::app();
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_mixed_case");
+
+    let body = r#"{"users":["github:Crates-Test-Org:Core"]}"#;
+
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/foo_mixed_case/owners")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_mixed_case")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+    }
+}
+
 // Test adding team as owner when on it
 #[test]
 fn add_team_as_member() {
