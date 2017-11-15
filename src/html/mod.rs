@@ -1,26 +1,14 @@
-#![allow(unused_imports)]
-
-use std::fs::File;
-use std::io::Read;
 use std::collections::HashMap;
 
 use conduit::{Request, Response};
 
-use util::{human, internal, CargoResult, ChainError, RequestUtils};
+use util::{CargoResult, RequestUtils};
 
 extern crate handlebars;
 use self::handlebars::*;
 
 use krate;
 
-use serde_json;
-use serde::Serialize;
-use serde_json::Map;
-use serde_json::Value;
-
-use conduit::WriteBody;
-
-use diesel::*;
 use db::RequestTransaction;
 
 pub fn index(req: &mut Request) -> CargoResult<Response> {
