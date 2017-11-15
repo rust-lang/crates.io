@@ -95,7 +95,7 @@
                     </div>
                 {{else}}
                     <a href="/login">
-                        {{!svg-jar "lock"}}
+                        {{embed_svg "lock"}}
                         Log in with GitHub
                     </a>
                 {{/if}}
@@ -141,12 +141,12 @@
             
                 <div class="links">
                     <a href="/install" class="yellow-button">
-                        {{!svg-jar "button-download"}}
+                        {{embed_svg "button-download"}}
                         Install Cargo
                     </a>
             
                     <a href="http://doc.crates.io/guide.html" class="yellow-button">
-                        {{!svg-jar "flag"}}
+                        {{embed_svg "flag"}}
                         Getting Started
                     </a>
                 </div>
@@ -161,12 +161,12 @@
             
                 <div id="stats">
                     <div class="downloads">
-                        {{!svg-jar "download"}}
+                        {{embed_svg "download"}}
                         <span class="num">{{format_num num_downloads}}</span>
                         <span class="desc small">Downloads</span>
                     </div>
                     <div class="crates">
-                        {{!svg-jar "crate"}}
+                        {{embed_svg "crate"}}
                         <span class="num">{{format_num num_crates}}</span>
                         <span class="desc small">Crates in stock</span>
                     </div>

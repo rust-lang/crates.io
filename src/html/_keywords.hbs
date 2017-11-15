@@ -1,10 +1,10 @@
 <ul>
     {{#each keywords as |keyword|}}
         <li>
-            <a href="/keyword/{{keyword.slug}}" class="name">
+            <a href="/keywords/{{keyword.slug}}" class="name">
                 <span>{{keyword.id}} ({{format_num keyword.crates_cnt}})</span>
                 <div class="arrow-in-list">
-                    {{!svg-jar "right-arrow"}}
+                    {{embed_svg "right-arrow"}}
                 </div>
             </a>
         </li>
