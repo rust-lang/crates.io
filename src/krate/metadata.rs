@@ -22,7 +22,7 @@ use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
-    Ok(req.json(&summary_json(&*req.db_conn()?).unwrap()))
+    Ok(req.json(&summary_json(&*req.db_conn()?)?))
 }
 
 pub fn summary_json(conn: &PgConnection) -> CargoResult<SummaryResponse> {

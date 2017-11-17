@@ -1,0 +1,74 @@
+{{#>layout}}
+    {{#*inline "head"}}
+        <title>Categories</title>
+    {{/inline}}
+
+    {{#*inline "main"}}
+        <div id="crates-heading">
+            {{embed_svg "crate"}}
+            <h1>All Categories</h1>
+        </div>
+
+        <div id="results">
+            <div class="nav">
+                <span class="amt small">
+                    Displaying
+                    <span class="cur">{{current_page_start}}-{{current_page_end}}</span>
+                    of <span class="total">{{meta.total}}</span> total results
+                </span>
+            </div>
+
+            <div class="sort">
+                <span class="small">Sort by</span>
+
+                <div class="dropdown-container">
+                    <button class="dropdown">
+                        {{embed_svg "sort"}}
+                        {{current_sort}}
+                        <span class="arrow"></span>
+                    </button>
+
+                    <ul class="dropdown">
+                        {{#each sorts as |sort|}}
+                            <li>
+                                <a href="/categories?sort={{sort.key}}">{{sort.name}}</a>
+                            </li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="white-rows">
+            {{#each categories as |category|}}
+                <div class="row">
+                    <div class="desc">
+                        <div class="info">
+                            <a href="/categories/{{category.slug}}">{{category.category}}</a>
+                            <span class="small">
+                                {{category.crates_cnt}} {{pluralize "crate" category.crates_cnt}}
+                            </span>
+                        </div>
+                        <div class="summary">
+                            <span class="small">
+                                {{category.description}}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+
+        <div class="pagination">
+            {{#link_to page=prev_page class="prev" rel="prev" title="previous page"}}
+                {{embed_svg "left-pag"}}
+            {{/link_to}}
+            {{#each pages as |page|}}
+                {{#link_to page=page}}{{page}}{{/link_to}}
+            {{/each}}
+            {{#link_to page=next_page class="next" rel="next" title="next page"}}
+                {{embed_svg "right-pag"}}
+            {{/link_to}}
+        </div>
+    {{/inline}}
+{{/layout}}

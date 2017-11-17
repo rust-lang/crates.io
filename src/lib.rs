@@ -226,6 +226,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut router = RouteBuilder::new();
 
     router.get("/", C(html::index));
+    router.get("/categories", C(html::categories::index));
 
     // Mount the router under the /api/v1 path so we're at least somewhat at the
     // liberty to change things in the future!

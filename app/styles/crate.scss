@@ -87,11 +87,12 @@
     .cur, .total { color: $main-color; font-weight: bold; }
 
     .dropdown-container { font-size: 85%; }
-    a.dropdown {
+    button.dropdown, a.dropdown {
         background-color: $main-bg-dark;
         padding: 10px;
         display: inline-block;
         @include border-radius(5px);
+        border-color: transparent;
     }
 }
 
