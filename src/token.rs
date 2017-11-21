@@ -69,7 +69,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { api_tokens: tokens }))
 }
 
-/// Handles the `POST /me/tokens` route.
+/// Handles the `PUT /me/tokens` route.
 pub fn new(req: &mut Request) -> CargoResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
@@ -89,12 +89,12 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
         ));
     }
 
-    let max_post_size = 2000;
+    let max_size = 2000;
     let length = req.content_length()
         .chain_error(|| bad_request("missing header: Content-Length"))?;
 
-    if length > max_post_size {
-        return Err(bad_request(&format!("max post size is: {}", max_post_size)));
+    if length > max_size {
+        return Err(bad_request(&format!("max content length is: {}", max_size)));
     }
 
     let mut json = vec![0; length as usize];

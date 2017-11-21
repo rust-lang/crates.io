@@ -206,7 +206,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/me", C(user::me));
     api_router.get("/me/updates", C(user::updates));
     api_router.get("/me/tokens", C(token::list));
-    api_router.post("/me/tokens", C(token::new));
+    api_router.put("/me/tokens", C(token::new));
     api_router.delete("/me/tokens/:id", C(token::revoke));
     api_router.get(
         "/me/crate_owner_invitations",
