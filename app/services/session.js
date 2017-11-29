@@ -1,9 +1,15 @@
-import Service from '@ember/service';
+import Service, { inject as service } from '@ember/service';
 
 export default Service.extend({
     savedTransition: null,
+    abortedTransition: null,
     isLoggedIn: false,
     currentUser: null,
+    currentUserDetected: false,
+
+    ajax: service(),
+    store: service(),
+    router: service(),
 
     init() {
         this._super(...arguments);
@@ -29,6 +35,7 @@ export default Service.extend({
 
     logoutUser() {
         this.set('savedTransition', null);
+        this.set('abortedTransition', null);
         this.set('isLoggedIn', null);
         this.set('currentUser', null);
 
@@ -36,6 +43,51 @@ export default Service.extend({
             localStorage.removeItem('isLoggedIn');
         } catch(e) {
             // ignore error
+        }
+    },
+
+    loadUser() {
+        if (this.get('isLoggedIn') && !this.get('currentUser')) {
+            this.fetchUser()
+                .catch(() => this.logoutUser())
+                .finally(() => {
+                    this.set('currentUserDetected', true);
+                    let transition = this.get('abortedTransition');
+                    if (transition) {
+                        transition.retry();
+                        this.set('abortedTransition', null);
+                    }
+                });
+        } else {
+            this.set('currentUserDetected', true);
+        }
+    },
+
+    fetchUser() {
+        return this.get('ajax').request('/api/v1/me')
+            .then((response) => {
+                this.set('currentUser', this.get('store').push(this.get('store').normalize('user', response.user)));
+            });
+    },
+
+    checkCurrentUser(transition, beforeRedirect) {
+        if (this.get('currentUser')) {
+            return;
+        }
+
+        // The current user is loaded asynchronously, so if we haven't actually
+        // loaded the current user yet then we need to wait for it to be loaded.
+        // Once we've done that we can retry the transition and start the whole
+        // process over again!
+        if (!this.get('currentUserDetected')) {
+            transition.abort();
+            this.set('abortedTransition', transition);
+        } else {
+            this.set('savedTransition', transition);
+            if (beforeRedirect) {
+                beforeRedirect();
+            }
+            return this.get('router').transitionTo('index');
         }
     }
 });
