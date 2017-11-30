@@ -3,7 +3,7 @@ use std::env;
 use conduit::Request;
 use diesel::prelude::{ConnectionResult, PgConnection};
 use r2d2;
-use r2d2_diesel::{self, ConnectionManager};
+use r2d2_diesel::ConnectionManager;
 use url::Url;
 
 use app::RequestApp;
@@ -23,14 +23,14 @@ pub fn connect_now() -> ConnectionResult<PgConnection> {
 
 pub fn diesel_pool(
     url: &str,
-    config: r2d2::Config<PgConnection, r2d2_diesel::Error>,
+    config: r2d2::Builder<ConnectionManager<PgConnection>>,
 ) -> DieselPool {
     let mut url = Url::parse(url).expect("Invalid database URL");
     if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
     let manager = ConnectionManager::new(url.into_string());
-    r2d2::Pool::new(config, manager).unwrap()
+    config.build(manager).unwrap()
 }
 
 pub trait RequestTransaction {

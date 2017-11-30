@@ -74,7 +74,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
     let downloads = VersionDownload::belonging_to(&version)
-        .filter(version_downloads::date.between(cutoff_start_date..cutoff_end_date))
+        .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
         .order(version_downloads::date)
         .load(&*conn)?
         .into_iter()

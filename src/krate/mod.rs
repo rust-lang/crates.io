@@ -11,11 +11,12 @@ use url::Url;
 
 use app::App;
 use badge::EncodableBadge;
+use crate_owner_invitation::NewCrateOwnerInvitation;
 use dependency::ReverseDependency;
 use owner::{CrateOwner, Owner, OwnerKind};
-use crate_owner_invitation::NewCrateOwnerInvitation;
 use schema::*;
 use util::{human, CargoResult};
+use with_count::*;
 use {Badge, Category, Keyword, User, Version};
 
 pub mod search;
@@ -531,19 +532,16 @@ impl Crate {
         offset: i64,
         limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
-        use diesel::dsl::sql;
-        use diesel::types::{BigInt, Integer, Text};
+        use diesel::sql_query;
+        use diesel::types::{BigInt, Integer};
 
-        type SqlType = ((dependencies::SqlType, Integer, Text), BigInt);
-        let rows = sql::<SqlType>(include_str!("krate_reverse_dependencies.sql"))
+        let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
             .bind::<BigInt, _>(offset)
             .bind::<BigInt, _>(limit)
-            .load::<(ReverseDependency, i64)>(conn)?;
+            .load::<WithCount<ReverseDependency>>(conn)?;
 
-        let (vec, counts): (_, Vec<_>) = rows.into_iter().unzip();
-        let cnt = counts.into_iter().nth(0).unwrap_or(0i64);
-        Ok((vec, cnt))
+        Ok(rows.records_and_total())
     }
 }
 

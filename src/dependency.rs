@@ -1,6 +1,9 @@
-use diesel::prelude::*;
 use diesel::pg::Pg;
+use diesel::prelude::*;
+use diesel::query_source::QueryableByName;
+use diesel::row::NamedRow;
 use semver;
+use std::error::Error;
 
 use git;
 use krate::Crate;
@@ -24,7 +27,7 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
-#[derive(Debug, Queryable)]
+#[derive(Debug)]
 pub struct ReverseDependency {
     dependency: Dependency,
     crate_downloads: i32,
@@ -181,5 +184,42 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
                 n => panic!("unknown kind: {}", n),
             },
         }
+    }
+}
+
+impl QueryableByName<Pg> for Dependency {
+    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
+        use schema::dependencies::*;
+        use diesel::dsl::SqlTypeOf;
+
+        let req_str = row.get::<SqlTypeOf<req>, String>("req")?;
+        Ok(Dependency {
+            id: row.get::<SqlTypeOf<id>, _>("id")?,
+            version_id: row.get::<SqlTypeOf<version_id>, _>("version_id")?,
+            crate_id: row.get::<SqlTypeOf<crate_id>, _>("crate_id")?,
+            req: semver::VersionReq::parse(&req_str)?,
+            optional: row.get::<SqlTypeOf<optional>, _>("optional")?,
+            default_features: row.get::<SqlTypeOf<default_features>, _>("default_features")?,
+            features: row.get::<SqlTypeOf<features>, _>("features")?,
+            target: row.get::<SqlTypeOf<target>, _>("target")?,
+            kind: match row.get::<SqlTypeOf<kind>, _>("kind")? {
+                0 => Kind::Normal,
+                1 => Kind::Build,
+                2 => Kind::Dev,
+                n => return Err(format!("unknown kind: {}", n).into()),
+            },
+        })
+    }
+}
+
+impl QueryableByName<Pg> for ReverseDependency {
+    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
+        use diesel::types::{Integer, Text};
+
+        Ok(ReverseDependency {
+            dependency: QueryableByName::build(row)?,
+            crate_downloads: row.get::<Integer, _>("crate_downloads")?,
+            name: row.get::<Text, _>("crate_name")?,
+        })
     }
 }

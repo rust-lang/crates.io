@@ -7,8 +7,6 @@ extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
 extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
