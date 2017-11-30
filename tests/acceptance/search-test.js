@@ -26,6 +26,21 @@ test('searching for "rust"', async function(assert) {
     assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
 });
 
+test('searching for "rust" from query', async function(assert) {
+    server.loadFixtures();
+
+    await visit('/search?q=rust');
+
+    assert.equal(currentURL(), '/search?q=rust');
+    assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
+
+    assert.dom('[data-test-search-input]')
+        .hasValue('rust');
+    assert.dom('[data-test-heading]')
+        .hasText('Search Results for \'rust\'');
+    assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+});
+
 test('pressing S key to focus the search bar', async function(assert) {
     server.loadFixtures();
 

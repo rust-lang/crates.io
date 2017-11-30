@@ -1,4 +1,4 @@
-import Controller, { inject as controller } from '@ember/controller';
+import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 
 import PaginationMixin from '../../mixins/pagination';
@@ -11,8 +11,7 @@ export default Controller.extend(PaginationMixin, {
 
     totalItems: computed.readOnly('model.meta.total'),
 
-    categoryController: controller('category'),
-    category: computed.alias('categoryController.model'),
+    category: null,
 
     currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'downloads') {

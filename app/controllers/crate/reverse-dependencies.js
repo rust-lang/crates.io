@@ -1,5 +1,5 @@
-import Controller, { inject as controller } from '@ember/controller';
-import { computed } from '@ember/object';
+import Controller from '@ember/controller';
+import { readOnly } from '@ember/object/computed';
 
 import PaginationMixin from '../../mixins/pagination';
 
@@ -7,9 +7,7 @@ export default Controller.extend(PaginationMixin, {
     queryParams: ['page', 'per_page'],
     page: '1',
     per_page: 10,
+    crate: null,
 
-    crateController: controller('crate'),
-    crate: computed.alias('crateController.model'),
-
-    totalItems: computed.readOnly('model.meta.total'),
+    totalItems: readOnly('model.meta.total'),
 });
