@@ -40,21 +40,16 @@ matrix:
     - rust: nightly
   include:
   - rust: nightly-2017-11-07
-    env: RUSTFMT=YESPLEASE
     script:
     - cargo install --force rustfmt-nightly --vers 0.2.15
-    - export LD_LIBRARY_PATH=$(rustc --print sysroot)/lib:$LD_LIBRARY_PATH
-    - rustfmt --version
+    - cargo install --force clippy --vers 0.0.169
     - cargo fmt -- --write-mode=diff
+    - cargo clippy
   - rust: stable
     script:
     - cargo build
     - cargo test
     - npm test
-  - rust: nightly-2017-11-07
-    env: CLIPPY=YESPLEASE
-    script:
-    - cargo check --features "lint"
   - rust: beta
     script:
     - cargo build

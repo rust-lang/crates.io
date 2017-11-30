@@ -29,7 +29,7 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         .filter_map(|arg| arg.parse::<i32>().ok());
     for id in ids {
         let mut rng = StdRng::new().unwrap();
-        let mut dls = rng.gen_range(5000i32, 10000);
+        let mut dls = rng.gen_range(5_000i32, 10_000);
 
         for day in 0..90 {
             dls += rng.gen_range(-100, 100);

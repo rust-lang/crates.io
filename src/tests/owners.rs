@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use {CrateList, GoodCrate};
 
 use cargo_registry::owner::EncodableOwner;
@@ -30,7 +32,7 @@ fn new_crate_owner() {
     let (_b, app, middle) = ::app();
 
     // Create a crate under one user
-    let mut req = ::new_req(app.clone(), "foo_owner", "1.0.0");
+    let mut req = ::new_req(Arc::clone(&app), "foo_owner", "1.0.0");
     ::sign_in(&mut req, &app);
     let u2;
     {
@@ -135,7 +137,7 @@ fn owners_can_remove_self() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/owners_selfremove/owners",
     );
@@ -265,7 +267,7 @@ fn check_ownership_two_crates() {
         (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
     };
 
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates");
+    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates");
 
     let query = format!("user_id={}", user.id);
     let mut response = ok_resp!(middle.call(req.with_query(&query)));
@@ -306,7 +308,7 @@ fn check_ownership_one_crate() {
     };
 
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/best_crate/owner_team",
     );
@@ -317,7 +319,7 @@ fn check_ownership_one_crate() {
     assert_eq!(json.teams[0].name, team.name);
 
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/best_crate/owner_user",
     );
@@ -337,7 +339,7 @@ fn invitations_are_empty_by_default() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
@@ -365,7 +367,7 @@ fn invitations_list() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
@@ -426,7 +428,7 @@ fn test_accept_invitation() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
@@ -522,7 +524,7 @@ fn test_decline_invitation() {
 
     let (_b, app, middle) = ::app();
     let mut req = ::req(
-        app.clone(),
+        Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );

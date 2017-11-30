@@ -65,7 +65,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     let mut total = 0;
     for download in rows {
         let amt = download.downloads - download.counted;
-        total += amt as i64;
+        total += i64::from(amt);
 
         // Flag this row as having been processed if we're passed the cutoff,
         // and unconditionally increment the number of counted downloads.

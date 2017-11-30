@@ -53,7 +53,6 @@ diesel_full_text_search = "0.16.0"
 serde_json = "1.0.0"
 serde_derive = "1.0.0"
 serde = "1.0.0"
-clippy = { version = "=0.0.169", optional = true }
 chrono = { version = "0.4.0", features = ["serde"] }
 comrak = { version = "0.2.3", default-features = false }
 ammonia = "1.0.0"
@@ -84,10 +83,6 @@ tokio-service = "0.1"
 [build-dependencies]
 dotenv = "0.10"
 diesel = { version = "0.16.0", features = ["postgres"] }
-
-[features]
-unstable = []
-lint = ["clippy"]
 
 [replace]
 "diesel:0.16.0" = { git = "https://github.com/diesel-rs/diesel.git" }

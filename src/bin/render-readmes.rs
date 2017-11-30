@@ -37,7 +37,7 @@ use cargo_registry::schema::*;
 use cargo_registry::render::readme_to_html;
 
 const DEFAULT_PAGE_SIZE: usize = 25;
-const USAGE: &'static str = "
+const USAGE: &str = "
 Usage: render-readmes [options]
        render-readmes --help
 
@@ -65,7 +65,7 @@ fn main() {
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = args.flag_older_than {
-        Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M:%S")
+        Utc.datetime_from_str(time, "%Y-%m-%d %H:%M:%S")
             .expect("Could not parse --older-than argument as a time")
     } else {
         start_time
@@ -174,7 +174,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     let mut handle = Easy::new();
     let location = match config
         .uploader
-        .crate_location(&krate_name, &version.num.to_string())
+        .crate_location(krate_name, &version.num.to_string())
     {
         Some(l) => l,
         None => return None,
@@ -237,7 +237,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     ));
     let manifest: Manifest = {
         let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         toml::from_str(&contents).expect(&format!(
             "[{}-{}] Syntax error in manifest file",
             krate_name,
@@ -254,7 +254,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
             version.num,
             manifest.package.readme.unwrap()
         );
-        let contents = find_file_by_path(&mut entries, Path::new(&path), &version, &krate_name);
+        let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         readme_to_html(
             &contents,
             manifest
@@ -297,7 +297,7 @@ fn find_file_by_path<R: Read>(
                     Ok(p) => p,
                     Err(_) => return false,
                 };
-                return filepath == path;
+                filepath == path
             }
         })
         .expect(&format!(

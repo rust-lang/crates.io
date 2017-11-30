@@ -40,7 +40,7 @@ installation and running instructions. The logs for recent builds in Travis
 may also be helpful to see which versions of these tools we're currently using.
 
 [jslint]: http://jslint.com/
-[clippy]: https://github.com/Manishearth/rust-clippy
+[clippy]: https://github.com/rust-lang-nursery/rust-clippy
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 We will try to review your pull requests as soon as possible!

@@ -138,8 +138,8 @@ fn app() -> (
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            std::env::var("S3_ACCESS_KEY").unwrap_or(String::new()),
-            std::env::var("S3_SECRET_KEY").unwrap_or(String::new()),
+            std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
+            std::env::var("S3_SECRET_KEY").unwrap_or_default(),
             &api_protocol,
         ),
         proxy: Some(proxy),
@@ -150,8 +150,8 @@ fn app() -> (
         uploader: uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
-        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or(String::new()),
-        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or(String::new()),
+        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
+        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
         max_upload_size: 1000,
@@ -162,15 +162,15 @@ fn app() -> (
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
-    let middleware = cargo_registry::middleware(app.clone());
-    return (bomb, app, middleware);
+    let middleware = cargo_registry::middleware(Arc::clone(&app));
+    (bomb, app, middleware)
 }
 
 // Return the environment variable only if it has been defined
 fn env(s: &str) -> String {
     // Handles both the `None` and empty string cases e.g. VAR=
     // by converting `None` to an empty string
-    let env_result = env::var(s).ok().unwrap_or(String::new());
+    let env_result = env::var(s).ok().unwrap_or_default();
 
     if env_result == "" {
         panic!("must have `{}` defined", s);
@@ -189,7 +189,7 @@ fn ok_resp(r: &conduit::Response) -> bool {
 
 fn bad_resp(r: &mut conduit::Response) -> Option<Bad> {
     let bad = json::<Bad>(r);
-    if bad.errors.len() == 0 {
+    if bad.errors.is_empty() {
         return None;
     }
     Some(bad)
@@ -524,7 +524,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
     NewCategory {
         category: category,
         slug: slug,
-        ..NewCategory::default()
     }
 }
 
@@ -532,8 +531,8 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(app: &Arc<App>, user: NewUser, krate: &str) -> MockRequest {
-    let mut req = new_req(app.clone(), krate, "1.0.0");
+fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str) -> MockRequest {
+    let mut req = new_req(Arc::clone(app), krate, "1.0.0");
     {
         let conn = app.diesel_database.get().unwrap();
         let user = user.create_or_update(&conn).unwrap();
@@ -562,7 +561,7 @@ fn new_req_full(
         Vec::new(),
         HashMap::new(),
     ));
-    return req;
+    req
 }
 
 fn new_req_with_keywords(
@@ -580,7 +579,7 @@ fn new_req_with_keywords(
         Vec::new(),
         HashMap::new(),
     ));
-    return req;
+    req
 }
 
 fn new_req_with_categories(
@@ -598,7 +597,7 @@ fn new_req_with_categories(
         cats,
         HashMap::new(),
     ));
-    return req;
+    req
 }
 
 fn new_req_with_badges(
@@ -616,7 +615,7 @@ fn new_req_with_badges(
         Vec::new(),
         badges,
     ));
-    return req;
+    req
 }
 
 fn new_req_body_version_2(krate: Crate) -> Vec<u8> {
@@ -697,7 +696,7 @@ fn new_crate_to_body_with_io(
     let mut body = Vec::new();
     body.extend(
         [
-            (json.len() >> 0) as u8,
+            json.len() as u8,
             (json.len() >> 8) as u8,
             (json.len() >> 16) as u8,
             (json.len() >> 24) as u8,
@@ -706,7 +705,7 @@ fn new_crate_to_body_with_io(
     );
     body.extend(json.as_bytes().iter().cloned());
     body.extend(&[
-        (tarball.len() >> 0) as u8,
+        tarball.len() as u8,
         (tarball.len() >> 8) as u8,
         (tarball.len() >> 16) as u8,
         (tarball.len() >> 24) as u8,

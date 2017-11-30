@@ -53,9 +53,9 @@ fn transfer(conn: &PgConnection) {
     if from.gh_id != to.gh_id {
         println!("====================================================");
         println!("WARNING");
-        println!("");
+        println!();
         println!("this may not be the same github user, different github IDs");
-        println!("");
+        println!();
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
@@ -97,7 +97,7 @@ fn get_confirm(msg: &str) {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         std::process::exit(0);
     }
 }
