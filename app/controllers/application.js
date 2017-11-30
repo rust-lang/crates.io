@@ -14,10 +14,7 @@ export default Controller.extend(EKMixin, {
             return;
         }
         event.preventDefault();
-        let searchInput = document.querySelector('#cargo-desktop-search');
-        if (searchInput) {
-            searchInput.focus();
-        }
+        document.querySelector('#cargo-desktop-search').focus();
     }),
 
     actions: {
