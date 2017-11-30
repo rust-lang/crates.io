@@ -11,8 +11,8 @@ export default Route.extend({
     },
     data: {},
 
-    setupController(controller, model) {
-        this._super(controller, model);
+    setupController(controller) {
+        this._super(...arguments);
 
         controller.set('fetchingFeed', true);
         controller.set('crates', this.get('data.crates'));

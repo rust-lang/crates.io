@@ -7,8 +7,8 @@ import AuthenticatedRoute from '../mixins/authenticated-route';
 export default Route.extend(AuthenticatedRoute, {
     data: {},
 
-    setupController(controller, model) {
-        this._super(controller, model);
+    setupController(controller) {
+        this._super(...arguments);
 
         controller.set('fetchingFeed', true);
         controller.set('myCrates', this.get('data.myCrates'));
