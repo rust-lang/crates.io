@@ -63,7 +63,7 @@ fn main() {
             .unwrap_or(8888)
     };
     let threads = if config.env == Env::Development {
-        1
+        4
     } else {
         50
     };

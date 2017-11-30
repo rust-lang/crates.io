@@ -1,0 +1,71 @@
+{{#>layout}}
+    {{#*inline "head"}}
+        <title>Cargo: packages for Rust</title>
+    {{/inline}}
+
+    {{#*inline "main"}}
+        <div id="title-header">
+            <h1>The Rust community&rsquo;s crate registry</h1>
+
+            <div class="links">
+                <a href="/install" class="yellow-button">
+                    {{embed_svg "button-download"}}
+                    Install Cargo
+                </a>
+
+                <a href="http://doc.crates.io/guide.html" class="yellow-button">
+                    {{embed_svg "flag"}}
+                    Getting Started
+                </a>
+            </div>
+        </div>
+
+        <div id="blurb">
+            <div id="intro">
+                Instantly publish your crates and install them. Use the API to
+                interact and find out more information about available crates. Become
+                a contributor and enhance the site with your work.
+            </div>
+
+            <div id="stats">
+                <div class="downloads">
+                    {{embed_svg "download"}}
+                    <span class="num">{{format_num num_downloads}}</span>
+                    <span class="desc small">Downloads</span>
+                </div>
+                <div class="crates">
+                    {{embed_svg "crate"}}
+                    <span class="num">{{format_num num_crates}}</span>
+                    <span class="desc small">Crates in stock</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="home-crates" class="crate-lists">
+            <div id="new-crates">
+                <h2>New Crates</h2>
+                {{>crates crates=new_crates}}
+            </div>
+            <div id="most-downloaded">
+                <h2>Most Downloaded</h2>
+                {{>crates crates=most_downloaded}}
+            </div>
+            <div id="just-updated">
+                <h2>Just Updated</h2>
+                {{>crates crates=just_updated}}
+            </div>
+            <div id="most-recently-downloaded">
+                <h2>Most Recent Downloads</h2>
+                {{>crates crates=most_recently_downloaded}}
+            </div>
+            <div id="keywords">
+                <h2>Popular Keywords <a href="/keywords">(see all)</a></h2>
+                {{>keywords keywords=popular_keywords}}
+            </div>
+            <div id="categories">
+                <h2>Popular Categories <a href="/categories">(see all)</a></h2>
+                {{>categories categories=popular_categories}}
+            </div>
+        </div>
+    {{/inline}}
+{{/layout}}

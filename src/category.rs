@@ -186,6 +186,10 @@ impl<'a> NewCategory<'a> {
 
 /// Handles the `GET /categories` route.
 pub fn index(req: &mut Request) -> CargoResult<Response> {
+    Ok(req.json(&index_json(req)?))
+}
+
+pub fn index_json(req: &Request) -> CargoResult<R> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
@@ -197,20 +201,21 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     // Query for the total count of categories
     let total = Category::count_toplevel(&conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        categories: Vec<EncodableCategory>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
-    }
-
-    Ok(req.json(&R {
+    Ok(R {
         categories: categories,
         meta: Meta { total: total },
-    }))
+    })
+}
+
+#[derive(Serialize, Debug)]
+pub struct R {
+    categories: Vec<EncodableCategory>,
+    meta: Meta,
+}
+#[derive(Serialize, Debug)]
+#[allow(missing_copy_implementations)]
+pub struct Meta {
+    total: i64,
 }
 
 /// Handles the `GET /categories/:category_id` route.

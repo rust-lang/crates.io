@@ -33,7 +33,7 @@ body {
   @include align-items(center);
 }
 
-.ember-application > div {
+body > div {
     width: 960px;
     @media only screen and (max-width: 960px) {
         width: 100%;
@@ -99,19 +99,13 @@ body {
     }
 
     .current-user-links {
-        display: none;
         left: auto;
         right: 0;
         min-width: 200px;
-
-        &.open { display: block; }
     }
     #doc-links {
-        display: none;
         left: auto;
         min-width: 150px;
-
-        &.open { display: block; }
     }
     form.search {
         @include display-flex;
@@ -266,9 +260,13 @@ pre {
 button.dropdown, a.dropdown {
     color: inherit;
     cursor: pointer;
-    .arrow { font-size: 50%; display: inline-block; vertical-align: middle; }
+    .arrow {
+        font-size: 50%;
+        display: inline-block;
+        vertical-align: middle;
+    }
     .arrow::after { content: "▼"; }
-    &.active .arrow::after { content: "▲"; }
+    .dropdown-container:hover & .arrow::after { content: "▲"; }
 }
 
 ul.dropdown {
@@ -300,12 +298,16 @@ ul.dropdown {
         }
     }
     li.last { border-top: 1px solid $gray-border; }
-    &.open {
+
+    display: none;
+
+    .dropdown-container:hover & {
         display: block;
         visibility: visible;
         opacity: 1;
     }
 }
+
 .dropdown-container {
     display: inline-block;
     position: relative;

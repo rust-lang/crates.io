@@ -73,6 +73,8 @@ conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
 
+handlebars = "0.29.1"
+
 [dev-dependencies]
 conduit-test = "0.8"
 hyper = "0.11"

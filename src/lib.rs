@@ -86,6 +86,7 @@ pub mod download;
 pub mod git;
 pub mod github;
 pub mod http;
+pub mod html;
 pub mod keyword;
 pub mod krate;
 pub mod owner;
@@ -224,6 +225,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
 
     let mut router = RouteBuilder::new();
 
+    router.get("/", C(html::index));
+    router.get("/categories", C(html::categories::index));
+
     // Mount the router under the /api/v1 path so we're at least somewhat at the
     // liberty to change things in the future!
     router.get("/api/v1/*path", R(Arc::clone(&api_router)));
@@ -278,7 +282,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.
     if env != Env::Test {
-        m.around(dist::Middleware::default());
+        m.add(dist::Static);
     }
 
     return m;

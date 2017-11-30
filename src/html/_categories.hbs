@@ -1,0 +1,12 @@
+<ul>
+    {{#each categories as |category|}}
+        <li>
+            <a href="/categories/{{category.slug}}" class="name">
+                <span>{{category.category}} ({{format_num category.crates_cnt}})</span>
+                <div class="arrow-in-list">
+                    {{embed_svg "right-arrow"}}
+                </div>
+            </a>
+        </li>
+    {{/each}}
+</ul>
