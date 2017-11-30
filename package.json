@@ -58,7 +58,7 @@
     "ember-prism": "^0.1.0",
     "ember-resolver": "^4.1.0",
     "ember-router-scroll": "^0.2.0",
-    "ember-source": "~2.15.3",
+    "ember-source": "~2.17.0",
     "ember-svg-jar": "^0.10.3",
     "ember-test-selectors": "^0.3.7",
     "emberx-select": "^3.0.1",
