@@ -20,7 +20,7 @@
     <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
         {{input type="text" class="search" name="q" id="cargo-desktop-search"
                 placeholder="Click or press 'S' to search..."
-                value=search
+                value=searchQuery
                 autofocus="autofocus"
                 tabindex="1"
                 required=true
@@ -104,7 +104,7 @@
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
     {{input type="text" class="search" name="q"
             placeholder="Search"
-            value=search
+            value=searchQuery
             autocorrect="off"
             tabindex="1"
             required=true}}

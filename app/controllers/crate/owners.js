@@ -1,9 +1,7 @@
-import Controller, { inject as controller } from '@ember/controller';
-import { computed } from '@ember/object';
+import Controller from '@ember/controller';
 
 export default Controller.extend({
-    crateController: controller('crate'),
-    crate: computed.alias('crateController.model'),
+    crate: null,
     error: false,
     invited: false,
     removed: false,

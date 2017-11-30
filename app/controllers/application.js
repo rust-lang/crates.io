@@ -1,10 +1,11 @@
-import Controller, { inject as controller } from '@ember/controller';
+import Controller from '@ember/controller';
+import { inject as service } from '@ember/service';
 import { oneWay } from '@ember/object/computed';
 import $ from 'jquery';
 
 export default Controller.extend({
-    searchController: controller('search'),
-    search: oneWay('searchController.q'),
+    search: service(),
+    searchQuery: oneWay('search.q'),
 
     init() {
         this._super(...arguments);
@@ -57,7 +58,7 @@ export default Controller.extend({
         search() {
             this.transitionToRoute('search', {
                 queryParams: {
-                    q: this.get('search'),
+                    q: this.get('searchQuery'),
                     page: 1
                 }
             });
