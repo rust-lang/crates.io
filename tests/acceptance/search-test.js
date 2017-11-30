@@ -1,6 +1,7 @@
 import { test } from 'qunit';
-import { fillIn, keyEvent, visit, triggerEvent, currentURL, blur } from 'ember-native-dom-helpers';
+import { fillIn, visit, triggerEvent, currentURL, blur } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 
 moduleForAcceptance('Acceptance | search');
 
@@ -47,15 +48,15 @@ test('pressing S key to focus the search bar', async function(assert) {
     await visit('/');
 
     await blur('[data-test-search-input]');
-    await keyEvent(document, 'keypress', 'a');
+    await triggerKeyPress('KeyA');
     assert.dom('[data-test-search-input]').isNotFocused();
 
     await blur('[data-test-search-input]');
-    await keyEvent(document, 'keypress', 's');
+    await triggerKeyPress('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 
     await blur('[data-test-search-input]');
-    await keyEvent(document, 'keydown', 's');
+    await triggerKeyDown('KeyS');
     assert.dom('[data-test-search-input]').isFocused();
 });
 
