@@ -106,7 +106,11 @@ button.small {
 .crate-lists {
     @include display-flex;
 
-    h2 { font-size: 105%; }
+    h2 {
+        font-size: 105%;
+        line-height: 20px;
+    }
+
     > div { margin: 0 15px; }
 
     ul { list-style: none; padding: 0; }
