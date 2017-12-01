@@ -1,8 +1,8 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
 
 import AuthenticatedRoute from '../../mixins/authenticated-route';
 
-export default Ember.Route.extend(AuthenticatedRoute, {
+export default Route.extend(AuthenticatedRoute, {
     model() {
         return this.get('store').findAll('crate-owner-invite');
     }

@@ -12,6 +12,11 @@ cache:
 addons:
   chrome: stable
 
+env:
+  global:
+    # See https://git.io/vdao3 for details.
+    - JOBS=1
+
 before_install:
   - nvm install 8.1.3
 

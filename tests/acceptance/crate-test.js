@@ -1,7 +1,7 @@
+import Service from '@ember/service';
 import { test } from 'qunit';
 import { click, visit, currentURL, currentRouteName, fillIn } from 'ember-native-dom-helpers';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import Ember from 'ember';
 
 moduleForAcceptance('Acceptance | crate page');
 
@@ -140,7 +140,7 @@ test('navigating to the owners page when not logged in', async function(assert) 
 test('navigating to the owners page when not an owner', async function(assert) {
     server.loadFixtures();
 
-    this.application.register('service:session-b', Ember.Service.extend({
+    this.application.register('service:session-b', Service.extend({
         currentUser: {
             login: 'iain8'
         }
@@ -156,7 +156,7 @@ test('navigating to the owners page when not an owner', async function(assert) {
 test('navigating to the owners page', async function(assert) {
     server.loadFixtures();
 
-    this.application.register('service:session-b', Ember.Service.extend({
+    this.application.register('service:session-b', Service.extend({
         currentUser: {
             login: 'thehydroimpulse'
         }

@@ -1,3 +1,4 @@
+import { alias, readOnly, gt, or } from '@ember/object/computed';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
@@ -16,29 +17,29 @@ export default Controller.extend({
     downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
         return this.get('requestedVersion') ? this.get('model') : this.get('crate');
     }),
-    downloads: computed.alias('downloadsContext.version_downloads'),
-    extraDownloads: computed.alias('downloads.content.meta.extra_downloads'),
+    downloads: alias('downloadsContext.version_downloads'),
+    extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
     fetchingFollowing: true,
     following: false,
-    currentVersion: computed.alias('model'),
+    currentVersion: alias('model'),
     requestedVersion: null,
-    keywords: computed.alias('crate.keywords'),
-    categories: computed.alias('crate.categories'),
-    badges: computed.alias('crate.badges'),
+    keywords: alias('crate.keywords'),
+    categories: alias('crate.categories'),
+    badges: alias('crate.badges'),
     isOwner: computed('crate.owner_user', function() {
         return this.get('crate.owner_user').findBy('login', this.session.get('currentUser.login'));
     }),
 
-    sortedVersions: computed.readOnly('crate.versions'),
+    sortedVersions: readOnly('crate.versions'),
 
     smallSortedVersions: computed('sortedVersions', function() {
         return this.get('sortedVersions').slice(0, NUM_VERSIONS);
     }),
 
-    hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
+    hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
 
-    anyLinks: computed.or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
+    anyLinks: or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return PromiseArray.create({
@@ -53,8 +54,8 @@ export default Controller.extend({
         });
     }),
 
-    anyKeywords: computed.gt('keywords.length', 0),
-    anyCategories: computed.gt('categories.length', 0),
+    anyKeywords: gt('keywords.length', 0),
+    anyCategories: gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
         let deps = this.get('currentVersion.dependencies');
