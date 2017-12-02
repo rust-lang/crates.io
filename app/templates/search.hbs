@@ -8,9 +8,15 @@
     {{#if q}}
         <h2>for '{{ q }}'</h2>
     {{/if}}
+
+    {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
 </div>
 
-{{#if hasItems}}
+{{#if firstResultPending}}
+    <div id="no-results">
+        <h2>Loading search results...</h2>
+    </div>
+{{else if hasItems}}
     <div id='results'>
         <div class='nav' data-test-search-nav>
             <span class='amt'>

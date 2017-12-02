@@ -46,6 +46,10 @@
     }
 }
 
+.crate-search .loading-spinner {
+    margin: 0 15px;
+}
+
 #selection {
     width: 100%;
     @include display-flex;
