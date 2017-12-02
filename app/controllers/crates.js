@@ -1,3 +1,4 @@
+import { readOnly } from '@ember/object/computed';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 
@@ -11,7 +12,7 @@ export default Controller.extend(PaginationMixin, {
     sort: 'alpha',
     alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
 
-    totalItems: computed.readOnly('model.meta.total'),
+    totalItems: readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
         if (this.get('sort') === 'downloads') {

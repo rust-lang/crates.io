@@ -1,3 +1,4 @@
+import { readOnly } from '@ember/object/computed';
 import Component from '@ember/component';
 import { computed } from '@ember/object';
 
@@ -17,7 +18,7 @@ export default Component.extend({
         }
     }),
 
-    height: computed.readOnly('width'),
+    height: readOnly('width'),
 
     src: computed('size', 'user', function() {
         return `${this.get('user.avatar')}&s=${this.get('width') * 2}`;

@@ -1,3 +1,4 @@
+import { readOnly } from '@ember/object/computed';
 import Mixin from '@ember/object/mixin';
 import { computed } from '@ember/object';
 
@@ -74,6 +75,6 @@ export default Mixin.create({
     }),
 
     // wire up these ember-style variables to the expected query parameters
-    itemsPerPage: computed.readOnly('per_page'),
-    selectedPage: computed.readOnly('page')
+    itemsPerPage: readOnly('per_page'),
+    selectedPage: readOnly('page')
 });
