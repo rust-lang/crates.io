@@ -13,8 +13,11 @@ export default Controller.extend(EKMixin, {
         if (event.ctrlKey || event.altKey || event.metaKey) {
             return;
         }
-        event.preventDefault();
-        document.querySelector('#cargo-desktop-search').focus();
+
+        if (document.activeElement === document.body) {
+            event.preventDefault();
+            document.querySelector('#cargo-desktop-search').focus();
+        }
     }),
 
     actions: {

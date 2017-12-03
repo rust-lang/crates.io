@@ -18,13 +18,14 @@
     {{/link-to}}
 
     <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
-        {{input type="text" class="search" name="q" id="cargo-desktop-search"
+        <input type="text" class="search" name="q" id="cargo-desktop-search"
                 placeholder="Click or press 'S' to search..."
-                value=searchQuery
+                value={{searchQuery}}
+                oninput={{action (mut searchQuery) value="target.value"}}
                 autofocus="autofocus"
                 tabindex="1"
-                required=true
-                data-test-search-input=true}}
+                required
+                data-test-search-input>
     </form>
 
     <div class='nav'>
@@ -102,12 +103,13 @@
 </div>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-    {{input type="text" class="search" name="q"
+    <input type="text" class="search" name="q"
             placeholder="Search"
-            value=searchQuery
+            value={{searchQuery}}
+            oninput={{action (mut searchQuery) value="target.value"}}
             autocorrect="off"
             tabindex="1"
-            required=true}}
+            required>
 </form>
 
 <div id="main" class='inner-content'>
