@@ -1,14 +1,14 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 export default Route.extend({
     flashMessages: service(),
-    ajax: service(),
     session: service(),
 
     async model(params) {
         try {
-            await this.get('ajax').raw(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', data: {} });
+            await ajax(`/api/v1/confirm/${params.email_token}`, { method: 'PUT', body: '{}' });
 
             /*  We need this block to reload the user model from the database,
                 without which if we haven't submitted another GET /me after
@@ -21,7 +21,7 @@ export default Route.extend({
                 Suggestions of a more ideomatic way to fix/test this are welcome!
             */
             if (this.get('session.isLoggedIn')) {
-                this.get('ajax').request('/api/v1/me').then((response) => {
+                ajax('/api/v1/me').then((response) => {
                     this.get('session').set('currentUser', this.store.push(this.store.normalize('user', response.user)));
                 });
             }

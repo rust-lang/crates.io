@@ -1,13 +1,11 @@
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 import { readOnly } from '@ember/object/computed';
-import { inject as service } from '@ember/service';
 
+import ajax from 'ember-fetch/ajax';
 import { task } from 'ember-concurrency';
 
 export default Controller.extend({
-    ajax: service(),
-
     model: readOnly('dataTask.lastSuccessful.value'),
 
     hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
@@ -15,7 +13,7 @@ export default Controller.extend({
     }),
 
     dataTask: task(function* () {
-        let data = yield this.get('ajax').request('/api/v1/summary');
+        let data = yield ajax('/api/v1/summary');
 
         addCrates(this.store, data.new_crates);
         addCrates(this.store, data.most_downloaded);

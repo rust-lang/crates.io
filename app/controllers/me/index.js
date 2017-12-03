@@ -7,8 +7,6 @@ export default Controller.extend({
 
     sortedTokens: sort('model.api_tokens', 'tokenSort'),
 
-    ajax: service(),
-
     flashMessages: service(),
 
     isResetting: false,

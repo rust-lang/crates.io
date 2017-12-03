@@ -1,4 +1,5 @@
 import Service, { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 export default Service.extend({
     savedTransition: null,
@@ -7,7 +8,6 @@ export default Service.extend({
     currentUser: null,
     currentUserDetected: false,
 
-    ajax: service(),
     store: service(),
     router: service(),
 
@@ -64,7 +64,7 @@ export default Service.extend({
     },
 
     fetchUser() {
-        return this.get('ajax').request('/api/v1/me')
+        return ajax('/api/v1/me')
             .then((response) => {
                 this.set('currentUser', this.get('store').push(this.get('store').normalize('user', response.user)));
             });
