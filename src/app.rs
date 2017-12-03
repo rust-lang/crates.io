@@ -11,6 +11,7 @@ use git2;
 use oauth2;
 use r2d2;
 use curl::easy::Easy;
+use scheduled_thread_pool::ScheduledThreadPool;
 
 use {db, Config};
 
@@ -80,11 +81,12 @@ impl App {
             _ => 1,
         };
 
-        let diesel_db_config = r2d2::Config::builder()
-            .pool_size(db_pool_size)
+        let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
+
+        let diesel_db_config = r2d2::Pool::builder()
+            .max_size(db_pool_size)
             .min_idle(db_min_idle)
-            .helper_threads(db_helper_threads)
-            .build();
+            .thread_pool(thread_pool);
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
 

@@ -1,7 +1,8 @@
 extern crate diesel;
+extern crate diesel_migrations;
 extern crate dotenv;
 
-use diesel::migrations::run_pending_migrations;
+use diesel_migrations::run_pending_migrations;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;

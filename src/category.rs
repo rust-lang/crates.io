@@ -8,7 +8,7 @@ use db::RequestTransaction;
 use schema::*;
 use util::{CargoResult, RequestUtils};
 
-#[derive(Clone, Identifiable, Queryable, Debug)]
+#[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
 pub struct Category {
     pub id: i32,
@@ -144,10 +144,9 @@ impl Category {
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        use diesel::dsl::*;
         use diesel::types::Text;
 
-        sql::<categories::SqlType>(
+        sql_query(
             "SELECT c.id, c.category, c.slug, c.description, \
              COALESCE (( \
              SELECT sum(c2.crates_cnt)::int \

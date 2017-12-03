@@ -13,8 +13,6 @@ extern crate comrak;
 extern crate curl;
 #[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
 extern crate diesel_full_text_search;
 extern crate dotenv;
 extern crate flate2;
@@ -31,6 +29,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
 extern crate s3;
+extern crate scheduled_thread_pool;
 extern crate semver;
 extern crate serde;
 #[macro_use]
@@ -100,6 +99,7 @@ pub mod site_metadata;
 
 mod local_upload;
 mod pagination;
+mod with_count;
 
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.
