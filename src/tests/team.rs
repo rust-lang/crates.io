@@ -130,7 +130,7 @@ fn nonexistent_team() {
 fn add_team_mixed_case() {
     let (_b, app, middle) = ::app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, mock_user_on_x_and_y(), "foo_mixed_case");
+        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_mixed_case");
 
     let body = r#"{"users":["github:Crates-Test-Org:Core"]}"#;
 
