@@ -21,7 +21,11 @@ export default Controller.extend(EKMixin, {
     }),
 
     actions: {
-        search() {
+        search(q) {
+            if (q !== undefined) {
+                this.set('searchQuery', q);
+            }
+
             this.transitionToRoute('search', {
                 queryParams: {
                     q: this.get('searchQuery'),
