@@ -12,7 +12,7 @@ export default Route.extend({
         this.refresh();
     }),
 
-    model(params) {
+    async model(params) {
         const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);
@@ -91,37 +91,38 @@ export default Route.extend({
         }
 
         // Find version model
-        return crate.get('versions')
-            .then(versions => {
-                const version = versions.find(version => version.get('num') === params.version_num);
-                if (params.version_num && !version) {
-                    this.get('flashMessages').queue(
-                        `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
-                }
+        let versions = await crate.get('versions');
 
-                const result = version ||
-                    versions.find(version => version.get('num') === maxVersion) ||
-                    versions.objectAt(0);
-                if (result.get('readme_path')) {
-                    this.get('ajax').request(result.get('readme_path'))
-                        .then((r) => this.get('ajax').raw(r.url, {
-                            method: 'GET',
-                            dataType: 'html',
-                            headers: {
-                                // We need to force the Accept header, otherwise crates.io won't return
-                                // the readme file when not using S3.
-                                Accept: '*/*',
-                            },
-                        }))
-                        .then((r) => {
-                            crate.set('readme', r.payload);
-                        })
-                        .catch(() => {
-                            crate.set('readme', null);
-                        });
-                }
-                return result;
-            });
+        const version = versions.find(version => version.get('num') === params.version_num);
+        if (params.version_num && !version) {
+            this.get('flashMessages').queue(
+                `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+        }
+
+        const result = version ||
+            versions.find(version => version.get('num') === maxVersion) ||
+            versions.objectAt(0);
+
+        if (result.get('readme_path')) {
+            this.get('ajax').request(result.get('readme_path'))
+                .then((r) => this.get('ajax').raw(r.url, {
+                    method: 'GET',
+                    dataType: 'html',
+                    headers: {
+                        // We need to force the Accept header, otherwise crates.io won't return
+                        // the readme file when not using S3.
+                        Accept: '*/*',
+                    },
+                }))
+                .then((r) => {
+                    crate.set('readme', r.payload);
+                })
+                .catch(() => {
+                    crate.set('readme', null);
+                });
+        }
+
+        return result;
     },
 
     serialize(model) {

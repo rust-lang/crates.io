@@ -18,9 +18,8 @@ export default Route.extend({
 
     ajax: service(),
 
-    beforeModel() {
-        return this.get('ajax').request(`/authorize_url`).then((url) => {
-            window.location = url.url;
-        });
+    async beforeModel() {
+        let url = await this.get('ajax').request(`/authorize_url`);
+        window.location = url.url;
     },
 });

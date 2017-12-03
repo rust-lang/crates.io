@@ -42,19 +42,21 @@ export default Controller.extend({
     }),
 
     actions: {
-        loadMore() {
+        async loadMore() {
             this.set('loadingMore', true);
             let page = (this.get('myFeed').length / 10) + 1;
 
-            this.get('ajax').request(`/api/v1/me/updates?page=${page}`).then((data) => {
-                let versions = data.versions.map(version =>
-                    this.store.push(this.store.normalize('version', version)));
+            try {
+                let data = await this.get('ajax').request(`/api/v1/me/updates?page=${page}`);
+
+                let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
                 this.get('myFeed').pushObjects(versions);
                 this.set('hasMore', data.meta.more);
-            }).finally(() => {
+
+            } finally {
                 this.set('loadingMore', false);
-            });
+            }
         }
     }
 });

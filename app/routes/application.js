@@ -8,15 +8,17 @@ export default Route.extend({
 
     flashMessages: service(),
 
-    beforeModel() {
-        if (this.session.get('isLoggedIn') &&
-            this.session.get('currentUser') === null) {
-            this.get('ajax').request('/api/v1/me').then((response) => {
+    async beforeModel() {
+        if (this.session.get('isLoggedIn') && this.session.get('currentUser') === null) {
+            try {
+                let response = await this.get('ajax').request('/api/v1/me');
                 this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-            }).catch(() => this.session.logoutUser()).finally(() => {
+            } catch(_) {
+                this.session.logoutUser();
+            } finally {
                 window.currentUserDetected = true;
                 $(window).trigger('currentUserDetected');
-            });
+            }
         } else {
             window.currentUserDetected = true;
         }

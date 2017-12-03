@@ -6,12 +6,11 @@ export default Route.extend({
 
     ajax: service(),
 
-    activate() {
-        this.get('ajax').delete(`/logout`).then(() => {
-            run(() => {
-                this.session.logoutUser();
-                this.transitionTo('index');
-            });
+    async activate() {
+        await this.get('ajax').delete(`/logout`);
+        run(() => {
+            this.session.logoutUser();
+            this.transitionTo('index');
         });
     }
 });

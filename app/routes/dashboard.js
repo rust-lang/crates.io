@@ -25,7 +25,7 @@ export default Route.extend(AuthenticatedRoute, {
         return this.session.get('currentUser');
     },
 
-    afterModel(user) {
+    async afterModel(user) {
         let myCrates = this.store.query('crate', {
             user_id: user.get('id')
         });
@@ -36,12 +36,6 @@ export default Route.extend(AuthenticatedRoute, {
 
         let myStats = user.stats();
 
-        return RSVP.hash({
-            myCrates,
-            myFollowing,
-            myStats
-        }).then((hash) => {
-            this.set('data', hash);
-        });
+        this.set('data', await RSVP.hash({ myCrates, myFollowing, myStats }));
     }
 });
