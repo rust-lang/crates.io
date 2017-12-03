@@ -106,9 +106,10 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
     for login in &logins {
         if add {
-            if owners.iter().any(|owner| {
+            let login_test = |owner: &Owner| {
                 owner.login().to_lowercase() == *login.to_lowercase()
-            }) {
+            };
+            if owners.iter().any(login_test) {
                 return Err(human(&format_args!("`{}` is already an owner", login)));
             }
             let msg = krate.owner_add(req.app(), &conn, user, login)?;
