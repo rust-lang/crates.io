@@ -18,19 +18,20 @@ export default Route.extend({
 
     ajax: service(),
 
-    beforeModel(transition) {
-        return this.get('ajax').request(`/authorize`, { data: transition.queryParams }).then((d) => {
+    async beforeModel(transition) {
+        try {
+            let d = await this.get('ajax').request(`/authorize`, { data: transition.queryParams });
             let item = JSON.stringify({ ok: true, data: d });
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        }).catch((d) => {
+        } catch(d) {
             let item = JSON.stringify({ ok: false, data: d });
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        }).finally(() => {
+        } finally {
             window.close();
-        });
+        }
     },
 });

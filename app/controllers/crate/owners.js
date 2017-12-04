@@ -8,7 +8,7 @@ export default Controller.extend({
     username: '',
 
     actions: {
-        addOwner() {
+        async addOwner() {
             this.set('error', false);
             this.set('invited', false);
 
@@ -19,35 +19,35 @@ export default Controller.extend({
                 return false;
             }
 
-            return this.get('crate').inviteOwner(username).then(() => {
+            try {
+                await this.get('crate').inviteOwner(username);
                 this.set('invited', `An invite has been sent to ${username}`);
-            }).catch((error) => {
+
+            } catch(error) {
                 if (error.payload) {
-                    this.set('error',
-                        `Error sending invite: ${error.payload.errors[0].detail}`
-                    );
+                    this.set('error', `Error sending invite: ${error.payload.errors[0].detail}`);
                 } else {
                     this.set('error', 'Error sending invite');
                 }
-            });
+            }
         },
 
-        removeOwner(user) {
+        async removeOwner(user) {
             this.set('removed', false);
 
-            return this.get('crate').removeOwner(user.get('login')).then(() => {
+            try {
+                await this.get('crate').removeOwner(user.get('login'));
                 this.set('removed', `User ${user.get('login')} removed as crate owner`);
 
                 this.get('crate.owner_user').removeObject(user);
-            }).catch((error) => {
+
+            } catch(error) {
                 if (error.payload) {
-                    this.set('removed',
-                        `Error removing owner: ${error.payload.errors[0].detail}`
-                    );
+                    this.set('removed', `Error removing owner: ${error.payload.errors[0].detail}`);
                 } else {
                     this.set('removed', 'Error removing owner');
                 }
-            });
+            }
         }
     }
 });

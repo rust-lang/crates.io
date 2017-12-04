@@ -92,22 +92,21 @@ export default Component.extend({
             this.set('value', this.get('prevEmail'));
         },
 
-        resendEmail() {
+        async resendEmail() {
             let user = this.get('user');
 
-            this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, {
-                method: 'PUT'
-            })
-                .then(() => this.set('disableResend', true))
-                .catch((error) => {
-                    if (error.payload) {
-                        this.set('isError', true);
-                        this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
-                    } else {
-                        this.set('isError', true);
-                        this.set('emailError', 'Unknown error in resending message');
-                    }
-                });
+            try {
+                await this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
+                this.set('disableResend', true);
+            } catch(error) {
+                if (error.payload) {
+                    this.set('isError', true);
+                    this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
+                } else {
+                    this.set('isError', true);
+                    this.set('emailError', 'Unknown error in resending message');
+                }
+            }
         }
     }
 });

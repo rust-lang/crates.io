@@ -7,39 +7,38 @@ export default Component.extend({
     inviteError: 'default error message',
 
     actions: {
-        acceptInvitation(invite) {
+        async acceptInvitation(invite) {
             invite.set('accepted', true);
-            invite.save()
-                .then(() => {
-                    this.set('isAccepted', true);
-                })
-                .catch((error) => {
-                    this.set('isError', true);
-                    if (error.payload) {
-                        this.set('inviteError',
-                            `Error in accepting invite: ${error.payload.errors[0].detail}`
-                        );
-                    } else {
-                        this.set('inviteError', 'Error in accepting invite');
-                    }
-                });
+
+            try {
+                await invite.save();
+                this.set('isAccepted', true);
+
+            } catch(error) {
+                this.set('isError', true);
+                if (error.payload) {
+                    this.set('inviteError', `Error in accepting invite: ${error.payload.errors[0].detail}`);
+                } else {
+                    this.set('inviteError', 'Error in accepting invite');
+                }
+            }
         },
-        declineInvitation(invite) {
+
+        async declineInvitation(invite) {
             invite.set('accepted', false);
-            invite.save()
-                .then(() => {
-                    this.set('isDeclined', true);
-                })
-                .catch((error) => {
-                    this.set('isError', true);
-                    if (error.payload) {
-                        this.set('inviteError',
-                            `Error in declining invite: ${error.payload.errors[0].detail}`
-                        );
-                    } else {
-                        this.set('inviteError', 'Error in declining invite');
-                    }
-                });
+
+            try {
+                await invite.save();
+                this.set('isDeclined', true);
+
+            } catch(error) {
+                this.set('isError', true);
+                if (error.payload) {
+                    this.set('inviteError', `Error in declining invite: ${error.payload.errors[0].detail}`);
+                } else {
+                    this.set('inviteError', 'Error in declining invite');
+                }
+            }
         }
     }
 });
