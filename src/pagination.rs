@@ -25,6 +25,8 @@ impl<T: Query> Query for Paginated<T> {
     type SqlType = (T::SqlType, BigInt);
 }
 
+impl<T, DB> RunQueryDsl<DB> for Paginated<T> {}
+
 impl<T> QueryFragment<Pg> for Paginated<T>
 where
     T: QueryFragment<Pg>,

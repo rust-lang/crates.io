@@ -27,10 +27,14 @@ pub struct Dependency {
     pub kind: Kind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, QueryableByName)]
 pub struct ReverseDependency {
+    #[diesel(embed)]
     dependency: Dependency,
+    #[sql_type = "::diesel::types::Integer"]
     crate_downloads: i32,
+    #[sql_type = "::diesel::types::Text"]
+    #[column_name(crate_name)]
     name: String,
 }
 
@@ -208,18 +212,6 @@ impl QueryableByName<Pg> for Dependency {
                 2 => Kind::Dev,
                 n => return Err(format!("unknown kind: {}", n).into()),
             },
-        })
-    }
-}
-
-impl QueryableByName<Pg> for ReverseDependency {
-    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
-        use diesel::types::{Integer, Text};
-
-        Ok(ReverseDependency {
-            dependency: QueryableByName::build(row)?,
-            crate_downloads: row.get::<Integer, _>("crate_downloads")?,
-            name: row.get::<Text, _>("crate_name")?,
         })
     }
 }
