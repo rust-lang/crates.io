@@ -544,6 +544,17 @@ fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
     new_req_full(app, ::krate(krate), version, Vec::new())
 }
 
+fn new_req_with_documentation(
+    app: Arc<App>,
+    krate: &str,
+    version: &str,
+    documentation: Option<String>,
+) -> MockRequest {
+    let mut krate = ::krate(krate);
+    krate.documentation = documentation;
+    new_req_full(app, krate, version, Vec::new())
+}
+
 fn new_req_full(
     app: Arc<App>,
     krate: Crate,

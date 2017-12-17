@@ -130,6 +130,7 @@ pub struct CrateLinks {
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
+#[changeset_options(treat_none_as_null = "true")]
 #[primary_key(name, max_upload_size)] // This is actually just to skip updating them
 pub struct NewCrate<'a> {
     pub name: &'a str,

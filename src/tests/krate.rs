@@ -1577,6 +1577,70 @@ fn publish_after_yank_max_version() {
 }
 
 #[test]
+fn publish_after_removing_documentation() {
+    let (_b, app, middle) = ::app();
+
+    let user;
+
+    // 1. Start with a crate with no documentation
+    {
+        let conn = app.diesel_database.get().unwrap();
+        user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("docscrate", user.id)
+            .version("0.2.0")
+            .expect_build(&conn);
+    }
+
+    // Verify that crates start without any documentation so the next assertion can *prove*
+    // that it was the one that added the documentation
+    {
+        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+
+    // 2. Add documentation
+    {
+        let mut req = ::new_req_with_documentation(
+            app.clone(),
+            "docscrate",
+            "0.2.1",
+            Some("http://foo.rs".to_owned()),
+        );
+        ::sign_in_as(&mut req, &user);
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: GoodCrate = ::json(&mut response);
+        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
+    }
+
+    // Ensure latest version also has the same documentation
+    {
+        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
+    }
+
+    // 3. Remove the documentation
+    {
+        let mut req = ::new_req_with_documentation(app.clone(), "docscrate", "0.2.2", None);
+        ::sign_in_as(&mut req, &user);
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: GoodCrate = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+
+    // Ensure latest version no longer has documentation
+    {
+        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+}
+
+#[test]
 fn bad_keywords() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(Arc::clone(&app), "foobar", "1.0.0");
