@@ -1594,7 +1594,7 @@ fn publish_after_removing_documentation() {
     // Verify that crates start without any documentation so the next assertion can *prove*
     // that it was the one that added the documentation
     {
-        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
         let mut response = ok_resp!(middle.call(&mut req));
         let json: CrateResponse = ::json(&mut response);
         assert_eq!(json.krate.documentation, None);
@@ -1603,7 +1603,7 @@ fn publish_after_removing_documentation() {
     // 2. Add documentation
     {
         let mut req = ::new_req_with_documentation(
-            app.clone(),
+            Arc::clone(&app),
             "docscrate",
             "0.2.1",
             Some("http://foo.rs".to_owned()),
@@ -1616,7 +1616,7 @@ fn publish_after_removing_documentation() {
 
     // Ensure latest version also has the same documentation
     {
-        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
         let mut response = ok_resp!(middle.call(&mut req));
         let json: CrateResponse = ::json(&mut response);
         assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
@@ -1624,7 +1624,7 @@ fn publish_after_removing_documentation() {
 
     // 3. Remove the documentation
     {
-        let mut req = ::new_req_with_documentation(app.clone(), "docscrate", "0.2.2", None);
+        let mut req = ::new_req_with_documentation(Arc::clone(&app), "docscrate", "0.2.2", None);
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         let json: GoodCrate = ::json(&mut response);
@@ -1633,7 +1633,7 @@ fn publish_after_removing_documentation() {
 
     // Ensure latest version no longer has documentation
     {
-        let mut req = ::req(app.clone(), Method::Get, "/api/v1/crates/docscrate");
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
         let mut response = ok_resp!(middle.call(&mut req));
         let json: CrateResponse = ::json(&mut response);
         assert_eq!(json.krate.documentation, None);
