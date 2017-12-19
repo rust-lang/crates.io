@@ -41,8 +41,7 @@ export default Route.extend({
         };
 
         const fetchCrateDocumentation = () => {
-            if (!crate.get('documentation') ||
-                crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
+            if (!crate.get('originalDocumentation')) {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
                 this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)

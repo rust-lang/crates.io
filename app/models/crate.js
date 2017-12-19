@@ -15,6 +15,7 @@ export default DS.Model.extend({
     mailing_list: DS.attr('string'),
     issues: DS.attr('string'),
     documentation: DS.attr('string'),
+    originalDocumentation: DS.attr('string'),
     repository: DS.attr('string'),
     exact_match: DS.attr('boolean'),
 
