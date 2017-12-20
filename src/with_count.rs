@@ -1,25 +1,7 @@
-use diesel::pg::Pg;
-use diesel::query_source::QueryableByName;
-use diesel::row::NamedRow;
-use std::error::Error;
-
+#[derive(QueryableByName)]
 pub struct WithCount<T> {
-    total: i64,
-    record: T,
-}
-
-impl<T> QueryableByName<Pg> for WithCount<T>
-where
-    T: QueryableByName<Pg>,
-{
-    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
-        use diesel::types::BigInt;
-
-        Ok(WithCount {
-            total: row.get::<BigInt, _>("total")?,
-            record: T::build(row)?,
-        })
-    }
+    #[sql_type = "::diesel::types::BigInt"] total: i64,
+    #[diesel(embed)] record: T,
 }
 
 pub trait WithCountExtension<T> {

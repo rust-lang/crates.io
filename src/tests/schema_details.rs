@@ -1,8 +1,5 @@
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::query_source::QueryableByName;
-use diesel::row::NamedRow;
-use std::error::Error;
+use diesel::types::Text;
 
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
@@ -46,37 +43,24 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
     }
 }
 
+#[derive(QueryableByName)]
 struct FkConstraint {
+    #[sql_type = "Text"]
+    #[column_name(conname)]
     name: String,
-    definition: String,
+    #[sql_type = "Text"] definition: String,
 }
 
+#[derive(QueryableByName)]
 struct TableNameAndConstraint {
+    #[sql_type = "Text"]
+    #[column_name(relname)]
     table_name: String,
-    constraint: Option<FkConstraint>,
-}
-
-impl QueryableByName<Pg> for TableNameAndConstraint {
-    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
-        use diesel::types::{Nullable, Text};
-
-        let constraint = match row.get::<Nullable<Text>, _>("conname")? {
-            Some(name) => Some(FkConstraint {
-                definition: row.get::<Text, _>("definition")?,
-                name,
-            }),
-            None => None,
-        };
-        Ok(TableNameAndConstraint {
-            table_name: row.get::<Text, _>("relname")?,
-            constraint,
-        })
-    }
+    #[diesel(embed)] constraint: Option<FkConstraint>,
 }
 
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
     use diesel::sql_query;
-    use diesel::types::Text;
 
     let (_r, app, _) = ::app();
     let conn = app.diesel_database.get().unwrap();
