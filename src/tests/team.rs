@@ -149,6 +149,23 @@ fn add_team_mixed_case() {
             .unwrap();
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
     }
+
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/foo_mixed_case/owners")
+                .with_method(Method::Get)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_mixed_case")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        let owner = &krate.owners(&*conn).unwrap()[1];
+        assert_eq!(owner.login(), owner.login().to_lowercase());
+    }
 }
 
 // Test adding team as owner when on it
