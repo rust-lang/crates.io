@@ -17,29 +17,6 @@ export default Route.extend({
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);
         const maxVersion = crate.get('max_version');
-
-        const isUnstableVersion = version => {
-            const versionLen = version.length;
-            let majorMinorPatchChars = 0;
-            let result = false;
-
-            for (let i = 0; i < versionLen; i++) {
-                const char = version.charAt(i);
-
-                if (!isNaN(parseInt(char)) || char === '.') {
-                    majorMinorPatchChars++;
-                } else {
-                    break;
-                }
-            }
-
-            if (versionLen !== majorMinorPatchChars) {
-                result = true;
-            }
-
-            return result;
-        };
-
         const fetchCrateDocumentation = () => {
             if (!crate.get('documentation') ||
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
@@ -54,31 +31,10 @@ export default Route.extend({
             }
         };
 
-        // Fallback to the crate's last stable version
-        // If `max_version` is `0.0.0` then all versions have been yanked
         if (!requestedVersion && maxVersion !== '0.0.0') {
-            if (isUnstableVersion(maxVersion)) {
-                crate.get('versions').then(versions => {
-                    const latestStableVersion = versions.find(version => {
-                        if (!isUnstableVersion(version.get('num'))) {
-                            return version;
-                        }
-                    });
-
-                    if (latestStableVersion == null) {
-                        // If no stable version exists, fallback to `maxVersion`
-                        params.version_num = maxVersion;
-                    } else {
-                        params.version_num = latestStableVersion.get('num');
-                    }
-                }).then(fetchCrateDocumentation);
-            } else {
-                params.version_num = maxVersion;
-                fetchCrateDocumentation();
-            }
-        } else {
-            fetchCrateDocumentation();
+            params.version_num = maxVersion;
         }
+        fetchCrateDocumentation();
 
         controller.set('crate', crate);
         controller.set('requestedVersion', requestedVersion);

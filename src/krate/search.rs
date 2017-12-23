@@ -38,6 +38,7 @@ use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
 pub fn search(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
     use diesel::types::{BigInt, Bool, Nullable};
+    use schema::versions::dsl::yanked;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -184,6 +185,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
+        .filter(yanked.eq(false))
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()

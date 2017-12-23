@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
@@ -115,15 +116,26 @@ impl Version {
     where
         T: IntoIterator<Item = semver::Version>,
     {
-        versions.into_iter().max().unwrap_or_else(|| {
-            semver::Version {
-                major: 0,
-                minor: 0,
-                patch: 0,
-                pre: vec![],
-                build: vec![],
-            }
-        })
+        versions
+            .into_iter()
+            .max_by(|x, y| {
+                if !x.is_prerelease() && y.is_prerelease() {
+                    Ordering::Greater
+                } else if x.is_prerelease() && !y.is_prerelease() {
+                    Ordering::Less
+                } else {
+                    x.cmp(y)
+                }
+            })
+            .unwrap_or_else(|| {
+                semver::Version {
+                    major: 0,
+                    minor: 0,
+                    patch: 0,
+                    pre: vec![],
+                    build: vec![],
+                }
+            })
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
@@ -266,4 +278,55 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
             ))
         })?;
     Ok((version, krate))
+}
+
+
+#[cfg(test)]
+mod test {
+
+    use semver;
+    use super::Version;
+
+    #[test]
+    fn max_version_returns_max_stable_when_only_stable() {
+        let versions = vec![
+            create_version("0.0.1"),
+            create_version("1.0.0"),
+            create_version("0.1.0"),
+        ];
+        assert_eq!(create_version("1.0.0"), Version::max(versions))
+    }
+
+    fn create_version(version: &str) -> semver::Version {
+        semver::Version::parse(version).unwrap()
+    }
+
+    #[test]
+    fn max_version_returns_max_prerelease_when_only_prerelease() {
+        let versions = vec![
+            create_version("0.0.1-pre.1"),
+            create_version("0.0.1-pre.3"),
+            create_version("0.0.1-pre.2"),
+        ];
+        assert_eq!(create_version("0.0.1-pre.3"), Version::max(versions))
+    }
+
+
+    #[test]
+    fn max_version_returns_zero_when_no_versions() {
+        let versions = vec![];
+        assert_eq!(create_version("0.0.0"), Version::max(versions))
+    }
+
+    #[test]
+    fn max_version_returns_latest_stable_when_prerelease_and_stable_mixed() {
+        let versions = vec![
+            create_version("1.0.1-pre.1"),
+            create_version("1.0.1-pre.3"),
+            create_version("1.0.0"),
+            create_version("0.9.0"),
+            create_version("1.0.1-pre.2"),
+        ];
+        assert_eq!(create_version("1.0.0"), Version::max(versions))
+    }
 }
