@@ -250,3 +250,17 @@ impl Deref for CategoryList {
         &self.0
     }
 }
+
+use diesel::pg::Pg;
+use diesel::types::{IsNull, Text, ToSql, ToSqlOutput};
+use std::error::Error;
+use std::io::Write;
+
+impl ToSql<Text, Pg> for Feature {
+    fn to_sql<W: Write>(
+        &self,
+        out: &mut ToSqlOutput<W, Pg>,
+    ) -> Result<IsNull, Box<Error + Send + Sync>> {
+        ToSql::<Text, Pg>::to_sql(&**self, out)
+    }
+}

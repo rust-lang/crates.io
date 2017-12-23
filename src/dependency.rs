@@ -60,19 +60,6 @@ pub enum Kind {
     // if you add a kind here, be sure to update `from_row` below.
 }
 
-#[derive(Default, Insertable, Debug)]
-#[table_name = "dependencies"]
-pub struct NewDependency<'a> {
-    pub version_id: i32,
-    pub crate_id: i32,
-    pub req: String,
-    pub optional: bool,
-    pub default_features: bool,
-    pub features: Vec<&'a str>,
-    pub target: Option<&'a str>,
-    pub kind: i32,
-}
-
 impl Dependency {
     // `downloads` need only be specified when generating a reverse dependency
     pub fn encodable(self, crate_name: &str, downloads: Option<i32>) -> EncodableDependency {
@@ -101,9 +88,10 @@ impl ReverseDependency {
 pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[::upload::CrateDependency],
-    version_id: i32,
+    target_version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
     use diesel::insert_into;
+    use self::dependencies::dsl::*;
 
     let git_and_new_dependencies = deps.iter()
         .map(|dep| {
@@ -120,28 +108,27 @@ pub fn add_dependencies(
                      information",
                 ));
             }
-            let features: Vec<_> = dep.features.iter().map(|s| &**s).collect();
 
             Ok((
                 git::Dependency {
                     name: dep.name.to_string(),
                     req: dep.version_req.to_string(),
-                    features: features.iter().map(|s| s.to_string()).collect(),
+                    features: dep.features.iter().map(|s| s.to_string()).collect(),
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),
                     kind: dep.kind.or(Some(Kind::Normal)),
                 },
-                NewDependency {
-                    version_id: version_id,
-                    crate_id: krate.id,
-                    req: dep.version_req.to_string(),
-                    kind: dep.kind.unwrap_or(Kind::Normal) as i32,
-                    optional: dep.optional,
-                    default_features: dep.default_features,
-                    features: features,
-                    target: dep.target.as_ref().map(|s| &**s),
-                },
+                (
+                    version_id.eq(target_version_id),
+                    crate_id.eq(krate.id),
+                    req.eq(dep.version_req.to_string()),
+                    dep.kind.map(|k| kind.eq(k as i32)),
+                    optional.eq(dep.optional),
+                    default_features.eq(dep.default_features),
+                    features.eq(&dep.features),
+                    target.eq(dep.target.as_ref().map(|s| &**s)),
+                ),
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -149,11 +136,32 @@ pub fn add_dependencies(
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();
 
-    insert_into(dependencies::table)
+    insert_into(dependencies)
         .values(&new_dependencies)
         .execute(conn)?;
 
     Ok(git_deps)
+}
+
+use diesel::types::{FromSql, FromSqlRow, Integer};
+use diesel::row::Row;
+
+// FIXME: Replace with `#[derive(FromSqlRow)]` in Diesel 1.1
+impl FromSqlRow<Integer, Pg> for Kind {
+    fn build_from_row<R: Row<Pg>>(row: &mut R) -> Result<Self, Box<Error + Send + Sync>> {
+        Self::from_sql(row.take())
+    }
+}
+
+impl FromSql<Integer, Pg> for Kind {
+    fn from_sql(bytes: Option<&[u8]>) -> Result<Self, Box<Error + Send + Sync>> {
+        match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
+            0 => Ok(Kind::Normal),
+            1 => Ok(Kind::Build),
+            2 => Ok(Kind::Dev),
+            n => Err(format!("unknown kind: {}", n).into()),
+        }
+    }
 }
 
 impl Queryable<dependencies::SqlType, Pg> for Dependency {
@@ -166,7 +174,7 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
         bool,
         Vec<String>,
         Option<String>,
-        i32,
+        Kind,
     );
 
     fn build(row: Self::Row) -> Self {
@@ -179,12 +187,7 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
             default_features: row.5,
             features: row.6,
             target: row.7,
-            kind: match row.8 {
-                0 => Kind::Normal,
-                1 => Kind::Build,
-                2 => Kind::Dev,
-                n => panic!("unknown kind: {}", n),
-            },
+            kind: row.8,
         }
     }
 }
@@ -204,12 +207,7 @@ impl QueryableByName<Pg> for Dependency {
             default_features: row.get::<SqlTypeOf<default_features>, _>("default_features")?,
             features: row.get::<SqlTypeOf<features>, _>("features")?,
             target: row.get::<SqlTypeOf<target>, _>("target")?,
-            kind: match row.get::<SqlTypeOf<kind>, _>("kind")? {
-                0 => Kind::Normal,
-                1 => Kind::Build,
-                2 => Kind::Dev,
-                n => return Err(format!("unknown kind: {}", n).into()),
-            },
+            kind: row.get::<SqlTypeOf<kind>, _>("kind")?,
         })
     }
 }

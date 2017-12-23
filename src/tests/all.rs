@@ -30,7 +30,6 @@ use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 use cargo_registry::app::App;
 use cargo_registry::category::NewCategory;
-use cargo_registry::dependency::NewDependency;
 use cargo_registry::keyword::Keyword;
 use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
 use cargo_registry::schema::*;
@@ -313,13 +312,15 @@ impl<'a> VersionBuilder<'a> {
         let new_deps = self.dependencies
             .into_iter()
             .map(|(crate_id, target)| {
-                NewDependency {
-                    version_id: vers.id,
-                    req: ">= 0".into(),
-                    crate_id,
-                    target,
-                    ..Default::default()
-                }
+                (
+                    dependencies::version_id.eq(vers.id),
+                    dependencies::req.eq(">= 0"),
+                    dependencies::crate_id.eq(crate_id),
+                    dependencies::target.eq(target),
+                    dependencies::optional.eq(false),
+                    dependencies::default_features.eq(false),
+                    dependencies::features.eq(Vec::<String>::new()),
+                )
             })
             .collect::<Vec<_>>();
         insert_into(dependencies::table)
@@ -505,16 +506,17 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use diesel::insert_into;
-    use cargo_registry::schema::dependencies;
+    use cargo_registry::schema::dependencies::dsl::*;
 
-    insert_into(dependencies::table)
-        .values(&NewDependency {
-            version_id: version.id,
-            crate_id: krate.id,
-            req: ">= 0".into(),
-            optional: false,
-            ..Default::default()
-        })
+    insert_into(dependencies)
+        .values((
+            version_id.eq(version.id),
+            crate_id.eq(krate.id),
+            req.eq(">= 0"),
+            optional.eq(false),
+            default_features.eq(false),
+            features.eq(Vec::<String>::new()),
+        ))
         .get_result(conn)
         .unwrap()
 }
