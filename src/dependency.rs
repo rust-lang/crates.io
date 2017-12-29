@@ -109,9 +109,7 @@ pub fn add_dependencies(
         .map(|dep| {
             let krate = Crate::by_name(&dep.name)
                 .first::<Crate>(&*conn)
-                .map_err(|_| {
-                    human(&format_args!("no known crate named `{}`", &*dep.name))
-                })?;
+                .map_err(|_| human(&format_args!("no known crate named `{}`", &*dep.name)))?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
                 return Err(human(
                     "wildcard (`*`) dependency constraints are not allowed \

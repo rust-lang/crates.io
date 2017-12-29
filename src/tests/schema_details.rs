@@ -15,8 +15,7 @@ fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
             panic!(
                 "Foreign key {} on table {} should have `ON DELETE CASCADE` \
                  but it doesn't.",
-                constraint.name,
-                row.table_name
+                constraint.name, row.table_name
             );
         }
     }
@@ -36,8 +35,7 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
             panic!(
                 "Foreign key {} on table {} should have `ON DELETE CASCADE` \
                  but it doesn't.",
-                constraint.name,
-                row.table_name
+                constraint.name, row.table_name
             );
         }
     }

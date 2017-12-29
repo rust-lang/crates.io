@@ -29,8 +29,12 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
-    IsItMaintainedIssueResolution { repository: String },
-    IsItMaintainedOpenIssues { repository: String },
+    IsItMaintainedIssueResolution {
+        repository: String,
+    },
+    IsItMaintainedOpenIssues {
+        repository: String,
+    },
     Codecov {
         repository: String,
         branch: Option<String>,
@@ -41,7 +45,9 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    Maintenance { status: MaintenanceStatus },
+    Maintenance {
+        status: MaintenanceStatus,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]

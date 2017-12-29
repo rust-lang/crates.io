@@ -49,7 +49,6 @@ pub fn json_response<T: Serialize>(t: &T) -> Response {
     }
 }
 
-
 impl<'a> RequestUtils for Request + 'a {
     fn json<T: Serialize>(&self, t: &T) -> Response {
         json_response(t)
@@ -89,9 +88,10 @@ impl<'a> RequestUtils for Request + 'a {
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(default);
         if limit > max {
-            return Err(human(
-                &format_args!("cannot request more than {} items", max),
-            ));
+            return Err(human(&format_args!(
+                "cannot request more than {} items",
+                max
+            )));
         }
         if page == 0 {
             return Err(human("page indexing starts from 1, page 0 is invalid"));

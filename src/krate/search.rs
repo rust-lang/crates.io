@@ -51,11 +51,9 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
 
     let mut query = crates::table
         .left_join(
-            crate_downloads::table.on(
-                crates::id
-                    .eq(crate_downloads::crate_id)
-                    .and(crate_downloads::date.gt(date(now - 90.days()))),
-            ),
+            crate_downloads::table.on(crates::id
+                .eq(crate_downloads::crate_id)
+                .and(crate_downloads::date.gt(date(now - 90.days())))),
         )
         .group_by(crates::id)
         .select((
@@ -90,10 +88,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
-            query = query.order((
-                perfect_match,
-                recent_downloads.clone().desc().nulls_last(),
-            ));
+            query = query.order((perfect_match, recent_downloads.clone().desc().nulls_last()));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))

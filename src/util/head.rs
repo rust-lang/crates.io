@@ -27,12 +27,14 @@ impl Handler for Head {
                 path: None,
                 method: Some(Method::Get),
             };
-            self.handler.as_ref().unwrap().call(&mut req).map(|r| {
-                Response {
+            self.handler
+                .as_ref()
+                .unwrap()
+                .call(&mut req)
+                .map(|r| Response {
                     body: Box::new(io::empty()),
                     ..r
-                }
-            })
+                })
         } else {
             self.handler.as_ref().unwrap().call(req)
         }
