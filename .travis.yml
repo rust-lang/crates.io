@@ -21,7 +21,7 @@ before_install:
   - nvm install 8
 
 install:
-  - cargo install --force diesel_cli --vers 1.0.0-rc1 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force diesel_cli --vers 1.0.0 --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
   - diesel database setup
