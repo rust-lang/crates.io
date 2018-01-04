@@ -3,11 +3,9 @@ import { computed } from '@ember/object';
 import { alias, bool, readOnly } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
-import { task, timeout } from 'ember-concurrency';
+import { task } from 'ember-concurrency';
 
 import PaginationMixin from '../mixins/pagination';
-
-const DEBOUNCE_MS = 250;
 
 export default Controller.extend(PaginationMixin, {
     search: service(),
@@ -42,13 +40,10 @@ export default Controller.extend(PaginationMixin, {
     hasItems: bool('totalItems'),
 
     dataTask: task(function* (params) {
-        // debounce the search query
-        yield timeout(DEBOUNCE_MS);
-
         if (params.q !== null) {
             params.q = params.q.trim();
         }
 
         return yield this.store.query('crate', params);
-    }).restartable(),
+    }).drop(),
 });
