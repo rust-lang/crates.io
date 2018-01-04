@@ -650,7 +650,6 @@ fn new_krate_non_canon_crate_name_dependencies() {
     ::json::<GoodCrate>(&mut response);
 }
 
-
 #[test]
 fn new_krate_with_wildcard_dependency() {
     let (_b, app, middle) = ::app();

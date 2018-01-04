@@ -499,7 +499,6 @@ fn test_accept_invitation() {
     assert_eq!(json.users.len(), 2);
 }
 
-
 /*  Given a user inviting a different user to be a crate
     owner, check that the user invited can decline their
     invitation and the invitation will be deleted from
@@ -571,7 +570,6 @@ fn test_decline_invitation() {
     let json: T = ::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, false);
     assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
-
 
     // then check to make sure that decline_invite did what it
     // was supposed to

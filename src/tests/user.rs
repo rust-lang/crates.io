@@ -93,26 +93,22 @@ fn show_latest_user_case_insensitively() {
         // should be used for uniquely identifying GitHub accounts whenever possible. For the
         // crates.io/user/:username pages, the best we can do is show the last crates.io account
         // created with that username.
-        t!(
-            NewUser::new(
-                1,
-                "foobar",
-                Some("foo@bar.com"),
-                Some("I was first then deleted my github account"),
-                None,
-                "bar"
-            ).create_or_update(&conn)
-        );
-        t!(
-            NewUser::new(
-                2,
-                "FOOBAR",
-                Some("later-foo@bar.com"),
-                Some("I was second, I took the foobar username on github"),
-                None,
-                "bar"
-            ).create_or_update(&conn)
-        );
+        t!(NewUser::new(
+            1,
+            "foobar",
+            Some("foo@bar.com"),
+            Some("I was first then deleted my github account"),
+            None,
+            "bar"
+        ).create_or_update(&conn));
+        t!(NewUser::new(
+            2,
+            "FOOBAR",
+            Some("later-foo@bar.com"),
+            Some("I was second, I took the foobar username on github"),
+            None,
+            "bar"
+        ).create_or_update(&conn));
     }
     let mut req = ::req(Arc::clone(&app), Method::Get, "api/v1/users/fOObAr");
     let mut response = ok_resp!(middle.call(&mut req));
@@ -724,12 +720,10 @@ fn test_confirm_user_email() {
             .unwrap()
     };
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/confirm/{}", email_token))
-                .with_method(Method::Put),
-        )
-    );
+    let mut response = ok_resp!(middle.call(req.with_path(&format!(
+        "/api/v1/confirm/{}",
+        email_token
+    )).with_method(Method::Put),));
     assert!(::json::<S>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));

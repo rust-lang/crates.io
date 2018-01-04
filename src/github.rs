@@ -72,8 +72,7 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
             return Err(internal(&format_args!(
                 "didn't get a 200 result from \
                  github, got {} with: {}",
-                n,
-                resp
+                n, resp
             )));
         }
     }

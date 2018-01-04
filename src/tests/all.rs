@@ -312,14 +312,12 @@ impl<'a> VersionBuilder<'a> {
 
         let new_deps = self.dependencies
             .into_iter()
-            .map(|(crate_id, target)| {
-                NewDependency {
-                    version_id: vers.id,
-                    req: ">= 0".into(),
-                    crate_id,
-                    target,
-                    ..Default::default()
-                }
+            .map(|(crate_id, target)| NewDependency {
+                version_id: vers.id,
+                req: ">= 0".into(),
+                crate_id,
+                target,
+                ..Default::default()
             })
             .collect::<Vec<_>>();
         insert_into(dependencies::table)

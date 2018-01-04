@@ -88,9 +88,10 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         }
 
         if krate.name != name {
-            return Err(human(
-                &format_args!("crate was previously named `{}`", krate.name),
-            ));
+            return Err(human(&format_args!(
+                "crate was previously named `{}`",
+                krate.name
+            )));
         }
 
         let length = req.content_length()

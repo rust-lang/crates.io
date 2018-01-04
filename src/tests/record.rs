@@ -121,7 +121,6 @@ pub fn proxy() -> (String, Bomb) {
             .connector(hyper_tls::HttpsConnector::new(4, &handle).unwrap())
             .build(&handle);
 
-
         let record = Rc::new(RefCell::new(record));
         let srv = listener.incoming().for_each(|(socket, addr)| {
             Http::new().bind_connection(
@@ -174,14 +173,14 @@ impl Service for Proxy {
         match *self.record.borrow_mut() {
             Record::Capture(_, _) => {
                 let record = Rc::clone(&self.record);
-                Box::new(record_http(req, &self.client).map(
-                    move |(response, exchange)| {
+                Box::new(
+                    record_http(req, &self.client).map(move |(response, exchange)| {
                         if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
                             d.push(exchange);
                         }
                         response
-                    },
-                ))
+                    }),
+                )
             }
             Record::Replay(ref mut exchanges) => {
                 replay_http(req, exchanges.remove(0), &mut &self.sink)

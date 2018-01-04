@@ -256,9 +256,8 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry.chain_error(|| {
-            human("uploaded tarball is malformed or too large when decompressed")
-        })?;
+        let entry = entry
+            .chain_error(|| human("uploaded tarball is malformed or too large when decompressed"))?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could

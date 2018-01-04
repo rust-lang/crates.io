@@ -585,8 +585,7 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
         "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://crates.io/confirm/{}",
-        user_name,
-        token
+        user_name, token
     );
 
     email::send_email(email, subject, &body)

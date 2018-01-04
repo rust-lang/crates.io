@@ -84,3 +84,7 @@ tokio-service = "0.1"
 dotenv = "0.10"
 diesel = { version = "1.0.0-beta1", features = ["postgres"] }
 diesel_migrations = { version = "1.0.0-beta1", features = ["postgres"] }
+
+# Remove once cookie depends on ring >= 0.13.0
+[patch.crates-io]
+ring = { git = "https://github.com/SergioBenitez/ring", branch = "v0.11" }
