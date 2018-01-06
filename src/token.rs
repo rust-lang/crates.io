@@ -146,3 +146,40 @@ pub fn revoke(req: &mut Request) -> CargoResult<Response> {
     struct R {}
     Ok(req.json(&R {}))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use serde_json;
+
+    #[test]
+    fn api_token_serializes_to_rfc3339() {
+        let tok = ApiToken {
+            id: 12345,
+            user_id: 23456,
+            token: "".to_string(),
+            name: "".to_string(),
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+        };
+        let json = serde_json::to_string(&tok).unwrap();
+        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+        assert!(json.as_str().find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#).is_some());
+    }
+
+    #[test]
+    fn encodeable_api_token_with_token_serializes_to_rfc3339() {
+        let tok = EncodableApiTokenWithToken {
+            id: 12345,
+            name: "".to_string(),
+            token: "".to_string(),
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+        };
+        let json = serde_json::to_string(&tok).unwrap();
+        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+        assert!(json.as_str().find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#).is_some());
+    }
+
+}

@@ -266,8 +266,10 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::NaiveDate;
     use diesel::connection::SimpleConnection;
     use dotenv::dotenv;
+    use serde_json;
     use std::env;
 
     fn pg_connection() -> PgConnection {
@@ -398,4 +400,34 @@ mod tests {
         let expected = vec![("Cat 3".to_string(), 6), ("Cat 1".to_string(), 3)];
         assert_eq!(expected, categories);
     }
+
+    #[test]
+    fn category_dates_serializes_to_rfc3339() {
+        let cat = EncodableCategory {
+            id: "".to_string(),
+            category: "".to_string(),
+            slug: "".to_string(),
+            description: "".to_string(),
+            crates_cnt: 1,
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+        };
+        let json = serde_json::to_string(&cat).unwrap();
+        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+    }
+
+    #[test]
+    fn category_with_sub_dates_serializes_to_rfc3339() {
+        let cat = EncodableCategoryWithSubcategories {
+            id: "".to_string(),
+            category: "".to_string(),
+            slug: "".to_string(),
+            description: "".to_string(),
+            crates_cnt: 1,
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            subcategories: vec![],
+        };
+        let json = serde_json::to_string(&cat).unwrap();
+        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+    }
+
 }
