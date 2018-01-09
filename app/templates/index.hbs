@@ -36,28 +36,28 @@
 </div>
 
 <div id='home-crates' class='crate-lists'>
-    <div id='new-crates' data-test-new-crates>
+    <section id='new-crates' data-test-new-crates>
         <h2>New Crates {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{crate-list crates=model.new_crates}}
-    </div>
-    <div id='most-downloaded' data-test-most-downloaded>
+    </section>
+    <section id='most-downloaded' data-test-most-downloaded>
         <h2>Most Downloaded {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{crate-list crates=model.most_downloaded}}
-    </div>
-    <div id='just-updated' data-test-just-updated>
+    </section>
+    <section id='just-updated' data-test-just-updated>
         <h2>Just Updated {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{crate-list crates=model.just_updated}}
-    </div>
-    <div id='most-recently-downloaded' data-test-most-recently-downloaded>
+    </section>
+    <section id='most-recently-downloaded' data-test-most-recently-downloaded>
         <h2>Most Recent Downloads {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{crate-list crates=model.most_recently_downloaded}}
-    </div>
-    <div id='keywords' data-test-keywords>
+    </section>
+    <section id='keywords' data-test-keywords>
         <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}} {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{keyword-list keywords=model.popular_keywords}}
-    </div>
-    <div id='categories' data-test-categories>
+    </section>
+    <section id='categories' data-test-categories>
         <h2>Popular Categories {{#link-to 'categories'}}(see all){{/link-to}} {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif">{{/if}}</h2>
         {{category-list categories=model.popular_categories}}
-    </div>
+    </section>
 </div>
