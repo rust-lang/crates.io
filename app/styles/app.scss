@@ -141,6 +141,15 @@ body {
     @include border-radius(15px);
 }
 
+form.search label {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 #header input.search {
     width: 100%;
     margin-left: 16px;

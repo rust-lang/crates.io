@@ -26,6 +26,7 @@
                 tabindex="1"
                 required
                 data-test-search-input>
+        <label for="cargo-desktop-search">Search</label>
     </form>
 
     <div class='nav'>
@@ -103,13 +104,14 @@
 </div>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-    <input type="text" class="search" name="q"
+    <input type="text" class="search" name="q" id="cargo-mobile-search"
             placeholder="Search"
             value={{searchQuery}}
             oninput={{action (mut searchQuery) value="target.value"}}
             autocorrect="off"
             tabindex="1"
             required>
+    <label for="cargo-mobile-search">Search</label>
 </form>
 
 <div id="main" class='inner-content'>
