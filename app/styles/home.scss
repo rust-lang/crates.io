@@ -20,7 +20,7 @@
         margin-right: 10px;
     }
 
-    &:hover { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &:hover, &:focus { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
     &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
     &[disabled] {
         @include vertical-gradient($start_light, $end_light);
