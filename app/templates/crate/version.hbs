@@ -92,9 +92,9 @@
             </span>
         </div>
         {{#if crate.readme}}
-            <div class="crate-readme">
+            <section class="crate-readme" aria-label="Readme">
                 {{crate-readme rendered=crate.readme}}
-            </div>
+            </section>
         {{else}}
             {{#if crate.description}}
                 <div class='about'>
@@ -104,7 +104,7 @@
             {{/if}}
         {{/if}}
     </div>
-    <div class='authorship'>
+    <section class='authorship' aria-label="Authorship">
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
@@ -243,7 +243,7 @@
                 </div>
             {{/if}}
         </div>
-    </div>
+    </section>
 </div>
 
 <div id='crate-downloads'>
