@@ -225,7 +225,7 @@
                 <h3>Dependencies</h3>
                     <ul>
                         {{#each currentDependencies as |dep|}}
-                            {{link-to-dep dep=dep}}
+                            {{link-to-dep tagName="li" dep=dep}}
                         {{else}}
                             <li>None</li>
                         {{/each}}
