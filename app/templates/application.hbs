@@ -5,7 +5,7 @@
   <img src='/assets/forkme.png'/>
 </a>
 
-<div id="header">
+<nav id="header">
     {{#link-to "index" tabindex="-1"}}
         <img src="/assets/Cargo-Logo-Small.png" id="logo"
              height=100 width=100 alt="Cargo Logo"/>
@@ -101,7 +101,7 @@
 
     <div class='links'>
     </div>
-</div>
+</nav>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
     <input type="text" class="search" name="q" id="cargo-mobile-search"
@@ -114,13 +114,13 @@
     <label for="cargo-mobile-search">Search</label>
 </form>
 
-<div id="main" class='inner-content'>
+<main id="main" class='inner-content'>
     {{flash-message}}
 
     {{outlet}}
-</div>
+</main>
 
-<div class='after-main-links'>
+<footer class='after-main-links'>
     {{#link-to 'install'}}Install{{/link-to}}
     <span class="sep">|</span>
     <a href='http://doc.crates.io'>Getting Started</a>
@@ -130,4 +130,4 @@
     <a href='mailto:help@crates.io'>Send us an email</a>
     <span class="sep">|</span>
     {{#link-to 'policies'}}Policies{{/link-to}}
-</div>
+</footer>
