@@ -21,9 +21,7 @@ before_install:
   - nvm install 8
 
 install:
-  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - npm install
-  - cargo install --force diesel_cli --vers 0.16.0 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force diesel_cli --vers 1.0.0 --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
   - diesel database setup
@@ -44,16 +42,17 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-  - rust: nightly-2017-11-07
+  - rust: nightly-2017-12-28
     script:
-    - cargo install --force rustfmt-nightly --vers 0.2.15
-    - cargo install --force clippy --vers 0.0.169
+    - cargo install --force rustfmt-nightly --vers 0.3.4
     - cargo fmt -- --write-mode=diff
+    - cargo install --force clippy --vers 0.0.177
     - cargo clippy
   - rust: stable
     script:
     - cargo build
     - cargo test
+    - npm install
     - npm test
   - rust: beta
     script:
@@ -68,6 +67,7 @@ env:
   global:
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - CARGO_TARGET_DIR=target
 
 notifications:
   email:

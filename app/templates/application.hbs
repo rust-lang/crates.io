@@ -21,7 +21,7 @@
         <input type="text" class="search" name="q" id="cargo-desktop-search"
                 placeholder="Click or press 'S' to search..."
                 value={{searchQuery}}
-                oninput={{action "search" value="target.value"}}
+                oninput={{action (mut searchQuery) value="target.value"}}
                 autofocus="autofocus"
                 tabindex="1"
                 required
@@ -106,7 +106,7 @@
     <input type="text" class="search" name="q"
             placeholder="Search"
             value={{searchQuery}}
-            oninput={{action "search" value="target.value"}}
+            oninput={{action (mut searchQuery) value="target.value"}}
             autocorrect="off"
             tabindex="1"
             required>

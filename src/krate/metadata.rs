@@ -66,10 +66,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
     let most_recently_downloaded = crates
         .left_join(
-            crate_downloads::table.on(
-                id.eq(crate_downloads::crate_id)
-                    .and(crate_downloads::date.gt(date(now - 90.days()))),
-            ),
+            crate_downloads::table.on(id.eq(crate_downloads::crate_id)
+                .and(crate_downloads::date.gt(date(now - 90.days())))),
         )
         .group_by(id)
         .order(recent_downloads.desc().nulls_last())
@@ -150,25 +148,23 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         keywords: Vec<EncodableKeyword>,
         categories: Vec<EncodableCategory>,
     }
-    Ok(
-        req.json(&R {
-            krate: krate.clone().encodable(
-                &max_version,
-                Some(ids),
-                Some(&kws),
-                Some(&cats),
-                Some(badges),
-                false,
-                recent_downloads,
-            ),
-            versions: versions
-                .into_iter()
-                .map(|v| v.encodable(&krate.name))
-                .collect(),
-            keywords: kws.into_iter().map(|k| k.encodable()).collect(),
-            categories: cats.into_iter().map(|k| k.encodable()).collect(),
-        }),
-    )
+    Ok(req.json(&R {
+        krate: krate.clone().encodable(
+            &max_version,
+            Some(ids),
+            Some(&kws),
+            Some(&cats),
+            Some(badges),
+            false,
+            recent_downloads,
+        ),
+        versions: versions
+            .into_iter()
+            .map(|v| v.encodable(&krate.name))
+            .collect(),
+        keywords: kws.into_iter().map(|k| k.encodable()).collect(),
+        categories: cats.into_iter().map(|k| k.encodable()).collect(),
+    }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.

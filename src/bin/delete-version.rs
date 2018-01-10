@@ -50,9 +50,7 @@ fn delete(conn: &PgConnection) {
         .unwrap();
     print!(
         "Are you sure you want to delete {}#{} ({}) [y/N]: ",
-        name,
-        version,
-        v.id
+        name, version, v.id
     );
     io::stdout().flush().unwrap();
     let mut line = String::new();

@@ -96,11 +96,9 @@ impl Keyword {
             diesel::delete(CrateKeyword::belonging_to(krate)).execute(conn)?;
             let crate_keywords = keywords
                 .into_iter()
-                .map(|kw| {
-                    CrateKeyword {
-                        crate_id: krate.id,
-                        keyword_id: kw.id,
-                    }
+                .map(|kw| CrateKeyword {
+                    crate_id: krate.id,
+                    keyword_id: kw.id,
                 })
                 .collect::<Vec<_>>();
             diesel::insert_into(crates_keywords::table)

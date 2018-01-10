@@ -115,15 +115,16 @@ impl Version {
     where
         T: IntoIterator<Item = semver::Version>,
     {
-        versions.into_iter().max().unwrap_or_else(|| {
-            semver::Version {
+        versions
+            .into_iter()
+            .max()
+            .unwrap_or_else(|| semver::Version {
                 major: 0,
                 minor: 0,
                 patch: 0,
                 pre: vec![],
                 build: vec![],
-            }
-        })
+            })
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
@@ -261,8 +262,7 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
         .map_err(|_| {
             human(&format_args!(
                 "crate `{}` does not have a version `{}`",
-                crate_name,
-                semver
+                crate_name, semver
             ))
         })?;
     Ok((version, krate))

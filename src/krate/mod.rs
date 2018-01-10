@@ -177,17 +177,15 @@ impl<'a> NewCrate<'a> {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url).map_err(|_| {
-                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-            })?;
+            let url = Url::parse(url)
+                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
                          scheme: `{}`",
-                        field,
-                        s
+                        field, s
                     )))
                 }
             }
@@ -195,8 +193,7 @@ impl<'a> NewCrate<'a> {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
                      data: {}",
-                    field,
-                    url
+                    field, url
                 )));
             }
             Ok(())
@@ -578,9 +575,9 @@ mod tests {
     #[test]
     fn documentation_blacklist_url_contains_partial_match() {
         assert_eq!(
-            Crate::remove_blacklisted_documentation_urls(
-                Some(String::from("http://rust-ci.organists.com")),
-            ),
+            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+                "http://rust-ci.organists.com"
+            )),),
             Some(String::from("http://rust-ci.organists.com"))
         );
     }

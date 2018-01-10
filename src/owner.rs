@@ -197,8 +197,7 @@ impl Team {
             .ok_or_else(|| {
                 human(&format_args!(
                     "could not find the github team {}/{}",
-                    org_name,
-                    team_name
+                    org_name, team_name
                 ))
             })?;
 
@@ -310,17 +309,18 @@ impl Owner {
         name: &str,
     ) -> CargoResult<Owner> {
         if name.contains(':') {
-            Ok(Owner::Team(
-                Team::create_or_update(app, conn, name, req_user)?,
-            ))
+            Ok(Owner::Team(Team::create_or_update(
+                app,
+                conn,
+                name,
+                req_user,
+            )?))
         } else {
             users::table
                 .filter(users::gh_login.eq(name))
                 .first(conn)
                 .map(Owner::User)
-                .map_err(|_| {
-                    human(&format_args!("could not find user with login `{}`", name))
-                })
+                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)))
         }
     }
 

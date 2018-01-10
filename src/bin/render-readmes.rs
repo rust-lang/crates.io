@@ -132,8 +132,7 @@ fn main() {
             let config = config.clone();
             version.record_readme_rendering(&conn).expect(&format!(
                 "[{}-{}] Couldn't record rendering time",
-                krate_name,
-                version.num
+                krate_name, version.num
             ));
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
@@ -155,8 +154,7 @@ fn main() {
                     )
                     .expect(&format!(
                         "[{}-{}] Couldn't upload file to S3",
-                        krate_name,
-                        version.num
+                        krate_name, version.num
                     ));
             });
             tasks.push(handle);
@@ -182,8 +180,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     let date = Utc::now().to_rfc2822();
     let url = Url::parse(&location).expect(&format!(
         "[{}-{}] Couldn't parse crate URL",
-        krate_name,
-        version.num
+        krate_name, version.num
     ));
 
     let mut headers = List::new();
@@ -206,9 +203,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         if let Err(err) = req.perform() {
             println!(
                 "[{}-{}] Unable to fetch crate: {}",
-                krate_name,
-                version.num,
-                err
+                krate_name, version.num, err
             );
             return None;
         }
@@ -217,31 +212,26 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         let response = String::from_utf8_lossy(&response);
         println!(
             "[{}-{}] Failed to get a 200 response: {}",
-            krate_name,
-            version.num,
-            response
+            krate_name, version.num, response
         );
         return None;
     }
     let reader = Cursor::new(response);
     let reader = GzDecoder::new(reader).expect(&format!(
         "[{}-{}] Invalid gzip header",
-        krate_name,
-        version.num
+        krate_name, version.num
     ));
     let mut archive = Archive::new(reader);
     let mut entries = archive.entries().expect(&format!(
         "[{}-{}] Invalid tar archive entries",
-        krate_name,
-        version.num
+        krate_name, version.num
     ));
     let manifest: Manifest = {
         let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         toml::from_str(&contents).expect(&format!(
             "[{}-{}] Syntax error in manifest file",
-            krate_name,
-            version.num
+            krate_name, version.num
         ))
     };
     if manifest.package.readme.is_none() {
@@ -265,8 +255,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
             manifest.package.repository.as_ref().map(|e| &**e),
         ).expect(&format!(
             "[{}-{}] Couldn't render README",
-            krate_name,
-            version.num
+            krate_name, version.num
         ))
     };
     return Some(rendered);
@@ -315,8 +304,7 @@ fn find_file_by_path<R: Read>(
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect(&format!(
         "[{}-{}] Couldn't read file contents",
-        krate_name,
-        version.num
+        krate_name, version.num
     ));
     contents
 }

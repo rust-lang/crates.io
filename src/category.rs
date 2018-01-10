@@ -88,11 +88,9 @@ impl Category {
                 .collect();
             let crate_categories = categories
                 .iter()
-                .map(|c| {
-                    CrateCategory {
-                        category_id: c.id,
-                        crate_id: krate.id,
-                    }
+                .map(|c| CrateCategory {
+                    category_id: c.id,
+                    crate_id: krate.id,
                 })
                 .collect::<Vec<_>>();
 
@@ -137,9 +135,7 @@ impl Category {
              WHERE split_part(c.slug, '::', 1) = c.slug
              GROUP BY c.id
              {} LIMIT {} OFFSET {}",
-            sort_sql,
-            limit,
-            offset
+            sort_sql, limit, offset
         ))).load(conn)
     }
 
