@@ -28,6 +28,11 @@
     }
 }
 
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 .yellow-button {
     @include button(#fede9e, #fdc452);
     vertical-align: middle;
@@ -147,11 +152,16 @@ button.small {
       margin: 0;
       padding: 0 15px;
       width: 33.33%;
+      min-height: 788.283px;
       @media only screen and (max-width: 750px) {
         width: 50%;
       }
       @media only screen and (max-width: 550px) {
         width: 100%;
+      }
+
+      li {
+        animation: fadein 400ms;
       }
     }
 }
