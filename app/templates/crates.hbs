@@ -71,16 +71,20 @@
     {{/each}}
 </div>
 
-<div class='pagination'>
+<nav class='pagination' aria-label="Pagination navigation">
     {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page" data-test-pagination-prev=true}}
         {{svg-jar "left-pag"}}
     {{/link-to}}
-    {{#each pages as |page|}}
-        {{#link-to (query-params page=page)}}
-            {{ page }}
-        {{/link-to}}
-    {{/each}}
+    <ol>
+        {{#each pages as |page|}}
+            <li>
+                {{#link-to (query-params page=page) title=(concat "Go to page " page)}}
+                    {{ page }}
+                {{/link-to}}
+            </li>
+        {{/each}}
+    </ol>
     {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page" data-test-pagination-next=true}}
         {{svg-jar "right-pag"}}
     {{/link-to}}
-</div>
+</nav>
