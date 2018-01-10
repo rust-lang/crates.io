@@ -113,6 +113,14 @@ button.small {
 
     > section { margin: 0 15px; }
 
+    > section[aria-busy="true"] > h2::after {
+        content: '';
+        background-image: url('/assets/ajax-loader.gif');
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+    }
+
     ul, ol { list-style: none; padding: 0; }
     li { margin: 8px 0; }
 
