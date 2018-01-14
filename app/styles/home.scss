@@ -151,7 +151,7 @@ button.small {
     @include flex-wrap(wrap);
     @include justify-content(left);
 
-    > div {
+    > section {
       margin: 0;
       padding: 0 15px;
       width: 33.33%;
