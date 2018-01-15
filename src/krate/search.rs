@@ -37,7 +37,7 @@ use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
-    use diesel::types::{BigInt, Bool, Nullable};
+    use diesel::sql_types::{BigInt, Bool, Nullable};
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;

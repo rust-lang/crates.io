@@ -88,7 +88,7 @@ impl<'a> NewUser<'a> {
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
         use diesel::insert_into;
         use diesel::dsl::sql;
-        use diesel::types::Integer;
+        use diesel::sql_types::Integer;
         use diesel::pg::upsert::excluded;
         use diesel::NotFound;
         use schema::users::dsl::*;

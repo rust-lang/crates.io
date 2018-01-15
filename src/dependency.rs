@@ -3,7 +3,6 @@ use diesel::prelude::*;
 use diesel::query_source::QueryableByName;
 use diesel::row::NamedRow;
 use semver;
-use std::error::Error;
 
 use git;
 use krate::Crate;
@@ -30,9 +29,9 @@ pub struct Dependency {
 #[derive(Debug, QueryableByName)]
 pub struct ReverseDependency {
     #[diesel(embed)] dependency: Dependency,
-    #[sql_type = "::diesel::types::Integer"] crate_downloads: i32,
-    #[sql_type = "::diesel::types::Text"]
-    #[column_name(crate_name)]
+    #[sql_type = "::diesel::sql_types::Integer"] crate_downloads: i32,
+    #[sql_type = "::diesel::sql_types::Text"]
+    #[column_name = "crate_name"]
     name: String,
 }
 
@@ -50,7 +49,7 @@ pub struct EncodableDependency {
     pub downloads: i32,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, FromSqlRow)]
 #[serde(rename_all = "lowercase")]
 #[repr(u32)]
 pub enum Kind {
@@ -141,18 +140,11 @@ pub fn add_dependencies(
     Ok(git_deps)
 }
 
-use diesel::types::{FromSql, FromSqlRow, Integer};
-use diesel::row::Row;
-
-// FIXME: Replace with `#[derive(FromSqlRow)]` in Diesel 1.1
-impl FromSqlRow<Integer, Pg> for Kind {
-    fn build_from_row<R: Row<Pg>>(row: &mut R) -> Result<Self, Box<Error + Send + Sync>> {
-        Self::from_sql(row.take())
-    }
-}
+use diesel::deserialize::{self, FromSql};
+use diesel::sql_types::Integer;
 
 impl FromSql<Integer, Pg> for Kind {
-    fn from_sql(bytes: Option<&[u8]>) -> Result<Self, Box<Error + Send + Sync>> {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
             0 => Ok(Kind::Normal),
             1 => Ok(Kind::Build),
@@ -191,7 +183,7 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
 }
 
 impl QueryableByName<Pg> for Dependency {
-    fn build<R: NamedRow<Pg>>(row: &R) -> Result<Self, Box<Error + Send + Sync>> {
+    fn build<R: NamedRow<Pg>>(row: &R) -> deserialize::Result<Self> {
         use schema::dependencies::*;
         use diesel::dsl::SqlTypeOf;
 

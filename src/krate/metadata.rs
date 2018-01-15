@@ -23,7 +23,7 @@ use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
-    use diesel::types::{BigInt, Nullable};
+    use diesel::sql_types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;

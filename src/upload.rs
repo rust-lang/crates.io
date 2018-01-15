@@ -252,15 +252,12 @@ impl Deref for CategoryList {
 }
 
 use diesel::pg::Pg;
-use diesel::types::{IsNull, Text, ToSql, ToSqlOutput};
-use std::error::Error;
+use diesel::serialize::{self, Output, ToSql};
+use diesel::sql_types::Text;
 use std::io::Write;
 
 impl ToSql<Text, Pg> for Feature {
-    fn to_sql<W: Write>(
-        &self,
-        out: &mut ToSqlOutput<W, Pg>,
-    ) -> Result<IsNull, Box<Error + Send + Sync>> {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
 }
