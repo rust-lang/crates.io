@@ -1,4 +1,4 @@
-<ul>
+<ol>
     {{#each crates as |crate index|}}
         <li>
             {{#link-to 'crate' crate.id class='name' data-test-crate-link=index}}
@@ -9,4 +9,4 @@
             {{/link-to}}
         </li>
     {{/each}}
-</ul>
+</ol>

@@ -5,7 +5,7 @@ import { computed } from '@ember/object';
 export default Component.extend({
     size: 'small',
     user: null,
-    attributeBindings: ['src', 'width', 'height'],
+    attributeBindings: ['src', 'width', 'height', 'alt'],
     tagName: 'img',
 
     width: computed('size', function() {
@@ -19,6 +19,10 @@ export default Component.extend({
     }),
 
     height: readOnly('width'),
+
+    alt: computed('user', function() {
+        return `${this.get('user.name')} (${this.get('user.login')})`;
+    }),
 
     src: computed('size', 'user', function() {
         return `${this.get('user.avatar')}&s=${this.get('width') * 2}`;

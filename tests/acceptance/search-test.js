@@ -1,9 +1,20 @@
 import { test } from 'qunit';
 import { fillIn, visit, triggerEvent, currentURL, blur } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | search');
+
+test('/search?q=rust is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/');
+    await a11yAudit(axeConfig);
+});
 
 test('searching for "rust"', async function(assert) {
     server.loadFixtures();

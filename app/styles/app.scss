@@ -84,7 +84,6 @@ body {
 
     button {
         background: none;
-        outline: 0;
         border: 0;
         padding: 10px 0;
 
@@ -130,7 +129,6 @@ body {
     font-size: 90%;
     border: none;
     color: black;
-    outline: 0;
     margin-left: 30px;
     padding: 5px 5px 5px 25px;
     background-color: white;
@@ -139,6 +137,15 @@ body {
     background-position: 6px 6px;
     background-size: 14px 15px;
     @include border-radius(15px);
+}
+
+form.search label {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
 
 #header input.search {
