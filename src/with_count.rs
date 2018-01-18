@@ -1,6 +1,6 @@
 #[derive(QueryableByName)]
 pub struct WithCount<T> {
-    #[sql_type = "::diesel::types::BigInt"] total: i64,
+    #[sql_type = "::diesel::sql_types::BigInt"] total: i64,
     #[diesel(embed)] record: T,
 }
 

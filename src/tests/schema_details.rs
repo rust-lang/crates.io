@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel::types::Text;
+use diesel::sql_types::Text;
 
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
@@ -44,7 +44,7 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
 #[derive(QueryableByName)]
 struct FkConstraint {
     #[sql_type = "Text"]
-    #[column_name(conname)]
+    #[column_name = "conname"]
     name: String,
     #[sql_type = "Text"] definition: String,
 }
@@ -52,7 +52,7 @@ struct FkConstraint {
 #[derive(QueryableByName)]
 struct TableNameAndConstraint {
     #[sql_type = "Text"]
-    #[column_name(relname)]
+    #[column_name = "relname"]
     table_name: String,
     #[diesel(embed)] constraint: Option<FkConstraint>,
 }

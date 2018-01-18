@@ -222,7 +222,7 @@ table! {
 
 table! {
     use diesel_full_text_search::{TsVector as Tsvector};
-    use diesel::types::*;
+    use diesel::sql_types::*;
 
     /// Representation of the `crates` table.
     ///
