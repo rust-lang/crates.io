@@ -28,7 +28,7 @@ export default Component.extend({
 
     projectName: computed('badge.attributes.project_name', function() {
         return this.get('badge.attributes.project_name') ||
-            this.get('badge.attributes.repository').replace(/_/g, '-');
+            this.get('badge.attributes.repository').replace(/[_.]/g, '-');
     }),
 
     service: computed('badge.attributes.service', function() {
