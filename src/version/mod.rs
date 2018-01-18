@@ -31,7 +31,7 @@ pub struct Version {
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub downloads: i32,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
 }
@@ -41,7 +41,7 @@ pub struct Version {
 pub struct NewVersion {
     crate_id: i32,
     num: String,
-    features: String,
+    features: serde_json::Value,
     license: Option<String>,
 }
 
@@ -55,7 +55,7 @@ pub struct EncodableVersion {
     #[serde(with = "::util::rfc3339")] pub updated_at: NaiveDateTime,
     #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
     pub downloads: i32,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
     pub links: VersionLinks,
@@ -145,7 +145,7 @@ impl NewVersion {
         license: Option<String>,
         license_file: Option<&str>,
     ) -> CargoResult<Self> {
-        let features = serde_json::to_string(features)?;
+        let features = serde_json::to_value(features)?;
 
         let mut new_version = NewVersion {
             crate_id: crate_id,
@@ -224,16 +224,13 @@ impl Queryable<versions::SqlType, Pg> for Version {
         NaiveDateTime,
         NaiveDateTime,
         i32,
-        Option<String>,
+        serde_json::Value,
         bool,
         Option<String>,
         Option<NaiveDateTime>,
     );
 
     fn build(row: Self::Row) -> Self {
-        let features = row.6
-            .map(|s| serde_json::from_str(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
         Version {
             id: row.0,
             crate_id: row.1,
@@ -241,7 +238,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             updated_at: row.3,
             created_at: row.4,
             downloads: row.5,
-            features: features,
+            features: row.6,
             yanked: row.7,
             license: row.8,
         }
