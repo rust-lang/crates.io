@@ -1,4 +1,4 @@
-extern crate semver;
+pub extern crate semver;
 
 use std::io::prelude::*;
 use std::io;
