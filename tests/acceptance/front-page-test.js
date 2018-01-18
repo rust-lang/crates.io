@@ -1,8 +1,19 @@
 import { test } from 'qunit';
 import { visit, currentURL } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | front page');
+
+test('is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/');
+    await a11yAudit(axeConfig);
+});
 
 test('visiting /', async function(assert) {
     server.loadFixtures();

@@ -10,12 +10,11 @@
     <h2>Add Owner</h2>
 
     <div class="row">
-        <div class="label">
-            <dt>Username</dt>
-        </div>
-
         <form class="email-form" {{action 'addOwner' on='submit'}}>
-            {{input type='text' value=username placeholder='Username' class='form-control space-right' name='username'}}
+            <label class="label" for='new-owner-username'>
+                Username
+            </label>
+            {{input type='text' id='new-owner-username' value=username placeholder='Username' class='form-control space-right' name='username'}}
 
             {{#if error}}
                 <div class='error'>

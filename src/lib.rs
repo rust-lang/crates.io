@@ -12,6 +12,8 @@ extern crate chrono;
 extern crate comrak;
 extern crate curl;
 #[macro_use]
+extern crate derive_deref;
+#[macro_use]
 extern crate diesel;
 extern crate diesel_full_text_search;
 extern crate dotenv;

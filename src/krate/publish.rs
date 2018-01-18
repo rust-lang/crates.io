@@ -51,11 +51,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
     let keywords = new_crate
         .keywords
         .as_ref()
-        .map(|kws| kws.iter().map(|kw| &**kw).collect())
+        .map(|kws| kws.iter().map(|kw| &***kw).collect())
         .unwrap_or_else(Vec::new);
 
     let categories = new_crate.categories.as_ref().map(|s| &s[..]).unwrap_or(&[]);
-    let categories: Vec<_> = categories.iter().map(|k| &**k).collect();
+    let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
 
     let conn = req.db_conn()?;
     // Create a transaction on the database, if there are no errors,
@@ -87,7 +87,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             ));
         }
 
-        if krate.name != name {
+        if &krate.name != name {
             return Err(human(&format_args!(
                 "crate was previously named `{}`",
                 krate.name

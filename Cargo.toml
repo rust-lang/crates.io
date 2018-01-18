@@ -57,6 +57,7 @@ docopt = "0.8.1"
 itertools = "0.6.0"
 lettre = "0.6"
 scheduled-thread-pool = "0.2.0"
+derive_deref = "1.0.0"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"

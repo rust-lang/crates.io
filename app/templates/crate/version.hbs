@@ -74,7 +74,7 @@
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
 
             {{#if (is-clipboard-supported)}}
-              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
+              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError') title="Copy to clipboard"}}
                     {{svg-jar "copy" alt="Copy to clipboard"}}
                 {{/copy-button}}
             {{/if}}
@@ -92,9 +92,9 @@
             </span>
         </div>
         {{#if crate.readme}}
-            <div class="crate-readme">
+            <section class="crate-readme" aria-label="Readme">
                 {{crate-readme rendered=crate.readme}}
-            </div>
+            </section>
         {{else}}
             {{#if crate.description}}
                 <div class='about'>
@@ -104,7 +104,7 @@
             {{/if}}
         {{/if}}
     </div>
-    <div class='authorship'>
+    <section class='authorship' aria-label="Crate metadata">
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
@@ -225,7 +225,7 @@
                 <h3>Dependencies</h3>
                     <ul>
                         {{#each currentDependencies as |dep|}}
-                            {{link-to-dep dep=dep}}
+                            {{link-to-dep tagName="li" dep=dep}}
                         {{else}}
                             <li>None</li>
                         {{/each}}
@@ -243,7 +243,7 @@
                 </div>
             {{/if}}
         </div>
-    </div>
+    </section>
 </div>
 
 <div id='crate-downloads'>
