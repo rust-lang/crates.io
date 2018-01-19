@@ -2,7 +2,7 @@ use std::io::Read;
 use std::net::SocketAddr;
 
 use conduit;
-use conduit::{Request, semver};
+use conduit::{semver, Request};
 
 // Can't derive Debug because of Request.
 #[allow(missing_debug_implementations)]
