@@ -252,14 +252,14 @@
         <div class='stat'>
             <span class='num'>
                 {{svg-jar "download"}}
-                {{format-num downloadsContext.downloads}}
+                <span class="num__align">{{ format-num downloadsContext.downloads }}</span>
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
                 {{svg-jar "crate"}}
-                {{crate.versions.length}}
+            <span class="num__align">{{ crate.versions.length }}</span>
             </span>
             <span class='desc small'>Versions published</span>
         </div>
