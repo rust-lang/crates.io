@@ -212,7 +212,7 @@
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
-    @media only screen and (min-width: 820px) {
+    @media only screen and (min-width: 890px) {
         @include flex-direction(row);
 
         .docs {
