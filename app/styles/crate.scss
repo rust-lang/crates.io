@@ -369,6 +369,10 @@
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            &__align {
+                position: relative;
+                bottom: 0.4rem;
+            }
         }
     }
 
