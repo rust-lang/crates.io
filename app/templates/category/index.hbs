@@ -1,7 +1,7 @@
 {{ title category.category ' - Categories' }}
 
 <div id='crates-heading'>
-    {{#link-to "categories"}}{{svg-jar "crate"}}{{/link-to}}
+    <a href="/categories" aria-label="Categories">{{svg-jar "crate"}}</a>
     <h1>
         {{#each category.parent_categories as |parent|}}{{link-to parent.category "category" parent.slug}}::{{/each}}
         {{~ category.category }}
