@@ -314,18 +314,24 @@ mod tests {
 
     #[test]
     fn category_parent_categories_includes_path_to_node_with_count() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 1), ('Cat 1::sub1', 'cat1::sub1', 2),
-            ('Cat 1::sub2', 'cat1::sub2', 2), ('Cat 1::sub1::subsub1', 'cat1::sub1::subsub1', 2),
-            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
-            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 200)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (category.eq("Cat 1::sub1"), slug.eq("cat1::sub1"), crates_cnt.eq(2)),
+                (category.eq("Cat 1::sub2"), slug.eq("cat1::sub2"), crates_cnt.eq(2)),
+                (category.eq("Cat 1::sub1::subsub1"), slug.eq("cat1::sub1::subsub1"), crates_cnt.eq(2)),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
+                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(200))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let cat = categories::table
-            .filter(categories::slug.eq("cat1::sub1"))
+        let cat = categories
+            .filter(slug.eq("cat1::sub1"))
             .first::<Category>(&conn)
             .unwrap();
         let subcats = cat.subcategories(&conn).unwrap();
