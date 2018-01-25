@@ -164,8 +164,16 @@ mod tests {
             last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
         };
         let json = serde_json::to_string(&tok).unwrap();
-        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
-        assert!(json.as_str().find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#).is_some());
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
     }
 
     #[test]
@@ -178,8 +186,16 @@ mod tests {
             last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
         };
         let json = serde_json::to_string(&tok).unwrap();
-        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
-        assert!(json.as_str().find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#).is_some());
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
     }
 
 }

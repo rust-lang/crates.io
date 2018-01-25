@@ -412,7 +412,11 @@ mod tests {
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
     }
 
     #[test]
@@ -427,7 +431,11 @@ mod tests {
             subcategories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
     }
 
 }

@@ -211,7 +211,11 @@ mod tests {
             crates_cnt: 0,
         };
         let json = serde_json::to_string(&key).unwrap();
-        assert!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11+00:00""#).is_some());
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
     }
 
 }
