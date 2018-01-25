@@ -169,10 +169,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotenv::dotenv;
-    use std::env;
+    use chrono::NaiveDate;
     use diesel;
     use diesel::connection::SimpleConnection;
+    use dotenv::dotenv;
+    use serde_json;
+    use std::env;
 
     fn pg_connection() -> PgConnection {
         let _ = dotenv();
@@ -199,4 +201,21 @@ mod tests {
         assert_eq!(associated.len(), 1);
         assert_eq!(associated.first().unwrap().keyword, "no");
     }
+
+    #[test]
+    fn keyword_serializes_to_rfc3339() {
+        let key = EncodableKeyword {
+            id: "".to_string(),
+            keyword: "".to_string(),
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            crates_cnt: 0,
+        };
+        let json = serde_json::to_string(&key).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+    }
+
 }

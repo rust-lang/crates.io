@@ -557,7 +557,9 @@ sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use super::Crate;
+    use super::*;
+    use chrono::NaiveDate;
+    use serde_json;
 
     #[test]
     fn documentation_blacklist_no_url_provided() {
@@ -589,6 +591,47 @@ mod tests {
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
+        );
+    }
+
+    #[test]
+    fn crate_serializes_to_rfc3399() {
+        let crt = EncodableCrate {
+            id: "".to_string(),
+            name: "".to_string(),
+            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            versions: None,
+            keywords: None,
+            categories: None,
+            badges: None,
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+            downloads: 0,
+            recent_downloads: None,
+            max_version: "".to_string(),
+            description: None,
+            homepage: None,
+            documentation: None,
+            repository: None,
+            links: CrateLinks {
+                version_downloads: "".to_string(),
+                versions: None,
+                owners: None,
+                owner_team: None,
+                owner_user: None,
+                reverse_dependencies: "".to_string(),
+            },
+            exact_match: false,
+        };
+        let json = serde_json::to_string(&crt).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
         );
     }
 }
