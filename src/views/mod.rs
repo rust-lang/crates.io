@@ -238,6 +238,7 @@ mod tests {
             crates_cnt: 1,
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             subcategories: vec![],
+            parent_categories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
         assert!(
