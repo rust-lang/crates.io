@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use diesel::query_builder::*;
-use diesel::types::BigInt;
+use diesel::sql_types::BigInt;
 use diesel::pg::Pg;
 
 pub struct Paginated<T> {

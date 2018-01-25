@@ -530,7 +530,7 @@ impl Crate {
         limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
-        use diesel::types::{BigInt, Integer};
+        use diesel::sql_types::{BigInt, Integer};
 
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
@@ -551,7 +551,7 @@ pub struct Follow {
     crate_id: i32,
 }
 
-use diesel::types::{Date, Text};
+use diesel::sql_types::{Date, Text};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
 sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
 

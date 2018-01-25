@@ -12,6 +12,8 @@ extern crate chrono;
 extern crate comrak;
 extern crate curl;
 #[macro_use]
+extern crate derive_deref;
+#[macro_use]
 extern crate diesel;
 extern crate diesel_full_text_search;
 extern crate dotenv;
@@ -25,8 +27,6 @@ extern crate license_exprs;
 extern crate log;
 extern crate oauth2;
 extern crate openssl;
-extern crate r2d2;
-extern crate r2d2_diesel;
 extern crate rand;
 extern crate s3;
 extern crate scheduled_thread_pool;
@@ -327,4 +327,4 @@ pub fn env(s: &str) -> String {
     ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
 
-sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);
+sql_function!(lower, lower_t, (x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

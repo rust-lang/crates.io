@@ -7,9 +7,9 @@ use std::sync::{Arc, Mutex};
 
 use conduit::{Request, Response};
 use conduit_middleware::Middleware;
+use diesel::r2d2;
 use git2;
 use oauth2;
-use r2d2;
 use curl::easy::Easy;
 use scheduled_thread_pool::ScheduledThreadPool;
 

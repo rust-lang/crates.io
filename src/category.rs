@@ -140,7 +140,7 @@ impl Category {
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        use diesel::types::Text;
+        use diesel::sql_types::Text;
 
         sql_query(
             "SELECT c.id, c.category, c.slug, c.description, \

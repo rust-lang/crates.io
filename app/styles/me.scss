@@ -177,7 +177,7 @@
         margin-bottom: 20px;
         background-color: $bg;
         color: white;
-        &:hover { background-color: darken($bg, 10%); }
+        &:hover, &:focus { background-color: darken($bg, 10%); }
     }
 }
 

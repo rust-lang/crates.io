@@ -190,6 +190,12 @@
     font-size: 90%;
     margin-bottom: 20px;
 
+    ol {
+        list-style: none;
+        padding: 0;
+    }
+    ol, li { display: inline; }
+
     a {
         color: $main-color-light;
         text-decoration: none;
@@ -363,6 +369,10 @@
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            &__align {
+                position: relative;
+                bottom: 0.4rem;
+            }
         }
     }
 
