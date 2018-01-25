@@ -196,32 +196,40 @@ mod tests {
 
     #[test]
     fn category_toplevel_excludes_subcategories() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
-            ('Cat 2', 'cat2'), ('Cat 1', 'cat1'), ('Cat 1::sub', 'cat1::sub')
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 2"), slug.eq("cat2")),
+                (category.eq("Cat 1"), slug.eq("cat1")),
+                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "", 10, 0)
+        let cats = Category::toplevel(&conn, "", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 1".to_string(), "Cat 2".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 0), ('Cat 2', 'cat2', 2), ('Cat 3', 'cat3', 1)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(0)),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(2)),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(1))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 10, 0)
+        let cats = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
@@ -231,47 +239,55 @@ mod tests {
             "Cat 3".to_string(),
             "Cat 1".to_string(),
         ];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_applies_limit_and_offset() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
-            ('Cat 1', 'cat1'), ('Cat 2', 'cat2')
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1")),
+                (category.eq("Cat 2"), slug.eq("cat2"))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "", 1, 0)
+        let cats = Category::toplevel(&conn, "", 1, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 1".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
 
-        let categories = Category::toplevel(&conn, "", 1, 1)
+        let cats = Category::toplevel(&conn, "", 1, 1)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 2".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_includes_subcategories_in_crate_cnt() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
-            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
-            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"), crates_cnt.eq(2)),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
+                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 10, 0)
+        let cats = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
@@ -281,35 +297,40 @@ mod tests {
             ("Cat 3".to_string(), 6),
             ("Cat 1".to_string(), 3),
         ];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_applies_limit_and_offset_after_grouping() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
-            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
-            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"), crates_cnt.eq(2)),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
+                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6))
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 2, 0)
+        let cats = Category::toplevel(&conn, "crates", 2, 0)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
             .collect::<Vec<_>>();
         let expected = vec![("Cat 2".to_string(), 12), ("Cat 3".to_string(), 6)];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
 
-        let categories = Category::toplevel(&conn, "crates", 2, 1)
+        let cats = Category::toplevel(&conn, "crates", 2, 1)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
             .collect::<Vec<_>>();
         let expected = vec![("Cat 3".to_string(), 6), ("Cat 1".to_string(), 3)];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
