@@ -93,9 +93,6 @@ impl Category {
         limit: i64,
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
-        use diesel::dsl::*;
-        use diesel::select;
-
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
             _ => "ORDER BY category ASC",
@@ -103,33 +100,23 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        select(sql::<categories::SqlType>(&format!(
-            "c.id, c.category, c.slug, c.description,
-                sum(c2.crates_cnt)::int as crates_cnt, c.created_at
-             FROM categories as c
-             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug
-             WHERE split_part(c.slug, '::', 1) = c.slug
-             GROUP BY c.id
+        sql_query(format!(
+            "SELECT c.id, c.category, c.slug, c.description, \
+                sum(c2.crates_cnt)::int as crates_cnt, c.created_at \
+             FROM categories as c \
+             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug \
+             WHERE split_part(c.slug, '::', 1) = c.slug \
+             GROUP BY c.id \
              {} LIMIT {} OFFSET {}",
             sort_sql, limit, offset
-        ))).load(conn)
+        )).load(conn)
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
-        sql_query(
-            "SELECT c.id, c.category, c.slug, c.description, \
-             COALESCE (( \
-             SELECT sum(c2.crates_cnt)::int \
-             FROM categories as c2 \
-             WHERE c2.slug = c.slug \
-             OR c2.slug LIKE c.slug || '::%' \
-             ), 0) as crates_cnt, c.created_at \
-             FROM categories as c \
-             WHERE c.category ILIKE $1 || '::%' \
-             AND c.category NOT ILIKE $1 || '::%::%'",
-        ).bind::<Text, _>(&self.category)
+        sql_query(include_str!("../subcategories.sql"))
+            .bind::<Text, _>(&self.category)
             .load(conn)
     }
 
@@ -141,16 +128,8 @@ impl Category {
         use diesel::expression::dsl::*;
         use diesel::types::Text;
 
-        sql::<categories::SqlType>(
-            "SELECT c.id, c.category, c.slug, c.description, \
-            COALESCE(( \
-            SELECT sum(c2.crates_cnt)::int from categories c2 \
-            WHERE path <@ subltree(c.path, 0, 2)), 0) as crates_cnt, c.created_at \
-            FROM categories c \
-            WHERE c.path @> (select path from categories where slug = $1) \
-            AND c.slug <> $1
-            ORDER BY c.path",
-        ).bind::<Text, _>(&self.slug)
+        sql_query(include_str!("../parent_categories.sql"))
+            .bind::<Text, _>(&self.slug)
             .load(conn)
     }
 }
