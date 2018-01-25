@@ -102,7 +102,7 @@ impl Category {
         // the crates in all subcategories
         sql_query(format!(
             "SELECT c.id, c.category, c.slug, c.description, \
-                sum(c2.crates_cnt)::int as crates_cnt, c.created_at \
+             sum(c2.crates_cnt)::int as crates_cnt, c.created_at \
              FROM categories as c \
              INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug \
              WHERE split_part(c.slug, '::', 1) = c.slug \
@@ -181,7 +181,7 @@ mod tests {
             .values(&vec![
                 (category.eq("Cat 2"), slug.eq("cat2")),
                 (category.eq("Cat 1"), slug.eq("cat1")),
-                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"))
+                (category.eq("Cat 1::sub"), slug.eq("cat1::sub")),
             ])
             .execute(&conn)
             .unwrap();
@@ -203,7 +203,7 @@ mod tests {
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(0)),
                 (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(2)),
-                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(1))
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(1)),
             ])
             .execute(&conn)
             .unwrap();
@@ -228,7 +228,7 @@ mod tests {
         insert_into(categories)
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1")),
-                (category.eq("Cat 2"), slug.eq("cat2"))
+                (category.eq("Cat 2"), slug.eq("cat2")),
             ])
             .execute(&conn)
             .unwrap();
@@ -257,11 +257,23 @@ mod tests {
         insert_into(categories)
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
-                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"), crates_cnt.eq(2)),
+                (
+                    category.eq("Cat 1::sub"),
+                    slug.eq("cat1::sub"),
+                    crates_cnt.eq(2),
+                ),
                 (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
-                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
-                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
-                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6))
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
             ])
             .execute(&conn)
             .unwrap();
@@ -286,11 +298,23 @@ mod tests {
         insert_into(categories)
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
-                (category.eq("Cat 1::sub"), slug.eq("cat1::sub"), crates_cnt.eq(2)),
+                (
+                    category.eq("Cat 1::sub"),
+                    slug.eq("cat1::sub"),
+                    crates_cnt.eq(2),
+                ),
                 (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
-                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
-                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
-                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6))
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
             ])
             .execute(&conn)
             .unwrap();
@@ -319,13 +343,33 @@ mod tests {
         insert_into(categories)
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
-                (category.eq("Cat 1::sub1"), slug.eq("cat1::sub1"), crates_cnt.eq(2)),
-                (category.eq("Cat 1::sub2"), slug.eq("cat1::sub2"), crates_cnt.eq(2)),
-                (category.eq("Cat 1::sub1::subsub1"), slug.eq("cat1::sub1::subsub1"), crates_cnt.eq(2)),
+                (
+                    category.eq("Cat 1::sub1"),
+                    slug.eq("cat1::sub1"),
+                    crates_cnt.eq(2),
+                ),
+                (
+                    category.eq("Cat 1::sub2"),
+                    slug.eq("cat1::sub2"),
+                    crates_cnt.eq(2),
+                ),
+                (
+                    category.eq("Cat 1::sub1::subsub1"),
+                    slug.eq("cat1::sub1::subsub1"),
+                    crates_cnt.eq(2),
+                ),
                 (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
-                (category.eq("Cat 2::Sub 1"), slug.eq("cat2::sub1"), crates_cnt.eq(4)),
-                (category.eq("Cat 2::Sub 2"), slug.eq("cat2::sub2"), crates_cnt.eq(5)),
-                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(200))
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(200)),
             ])
             .execute(&conn)
             .unwrap();
