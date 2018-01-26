@@ -93,7 +93,6 @@ pub mod models;
 pub mod views;
 
 mod local_upload;
-mod pagination;
 mod with_count;
 
 /// Used for setting different values depending on whether the app is being run in production,

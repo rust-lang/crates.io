@@ -10,7 +10,7 @@ use serde_json;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use pagination::Paginate;
+use controllers::helpers::Paginate;
 use util::{bad_request, human, CargoResult, RequestUtils};
 use github;
 use email;

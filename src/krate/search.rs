@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel_full_text_search::*;
 
 use db::RequestTransaction;
-use pagination::Paginate;
+use controllers::helpers::Paginate;
 use user::RequestUser;
 use util::{CargoResult, RequestUtils};
 

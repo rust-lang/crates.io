@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel;
 
 use db::RequestTransaction;
-use pagination::Paginate;
+use controllers::helpers::Paginate;
 use util::{CargoResult, RequestUtils};
 
 use models::Crate;
