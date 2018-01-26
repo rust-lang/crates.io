@@ -1,8 +1,4 @@
-use diesel::prelude::*;
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
+use super::prelude::*;
 
 use controllers::helpers::Paginate;
 use models::Keyword;
