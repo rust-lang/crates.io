@@ -186,8 +186,8 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/crates/:crate_id/reverse_dependencies",
         C(krate::metadata::reverse_dependencies),
     );
-    api_router.get("/keywords", C(keyword::index));
-    api_router.get("/keywords/:keyword_id", C(keyword::show));
+    api_router.get("/keywords", C(controllers::keyword::index));
+    api_router.get("/keywords/:keyword_id", C(controllers::keyword::show));
     api_router.get("/categories", C(category::index));
     api_router.get("/categories/:category_id", C(category::show));
     api_router.get("/category_slugs", C(category::slugs));
