@@ -2,4 +2,5 @@
 
 pub mod helpers;
 
+pub mod category;
 pub mod keyword;

@@ -188,9 +188,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     );
     api_router.get("/keywords", C(controllers::keyword::index));
     api_router.get("/keywords/:keyword_id", C(controllers::keyword::show));
-    api_router.get("/categories", C(category::index));
-    api_router.get("/categories/:category_id", C(category::show));
-    api_router.get("/category_slugs", C(category::slugs));
+    api_router.get("/categories", C(controllers::category::index));
+    api_router.get("/categories/:category_id", C(controllers::category::show));
+    api_router.get("/category_slugs", C(controllers::category::slugs));
     api_router.get("/users/:user_id", C(user::show));
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));
