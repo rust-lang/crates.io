@@ -4,6 +4,7 @@ use diesel;
 
 use models::Crate;
 use schema::*;
+use views::EncodableKeyword;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -21,14 +22,6 @@ pub struct Keyword {
 pub struct CrateKeyword {
     crate_id: i32,
     keyword_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableKeyword {
-    pub id: String,
-    pub keyword: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
 }
 
 impl Keyword {

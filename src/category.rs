@@ -3,6 +3,7 @@ use diesel::*;
 
 use models::Crate;
 use schema::*;
+use views::EncodableCategory;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
@@ -23,27 +24,6 @@ pub struct Category {
 pub struct CrateCategory {
     crate_id: i32,
     category_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategory {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategoryWithSubcategories {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-    pub subcategories: Vec<EncodableCategory>,
 }
 
 impl Category {
@@ -183,6 +163,8 @@ mod tests {
     use dotenv::dotenv;
     use serde_json;
     use std::env;
+
+    use views::EncodableCategoryWithSubcategories;
 
     fn pg_connection() -> PgConnection {
         let _ = dotenv();
