@@ -58,11 +58,11 @@ pub struct EncodableVersion {
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
     pub license: Option<String>,
-    pub links: VersionLinks,
+    pub links: EncodableVersionLinks,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct VersionLinks {
+pub struct EncodableVersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
@@ -94,7 +94,7 @@ impl Version {
             features: features,
             yanked: yanked,
             license: license,
-            links: VersionLinks {
+            links: EncodableVersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
@@ -266,45 +266,4 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
             ))
         })?;
     Ok((version, krate))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::NaiveDate;
-    use serde_json;
-
-    #[test]
-    fn version_serializes_to_rfc3339() {
-        let ver = EncodableVersion {
-            id: 1,
-            krate: "".to_string(),
-            num: "".to_string(),
-            dl_path: "".to_string(),
-            readme_path: "".to_string(),
-            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
-            downloads: 0,
-            features: HashMap::new(),
-            yanked: false,
-            license: None,
-            links: VersionLinks {
-                dependencies: "".to_string(),
-                version_downloads: "".to_string(),
-                authors: "".to_string(),
-            },
-        };
-        let json = serde_json::to_string(&ver).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
-                .is_some()
-        );
-    }
-
 }
