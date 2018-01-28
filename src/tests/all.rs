@@ -660,6 +660,7 @@ fn new_req_body(
             license_file: None,
             repository: krate.repository,
             badges: Some(badges),
+            links: None,
         },
         &[],
     )

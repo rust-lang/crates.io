@@ -21,6 +21,8 @@ pub struct Crate {
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: Option<bool>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
