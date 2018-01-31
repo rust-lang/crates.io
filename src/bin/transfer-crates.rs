@@ -13,8 +13,7 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, User};
-use cargo_registry::owner::OwnerKind;
+use cargo_registry::models::{Crate, OwnerKind, User};
 use cargo_registry::schema::*;
 
 fn main() {

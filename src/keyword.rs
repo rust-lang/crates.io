@@ -1,17 +1,15 @@
-#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
-use std::ascii::AsciiExt;
-
 use chrono::NaiveDateTime;
 use conduit::{Request, Response};
 use conduit_router::RequestParams;
 use diesel::prelude::*;
 use diesel;
 
-use Crate;
 use db::RequestTransaction;
-use pagination::Paginate;
-use schema::*;
+use controllers::helpers::Paginate;
 use util::{CargoResult, RequestUtils};
+
+use models::Crate;
+use schema::*;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {

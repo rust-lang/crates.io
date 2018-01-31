@@ -13,16 +13,15 @@ use app::RequestApp;
 use db::RequestTransaction;
 use dependency;
 use git;
-use owner::{rights, Rights};
+use owner::rights;
 use render;
-use upload;
 use user::RequestUser;
 use util::{read_fill, read_le_u32};
 use util::{human, internal, CargoResult, ChainError, RequestUtils};
-use version::NewVersion;
-use {Badge, Category, Keyword, User};
 
-use super::{EncodableCrate, NewCrate};
+use views::EncodableCrate;
+use views::EncodableCrateUpload;
+use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -193,7 +192,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
+fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let amt = u64::from(read_le_u32(req.body())?);
     let max = req.app().config.max_upload_size;
@@ -203,7 +202,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     let mut json = vec![0; amt as usize];
     read_fill(req.body(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| human("json body was not valid utf-8"))?;
-    let new: upload::NewCrate = serde_json::from_str(&json)
+    let new: EncodableCrateUpload = serde_json::from_str(&json)
         .map_err(|e| human(&format_args!("invalid upload request: {}", e)))?;
 
     // Make sure required fields are provided

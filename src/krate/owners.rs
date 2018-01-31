@@ -7,12 +7,12 @@ use serde_json;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use owner::{rights, EncodableOwner, Owner, Rights, Team};
+use owner::rights;
 use user::RequestUser;
 use util::{human, CargoResult, RequestUtils};
-use User;
 
-use super::Crate;
+use views::EncodableOwner;
+use models::{Crate, Owner, Rights, Team, User};
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut Request) -> CargoResult<Response> {

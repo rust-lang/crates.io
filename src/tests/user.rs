@@ -2,13 +2,10 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use conduit::{Handler, Method};
-
-use cargo_registry::token::ApiToken;
-use cargo_registry::krate::EncodableCrate;
-use cargo_registry::user::{Email, EncodablePrivateUser, EncodablePublicUser, NewUser, User};
-use cargo_registry::version::EncodableVersion;
-
 use diesel::prelude::*;
+
+use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
+use models::{ApiToken, Email, NewUser, User};
 
 #[derive(Deserialize)]
 struct AuthResponse {

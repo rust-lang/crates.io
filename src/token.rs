@@ -6,8 +6,10 @@ use diesel;
 use serde_json as json;
 
 use db::RequestTransaction;
-use user::{AuthenticationSource, RequestUser, User};
+use user::{AuthenticationSource, RequestUser};
 use util::{bad_request, read_fill, CargoResult, ChainError, RequestUtils};
+
+use models::User;
 use schema::api_tokens;
 
 /// The model representing a row in the `api_tokens` database table.

@@ -7,11 +7,13 @@ use diesel::prelude::*;
 use app::RequestApp;
 use db::RequestTransaction;
 use git;
-use owner::{rights, Rights};
-use schema::*;
+use owner::rights;
 use user::RequestUser;
 use util::errors::CargoError;
 use util::{human, CargoResult, RequestUtils};
+
+use models::Rights;
+use schema::*;
 
 use super::version_and_crate;
 

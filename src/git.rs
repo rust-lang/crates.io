@@ -9,8 +9,9 @@ use git2;
 use serde_json;
 
 use app::App;
-use dependency::Kind;
 use util::{internal, CargoResult};
+
+use models::Kind;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {

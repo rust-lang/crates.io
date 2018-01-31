@@ -1,8 +1,9 @@
 use std::env;
 
-use cargo_registry::schema::categories;
 use diesel::*;
 use dotenv::dotenv;
+
+use schema::categories;
 
 const ALGORITHMS: &str = r#"
 [algorithms]

@@ -4,11 +4,12 @@ use diesel::prelude::*;
 use serde_json;
 
 use db::RequestTransaction;
-use schema::{crate_owner_invitations, crate_owners, crates, users};
 use user::RequestUser;
 use util::errors::{human, CargoResult};
 use util::RequestUtils;
-use owner::{CrateOwner, OwnerKind};
+
+use models::{CrateOwner, OwnerKind};
+use schema::{crate_owner_invitations, crate_owners, crates, users};
 
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Identifiable, Queryable)]

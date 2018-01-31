@@ -9,16 +9,15 @@ use conduit_router::RequestParams;
 use diesel::prelude::*;
 
 use app::RequestApp;
-use category::{CrateCategory, EncodableCategory};
 use db::RequestTransaction;
-use dependency::EncodableDependency;
-use keyword::{CrateKeyword, EncodableKeyword};
-use schema::*;
 use util::{human, CargoResult, RequestUtils};
-use version::EncodableVersion;
-use {Category, Keyword, Version};
 
-use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
+use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
+            EncodableVersion};
+use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
+use schema::*;
+
+use super::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {

@@ -10,19 +10,18 @@ use serde_json;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use krate::Follow;
-use pagination::Paginate;
-use schema::*;
+use controllers::helpers::Paginate;
 use util::{bad_request, human, CargoResult, RequestUtils};
-use version::EncodableVersion;
-use {github, Version};
-use owner::{CrateOwner, Owner, OwnerKind};
-use krate::Crate;
+use github;
 use email;
 
 pub use self::middleware::{AuthenticationSource, Middleware, RequestUser};
 
 pub mod middleware;
+
+use views::{EncodableTeam, EncodableVersion};
+use models::{Crate, CrateOwner, Follow, Owner, OwnerKind, Team, Version};
+use schema::*;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
@@ -420,8 +419,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /teams/:team_id` route.
 pub fn show_team(req: &mut Request) -> CargoResult<Response> {
     use self::teams::dsl::{login, teams};
-    use owner::Team;
-    use owner::EncodableTeam;
 
     let name = &req.params()["team_id"];
     let conn = req.db_conn()?;
@@ -479,7 +476,6 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /users/:user_id/stats` route.
 pub fn stats(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::sum;
-    use owner::OwnerKind;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;

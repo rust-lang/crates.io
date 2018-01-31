@@ -29,22 +29,22 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 use cargo_registry::app::App;
-use cargo_registry::category::NewCategory;
-use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
-use cargo_registry::schema::*;
-use cargo_registry::upload as u;
-use cargo_registry::user::NewUser;
-use cargo_registry::owner::{CrateOwner, NewTeam, Team};
-use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use cargo_registry::Replica;
 use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
+
+pub use cargo_registry::{models, schema, views};
+
+use views::EncodableCrate;
+use views::krate_publish as u;
+use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
+use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
+use schema::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -474,7 +474,7 @@ fn new_version(crate_id: i32, num: &str) -> NewVersion {
 }
 
 fn krate(name: &str) -> Crate {
-    cargo_registry::krate::Crate {
+    Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),

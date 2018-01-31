@@ -51,15 +51,7 @@ extern crate conduit_static;
 extern crate cookie;
 
 pub use app::App;
-pub use self::badge::Badge;
-pub use self::category::Category;
 pub use config::Config;
-pub use self::dependency::Dependency;
-pub use self::download::VersionDownload;
-pub use self::keyword::Keyword;
-pub use self::krate::Crate;
-pub use self::user::User;
-pub use self::version::Version;
 pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
@@ -89,7 +81,6 @@ pub mod owner;
 pub mod render;
 pub mod schema;
 pub mod token;
-pub mod upload;
 pub mod uploaders;
 pub mod user;
 pub mod util;
@@ -97,8 +88,11 @@ pub mod version;
 pub mod email;
 pub mod site_metadata;
 
+pub mod controllers;
+pub mod models;
+pub mod views;
+
 mod local_upload;
-mod pagination;
 mod with_count;
 
 /// Used for setting different values depending on whether the app is being run in production,
