@@ -1,9 +1,14 @@
 // TODO: Move all encodable types here
 // For now, just reexport
 
+use std::collections::HashMap;
 use chrono::NaiveDateTime;
 
-pub use badge::EncodableBadge;
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
+pub struct EncodableBadge {
+    pub badge_type: String,
+    pub attributes: HashMap<String, Option<String>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableCategory {

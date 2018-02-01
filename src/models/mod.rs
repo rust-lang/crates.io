@@ -1,4 +1,4 @@
-pub use badge::{Badge, MaintenanceStatus};
+pub use self::badge::{Badge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use crate_owner_invitation::NewCrateOwnerInvitation;
 pub use dependency::{Dependency, Kind, ReverseDependency};
@@ -13,6 +13,7 @@ pub use version::{NewVersion, Version};
 
 pub mod helpers;
 
+mod badge;
 mod category;
 mod follow;
 mod keyword;

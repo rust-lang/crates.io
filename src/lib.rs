@@ -63,7 +63,6 @@ use conduit_middleware::MiddlewareBuilder;
 use util::{R404, C, R};
 
 pub mod app;
-pub mod badge;
 pub mod boot;
 pub mod config;
 pub mod crate_owner_invitation;

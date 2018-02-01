@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 use models::Crate;
 use schema::badges;
+use views::EncodableBadge;
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
@@ -60,12 +61,6 @@ pub enum MaintenanceStatus {
     Experimental,
     LookingForMaintainer,
     Deprecated,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
-pub struct EncodableBadge {
-    pub badge_type: String,
-    pub attributes: HashMap<String, Option<String>>,
 }
 
 impl Queryable<badges::SqlType, Pg> for Badge {
