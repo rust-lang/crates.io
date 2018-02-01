@@ -1,16 +1,10 @@
 //! All routes related to managing owners of a crate
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
 use serde_json;
 
-use app::RequestApp;
-use db::RequestTransaction;
 use owner::rights;
-use user::RequestUser;
-use util::{human, CargoResult, RequestUtils};
 
+use controllers::prelude::*;
 use views::EncodableOwner;
 use models::{Crate, Owner, Rights, Team, User};
 

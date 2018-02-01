@@ -41,7 +41,39 @@ pub struct EncodableKeyword {
     pub crates_cnt: i32,
 }
 
-pub use krate::EncodableCrate;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableCrate {
+    pub id: String,
+    pub name: String,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
+    pub versions: Option<Vec<i32>>,
+    pub keywords: Option<Vec<String>>,
+    pub categories: Option<Vec<String>>,
+    pub badges: Option<Vec<EncodableBadge>>,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    pub downloads: i32,
+    pub recent_downloads: Option<i64>,
+    pub max_version: String,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
+    pub repository: Option<String>,
+    pub links: EncodableCrateLinks,
+    pub exact_match: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableCrateLinks {
+    pub version_downloads: String,
+    pub versions: Option<String>,
+    pub owners: Option<String>,
+    pub owner_team: Option<String>,
+    pub owner_user: Option<String>,
+    pub reverse_dependencies: String,
+}
+
 pub use owner::{EncodableOwner, EncodableTeam};
 pub use token::EncodableApiTokenWithToken;
 pub use user::{EncodablePrivateUser, EncodablePublicUser};
@@ -133,6 +165,47 @@ mod tests {
             },
         };
         let json = serde_json::to_string(&ver).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn crate_serializes_to_rfc3399() {
+        let crt = EncodableCrate {
+            id: "".to_string(),
+            name: "".to_string(),
+            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            versions: None,
+            keywords: None,
+            categories: None,
+            badges: None,
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
+            downloads: 0,
+            recent_downloads: None,
+            max_version: "".to_string(),
+            description: None,
+            homepage: None,
+            documentation: None,
+            repository: None,
+            links: EncodableCrateLinks {
+                version_downloads: "".to_string(),
+                versions: None,
+                owners: None,
+                owner_team: None,
+                owner_user: None,
+                reverse_dependencies: "".to_string(),
+            },
+            exact_match: false,
+        };
+        let json = serde_json::to_string(&crt).unwrap();
         assert!(
             json.as_str()
                 .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)

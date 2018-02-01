@@ -4,23 +4,18 @@ use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use conduit::{Request, Response};
-use diesel::prelude::*;
 use hex::ToHex;
 use serde_json;
 
-use app::RequestApp;
-use db::RequestTransaction;
 use dependency;
 use git;
 use owner::rights;
 use render;
-use user::RequestUser;
 use util::{read_fill, read_le_u32};
-use util::{human, internal, CargoResult, ChainError, RequestUtils};
+use util::{internal, ChainError};
 
-use views::EncodableCrate;
-use views::EncodableCrateUpload;
+use controllers::prelude::*;
+use views::{EncodableCrate, EncodableCrateUpload};
 use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 
 /// Handles the `PUT /crates/new` route.

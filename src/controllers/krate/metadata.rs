@@ -4,20 +4,15 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
-
 use app::RequestApp;
-use db::RequestTransaction;
-use util::{human, CargoResult, RequestUtils};
 
+use controllers::prelude::*;
 use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
             EncodableVersion};
 use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
 use schema::*;
 
-use super::ALL_COLUMNS;
+use models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
