@@ -2,8 +2,6 @@
 
 use serde_json;
 
-use owner::rights;
-
 use controllers::prelude::*;
 use views::EncodableOwner;
 use models::{Crate, Owner, Rights, Team, User};
@@ -79,7 +77,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
     let owners = krate.owners(&conn)?;
 
-    match rights(req.app(), &owners, user)? {
+    match user.rights(req.app(), &owners)? {
         Rights::Full => {}
         // Yes!
         Rights::Publish => {

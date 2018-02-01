@@ -8,7 +8,7 @@ use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
 
-use app::RequestApp;
+use app::{App, RequestApp};
 use db::RequestTransaction;
 use controllers::helpers::Paginate;
 use util::{bad_request, human, CargoResult, RequestUtils};
@@ -20,7 +20,7 @@ pub use self::middleware::{AuthenticationSource, Middleware, RequestUser};
 pub mod middleware;
 
 use views::{EncodableTeam, EncodableVersion};
-use models::{Crate, CrateOwner, Follow, Owner, OwnerKind, Team, Version};
+use models::{Crate, CrateOwner, Follow, Owner, OwnerKind, Rights, Team, Version};
 use schema::*;
 
 /// The model representing a row in the `users` database table.
@@ -188,6 +188,29 @@ impl User {
             .map(Owner::User);
 
         Ok(users.collect())
+    }
+
+    /// Given this set of owners, determines the strongest rights the
+    /// user has.
+    ///
+    /// Shortcircuits on `Full` because you can't beat it. In practice we'll always
+    /// see `[user, user, user, ..., team, team, team]`, so we could shortcircuit on
+    /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
+    /// Sweet free optimization if teams are proving burdensome to check.
+    /// More than one team isn't really expected, though.
+    pub fn rights(&self, app: &App, owners: &[Owner]) -> CargoResult<Rights> {
+        let mut best = Rights::None;
+        for owner in owners {
+            match *owner {
+                Owner::User(ref other_user) => if other_user.id == self.id {
+                    return Ok(Rights::Full);
+                },
+                Owner::Team(ref team) => if team.contains_user(app, self)? {
+                    best = Rights::Publish;
+                },
+            }
+        }
+        Ok(best)
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.

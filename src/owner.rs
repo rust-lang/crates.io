@@ -5,7 +5,7 @@ use github;
 use util::{human, CargoResult};
 
 use models::{Crate, User};
-use schema::*;
+use schema::{crate_owners, teams, users};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -70,15 +70,6 @@ pub struct EncodableOwner {
     pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
-}
-
-/// Access rights to the crate (publishing and ownership management)
-/// NOTE: The order of these variants matters!
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
-pub enum Rights {
-    None,
-    Publish,
-    Full,
 }
 
 #[derive(Insertable, AsChangeset, Debug)]
@@ -384,27 +375,4 @@ impl Owner {
             }
         }
     }
-}
-
-/// Given this set of owners, determines the strongest rights the
-/// given user has.
-///
-/// Shortcircuits on `Full` because you can't beat it. In practice we'll always
-/// see `[user, user, user, ..., team, team, team]`, so we could shortcircuit on
-/// `Publish` as well, but this is a non-obvious invariant so we don't bother.
-/// Sweet free optimization if teams are proving burdensome to check.
-/// More than one team isn't really expected, though.
-pub fn rights(app: &App, owners: &[Owner], user: &User) -> CargoResult<Rights> {
-    let mut best = Rights::None;
-    for owner in owners {
-        match *owner {
-            Owner::User(ref other_user) => if other_user.id == user.id {
-                return Ok(Rights::Full);
-            },
-            Owner::Team(ref team) => if team.contains_user(app, user)? {
-                best = Rights::Publish;
-            },
-        }
-    }
-    Ok(best)
 }

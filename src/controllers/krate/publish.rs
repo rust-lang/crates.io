@@ -9,7 +9,6 @@ use serde_json;
 
 use dependency;
 use git;
-use owner::rights;
 use render;
 use util::{read_fill, read_le_u32};
 use util::{internal, ChainError};
@@ -72,7 +71,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         let krate = persist.create_or_update(&conn, license_file, user.id)?;
 
         let owners = krate.owners(&conn)?;
-        if rights(req.app(), &owners, &user)? < Rights::Publish {
+        if user.rights(req.app(), &owners)? < Rights::Publish {
             return Err(human(
                 "this crate exists but you don't seem to be an owner. \
                  If you believe this is a mistake, perhaps you need \
