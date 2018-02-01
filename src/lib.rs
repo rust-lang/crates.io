@@ -65,7 +65,6 @@ use util::{R404, C, R};
 pub mod app;
 pub mod badge;
 pub mod boot;
-pub mod category;
 pub mod config;
 pub mod crate_owner_invitation;
 pub mod db;
@@ -75,7 +74,6 @@ pub mod download;
 pub mod git;
 pub mod github;
 pub mod http;
-pub mod keyword;
 pub mod krate;
 pub mod owner;
 pub mod render;
@@ -186,11 +184,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/crates/:crate_id/reverse_dependencies",
         C(krate::metadata::reverse_dependencies),
     );
-    api_router.get("/keywords", C(keyword::index));
-    api_router.get("/keywords/:keyword_id", C(keyword::show));
-    api_router.get("/categories", C(category::index));
-    api_router.get("/categories/:category_id", C(category::show));
-    api_router.get("/category_slugs", C(category::slugs));
+    api_router.get("/keywords", C(controllers::keyword::index));
+    api_router.get("/keywords/:keyword_id", C(controllers::keyword::show));
+    api_router.get("/categories", C(controllers::category::index));
+    api_router.get("/categories/:category_id", C(controllers::category::show));
+    api_router.get("/category_slugs", C(controllers::category::slugs));
     api_router.get("/users/:user_id", C(user::show));
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));

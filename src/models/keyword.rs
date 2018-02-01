@@ -1,15 +1,10 @@
 use chrono::NaiveDateTime;
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
 use diesel::prelude::*;
 use diesel;
 
-use db::RequestTransaction;
-use controllers::helpers::Paginate;
-use util::{CargoResult, RequestUtils};
-
 use models::Crate;
 use schema::*;
+use views::EncodableKeyword;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -27,14 +22,6 @@ pub struct Keyword {
 pub struct CrateKeyword {
     crate_id: i32,
     keyword_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableKeyword {
-    pub id: String,
-    pub keyword: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
 }
 
 impl Keyword {
@@ -107,71 +94,12 @@ impl Keyword {
     }
 }
 
-/// Handles the `GET /keywords` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    use schema::keywords;
-
-    let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
-    let query = req.query();
-    let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
-
-    let mut query = keywords::table.into_boxed();
-
-    if sort == "crates" {
-        query = query.order(keywords::crates_cnt.desc());
-    } else {
-        query = query.order(keywords::keyword.asc());
-    }
-
-    let data = query
-        .paginate(limit, offset)
-        .load::<(Keyword, i64)>(&*conn)?;
-    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
-    let kws = data.into_iter()
-        .map(|(k, _)| k.encodable())
-        .collect::<Vec<_>>();
-
-    #[derive(Serialize)]
-    struct R {
-        keywords: Vec<EncodableKeyword>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
-    }
-
-    Ok(req.json(&R {
-        keywords: kws,
-        meta: Meta { total: total },
-    }))
-}
-
-/// Handles the `GET /keywords/:keyword_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let name = &req.params()["keyword_id"];
-    let conn = req.db_conn()?;
-
-    let kw = Keyword::find_by_keyword(&conn, name)?;
-
-    #[derive(Serialize)]
-    struct R {
-        keyword: EncodableKeyword,
-    }
-    Ok(req.json(&R {
-        keyword: kw.encodable(),
-    }))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
     use diesel;
     use diesel::connection::SimpleConnection;
     use dotenv::dotenv;
-    use serde_json;
     use std::env;
 
     fn pg_connection() -> PgConnection {
@@ -199,21 +127,4 @@ mod tests {
         assert_eq!(associated.len(), 1);
         assert_eq!(associated.first().unwrap().keyword, "no");
     }
-
-    #[test]
-    fn keyword_serializes_to_rfc3339() {
-        let key = EncodableKeyword {
-            id: "".to_string(),
-            keyword: "".to_string(),
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            crates_cnt: 0,
-        };
-        let json = serde_json::to_string(&key).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-    }
-
 }

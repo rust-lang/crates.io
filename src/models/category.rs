@@ -1,13 +1,9 @@
 use chrono::NaiveDateTime;
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
 use diesel::*;
-
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
 
 use models::Crate;
 use schema::*;
+use views::EncodableCategory;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
@@ -28,27 +24,6 @@ pub struct Category {
 pub struct CrateCategory {
     crate_id: i32,
     category_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategory {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategoryWithSubcategories {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-    pub subcategories: Vec<EncodableCategory>,
 }
 
 impl Category {
@@ -180,97 +155,11 @@ impl<'a> NewCategory<'a> {
     }
 }
 
-/// Handles the `GET /categories` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
-    let query = req.query();
-    let sort = query.get("sort").map_or("alpha", String::as_str);
-
-    let categories = Category::toplevel(&conn, sort, limit, offset)?;
-    let categories = categories.into_iter().map(Category::encodable).collect();
-
-    // Query for the total count of categories
-    let total = Category::count_toplevel(&conn)?;
-
-    #[derive(Serialize)]
-    struct R {
-        categories: Vec<EncodableCategory>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
-    }
-
-    Ok(req.json(&R {
-        categories: categories,
-        meta: Meta { total: total },
-    }))
-}
-
-/// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let slug = &req.params()["category_id"];
-    let conn = req.db_conn()?;
-    let cat = categories::table
-        .filter(categories::slug.eq(::lower(slug)))
-        .first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&conn)?
-        .into_iter()
-        .map(Category::encodable)
-        .collect();
-
-    let cat = cat.encodable();
-    let cat_with_subcats = EncodableCategoryWithSubcategories {
-        id: cat.id,
-        category: cat.category,
-        slug: cat.slug,
-        description: cat.description,
-        created_at: cat.created_at,
-        crates_cnt: cat.crates_cnt,
-        subcategories: subcats,
-    };
-
-    #[derive(Serialize)]
-    struct R {
-        category: EncodableCategoryWithSubcategories,
-    }
-    Ok(req.json(&R {
-        category: cat_with_subcats,
-    }))
-}
-
-/// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.db_conn()?;
-    let slugs = categories::table
-        .select((categories::slug, categories::slug))
-        .order(categories::slug)
-        .load(&*conn)?;
-
-    #[derive(Serialize, Queryable)]
-    struct Slug {
-        id: String,
-        slug: String,
-    }
-
-    #[derive(Serialize)]
-    struct R {
-        category_slugs: Vec<Slug>,
-    }
-    Ok(req.json(&R {
-        category_slugs: slugs,
-    }))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
     use diesel::connection::SimpleConnection;
     use dotenv::dotenv;
-    use serde_json;
     use std::env;
 
     fn pg_connection() -> PgConnection {
@@ -401,42 +290,4 @@ mod tests {
         let expected = vec![("Cat 3".to_string(), 6), ("Cat 1".to_string(), 3)];
         assert_eq!(expected, categories);
     }
-
-    #[test]
-    fn category_dates_serializes_to_rfc3339() {
-        let cat = EncodableCategory {
-            id: "".to_string(),
-            category: "".to_string(),
-            slug: "".to_string(),
-            description: "".to_string(),
-            crates_cnt: 1,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-        };
-        let json = serde_json::to_string(&cat).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-    }
-
-    #[test]
-    fn category_with_sub_dates_serializes_to_rfc3339() {
-        let cat = EncodableCategoryWithSubcategories {
-            id: "".to_string(),
-            category: "".to_string(),
-            slug: "".to_string(),
-            description: "".to_string(),
-            crates_cnt: 1,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            subcategories: vec![],
-        };
-        let json = serde_json::to_string(&cat).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-    }
-
 }
