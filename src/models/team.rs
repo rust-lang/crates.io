@@ -4,35 +4,9 @@ use app::App;
 use github;
 use util::{human, CargoResult};
 
-use models::{Crate, User};
-use schema::{crate_owners, teams, users};
-
-#[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
-#[belongs_to(Crate)]
-#[belongs_to(User, foreign_key = "owner_id")]
-#[belongs_to(Team, foreign_key = "owner_id")]
-#[table_name = "crate_owners"]
-#[primary_key(crate_id, owner_id, owner_kind)]
-pub struct CrateOwner {
-    pub crate_id: i32,
-    pub owner_id: i32,
-    pub created_by: i32,
-    pub owner_kind: i32,
-}
-
-#[derive(Debug, Clone, Copy)]
-#[repr(u32)]
-pub enum OwnerKind {
-    User = 0,
-    Team = 1,
-}
-
-/// Unifies the notion of a User or a Team.
-#[derive(Debug)]
-pub enum Owner {
-    User(User),
-    Team(Team),
-}
+use models::{Crate, CrateOwner, Owner, OwnerKind, User};
+use schema::{crate_owners, teams};
+use views::EncodableTeam;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -49,25 +23,6 @@ pub struct Team {
     /// is deleted and then recreated with the same name!!!
     pub github_id: i32,
     /// Sugary goodness
-    pub name: Option<String>,
-    pub avatar: Option<String>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct EncodableTeam {
-    pub id: i32,
-    pub login: String,
-    pub name: Option<String>,
-    pub avatar: Option<String>,
-    pub url: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableOwner {
-    pub id: i32,
-    pub login: String,
-    pub kind: String,
-    pub url: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
 }
@@ -240,7 +195,7 @@ impl Team {
             avatar,
             ..
         } = self;
-        let url = Team::github_url(&login);
+        let url = github::team_url(&login);
 
         EncodableTeam {
             id: id,
@@ -249,16 +204,6 @@ impl Team {
             avatar: avatar,
             url: Some(url),
         }
-    }
-
-    fn github_url(login: &str) -> String {
-        let mut login_pieces = login.split(':');
-        login_pieces.next();
-
-        format!(
-            "https://github.com/{}",
-            login_pieces.next().expect("org failed"),
-        )
     }
 }
 
@@ -285,94 +230,4 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
     Ok(membership.state == "active")
-}
-
-impl Owner {
-    /// Finds the owner by name. Always recreates teams to get the most
-    /// up-to-date GitHub ID. Fails out if the user isn't found in the
-    /// database, the team isn't found on GitHub, or if the user isn't a member
-    /// of the team on GitHub.
-    /// May be a user's GH login or a full team name. This is case
-    /// sensitive.
-    pub fn find_or_create_by_login(
-        app: &App,
-        conn: &PgConnection,
-        req_user: &User,
-        name: &str,
-    ) -> CargoResult<Owner> {
-        if name.contains(':') {
-            Ok(Owner::Team(Team::create_or_update(
-                app,
-                conn,
-                name,
-                req_user,
-            )?))
-        } else {
-            users::table
-                .filter(users::gh_login.eq(name))
-                .first(conn)
-                .map(Owner::User)
-                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)))
-        }
-    }
-
-    pub fn kind(&self) -> i32 {
-        match *self {
-            Owner::User(_) => OwnerKind::User as i32,
-            Owner::Team(_) => OwnerKind::Team as i32,
-        }
-    }
-
-    pub fn login(&self) -> &str {
-        match *self {
-            Owner::User(ref user) => &user.gh_login,
-            Owner::Team(ref team) => &team.login,
-        }
-    }
-
-    pub fn id(&self) -> i32 {
-        match *self {
-            Owner::User(ref user) => user.id,
-            Owner::Team(ref team) => team.id,
-        }
-    }
-
-    pub fn encodable(self) -> EncodableOwner {
-        match self {
-            Owner::User(User {
-                id,
-                name,
-                gh_login,
-                gh_avatar,
-                ..
-            }) => {
-                let url = format!("https://github.com/{}", gh_login);
-                EncodableOwner {
-                    id: id,
-                    login: gh_login,
-                    avatar: gh_avatar,
-                    url: Some(url),
-                    name: name,
-                    kind: String::from("user"),
-                }
-            }
-            Owner::Team(Team {
-                id,
-                name,
-                login,
-                avatar,
-                ..
-            }) => {
-                let url = Team::github_url(&login);
-                EncodableOwner {
-                    id: id,
-                    login: login,
-                    url: Some(url),
-                    avatar: avatar,
-                    name: name,
-                    kind: String::from("team"),
-                }
-            }
-        }
-    }
 }

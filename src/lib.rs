@@ -73,7 +73,6 @@ pub mod download;
 pub mod git;
 pub mod github;
 pub mod http;
-pub mod owner;
 pub mod render;
 pub mod schema;
 pub mod token;

@@ -79,7 +79,25 @@ pub struct EncodableCrateLinks {
     pub reverse_dependencies: String,
 }
 
-pub use owner::{EncodableOwner, EncodableTeam};
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableOwner {
+    pub id: i32,
+    pub login: String,
+    pub kind: String,
+    pub url: Option<String>,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct EncodableTeam {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
 pub use token::EncodableApiTokenWithToken;
 pub use user::{EncodablePrivateUser, EncodablePublicUser};
 pub use version::{EncodableVersion, EncodableVersionLinks};
