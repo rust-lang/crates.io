@@ -11,7 +11,7 @@ use serde_json;
 use app::RequestApp;
 use db::RequestTransaction;
 use controllers::helpers::Paginate;
-use util::{bad_request, human, CargoResult, RequestUtils};
+use util::{bad_request, human, CargoError, CargoResult, RequestUtils};
 use github;
 use email;
 
@@ -89,7 +89,6 @@ impl<'a> NewUser<'a> {
         use diesel::dsl::sql;
         use diesel::sql_types::Integer;
         use diesel::pg::upsert::excluded;
-        use diesel::NotFound;
         use schema::users::dsl::*;
 
         conn.transaction(|| {
@@ -128,8 +127,7 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    send_user_confirm_email(user_email, &user.gh_login, &token)
-                        .map_err(|_| NotFound)?;
+                    send_user_confirm_email(user_email, &user.gh_login, &token);
                 }
             }
 
@@ -541,7 +539,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
         return Err(human("empty email rejected"));
     }
 
-    conn.transaction(|| {
+    conn.transaction::<_, Box<CargoError>, _>(|| {
         update(users.filter(gh_login.eq(&user.gh_login)))
             .set(email.eq(user_email))
             .execute(&*conn)?;
@@ -560,8 +558,9 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
             .get_result::<String>(&*conn)
             .map_err(|_| human("Error in creating token"))?;
 
-        send_user_confirm_email(user_email, &user.gh_login, &token)
-            .map_err(|_| bad_request("Email could not be sent"))
+        send_user_confirm_email(user_email, &user.gh_login, &token);
+
+        Ok(())
     })?;
 
     #[derive(Serialize)]
@@ -571,7 +570,17 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R { ok: true }))
 }
 
-fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
+/// Attempts to send a confirmation email. Swallows all errors.
+///
+/// This function swallows any errors that occur while attempting to send the
+/// email.  Some users do not have any valid email set in their GitHub profile.
+/// We cannot force them to give us an email address, and that should not stop
+/// them from signing in.
+fn send_user_confirm_email(email: &str, user_name: &str, token: &str) {
+    let _ = try_send_user_confirm_email(email, user_name, token);
+}
+
+fn try_send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match
@@ -629,7 +638,7 @@ pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
             .get_result::<Email>(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        send_user_confirm_email(&email.email, &user.gh_login, &email.token)
+        try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
 
