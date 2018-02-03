@@ -93,3 +93,19 @@ fn authors() {
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
 }
+
+#[test]
+fn record_rerendered_readme_time() {
+    let (_b, app, _middle) = ::app();
+    let version = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap()
+    };
+    {
+        let conn = app.diesel_database.get().unwrap();
+        version.record_readme_rendering(&conn).unwrap();
+        version.record_readme_rendering(&conn).unwrap();
+    }
+}

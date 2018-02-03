@@ -128,11 +128,14 @@ impl Version {
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
-        use schema::versions::dsl::readme_rendered_at;
+        use schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
 
-        diesel::update(self)
-            .set(readme_rendered_at.eq(now.nullable()))
+        diesel::insert_into(readme_renderings)
+            .values(version_id.eq(self.id))
+            .on_conflict(version_id)
+            .do_update()
+            .set(rendered_at.eq(now))
             .execute(conn)
     }
 }
@@ -227,7 +230,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
         Option<String>,
         bool,
         Option<String>,
-        Option<NaiveDateTime>,
     );
 
     fn build(row: Self::Row) -> Self {
