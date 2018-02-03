@@ -25,6 +25,10 @@
         .team-info {
             @include flex-direction(column);
         }
+        h1 {
+            position: relative;
+            bottom: 0.3rem;
+        }
     }
     h1 {
         padding-left: 10px;
@@ -118,12 +122,35 @@
     }
 }
 
+.crate-link {
+    display: inline-block;
+}
+
+@media only screen and (max-width: 639px) {
+    .white-rows div {
+        margin: auto auto 0.2rem auto;
+        text-align: center;
+    }
+    .white-rows > div .row {
+        flex-flow: column wrap;
+    }
+    .row > div.stats {
+        width: 100%;
+        display: flex;
+        margin: auto;
+    }
+    .crate-link {
+        text-align: center;
+        display: block;
+    }
+}
+
 .crate {
     .desc {
         padding-top: 5px;
         @include display-flex;
         @include flex-direction(column);
-        width: 75%;
+        @media screen and (min-width: 640px){ width: 75%; }
     }
 
     .info a {
@@ -143,7 +170,7 @@
     .downloads {
         @include display-flex;
         @include align-items(center);
-        padding-bottom: 5px;
+        @media screen and (min-width: 640px) { padding-bottom: 5px; }
     }
     .recent-downloads {
         @include display-flex;
