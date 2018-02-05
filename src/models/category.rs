@@ -93,6 +93,8 @@ impl Category {
         limit: i64,
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
+        use diesel::sql_types::Int8;
+
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
             _ => "ORDER BY category ASC",
@@ -100,16 +102,10 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        sql_query(format!(
-            "SELECT c.id, c.category, c.slug, c.description, \
-             sum(c2.crates_cnt)::int as crates_cnt, c.created_at \
-             FROM categories as c \
-             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug \
-             WHERE split_part(c.slug, '::', 1) = c.slug \
-             GROUP BY c.id \
-             {} LIMIT {} OFFSET {}",
-            sort_sql, limit, offset
-        )).load(conn)
+        sql_query(format!(include_str!("toplevel.sql"), sort_sql))
+            .bind::<Int8, _>(limit)
+            .bind::<Int8, _>(offset)
+            .load(conn)
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
