@@ -237,15 +237,11 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
             krate_name, version.num
         ))
     };
-    if manifest.package.readme.is_none() {
-        return None;
-    }
+
     let rendered = {
         let path = format!(
             "{}-{}/{}",
-            krate_name,
-            version.num,
-            manifest.package.readme.unwrap()
+            krate_name, version.num, manifest.package.readme?
         );
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
         readme_to_html(
@@ -262,12 +258,14 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         ))
     };
     return Some(rendered);
+
     #[derive(Deserialize)]
     struct Package {
         readme: Option<String>,
         readme_file: Option<String>,
         repository: Option<String>,
     }
+
     #[derive(Deserialize)]
     struct Manifest {
         package: Package,
