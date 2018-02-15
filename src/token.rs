@@ -17,11 +17,15 @@ use schema::api_tokens;
 #[belongs_to(User)]
 pub struct ApiToken {
     pub id: i32,
-    #[serde(skip)] pub user_id: i32,
-    #[serde(skip)] pub token: String,
+    #[serde(skip)]
+    pub user_id: i32,
+    #[serde(skip)]
+    pub token: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")] pub last_used_at: Option<NaiveDateTime>,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 /// The serialization format for the `ApiToken` model with its token value.
@@ -32,8 +36,10 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")] pub last_used_at: Option<NaiveDateTime>,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {

@@ -100,7 +100,8 @@ mod version;
 
 #[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]

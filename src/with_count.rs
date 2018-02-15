@@ -1,7 +1,9 @@
 #[derive(QueryableByName)]
 pub struct WithCount<T> {
-    #[sql_type = "::diesel::sql_types::BigInt"] total: i64,
-    #[diesel(embed)] record: T,
+    #[sql_type = "::diesel::sql_types::BigInt"]
+    total: i64,
+    #[diesel(embed)]
+    record: T,
 }
 
 pub trait WithCountExtension<T> {

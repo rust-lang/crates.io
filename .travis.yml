@@ -42,11 +42,11 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-  - rust: nightly-2017-12-28
+  - rust: nightly-2017-02-13
     script:
-    - cargo install --force rustfmt-nightly --vers 0.3.4
+    - cargo install --force rustfmt-nightly --vers 0.3.6
     - cargo fmt -- --write-mode=diff
-    - cargo install --force clippy --vers 0.0.177
+    - cargo install --force clippy --vers 0.0.186
     - cargo clippy
   - rust: stable
     script:
