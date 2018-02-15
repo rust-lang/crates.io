@@ -65,7 +65,6 @@ use util::{R404, C, R};
 pub mod app;
 pub mod boot;
 pub mod config;
-pub mod crate_owner_invitation;
 pub mod db;
 pub mod dependency;
 pub mod dist;
@@ -223,11 +222,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/me/tokens/:id", C(token::revoke));
     api_router.get(
         "/me/crate_owner_invitations",
-        C(crate_owner_invitation::list),
+        C(controllers::crate_owner_invitation::list),
     );
     api_router.put(
         "/me/crate_owner_invitations/:crate_id",
-        C(crate_owner_invitation::handle_invite),
+        C(controllers::crate_owner_invitation::handle_invite),
     );
     api_router.get("/summary", C(controllers::krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::confirm_user_email));

@@ -15,5 +15,6 @@ mod prelude {
 pub mod helpers;
 
 pub mod category;
+pub mod crate_owner_invitation;
 pub mod keyword;
 pub mod krate;

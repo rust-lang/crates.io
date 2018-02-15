@@ -1,6 +1,3 @@
-// TODO: Move all encodable types here
-// For now, just reexport
-
 use std::collections::HashMap;
 use chrono::NaiveDateTime;
 
@@ -33,7 +30,22 @@ pub struct EncodableCategoryWithSubcategories {
     pub subcategories: Vec<EncodableCategory>,
 }
 
-pub use crate_owner_invitation::{EncodableCrateOwnerInvitation, InvitationResponse};
+/// The serialization format for the `CrateOwnerInvitation` model.
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableCrateOwnerInvitation {
+    pub invited_by_username: String,
+    pub crate_name: String,
+    pub crate_id: i32,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+}
+
+#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+pub struct InvitationResponse {
+    pub crate_id: i32,
+    pub accepted: bool,
+}
+
 pub use dependency::EncodableDependency;
 pub use download::EncodableVersionDownload;
 
@@ -237,6 +249,22 @@ mod tests {
         assert!(
             json.as_str()
                 .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn crate_owner_invitation_serializes_to_rfc3339() {
+        let inv = EncodableCrateOwnerInvitation {
+            invited_by_username: "".to_string(),
+            crate_name: "".to_string(),
+            crate_id: 123,
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+        };
+        let json = serde_json::to_string(&inv).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
                 .is_some()
         );
     }

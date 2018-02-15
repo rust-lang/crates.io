@@ -85,12 +85,6 @@ fn new_crate_owner() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    #[derive(Deserialize)]
-    struct InvitationResponse {
-        crate_id: i32,
-        accepted: bool,
-    }
-
     let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
     assert!(crate_owner_invite.crate_owner_invitation.accepted);
     assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
@@ -200,12 +194,6 @@ fn owners_can_remove_self() {
     #[derive(Deserialize)]
     struct CrateOwnerInvitation {
         crate_owner_invitation: InvitationResponse,
-    }
-
-    #[derive(Deserialize)]
-    struct InvitationResponse {
-        crate_id: i32,
-        accepted: bool,
     }
 
     let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
