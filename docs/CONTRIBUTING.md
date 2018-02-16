@@ -559,3 +559,65 @@ docker-compose up -d
 
 A number of names volumes are created, as can be seen in the `volumes` section
 of the `docker-compose.yml` file.
+
+### Running crates.io with Vagrant
+A vagrantfile is also provided for quickly setting up an environment for
+crates.io.
+
+#### Dependencies
+The only dependency is Vagrant! Look for the appropriate package from your
+package manager or download the latest version of Vagrant from their
+[website](https://www.vagrantup.com/downloads.html).
+
+  - Ubuntu: `sudo apt-get install vagrant`
+  - Fedora: `sudo dnf install vagrant`
+
+#### Running Vagrant
+The vm can be started by running `vagrant up`. This will run the provisioning
+script `vagrant_provision.sh`, synchronize the crates.io directory on the host
+with /vagrant on the vm, and bind ports from the vm to the host machine. In
+order to access the vm, run `vagrant ssh`.
+
+```sh
+vagrant up
+#When run the first time the provision script will run
+vagrant ssh
+cd /vagrant
+```
+
+Once logged in, you can start the backend and frontend normally and access them
+on port 4200 or 8888 respectively.
+
+#### Publishing to Vagrant's crates.io
+Publishing to the local crates.io can be done from the vm's shell by running:
+
+```
+cargo publish --index file:///vagrant/tmp/index-co
+```
+
+#### Synchronized files
+`/vagrant` on the vm and the crates.io directory on the host are synchronized.
+Any changes that occur on one will show up on the other. If you wish to edit
+with a program not installed on the vm, you can go ahead and do so in your host
+environment.
+
+#### Environment variables
+Currently the Vagrant setup relies on certain values in `.env`. These are:
+
+```sh
+export DATABASE_URL=postgres://postgres@localhost/cargo_registry
+export GIT_REPO_URL=./tmp/index-bare
+export GIT_REPO_CHECKOUT=./tmp/index-co
+```
+
+Since the `.env` file is synchronized between the host and vm, these values
+should be changed by hand.
+
+#### Ports
+The vm upon loading will bind itself to three ports on the host machine. These are:
+
+| Host port | Vm port | Purpose     |
+|-----------|---------|-------------|
+| 2222      | 22      | Vagrant ssh |
+| 4200      | 4200    | Frontend    |
+| 8888      | 8888    | Backend     |

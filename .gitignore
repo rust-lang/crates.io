@@ -20,3 +20,4 @@ yarn-error.log
 testem.log
 .env
 docker-compose.override.yml
+.vagrant
