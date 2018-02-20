@@ -22,7 +22,7 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
-    "test": "ember test"
+    "test": "ember exam --split=2 --parallel"
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
@@ -49,6 +49,7 @@
     "ember-concurrency": "^0.8.12",
     "ember-data": "~2.12.1",
     "ember-disable-prototype-extensions": "^1.1.3",
+    "ember-exam": "^1.0.0",
     "ember-export-application-global": "^2.0.0",
     "ember-keyboard": "^2.3.0",
     "ember-load-initializers": "^1.0.0",
