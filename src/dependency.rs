@@ -28,8 +28,10 @@ pub struct Dependency {
 
 #[derive(Debug, QueryableByName)]
 pub struct ReverseDependency {
-    #[diesel(embed)] dependency: Dependency,
-    #[sql_type = "::diesel::sql_types::Integer"] crate_downloads: i32,
+    #[diesel(embed)]
+    dependency: Dependency,
+    #[sql_type = "::diesel::sql_types::Integer"]
+    crate_downloads: i32,
     #[sql_type = "::diesel::sql_types::Text"]
     #[column_name = "crate_name"]
     name: String,

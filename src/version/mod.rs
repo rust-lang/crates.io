@@ -48,12 +48,15 @@ pub struct NewVersion {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
-    #[serde(rename = "crate")] pub krate: String,
+    #[serde(rename = "crate")]
+    pub krate: String,
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    #[serde(with = "::util::rfc3339")] pub updated_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,

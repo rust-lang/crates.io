@@ -31,7 +31,8 @@ struct VersionsList {
 }
 #[derive(Deserialize)]
 struct CrateResponse {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }

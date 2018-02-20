@@ -98,12 +98,14 @@ type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")] pub updated_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub badges: Option<Vec<EncodableBadge>>,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub recent_downloads: Option<i64>,
     pub max_version: String,

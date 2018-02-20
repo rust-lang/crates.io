@@ -177,7 +177,8 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
         #[derive(Serialize)]
         struct R<'a> {
-            #[serde(rename = "crate")] krate: EncodableCrate,
+            #[serde(rename = "crate")]
+            krate: EncodableCrate,
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
