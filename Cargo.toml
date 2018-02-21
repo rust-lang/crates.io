@@ -35,7 +35,7 @@ semver = "0.5"
 url = "1.2"
 tar = "0.4.13"
 
-openssl = "0.9.14"
+openssl = "0.10.0"
 curl = "0.4"
 oauth2 = "0.3"
 log = "0.3"
