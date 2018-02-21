@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use conduit::{Handler, Method};
+use diesel::dsl::*;
 use diesel::update;
 use flate2::Compression;
 use flate2::write::GzEncoder;
@@ -289,35 +290,152 @@ fn exact_match_first_on_queries() {
 }
 
 #[test]
-fn exact_match_on_queries_with_sort() {
+fn index_sorting() {
     let (_b, app, middle) = ::app();
+    let krate1;
+    let krate2;
+    let krate3;
+    let krate4;
 
     {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
 
-        ::CrateBuilder::new("foo_sort", user.id)
+        krate1 = ::CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
             .recent_downloads(50)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("bar_sort", user.id)
+        krate2 = ::CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
             .recent_downloads(0)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("baz_sort", user.id)
+        krate3 = ::CrateBuilder::new("baz_sort", user.id)
             .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
             .downloads(100_000)
             .recent_downloads(10)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("other_sort", user.id)
+        krate4 = ::CrateBuilder::new("other_sort", user.id)
             .description("other_sort const")
             .downloads(999_999)
             .expect_build(&conn);
+
+        // Set the updated at column for each crate
+        update(&krate1)
+            .set(crates::updated_at.eq(now - 3.weeks()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::updated_at.eq(now - 5.days()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::updated_at.eq(now - 10.seconds()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::updated_at.eq(now))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+    // Sort by downloads
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "other_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Sort by recent-downloads
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
+
+    //Sort by recently-updated
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recently-updated"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "other_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Test for bug with showing null results first when sorting
+    // by descending
+    // This has nothing to do with querying for exact match I'm sorry
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
+}
+
+#[test]
+fn exact_match_on_queries_with_sort() {
+    let (_b, app, middle) = ::app();
+
+    let krate1;
+    let krate2;
+    let krate3;
+    let krate4;
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        krate1 = ::CrateBuilder::new("foo_sort", user.id)
+            .description("bar_sort baz_sort const")
+            .downloads(50)
+            .recent_downloads(50)
+            .expect_build(&conn);
+
+        krate2 = ::CrateBuilder::new("bar_sort", user.id)
+            .description("foo_sort baz_sort foo_sort baz_sort const")
+            .downloads(3333)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        krate3 = ::CrateBuilder::new("baz_sort", user.id)
+            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+            .downloads(100_000)
+            .recent_downloads(10)
+            .expect_build(&conn);
+
+        krate4 = ::CrateBuilder::new("other_sort", user.id)
+            .description("other_sort const")
+            .downloads(999_999)
+            .expect_build(&conn);
+
+        // Set the updated at column for each crate
+        update(&krate1)
+            .set(crates::updated_at.eq(now - 3.weeks()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::updated_at.eq(now - 5.days()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::updated_at.eq(now - 10.seconds()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::updated_at.eq(now))
+            .execute(&*conn)
+            .unwrap();
     }
 
     // Sort by downloads
@@ -358,6 +476,14 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[0].name, "bar_sort");
     assert_eq!(json.crates[1].name, "foo_sort");
     assert_eq!(json.crates[2].name, "baz_sort");
+
+    //Sort by recently-updated
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recently-updated"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "baz_sort");
+    assert_eq!(json.crates[1].name, "bar_sort");
+    assert_eq!(json.crates[2].name, "foo_sort");
 
     // Test for bug with showing null results first when sorting
     // by descending
