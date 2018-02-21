@@ -43,7 +43,7 @@ env_logger = "0.5"
 hex = "0.2"
 htmlescape = "0.3.1"
 license-exprs = "^1.3"
-dotenv = "0.10.0"
+dotenv = "0.11.0"
 toml = "0.4"
 diesel = { version = "1.1.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "1.0.0"
@@ -54,7 +54,7 @@ chrono = { version = "0.4.0", features = ["serde"] }
 comrak = { version = "0.2.3", default-features = false }
 ammonia = "1.0.0"
 docopt = "0.8.1"
-itertools = "0.6.0"
+itertools = "0.7.0"
 lettre = "0.6"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
@@ -80,7 +80,7 @@ tokio-core = "0.1"
 tokio-service = "0.1"
 
 [build-dependencies]
-dotenv = "0.10"
+dotenv = "0.11"
 diesel = { version = "1.1.0", features = ["postgres"] }
 diesel_migrations = { version = "1.1.0", features = ["postgres"] }
 
