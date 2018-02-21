@@ -362,8 +362,8 @@ fn index_sorting() {
     assert_eq!(json.crates[2].name, "bar_sort");
     assert_eq!(json.crates[3].name, "other_sort");
 
-    //Sort by recently-updated
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recently-updated"),));
+    //Sort by recent-updates
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-updates"),));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "other_sort");
@@ -477,8 +477,8 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[1].name, "foo_sort");
     assert_eq!(json.crates[2].name, "baz_sort");
 
-    //Sort by recently-updated
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recently-updated"),));
+    //Sort by recent-updates
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-updates"),));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_sort");

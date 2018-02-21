@@ -143,7 +143,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
-    } else if sort == "recently-updated" {
+    } else if sort == "recent-updates" {
         query = query.order(crates::updated_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
