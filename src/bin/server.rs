@@ -15,7 +15,7 @@ use std::sync::mpsc::channel;
 #[allow(dead_code)]
 fn main() {
     // Initialize logging
-    env_logger::init().unwrap();
+    env_logger::init();
     let config: cargo_registry::Config = Default::default();
 
     // If there isn't a git checkout containing the crate index repo at the path specified
