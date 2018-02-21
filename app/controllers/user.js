@@ -18,6 +18,8 @@ export default Controller.extend(PaginationMixin, {
             return 'All-Time Downloads';
         } else if (this.sort === 'recent-downloads') {
             return 'Recent Downloads';
+        } else if (this.get('sort') === 'recently-updated') {
+            return 'Recently Updated';
         } else {
             return 'Alphabetical';
         }
