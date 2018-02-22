@@ -1,5 +1,1 @@
-combine_control_expr = true
 max_width = 100
-error_on_line_overflow = false
-write_mode = "Overwrite"
-
