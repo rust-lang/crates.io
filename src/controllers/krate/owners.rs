@@ -1,16 +1,8 @@
 //! All routes related to managing owners of a crate
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
 use serde_json;
 
-use app::RequestApp;
-use db::RequestTransaction;
-use owner::rights;
-use user::RequestUser;
-use util::{human, CargoResult, RequestUtils};
-
+use controllers::prelude::*;
 use views::EncodableOwner;
 use models::{Crate, Owner, Rights, Team, User};
 
@@ -85,7 +77,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
     let owners = krate.owners(&conn)?;
 
-    match rights(req.app(), &owners, user)? {
+    match user.rights(req.app(), &owners)? {
         Rights::Full => {}
         // Yes!
         Rights::Publish => {

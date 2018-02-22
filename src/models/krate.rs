@@ -9,19 +9,12 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
-use views::EncodableBadge;
+use views::{EncodableCrate, EncodableCrateLinks};
 use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
              ReverseDependency, User, Version};
 
 use schema::*;
-use with_count::*;
-
-pub mod search;
-pub mod publish;
-pub mod owners;
-pub mod follow;
-pub mod downloads;
-pub mod metadata;
+use models::helpers::with_count::*;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -93,39 +86,6 @@ pub const MAX_NAME_LENGTH: usize = 64;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCrate {
-    pub id: String,
-    pub name: String,
-    #[serde(with = "::util::rfc3339")]
-    pub updated_at: NaiveDateTime,
-    pub versions: Option<Vec<i32>>,
-    pub keywords: Option<Vec<String>>,
-    pub categories: Option<Vec<String>>,
-    pub badges: Option<Vec<EncodableBadge>>,
-    #[serde(with = "::util::rfc3339")]
-    pub created_at: NaiveDateTime,
-    pub downloads: i32,
-    pub recent_downloads: Option<i64>,
-    pub max_version: String,
-    pub description: Option<String>,
-    pub homepage: Option<String>,
-    pub documentation: Option<String>,
-    pub repository: Option<String>,
-    pub links: CrateLinks,
-    pub exact_match: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CrateLinks {
-    pub version_downloads: String,
-    pub versions: Option<String>,
-    pub owners: Option<String>,
-    pub owner_team: Option<String>,
-    pub owner_user: Option<String>,
-    pub reverse_dependencies: String,
-}
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
@@ -377,7 +337,7 @@ impl Crate {
             exact_match: exact_match,
             description: description,
             repository: repository,
-            links: CrateLinks {
+            links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
@@ -541,24 +501,12 @@ impl Crate {
     }
 }
 
-#[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]
-#[belongs_to(User)]
-#[primary_key(user_id, crate_id)]
-#[table_name = "follows"]
-pub struct Follow {
-    user_id: i32,
-    crate_id: i32,
-}
-
 use diesel::sql_types::{Date, Text};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
 sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use chrono::NaiveDate;
-    use serde_json;
     use models::Crate;
 
     #[test]
@@ -591,47 +539,6 @@ mod tests {
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
-        );
-    }
-
-    #[test]
-    fn crate_serializes_to_rfc3399() {
-        let crt = EncodableCrate {
-            id: "".to_string(),
-            name: "".to_string(),
-            updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-            versions: None,
-            keywords: None,
-            categories: None,
-            badges: None,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
-            downloads: 0,
-            recent_downloads: None,
-            max_version: "".to_string(),
-            description: None,
-            homepage: None,
-            documentation: None,
-            repository: None,
-            links: CrateLinks {
-                version_downloads: "".to_string(),
-                versions: None,
-                owners: None,
-                owner_team: None,
-                owner_user: None,
-                reverse_dependencies: "".to_string(),
-            },
-            exact_match: false,
-        };
-        let json = serde_json::to_string(&crt).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:12+00:00""#)
-                .is_some()
         );
     }
 }

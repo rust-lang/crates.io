@@ -15,7 +15,7 @@ use semver;
 use serde_json;
 
 use cargo_registry::git;
-use cargo_registry::krate::MAX_NAME_LENGTH;
+use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
 

@@ -1,19 +1,14 @@
 //! Endpoint for searching and discovery functionality
 
-use conduit::{Request, Response};
-use diesel::prelude::*;
 use diesel_full_text_search::*;
 
-use db::RequestTransaction;
 use controllers::helpers::Paginate;
-use user::RequestUser;
-use util::{CargoResult, RequestUtils};
-
+use controllers::prelude::*;
 use views::EncodableCrate;
 use models::{Badge, Crate, OwnerKind, Version};
 use schema::*;
 
-use super::{canon_crate_name, ALL_COLUMNS};
+use models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the

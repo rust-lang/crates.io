@@ -1,70 +1,10 @@
-use chrono::NaiveDateTime;
-use conduit::{Request, Response};
-use diesel::prelude::*;
+use super::prelude::*;
+
 use serde_json;
 
-use db::RequestTransaction;
-use user::RequestUser;
-use util::errors::{human, CargoResult};
-use util::RequestUtils;
-
-use models::{CrateOwner, OwnerKind};
-use schema::{crate_owner_invitations, crate_owners, crates, users};
-
-/// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Identifiable, Queryable)]
-#[primary_key(invited_user_id, crate_id)]
-pub struct CrateOwnerInvitation {
-    pub invited_user_id: i32,
-    pub invited_by_user_id: i32,
-    pub crate_id: i32,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Insertable, Clone, Copy, Debug)]
-#[table_name = "crate_owner_invitations"]
-pub struct NewCrateOwnerInvitation {
-    pub invited_user_id: i32,
-    pub invited_by_user_id: i32,
-    pub crate_id: i32,
-}
-
-impl CrateOwnerInvitation {
-    pub fn invited_by_username(&self, conn: &PgConnection) -> String {
-        users::table
-            .find(self.invited_by_user_id)
-            .select(users::gh_login)
-            .first(&*conn)
-            .unwrap_or_else(|_| String::from("(unknown username)"))
-    }
-
-    pub fn crate_name(&self, conn: &PgConnection) -> String {
-        crates::table
-            .find(self.crate_id)
-            .select(crates::name)
-            .first(&*conn)
-            .unwrap_or_else(|_| String::from("(unknown crate name)"))
-    }
-
-    pub fn encodable(self, conn: &PgConnection) -> EncodableCrateOwnerInvitation {
-        EncodableCrateOwnerInvitation {
-            invited_by_username: self.invited_by_username(conn),
-            crate_name: self.crate_name(conn),
-            crate_id: self.crate_id,
-            created_at: self.created_at,
-        }
-    }
-}
-
-/// The serialization format for the `CrateOwnerInvitation` model.
-#[derive(Deserialize, Serialize, Debug)]
-pub struct EncodableCrateOwnerInvitation {
-    pub invited_by_username: String,
-    pub crate_name: String,
-    pub crate_id: i32,
-    #[serde(with = "::util::rfc3339")]
-    pub created_at: NaiveDateTime,
-}
+use models::{CrateOwner, CrateOwnerInvitation, OwnerKind};
+use schema::{crate_owner_invitations, crate_owners};
+use views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut Request) -> CargoResult<Response> {
@@ -90,12 +30,6 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
 #[derive(Deserialize)]
 struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
-}
-
-#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
-pub struct InvitationResponse {
-    pub crate_id: i32,
-    pub accepted: bool,
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
@@ -174,28 +108,4 @@ fn decline_invite(
     Ok(req.json(&R {
         crate_owner_invitation: crate_invite,
     }))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::NaiveDate;
-    use serde_json;
-
-    #[test]
-    fn crate_owner_invitation_serializes_to_rfc3339() {
-        let inv = EncodableCrateOwnerInvitation {
-            invited_by_username: "".to_string(),
-            crate_name: "".to_string(),
-            crate_id: 123,
-            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
-        };
-        let json = serde_json::to_string(&inv).unwrap();
-        assert!(
-            json.as_str()
-                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
-                .is_some()
-        );
-    }
-
 }
