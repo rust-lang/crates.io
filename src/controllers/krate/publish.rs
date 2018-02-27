@@ -30,6 +30,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
     let name = &*new_crate.name;
     let vers = &*new_crate.vers;
+    let links = new_crate.links.clone();
     let repo = new_crate.repository.as_ref().map(|s| &**s);
     let features = new_crate
         .features
@@ -147,6 +148,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             features: features,
             deps: git_deps,
             yanked: Some(false),
+            links,
         };
         git::add_crate(&**req.app(), &git_crate).chain_error(|| {
             internal(&format_args!(

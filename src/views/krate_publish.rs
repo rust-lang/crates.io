@@ -31,6 +31,8 @@ pub struct NewCrate {
     pub license_file: Option<String>,
     pub repository: Option<String>,
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]

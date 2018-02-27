@@ -81,6 +81,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         license_file: None,
         repository: None,
         badges: None,
+        links: None,
     }
 }
 
