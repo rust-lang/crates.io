@@ -429,6 +429,12 @@ description = """
 Ways to view data, such as plotting or graphing.\
 """
 
+[wasm]
+name = "WebAssembly"
+description = """
+Crates for use when targeting WebAssembly, or for manipulating WebAssembly.\
+"""
+
 [web-programming]
 name = "Web programming"
 description = """
