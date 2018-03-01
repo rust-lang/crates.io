@@ -203,17 +203,47 @@ fn publish_build_info() {
     }
 
     let json = ::json::<R>(&mut response);
+
+    let nightly_key_string = String::from("2017-01-25T00:00:00+00:00");
     assert_eq!(
         json.build_info.ordering.get("nightly"),
-        Some(&vec![String::from("2017-01-25T00:00:00+00:00")])
+        Some(&vec![nightly_key_string.clone()])
     );
+    assert_eq!(
+        json.build_info
+            .nightly
+            .keys()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>(),
+        vec![nightly_key_string]
+    );
+
+    let beta_key_string = String::from("2017-01-20T00:00:00+00:00");
     assert_eq!(
         json.build_info.ordering.get("beta"),
-        Some(&vec![String::from("2017-01-20T00:00:00+00:00")])
+        Some(&vec![beta_key_string.clone()])
     );
     assert_eq!(
+        json.build_info
+            .beta
+            .keys()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>(),
+        vec![beta_key_string]
+    );
+
+    let stable_key_string = String::from("1.13.0");
+    assert_eq!(
         json.build_info.ordering.get("stable"),
-        Some(&vec![String::from("1.13.0")])
+        Some(&vec![stable_key_string.clone()])
+    );
+    assert_eq!(
+        json.build_info
+            .stable
+            .keys()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>(),
+        vec![stable_key_string]
     );
 }
 
