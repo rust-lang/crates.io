@@ -7,7 +7,7 @@
 
 use std::str::FromStr;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::NaiveDate;
 use conduit::{Request, Response};
 use diesel::prelude::*;
 
@@ -81,8 +81,8 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
 //   "build_info": {
 //     "id": 1,
 //     "ordering": {
-//       "nightly": ["2017-07-26T00:00:00Z"],
-//       "beta": ["2017-07-18T00:00:00Z"],
+//       "nightly": ["2017-07-26"],
+//       "beta": ["2017-07-18"],
 //       "stable": ["1.19.0"]
 //     },
 //     "stable": {
@@ -91,10 +91,10 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
 //       "1.18.0": { "x86_64-pc-windows-gnu": false }
 //     },
 //     "beta": {
-//       "2017-07-18T00:00:00Z": { "x86_64-apple-darwin": false }
+//       "2017-07-18": { "x86_64-apple-darwin": false }
 //     },
 //     "nightly": {
-//       "2017-07-26T00:00:00Z": { "x86_64-apple-darwin": true }
+//       "2017-07-26": { "x86_64-apple-darwin": true }
 //     }
 //   }
 // }
@@ -159,18 +159,18 @@ pub fn build_info(req: &mut Request) -> CargoResult<Response> {
         stables.into_iter().map(|s| s.to_string()).collect(),
     );
 
-    fn naive_date_to_rfc3339(date: NaiveDate) -> String {
-        DateTime::<Utc>::from_utc(date.and_hms(0, 0, 0), Utc).to_rfc3339()
+    fn naive_date_to_string(date: NaiveDate) -> String {
+        date.format("%Y-%m-%d").to_string()
     }
 
     encodable_build_info.ordering.insert(
         String::from("beta"),
-        betas.into_iter().map(naive_date_to_rfc3339).collect(),
+        betas.into_iter().map(naive_date_to_string).collect(),
     );
 
     encodable_build_info.ordering.insert(
         String::from("nightly"),
-        nightlies.into_iter().map(naive_date_to_rfc3339).collect(),
+        nightlies.into_iter().map(naive_date_to_string).collect(),
     );
 
     #[derive(Serialize, Debug)]

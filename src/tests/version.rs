@@ -204,7 +204,7 @@ fn publish_build_info() {
 
     let json = ::json::<R>(&mut response);
 
-    let nightly_key_string = String::from("2017-01-25T00:00:00+00:00");
+    let nightly_key_string = String::from("2017-01-25");
     assert_eq!(
         json.build_info.ordering.get("nightly"),
         Some(&vec![nightly_key_string.clone()])
@@ -218,7 +218,7 @@ fn publish_build_info() {
         vec![nightly_key_string]
     );
 
-    let beta_key_string = String::from("2017-01-20T00:00:00+00:00");
+    let beta_key_string = String::from("2017-01-20");
     assert_eq!(
         json.build_info.ordering.get("beta"),
         Some(&vec![beta_key_string.clone()])
