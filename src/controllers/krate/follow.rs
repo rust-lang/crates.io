@@ -1,15 +1,9 @@
 //! Endpoints for managing a per user list of followed crates
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
 use diesel::associations::Identifiable;
-use diesel::prelude::*;
 use diesel;
 
-use db::RequestTransaction;
-use user::RequestUser;
-use util::{CargoResult, RequestUtils};
-
+use controllers::prelude::*;
 use models::{Crate, Follow};
 use schema::*;
 
@@ -32,11 +26,8 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
         .values(&follow)
         .on_conflict_do_nothing()
         .execute(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+
+    ok_true()
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
@@ -44,11 +35,8 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     diesel::delete(&follow).execute(&*conn)?;
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+
+    ok_true()
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
@@ -58,6 +46,7 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     let following = diesel::select(exists(follows::table.find(follow.id()))).get_result(&*conn)?;
+
     #[derive(Serialize)]
     struct R {
         following: bool,

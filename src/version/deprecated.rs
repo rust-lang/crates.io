@@ -64,7 +64,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
             versions::table
                 .find(id)
                 .inner_join(crates::table)
-                .select((versions::all_columns, ::krate::ALL_COLUMNS))
+                .select((versions::all_columns, ::models::krate::ALL_COLUMNS))
                 .first(&*conn)?
         }
     };

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use semver;
 
-use krate::MAX_NAME_LENGTH;
+use models::krate::MAX_NAME_LENGTH;
 
 use models::Keyword as CrateKeyword;
 use models::Kind as DependencyKind;
@@ -31,6 +31,8 @@ pub struct NewCrate {
     pub license_file: Option<String>,
     pub repository: Option<String>,
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]

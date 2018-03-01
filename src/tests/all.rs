@@ -100,7 +100,8 @@ mod version;
 
 #[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -659,6 +660,7 @@ fn new_req_body(
             license_file: None,
             repository: krate.repository,
             badges: Some(badges),
+            links: None,
         },
         &[],
     )

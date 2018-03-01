@@ -2,14 +2,19 @@
 
 mod prelude {
     pub use diesel::prelude::*;
+    pub use super::helpers::ok_true;
 
+    pub use app::RequestApp;
     pub use conduit::{Request, Response};
     pub use conduit_router::RequestParams;
     pub use db::RequestTransaction;
-    pub use util::{CargoResult, RequestUtils};
+    pub use user::RequestUser;
+    pub use util::{human, CargoResult, RequestUtils};
 }
 
 pub mod helpers;
 
 pub mod category;
+pub mod crate_owner_invitation;
 pub mod keyword;
+pub mod krate;

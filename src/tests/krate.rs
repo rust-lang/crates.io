@@ -15,7 +15,7 @@ use semver;
 use serde_json;
 
 use cargo_registry::git;
-use cargo_registry::krate::MAX_NAME_LENGTH;
+use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
 
@@ -31,7 +31,8 @@ struct VersionsList {
 }
 #[derive(Deserialize)]
 struct CrateResponse {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }
@@ -80,6 +81,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         license_file: None,
         repository: None,
         badges: None,
+        links: None,
     }
 }
 

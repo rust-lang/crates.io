@@ -4,19 +4,13 @@
 //! download counts are located in `krate::downloads`.
 
 use std::cmp;
-
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
-
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
+use controllers::prelude::*;
 
 use views::EncodableVersionDownload;
 use models::{Crate, Version, VersionDownload};
-use schema::*;
+use schema::version_downloads;
 
-use super::to_char;
+use models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {

@@ -8,7 +8,6 @@ use serde_json;
 use app::RequestApp;
 use db::RequestTransaction;
 use models::{Rights, Version};
-use owner::rights;
 use user::RequestUser;
 use util::{human, CargoResult, RequestUtils};
 use version::version_and_crate;
@@ -116,7 +115,7 @@ pub fn publish_build_info(req: &mut Request) -> CargoResult<Response> {
     let user = req.user()?;
     let tx = req.db_conn()?;
     let owners = krate.owners(&tx)?;
-    if rights(req.app(), &owners, user)? < Rights::Publish {
+    if user.rights(req.app(), &owners)? < Rights::Publish {
         return Err(human("must already be an owner to publish build info"));
     }
 
