@@ -116,10 +116,9 @@ impl Version {
 
     pub fn max<T>(versions: T) -> semver::Version
     where
-        T: IntoIterator<Item = semver::Version>,
+        T: Iterator<Item = semver::Version>,
     {
         versions
-            .into_iter()
             .max()
             .unwrap_or_else(|| semver::Version {
                 major: 0,
