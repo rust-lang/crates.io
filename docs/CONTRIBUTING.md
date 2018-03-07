@@ -561,18 +561,26 @@ A number of names volumes are created, as can be seen in the `volumes` section
 of the `docker-compose.yml` file.
 
 ### Running crates.io with Vagrant
+
 A vagrantfile is also provided for quickly setting up an environment for
 crates.io.
 
 #### Dependencies
-The only dependency is Vagrant! Look for the appropriate package from your
-package manager or download the latest version of Vagrant from their
-[website](https://www.vagrantup.com/downloads.html).
+
+Rsync and Vagrant must be installed on the host machine. Rsync should be
+installed by default on most distributions. For Vagrant look for the
+appropriate package from your package manager or download the latest version of
+Vagrant from their [website](https://www.vagrantup.com/downloads.html).
 
   - Ubuntu: `sudo apt-get install vagrant`
   - Fedora: `sudo dnf install vagrant`
 
+#### Configuration
+
+If you want to set values in the `.env` file such as Session key, gh_client id and secret, Mailgun credentials, or S3 credentials you can do so by copying `.env.sample` to `.env.vagrant` and setting the values there. Database URL and Git_repo values will be set to sane values during provisioning.
+
 #### Running Vagrant
+
 The vm can be started by running `vagrant up`. This will run the provisioning
 script `vagrant_provision.sh`, synchronize the crates.io directory on the host
 with /vagrant on the vm, and bind ports from the vm to the host machine. In
@@ -589,29 +597,29 @@ Once logged in, you can start the backend and frontend normally and access them
 on port 4200 or 8888 respectively.
 
 #### Publishing to Vagrant's crates.io
-Publishing to the local crates.io can be done from the vm's shell by running:
+
+You can publish to this crates.io instance from within the Vagrant box or from
+the host machine, although the index endpoints will be different as seen below.
 
 ```
+#Inside the vagrant box
 cargo publish --index file:///vagrant/tmp/index-co
+
+#From the host machine
+cargo publish --index http://localhost:4200/git/index
 ```
 
 #### Synchronized files
-`/vagrant` on the vm and the crates.io directory on the host are synchronized.
-Any changes that occur on one will show up on the other. If you wish to edit
-with a program not installed on the vm, you can go ahead and do so in your host
-environment.
+`/vagrant` on the vm is generated from the `crates.io` directory when `vagrant
+up`, `vagrant reload`, or `vagrant rsync` is run. If you want to keep the
+`/vagrant` directory updated, you can run `vagrant rsync-auto` to monitor the
+`crates.io` directory. It's likely that you'll need to [increase the number of
+inotify
+watchers](https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers)
+to use rsync-auto.
 
-#### Environment variables
-Currently the Vagrant setup relies on certain values in `.env`. These are:
-
-```sh
-export DATABASE_URL=postgres://postgres@localhost/cargo_registry
-export GIT_REPO_URL=./tmp/index-bare
-export GIT_REPO_CHECKOUT=./tmp/index-co
-```
-
-Since the `.env` file is synchronized between the host and vm, these values
-should be changed by hand.
+Since the rsync operation is one-way, it is strongly recommended that you don't
+develop inside the vagrant box.
 
 #### Ports
 The vm upon loading will bind itself to three ports on the host machine. These are:

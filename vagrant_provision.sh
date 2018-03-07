@@ -79,6 +79,39 @@ else
 	echo "PSQL database 'cargo_registry' already exists"
 fi
 
+#Set necessary git variables
+su - vagrant -c 'git config --global user.email "you@example.com"'
+su - vagrant -c 'git config --global user.name "Your Name"'
+
+#Make the .env file by either copying .env.vagrant to .env or by building it from .env.sample
+if [ -e /vagrant/.env ]
+then
+	echo "Env file already exists"
+elif [ -e /vagrant/.env.vagrant ]
+then
+	echo "Creating env from vagrant env"
+	cp /vagrant/.env.vagrant /vagrant/.env
+elif [ -e /vagrant/.env.sample ]
+then
+	echo "Creating env from env.sample"
+	cp /vagrant/.env.sample /vagrant/.env
+else
+	echo "ERROR: No .env file could be made"
+fi
+
+if [ -e /vagrant/.env ]
+then
+	echo "ERROR: No .env file. Build will fail"
+	sed -i '/export DATABASE_URL/d' /vagrant/.env
+	sed -i '/export TEST_DATABASE_URL/d' /vagrant/.env
+	sed -i '/export GIT_REPO_URL/d' /vagrant/.env
+	sed -i '/export GIT_REPO_CHECKOUT/d' /vagrant/.env
+	echo 'export DATABASE_URL=postgres://postgres@localhost/cargo_registry' >> /vagrant/.env
+	echo 'export TEST_DATABASE_URL=postgres://postgres@localhost/cargo_registry_test' >> /vagrant/.env
+	echo 'export GIT_REPO_URL=./tmp/index-bare' >> /vagrant/.env
+	echo 'export GIT_REPO_CHECKOUT=./tmp/index-co' >> /vagrant/.env
+fi
+
 #Run the diesel migrations and init the repos in ./tmp
 echo "DEBUG: running migrations"
 su - vagrant -c 'cd /vagrant; diesel migration run'
