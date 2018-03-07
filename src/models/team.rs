@@ -85,7 +85,14 @@ impl Team {
                          format is github:org:team",
                     )
                 })?;
-                Team::create_or_update_github_team(app, conn, login, org, team, req_user)
+                Team::create_or_update_github_team(
+                    app,
+                    conn,
+                    &login.to_lowercase(),
+                    org,
+                    team,
+                    req_user,
+                )
             }
             _ => Err(human(
                 "unknown organization handler, \
@@ -140,7 +147,7 @@ impl Team {
 
         let team = teams
             .into_iter()
-            .find(|team| team.slug == team_name)
+            .find(|team| team.slug.to_lowercase() == team_name.to_lowercase())
             .ok_or_else(|| {
                 human(&format_args!(
                     "could not find the github team {}/{}",
@@ -161,7 +168,7 @@ impl Team {
         let (handle, resp) = github::github(app, &url, &token)?;
         let org: Org = github::parse_github_response(handle, &resp)?;
 
-        NewTeam::new(login, team.id, team.name, org.avatar_url)
+        NewTeam::new(&login.to_lowercase(), team.id, team.name, org.avatar_url)
             .create_or_update(conn)
             .map_err(Into::into)
     }
