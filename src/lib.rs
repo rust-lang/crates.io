@@ -22,6 +22,7 @@ extern crate git2;
 extern crate hex;
 extern crate htmlescape;
 extern crate lettre;
+extern crate lettre_email;
 extern crate license_exprs;
 #[macro_use]
 extern crate log;
