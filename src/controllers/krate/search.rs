@@ -178,12 +178,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| {
-            versions
-                .into_iter()
-                .max_by(Version::semantically_newest_first)
-                .unwrap()
-        })
+        .map(|versions| versions.into_iter().max_by(Version::semver_cmp).unwrap())
         .collect::<Vec<_>>();
 
     let build_infos = BuildInfo::belonging_to(&versions)

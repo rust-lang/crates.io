@@ -175,8 +175,8 @@ impl Version {
     }
 
     /// Orders SemVer numbers so that "higher" version numbers appear first.
-    pub fn semantically_newest_first(a: &Self, b: &Self) -> ::std::cmp::Ordering {
-        b.num.cmp(&a.num)
+    pub fn semver_cmp(a: &Self, b: &Self) -> ::std::cmp::Ordering {
+        a.num.cmp(&b.num)
     }
 }
 
