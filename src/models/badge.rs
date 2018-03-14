@@ -1,10 +1,11 @@
-use krate::Crate;
-use schema::badges;
-
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde_json;
 use std::collections::HashMap;
+
+use models::Crate;
+use schema::badges;
+use views::EncodableBadge;
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
@@ -29,8 +30,12 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
-    IsItMaintainedIssueResolution { repository: String },
-    IsItMaintainedOpenIssues { repository: String },
+    IsItMaintainedIssueResolution {
+        repository: String,
+    },
+    IsItMaintainedOpenIssues {
+        repository: String,
+    },
     Codecov {
         repository: String,
         branch: Option<String>,
@@ -41,7 +46,9 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
-    Maintenance { status: MaintenanceStatus },
+    Maintenance {
+        status: MaintenanceStatus,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
@@ -54,12 +61,6 @@ pub enum MaintenanceStatus {
     Experimental,
     LookingForMaintainer,
     Deprecated,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
-pub struct EncodableBadge {
-    pub badge_type: String,
-    pub attributes: HashMap<String, Option<String>>,
 }
 
 impl Queryable<badges::SqlType, Pg> for Badge {

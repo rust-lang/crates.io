@@ -1,6 +1,3 @@
-#[allow(unused_imports)] // TODO: Remove when rustc 1.23 is stable
-use std::ascii::AsciiExt;
-
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::associations::Identifiable;
 use diesel::prelude::*;
@@ -10,21 +7,14 @@ use semver;
 use url::Url;
 
 use app::App;
-use badge::EncodableBadge;
-use crate_owner_invitation::NewCrateOwnerInvitation;
-use dependency::ReverseDependency;
-use owner::{CrateOwner, Owner, OwnerKind};
-use schema::*;
 use util::{human, CargoResult};
-use with_count::*;
-use {Badge, Category, Keyword, User, Version};
 
-pub mod search;
-pub mod publish;
-pub mod owners;
-pub mod follow;
-pub mod downloads;
-pub mod metadata;
+use views::{EncodableCrate, EncodableCrateLinks};
+use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
+             ReverseDependency, User, Version};
+
+use schema::*;
+use models::helpers::with_count::*;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -97,37 +87,6 @@ type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCrate {
-    pub id: String,
-    pub name: String,
-    #[serde(with = "::util::rfc3339")] pub updated_at: NaiveDateTime,
-    pub versions: Option<Vec<i32>>,
-    pub keywords: Option<Vec<String>>,
-    pub categories: Option<Vec<String>>,
-    pub badges: Option<Vec<EncodableBadge>>,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub downloads: i32,
-    pub recent_downloads: Option<i64>,
-    pub max_version: String,
-    pub description: Option<String>,
-    pub homepage: Option<String>,
-    pub documentation: Option<String>,
-    pub repository: Option<String>,
-    pub links: CrateLinks,
-    pub exact_match: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CrateLinks {
-    pub version_downloads: String,
-    pub versions: Option<String>,
-    pub owners: Option<String>,
-    pub owner_team: Option<String>,
-    pub owner_user: Option<String>,
-    pub reverse_dependencies: String,
-}
-
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
 #[changeset_options(treat_none_as_null = "true")]
@@ -178,17 +137,15 @@ impl<'a> NewCrate<'a> {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url).map_err(|_| {
-                human(&format_args!("`{}` is not a valid url: `{}`", field, url))
-            })?;
+            let url = Url::parse(url)
+                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
             match &url.scheme()[..] {
                 "http" | "https" => {}
                 s => {
                     return Err(human(&format_args!(
                         "`{}` has an invalid url \
                          scheme: `{}`",
-                        field,
-                        s
+                        field, s
                     )))
                 }
             }
@@ -196,8 +153,7 @@ impl<'a> NewCrate<'a> {
                 return Err(human(&format_args!(
                     "`{}` must have relative scheme \
                      data: {}",
-                    field,
-                    url
+                    field, url
                 )));
             }
             Ok(())
@@ -382,7 +338,7 @@ impl Crate {
             exact_match: exact_match,
             description: description,
             repository: repository,
-            links: CrateLinks {
+            links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,
                 owners: Some(format!("/api/v1/crates/{}/owners", name)),
@@ -534,7 +490,7 @@ impl Crate {
         limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
-        use diesel::types::{BigInt, Integer};
+        use diesel::sql_types::{BigInt, Integer};
 
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
@@ -546,22 +502,13 @@ impl Crate {
     }
 }
 
-#[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]
-#[belongs_to(User)]
-#[primary_key(user_id, crate_id)]
-#[table_name = "follows"]
-pub struct Follow {
-    user_id: i32,
-    crate_id: i32,
-}
-
-use diesel::types::{Date, Text};
+use diesel::sql_types::{Date, Text};
 sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
 sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use super::Crate;
+    use models::Crate;
 
     #[test]
     fn documentation_blacklist_no_url_provided() {
@@ -579,9 +526,9 @@ mod tests {
     #[test]
     fn documentation_blacklist_url_contains_partial_match() {
         assert_eq!(
-            Crate::remove_blacklisted_documentation_urls(
-                Some(String::from("http://rust-ci.organists.com")),
-            ),
+            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+                "http://rust-ci.organists.com"
+            )),),
             Some(String::from("http://rust-ci.organists.com"))
         );
     }

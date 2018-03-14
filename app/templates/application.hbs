@@ -1,12 +1,8 @@
 {{title "Cargo: packages for Rust" separator=' - ' prepend=true}}
 {{google-jsapi}}
 
-<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
-  <img src='/assets/forkme.png'/>
-</a>
-
-<div id="header">
-    {{#link-to "index"}}
+<nav id="header">
+    {{#link-to "index" tabindex="-1"}}
         <img src="/assets/Cargo-Logo-Small.png" id="logo"
              height=100 width=100 alt="Cargo Logo"/>
     {{/link-to}}
@@ -21,11 +17,11 @@
         <input type="text" class="search" name="q" id="cargo-desktop-search"
                 placeholder="Click or press 'S' to search..."
                 value={{searchQuery}}
-                oninput={{action "search" value="target.value"}}
+                oninput={{action (mut searchQuery) value="target.value"}}
                 autofocus="autofocus"
-                tabindex="1"
                 required
                 data-test-search-input>
+        <label for="cargo-desktop-search">Search</label>
     </form>
 
     <div class='nav'>
@@ -100,25 +96,25 @@
 
     <div class='links'>
     </div>
-</div>
+</nav>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-    <input type="text" class="search" name="q"
+    <input type="text" class="search" name="q" id="cargo-mobile-search"
             placeholder="Search"
             value={{searchQuery}}
-            oninput={{action "search" value="target.value"}}
+            oninput={{action (mut searchQuery) value="target.value"}}
             autocorrect="off"
-            tabindex="1"
             required>
+    <label for="cargo-mobile-search">Search</label>
 </form>
 
-<div id="main" class='inner-content'>
+<main id="main" class='inner-content'>
     {{flash-message}}
 
     {{outlet}}
-</div>
+</main>
 
-<div class='after-main-links'>
+<footer class='after-main-links'>
     {{#link-to 'install'}}Install{{/link-to}}
     <span class="sep">|</span>
     <a href='http://doc.crates.io'>Getting Started</a>
@@ -128,4 +124,8 @@
     <a href='mailto:help@crates.io'>Send us an email</a>
     <span class="sep">|</span>
     {{#link-to 'policies'}}Policies{{/link-to}}
-</div>
+</footer>
+
+<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
+  <img src='/assets/forkme.png' alt="Fork me on GitHub" />
+</a>

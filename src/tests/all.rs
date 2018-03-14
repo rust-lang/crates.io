@@ -6,6 +6,7 @@ extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
 extern crate curl;
+#[macro_use]
 extern crate diesel;
 extern crate dotenv;
 extern crate flate2;
@@ -28,23 +29,22 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 use cargo_registry::app::App;
-use cargo_registry::category::NewCategory;
-use cargo_registry::dependency::NewDependency;
-use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
-use cargo_registry::schema::*;
-use cargo_registry::upload as u;
-use cargo_registry::user::NewUser;
-use cargo_registry::owner::{CrateOwner, NewTeam, Team};
-use cargo_registry::version::NewVersion;
 use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use cargo_registry::Replica;
 use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
+
+pub use cargo_registry::{models, schema, views};
+
+use views::EncodableCrate;
+use views::krate_publish as u;
+use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
+use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
+use schema::*;
 
 macro_rules! t {
     ($e:expr) => (
@@ -100,7 +100,8 @@ mod version;
 
 #[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -312,13 +313,15 @@ impl<'a> VersionBuilder<'a> {
         let new_deps = self.dependencies
             .into_iter()
             .map(|(crate_id, target)| {
-                NewDependency {
-                    version_id: vers.id,
-                    req: ">= 0".into(),
-                    crate_id,
-                    target,
-                    ..Default::default()
-                }
+                (
+                    dependencies::version_id.eq(vers.id),
+                    dependencies::req.eq(">= 0"),
+                    dependencies::crate_id.eq(crate_id),
+                    dependencies::target.eq(target),
+                    dependencies::optional.eq(false),
+                    dependencies::default_features.eq(false),
+                    dependencies::features.eq(Vec::<String>::new()),
+                )
             })
             .collect::<Vec<_>>();
         insert_into(dependencies::table)
@@ -472,7 +475,7 @@ fn new_version(crate_id: i32, num: &str) -> NewVersion {
 }
 
 fn krate(name: &str) -> Crate {
-    cargo_registry::krate::Crate {
+    Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),
@@ -504,16 +507,17 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use diesel::insert_into;
-    use cargo_registry::schema::dependencies;
+    use cargo_registry::schema::dependencies::dsl::*;
 
-    insert_into(dependencies::table)
-        .values(&NewDependency {
-            version_id: version.id,
-            crate_id: krate.id,
-            req: ">= 0".into(),
-            optional: false,
-            ..Default::default()
-        })
+    insert_into(dependencies)
+        .values((
+            version_id.eq(version.id),
+            crate_id.eq(krate.id),
+            req.eq(">= 0"),
+            optional.eq(false),
+            default_features.eq(false),
+            features.eq(Vec::<String>::new()),
+        ))
         .get_result(conn)
         .unwrap()
 }
@@ -667,6 +671,7 @@ fn new_req_body(
             license_file: None,
             repository: krate.repository,
             badges: Some(badges),
+            links: None,
         },
         &[],
     )
@@ -691,7 +696,7 @@ fn new_crate_to_body_with_io(
 ) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
         for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));

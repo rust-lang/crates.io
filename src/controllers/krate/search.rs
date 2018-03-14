@@ -1,18 +1,14 @@
 //! Endpoint for searching and discovery functionality
 
-use conduit::{Request, Response};
-use diesel::prelude::*;
 use diesel_full_text_search::*;
 
-use db::RequestTransaction;
-use owner::OwnerKind;
-use pagination::Paginate;
+use controllers::helpers::Paginate;
+use controllers::prelude::*;
+use views::EncodableCrate;
+use models::{Badge, Crate, OwnerKind, Version};
 use schema::*;
-use user::RequestUser;
-use util::{CargoResult, RequestUtils};
-use {Badge, Version};
 
-use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
+use models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -37,7 +33,7 @@ use super::{canon_crate_name, Crate, EncodableCrate, ALL_COLUMNS};
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
-    use diesel::types::{BigInt, Bool, Nullable};
+    use diesel::sql_types::{BigInt, Bool, Nullable};
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -51,11 +47,9 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
 
     let mut query = crates::table
         .left_join(
-            crate_downloads::table.on(
-                crates::id
-                    .eq(crate_downloads::crate_id)
-                    .and(crate_downloads::date.gt(date(now - 90.days()))),
-            ),
+            crate_downloads::table.on(crates::id
+                .eq(crate_downloads::crate_id)
+                .and(crate_downloads::date.gt(date(now - 90.days())))),
         )
         .group_by(crates::id)
         .select((
@@ -90,10 +84,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         if sort == "downloads" {
             query = query.order((perfect_match, crates::downloads.desc()));
         } else if sort == "recent-downloads" {
-            query = query.order((
-                perfect_match,
-                recent_downloads.clone().desc().nulls_last(),
-            ));
+            query = query.order((perfect_match, recent_downloads.clone().desc().nulls_last()));
         } else {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
             query = query.order((perfect_match, rank.desc()))

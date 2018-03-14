@@ -5,7 +5,7 @@ use openssl::hash::{Hasher, MessageDigest};
 pub fn hash(data: &[u8]) -> Vec<u8> {
     let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
     hasher.update(data).unwrap();
-    hasher.finish2().unwrap().to_vec()
+    hasher.finish().unwrap().to_vec()
 }
 
 // Can't derive debug because of Hasher.
@@ -24,13 +24,7 @@ impl<R: Read> HashingReader<R> {
     }
 
     pub fn finalize(mut self) -> Vec<u8> {
-        /*
-            rustfmt wanted to merge the lines together so had to use this
-            to stop this from occurring
-        */
-        #[cfg_attr(rustfmt, rustfmt_skip)]
-        #[allow(deprecated)]
-        self.hasher.finish().unwrap()
+        self.hasher.finish().unwrap().to_vec()
     }
 }
 

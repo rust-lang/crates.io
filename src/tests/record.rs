@@ -8,8 +8,7 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
-use std::fs::File;
-use std::fs;
+use std::fs::{self, File};
 use std::io::prelude::*;
 use std::io;
 use std::net;
@@ -19,7 +18,6 @@ use std::str;
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
 
-use cargo_registry::user::NewUser;
 use curl::easy::{Easy, List};
 use self::futures::{Future, Stream};
 use self::futures::sync::oneshot;
@@ -28,6 +26,8 @@ use self::tokio_core::net::TcpListener;
 use self::tokio_core::reactor::Core;
 use self::tokio_service::Service;
 use serde_json;
+
+use models::NewUser;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -121,7 +121,6 @@ pub fn proxy() -> (String, Bomb) {
             .connector(hyper_tls::HttpsConnector::new(4, &handle).unwrap())
             .build(&handle);
 
-
         let record = Rc::new(RefCell::new(record));
         let srv = listener.incoming().for_each(|(socket, addr)| {
             Http::new().bind_connection(
@@ -174,14 +173,14 @@ impl Service for Proxy {
         match *self.record.borrow_mut() {
             Record::Capture(_, _) => {
                 let record = Rc::clone(&self.record);
-                Box::new(record_http(req, &self.client).map(
-                    move |(response, exchange)| {
+                Box::new(
+                    record_http(req, &self.client).map(move |(response, exchange)| {
                         if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
                             d.push(exchange);
                         }
                         response
-                    },
-                ))
+                    }),
+                )
             }
             Record::Replay(ref mut exchanges) => {
                 replay_http(req, exchanges.remove(0), &mut &self.sink)

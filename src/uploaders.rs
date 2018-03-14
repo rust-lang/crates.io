@@ -1,7 +1,6 @@
 use conduit::Request;
 use curl::easy::Easy;
 use flate2::read::GzDecoder;
-use krate::Crate;
 use s3;
 use semver;
 use tar;
@@ -13,6 +12,8 @@ use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
 use std::io::{Read, Write};
+
+use models::Crate;
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -246,7 +247,7 @@ fn verify_tarball(
     max_unpack: u64,
 ) -> CargoResult<()> {
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball)?;
+    let decoder = GzDecoder::new(tarball);
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
@@ -256,9 +257,8 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry.chain_error(|| {
-            human("uploaded tarball is malformed or too large when decompressed")
-        })?;
+        let entry = entry
+            .chain_error(|| human("uploaded tarball is malformed or too large when decompressed"))?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could

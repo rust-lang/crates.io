@@ -3,7 +3,8 @@ use std::sync::Arc;
 use conduit::{Handler, Method};
 use conduit_test::MockRequest;
 
-use cargo_registry::keyword::{EncodableKeyword, Keyword};
+use views::EncodableKeyword;
+use models::Keyword;
 
 #[derive(Deserialize)]
 struct KeywordList {

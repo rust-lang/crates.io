@@ -3,14 +3,15 @@
 //! to and from structs. The serlializing is only utilised in
 //! integration tests.
 use std::collections::HashMap;
-use std::ops::Deref;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use semver;
-use dependency::Kind as DependencyKind;
 
-use keyword::Keyword as CrateKeyword;
-use krate::{Crate, MAX_NAME_LENGTH};
+use models::krate::MAX_NAME_LENGTH;
+
+use models::Keyword as CrateKeyword;
+use models::Kind as DependencyKind;
+use models::Crate;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewCrate {
@@ -30,23 +31,25 @@ pub struct NewCrate {
     pub license_file: Option<String>,
     pub repository: Option<String>,
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
-#[derive(PartialEq, Eq, Hash, Serialize, Debug)]
+#[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
 pub struct CrateName(pub String);
-#[derive(Debug)]
+#[derive(Debug, Deref)]
 pub struct CrateVersion(pub semver::Version);
-#[derive(Debug)]
+#[derive(Debug, Deref)]
 pub struct CrateVersionReq(pub semver::VersionReq);
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Deref)]
 pub struct KeywordList(pub Vec<Keyword>);
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Deref)]
 pub struct Keyword(pub String);
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Deref)]
 pub struct CategoryList(pub Vec<Category>);
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Deref)]
 pub struct Category(pub String);
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Deref)]
 pub struct Feature(pub String);
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -177,6 +180,7 @@ impl<'de> Deserialize<'de> for CategoryList {
         }
     }
 }
+
 impl Serialize for CrateVersion {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -195,58 +199,13 @@ impl Serialize for CrateVersionReq {
     }
 }
 
-impl Deref for CrateName {
-    type Target = str;
-    fn deref(&self) -> &str {
-        &self.0
-    }
-}
+use diesel::pg::Pg;
+use diesel::serialize::{self, Output, ToSql};
+use diesel::sql_types::Text;
+use std::io::Write;
 
-impl Deref for Keyword {
-    type Target = str;
-    fn deref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Deref for Category {
-    type Target = str;
-    fn deref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Deref for Feature {
-    type Target = str;
-    fn deref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Deref for CrateVersion {
-    type Target = semver::Version;
-    fn deref(&self) -> &semver::Version {
-        &self.0
-    }
-}
-
-impl Deref for CrateVersionReq {
-    type Target = semver::VersionReq;
-    fn deref(&self) -> &semver::VersionReq {
-        &self.0
-    }
-}
-
-impl Deref for KeywordList {
-    type Target = [Keyword];
-    fn deref(&self) -> &[Keyword] {
-        &self.0
-    }
-}
-
-impl Deref for CategoryList {
-    type Target = [Category];
-    fn deref(&self) -> &[Category] {
-        &self.0
+impl ToSql<Text, Pg> for Feature {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        ToSql::<Text, Pg>::to_sql(&**self, out)
     }
 }

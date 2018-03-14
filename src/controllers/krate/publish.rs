@@ -4,25 +4,18 @@ use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use conduit::{Request, Response};
-use diesel::prelude::*;
 use hex::ToHex;
 use serde_json;
 
-use app::RequestApp;
-use db::RequestTransaction;
 use dependency;
 use git;
-use owner::{rights, Rights};
 use render;
-use upload;
-use user::RequestUser;
 use util::{read_fill, read_le_u32};
-use util::{human, internal, CargoResult, ChainError, RequestUtils};
-use version::NewVersion;
-use {Badge, Category, Keyword, User};
+use util::{internal, ChainError};
 
-use super::{EncodableCrate, NewCrate};
+use controllers::prelude::*;
+use views::{EncodableCrate, EncodableCrateUpload};
+use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -37,6 +30,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
     let name = &*new_crate.name;
     let vers = &*new_crate.vers;
+    let links = new_crate.links.clone();
     let repo = new_crate.repository.as_ref().map(|s| &**s);
     let features = new_crate
         .features
@@ -51,11 +45,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
     let keywords = new_crate
         .keywords
         .as_ref()
-        .map(|kws| kws.iter().map(|kw| &**kw).collect())
+        .map(|kws| kws.iter().map(|kw| &***kw).collect())
         .unwrap_or_else(Vec::new);
 
     let categories = new_crate.categories.as_ref().map(|s| &s[..]).unwrap_or(&[]);
-    let categories: Vec<_> = categories.iter().map(|k| &**k).collect();
+    let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
 
     let conn = req.db_conn()?;
     // Create a transaction on the database, if there are no errors,
@@ -78,7 +72,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         let krate = persist.create_or_update(&conn, license_file, user.id)?;
 
         let owners = krate.owners(&conn)?;
-        if rights(req.app(), &owners, &user)? < Rights::Publish {
+        if user.rights(req.app(), &owners)? < Rights::Publish {
             return Err(human(
                 "this crate exists but you don't seem to be an owner. \
                  If you believe this is a mistake, perhaps you need \
@@ -87,10 +81,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             ));
         }
 
-        if krate.name != name {
-            return Err(human(
-                &format_args!("crate was previously named `{}`", krate.name),
-            ));
+        if &krate.name != name {
+            return Err(human(&format_args!(
+                "crate was previously named `{}`",
+                krate.name
+            )));
         }
 
         let length = req.content_length()
@@ -145,14 +140,18 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
                 .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
 
+        let mut hex_cksum = String::new();
+        cksum.write_hex(&mut hex_cksum)?;
+
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
             name: name.to_string(),
             vers: vers.to_string(),
-            cksum: cksum.to_hex(),
+            cksum: hex_cksum,
             features: features,
             deps: git_deps,
             yanked: Some(false),
+            links,
         };
         git::add_crate(&**req.app(), &git_crate).chain_error(|| {
             internal(&format_args!(
@@ -177,7 +176,8 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 
         #[derive(Serialize)]
         struct R<'a> {
-            #[serde(rename = "crate")] krate: EncodableCrate,
+            #[serde(rename = "crate")]
+            krate: EncodableCrate,
             warnings: Warnings<'a>,
         }
         Ok(req.json(&R {
@@ -192,7 +192,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)> {
+fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let amt = u64::from(read_le_u32(req.body())?);
     let max = req.app().config.max_upload_size;
@@ -202,7 +202,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(upload::NewCrate, User)>
     let mut json = vec![0; amt as usize];
     read_fill(req.body(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| human("json body was not valid utf-8"))?;
-    let new: upload::NewCrate = serde_json::from_str(&json)
+    let new: EncodableCrateUpload = serde_json::from_str(&json)
         .map_err(|e| human(&format_args!("invalid upload request: {}", e)))?;
 
     // Make sure required fields are provided

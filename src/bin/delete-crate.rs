@@ -15,7 +15,7 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::Crate;
+use cargo_registry::models::Crate;
 use cargo_registry::schema::crates;
 
 #[allow(dead_code)]
@@ -39,8 +39,7 @@ fn delete(conn: &PgConnection) {
     let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
     print!(
         "Are you sure you want to delete {} ({}) [y/N]: ",
-        name,
-        krate.id
+        name, krate.id
     );
     io::stdout().flush().unwrap();
     let mut line = String::new();

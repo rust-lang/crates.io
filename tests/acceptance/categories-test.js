@@ -1,8 +1,30 @@
 import { test } from 'qunit';
 import { visit } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | categories');
+
+test('is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.create('category', { category: 'API bindings', crates_cnt: 0 });
+    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+    server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+
+    await visit('/categories');
+    await a11yAudit(axeConfig);
+});
+
+test('category/:category_id is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+
+    await visit('/categories/algorithms');
+    await a11yAudit(axeConfig);
+});
 
 test('listing categories', async function(assert) {
     server.create('category', { category: 'API bindings', crates_cnt: 0 });

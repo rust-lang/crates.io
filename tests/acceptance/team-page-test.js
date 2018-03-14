@@ -1,8 +1,19 @@
 import { test } from 'qunit';
 import { visit } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | team page');
+
+test('is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/teams/github:org:thehydroimpulse');
+    await a11yAudit(axeConfig);
+});
 
 test('has team organization display', async function(assert) {
     server.loadFixtures();
@@ -28,7 +39,7 @@ test('github link has image in team header', async function(assert) {
     await visit('/teams/github:org:thehydroimpulse');
 
     assert.dom('[data-test-heading] [data-test-github-link] img')
-        .hasAttribute('src', '/assets/GitHub-Mark-32px.png');
+        .hasAttribute('src', '/assets/GitHub-Mark.svg');
 });
 
 test('team organization details has github profile icon', async function(assert) {

@@ -1,9 +1,51 @@
 import Service from '@ember/service';
 import { test } from 'qunit';
 import { click, visit, currentURL, currentRouteName, fillIn } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | crate page');
+
+test('is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.create('crate', 'withVersion', { id: 'nanomsg' });
+
+    await visit('/');
+    await a11yAudit(axeConfig);
+});
+
+test('/crates/:crate is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+
+    await visit('/crates/nanomsg');
+    await a11yAudit(axeConfig);
+});
+
+test('/crates/:crate/:version is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.create('crate', { id: 'nanomsg', max_version: '0.6.1' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.0' });
+    server.create('version', { crate: 'nanomsg', num: '0.6.1' });
+
+    await visit('/crates/nanomsg/0.6.0');
+    await a11yAudit(axeConfig);
+});
+
+test('/crates/:crate/owners is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/crates/nanomsg/owners');
+    await a11yAudit(axeConfig);
+});
 
 test('visiting a crate page from the front page', async function(assert) {
     server.create('crate', 'withVersion', { id: 'nanomsg' });

@@ -4,23 +4,18 @@
 //! download counts are located in `krate::downloads`.
 
 use std::cmp;
+use controllers::prelude::*;
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
+use views::EncodableVersionDownload;
+use models::{Crate, Version, VersionDownload};
+use schema::version_downloads;
 
-use db::RequestTransaction;
-use download::{EncodableVersionDownload, VersionDownload};
-use schema::*;
-use util::{CargoResult, RequestUtils};
-use Version;
-
-use super::{to_char, Crate};
+use models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
-    use diesel::types::BigInt;
+    use diesel::sql_types::BigInt;
 
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;

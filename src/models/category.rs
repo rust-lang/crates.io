@@ -1,12 +1,9 @@
 use chrono::NaiveDateTime;
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
 use diesel::*;
 
-use Crate;
-use db::RequestTransaction;
+use models::Crate;
 use schema::*;
-use util::{CargoResult, RequestUtils};
+use views::EncodableCategory;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
@@ -27,27 +24,6 @@ pub struct Category {
 pub struct CrateCategory {
     crate_id: i32,
     category_id: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategory {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategoryWithSubcategories {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    pub crates_cnt: i32,
-    pub subcategories: Vec<EncodableCategory>,
 }
 
 impl Category {
@@ -88,11 +64,9 @@ impl Category {
                 .collect();
             let crate_categories = categories
                 .iter()
-                .map(|c| {
-                    CrateCategory {
-                        category_id: c.id,
-                        crate_id: krate.id,
-                    }
+                .map(|c| CrateCategory {
+                    category_id: c.id,
+                    crate_id: krate.id,
                 })
                 .collect::<Vec<_>>();
 
@@ -137,14 +111,12 @@ impl Category {
              WHERE split_part(c.slug, '::', 1) = c.slug
              GROUP BY c.id
              {} LIMIT {} OFFSET {}",
-            sort_sql,
-            limit,
-            offset
+            sort_sql, limit, offset
         ))).load(conn)
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        use diesel::types::Text;
+        use diesel::sql_types::Text;
 
         sql_query(
             "SELECT c.id, c.category, c.slug, c.description, \
@@ -181,90 +153,6 @@ impl<'a> NewCategory<'a> {
             .set(self)
             .get_result(conn)
     }
-}
-
-/// Handles the `GET /categories` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
-    let query = req.query();
-    let sort = query.get("sort").map_or("alpha", String::as_str);
-
-    let categories = Category::toplevel(&conn, sort, limit, offset)?;
-    let categories = categories.into_iter().map(Category::encodable).collect();
-
-    // Query for the total count of categories
-    let total = Category::count_toplevel(&conn)?;
-
-    #[derive(Serialize)]
-    struct R {
-        categories: Vec<EncodableCategory>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
-    }
-
-    Ok(req.json(&R {
-        categories: categories,
-        meta: Meta { total: total },
-    }))
-}
-
-/// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
-    let slug = &req.params()["category_id"];
-    let conn = req.db_conn()?;
-    let cat = categories::table
-        .filter(categories::slug.eq(::lower(slug)))
-        .first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&conn)?
-        .into_iter()
-        .map(Category::encodable)
-        .collect();
-
-    let cat = cat.encodable();
-    let cat_with_subcats = EncodableCategoryWithSubcategories {
-        id: cat.id,
-        category: cat.category,
-        slug: cat.slug,
-        description: cat.description,
-        created_at: cat.created_at,
-        crates_cnt: cat.crates_cnt,
-        subcategories: subcats,
-    };
-
-    #[derive(Serialize)]
-    struct R {
-        category: EncodableCategoryWithSubcategories,
-    }
-    Ok(req.json(&R {
-        category: cat_with_subcats,
-    }))
-}
-
-/// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut Request) -> CargoResult<Response> {
-    let conn = req.db_conn()?;
-    let slugs = categories::table
-        .select((categories::slug, categories::slug))
-        .order(categories::slug)
-        .load(&*conn)?;
-
-    #[derive(Serialize, Queryable)]
-    struct Slug {
-        id: String,
-        slug: String,
-    }
-
-    #[derive(Serialize)]
-    struct R {
-        category_slugs: Vec<Slug>,
-    }
-    Ok(req.json(&R {
-        category_slugs: slugs,
-    }))
 }
 
 #[cfg(test)]

@@ -6,8 +6,10 @@ use diesel;
 use serde_json as json;
 
 use db::RequestTransaction;
-use user::{AuthenticationSource, RequestUser, User};
+use user::{AuthenticationSource, RequestUser};
 use util::{bad_request, read_fill, CargoResult, ChainError, RequestUtils};
+
+use models::User;
 use schema::api_tokens;
 
 /// The model representing a row in the `api_tokens` database table.
@@ -15,11 +17,15 @@ use schema::api_tokens;
 #[belongs_to(User)]
 pub struct ApiToken {
     pub id: i32,
-    #[serde(skip)] pub user_id: i32,
-    #[serde(skip)] pub token: String,
+    #[serde(skip)]
+    pub user_id: i32,
+    #[serde(skip)]
+    pub token: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")] pub last_used_at: Option<NaiveDateTime>,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 /// The serialization format for the `ApiToken` model with its token value.
@@ -30,8 +36,10 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")] pub last_used_at: Option<NaiveDateTime>,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
@@ -102,9 +110,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 
     let json = String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
 
-    let new: NewApiTokenRequest = json::from_str(&json).map_err(|e| {
-        bad_request(&format!("invalid new token request: {:?}", e))
-    })?;
+    let new: NewApiTokenRequest = json::from_str(&json)
+        .map_err(|e| bad_request(&format!("invalid new token request: {:?}", e)))?;
 
     let name = &new.api_token.name;
     if name.len() < 1 {
@@ -146,4 +153,57 @@ pub fn revoke(req: &mut Request) -> CargoResult<Response> {
     #[derive(Serialize)]
     struct R {}
     Ok(req.json(&R {}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use serde_json;
+
+    #[test]
+    fn api_token_serializes_to_rfc3339() {
+        let tok = ApiToken {
+            id: 12345,
+            user_id: 23456,
+            token: "".to_string(),
+            name: "".to_string(),
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+        };
+        let json = serde_json::to_string(&tok).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn encodeable_api_token_with_token_serializes_to_rfc3339() {
+        let tok = EncodableApiTokenWithToken {
+            id: 12345,
+            name: "".to_string(),
+            token: "".to_string(),
+            created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
+            last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
+        };
+        let json = serde_json::to_string(&tok).unwrap();
+        assert!(
+            json.as_str()
+                .find(r#""created_at":"2017-01-06T14:23:11+00:00""#)
+                .is_some()
+        );
+        assert!(
+            json.as_str()
+                .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#)
+                .is_some()
+        );
+    }
+
 }

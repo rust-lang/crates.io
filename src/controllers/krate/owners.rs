@@ -1,18 +1,10 @@
 //! All routes related to managing owners of a crate
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
 use serde_json;
 
-use app::RequestApp;
-use db::RequestTransaction;
-use owner::{rights, EncodableOwner, Owner, Rights, Team};
-use user::RequestUser;
-use util::{human, CargoResult, RequestUtils};
-use User;
-
-use super::Crate;
+use controllers::prelude::*;
+use views::EncodableOwner;
+use models::{Crate, Owner, Rights, Team, User};
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut Request) -> CargoResult<Response> {
@@ -85,7 +77,7 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
     let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
     let owners = krate.owners(&conn)?;
 
-    match rights(req.app(), &owners, user)? {
+    match user.rights(req.app(), &owners)? {
         Rights::Full => {}
         // Yes!
         Rights::Publish => {
@@ -114,7 +106,8 @@ fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
 
     for login in &logins {
         if add {
-            if owners.iter().any(|owner| owner.login() == *login) {
+            let login_test = |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+            if owners.iter().any(login_test) {
                 return Err(human(&format_args!("`{}` is already an owner", login)));
             }
             let msg = krate.owner_add(req.app(), &conn, user, login)?;

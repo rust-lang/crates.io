@@ -1,9 +1,9 @@
-use cargo_registry::app::App;
-use cargo_registry::badge::{Badge, MaintenanceStatus};
-use cargo_registry::krate::Crate;
-
 use std::collections::HashMap;
 use std::sync::Arc;
+
+use App;
+
+use models::{Badge, Crate, MaintenanceStatus};
 
 struct BadgeRef {
     appveyor: Badge,

@@ -1,10 +1,10 @@
 use std::sync::ONCE_INIT;
 use conduit::{Handler, Method};
 use diesel::*;
-
-use cargo_registry::user::NewUser;
-use cargo_registry::krate::{Crate, EncodableCrate};
 use record::GhUser;
+
+use views::EncodableCrate;
+use models::{Crate, NewUser};
 
 // Users: `crates-tester-1` and `crates-tester-2`
 // Passwords: ask acrichto or gankro
@@ -123,6 +123,49 @@ fn nonexistent_team() {
         "{:?}",
         json.errors
     );
+}
+
+// Test adding team names with mixed case
+#[test]
+fn add_team_mixed_case() {
+    let (_b, app, middle) = ::app();
+    let mut req =
+        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_mixed_case");
+
+    let body = r#"{"users":["github:Crates-Test-Org:Core"]}"#;
+
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/foo_mixed_case/owners")
+                .with_method(Method::Put)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_mixed_case")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
+    }
+
+    ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/foo_mixed_case/owners")
+                .with_method(Method::Get)
+                .with_body(body.as_bytes()),
+        )
+    );
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let krate = Crate::by_name("foo_mixed_case")
+            .first::<Crate>(&*conn)
+            .unwrap();
+        let owner = &krate.owners(&*conn).unwrap()[1];
+        assert_eq!(owner.login(), owner.login().to_lowercase());
+    }
 }
 
 // Test adding team as owner when on it

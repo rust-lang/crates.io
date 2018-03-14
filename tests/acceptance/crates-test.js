@@ -1,8 +1,28 @@
 import { test } from 'qunit';
 import { click, visit, currentURL } from 'ember-native-dom-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
+import axeConfig from '../axe-config';
 
 moduleForAcceptance('Acceptance | crates page');
+
+test('is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/');
+    await a11yAudit(axeConfig);
+});
+
+test('/crates is accessible', async function(assert) {
+    assert.expect(0);
+
+    server.loadFixtures();
+
+    await visit('/crates');
+    await a11yAudit(axeConfig);
+});
 
 test('visiting the crates page from the front page', async function(assert) {
     server.loadFixtures();

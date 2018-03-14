@@ -9,10 +9,7 @@ use diesel::prelude::*;
 use semver;
 use serde_json;
 
-use Crate;
 use db::RequestTransaction;
-use dependency::Dependency;
-use schema::*;
 use util::{human, CargoResult};
 use license_exprs;
 
@@ -20,6 +17,9 @@ pub mod deprecated;
 pub mod downloads;
 pub mod metadata;
 pub mod yank;
+
+use models::{Crate, Dependency};
+use schema::*;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
@@ -48,21 +48,24 @@ pub struct NewVersion {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {
     pub id: i32,
-    #[serde(rename = "crate")] pub krate: String,
+    #[serde(rename = "crate")]
+    pub krate: String,
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    #[serde(with = "::util::rfc3339")] pub updated_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339")] pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
     pub license: Option<String>,
-    pub links: VersionLinks,
+    pub links: EncodableVersionLinks,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct VersionLinks {
+pub struct EncodableVersionLinks {
     pub dependencies: String,
     pub version_downloads: String,
     pub authors: String,
@@ -94,7 +97,7 @@ impl Version {
             features: features,
             yanked: yanked,
             license: license,
-            links: VersionLinks {
+            links: EncodableVersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
@@ -115,23 +118,27 @@ impl Version {
     where
         T: IntoIterator<Item = semver::Version>,
     {
-        versions.into_iter().max().unwrap_or_else(|| {
-            semver::Version {
+        versions
+            .into_iter()
+            .max()
+            .unwrap_or_else(|| semver::Version {
                 major: 0,
                 minor: 0,
                 patch: 0,
                 pre: vec![],
                 build: vec![],
-            }
-        })
+            })
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
-        use schema::versions::dsl::readme_rendered_at;
+        use schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
 
-        diesel::update(self)
-            .set(readme_rendered_at.eq(now.nullable()))
+        diesel::insert_into(readme_renderings)
+            .values(version_id.eq(self.id))
+            .on_conflict(version_id)
+            .do_update()
+            .set(rendered_at.eq(now))
             .execute(conn)
     }
 }
@@ -226,7 +233,6 @@ impl Queryable<versions::SqlType, Pg> for Version {
         Option<String>,
         bool,
         Option<String>,
-        Option<NaiveDateTime>,
     );
 
     fn build(row: Self::Row) -> Self {
@@ -261,8 +267,7 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
         .map_err(|_| {
             human(&format_args!(
                 "crate `{}` does not have a version `{}`",
-                crate_name,
-                semver
+                crate_name, semver
             ))
         })?;
     Ok((version, krate))

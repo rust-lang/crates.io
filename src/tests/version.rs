@@ -8,8 +8,8 @@ use serde_json::Value;
 use conduit::{Handler, Method};
 use self::diesel::prelude::*;
 
-use cargo_registry::version::EncodableVersion;
-use cargo_registry::schema::versions;
+use views::EncodableVersion;
+use schema::versions;
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -92,4 +92,20 @@ fn authors() {
     let json: Value = serde_json::from_str(s).unwrap();
     let json = json.as_object().unwrap();
     assert!(json.contains_key(&"users".to_string()));
+}
+
+#[test]
+fn record_rerendered_readme_time() {
+    let (_b, app, _middle) = ::app();
+    let version = {
+        let conn = app.diesel_database.get().unwrap();
+        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap()
+    };
+    {
+        let conn = app.diesel_database.get().unwrap();
+        version.record_readme_rendering(&conn).unwrap();
+        version.record_readme_rendering(&conn).unwrap();
+    }
 }

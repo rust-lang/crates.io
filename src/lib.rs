@@ -12,6 +12,8 @@ extern crate chrono;
 extern crate comrak;
 extern crate curl;
 #[macro_use]
+extern crate derive_deref;
+#[macro_use]
 extern crate diesel;
 extern crate diesel_full_text_search;
 extern crate dotenv;
@@ -20,13 +22,12 @@ extern crate git2;
 extern crate hex;
 extern crate htmlescape;
 extern crate lettre;
+extern crate lettre_email;
 extern crate license_exprs;
 #[macro_use]
 extern crate log;
 extern crate oauth2;
 extern crate openssl;
-extern crate r2d2;
-extern crate r2d2_diesel;
 extern crate rand;
 extern crate s3;
 extern crate scheduled_thread_pool;
@@ -51,15 +52,7 @@ extern crate conduit_static;
 extern crate cookie;
 
 pub use app::App;
-pub use self::badge::Badge;
-pub use self::category::Category;
 pub use config::Config;
-pub use self::dependency::Dependency;
-pub use self::download::VersionDownload;
-pub use self::keyword::Keyword;
-pub use self::krate::Crate;
-pub use self::user::User;
-pub use self::version::Version;
 pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
@@ -71,11 +64,8 @@ use conduit_middleware::MiddlewareBuilder;
 use util::{R404, C, R};
 
 pub mod app;
-pub mod badge;
 pub mod boot;
-pub mod category;
 pub mod config;
-pub mod crate_owner_invitation;
 pub mod db;
 pub mod dependency;
 pub mod dist;
@@ -83,13 +73,9 @@ pub mod download;
 pub mod git;
 pub mod github;
 pub mod http;
-pub mod keyword;
-pub mod krate;
-pub mod owner;
 pub mod render;
 pub mod schema;
 pub mod token;
-pub mod upload;
 pub mod uploaders;
 pub mod user;
 pub mod util;
@@ -97,9 +83,11 @@ pub mod version;
 pub mod email;
 pub mod site_metadata;
 
+pub mod controllers;
+pub mod models;
+pub mod views;
+
 mod local_upload;
-mod pagination;
-mod with_count;
 
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.
@@ -138,13 +126,22 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(krate::search::search));
+    api_router.get("/crates", C(controllers::krate::search::search));
 
     // Routes used by `cargo`
-    api_router.put("/crates/new", C(krate::publish::publish));
-    api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
-    api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
+    api_router.put("/crates/new", C(controllers::krate::publish::publish));
+    api_router.get(
+        "/crates/:crate_id/owners",
+        C(controllers::krate::owners::owners),
+    );
+    api_router.put(
+        "/crates/:crate_id/owners",
+        C(controllers::krate::owners::add_owners),
+    );
+    api_router.delete(
+        "/crates/:crate_id/owners",
+        C(controllers::krate::owners::remove_owners),
+    );
     api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
     api_router.put(
         "/crates/:crate_id/:version/unyank",
@@ -160,11 +157,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/versions/:version_id", C(version::deprecated::show));
 
     // Routes used by the frontend
-    api_router.get("/crates/:crate_id", C(krate::metadata::show));
+    api_router.get("/crates/:crate_id", C(controllers::krate::metadata::show));
     api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
-        C(krate::metadata::readme),
+        C(controllers::krate::metadata::readme),
     );
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
@@ -180,23 +177,41 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     );
     api_router.get(
         "/crates/:crate_id/downloads",
-        C(krate::downloads::downloads),
+        C(controllers::krate::downloads::downloads),
     );
-    api_router.get("/crates/:crate_id/versions", C(krate::metadata::versions));
-    api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
-    api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));
-    api_router.get("/crates/:crate_id/following", C(krate::follow::following));
-    api_router.get("/crates/:crate_id/owner_team", C(krate::owners::owner_team));
-    api_router.get("/crates/:crate_id/owner_user", C(krate::owners::owner_user));
+    api_router.get(
+        "/crates/:crate_id/versions",
+        C(controllers::krate::metadata::versions),
+    );
+    api_router.put(
+        "/crates/:crate_id/follow",
+        C(controllers::krate::follow::follow),
+    );
+    api_router.delete(
+        "/crates/:crate_id/follow",
+        C(controllers::krate::follow::unfollow),
+    );
+    api_router.get(
+        "/crates/:crate_id/following",
+        C(controllers::krate::follow::following),
+    );
+    api_router.get(
+        "/crates/:crate_id/owner_team",
+        C(controllers::krate::owners::owner_team),
+    );
+    api_router.get(
+        "/crates/:crate_id/owner_user",
+        C(controllers::krate::owners::owner_user),
+    );
     api_router.get(
         "/crates/:crate_id/reverse_dependencies",
-        C(krate::metadata::reverse_dependencies),
+        C(controllers::krate::metadata::reverse_dependencies),
     );
-    api_router.get("/keywords", C(keyword::index));
-    api_router.get("/keywords/:keyword_id", C(keyword::show));
-    api_router.get("/categories", C(category::index));
-    api_router.get("/categories/:category_id", C(category::show));
-    api_router.get("/category_slugs", C(category::slugs));
+    api_router.get("/keywords", C(controllers::keyword::index));
+    api_router.get("/keywords/:keyword_id", C(controllers::keyword::show));
+    api_router.get("/categories", C(controllers::category::index));
+    api_router.get("/categories/:category_id", C(controllers::category::show));
+    api_router.get("/category_slugs", C(controllers::category::slugs));
     api_router.get("/users/:user_id", C(user::show));
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));
@@ -208,13 +223,13 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.delete("/me/tokens/:id", C(token::revoke));
     api_router.get(
         "/me/crate_owner_invitations",
-        C(crate_owner_invitation::list),
+        C(controllers::crate_owner_invitation::list),
     );
     api_router.put(
         "/me/crate_owner_invitations/:crate_id",
-        C(crate_owner_invitation::handle_invite),
+        C(controllers::crate_owner_invitation::handle_invite),
     );
-    api_router.get("/summary", C(krate::metadata::summary));
+    api_router.get("/summary", C(controllers::krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::confirm_user_email));
     api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
     api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
@@ -327,4 +342,4 @@ pub fn env(s: &str) -> String {
     ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
 
-sql_function!(lower, lower_t, (x: ::diesel::types::Text) -> ::diesel::types::Text);
+sql_function!(lower, lower_t, (x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

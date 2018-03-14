@@ -9,10 +9,12 @@ use diesel::prelude::*;
 
 use app::RequestApp;
 use db::RequestTransaction;
-use download::{EncodableVersionDownload, VersionDownload};
-use schema::*;
 use util::{human, CargoResult, RequestUtils};
-use {Crate, Replica};
+use Replica;
+
+use views::EncodableVersionDownload;
+use schema::*;
+use models::{Crate, VersionDownload};
 
 use super::version_and_crate;
 

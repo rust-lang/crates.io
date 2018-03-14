@@ -1,8 +1,9 @@
 use diesel::prelude::*;
 use diesel::query_builder::*;
-use diesel::types::BigInt;
+use diesel::sql_types::BigInt;
 use diesel::pg::Pg;
 
+#[derive(Debug)]
 pub struct Paginated<T> {
     query: T,
     limit: i64,
@@ -24,6 +25,8 @@ impl<T: AsQuery> Paginate for T {}
 impl<T: Query> Query for Paginated<T> {
     type SqlType = (T::SqlType, BigInt);
 }
+
+impl<T, DB> RunQueryDsl<DB> for Paginated<T> {}
 
 impl<T> QueryFragment<Pg> for Paginated<T>
 where

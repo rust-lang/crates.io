@@ -7,11 +7,12 @@ use diesel::prelude::*;
 use app::RequestApp;
 use db::RequestTransaction;
 use git;
-use owner::{rights, Rights};
-use schema::*;
 use user::RequestUser;
 use util::errors::CargoError;
 use util::{human, CargoResult, RequestUtils};
+
+use models::Rights;
+use schema::*;
 
 use super::version_and_crate;
 
@@ -39,7 +40,7 @@ fn modify_yank(req: &mut Request, yanked: bool) -> CargoResult<Response> {
     let user = req.user()?;
     let conn = req.db_conn()?;
     let owners = krate.owners(&conn)?;
-    if rights(req.app(), &owners, user)? < Rights::Publish {
+    if user.rights(req.app(), &owners)? < Rights::Publish {
         return Err(human("must already be an owner to yank or unyank"));
     }
 

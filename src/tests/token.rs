@@ -4,7 +4,8 @@ use std::sync::Arc;
 use diesel::prelude::*;
 use conduit::{Handler, Method};
 
-use cargo_registry::token::{ApiToken, EncodableApiTokenWithToken};
+use views::EncodableApiTokenWithToken;
+use models::ApiToken;
 
 #[derive(Deserialize)]
 struct DecodableApiToken {

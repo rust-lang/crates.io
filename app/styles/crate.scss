@@ -190,6 +190,12 @@
     font-size: 90%;
     margin-bottom: 20px;
 
+    ol {
+        list-style: none;
+        padding: 0;
+    }
+    ol, li { display: inline; }
+
     a {
         color: $main-color-light;
         text-decoration: none;
@@ -206,7 +212,7 @@
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
-    @media only screen and (min-width: 820px) {
+    @media only screen and (min-width: 890px) {
         @include flex-direction(row);
 
         .docs {
@@ -363,6 +369,10 @@
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            &__align {
+                position: relative;
+                bottom: 0.4rem;
+            }
         }
     }
 

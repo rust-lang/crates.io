@@ -8,21 +8,20 @@ use rand::{thread_rng, Rng};
 use std::borrow::Cow;
 use serde_json;
 
-use app::RequestApp;
+use app::{App, RequestApp};
 use db::RequestTransaction;
-use krate::Follow;
-use pagination::Paginate;
-use schema::*;
+use controllers::helpers::Paginate;
 use util::{bad_request, human, CargoResult, RequestUtils};
-use version::EncodableVersion;
-use {github, Version};
-use owner::{CrateOwner, Owner, OwnerKind};
-use krate::Crate;
+use github;
 use email;
 
 pub use self::middleware::{AuthenticationSource, Middleware, RequestUser};
 
 pub mod middleware;
+
+use views::{EncodableTeam, EncodableVersion};
+use models::{Crate, CrateOwner, Follow, Owner, OwnerKind, Rights, Team, Version};
+use schema::*;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
@@ -88,7 +87,7 @@ impl<'a> NewUser<'a> {
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
         use diesel::insert_into;
         use diesel::dsl::sql;
-        use diesel::types::Integer;
+        use diesel::sql_types::Integer;
         use diesel::pg::upsert::excluded;
         use diesel::NotFound;
         use schema::users::dsl::*;
@@ -189,6 +188,29 @@ impl User {
             .map(Owner::User);
 
         Ok(users.collect())
+    }
+
+    /// Given this set of owners, determines the strongest rights the
+    /// user has.
+    ///
+    /// Shortcircuits on `Full` because you can't beat it. In practice we'll always
+    /// see `[user, user, user, ..., team, team, team]`, so we could shortcircuit on
+    /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
+    /// Sweet free optimization if teams are proving burdensome to check.
+    /// More than one team isn't really expected, though.
+    pub fn rights(&self, app: &App, owners: &[Owner]) -> CargoResult<Rights> {
+        let mut best = Rights::None;
+        for owner in owners {
+            match *owner {
+                Owner::User(ref other_user) => if other_user.id == self.id {
+                    return Ok(Rights::Full);
+                },
+                Owner::Team(ref team) => if team.contains_user(app, self)? {
+                    best = Rights::Publish;
+                },
+            }
+        }
+        Ok(best)
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
@@ -420,8 +442,6 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /teams/:team_id` route.
 pub fn show_team(req: &mut Request) -> CargoResult<Response> {
     use self::teams::dsl::{login, teams};
-    use owner::Team;
-    use owner::EncodableTeam;
 
     let name = &req.params()["team_id"];
     let conn = req.db_conn()?;
@@ -479,7 +499,6 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /users/:user_id/stats` route.
 pub fn stats(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::sum;
-    use owner::OwnerKind;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
@@ -585,8 +604,7 @@ fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoRe
         "Hello {}! Welcome to Crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://crates.io/confirm/{}",
-        user_name,
-        token
+        user_name, token
     );
 
     email::send_email(email, subject, &body)

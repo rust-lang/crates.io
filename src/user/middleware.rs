@@ -6,9 +6,10 @@ use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
 use db::RequestTransaction;
-use schema::users;
-use super::User;
 use util::errors::{std_error, CargoResult, ChainError, Unauthorized};
+
+use models::User;
+use schema::users;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Middleware;

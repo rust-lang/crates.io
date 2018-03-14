@@ -72,8 +72,7 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
             return Err(internal(&format_args!(
                 "didn't get a 200 result from \
                  github, got {} with: {}",
-                n,
-                resp
+                n, resp
             )));
         }
     }
@@ -93,4 +92,13 @@ pub fn token(token: String) -> Token {
         scopes: Vec::new(),
         token_type: String::new(),
     }
+}
+
+pub fn team_url(login: &str) -> String {
+    let mut login_pieces = login.split(':');
+    login_pieces.next();
+    format!(
+        "https://github.com/{}",
+        login_pieces.next().expect("org failed"),
+    )
 }

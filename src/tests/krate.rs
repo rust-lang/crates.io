@@ -14,20 +14,16 @@ use git2;
 use semver;
 use serde_json;
 
-use cargo_registry::dependency::EncodableDependency;
-use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
-use cargo_registry::keyword::EncodableKeyword;
-use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
-
-use cargo_registry::token::ApiToken;
-use cargo_registry::schema::{crates, metadata, versions};
-
-use cargo_registry::upload as u;
-use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::{Category, EncodableCategory};
+use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
+
+use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
+            EncodableVersion, EncodableVersionDownload};
+use views::krate_publish as u;
+use models::{ApiToken, Category, Crate};
+use schema::{crates, metadata, versions};
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -35,7 +31,8 @@ struct VersionsList {
 }
 #[derive(Deserialize)]
 struct CrateResponse {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }
@@ -84,6 +81,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         license_file: None,
         repository: None,
         badges: None,
+        links: None,
     }
 }
 
@@ -649,7 +647,6 @@ fn new_krate_non_canon_crate_name_dependencies() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 }
-
 
 #[test]
 fn new_krate_with_wildcard_dependency() {

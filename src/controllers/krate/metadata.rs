@@ -4,26 +4,20 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
-
 use app::RequestApp;
-use category::{CrateCategory, EncodableCategory};
-use db::RequestTransaction;
-use dependency::EncodableDependency;
-use keyword::{CrateKeyword, EncodableKeyword};
-use schema::*;
-use util::{human, CargoResult, RequestUtils};
-use version::EncodableVersion;
-use {Category, Keyword, Version};
 
-use super::{Crate, CrateDownload, EncodableCrate, ALL_COLUMNS};
+use controllers::prelude::*;
+use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
+            EncodableVersion};
+use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
+use schema::*;
+
+use models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
     use diesel::dsl::*;
-    use diesel::types::{BigInt, Nullable};
+    use diesel::sql_types::{BigInt, Nullable};
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -66,10 +60,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
     let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
     let most_recently_downloaded = crates
         .left_join(
-            crate_downloads::table.on(
-                id.eq(crate_downloads::crate_id)
-                    .and(crate_downloads::date.gt(date(now - 90.days()))),
-            ),
+            crate_downloads::table.on(id.eq(crate_downloads::crate_id)
+                .and(crate_downloads::date.gt(date(now - 90.days())))),
         )
         .group_by(id)
         .order(recent_downloads.desc().nulls_last())
@@ -145,30 +137,29 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 
     #[derive(Serialize)]
     struct R {
-        #[serde(rename = "crate")] krate: EncodableCrate,
+        #[serde(rename = "crate")]
+        krate: EncodableCrate,
         versions: Vec<EncodableVersion>,
         keywords: Vec<EncodableKeyword>,
         categories: Vec<EncodableCategory>,
     }
-    Ok(
-        req.json(&R {
-            krate: krate.clone().encodable(
-                &max_version,
-                Some(ids),
-                Some(&kws),
-                Some(&cats),
-                Some(badges),
-                false,
-                recent_downloads,
-            ),
-            versions: versions
-                .into_iter()
-                .map(|v| v.encodable(&krate.name))
-                .collect(),
-            keywords: kws.into_iter().map(|k| k.encodable()).collect(),
-            categories: cats.into_iter().map(|k| k.encodable()).collect(),
-        }),
-    )
+    Ok(req.json(&R {
+        krate: krate.clone().encodable(
+            &max_version,
+            Some(ids),
+            Some(&kws),
+            Some(&cats),
+            Some(badges),
+            false,
+            recent_downloads,
+        ),
+        versions: versions
+            .into_iter()
+            .map(|v| v.encodable(&krate.name))
+            .collect(),
+        keywords: kws.into_iter().map(|k| k.encodable()).collect(),
+        categories: cats.into_iter().map(|k| k.encodable()).collect(),
+    }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
