@@ -1603,7 +1603,7 @@ fn publish_after_removing_documentation() {
             Arc::clone(&app),
             "docscrate",
             "0.2.1",
-            Some("http://foo.rs".to_owned()),
+            "http://foo.rs",
         );
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
@@ -1621,7 +1621,7 @@ fn publish_after_removing_documentation() {
 
     // 3. Remove the documentation
     {
-        let mut req = ::new_req_with_documentation(Arc::clone(&app), "docscrate", "0.2.2", None);
+        let mut req = ::new_req(Arc::clone(&app), "docscrate", "0.2.2");
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
         let json: GoodCrate = ::json(&mut response);

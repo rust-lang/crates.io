@@ -552,10 +552,10 @@ fn new_req_with_documentation(
     app: Arc<App>,
     krate: &str,
     version: &str,
-    documentation: Option<String>,
+    documentation: &str,
 ) -> MockRequest {
     let mut krate = ::krate(krate);
-    krate.documentation = documentation;
+    krate.documentation = Some(documentation.into());
     new_req_full(app, krate, version, Vec::new())
 }
 
