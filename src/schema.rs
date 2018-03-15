@@ -3,6 +3,7 @@
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `api_tokens` table.
     ///
@@ -50,6 +51,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `badges` table.
     ///
@@ -79,6 +81,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `categories` table.
     ///
@@ -132,6 +135,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crate_downloads` table.
     ///
@@ -161,6 +165,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crate_owner_invitations` table.
     ///
@@ -196,6 +201,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crate_owners` table.
     ///
@@ -249,6 +255,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crates` table.
     ///
@@ -344,6 +351,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crates_categories` table.
     ///
@@ -367,6 +375,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `crates_keywords` table.
     ///
@@ -390,6 +399,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `dependencies` table.
     ///
@@ -455,6 +465,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `emails` table.
     ///
@@ -502,6 +513,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `follows` table.
     ///
@@ -525,6 +537,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `keywords` table.
     ///
@@ -560,6 +573,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `metadata` table.
     ///
@@ -577,6 +591,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `readme_renderings` table.
     ///
@@ -618,6 +633,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `reserved_crate_names` table.
     ///
@@ -635,6 +651,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `teams` table.
     ///
@@ -676,6 +693,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `users` table.
     ///
@@ -729,6 +747,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `version_authors` table.
     ///
@@ -764,6 +783,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `version_downloads` table.
     ///
@@ -811,6 +831,7 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
+    use diesel_ltree::Ltree;
 
     /// Representation of the `versions` table.
     ///
