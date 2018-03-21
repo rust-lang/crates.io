@@ -62,7 +62,13 @@ pub struct EncodableDependency {
     pub downloads: i32,
 }
 
-pub use download::EncodableVersionDownload;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersionDownload {
+    pub id: i32,
+    pub version: i32,
+    pub downloads: i32,
+    pub date: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableKeyword {

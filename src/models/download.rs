@@ -4,6 +4,7 @@ use diesel::prelude::*;
 
 use models::Version;
 use schema::version_downloads;
+use views::EncodableVersionDownload;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
 #[belongs_to(Version)]
@@ -14,14 +15,6 @@ pub struct VersionDownload {
     pub counted: i32,
     pub date: NaiveDate,
     pub processed: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableVersionDownload {
-    pub id: i32,
-    pub version: i32,
-    pub downloads: i32,
-    pub date: String,
 }
 
 impl VersionDownload {

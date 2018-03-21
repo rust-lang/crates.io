@@ -68,7 +68,6 @@ pub mod boot;
 pub mod config;
 pub mod db;
 pub mod dist;
-pub mod download;
 pub mod git;
 pub mod github;
 pub mod http;
