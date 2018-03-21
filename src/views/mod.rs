@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use chrono::NaiveDateTime;
 
+use models::DependencyKind;
+
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
@@ -46,7 +48,20 @@ pub struct InvitationResponse {
     pub accepted: bool,
 }
 
-pub use dependency::EncodableDependency;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableDependency {
+    pub id: i32,
+    pub version_id: i32,
+    pub crate_id: String,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: Vec<String>,
+    pub target: Option<String>,
+    pub kind: DependencyKind,
+    pub downloads: i32,
+}
+
 pub use download::EncodableVersionDownload;
 
 #[derive(Serialize, Deserialize, Debug)]

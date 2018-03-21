@@ -67,7 +67,6 @@ pub mod app;
 pub mod boot;
 pub mod config;
 pub mod db;
-pub mod dependency;
 pub mod dist;
 pub mod download;
 pub mod git;

@@ -1,7 +1,7 @@
 pub use self::badge::{Badge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitation};
-pub use dependency::{Dependency, Kind, ReverseDependency};
+pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
 pub use download::VersionDownload;
 pub use self::follow::Follow;
 pub use self::keyword::{CrateKeyword, Keyword};
@@ -18,6 +18,7 @@ pub mod helpers;
 mod badge;
 mod category;
 mod crate_owner_invitation;
+pub mod dependency;
 mod follow;
 mod keyword;
 pub mod krate;

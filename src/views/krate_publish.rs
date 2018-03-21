@@ -10,7 +10,7 @@ use semver;
 use models::krate::MAX_NAME_LENGTH;
 
 use models::Keyword as CrateKeyword;
-use models::Kind as DependencyKind;
+use models::DependencyKind;
 use models::Crate;
 
 #[derive(Deserialize, Serialize, Debug)]
