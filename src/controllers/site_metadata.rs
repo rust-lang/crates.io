@@ -1,6 +1,4 @@
-use conduit::{Request, Response};
-use util::RequestUtils;
-use util::errors::CargoResult;
+use super::prelude::*;
 
 /// Returns the JSON representation of the current deployed commit sha.
 ///

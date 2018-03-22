@@ -18,3 +18,4 @@ pub mod category;
 pub mod crate_owner_invitation;
 pub mod keyword;
 pub mod krate;
+pub mod site_metadata;
