@@ -131,7 +131,20 @@ pub struct EncodableTeam {
     pub url: Option<String>,
 }
 
-pub use token::EncodableApiTokenWithToken;
+/// The serialization format for the `ApiToken` model with its token value.
+/// This should only be used when initially creating a new token to minimize
+/// the chance of token leaks.
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableApiTokenWithToken {
+    pub id: i32,
+    pub name: String,
+    pub token: String,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
+}
+
 pub use user::{EncodablePrivateUser, EncodablePublicUser};
 pub use version::{EncodableVersion, EncodableVersionLinks};
 

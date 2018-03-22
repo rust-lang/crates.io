@@ -10,7 +10,7 @@ pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::rights::Rights;
 pub use self::team::{NewTeam, Team};
 pub use user::{Email, NewUser, User};
-pub use token::ApiToken;
+pub use self::token::ApiToken;
 pub use version::{NewVersion, Version};
 
 pub mod helpers;
@@ -26,3 +26,4 @@ pub mod krate;
 mod owner;
 mod rights;
 mod team;
+mod token;

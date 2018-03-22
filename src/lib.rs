@@ -73,7 +73,6 @@ pub mod github;
 pub mod http;
 pub mod render;
 pub mod schema;
-pub mod token;
 pub mod uploaders;
 pub mod user;
 pub mod util;
@@ -215,9 +214,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/teams/:team_id", C(user::show_team));
     api_router.get("/me", C(user::me));
     api_router.get("/me/updates", C(user::updates));
-    api_router.get("/me/tokens", C(token::list));
-    api_router.put("/me/tokens", C(token::new));
-    api_router.delete("/me/tokens/:id", C(token::revoke));
+    api_router.get("/me/tokens", C(controllers::token::list));
+    api_router.put("/me/tokens", C(controllers::token::new));
+    api_router.delete("/me/tokens/:id", C(controllers::token::revoke));
     api_router.get(
         "/me/crate_owner_invitations",
         C(controllers::crate_owner_invitation::list),
