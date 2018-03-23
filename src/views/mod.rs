@@ -146,7 +146,32 @@ pub struct EncodableApiTokenWithToken {
 }
 
 pub use user::{EncodablePrivateUser, EncodablePublicUser};
-pub use version::{EncodableVersion, EncodableVersionLinks};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersion {
+    pub id: i32,
+    #[serde(rename = "crate")]
+    pub krate: String,
+    pub num: String,
+    pub dl_path: String,
+    pub readme_path: String,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    pub downloads: i32,
+    pub features: HashMap<String, Vec<String>>,
+    pub yanked: bool,
+    pub license: Option<String>,
+    pub links: EncodableVersionLinks,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersionLinks {
+    pub dependencies: String,
+    pub version_downloads: String,
+    pub authors: String,
+}
 
 // TODO: Prefix many of these with `Encodable` then clean up the reexports
 pub mod krate_publish;

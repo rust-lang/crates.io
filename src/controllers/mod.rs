@@ -20,3 +20,4 @@ pub mod keyword;
 pub mod krate;
 pub mod site_metadata;
 pub mod token;
+pub mod version;

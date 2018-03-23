@@ -11,7 +11,7 @@ pub use self::rights::Rights;
 pub use self::team::{NewTeam, Team};
 pub use user::{Email, NewUser, User};
 pub use self::token::ApiToken;
-pub use version::{NewVersion, Version};
+pub use self::version::{NewVersion, Version};
 
 pub mod helpers;
 
@@ -27,3 +27,4 @@ mod owner;
 mod rights;
 mod team;
 mod token;
+mod version;

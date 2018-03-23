@@ -76,7 +76,6 @@ pub mod schema;
 pub mod uploaders;
 pub mod user;
 pub mod util;
-pub mod version;
 pub mod email;
 
 pub mod controllers;
@@ -138,38 +137,38 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         "/crates/:crate_id/owners",
         C(controllers::krate::owners::remove_owners),
     );
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
+    api_router.delete("/crates/:crate_id/:version/yank", C(controllers::version::yank::yank));
     api_router.put(
         "/crates/:crate_id/:version/unyank",
-        C(version::yank::unyank),
+        C(controllers::version::yank::unyank),
     );
     api_router.get(
         "/crates/:crate_id/:version/download",
-        C(version::downloads::download),
+        C(controllers::version::downloads::download),
     );
 
     // Routes that appear to be unused
-    api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show));
+    api_router.get("/versions", C(controllers::version::deprecated::index));
+    api_router.get("/versions/:version_id", C(controllers::version::deprecated::show));
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(controllers::krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
+    api_router.get("/crates/:crate_id/:version", C(controllers::version::deprecated::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
         C(controllers::krate::metadata::readme),
     );
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
-        C(version::metadata::dependencies),
+        C(controllers::version::metadata::dependencies),
     );
     api_router.get(
         "/crates/:crate_id/:version/downloads",
-        C(version::downloads::downloads),
+        C(controllers::version::downloads::downloads),
     );
     api_router.get(
         "/crates/:crate_id/:version/authors",
-        C(version::metadata::authors),
+        C(controllers::version::metadata::authors),
     );
     api_router.get(
         "/crates/:crate_id/downloads",
