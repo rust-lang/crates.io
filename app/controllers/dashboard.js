@@ -12,7 +12,6 @@ export default Controller.extend({
     init() {
         this._super(...arguments);
 
-        this.fetchingFeed = true;
         this.loadingMore = false;
         this.hasMore = false;
         this.myCrates = A();
