@@ -118,116 +118,91 @@ pub enum Replica {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
+    use controllers::*;
+
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(controllers::krate::search::search));
+    api_router.get("/crates", C(krate::search::search));
 
     // Routes used by `cargo`
-    api_router.put("/crates/new", C(controllers::krate::publish::publish));
-    api_router.get(
-        "/crates/:crate_id/owners",
-        C(controllers::krate::owners::owners),
-    );
-    api_router.put(
-        "/crates/:crate_id/owners",
-        C(controllers::krate::owners::add_owners),
-    );
-    api_router.delete(
-        "/crates/:crate_id/owners",
-        C(controllers::krate::owners::remove_owners),
-    );
-    api_router.delete("/crates/:crate_id/:version/yank", C(controllers::version::yank::yank));
+    api_router.put("/crates/new", C(krate::publish::publish));
+    api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
+    api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
+    api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
+    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
     api_router.put(
         "/crates/:crate_id/:version/unyank",
-        C(controllers::version::yank::unyank),
+        C(version::yank::unyank),
     );
     api_router.get(
         "/crates/:crate_id/:version/download",
-        C(controllers::version::downloads::download),
+        C(version::downloads::download),
     );
 
     // Routes that appear to be unused
-    api_router.get("/versions", C(controllers::version::deprecated::index));
-    api_router.get("/versions/:version_id", C(controllers::version::deprecated::show));
+    api_router.get("/versions", C(version::deprecated::index));
+    api_router.get("/versions/:version_id", C(version::deprecated::show));
 
     // Routes used by the frontend
-    api_router.get("/crates/:crate_id", C(controllers::krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(controllers::version::deprecated::show));
+    api_router.get("/crates/:crate_id", C(krate::metadata::show));
+    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
-        C(controllers::krate::metadata::readme),
+        C(krate::metadata::readme),
     );
     api_router.get(
         "/crates/:crate_id/:version/dependencies",
-        C(controllers::version::metadata::dependencies),
+        C(version::metadata::dependencies),
     );
     api_router.get(
         "/crates/:crate_id/:version/downloads",
-        C(controllers::version::downloads::downloads),
+        C(version::downloads::downloads),
     );
     api_router.get(
         "/crates/:crate_id/:version/authors",
-        C(controllers::version::metadata::authors),
+        C(version::metadata::authors),
     );
     api_router.get(
         "/crates/:crate_id/downloads",
-        C(controllers::krate::downloads::downloads),
+        C(krate::downloads::downloads),
     );
-    api_router.get(
-        "/crates/:crate_id/versions",
-        C(controllers::krate::metadata::versions),
-    );
-    api_router.put(
-        "/crates/:crate_id/follow",
-        C(controllers::krate::follow::follow),
-    );
-    api_router.delete(
-        "/crates/:crate_id/follow",
-        C(controllers::krate::follow::unfollow),
-    );
-    api_router.get(
-        "/crates/:crate_id/following",
-        C(controllers::krate::follow::following),
-    );
-    api_router.get(
-        "/crates/:crate_id/owner_team",
-        C(controllers::krate::owners::owner_team),
-    );
-    api_router.get(
-        "/crates/:crate_id/owner_user",
-        C(controllers::krate::owners::owner_user),
-    );
+    api_router.get("/crates/:crate_id/versions", C(krate::metadata::versions));
+    api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
+    api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));
+    api_router.get("/crates/:crate_id/following", C(krate::follow::following));
+    api_router.get("/crates/:crate_id/owner_team", C(krate::owners::owner_team));
+    api_router.get("/crates/:crate_id/owner_user", C(krate::owners::owner_user));
     api_router.get(
         "/crates/:crate_id/reverse_dependencies",
-        C(controllers::krate::metadata::reverse_dependencies),
+        C(krate::metadata::reverse_dependencies),
     );
-    api_router.get("/keywords", C(controllers::keyword::index));
-    api_router.get("/keywords/:keyword_id", C(controllers::keyword::show));
-    api_router.get("/categories", C(controllers::category::index));
-    api_router.get("/categories/:category_id", C(controllers::category::show));
-    api_router.get("/category_slugs", C(controllers::category::slugs));
+    api_router.get("/keywords", C(keyword::index));
+    api_router.get("/keywords/:keyword_id", C(keyword::show));
+    api_router.get("/categories", C(category::index));
+    api_router.get("/categories/:category_id", C(category::show));
+    api_router.get("/category_slugs", C(category::slugs));
     api_router.get("/users/:user_id", C(user::show));
     api_router.put("/users/:user_id", C(user::update_user));
     api_router.get("/users/:user_id/stats", C(user::stats));
     api_router.get("/teams/:team_id", C(user::show_team));
     api_router.get("/me", C(user::me));
     api_router.get("/me/updates", C(user::updates));
-    api_router.get("/me/tokens", C(controllers::token::list));
-    api_router.put("/me/tokens", C(controllers::token::new));
-    api_router.delete("/me/tokens/:id", C(controllers::token::revoke));
+    api_router.get("/me/tokens", C(token::list));
+    api_router.put("/me/tokens", C(token::new));
+    api_router.delete("/me/tokens/:id", C(token::revoke));
     api_router.get(
         "/me/crate_owner_invitations",
-        C(controllers::crate_owner_invitation::list),
+        C(crate_owner_invitation::list),
     );
     api_router.put(
         "/me/crate_owner_invitations/:crate_id",
-        C(controllers::crate_owner_invitation::handle_invite),
+        C(crate_owner_invitation::handle_invite),
     );
-    api_router.get("/summary", C(controllers::krate::metadata::summary));
+    api_router.get("/summary", C(krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::confirm_user_email));
     api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
-    api_router.get("/site_metadata", C(controllers::site_metadata::show_deployed_sha));
+    api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
     let api_router = Arc::new(R404(api_router));
 
     let mut router = RouteBuilder::new();

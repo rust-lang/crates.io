@@ -12,7 +12,7 @@ use license_exprs;
 
 use models::{Crate, Dependency};
 use schema::*;
-use views::{EncodableVersion,EncodableVersionLinks};
+use views::{EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug)]
