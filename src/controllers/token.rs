@@ -2,7 +2,7 @@ use super::prelude::*;
 
 use diesel;
 use serde_json as json;
-use user::AuthenticationSource;
+use middleware::current_user::AuthenticationSource;
 use util::{bad_request, read_fill, ChainError};
 
 use models::ApiToken;

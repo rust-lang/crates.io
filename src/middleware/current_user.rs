@@ -12,7 +12,7 @@ use models::User;
 use schema::users;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Middleware;
+pub struct CurrentUser;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AuthenticationSource {
@@ -20,7 +20,7 @@ pub enum AuthenticationSource {
     ApiToken,
 }
 
-impl conduit_middleware::Middleware for Middleware {
+impl conduit_middleware::Middleware for CurrentUser {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {

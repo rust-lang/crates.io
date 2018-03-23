@@ -1,15 +1,11 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
-use conduit::{Request, Response};
-use diesel;
-use diesel::prelude::*;
+use controllers::prelude::*;
 
-use app::RequestApp;
-use db::RequestTransaction;
+use diesel;
+
 use git;
-use user::RequestUser;
 use util::errors::CargoError;
-use util::{human, CargoResult, RequestUtils};
 
 use models::Rights;
 use schema::*;

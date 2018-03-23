@@ -5,13 +5,9 @@
 //! period of time to ensure there are no external users of an endpoint before
 //! it is removed.
 
-use conduit_router::RequestParams;
-use conduit::{Request, Response};
-use diesel::prelude::*;
-use url;
+use controllers::prelude::*;
 
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
+use url;
 
 use views::EncodableVersion;
 use models::Version;

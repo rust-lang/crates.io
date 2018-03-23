@@ -28,4 +28,3 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
         })?;
     Ok((version, krate))
 }
-

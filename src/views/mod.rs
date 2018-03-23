@@ -145,7 +145,31 @@ pub struct EncodableApiTokenWithToken {
     pub last_used_at: Option<NaiveDateTime>,
 }
 
-pub use user::{EncodablePrivateUser, EncodablePublicUser};
+/// The serialization format for the `User` model.
+/// Same as public user, except for addition of
+/// email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePrivateUser {
+    pub id: i32,
+    pub login: String,
+    pub email: Option<String>,
+    pub email_verified: bool,
+    pub email_verification_sent: bool,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+/// The serialization format for the `User` model.
+/// Same as private user, except no email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePublicUser {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersion {

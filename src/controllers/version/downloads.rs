@@ -2,14 +2,10 @@
 //!
 //! Crate level functionality is located in `krate::downloads`.
 
-use chrono::{Duration, NaiveDate, Utc};
-use conduit::{Request, Response};
-use conduit_router::RequestParams;
-use diesel::prelude::*;
+use controllers::prelude::*;
 
-use app::RequestApp;
-use db::RequestTransaction;
-use util::{human, CargoResult, RequestUtils};
+use chrono::{Duration, NaiveDate, Utc};
+
 use Replica;
 
 use views::EncodableVersionDownload;

@@ -71,10 +71,10 @@ pub mod dist;
 pub mod git;
 pub mod github;
 pub mod http;
+pub mod middleware;
 pub mod render;
 pub mod schema;
 pub mod uploaders;
-pub mod user;
 pub mod util;
 pub mod email;
 
@@ -182,12 +182,12 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     api_router.get("/categories", C(category::index));
     api_router.get("/categories/:category_id", C(category::show));
     api_router.get("/category_slugs", C(category::slugs));
-    api_router.get("/users/:user_id", C(user::show));
-    api_router.put("/users/:user_id", C(user::update_user));
-    api_router.get("/users/:user_id/stats", C(user::stats));
-    api_router.get("/teams/:team_id", C(user::show_team));
-    api_router.get("/me", C(user::me));
-    api_router.get("/me/updates", C(user::updates));
+    api_router.get("/users/:user_id", C(user::other::show));
+    api_router.put("/users/:user_id", C(user::me::update_user));
+    api_router.get("/users/:user_id/stats", C(user::other::stats));
+    api_router.get("/teams/:team_id", C(team::show_team));
+    api_router.get("/me", C(user::me::me));
+    api_router.get("/me/updates", C(user::me::updates));
     api_router.get("/me/tokens", C(token::list));
     api_router.put("/me/tokens", C(token::new));
     api_router.delete("/me/tokens/:id", C(token::revoke));
@@ -200,8 +200,11 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         C(crate_owner_invitation::handle_invite),
     );
     api_router.get("/summary", C(krate::metadata::summary));
-    api_router.put("/confirm/:email_token", C(user::confirm_user_email));
-    api_router.put("/users/:user_id/resend", C(user::regenerate_token_and_send));
+    api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
+    api_router.put(
+        "/users/:user_id/resend",
+        C(user::me::regenerate_token_and_send),
+    );
     api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
     let api_router = Arc::new(R404(api_router));
 
@@ -215,9 +218,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     router.head("/api/v1/*path", R(Arc::clone(&api_router)));
     router.delete("/api/v1/*path", R(api_router));
 
-    router.get("/authorize_url", C(user::github_authorize));
-    router.get("/authorize", C(user::github_access_token));
-    router.delete("/logout", C(user::logout));
+    router.get("/authorize_url", C(user::session::github_authorize));
+    router.get("/authorize", C(user::session::github_access_token));
+    router.delete("/logout", C(user::session::logout));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
@@ -256,7 +259,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     m.add(app::AppMiddleware::new(app));
 
     // Sets the current user on each request.
-    m.add(user::Middleware);
+    m.add(middleware::CurrentUser);
 
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.

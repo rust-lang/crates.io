@@ -8,7 +8,7 @@ mod prelude {
     pub use conduit::{Request, Response};
     pub use conduit_router::RequestParams;
     pub use db::RequestTransaction;
-    pub use user::RequestUser;
+    pub use middleware::current_user::RequestUser;
     pub use util::{human, CargoResult, RequestUtils};
 }
 
@@ -19,5 +19,7 @@ pub mod crate_owner_invitation;
 pub mod keyword;
 pub mod krate;
 pub mod site_metadata;
+pub mod team;
 pub mod token;
 pub mod version;
+pub mod user;
