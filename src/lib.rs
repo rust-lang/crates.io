@@ -241,7 +241,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
     }
 
-    m.around(util::Head::default());
+    m.around(middleware::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new());
     m.add(conduit_cookie::SessionMiddleware::new(

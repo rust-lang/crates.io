@@ -1,9 +1,9 @@
+//! Middleware that proxies HEAD requests into a GET request then throws away the body
+
+use super::prelude::*;
+
 use std::io;
-use std::error::Error;
-
-use conduit::{Handler, Method, Request, Response};
-use conduit_middleware::AroundMiddleware;
-
+use conduit::Method;
 use util::RequestProxy;
 
 // Can't derive debug because of Handler.
