@@ -3,16 +3,18 @@ import { setupApplicationTest } from 'ember-qunit';
 import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | categories', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('is accessible', async function(assert) {
         assert.expect(0);
 
-        server.create('category', { category: 'API bindings', crates_cnt: 0 });
-        server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-        server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
         await visit('/categories');
         await a11yAudit(axeConfig);
@@ -21,16 +23,16 @@ module('Acceptance | categories', function(hooks) {
     test('category/:category_id is accessible', async function(assert) {
         assert.expect(0);
 
-        server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
 
         await visit('/categories/algorithms');
         await a11yAudit(axeConfig);
     });
 
     test('listing categories', async function(assert) {
-        server.create('category', { category: 'API bindings', crates_cnt: 0 });
-        server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-        server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
         await visit('/categories');
 
@@ -40,7 +42,7 @@ module('Acceptance | categories', function(hooks) {
     });
 
     test('category/:category_id index default sort is recent-downloads', async function(assert) {
-        server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
 
         await visit('/categories/algorithms');
 

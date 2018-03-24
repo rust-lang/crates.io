@@ -3,21 +3,23 @@ import { setupApplicationTest } from 'ember-qunit';
 import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | team page', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/teams/github:org:thehydroimpulse');
         await a11yAudit(axeConfig);
     });
 
     test('has team organization display', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/teams/github:org:thehydroimpulse');
 
@@ -26,7 +28,7 @@ module('Acceptance | team page', function(hooks) {
     });
 
     test('has link to github in team header', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/teams/github:org:thehydroimpulse');
 
@@ -35,7 +37,7 @@ module('Acceptance | team page', function(hooks) {
     });
 
     test('github link has image in team header', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/teams/github:org:thehydroimpulse');
 
@@ -44,7 +46,7 @@ module('Acceptance | team page', function(hooks) {
     });
 
     test('team organization details has github profile icon', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/teams/github:org:thehydroimpulse');
 

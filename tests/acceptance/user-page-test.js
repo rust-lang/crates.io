@@ -3,21 +3,23 @@ import { setupApplicationTest } from 'ember-qunit';
 import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | user page', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/users/thehydroimpulse');
         await a11yAudit(axeConfig);
     });
 
     test('has user display', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/users/thehydroimpulse');
 
@@ -25,7 +27,7 @@ module('Acceptance | user page', function(hooks) {
     });
 
     test('has link to github in user header', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/users/thehydroimpulse');
 
@@ -34,7 +36,7 @@ module('Acceptance | user page', function(hooks) {
     });
 
     test('github link has image in user header', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/users/thehydroimpulse');
 
@@ -43,7 +45,7 @@ module('Acceptance | user page', function(hooks) {
     });
 
     test('user details has github profile icon', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/users/thehydroimpulse');
 

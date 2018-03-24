@@ -3,21 +3,23 @@ import { setupApplicationTest } from 'ember-qunit';
 import { currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | front page', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await a11yAudit(axeConfig);
     });
 
     test('visiting /', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
 

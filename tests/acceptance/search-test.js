@@ -4,21 +4,23 @@ import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpe
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | search', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('/search?q=rust is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await a11yAudit(axeConfig);
     });
 
     test('searching for "rust"', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await fillIn('[data-test-search-input]', 'rust');
@@ -40,7 +42,7 @@ module('Acceptance | search', function(hooks) {
     });
 
     test('searching for "rust" from query', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/search?q=rust');
 
@@ -55,7 +57,7 @@ module('Acceptance | search', function(hooks) {
     });
 
     test('pressing S key to focus the search bar', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
 
@@ -73,7 +75,7 @@ module('Acceptance | search', function(hooks) {
     });
 
     test('check search results are by default displayed by relevance', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await fillIn('[data-test-search-input]', 'rust');

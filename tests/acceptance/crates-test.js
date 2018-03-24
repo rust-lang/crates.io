@@ -3,14 +3,16 @@ import { setupApplicationTest } from 'ember-qunit';
 import { click, currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
+import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
 
 module('Acceptance | crates page', function(hooks) {
     setupApplicationTest(hooks);
+    setupMirage(hooks);
 
     test('is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await a11yAudit(axeConfig);
@@ -19,14 +21,14 @@ module('Acceptance | crates page', function(hooks) {
     test('/crates is accessible', async function(assert) {
         assert.expect(0);
 
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
         await a11yAudit(axeConfig);
     });
 
     test('visiting the crates page from the front page', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/');
         await click('[data-test-all-crates-link]');
@@ -36,7 +38,7 @@ module('Acceptance | crates page', function(hooks) {
     });
 
     test('visiting the crates page directly', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
         await click('[data-test-all-crates-link]');
@@ -46,7 +48,7 @@ module('Acceptance | crates page', function(hooks) {
     });
 
     test('listing crates', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
 
@@ -55,7 +57,7 @@ module('Acceptance | crates page', function(hooks) {
     });
 
     test('navigating to next page of crates', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
         await click('[data-test-pagination-next]');
@@ -66,7 +68,7 @@ module('Acceptance | crates page', function(hooks) {
     });
 
     test('crates default sort is alphabetical', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
 
@@ -74,14 +76,14 @@ module('Acceptance | crates page', function(hooks) {
     });
 
     test('downloads appears for each crate on crate list', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
         assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 497');
     });
 
     test('recent downloads appears for each crate on crate list', async function(assert) {
-        server.loadFixtures();
+        this.server.loadFixtures();
 
         await visit('/crates');
         assert.dom('[data-test-crate-row="0"] [data-test-recent-downloads]').hasText('Recent: 497');
