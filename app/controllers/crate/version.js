@@ -1,4 +1,5 @@
 import { alias, readOnly, gt, or } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
@@ -12,6 +13,8 @@ const NUM_VERSIONS = 5;
 const PromiseArray = ArrayProxy.extend(PromiseProxyMixin);
 
 export default Controller.extend({
+    session: service(),
+
     isDownloading: false,
 
     downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
@@ -28,7 +31,7 @@ export default Controller.extend({
     categories: alias('crate.categories'),
     badges: alias('crate.badges'),
     isOwner: computed('crate.owner_user', function() {
-        return this.get('crate.owner_user').findBy('login', this.session.get('currentUser.login'));
+        return this.get('crate.owner_user').findBy('login', this.get('session.currentUser.login'));
     }),
 
     sortedVersions: readOnly('crate.versions'),
