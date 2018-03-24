@@ -1,10 +1,9 @@
 import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 export default Route.extend({
-
-    ajax: service(),
 
     flashMessages: service(),
 
@@ -45,7 +44,7 @@ export default Route.extend({
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
                     .then((r) => {
                         if (r.length > 0 && r[0].build_status === true) {
                             crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
@@ -85,7 +84,7 @@ export default Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.session.get('currentUser')) {
-            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
+            ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
@@ -104,8 +103,8 @@ export default Route.extend({
             versions.objectAt(0);
 
         if (result.get('readme_path')) {
-            this.get('ajax').request(result.get('readme_path'))
-                .then((r) => this.get('ajax').raw(r.url, {
+            ajax(result.get('readme_path'))
+                .then((r) =>ajax(r.url, {
                     method: 'GET',
                     dataType: 'html',
                     headers: {

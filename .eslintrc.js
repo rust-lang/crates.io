@@ -10,6 +10,7 @@ module.exports = {
     extends: [
         'eslint:recommended',
         'plugin:ember-suave/recommended',
+		'plugin:ember/recommended'
     ],
     env: {
         browser: true,
@@ -30,5 +31,9 @@ module.exports = {
         'ember-suave/no-const-outside-module-scope': 'off',
         'ember-suave/no-direct-property-access': 'off',
         'ember-suave/require-access-in-comments': 'off',
+		'ember/no-jquery': 'error',
+		'ember/avoid-leaking-state-in-ember-objects': 'off',
+		'ember/no-capital-letters-in-routes': 'off',
+		'ember/no-on-calls-in-components': 'off'
     },
 };
