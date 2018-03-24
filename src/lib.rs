@@ -69,7 +69,6 @@ pub mod db;
 pub mod dist;
 pub mod git;
 pub mod github;
-pub mod http;
 pub mod middleware;
 pub mod render;
 pub mod schema;
@@ -251,7 +250,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         env == Env::Production,
     ));
     if env == Env::Production {
-        m.add(http::SecurityHeadersMiddleware::new(&app.config.uploader));
+        m.add(middleware::SecurityHeaders::new(&app.config.uploader));
     }
     m.add(app::AppMiddleware::new(app));
 
