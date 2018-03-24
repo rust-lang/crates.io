@@ -7,12 +7,13 @@ use tar;
 use util::{human, internal, CargoResult, ChainError};
 use util::{hash, LimitErrorReader, read_le_u32};
 
-use app::{App, RequestApp};
 use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
 use std::io::{Read, Write};
 
+use app::App;
+use middleware::app::RequestApp;
 use models::Crate;
 
 #[derive(Clone, Debug)]

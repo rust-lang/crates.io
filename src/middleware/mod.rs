@@ -4,12 +4,14 @@ mod prelude {
     pub use conduit_middleware::{AroundMiddleware, Middleware};
 }
 
+pub use self::app::AppMiddleware;
 pub use self::current_user::CurrentUser;
 pub use self::debug::Debug;
 pub use self::head::Head;
 pub use self::local_upload::LocalUpload;
 pub use self::security_headers::SecurityHeaders;
 
+pub mod app;
 pub mod current_user;
 mod debug;
 mod head;

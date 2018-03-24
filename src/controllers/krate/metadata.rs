@@ -4,8 +4,6 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use app::RequestApp;
-
 use controllers::prelude::*;
 use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
             EncodableVersion};

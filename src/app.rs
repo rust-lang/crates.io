@@ -1,12 +1,9 @@
 //! Application-wide components in a struct accessible from each request
 
 use std::env;
-use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use conduit::{Request, Response};
-use conduit_middleware::Middleware;
 use diesel::r2d2;
 use git2;
 use oauth2;
@@ -37,13 +34,6 @@ pub struct App {
 
     /// The server configuration
     pub config: Config,
-}
-
-/// The `AppMiddleware` injects an `App` instance into the `Request` extensions
-// Can't derive Debug because `App` can't.
-#[allow(missing_debug_implementations)]
-pub struct AppMiddleware {
-    app: Arc<App>,
 }
 
 impl App {
@@ -111,38 +101,5 @@ impl App {
             handle.proxy(proxy).unwrap();
         }
         handle
-    }
-}
-
-impl AppMiddleware {
-    pub fn new(app: Arc<App>) -> AppMiddleware {
-        AppMiddleware { app: app }
-    }
-}
-
-impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
-        req.mut_extensions().insert(Arc::clone(&self.app));
-        Ok(())
-    }
-
-    fn after(
-        &self,
-        req: &mut Request,
-        res: Result<Response, Box<Error + Send>>,
-    ) -> Result<Response, Box<Error + Send>> {
-        req.mut_extensions().pop::<Arc<App>>().unwrap();
-        res
-    }
-}
-
-/// Adds an `app()` method to the `Request` type returning the global `App` instance
-pub trait RequestApp {
-    fn app(&self) -> &Arc<App>;
-}
-
-impl<T: Request + ?Sized> RequestApp for T {
-    fn app(&self) -> &Arc<App> {
-        self.extensions().find::<Arc<App>>().expect("Missing app")
     }
 }

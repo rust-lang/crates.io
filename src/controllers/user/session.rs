@@ -1,6 +1,5 @@
 use controllers::prelude::*;
 
-use app::RequestApp;
 use conduit_cookie::RequestSession;
 use rand::{thread_rng, Rng};
 use github;

@@ -252,7 +252,7 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     if env == Env::Production {
         m.add(middleware::SecurityHeaders::new(&app.config.uploader));
     }
-    m.add(app::AppMiddleware::new(app));
+    m.add(middleware::AppMiddleware::new(app));
 
     // Sets the current user on each request.
     m.add(middleware::CurrentUser);

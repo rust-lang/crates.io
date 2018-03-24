@@ -1,15 +1,15 @@
-// TODO: Finish moving api endpoints to submodules here
-
 mod prelude {
     pub use diesel::prelude::*;
     pub use super::helpers::ok_true;
 
-    pub use app::RequestApp;
     pub use conduit::{Request, Response};
     pub use conduit_router::RequestParams;
+
     pub use db::RequestTransaction;
-    pub use middleware::current_user::RequestUser;
     pub use util::{human, CargoResult, RequestUtils};
+
+    pub use middleware::app::RequestApp;
+    pub use middleware::current_user::RequestUser;
 }
 
 pub mod helpers;
