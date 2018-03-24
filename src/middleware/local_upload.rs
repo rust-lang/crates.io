@@ -1,35 +1,33 @@
 //! This module implements middleware to serve crates and readmes
 //! from the `local_uploads/` directory. This is only used in
 //! development environments.
-use std::error::Error;
+use super::prelude::*;
 
-use conduit::{Handler, Request, Response};
 use conduit_static::Static;
-use conduit_middleware::AroundMiddleware;
 
 // Can't derive debug because of Handler and Static.
 #[allow(missing_debug_implementations)]
-pub struct Middleware {
+pub struct LocalUpload {
     handler: Option<Box<Handler>>,
     local_uploads: Static,
 }
 
-impl Default for Middleware {
-    fn default() -> Middleware {
-        Middleware {
+impl Default for LocalUpload {
+    fn default() -> LocalUpload {
+        LocalUpload {
             handler: None,
             local_uploads: Static::new("local_uploads"),
         }
     }
 }
 
-impl AroundMiddleware for Middleware {
+impl AroundMiddleware for LocalUpload {
     fn with_handler(&mut self, handler: Box<Handler>) {
         self.handler = Some(handler);
     }
 }
 
-impl Handler for Middleware {
+impl Handler for LocalUpload {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
         match self.local_uploads.call(req) {
             Ok(ref resp) if resp.status.0 == 404 => {}

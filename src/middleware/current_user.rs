@@ -1,7 +1,5 @@
-use std::error::Error;
+use super::prelude::*;
 
-use conduit_middleware;
-use conduit::Request;
 use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
@@ -20,7 +18,7 @@ pub enum AuthenticationSource {
     ApiToken,
 }
 
-impl conduit_middleware::Middleware for CurrentUser {
+impl Middleware for CurrentUser {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {

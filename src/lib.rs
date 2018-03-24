@@ -56,7 +56,6 @@ pub use config::Config;
 pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
-use std::error::Error;
 
 use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
@@ -81,8 +80,6 @@ pub mod email;
 pub mod controllers;
 pub mod models;
 pub mod views;
-
-mod local_upload;
 
 /// Used for setting different values depending on whether the app is being run in production,
 /// in development, or for testing.
@@ -236,9 +233,9 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(R404(router));
 
     if env == Env::Development {
-        // DebugMiddleware is defined below to print logs for each request.
-        m.add(DebugMiddleware);
-        m.around(local_upload::Middleware::default());
+        // Debug middleware prints a log for each request.
+        m.add(middleware::Debug);
+        m.around(middleware::LocalUpload::default());
     }
 
     if env != Env::Test {
@@ -268,37 +265,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     }
 
     return m;
-
-    struct DebugMiddleware;
-
-    impl conduit_middleware::Middleware for DebugMiddleware {
-        fn before(&self, req: &mut conduit::Request) -> Result<(), Box<Error + Send>> {
-            println!("  version: {}", req.http_version());
-            println!("  method: {:?}", req.method());
-            println!("  scheme: {:?}", req.scheme());
-            println!("  host: {:?}", req.host());
-            println!("  path: {}", req.path());
-            println!("  query_string: {:?}", req.query_string());
-            println!("  remote_addr: {:?}", req.remote_addr());
-            for &(k, ref v) in &req.headers().all() {
-                println!("  hdr: {}={:?}", k, v);
-            }
-            Ok(())
-        }
-        fn after(
-            &self,
-            _req: &mut conduit::Request,
-            res: Result<conduit::Response, Box<Error + Send>>,
-        ) -> Result<conduit::Response, Box<Error + Send>> {
-            res.map(|res| {
-                println!("  <- {:?}", res.status);
-                for (k, v) in &res.headers {
-                    println!("  <- {} {:?}", k, v);
-                }
-                res
-            })
-        }
-    }
 }
 
 /// Convenience function requiring that an environment variable is set.
