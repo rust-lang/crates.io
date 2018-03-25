@@ -182,13 +182,12 @@ test('navigating to the owners page when not logged in', async function(assert) 
 test('navigating to the owners page when not an owner', async function(assert) {
     server.loadFixtures();
 
-    this.application.register('service:session-b', Service.extend({
+    this.application.__deprecatedInstance__.register('service:session', Service.extend({
         currentUser: {
             login: 'iain8'
-        }
+        },
+        loadUser() {},
     }));
-
-    this.application.inject('controller', 'session', 'service:session-b');
 
     await visit('/crates/nanomsg');
 
@@ -198,13 +197,12 @@ test('navigating to the owners page when not an owner', async function(assert) {
 test('navigating to the owners page', async function(assert) {
     server.loadFixtures();
 
-    this.application.register('service:session-b', Service.extend({
+    this.application.__deprecatedInstance__.register('service:session', Service.extend({
         currentUser: {
             login: 'thehydroimpulse'
-        }
+        },
+        loadUser() {},
     }));
-
-    this.application.inject('controller', 'session', 'service:session-b');
 
     await visit('/crates/nanomsg');
     await click('#crate-owners p a');
