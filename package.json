@@ -57,7 +57,6 @@
     "ember-metrics": "^0.10.0",
     "ember-moment": "^7.5.0",
     "ember-native-dom-helpers": "^0.5.4",
-    "ember-normalize": "^1.0.0",
     "ember-page-title": "^3.2.2",
     "ember-prism": "^0.2.0",
     "ember-resolver": "^4.1.0",

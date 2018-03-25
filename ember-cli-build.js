@@ -29,7 +29,12 @@ module.exports = function(defaults) {
         'ember-prism': {
             theme: 'twilight',
             components: highlightedLanguages,
-        }
+        },
+        sassOptions: {
+            includePaths: [
+                'node_modules/normalize.css',
+            ],
+        },
     });
 
     // Use `app.import` to add additional libraries to the generated
