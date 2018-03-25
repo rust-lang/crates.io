@@ -30,7 +30,7 @@ export default Controller.extend({
     keywords: alias('crate.keywords'),
     categories: alias('crate.categories'),
     badges: alias('crate.badges'),
-    isOwner: computed('crate.owner_user', function() {
+    isOwner: computed('crate.owner_user', 'session.currentUser.login', function() {
         return this.get('crate.owner_user').findBy('login', this.get('session.currentUser.login'));
     }),
 
