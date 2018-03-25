@@ -10,6 +10,7 @@ import { inject as service } from '@ember/service';
  */
 export default Route.extend({
     flashMessages: service(),
+    session: service(),
 
     beforeModel(transition) {
         try {
@@ -68,8 +69,8 @@ export default Route.extend({
             }
 
             let user = this.store.push(this.store.normalize('user', data.user));
-            let transition = this.session.get('savedTransition');
-            this.session.loginUser(user);
+            let transition = this.get('session.savedTransition');
+            this.get('session').loginUser(user);
             if (transition) {
                 transition.retry();
             }

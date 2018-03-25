@@ -22,7 +22,7 @@ export default Route.extend(AuthenticatedRoute, {
     },
 
     model() {
-        return this.session.get('currentUser');
+        return this.get('session.currentUser');
     },
 
     async afterModel(user) {
