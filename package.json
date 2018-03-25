@@ -70,7 +70,7 @@
     "eslint-plugin-ember-suave": "^1.0.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
-    "qunit-dom": "^0.3.2"
+    "qunit-dom": "^0.5.0"
   },
   "engines": {
     "node": "^8.1.3",
