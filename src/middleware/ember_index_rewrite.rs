@@ -13,9 +13,7 @@ pub struct EmberIndexRewrite {
 
 impl Default for EmberIndexRewrite {
     fn default() -> EmberIndexRewrite {
-        EmberIndexRewrite {
-            handler: None,
-        }
+        EmberIndexRewrite { handler: None }
     }
 }
 
