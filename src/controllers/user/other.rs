@@ -1,8 +1,5 @@
 use controllers::prelude::*;
 
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
-
 use models::{OwnerKind, User};
 use schema::{crate_owners, crates, users};
 use views::EncodablePublicUser;

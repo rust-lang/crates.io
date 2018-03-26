@@ -2,9 +2,8 @@ use controllers::prelude::*;
 
 use serde_json;
 
-use db::RequestTransaction;
 use controllers::helpers::Paginate;
-use util::{bad_request, human, CargoResult, RequestUtils};
+use util::bad_request;
 use email;
 
 use views::{EncodablePrivateUser, EncodableVersion};
