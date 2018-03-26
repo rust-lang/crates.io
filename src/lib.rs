@@ -232,9 +232,10 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(R404(router));
 
     if env == Env::Development {
-        // Debug middleware prints a log for each request.
+        // Print a log for each request.
         m.add(middleware::Debug);
-        m.around(middleware::LocalUpload::default());
+        // Locally serve crates and readmes
+        m.around(middleware::StaticOrContinue::new("local_uploads"));
     }
 
     if env != Env::Test {

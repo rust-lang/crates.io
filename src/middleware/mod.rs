@@ -8,12 +8,12 @@ pub use self::app::AppMiddleware;
 pub use self::current_user::CurrentUser;
 pub use self::debug::Debug;
 pub use self::head::Head;
-pub use self::local_upload::LocalUpload;
 pub use self::security_headers::SecurityHeaders;
+pub use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
 pub mod current_user;
 mod debug;
 mod head;
-mod local_upload;
 mod security_headers;
+mod static_or_continue;
