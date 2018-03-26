@@ -66,7 +66,6 @@ pub mod app;
 pub mod boot;
 pub mod config;
 pub mod db;
-pub mod dist;
 pub mod git;
 pub mod github;
 pub mod middleware;
@@ -242,7 +241,6 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
         m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
     }
 
-    m.around(middleware::Head::default());
     m.add(conduit_conditional_get::ConditionalGet);
     m.add(conduit_cookie::Middleware::new());
     m.add(conduit_cookie::SessionMiddleware::new(
@@ -261,8 +259,12 @@ pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
     // Serve the static files in the *dist* directory, which are the frontend assets.
     // Not needed for the backend tests.
     if env != Env::Test {
-        m.around(dist::Middleware::default());
+        m.around(middleware::StaticOrContinue::new("dist"));
+        m.around(middleware::EmberIndexRewrite::default());
+        // Note: around middleware is run from bottom to top, so the rewrite occurs first
     }
+
+    m.around(middleware::Head::default());
 
     return m;
 }
