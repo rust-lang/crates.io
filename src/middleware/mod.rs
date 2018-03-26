@@ -19,3 +19,60 @@ mod ember_index_rewrite;
 mod head;
 mod security_headers;
 mod static_or_continue;
+
+use conduit_middleware::MiddlewareBuilder;
+use conduit_conditional_get::ConditionalGet;
+use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
+use conduit_log_requests::LogRequests;
+
+use std::sync::Arc;
+use cookie;
+use log;
+
+use {App, Env};
+use router::R404;
+
+pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
+    let mut m = MiddlewareBuilder::new(endpoints);
+
+    let env = app.config.env;
+    if env == Env::Development {
+        // Print a log for each request.
+        m.add(Debug);
+        // Locally serve crates and readmes
+        m.around(StaticOrContinue::new("local_uploads"));
+    }
+
+    if env != Env::Test {
+        m.add(LogRequests(log::LogLevel::Info));
+    }
+
+    m.add(ConditionalGet);
+
+    m.add(Cookie::new());
+    m.add(SessionMiddleware::new(
+        "cargo_session",
+        cookie::Key::from_master(app.session_key.as_bytes()),
+        env == Env::Production,
+    ));
+
+    if env == Env::Production {
+        m.add(SecurityHeaders::new(&app.config.uploader));
+    }
+    m.add(AppMiddleware::new(app));
+
+    // Sets the current user on each request.
+    m.add(CurrentUser);
+
+    // Serve the static files in the *dist* directory, which are the frontend assets.
+    // Not needed for the backend tests.
+    if env != Env::Test {
+        m.around(StaticOrContinue::new("dist"));
+        m.around(EmberIndexRewrite::default());
+        // Note: around middleware is run from bottom to top, so the rewrite occurs first
+    }
+
+    m.around(Head::default());
+
+    m
+}

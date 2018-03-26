@@ -110,48 +110,9 @@ pub enum Replica {
 /// Configures routes, sessions, logging, and other middleware.
 ///
 /// Called from *src/bin/server.rs*.
-pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
+pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
     let endpoints = router::build_router(&app);
-    let mut m = MiddlewareBuilder::new(endpoints);
-
-    let env = app.config.env;
-    if env == Env::Development {
-        // Print a log for each request.
-        m.add(middleware::Debug);
-        // Locally serve crates and readmes
-        m.around(middleware::StaticOrContinue::new("local_uploads"));
-    }
-
-    if env != Env::Test {
-        m.add(conduit_log_requests::LogRequests(log::LogLevel::Info));
-    }
-
-    m.add(conduit_conditional_get::ConditionalGet);
-    m.add(conduit_cookie::Middleware::new());
-    m.add(conduit_cookie::SessionMiddleware::new(
-        "cargo_session",
-        cookie::Key::from_master(app.session_key.as_bytes()),
-        env == Env::Production,
-    ));
-    if env == Env::Production {
-        m.add(middleware::SecurityHeaders::new(&app.config.uploader));
-    }
-    m.add(middleware::AppMiddleware::new(app));
-
-    // Sets the current user on each request.
-    m.add(middleware::CurrentUser);
-
-    // Serve the static files in the *dist* directory, which are the frontend assets.
-    // Not needed for the backend tests.
-    if env != Env::Test {
-        m.around(middleware::StaticOrContinue::new("dist"));
-        m.around(middleware::EmberIndexRewrite::default());
-        // Note: around middleware is run from bottom to top, so the rewrite occurs first
-    }
-
-    m.around(middleware::Head::default());
-
-    return m;
+    middleware::build_middleware(app, endpoints)
 }
 
 /// Convenience function requiring that an environment variable is set.
