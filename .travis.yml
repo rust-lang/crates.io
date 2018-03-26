@@ -17,6 +17,7 @@ env:
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - CARGO_TARGET_DIR=target
+    - PERCY_PARALLEL_TOTAL=2
 
 before_install:
   - nvm install 8

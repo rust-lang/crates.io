@@ -4,6 +4,7 @@ import { click, currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | crates page', function(hooks) {
     setupApplicationTest(hooks);
@@ -15,6 +16,8 @@ module('Acceptance | crates page', function(hooks) {
         this.server.loadFixtures();
 
         await visit('/');
+        percySnapshot(assert);
+
         await a11yAudit(axeConfig);
     });
 
@@ -24,6 +27,8 @@ module('Acceptance | crates page', function(hooks) {
         this.server.loadFixtures();
 
         await visit('/crates');
+        percySnapshot(assert);
+
         await a11yAudit(axeConfig);
     });
 

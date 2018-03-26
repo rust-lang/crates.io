@@ -4,6 +4,7 @@ import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | categories', function(hooks) {
     setupApplicationTest(hooks);
@@ -17,6 +18,8 @@ module('Acceptance | categories', function(hooks) {
         this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
         await visit('/categories');
+        percySnapshot(assert);
+
         await a11yAudit(axeConfig);
     });
 
@@ -26,6 +29,8 @@ module('Acceptance | categories', function(hooks) {
         this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
 
         await visit('/categories/algorithms');
+        percySnapshot(assert);
+
         await a11yAudit(axeConfig);
     });
 
