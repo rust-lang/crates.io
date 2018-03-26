@@ -57,10 +57,7 @@ pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
 
-use conduit_router::RouteBuilder;
 use conduit_middleware::MiddlewareBuilder;
-
-use util::{R404, C, R};
 
 pub mod app;
 pub mod boot;
@@ -77,6 +74,7 @@ pub mod email;
 
 pub mod controllers;
 pub mod models;
+mod router;
 pub mod views;
 
 /// Used for setting different values depending on whether the app is being run in production,
@@ -113,123 +111,10 @@ pub enum Replica {
 ///
 /// Called from *src/bin/server.rs*.
 pub fn middleware(app: Arc<App>) -> MiddlewareBuilder {
-    use controllers::*;
+    let endpoints = router::build_router(&app);
+    let mut m = MiddlewareBuilder::new(endpoints);
 
-    let mut api_router = RouteBuilder::new();
-
-    // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(krate::search::search));
-
-    // Routes used by `cargo`
-    api_router.put("/crates/new", C(krate::publish::publish));
-    api_router.get("/crates/:crate_id/owners", C(krate::owners::owners));
-    api_router.put("/crates/:crate_id/owners", C(krate::owners::add_owners));
-    api_router.delete("/crates/:crate_id/owners", C(krate::owners::remove_owners));
-    api_router.delete("/crates/:crate_id/:version/yank", C(version::yank::yank));
-    api_router.put(
-        "/crates/:crate_id/:version/unyank",
-        C(version::yank::unyank),
-    );
-    api_router.get(
-        "/crates/:crate_id/:version/download",
-        C(version::downloads::download),
-    );
-
-    // Routes that appear to be unused
-    api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show));
-
-    // Routes used by the frontend
-    api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
-    api_router.get(
-        "/crates/:crate_id/:version/readme",
-        C(krate::metadata::readme),
-    );
-    api_router.get(
-        "/crates/:crate_id/:version/dependencies",
-        C(version::metadata::dependencies),
-    );
-    api_router.get(
-        "/crates/:crate_id/:version/downloads",
-        C(version::downloads::downloads),
-    );
-    api_router.get(
-        "/crates/:crate_id/:version/authors",
-        C(version::metadata::authors),
-    );
-    api_router.get(
-        "/crates/:crate_id/downloads",
-        C(krate::downloads::downloads),
-    );
-    api_router.get("/crates/:crate_id/versions", C(krate::metadata::versions));
-    api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
-    api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));
-    api_router.get("/crates/:crate_id/following", C(krate::follow::following));
-    api_router.get("/crates/:crate_id/owner_team", C(krate::owners::owner_team));
-    api_router.get("/crates/:crate_id/owner_user", C(krate::owners::owner_user));
-    api_router.get(
-        "/crates/:crate_id/reverse_dependencies",
-        C(krate::metadata::reverse_dependencies),
-    );
-    api_router.get("/keywords", C(keyword::index));
-    api_router.get("/keywords/:keyword_id", C(keyword::show));
-    api_router.get("/categories", C(category::index));
-    api_router.get("/categories/:category_id", C(category::show));
-    api_router.get("/category_slugs", C(category::slugs));
-    api_router.get("/users/:user_id", C(user::other::show));
-    api_router.put("/users/:user_id", C(user::me::update_user));
-    api_router.get("/users/:user_id/stats", C(user::other::stats));
-    api_router.get("/teams/:team_id", C(team::show_team));
-    api_router.get("/me", C(user::me::me));
-    api_router.get("/me/updates", C(user::me::updates));
-    api_router.get("/me/tokens", C(token::list));
-    api_router.put("/me/tokens", C(token::new));
-    api_router.delete("/me/tokens/:id", C(token::revoke));
-    api_router.get(
-        "/me/crate_owner_invitations",
-        C(crate_owner_invitation::list),
-    );
-    api_router.put(
-        "/me/crate_owner_invitations/:crate_id",
-        C(crate_owner_invitation::handle_invite),
-    );
-    api_router.get("/summary", C(krate::metadata::summary));
-    api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
-    api_router.put(
-        "/users/:user_id/resend",
-        C(user::me::regenerate_token_and_send),
-    );
-    api_router.get("/site_metadata", C(site_metadata::show_deployed_sha));
-    let api_router = Arc::new(R404(api_router));
-
-    let mut router = RouteBuilder::new();
-
-    // Mount the router under the /api/v1 path so we're at least somewhat at the
-    // liberty to change things in the future!
-    router.get("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.put("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.post("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.head("/api/v1/*path", R(Arc::clone(&api_router)));
-    router.delete("/api/v1/*path", R(api_router));
-
-    router.get("/authorize_url", C(user::session::github_authorize));
-    router.get("/authorize", C(user::session::github_access_token));
-    router.delete("/logout", C(user::session::logout));
-
-    // Only serve the local checkout of the git index in development mode.
-    // In production, for crates.io, cargo gets the index from
-    // https://github.com/rust-lang/crates.io-index directly.
     let env = app.config.env;
-    if env == Env::Development {
-        let s = conduit_git_http_backend::Serve(app.git_repo_checkout.clone());
-        let s = Arc::new(s);
-        router.get("/git/index/*path", R(Arc::clone(&s)));
-        router.post("/git/index/*path", R(s));
-    }
-
-    let mut m = MiddlewareBuilder::new(R404(router));
-
     if env == Env::Development {
         // Print a log for each request.
         m.add(middleware::Debug);
