@@ -9,13 +9,12 @@ branches:
 cache:
   cargo: true
 
-addons:
-  chrome: stable
-
 env:
   global:
-    # See https://git.io/vdao3 for details.
-    - JOBS=1
+    - JOBS=1 # See https://git.io/vdao3 for details.
+    - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - CARGO_TARGET_DIR=target
 
 before_install:
   - nvm install 8
@@ -27,6 +26,7 @@ before_script:
   - diesel database setup
 
 addons:
+  chrome: stable
   postgresql: "9.5"
   apt:
     sources:
@@ -62,12 +62,6 @@ matrix:
       script:
         - cargo build
         - cargo test
-
-env:
-  global:
-    - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
-    - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
-    - CARGO_TARGET_DIR=target
 
 notifications:
   email:
