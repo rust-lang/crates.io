@@ -45,7 +45,7 @@ export default Route.extend({
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' })
                     .then((r) => {
                         if (r.length > 0 && r[0].build_status === true) {
                             crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
