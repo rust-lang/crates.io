@@ -8,6 +8,8 @@ branches:
 
 cache:
   cargo: true
+  directories:
+    - node_modules
 
 env:
   global:
