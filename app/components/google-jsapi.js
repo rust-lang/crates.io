@@ -5,7 +5,7 @@ export default Component.extend({
     tagName: '',
 
     didInsertElement() {
-        getScript('https://www.google.com/jsapi', () => {
+        getScript('https://www.google.com/jsapi', function() {
             window.google.load('visualization', '1.0', {
                 packages: ['corechart'],
                 callback() {
@@ -16,6 +16,8 @@ export default Component.extend({
         });
     }
 });
+
+// credit https://stackoverflow.com/questions/16839698/jquery-getscript-alternative-in-native-javascript
 function getScript(source, callback) {
     let script = document.createElement('script');
     let [prior] = document.getElementsByTagName('script');

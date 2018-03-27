@@ -18,13 +18,14 @@ export default Component.extend({
     didInsertElement() {
         this._super(...arguments);
 
-        document.addEventListener('resize.chart', () => this.rerender());
-        document.addEventListener('googleChartsLoaded', () => this.rerender());
+        window.addEventListener('resize.chart', this.onChartResize);
+        document.addEventListener('googleChartsLoaded', this.onChartResize);
     },
 
     willDestroyElement() {
-        document.removeEventListener('resize.chart', null);
-        document.removeEventListener('googleChartsLoaded', null);
+        this._super(...arguments);
+        window.removeEventListener('resize.chart', this.onChartResize);
+        document.removeEventListener('googleChartsLoaded', this.onChartResize);
     },
 
     didRender() {
@@ -161,6 +162,10 @@ export default Component.extend({
             series: seriesOption
         });
     },
+
+    onChartResize() {
+        this.rerender();
+    }
 });
 
 function range(start, end, step) {
