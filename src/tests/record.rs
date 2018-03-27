@@ -122,17 +122,19 @@ pub fn proxy() -> (String, Bomb) {
             .build(&handle);
 
         let record = Rc::new(RefCell::new(record));
-        let srv = listener.incoming().for_each(|(socket, addr)| {
-            Http::new().bind_connection(
-                &handle,
+        let srv = listener.incoming().for_each(|(socket, _addr)| {
+            let conn = Http::<hyper::Chunk>::new().serve_connection(
                 socket,
-                addr,
                 Proxy {
                     sink: sink2.clone(),
                     record: Rc::clone(&record),
                     client: client.clone(),
                 },
             );
+
+            let fut = conn.map(|_| ())
+                .map_err(|e| eprintln!("server connection error: {}", e));
+            handle.spawn(fut);
             Ok(())
         });
         drop(core.run(srv.select2(quitrx)));
