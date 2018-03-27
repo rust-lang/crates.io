@@ -10,7 +10,6 @@ export default Route.extend(AuthenticatedRoute, {
     setupController(controller) {
         this._super(...arguments);
 
-        controller.set('fetchingFeed', true);
         controller.set('myCrates', this.get('data.myCrates'));
         controller.set('myFollowing', this.get('data.myFollowing'));
         controller.set('myStats', this.get('data.myStats'));
@@ -22,7 +21,7 @@ export default Route.extend(AuthenticatedRoute, {
     },
 
     model() {
-        return this.session.get('currentUser');
+        return this.get('session.currentUser');
     },
 
     async afterModel(user) {

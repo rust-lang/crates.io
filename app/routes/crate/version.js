@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 
 export default Route.extend({
+    session: service(),
 
     flashMessages: service(),
 
@@ -83,7 +84,7 @@ export default Route.extend({
         controller.set('requestedVersion', requestedVersion);
         controller.set('fetchingFollowing', true);
 
-        if (this.session.get('currentUser')) {
+        if (this.get('session.currentUser')) {
             ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));

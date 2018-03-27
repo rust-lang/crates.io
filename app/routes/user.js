@@ -10,8 +10,6 @@ export default Route.extend({
         sort: { refreshModel: true },
     },
 
-    data: {},
-
     model(params) {
         const { user_id } = params;
         return this.store.queryRecord('user', { user_id }).then(
@@ -29,12 +27,5 @@ export default Route.extend({
                 }
             }
         );
-    },
-
-    setupController(controller) {
-        this._super(...arguments);
-
-        controller.set('fetchingFeed', true);
-        controller.set('crates', this.get('data.crates'));
     },
 });
