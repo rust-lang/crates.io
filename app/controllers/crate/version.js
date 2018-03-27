@@ -181,7 +181,12 @@ export default Controller.extend({
     },
 
     report: observer('crate.readme', function() {
-        setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')));
-    }),
-
+        setTimeout(() => trigger(window, 'hashchange'));
+    })
 });
+
+function trigger(target, eventName) {
+    let event = document.createEvent('Event');
+    event.initEvent(eventName, true, true);
+    target.dispatchEvent(event);
+}
