@@ -4,7 +4,7 @@ dist: trusty
 
 branches:
   except:
-  - staging.tmp
+    - staging.tmp
 
 cache:
   cargo: true
@@ -42,26 +42,26 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-  - rust: nightly-2018-02-13
-    script:
-    - cargo install --force rustfmt-nightly --vers 0.3.6
-    - cargo fmt -- --write-mode=diff
-    - cargo install --force clippy --vers 0.0.186
-    - cargo clippy
-  - rust: stable
-    script:
-    - cargo build
-    - cargo test
-    - npm install
-    - npm test
-  - rust: beta
-    script:
-    - cargo build
-    - cargo test
-  - rust: nightly
-    script:
-    - cargo build
-    - cargo test
+    - rust: nightly-2018-02-13
+      script:
+        - cargo install --force rustfmt-nightly --vers 0.3.6
+        - cargo fmt -- --write-mode=diff
+        - cargo install --force clippy --vers 0.0.186
+        - cargo clippy
+    - rust: stable
+      script:
+        - cargo build
+        - cargo test
+        - npm install
+        - npm test
+    - rust: beta
+      script:
+        - cargo build
+        - cargo test
+    - rust: nightly
+      script:
+        - cargo build
+        - cargo test
 
 env:
   global:
