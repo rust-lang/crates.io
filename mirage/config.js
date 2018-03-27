@@ -248,6 +248,8 @@ export default function() {
 
         return {};
     });
+
+    this.passthrough('https://www.google.com/jsapi');
 }
 
 function notFound() {

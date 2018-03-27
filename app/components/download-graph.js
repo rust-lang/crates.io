@@ -23,8 +23,8 @@ export default Component.extend({
     },
 
     willDestroyElement() {
-        document.removeEventListener('resize.chart');
-        document.removeEventListener('googleChartsLoaded');
+        document.removeEventListener('resize.chart', null);
+        document.removeEventListener('googleChartsLoaded', null);
     },
 
     didRender() {
