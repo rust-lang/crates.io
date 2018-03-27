@@ -1,5 +1,4 @@
 import Component from '@ember/component';
-import $ from 'jquery';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = [
@@ -19,13 +18,13 @@ export default Component.extend({
     didInsertElement() {
         this._super(...arguments);
 
-        $(window).on('resize.chart', () => this.rerender());
-        $(document).on('googleChartsLoaded', () => this.rerender());
+        document.addEventListener('resize.chart', () => this.rerender());
+        document.addEventListener('googleChartsLoaded', () => this.rerender());
     },
 
     willDestroyElement() {
-        $(window).off('resize.chart');
-        $(document).off('googleChartsLoaded');
+        document.removeEventListener('resize.chart');
+        document.removeEventListener('googleChartsLoaded');
     },
 
     didRender() {
@@ -79,10 +78,10 @@ export default Component.extend({
         }
 
         if (!data || !window.google || !window.googleChartsLoaded) {
-            this.$().hide();
+            this.get('element').style.display = 'none';
             return;
         } else {
-            this.$().show();
+            this.get('element').style.display = '';
         }
 
         let myData = window.google.visualization.arrayToDataTable(data);

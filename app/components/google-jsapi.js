@@ -1,16 +1,17 @@
 import Component from '@ember/component';
-import $ from 'jquery';
+import ajax from 'ember-fetch/ajax';
+import trigger from '../utils/trigger';
 
 export default Component.extend({
     tagName: '',
 
     didInsertElement() {
-        $.getScript('https://www.google.com/jsapi', function() {
+        ajax('https://www.google.com/jsapi', () => {
             window.google.load('visualization', '1.0', {
                 packages: ['corechart'],
                 callback() {
                     window.googleChartsLoaded = true;
-                    $(document).trigger('googleChartsLoaded');
+                    trigger('googleChartsLoaded');
                 }
             });
         });

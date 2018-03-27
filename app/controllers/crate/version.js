@@ -6,6 +6,7 @@ import ArrayProxy from '@ember/array/proxy';
 import { computed, observer } from '@ember/object';
 import { later } from '@ember/runloop';
 import moment from 'moment';
+import trigger from '../../utils/trigger';
 
 const NUM_VERSIONS = 5;
 
@@ -184,9 +185,3 @@ export default Controller.extend({
         setTimeout(() => trigger(window, 'hashchange'));
     })
 });
-
-function trigger(target, eventName) {
-    let event = document.createEvent('Event');
-    event.initEvent(eventName, true, true);
-    target.dispatchEvent(event);
-}
