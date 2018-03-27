@@ -8,6 +8,8 @@ branches:
 
 cache:
   cargo: true
+  directories:
+    - $HOME/.npm
 
 env:
   global:
