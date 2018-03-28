@@ -126,8 +126,6 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-// Can't Copy or Debug the fn.
-#[allow(missing_debug_implementations, missing_copy_implementations)]
 struct C(pub fn(&mut Request) -> CargoResult<Response>);
 
 impl Handler for C {
@@ -143,8 +141,7 @@ impl Handler for C {
     }
 }
 
-#[derive(Debug)]
-pub struct R<H>(pub Arc<H>);
+struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {

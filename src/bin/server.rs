@@ -12,7 +12,6 @@ use std::fs::{self, File};
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 
-#[allow(dead_code)]
 fn main() {
     // Initialize logging
     env_logger::init();
