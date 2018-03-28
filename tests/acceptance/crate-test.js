@@ -4,7 +4,7 @@ import { setupApplicationTest } from 'ember-qunit';
 import { click, fillIn, currentURL, currentRouteName, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
-import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | crate page', function(hooks) {

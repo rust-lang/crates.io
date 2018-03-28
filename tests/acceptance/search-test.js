@@ -4,7 +4,7 @@ import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpe
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 import axeConfig from '../axe-config';
-import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | search', function(hooks) {
