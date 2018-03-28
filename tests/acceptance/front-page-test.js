@@ -4,6 +4,7 @@ import { currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | front page', function(hooks) {
     setupApplicationTest(hooks);
@@ -41,5 +42,7 @@ module('Acceptance | front page', function(hooks) {
 
         assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.7.0-alpha)');
         assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
+
+        percySnapshot(assert);
     });
 });

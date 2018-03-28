@@ -17,6 +17,11 @@ env:
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - CARGO_TARGET_DIR=target
+    - PERCY_PARALLEL_TOTAL=2
+    # Percy secrets are included here to enable Percy's GitHub integration
+    # on community-submitted PRs
+    - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+    - PERCY_PROJECT=crates-io/crates.io
 
 before_install:
   - nvm install 8
