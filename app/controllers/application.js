@@ -7,6 +7,7 @@ import { on } from '@ember/object/evented';
 export default Controller.extend(EKMixin, {
     search: service(),
     searchQuery: oneWay('search.q'),
+    session: service(),
 
     keyboardActivated: true,
     focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), function(event) {
