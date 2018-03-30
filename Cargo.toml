@@ -71,7 +71,7 @@ conduit-middleware = "0.8"
 conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
-civet = "0.9"
+civet = "0.11"
 
 [dev-dependencies]
 conduit-test = "0.8"
