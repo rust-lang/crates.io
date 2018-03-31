@@ -1,18 +1,21 @@
 use conduit::Request;
 use curl::easy::Easy;
 use flate2::read::GzDecoder;
+use openssl::hash::{Hasher, MessageDigest};
 use s3;
 use semver;
 use tar;
-use util::{human, internal, CargoResult, ChainError};
-use util::{hash, LimitErrorReader, read_le_u32};
 
-use app::{App, RequestApp};
+use util::{human, internal, CargoResult, ChainError};
+use util::{LimitErrorReader, read_le_u32};
+
 use std::sync::Arc;
 use std::fs::{self, File};
 use std::env;
 use std::io::{Read, Write};
 
+use app::App;
+use middleware::app::RequestApp;
 use models::Crate;
 
 #[derive(Clone, Debug)]
@@ -270,4 +273,10 @@ fn verify_tarball(
         }
     }
     Ok(())
+}
+
+fn hash(data: &[u8]) -> Vec<u8> {
+    let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
+    hasher.update(data).unwrap();
+    hasher.finish().unwrap().to_vec()
 }

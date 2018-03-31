@@ -1,20 +1,16 @@
-//! This module implements middleware for adding secuirty headers to
-//! http responses in production.
+//! Middleware that adds secuirty headers to http responses in production.
 
-use conduit::{Request, Response};
-use conduit_middleware::Middleware;
-
-use std::error::Error;
+use super::prelude::*;
 use std::collections::HashMap;
 
 use Uploader;
 
 #[derive(Clone, Debug)]
-pub struct SecurityHeadersMiddleware {
+pub struct SecurityHeaders {
     headers: HashMap<String, Vec<String>>,
 }
 
-impl SecurityHeadersMiddleware {
+impl SecurityHeaders {
     pub fn new(uploader: &Uploader) -> Self {
         let mut headers = HashMap::new();
 
@@ -60,11 +56,11 @@ impl SecurityHeadersMiddleware {
             ],
         );
 
-        SecurityHeadersMiddleware { headers }
+        SecurityHeaders { headers }
     }
 }
 
-impl Middleware for SecurityHeadersMiddleware {
+impl Middleware for SecurityHeaders {
     fn after(
         &self,
         _: &mut Request,

@@ -4,11 +4,7 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use conduit::{Request, Response};
-
-use diesel::prelude::*;
-use db::RequestTransaction;
-use util::{CargoResult, RequestUtils};
+use controllers::prelude::*;
 
 use views::{EncodableDependency, EncodablePublicUser};
 use schema::*;

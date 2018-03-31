@@ -12,7 +12,6 @@ use std::fs::{self, File};
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 
-#[allow(dead_code)]
 fn main() {
     // Initialize logging
     env_logger::init();
@@ -46,7 +45,7 @@ fn main() {
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
     let app = cargo_registry::App::new(&config);
-    let app = cargo_registry::middleware(Arc::new(app));
+    let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.

@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use chrono::NaiveDateTime;
 
+use models::DependencyKind;
+
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
     pub badge_type: String,
@@ -46,8 +48,27 @@ pub struct InvitationResponse {
     pub accepted: bool,
 }
 
-pub use dependency::EncodableDependency;
-pub use download::EncodableVersionDownload;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableDependency {
+    pub id: i32,
+    pub version_id: i32,
+    pub crate_id: String,
+    pub req: String,
+    pub optional: bool,
+    pub default_features: bool,
+    pub features: Vec<String>,
+    pub target: Option<String>,
+    pub kind: DependencyKind,
+    pub downloads: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersionDownload {
+    pub id: i32,
+    pub version: i32,
+    pub downloads: i32,
+    pub date: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableKeyword {
@@ -110,9 +131,71 @@ pub struct EncodableTeam {
     pub url: Option<String>,
 }
 
-pub use token::EncodableApiTokenWithToken;
-pub use user::{EncodablePrivateUser, EncodablePublicUser};
-pub use version::{EncodableVersion, EncodableVersionLinks};
+/// The serialization format for the `ApiToken` model with its token value.
+/// This should only be used when initially creating a new token to minimize
+/// the chance of token leaks.
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableApiTokenWithToken {
+    pub id: i32,
+    pub name: String,
+    pub token: String,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339::option")]
+    pub last_used_at: Option<NaiveDateTime>,
+}
+
+/// The serialization format for the `User` model.
+/// Same as public user, except for addition of
+/// email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePrivateUser {
+    pub id: i32,
+    pub login: String,
+    pub email: Option<String>,
+    pub email_verified: bool,
+    pub email_verification_sent: bool,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+/// The serialization format for the `User` model.
+/// Same as private user, except no email field
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodablePublicUser {
+    pub id: i32,
+    pub login: String,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersion {
+    pub id: i32,
+    #[serde(rename = "crate")]
+    pub krate: String,
+    pub num: String,
+    pub dl_path: String,
+    pub readme_path: String,
+    #[serde(with = "::util::rfc3339")]
+    pub updated_at: NaiveDateTime,
+    #[serde(with = "::util::rfc3339")]
+    pub created_at: NaiveDateTime,
+    pub downloads: i32,
+    pub features: HashMap<String, Vec<String>>,
+    pub yanked: bool,
+    pub license: Option<String>,
+    pub links: EncodableVersionLinks,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableVersionLinks {
+    pub dependencies: String,
+    pub version_downloads: String,
+    pub authors: String,
+}
 
 // TODO: Prefix many of these with `Encodable` then clean up the reexports
 pub mod krate_publish;

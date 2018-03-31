@@ -9,6 +9,7 @@ use util::{human, CargoResult};
 
 use models::{Crate, Version};
 use schema::*;
+use views::EncodableDependency;
 
 #[derive(Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
@@ -23,7 +24,7 @@ pub struct Dependency {
     pub default_features: bool,
     pub features: Vec<String>,
     pub target: Option<String>,
-    pub kind: Kind,
+    pub kind: DependencyKind,
 }
 
 #[derive(Debug, QueryableByName)]
@@ -37,24 +38,10 @@ pub struct ReverseDependency {
     name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableDependency {
-    pub id: i32,
-    pub version_id: i32,
-    pub crate_id: String,
-    pub req: String,
-    pub optional: bool,
-    pub default_features: bool,
-    pub features: Vec<String>,
-    pub target: Option<String>,
-    pub kind: Kind,
-    pub downloads: i32,
-}
-
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, FromSqlRow)]
 #[serde(rename_all = "lowercase")]
 #[repr(u32)]
-pub enum Kind {
+pub enum DependencyKind {
     Normal = 0,
     Build = 1,
     Dev = 2,
@@ -116,7 +103,7 @@ pub fn add_dependencies(
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),
-                    kind: dep.kind.or(Some(Kind::Normal)),
+                    kind: dep.kind.or(Some(DependencyKind::Normal)),
                 },
                 (
                     version_id.eq(target_version_id),
@@ -145,12 +132,12 @@ pub fn add_dependencies(
 use diesel::deserialize::{self, FromSql};
 use diesel::sql_types::Integer;
 
-impl FromSql<Integer, Pg> for Kind {
+impl FromSql<Integer, Pg> for DependencyKind {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match <i32 as FromSql<Integer, Pg>>::from_sql(bytes)? {
-            0 => Ok(Kind::Normal),
-            1 => Ok(Kind::Build),
-            2 => Ok(Kind::Dev),
+            0 => Ok(DependencyKind::Normal),
+            1 => Ok(DependencyKind::Build),
+            2 => Ok(DependencyKind::Dev),
             n => Err(format!("unknown kind: {}", n).into()),
         }
     }
@@ -166,7 +153,7 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
         bool,
         Vec<String>,
         Option<String>,
-        Kind,
+        DependencyKind,
     );
 
     fn build(row: Self::Row) -> Self {

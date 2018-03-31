@@ -13,7 +13,6 @@ use cargo_registry::schema::*;
 
 static LIMIT: i64 = 1000;
 
-#[allow(dead_code)] // dead in tests
 fn main() {
     let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());

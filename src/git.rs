@@ -11,7 +11,7 @@ use serde_json;
 use app::App;
 use util::{internal, CargoResult};
 
-use models::Kind;
+use models::DependencyKind;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -33,7 +33,7 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Option<Kind>,
+    pub kind: Option<DependencyKind>,
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {

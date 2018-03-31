@@ -5,7 +5,7 @@ use diesel::prelude::{ConnectionResult, PgConnection};
 use diesel::r2d2::{self, ConnectionManager};
 use url::Url;
 
-use app::RequestApp;
+use middleware::app::RequestApp;
 use util::CargoResult;
 
 pub type DieselPool = r2d2::Pool<ConnectionManager<PgConnection>>;
