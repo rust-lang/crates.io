@@ -12,7 +12,7 @@ pub struct AppMiddleware {
 
 impl AppMiddleware {
     pub fn new(app: Arc<App>) -> AppMiddleware {
-        AppMiddleware { app: app }
+        AppMiddleware { app }
     }
 }
 

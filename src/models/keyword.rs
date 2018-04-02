@@ -69,9 +69,9 @@ impl Keyword {
         } = self;
         EncodableKeyword {
             id: keyword.clone(),
-            created_at: created_at,
-            crates_cnt: crates_cnt,
-            keyword: keyword,
+            created_at,
+            crates_cnt,
+            keyword,
         }
     }
 

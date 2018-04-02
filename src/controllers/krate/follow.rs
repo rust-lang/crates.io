@@ -14,7 +14,7 @@ fn follow_target(req: &mut Request) -> CargoResult<Follow> {
     let crate_id = Crate::by_name(crate_name).select(crates::id).first(&*conn)?;
     Ok(Follow {
         user_id: user.id,
-        crate_id: crate_id,
+        crate_id,
     })
 }
 
@@ -51,7 +51,5 @@ pub fn following(req: &mut Request) -> CargoResult<Response> {
     struct R {
         following: bool,
     }
-    Ok(req.json(&R {
-        following: following,
-    }))
+    Ok(req.json(&R { following }))
 }

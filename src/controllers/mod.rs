@@ -41,7 +41,7 @@ mod prelude {
             headers.insert("Location".to_string(), vec![url.to_string()]);
             Response {
                 status: (302, "Found"),
-                headers: headers,
+                headers,
                 body: Box::new(io::empty()),
             }
         }

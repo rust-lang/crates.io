@@ -40,9 +40,9 @@ impl Category {
             id: slug.clone(),
             slug: slug.clone(),
             description: description.clone(),
-            created_at: created_at,
-            crates_cnt: crates_cnt,
-            category: category,
+            created_at,
+            crates_cnt,
+            category,
         }
     }
 

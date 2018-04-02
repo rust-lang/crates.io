@@ -36,7 +36,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         url: url.to_string(),
-        state: state,
+        state,
     }))
 }
 

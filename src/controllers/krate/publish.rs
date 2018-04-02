@@ -57,7 +57,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
     conn.transaction(|| {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
-            name: name,
+            name,
             description: new_crate.description.as_ref().map(|s| &**s),
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
@@ -148,7 +148,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             name: name.to_string(),
             vers: vers.to_string(),
             cksum: hex_cksum,
-            features: features,
+            features,
             deps: git_deps,
             yanked: Some(false),
             links,
@@ -182,7 +182,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         }
         Ok(req.json(&R {
             krate: krate.minimal_encodable(&max_version, None, false, None),
-            warnings: warnings,
+            warnings,
         }))
     })
 }

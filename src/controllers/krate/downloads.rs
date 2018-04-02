@@ -63,6 +63,6 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     };
     Ok(req.json(&R {
         version_downloads: downloads,
-        meta: meta,
+        meta,
     }))
 }

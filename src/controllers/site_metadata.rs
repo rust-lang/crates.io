@@ -12,7 +12,5 @@ pub fn show_deployed_sha(req: &mut Request) -> CargoResult<Response> {
     struct R {
         deployed_sha: String,
     }
-    Ok(req.json(&R {
-        deployed_sha: deployed_sha,
-    }))
+    Ok(req.json(&R { deployed_sha }))
 }

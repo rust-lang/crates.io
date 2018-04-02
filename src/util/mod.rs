@@ -26,7 +26,7 @@ pub fn json_response<T: Serialize>(t: &T) -> Response {
     headers.insert("Content-Length".to_string(), vec![json.len().to_string()]);
     Response {
         status: (200, "OK"),
-        headers: headers,
+        headers,
         body: Box::new(Cursor::new(json.into_bytes())),
     }
 }

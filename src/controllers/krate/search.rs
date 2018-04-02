@@ -212,7 +212,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
     }
 
     Ok(req.json(&R {
-        crates: crates,
-        meta: Meta { total: total },
+        crates,
+        meta: Meta { total },
     }))
 }
