@@ -5,16 +5,7 @@ use std::fmt;
 use conduit::Response;
 use diesel::result::Error as DieselError;
 
-use util::json_response;
-
-#[derive(Serialize)]
-struct StringError {
-    detail: String,
-}
-#[derive(Serialize)]
-struct Bad {
-    errors: Vec<StringError>,
-}
+use util::{json_error, json_error_200};
 
 // =============================================================================
 // CargoError trait
@@ -27,13 +18,7 @@ pub trait CargoError: Send + fmt::Display + 'static {
 
     fn response(&self) -> Option<Response> {
         if self.human() {
-            Some(json_response(&Bad {
-                errors: vec![
-                    StringError {
-                        detail: self.description().to_string(),
-                    },
-                ],
-            }))
+            Some(json_error_200(self.description()))
         } else {
             self.cause().and_then(|cause| cause.response())
         }
@@ -242,15 +227,7 @@ impl CargoError for NotFound {
     }
 
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: "Not Found".to_string(),
-                },
-            ],
-        });
-        response.status = (404, "Not Found");
-        Some(response)
+        Some(json_error((404, "Not Found"), "Not Found"))
     }
 }
 
@@ -269,15 +246,10 @@ impl CargoError for Unauthorized {
     }
 
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: "must be logged in to perform that action".to_string(),
-                },
-            ],
-        });
-        response.status = (403, "Forbidden");
-        Some(response)
+        Some(json_error(
+            (403, "Forbidden"),
+            "must be logged in to perform that action",
+        ))
     }
 }
 
@@ -295,15 +267,7 @@ impl CargoError for BadRequest {
     }
 
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: self.0.clone(),
-                },
-            ],
-        });
-        response.status = (400, "Bad Request");
-        Some(response)
+        Some(json_error((400, "Bad Request"), &*self.0))
     }
 }
 
