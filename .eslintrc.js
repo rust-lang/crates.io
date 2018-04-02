@@ -7,9 +7,12 @@ module.exports = {
             'experimentalObjectRestSpread': true,
         },
     },
+    plugins: [
+        'ember',
+    ],
     extends: [
         'eslint:recommended',
-        'plugin:ember-suave/recommended',
+        'plugin:ember-suave/recommended', // to be replaced with 'plugin:ember/recommended',
     ],
     env: {
         browser: true,
@@ -31,4 +34,24 @@ module.exports = {
         'ember-suave/no-direct-property-access': 'off',
         'ember-suave/require-access-in-comments': 'off',
     },
+    overrides: [
+        // node files
+        {
+            files: [
+                'testem.js',
+                'ember-cli-build.js',
+                'config/**/*.js',
+                'lib/*/index.js',
+            ],
+            parserOptions: {
+                sourceType: 'script',
+                ecmaVersion: 2015,
+            },
+            env: {
+                browser: false,
+                node: true,
+            },
+        },
+    ],
+
 };

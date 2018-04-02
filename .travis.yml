@@ -25,6 +25,7 @@ env:
 
 before_install:
   - nvm install 8
+  - npm config set spin false
 
 install:
   - cargo install --force diesel_cli --vers 1.0.0 --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
@@ -60,6 +61,7 @@ matrix:
         - cargo build
         - cargo test
         - npm install
+        - npm run lint:js
         - npm test
     - rust: beta
       script:
