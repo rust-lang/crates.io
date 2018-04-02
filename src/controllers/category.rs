@@ -28,8 +28,8 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     }
 
     Ok(req.json(&R {
-        categories: categories,
-        meta: Meta { total: total },
+        categories,
+        meta: Meta { total },
     }))
 }
 

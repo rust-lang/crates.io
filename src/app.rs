@@ -82,7 +82,7 @@ impl App {
 
         App {
             diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
-            github: github,
+            github,
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),

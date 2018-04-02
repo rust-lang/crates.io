@@ -96,11 +96,11 @@ impl Owner {
             }) => {
                 let url = format!("https://github.com/{}", gh_login);
                 EncodableOwner {
-                    id: id,
+                    id,
                     login: gh_login,
                     avatar: gh_avatar,
                     url: Some(url),
-                    name: name,
+                    name,
                     kind: String::from("user"),
                 }
             }
@@ -113,11 +113,11 @@ impl Owner {
             }) => {
                 let url = github::team_url(&login);
                 EncodableOwner {
-                    id: id,
-                    login: login,
+                    id,
+                    login,
                     url: Some(url),
-                    avatar: avatar,
-                    name: name,
+                    avatar,
+                    name,
                     kind: String::from("team"),
                 }
             }

@@ -41,7 +41,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 
     Ok(req.json(&R {
         keywords: kws,
-        meta: Meta { total: total },
+        meta: Meta { total },
     }))
 }
 

@@ -57,6 +57,6 @@ pub fn authors(req: &mut Request) -> CargoResult<Response> {
     }
     Ok(req.json(&R {
         users: vec![],
-        meta: Meta { names: names },
+        meta: Meta { names },
     }))
 }

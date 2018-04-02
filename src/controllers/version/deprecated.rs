@@ -39,7 +39,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
     struct R {
         versions: Vec<EncodableVersion>,
     }
-    Ok(req.json(&R { versions: versions }))
+    Ok(req.json(&R { versions }))
 }
 
 /// Handles the `GET /versions/:version_id` and

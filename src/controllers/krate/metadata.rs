@@ -92,14 +92,14 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         popular_categories: Vec<EncodableCategory>,
     }
     Ok(req.json(&R {
-        num_downloads: num_downloads,
-        num_crates: num_crates,
+        num_downloads,
+        num_crates,
         new_crates: encode_crates(new_crates)?,
         most_downloaded: encode_crates(most_downloaded)?,
         most_recently_downloaded: encode_crates(most_recently_downloaded)?,
         just_updated: encode_crates(just_updated)?,
-        popular_keywords: popular_keywords,
-        popular_categories: popular_categories,
+        popular_keywords,
+        popular_categories,
     }))
 }
 
@@ -200,7 +200,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
     struct R {
         versions: Vec<EncodableVersion>,
     }
-    Ok(req.json(&R { versions: versions }))
+    Ok(req.json(&R { versions }))
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
@@ -241,6 +241,6 @@ pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
     Ok(req.json(&R {
         dependencies: rev_deps,
         versions,
-        meta: Meta { total: total },
+        meta: Meta { total },
     }))
 }

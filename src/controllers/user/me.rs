@@ -39,10 +39,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    let user = User {
-        email: email,
-        ..user
-    };
+    let user = User { email, ..user };
 
     #[derive(Serialize)]
     struct R {
@@ -88,8 +85,8 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         more: bool,
     }
     Ok(req.json(&R {
-        versions: versions,
-        meta: Meta { more: more },
+        versions,
+        meta: Meta { more },
     }))
 }
 

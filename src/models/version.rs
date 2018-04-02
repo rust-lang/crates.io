@@ -56,14 +56,14 @@ impl Version {
             dl_path: format!("/api/v1/crates/{}/{}/download", crate_name, num),
             readme_path: format!("/api/v1/crates/{}/{}/readme", crate_name, num),
             num: num.clone(),
-            id: id,
+            id,
             krate: crate_name.to_string(),
-            updated_at: updated_at,
-            created_at: created_at,
-            downloads: downloads,
-            features: features,
-            yanked: yanked,
-            license: license,
+            updated_at,
+            created_at,
+            downloads,
+            features,
+            yanked,
+            license,
             links: EncodableVersionLinks {
                 dependencies: format!("/api/v1/crates/{}/{}/dependencies", crate_name, num),
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
@@ -121,10 +121,10 @@ impl NewVersion {
         let features = serde_json::to_string(features)?;
 
         let mut new_version = NewVersion {
-            crate_id: crate_id,
+            crate_id,
             num: num.to_string(),
-            features: features,
-            license: license,
+            features,
+            license,
         };
 
         new_version.validate_license(license_file)?;
@@ -213,7 +213,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             updated_at: row.3,
             created_at: row.4,
             downloads: row.5,
-            features: features,
+            features,
             yanked: row.7,
             license: row.8,
         }

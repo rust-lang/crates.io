@@ -42,11 +42,11 @@ impl<'a> NewUser<'a> {
         gh_access_token: &'a str,
     ) -> Self {
         NewUser {
-            gh_id: gh_id,
-            gh_login: gh_login,
-            email: email,
-            name: name,
-            gh_avatar: gh_avatar,
+            gh_id,
+            gh_login,
+            email,
+            name,
+            gh_avatar,
             gh_access_token: Cow::Borrowed(gh_access_token),
         }
     }
@@ -171,13 +171,13 @@ impl User {
         } = self;
         let url = format!("https://github.com/{}", gh_login);
         EncodablePrivateUser {
-            id: id,
-            email: email,
+            id,
+            email,
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
             login: gh_login,
-            name: name,
+            name,
             url: Some(url),
         }
     }
@@ -193,10 +193,10 @@ impl User {
         } = self;
         let url = format!("https://github.com/{}", gh_login);
         EncodablePublicUser {
-            id: id,
+            id,
             avatar: gh_avatar,
             login: gh_login,
-            name: name,
+            name,
             url: Some(url),
         }
     }

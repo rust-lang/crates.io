@@ -44,10 +44,10 @@ impl<'a> NewTeam<'a> {
         avatar: Option<String>,
     ) -> Self {
         NewTeam {
-            login: login,
-            github_id: github_id,
-            name: name,
-            avatar: avatar,
+            login,
+            github_id,
+            name,
+            avatar,
         }
     }
 
@@ -205,10 +205,10 @@ impl Team {
         let url = github::team_url(&login);
 
         EncodableTeam {
-            id: id,
-            login: login,
-            name: name,
-            avatar: avatar,
+            id,
+            login,
+            name,
+            avatar,
             url: Some(url),
         }
     }
