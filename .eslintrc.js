@@ -7,8 +7,12 @@ module.exports = {
             'experimentalObjectRestSpread': true,
         },
     },
+    plugins: [
+        'ember',
+    ],
     extends: [
         'eslint:recommended',
+        'plugin:ember/recommended',
     ],
     env: {
         browser: true,
