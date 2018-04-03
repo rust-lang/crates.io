@@ -9,7 +9,6 @@ module.exports = {
     },
     extends: [
         'eslint:recommended',
-        'plugin:ember-suave/recommended',
     ],
     env: {
         browser: true,
@@ -26,9 +25,5 @@ module.exports = {
             'allowTemplateLiterals': true,
             'avoidEscape': true,
         }],
-
-        'ember-suave/no-const-outside-module-scope': 'off',
-        'ember-suave/no-direct-property-access': 'off',
-        'ember-suave/require-access-in-comments': 'off',
     },
 };
