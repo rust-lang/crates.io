@@ -24,13 +24,6 @@ module.exports = function(environment) {
             // Here you can pass flags/options to your application instance
             // when it is created
         },
-        metricsAdapters: [{
-            name: 'GoogleAnalytics',
-            environments: ['production'],
-            config: {
-                id: 'UA-58390457-3'
-            }
-        }]
     };
 
     if (environment === 'development') {
