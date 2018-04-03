@@ -30,7 +30,8 @@ pub struct CrateDownload {
     pub date: NaiveDate,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset)]
+#[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset, QueryableByName)]
+#[table_name = "crates"]
 pub struct Crate {
     pub id: i32,
     pub name: String,
