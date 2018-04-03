@@ -35,4 +35,23 @@ module.exports = {
         'ember/no-capital-letters-in-routes': 'off',
         'ember/new-module-imports': 'off',
     },
+    overrides: [
+        // node files
+        {
+            files: [
+                'testem.js',
+                'ember-cli-build.js',
+                'config/**/*.js',
+                'lib/*/index.js',
+            ],
+            parserOptions: {
+                sourceType: 'script',
+                ecmaVersion: 2015,
+            },
+            env: {
+                browser: false,
+                node: true,
+            },
+        },
+    ],
 };
