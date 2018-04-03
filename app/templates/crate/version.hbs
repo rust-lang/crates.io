@@ -12,7 +12,7 @@
             {{#if session.currentUser}}
                 <button class='tan-button' {{action 'toggleFollow' this}}>
                     {{#if fetchingFollowing}}
-                        <img src="/assets/ajax-loader.gif"/>
+                        <img src="/assets/ajax-loader.gif">
                     {{else}}
                         {{#if following}}
                             Unfollow
@@ -113,7 +113,7 @@
                     <img
                         src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
                         alt="{{ crate.name }}’s current version badge"
-                        title="{{ crate.name }}’s current version badge" />
+                        title="{{ crate.name }}’s current version badge">
                 </p>
 
                 {{#each crate.annotated_badges as |badge|}}
