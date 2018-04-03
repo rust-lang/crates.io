@@ -4,7 +4,7 @@ export default Component.extend({
     rendered: '',
     didRender() {
         this._super(...arguments);
-        this.$('pre > code').each(function() {
+        [...this.get('element').querySelectorAll('pre > code')].forEach(function() {
             window.Prism.highlightElement(this);
         });
     }

@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
+import { serializeQueryParams } from 'ember-fetch/mixins/adapter-fetch';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
@@ -15,23 +16,21 @@ import { inject as service } from '@ember/service';
  * @see `/login` route
  */
 export default Route.extend({
-
-    ajax: service(),
-
     async beforeModel(transition) {
         try {
-            let d = await this.get('ajax').request(`/authorize`, { data: transition.queryParams });
-            let item = JSON.stringify({ ok: true, data: d });
+            let queryParams = serializeQueryParams(transition.queryParams);
+            let data = await ajax(`/authorize?${queryParams}`);
+            let item = JSON.stringify({ ok: true, data });
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        } catch(d) {
-            let item = JSON.stringify({ ok: false, data: d });
+        } catch(data) {
+            let item = JSON.stringify({ ok: false, data });
             if (window.opener) {
                 window.opener.github_response = item;
             }
         } finally {
             window.close();
         }
-    },
+    }
 });

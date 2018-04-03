@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Factory, faker } from 'ember-cli-mirage';
 import Ember from 'ember';
 

@@ -8,7 +8,7 @@ export default Component.extend({
 
     didInsertElement() {
         if (this.get('api_token.isNew')) {
-            this.$('input').focus();
+            document.getElementById('new-token-name').focus();
         }
     },
 

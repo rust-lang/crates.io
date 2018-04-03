@@ -2,9 +2,9 @@ import Component from '@ember/component';
 import { empty } from '@ember/object/computed';
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 export default Component.extend({
-    ajax: service(),
     flashMessages: service(),
 
     type: '',
@@ -18,7 +18,7 @@ export default Component.extend({
         let email = this.get('user.email');
         return (email == null);
     }),
-    emailNotVerified: computed('user.email', 'user.email_verified', function() {
+    emailNotVerified: computed('user.{email,user.email_verified}', function() {
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
 
@@ -96,7 +96,7 @@ export default Component.extend({
             let user = this.get('user');
 
             try {
-                await this.get('ajax').raw(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
+                await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
                 this.set('disableResend', true);
             } catch(error) {
                 if (error.payload) {

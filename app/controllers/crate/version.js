@@ -5,8 +5,8 @@ import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
 import { computed, observer } from '@ember/object';
 import { later } from '@ember/runloop';
-import $ from 'jquery';
 import moment from 'moment';
+import trigger from '../../utils/trigger';
 
 const NUM_VERSIONS = 5;
 
@@ -182,7 +182,6 @@ export default Controller.extend({
     },
 
     report: observer('crate.readme', function() {
-        setTimeout(() => $(window).trigger('hashchange'));
-    }),
-
+        setTimeout(() => trigger(window, 'hashchange'));
+    })
 });

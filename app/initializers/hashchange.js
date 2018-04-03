@@ -1,5 +1,3 @@
-import $ from 'jquery';
-
 function decodeFragmentValue(hash) {
     try {
         return decodeURIComponent(hash.slice(1));
@@ -29,19 +27,21 @@ function hashchange() {
 }
 
 export function initialize() {
-    $(window).on('hashchange', hashchange);
+    if (typeof FastBoot === 'undefined') {
+        window.addEventListener('hashchange', hashchange);
 
-    // If clicking on a link to the same fragment as currently in the address bar,
-    // hashchange won't be fired, so we need to manually trigger rescroll.
-    $(document).on('a[href]', 'click', function(event) {
-        if (this.href === location.href && location.hash.length > 1) {
-            setTimeout(function() {
-                if (!event.defaultPrevented) {
-                    hashchange();
-                }
-            });
-        }
-    });
+        // If clicking on a link to the same fragment as currently in the address bar,
+        // hashchange won't be fired, so we need to manually trigger rescroll.
+        document.addEventListener('click', ({ target, defaultPrevented }) => {
+            if (target.matches('a[href]') && target.href === location.href && location.hash.length > 1) {
+                setTimeout(() => {
+                    if (!defaultPrevented) {
+                        hashchange();
+                    }
+                });
+            }
+        });
+    }
 }
 
 export default {

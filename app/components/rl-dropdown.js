@@ -21,9 +21,9 @@ export default Component.extend({
 
     manageVisibility: on('didInsertElement', observer('isExpanded', function() {
         if (this.get('isExpanded')) {
-            this.$().css('display', 'block');
+            this.get('element').style.display, 'block';
         } else {
-            this.$().css('display', 'none');
+            this.get('element').style.display = 'none';
         }
     })),
 

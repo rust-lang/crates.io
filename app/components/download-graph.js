@@ -1,5 +1,4 @@
 import Component from '@ember/component';
-import $ from 'jquery';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = [
@@ -19,13 +18,14 @@ export default Component.extend({
     didInsertElement() {
         this._super(...arguments);
 
-        $(window).on('resize.chart', () => this.rerender());
-        $(document).on('googleChartsLoaded', () => this.rerender());
+        window.addEventListener('resize.chart', this.onChartResize);
+        document.addEventListener('googleChartsLoaded', this.onChartResize);
     },
 
     willDestroyElement() {
-        $(window).off('resize.chart');
-        $(document).off('googleChartsLoaded');
+        this._super(...arguments);
+        window.removeEventListener('resize.chart', this.onChartResize);
+        document.removeEventListener('googleChartsLoaded', this.onChartResize);
     },
 
     didRender() {
@@ -79,10 +79,10 @@ export default Component.extend({
         }
 
         if (!data || !window.google || !window.googleChartsLoaded) {
-            this.$().hide();
+            this.get('element').style.display = 'none';
             return;
         } else {
-            this.$().show();
+            this.get('element').style.display = '';
         }
 
         let myData = window.google.visualization.arrayToDataTable(data);
@@ -162,6 +162,10 @@ export default Component.extend({
             series: seriesOption
         });
     },
+
+    onChartResize() {
+        this.rerender();
+    }
 });
 
 function range(start, end, step) {
