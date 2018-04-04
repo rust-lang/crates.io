@@ -29,7 +29,6 @@ module.exports = {
             'allowTemplateLiterals': true,
             'avoidEscape': true,
         }],
-        'ember/use-brace-expansion': 'off',
         'ember/no-on-calls-in-components': 'off',
         'ember/avoid-leaking-state-in-ember-objects': 'off',
         'ember/no-capital-letters-in-routes': 'off',
