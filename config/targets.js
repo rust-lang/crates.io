@@ -1,4 +1,3 @@
-/* eslint-env node */
 module.exports = {
     browsers: [
         // These are the browsers we actually are attempting to support:
