@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 /**
- * This route will open a popup window directed at the `/github_login` route.
+ * This route will open a popup window directed at the `github-login` route.
  * After the window has opened it will wait for the window to close and
  * then evaluate whether the OAuth flow was successful.
  *

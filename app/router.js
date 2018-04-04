@@ -10,7 +10,7 @@ const Router = EmberRouter.extend(RouterScroll, {
 Router.map(function() {
     this.route('logout');
     this.route('login');
-    this.route('github_login');
+    this.route('github-login', { path: 'github_login' });
     this.route('github_authorize', { path: '/authorize/github' });
     this.route('crates');
     this.route('crate', { path: '/crates/:crate_id' }, function() {
