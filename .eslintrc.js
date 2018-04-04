@@ -30,7 +30,6 @@ module.exports = {
             'avoidEscape': true,
         }],
         'ember/no-on-calls-in-components': 'off',
-        'ember/no-capital-letters-in-routes': 'off',
     },
     overrides: [
         // node files
