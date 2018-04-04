@@ -6,7 +6,7 @@ import { inject as service } from '@ember/service';
  * After the window has opened it will wait for the window to close and
  * then evaluate whether the OAuth flow was successful.
  *
- * @see `/github_authorize` route
+ * @see `github-authorize` route
  */
 export default Route.extend({
     flashMessages: service(),
