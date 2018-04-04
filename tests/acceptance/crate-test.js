@@ -195,8 +195,8 @@ module('Acceptance | crate page', function(hooks) {
         this.server.loadFixtures();
 
         this.owner.register('service:session', Service.extend({
-            currentUser: {
-                login: 'iain8'
+            get currentUser() {
+                return { login: 'iain8' };
             },
             loadUser() {},
         }));
@@ -210,8 +210,8 @@ module('Acceptance | crate page', function(hooks) {
         this.server.loadFixtures();
 
         this.owner.register('service:session', Service.extend({
-            currentUser: {
-                login: 'thehydroimpulse'
+            get currentUser() {
+                return { login: 'thehydroimpulse' };
             },
             loadUser() {},
         }));
