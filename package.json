@@ -56,7 +56,6 @@
     "ember-keyboard": "^3.0.2",
     "ember-load-initializers": "^1.0.0",
     "ember-maybe-import-regenerator": "^0.1.6",
-    "ember-metrics": "^0.10.0",
     "ember-moment": "^7.5.0",
     "ember-page-title": "^4.0.3",
     "ember-percy": "^1.4.0",
