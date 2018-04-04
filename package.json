@@ -68,7 +68,7 @@
     "ember-test-selectors": "^0.3.7",
     "ember-web-app": "^2.2.0",
     "emberx-select": "^3.1.1",
-    "eslint-plugin-ember-suave": "^1.0.0",
+    "eslint-plugin-ember": "^5.1.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
     "qunit-dom": "^0.5.0",

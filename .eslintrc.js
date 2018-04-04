@@ -7,9 +7,12 @@ module.exports = {
             'experimentalObjectRestSpread': true,
         },
     },
+    plugins: [
+        'ember',
+    ],
     extends: [
         'eslint:recommended',
-        'plugin:ember-suave/recommended',
+        'plugin:ember/recommended',
     ],
     env: {
         browser: true,
@@ -26,9 +29,10 @@ module.exports = {
             'allowTemplateLiterals': true,
             'avoidEscape': true,
         }],
-
-        'ember-suave/no-const-outside-module-scope': 'off',
-        'ember-suave/no-direct-property-access': 'off',
-        'ember-suave/require-access-in-comments': 'off',
+        'ember/use-brace-expansion': 'off',
+        'ember/no-on-calls-in-components': 'off',
+        'ember/avoid-leaking-state-in-ember-objects': 'off',
+        'ember/no-capital-letters-in-routes': 'off',
+        'ember/new-module-imports': 'off',
     },
 };
