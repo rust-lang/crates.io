@@ -24,8 +24,11 @@ export default DS.Model.extend({
         ...badge,
         component_name: `badge-${badge.badge_type}`
     })),
+
+    // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects
     badge_sort: ['badge_type'],
     annotated_badges: sort('enhanced_badges', 'badge_sort'),
+
     owners: DS.hasMany('users', { async: true }),
     owner_team: DS.hasMany('teams', { async: true }),
     owner_user: DS.hasMany('users', { async: true }),

@@ -3,6 +3,7 @@ import { sort, filterBy, notEmpty } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
 export default Controller.extend({
+    // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects
     tokenSort: ['created_at:desc'],
 
     sortedTokens: sort('model.api_tokens', 'tokenSort'),
