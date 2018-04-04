@@ -18,7 +18,7 @@ export default Component.extend({
         let email = this.get('user.email');
         return (email == null);
     }),
-    emailNotVerified: computed('user.email', 'user.email_verified', function() {
+    emailNotVerified: computed('user.{email,email_verified}', function() {
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
 

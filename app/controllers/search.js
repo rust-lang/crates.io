@@ -17,11 +17,11 @@ export default Controller.extend(PaginationMixin, {
 
     model: readOnly('dataTask.lastSuccessful.value'),
 
-    hasData: computed('dataTask.lastSuccessful', 'dataTask.isRunning', function() {
+    hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
         return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
     }),
 
-    firstResultPending: computed('dataTask.lastSuccessful', 'dataTask.isRunning', function() {
+    firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function() {
         return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
     }),
 
