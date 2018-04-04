@@ -18,7 +18,7 @@ Router.map(function() {
         this.route('versions');
         this.route('version', { path: '/:version_num' });
 
-        this.route('reverse_dependencies');
+        this.route('reverse-dependencies', { path: 'reverse_dependencies' });
 
         this.route('owners');
 
