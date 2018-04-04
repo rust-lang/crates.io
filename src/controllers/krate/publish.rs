@@ -223,7 +223,7 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, Us
     if !missing.is_empty() {
         return Err(human(&format_args!(
             "missing or empty metadata fields: {}. Please \
-             see http://doc.crates.io/manifest.html#package-metadata for \
+             see https://doc.rust-lang.org/cargo/reference/manifest.html for \
              how to upload metadata",
             missing.join(", ")
         )));
