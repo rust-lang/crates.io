@@ -1,5 +1,5 @@
 import { Factory, faker } from 'ember-cli-mirage';
-import Ember from 'ember';
+import { dasherize } from '@ember/string';
 
 export default Factory.extend({
     category(i) {
@@ -7,11 +7,11 @@ export default Factory.extend({
     },
 
     id() {
-        return Ember.String.dasherize(this.category);
+        return dasherize(this.category);
     },
 
     slug() {
-        return Ember.String.dasherize(this.category);
+        return dasherize(this.category);
     },
 
     description: () => faker.lorem.sentence(),
