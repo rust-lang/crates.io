@@ -44,10 +44,11 @@ Router.map(function() {
         this.route('index', { path: '/' });
     });
     this.route('category-slugs', { path: 'category_slugs' });
-    this.route('catchAll', { path: '*path' });
     this.route('team', { path: '/teams/:team_id' });
     this.route('policies');
     this.route('confirm', { path: '/confirm/:email_token' });
+
+    this.route('catch-all', { path: '*path' });
 });
 
 export default Router;
