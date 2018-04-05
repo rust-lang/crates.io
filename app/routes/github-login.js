@@ -9,10 +9,10 @@ import { inject as service } from '@ember/service';
  * https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg
  *
  * Once the user has allowed the OAuth flow access the page will redirect him
- * to the `/github_authorize` route of this application.
+ * to the `github-authorize` route of this application.
  *
  * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
- * @see `/github_authorize` route
+ * @see `github-authorize` route
  */
 export default Route.extend({
 
