@@ -53,6 +53,12 @@ module.exports = function(environment) {
 
     if (environment === 'production') {
         // here you can enable a production-specific feature
+
+        // Heroku Git Hash support
+        if (process.env.SOURCE_VERSION) {
+            let hash = process.env.SOURCE_VERSION.substr(0, 7);
+            ENV['ember-cli-app-version'] = { version: hash };
+        }
     }
 
     return ENV;
