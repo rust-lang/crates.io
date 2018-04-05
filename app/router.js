@@ -10,15 +10,15 @@ const Router = EmberRouter.extend(RouterScroll, {
 Router.map(function() {
     this.route('logout');
     this.route('login');
-    this.route('github_login');
-    this.route('github_authorize', { path: '/authorize/github' });
+    this.route('github-login', { path: 'github_login' });
+    this.route('github-authorize', { path: '/authorize/github' });
     this.route('crates');
     this.route('crate', { path: '/crates/:crate_id' }, function() {
         this.route('download');
         this.route('versions');
         this.route('version', { path: '/:version_num' });
 
-        this.route('reverse_dependencies');
+        this.route('reverse-dependencies', { path: 'reverse_dependencies' });
 
         this.route('owners');
 
@@ -43,7 +43,7 @@ Router.map(function() {
     this.route('category', { path: '/categories/:category_id' }, function() {
         this.route('index', { path: '/' });
     });
-    this.route('category_slugs');
+    this.route('category-slugs', { path: 'category_slugs' });
     this.route('catchAll', { path: '*path' });
     this.route('team', { path: '/teams/:team_id' });
     this.route('policies');
