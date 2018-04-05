@@ -29,7 +29,6 @@ module.exports = {
             'allowTemplateLiterals': true,
             'avoidEscape': true,
         }],
-        'ember/no-on-calls-in-components': 'off',
     },
     overrides: [
         // node files
