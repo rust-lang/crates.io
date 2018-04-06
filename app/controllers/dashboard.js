@@ -1,14 +1,11 @@
 import Controller from '@ember/controller';
 import { A } from '@ember/array';
 import { computed } from '@ember/object';
-import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 const TO_SHOW = 5;
 
 export default Controller.extend({
-
-    ajax: service(),
-
     init() {
         this._super(...arguments);
 
@@ -46,8 +43,7 @@ export default Controller.extend({
             let page = (this.get('myFeed').length / 10) + 1;
 
             try {
-                let data = await this.get('ajax').request(`/api/v1/me/updates?page=${page}`);
-
+                let data = await ajax(`/api/v1/me/updates?page=${page}`);
                 let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
                 this.get('myFeed').pushObjects(versions);

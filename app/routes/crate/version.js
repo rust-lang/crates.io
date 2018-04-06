@@ -2,8 +2,10 @@ import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
+import fetch from 'fetch';
+import ajax from 'ember-fetch/ajax';
+
 export default Route.extend({
-    ajax: service(),
     session: service(),
 
     flashMessages: service(),
@@ -45,7 +47,7 @@ export default Route.extend({
                 crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' })
                     .then((r) => {
                         if (r.length > 0 && r[0].build_status === true) {
                             crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
@@ -85,7 +87,7 @@ export default Route.extend({
         controller.set('fetchingFollowing', true);
 
         if (this.get('session.currentUser')) {
-            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
+            ajax(`/api/v1/crates/${crate.get('name')}/following`)
                 .then((d) => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
@@ -104,18 +106,13 @@ export default Route.extend({
             versions.objectAt(0);
 
         if (result.get('readme_path')) {
-            this.get('ajax').request(result.get('readme_path'))
-                .then((r) => this.get('ajax').raw(r.url, {
-                    method: 'GET',
-                    dataType: 'html',
-                    headers: {
-                        // We need to force the Accept header, otherwise crates.io won't return
-                        // the readme file when not using S3.
-                        Accept: '*/*',
-                    },
-                }))
-                .then((r) => {
-                    crate.set('readme', r.payload);
+            fetch(result.get('readme_path'))
+                .then(async (r) => {
+                    if (r.ok) {
+                        crate.set('readme', await r.text());
+                    } else {
+                        crate.set('readme', null);
+                    }
                 })
                 .catch(() => {
                     crate.set('readme', null);

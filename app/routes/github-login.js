@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
@@ -15,11 +15,8 @@ import { inject as service } from '@ember/service';
  * @see `github-authorize` route
  */
 export default Route.extend({
-
-    ajax: service(),
-
     async beforeModel() {
-        let url = await this.get('ajax').request(`/authorize_url`);
+        let url = await ajax(`/authorize_url`);
         window.location = url.url;
     },
 });
