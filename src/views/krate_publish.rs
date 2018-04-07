@@ -18,7 +18,7 @@ pub struct NewCrate {
     pub name: CrateName,
     pub vers: CrateVersion,
     pub deps: Vec<CrateDependency>,
-    pub features: HashMap<CrateName, Vec<Feature>>,
+    pub features: HashMap<FeatureName, Vec<Feature>>,
     pub authors: Vec<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
@@ -51,6 +51,8 @@ pub struct CategoryList(pub Vec<Category>);
 pub struct Category(pub String);
 #[derive(Serialize, Debug, Deref)]
 pub struct Feature(pub String);
+#[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
+pub struct FeatureName(pub String);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CrateDependency {
@@ -98,6 +100,20 @@ impl<'de> Deserialize<'de> for Keyword {
             Err(de::Error::invalid_value(value, &expected))
         } else {
             Ok(Keyword(s))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for FeatureName {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(d)?;
+        if !Crate::valid_feature_name(&s) {
+            let value = de::Unexpected::Str(&s);
+            let expected = "a valid feature name containing only letters, \
+                            numbers, hyphens, or underscores";
+            Err(de::Error::invalid_value(value, &expected))
+        } else {
+            Ok(FeatureName(s))
         }
     }
 }
