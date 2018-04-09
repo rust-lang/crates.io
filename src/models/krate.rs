@@ -250,24 +250,29 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        if name.is_empty() {
-            return false;
-        }
-        name.chars().next().unwrap().is_alphabetic()
+        Self::valid_feature_name(name)
+            && name.chars()
+                .nth(0)
+                .map(char::is_alphabetic)
+                .unwrap_or(false)
+    }
+
+    pub fn valid_feature_name(name: &str) -> bool {
+        !name.is_empty()
             && name.chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }
 
-    pub fn valid_feature_name(name: &str) -> bool {
+    pub fn valid_feature(name: &str) -> bool {
         let mut parts = name.split('/');
         match parts.next() {
-            Some(part) if !Crate::valid_ident(part) => return false,
+            Some(part) if !Crate::valid_feature_name(part) => return false,
             None => return false,
             _ => {}
         }
         match parts.next() {
-            Some(part) if !Crate::valid_ident(part) => return false,
+            Some(part) if !Crate::valid_feature_name(part) => return false,
             _ => {}
         }
         parts.next().is_none()

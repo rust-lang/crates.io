@@ -753,11 +753,12 @@ fn new_krate_bad_name() {
 
 #[test]
 fn valid_feature_names() {
-    assert!(Crate::valid_feature_name("foo"));
-    assert!(!Crate::valid_feature_name(""));
-    assert!(!Crate::valid_feature_name("/"));
-    assert!(!Crate::valid_feature_name("%/%"));
-    assert!(Crate::valid_feature_name("a/a"));
+    assert!(Crate::valid_feature("foo"));
+    assert!(!Crate::valid_feature(""));
+    assert!(!Crate::valid_feature("/"));
+    assert!(!Crate::valid_feature("%/%"));
+    assert!(Crate::valid_feature("a/a"));
+    assert!(Crate::valid_feature("32-column-tables"));
 }
 
 #[test]
