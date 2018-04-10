@@ -225,3 +225,15 @@ impl ToSql<Text, Pg> for Feature {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
 }
+
+#[test]
+fn feature_deserializes_for_valid_features() {
+    use serde_json as json;
+
+    assert!(json::from_str::<Feature>("\"foo\"").is_ok());
+    assert!(json::from_str::<Feature>("\"\"").is_err());
+    assert!(json::from_str::<Feature>("\"/\"").is_err());
+    assert!(json::from_str::<Feature>("\"%/%\"").is_err());
+    assert!(json::from_str::<Feature>("\"a/a\"").is_ok());
+    assert!(json::from_str::<Feature>("\"32-column-tables\"").is_ok());
+}
