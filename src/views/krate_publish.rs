@@ -121,7 +121,7 @@ impl<'de> Deserialize<'de> for FeatureName {
 impl<'de> Deserialize<'de> for Feature {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Feature, D::Error> {
         let s = String::deserialize(d)?;
-        if !Crate::valid_feature_name(&s) {
+        if !Crate::valid_feature(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid feature name";
             Err(de::Error::invalid_value(value, &expected))
@@ -224,4 +224,16 @@ impl ToSql<Text, Pg> for Feature {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
+}
+
+#[test]
+fn feature_deserializes_for_valid_features() {
+    use serde_json as json;
+
+    assert!(json::from_str::<Feature>("\"foo\"").is_ok());
+    assert!(json::from_str::<Feature>("\"\"").is_err());
+    assert!(json::from_str::<Feature>("\"/\"").is_err());
+    assert!(json::from_str::<Feature>("\"%/%\"").is_err());
+    assert!(json::from_str::<Feature>("\"a/a\"").is_ok());
+    assert!(json::from_str::<Feature>("\"32-column-tables\"").is_ok());
 }
