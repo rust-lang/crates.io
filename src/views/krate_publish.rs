@@ -121,7 +121,7 @@ impl<'de> Deserialize<'de> for FeatureName {
 impl<'de> Deserialize<'de> for Feature {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Feature, D::Error> {
         let s = String::deserialize(d)?;
-        if !Crate::valid_feature_name(&s) {
+        if !Crate::valid_feature(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid feature name";
             Err(de::Error::invalid_value(value, &expected))
