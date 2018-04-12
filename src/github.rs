@@ -54,9 +54,10 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
     data: &'a [u8],
 ) -> CargoResult<T> {
     match resp.response_code().unwrap() {
-        200 => {}
         // Ok!
-        403 => {
+        200 => {}
+        // Unauthorized or Forbidden
+        401 | 403 => {
             return Err(human(
                 "It looks like you don't have permission \
                  to query a necessary property from Github \
@@ -67,6 +68,7 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
                  https://crates.io/login",
             ));
         }
+        // Something else
         n => {
             let resp = String::from_utf8_lossy(data);
             return Err(internal(&format_args!(
