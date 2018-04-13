@@ -4,18 +4,17 @@ use super::prelude::*;
 
 use std::io::Cursor;
 use std::collections::HashMap;
-use std::net::IpAddr;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct BlockIps {
-    ips: Vec<IpAddr>,
+    ips: Vec<String>,
     handler: Option<Box<Handler>>,
 }
 
 impl BlockIps {
-    pub fn new(ips: Vec<IpAddr>) -> Self {
+    pub fn new(ips: Vec<String>) -> Self {
         Self { ips, handler: None }
     }
 }
@@ -28,7 +27,12 @@ impl AroundMiddleware for BlockIps {
 
 impl Handler for BlockIps {
     fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
-        if self.ips.contains(&req.remote_addr().ip()) {
+        let has_blacklisted_ip = req.headers()
+            .find("X-Forwarded-For")
+            .unwrap()
+            .iter()
+            .any(|v| v.split(", ").any(|ip| self.ips.iter().any(|x| x == ip)));
+        if has_blacklisted_ip {
             let body = format!(
                 "We are unable to process your request at this time. \
                  Please open an issue at https://github.com/rust-lang/crates.io \

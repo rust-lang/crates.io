@@ -81,10 +81,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     m.around(Head::default());
 
     if let Ok(ip_list) = env::var("BLACKLISTED_IPS") {
-        let ips = ip_list
-            .split(',')
-            .map(|s| s.parse().expect("Could not parse IP address"))
-            .collect();
+        let ips = ip_list.split(',').map(String::from).collect();
         m.around(blacklist_ips::BlockIps::new(ips));
     }
 
