@@ -30,19 +30,17 @@ fn main() {
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
     use version_downloads::dsl::*;
+
     let mut max = Some(0);
     while let Some(m) = max {
-        conn.transaction::<_, diesel::result::Error, _>(|| {
-            let rows = version_downloads
-                .filter(processed.eq(false))
-                .filter(id.gt(m))
-                .order(id)
-                .limit(LIMIT)
-                .load(conn)?;
-            collect(conn, &rows)?;
-            max = rows.last().map(|d| d.id);
-            Ok(())
-        })?;
+        let rows = version_downloads
+            .filter(processed.eq(false))
+            .filter(id.gt(m))
+            .order(id)
+            .limit(LIMIT)
+            .load(conn)?;
+        collect(conn, &rows)?;
+        max = rows.last().map(|d| d.id);
     }
     Ok(())
 }
@@ -61,49 +59,51 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
         now.to_rfc2822()
     );
 
-    let mut total = 0;
     for download in rows {
         let amt = download.downloads - download.counted;
-        total += i64::from(amt);
 
-        // Flag this row as having been processed if we're passed the cutoff,
-        // and unconditionally increment the number of counted downloads.
-        update(version_downloads::table.find(download.id))
-            .set((
-                version_downloads::processed.eq(download.date < cutoff),
-                version_downloads::counted.eq(version_downloads::counted + amt),
-            ))
-            .execute(conn)?;
+        conn.transaction::<_, diesel::result::Error, _>(|| {
+            // Flag this row as having been processed if we're passed the cutoff,
+            // and unconditionally increment the number of counted downloads.
+            update(version_downloads::table.find(download.id))
+                .set((
+                    version_downloads::processed.eq(download.date < cutoff),
+                    version_downloads::counted.eq(version_downloads::counted + amt),
+                ))
+                .execute(conn)?;
 
-        // Update the total number of version downloads
-        let crate_id = update(versions::table.find(download.version_id))
-            .set(versions::downloads.eq(versions::downloads + amt))
-            .returning(versions::crate_id)
-            .get_result::<i32>(conn)?;
+            // Update the total number of version downloads
+            let crate_id = update(versions::table.find(download.version_id))
+                .set(versions::downloads.eq(versions::downloads + amt))
+                .returning(versions::crate_id)
+                .get_result::<i32>(conn)?;
 
-        // Update the total number of crate downloads
-        update(crates::table.find(crate_id))
-            .set(crates::downloads.eq(crates::downloads + amt))
-            .execute(conn)?;
+            // Update the total number of crate downloads
+            update(crates::table.find(crate_id))
+                .set(crates::downloads.eq(crates::downloads + amt))
+                .execute(conn)?;
 
-        // Update the total number of crate downloads for today
-        insert_into(crate_downloads::table)
-            .values((
-                crate_downloads::crate_id.eq(crate_id),
-                crate_downloads::downloads.eq(amt),
-                crate_downloads::date.eq(download.date),
-            ))
-            .on_conflict(crate_downloads::table.primary_key())
-            .do_update()
-            .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
-            .execute(conn)?;
+            // Update the total number of crate downloads for today
+            insert_into(crate_downloads::table)
+                .values((
+                    crate_downloads::crate_id.eq(crate_id),
+                    crate_downloads::downloads.eq(amt),
+                    crate_downloads::date.eq(download.date),
+                ))
+                .on_conflict(crate_downloads::table.primary_key())
+                .do_update()
+                .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
+                .execute(conn)?;
+
+            // Now that everything else for this crate is done, update the global counter of total
+            // downloads
+            update(metadata::table)
+                .set(metadata::total_downloads.eq(metadata::total_downloads + (amt as i64)))
+                .execute(conn)?;
+
+            Ok(())
+        })?;
     }
-
-    // After everything else is done, update the global counter of total
-    // downloads.
-    update(metadata::table)
-        .set(metadata::total_downloads.eq(metadata::total_downloads + total))
-        .execute(conn)?;
 
     Ok(())
 }
