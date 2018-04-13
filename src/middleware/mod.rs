@@ -49,7 +49,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         m.add(DebugRequest);
     }
 
-    if env != Env::Test {
+    if env == Env::Development {
         m.add(LogRequests(log::LogLevel::Info));
     }
 
