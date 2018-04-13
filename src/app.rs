@@ -3,6 +3,7 @@
 use std::env;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use diesel::r2d2;
 use git2;
@@ -71,11 +72,19 @@ impl App {
             _ => 1,
         };
 
+        let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
+            (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
+            (_, ::Env::Production) => 10,
+            _ => 30,
+        };
+
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
         let diesel_db_config = r2d2::Pool::builder()
             .max_size(db_pool_size)
             .min_idle(db_min_idle)
+            .connection_timeout(Duration::from_secs(db_connection_timeout))
+            .connection_customizer(Box::new(db::SetStatementTimeout(db_connection_timeout)))
             .thread_pool(thread_pool);
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
