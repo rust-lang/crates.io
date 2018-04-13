@@ -98,7 +98,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
             // Now that everything else for this crate is done, update the global counter of total
             // downloads
             update(metadata::table)
-                .set(metadata::total_downloads.eq(metadata::total_downloads + (amt as i64)))
+                .set(metadata::total_downloads.eq(metadata::total_downloads + i64::from(amt)))
                 .execute(conn)?;
 
             Ok(())
