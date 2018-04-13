@@ -28,7 +28,7 @@ impl Middleware for Debug {
 #[derive(Clone, Copy, Debug)]
 pub struct DebugRequest;
 
-impl Middleware for DebugRequest{
+impl Middleware for DebugRequest {
     fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
         println!("  version: {}", req.http_version());
         println!("  method: {:?}", req.method());
