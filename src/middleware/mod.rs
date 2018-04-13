@@ -6,7 +6,7 @@ mod prelude {
 
 pub use self::app::AppMiddleware;
 pub use self::current_user::CurrentUser;
-pub use self::debug::Debug;
+pub use self::debug::*;
 pub use self::ember_index_rewrite::EmberIndexRewrite;
 pub use self::head::Head;
 pub use self::security_headers::SecurityHeaders;
@@ -25,6 +25,7 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_log_requests::LogRequests;
 
+use std::env;
 use std::sync::Arc;
 use cookie;
 use log;
@@ -41,6 +42,10 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         m.add(Debug);
         // Locally serve crates and readmes
         m.around(StaticOrContinue::new("local_uploads"));
+    }
+
+    if env::var_os("DEBUG_REQUESTS").is_some() {
+        m.add(DebugRequest);
     }
 
     if env != Env::Test {
