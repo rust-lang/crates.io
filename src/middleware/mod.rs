@@ -13,6 +13,7 @@ pub use self::security_headers::SecurityHeaders;
 pub use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
+mod blacklist_ips;
 pub mod current_user;
 mod debug;
 mod ember_index_rewrite;
@@ -78,6 +79,14 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
 
     m.around(Head::default());
+
+    if let Ok(ip_list) = env::var("BLACKLISTED_IPS") {
+        let ips = ip_list
+            .split(',')
+            .map(|s| s.parse().expect("Could not parse IP address"))
+            .collect();
+        m.around(blacklist_ips::BlockIps::new(ips));
+    }
 
     m
 }
