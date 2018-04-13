@@ -36,6 +36,7 @@ impl Handler for BlockIps {
             let body = format!(
                 "We are unable to process your request at this time. \
                  Please open an issue at https://github.com/rust-lang/crates.io \
+                 or email crates-io@rust-lang.org \
                  and provide the request id {}",
                 req.headers().find("X-Request-Id").unwrap()[0]
             );
