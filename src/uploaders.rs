@@ -250,7 +250,7 @@ fn verify_tarball(
     max_unpack: u64,
 ) -> CargoResult<()> {
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball);
+    let decoder = GzDecoder::new(tarball)?;
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
@@ -278,5 +278,5 @@ fn verify_tarball(
 fn hash(data: &[u8]) -> Vec<u8> {
     let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
     hasher.update(data).unwrap();
-    hasher.finish().unwrap().to_vec()
+    hasher.finish2().unwrap().to_vec()
 }

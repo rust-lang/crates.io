@@ -14,7 +14,7 @@ use std::sync::mpsc::channel;
 
 fn main() {
     // Initialize logging
-    env_logger::init();
+    env_logger::init().unwrap();
     let config: cargo_registry::Config = Default::default();
 
     // If there isn't a git checkout containing the crate index repo at the path specified

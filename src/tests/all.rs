@@ -696,7 +696,7 @@ fn new_crate_to_body_with_io(
 ) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
         for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));

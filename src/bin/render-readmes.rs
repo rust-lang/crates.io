@@ -220,7 +220,10 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         return None;
     }
     let reader = Cursor::new(response);
-    let reader = GzDecoder::new(reader);
+    let reader = GzDecoder::new(reader).expect(&format!(
+        "[{}-{}] Invalid gzip header",
+        krate_name, version.num
+    ));
     let mut archive = Archive::new(reader);
     let mut entries = archive.entries().expect(&format!(
         "[{}-{}] Invalid tar archive entries",

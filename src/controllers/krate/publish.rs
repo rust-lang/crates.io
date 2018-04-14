@@ -140,14 +140,11 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
                 .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
 
-        let mut hex_cksum = String::new();
-        cksum.write_hex(&mut hex_cksum)?;
-
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
             name: name.to_string(),
             vers: vers.to_string(),
-            cksum: hex_cksum,
+            cksum: cksum.to_hex(),
             features,
             deps: git_deps,
             yanked: Some(false),

@@ -134,7 +134,7 @@ impl Bucket {
             let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
             let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
             signer.update(string.as_bytes()).unwrap();
-            encode(&signer.sign_to_vec().unwrap()[..])
+            encode(&signer.finish().unwrap()[..])
         };
         format!("AWS {}:{}", self.access_key, signature)
     }
