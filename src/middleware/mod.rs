@@ -16,6 +16,7 @@ pub mod app;
 mod blacklist_ips;
 pub mod current_user;
 mod debug;
+mod ensure_well_formed_500;
 mod ember_index_rewrite;
 mod head;
 mod security_headers;
@@ -36,6 +37,10 @@ use router::R404;
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
+
+    if env != Env::Test {
+        m.add(ensure_well_formed_500::EnsureWellFormed500);
+    }
 
     let env = app.config.env;
     if env == Env::Development {
