@@ -37,12 +37,12 @@ use router::R404;
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
+    let env = app.config.env;
 
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
     }
 
-    let env = app.config.env;
     if env == Env::Development {
         // Print a log for each request.
         m.add(Debug);
