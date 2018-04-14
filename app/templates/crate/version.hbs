@@ -109,13 +109,6 @@
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
                 <div class='date'>{{moment-from-now crate.updated_at}}</div>
-                <p>
-                    <img
-                        src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                        alt="{{ crate.name }}’s current version badge"
-                        title="{{ crate.name }}’s current version badge">
-                </p>
-
                 {{#each crate.annotated_badges as |badge|}}
                     <p>
                         {{component badge.component_name badge=badge}}
