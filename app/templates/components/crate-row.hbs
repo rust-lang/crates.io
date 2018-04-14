@@ -1,13 +1,7 @@
 <div class='desc'>
     <div class='info'>
         {{#link-to 'crate' crate.id data-test-crate-link}}{{ crate.name }}{{/link-to}}
-        <span class='vers'>
-            <img
-                src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                alt="{{ crate.max_version }}"
-                title="{{ crate.name }}’s current version badge"
-                data-test-version-badge>
-        </span>
+        {{crate-badge crate=crate}}
         {{#each crate.annotated_badges as |badge|}}
             {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
         {{/each}}
