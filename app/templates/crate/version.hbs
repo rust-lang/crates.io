@@ -42,15 +42,11 @@
         {{#if crate.repository}}
             <li><a href="{{crate.repository}}">Repository</a></li>
         {{/if}}
-        {{#if crate.reverse_dependencies}}
-            <li>
-              {{#link-to 'crate.reverse-dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
-                Dependent crates
-              {{/link-to}}
-            </li>
-        {{else}}
-            <li>No dependent crates</li>
-        {{/if}}
+        <li>
+          {{#link-to 'crate.reverse-dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
+            Dependent crates
+          {{/link-to}}
+        </li>
     </ul>
     </div>
 </div>
