@@ -1,4 +1,4 @@
-import { alias, readOnly, gt, or } from '@ember/object/computed';
+import { alias, readOnly, gt } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
@@ -41,8 +41,6 @@ export default Controller.extend({
     }),
 
     hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
-
-    anyLinks: or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return PromiseArray.create({
