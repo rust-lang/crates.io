@@ -22,7 +22,8 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
-    "test": "ember exam --split=2 --parallel"
+    "test": "ember exam --split=2 --parallel",
+    "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
@@ -33,6 +34,7 @@
     "ember-cli-babel": "^6.8.2",
     "ember-cli-cjs-transform": "^1.1.1",
     "ember-cli-clipboard": "^0.9.0",
+    "ember-cli-code-coverage": "kategengler/ember-cli-code-coverage#77b5b92",
     "ember-cli-dependency-checker": "^2.0.1",
     "ember-cli-eslint": "^4.2.1",
     "ember-cli-htmlbars": "^2.0.3",
@@ -69,6 +71,7 @@
     "eslint-plugin-ember": "^5.1.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
+    "nyc": "^11.6.0",
     "qunit-dom": "^0.5.0",
     "timekeeper": "^2.1.0"
   },
