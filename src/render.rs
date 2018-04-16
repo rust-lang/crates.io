@@ -2,6 +2,7 @@ use ammonia::{Builder, UrlRelative};
 use comrak;
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
+use std::path::Path;
 use url::Url;
 
 use util::CargoResult;
@@ -119,6 +120,16 @@ impl<'a> MarkdownRenderer<'a> {
             None
         });
 
+        fn is_media_url(url: &str) -> bool {
+            Path::new(url)
+                .extension()
+                .and_then(|e| e.to_str())
+                .map_or(false, |e| match e {
+                    "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
+                    _ => false,
+                })
+        }
+
         let relative_url_sanitizer = constrain_closure(move |url| {
             // sanitizer_base_url is Some(String); use it to fix the relative URL.
             if url.starts_with('#') {
@@ -133,7 +144,13 @@ impl<'a> MarkdownRenderer<'a> {
                 let offset = new_url.len() - 5;
                 new_url.drain(offset..offset + 4);
             }
-            new_url += "blob/master";
+            // Assumes GitHub's URL scheme. GitHub renders text and markdown
+            // better in the "blob" view, but images need to be served raw.
+            new_url += if is_media_url(url) {
+                "raw/master"
+            } else {
+                "blob/master"
+            };
             if !url.starts_with('/') {
                 new_url.push('/');
             }
@@ -310,6 +327,7 @@ mod tests {
     fn relative_links() {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
+        let image = "![alt](img.png)";
 
         for host in &["github.com", "gitlab.com", "bitbucket.org"] {
             for (&extra_slash, &dot_git) in [true, false].iter().zip(&[true, false]) {
@@ -334,6 +352,15 @@ mod tests {
                     result,
                     format!(
                         "<p><a href=\"https://{}/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(image, Some(&url)).unwrap();
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
