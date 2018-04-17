@@ -147,7 +147,7 @@ In order to run the backend, you will need to have installed:
 - [Postgres](https://www.postgresql.org/) >= 9.5
 - [CMake](https://cmake.org/download/) >= 3.6.1
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
-- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.11.0
+- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0
 
 ##### Rust
 
