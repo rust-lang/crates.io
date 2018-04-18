@@ -1,6 +1,9 @@
 import Response from 'ember-cli-mirage/response';
 
 export default function() {
+    // Used by ember-cli-code-coverage
+    this.passthrough('/write-coverage');
+
     this.namespace = '/api/v1';
 
     this.get('/summary', function(schema) {
