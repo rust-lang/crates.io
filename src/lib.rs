@@ -44,7 +44,6 @@ extern crate conduit;
 extern crate conduit_conditional_get;
 extern crate conduit_cookie;
 extern crate conduit_git_http_backend;
-extern crate conduit_log_requests;
 extern crate conduit_middleware;
 extern crate conduit_router;
 extern crate conduit_static;

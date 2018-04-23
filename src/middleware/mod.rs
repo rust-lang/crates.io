@@ -18,6 +18,7 @@ pub mod current_user;
 mod debug;
 mod ensure_well_formed_500;
 mod ember_index_rewrite;
+mod log_request;
 mod head;
 mod security_headers;
 mod static_or_continue;
@@ -25,12 +26,10 @@ mod static_or_continue;
 use conduit_middleware::MiddlewareBuilder;
 use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
-use conduit_log_requests::LogRequests;
 
 use std::env;
 use std::sync::Arc;
 use cookie;
-use log;
 
 use {App, Env};
 use router::R404;
@@ -55,7 +54,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
 
     if env != Env::Test {
-        m.add(LogRequests(log::LogLevel::Info));
+        m.around(log_request::LogRequests::default());
     }
 
     m.add(ConditionalGet);
