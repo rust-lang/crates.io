@@ -49,6 +49,10 @@ impl Handler for LogRequests {
             print!(" error=\"{}\"", e.description());
         }
 
+        if response_time > 1000 {
+            print!(" SLOW REQUEST");
+        }
+
         println!();
 
         res
