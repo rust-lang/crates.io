@@ -28,7 +28,7 @@ impl Handler for LogRequests {
         };
         let response_time = request_start.elapsed();
         let response_time =
-            response_time.as_secs() * 1000 + response_time.subsec_nanos() as u64 / 1_000_000;
+            response_time.as_secs() * 1000 + u64::from(response_time.subsec_nanos()) / 1_000_000;
 
         print!(
             "at={level} method={method} path=\"{path}\" \
@@ -49,7 +49,7 @@ impl Handler for LogRequests {
             print!(" error=\"{}\"", e.description());
         }
 
-        print!("\n");
+        println!();
 
         res
     }

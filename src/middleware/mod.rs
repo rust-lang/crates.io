@@ -53,10 +53,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         m.add(DebugRequest);
     }
 
-    if env != Env::Test {
-        m.around(log_request::LogRequests::default());
-    }
-
     m.add(ConditionalGet);
 
     m.add(Cookie::new());
@@ -87,6 +83,10 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     if let Ok(ip_list) = env::var("BLACKLISTED_IPS") {
         let ips = ip_list.split(',').map(String::from).collect();
         m.around(blacklist_ips::BlockIps::new(ips));
+    }
+
+    if env != Env::Test {
+        m.around(log_request::LogRequests::default());
     }
 
     m
