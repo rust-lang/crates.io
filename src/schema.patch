@@ -1,0 +1,62 @@
+diff --git a/src/schema.rs b/src/schema.rs
+index 3c2b80c..89da3e4 100644
+--- a/src/schema.rs
++++ b/src/schema.rs
+@@ -1,3 +1,5 @@
++#![allow(unused_imports)]
++
+ table! {
+     use diesel::sql_types::*;
+     use diesel_full_text_search::{TsVector as Tsvector};
+@@ -590,6 +592,24 @@ table! {
+ }
+ 
+ table! {
++    /// Representation of the `recent_crate_downloads` view.
++    ///
++    /// This data represents the downloads in the last 90 days.
++    /// This view does not contain realtime data.
++    /// It is refreshed by the `update-downloads` script.
++    recent_crate_downloads (crate_id) {
++        /// The `crate_id` column of the `recent_crate_downloads` view.
++        ///
++        /// Its SQL type is `Integer`.
++        crate_id -> Integer,
++        /// The `downloads` column of the `recent_crate_downloads` table.
++        ///
++        /// Its SQL type is `BigInt`.
++        downloads -> BigInt,
++    }
++}
++
++table! {
+     use diesel::sql_types::*;
+     use diesel_full_text_search::{TsVector as Tsvector};
+ 
+@@ -851,7 +871,8 @@ joinable!(api_tokens -> users (user_id));
+ joinable!(crate_downloads -> crates (crate_id));
+ joinable!(crate_owner_invitations -> crates (crate_id));
+ joinable!(crate_owners -> crates (crate_id));
+-joinable!(crate_owners -> users (created_by));
++joinable!(crate_owners -> teams (owner_id));
++joinable!(crate_owners -> users (owner_id));
+ joinable!(crates_categories -> categories (category_id));
+ joinable!(crates_categories -> crates (crate_id));
+ joinable!(crates_keywords -> crates (crate_id));
+@@ -862,6 +883,7 @@ joinable!(emails -> users (user_id));
+ joinable!(follows -> crates (crate_id));
+ joinable!(follows -> users (user_id));
+ joinable!(readme_renderings -> versions (version_id));
++joinable!(recent_crate_downloads -> crates (crate_id));
+ joinable!(version_authors -> users (user_id));
+ joinable!(version_authors -> versions (version_id));
+ joinable!(version_downloads -> versions (version_id));
+@@ -883,6 +905,7 @@ allow_tables_to_appear_in_same_query!(
+     keywords,
+     metadata,
+     readme_renderings,
++    recent_crate_downloads,
+     reserved_crate_names,
+     teams,
+     users,
+
