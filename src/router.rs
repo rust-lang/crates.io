@@ -171,3 +171,61 @@ impl Handler for R404 {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    extern crate conduit_test;
+
+    use self::conduit_test::MockRequest;
+    use super::*;
+    use diesel::result::Error as DieselError;
+    use util::errors::*;
+
+    fn err<E: CargoError>(err: E) -> CargoResult<Response> {
+        Err(Box::new(err))
+    }
+
+    #[test]
+    fn http_error_responses() {
+        let mut req = MockRequest::new(::conduit::Method::Get, "/");
+
+        // Types for handling common error status codes
+        assert_eq!(
+            C(|_| Err(bad_request(""))).call(&mut req).unwrap().status.0,
+            400
+        );
+        assert_eq!(
+            C(|_| err(Unauthorized)).call(&mut req).unwrap().status.0,
+            403
+        );
+        assert_eq!(
+            C(|_| Err(DieselError::NotFound.into()))
+                .call(&mut req)
+                .unwrap()
+                .status
+                .0,
+            404
+        );
+        assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status.0, 404);
+
+        // Human errors are returned as 200 so that cargo displays this nicely on the command line
+        assert_eq!(C(|_| Err(human(""))).call(&mut req).unwrap().status.0, 200);
+
+        // All other error types are propogated up the middleware, eventually becoming status 500
+        assert!(C(|_| Err(internal(""))).call(&mut req).is_err());
+        assert!(C(|_| err(::curl::Error::new(0))).call(&mut req).is_err());
+        assert!(
+            C(|_| err(::serde_json::Error::syntax(
+                ::serde_json::error::ErrorCode::ExpectedColon,
+                0,
+                0
+            ))).call(&mut req)
+                .is_err()
+        );
+        assert!(
+            C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
+                .call(&mut req)
+                .is_err()
+        );
+    }
+}
