@@ -89,7 +89,7 @@ pub fn add_dependencies(
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
                 return Err(human(
                     "wildcard (`*`) dependency constraints are not allowed \
-                     on crates.io. See http://doc.crates.io/faq.html#can-\
+                     on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
                      libraries-use--as-a-version-for-their-dependencies for more \
                      information",
                 ));
