@@ -2,6 +2,7 @@
 
 extern crate cargo_registry;
 extern crate chrono;
+#[macro_use]
 extern crate diesel;
 
 use diesel::prelude::*;
@@ -29,6 +30,7 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use diesel::select;
     use version_downloads::dsl::*;
 
     let mut max = Some(0);
@@ -42,6 +44,9 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         collect(conn, &rows)?;
         max = rows.last().map(|d| d.id);
     }
+
+    no_arg_sql_function!(refresh_recent_crate_downloads, ());
+    select(refresh_recent_crate_downloads).execute(conn)?;
     Ok(())
 }
 

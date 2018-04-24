@@ -592,6 +592,24 @@ table! {
 }
 
 table! {
+    /// Representation of the `recent_crate_downloads` view.
+    ///
+    /// This data represents the downloads in the last 90 days.
+    /// This view does not contain realtime data.
+    /// It is refreshed by the `update-downloads` script.
+    recent_crate_downloads (crate_id) {
+        /// The `crate_id` column of the `recent_crate_downloads` view.
+        ///
+        /// Its SQL type is `Integer`.
+        crate_id -> Integer,
+        /// The `downloads` column of the `recent_crate_downloads` table.
+        ///
+        /// Its SQL type is `BigInt`.
+        downloads -> BigInt,
+    }
+}
+
+table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
 
@@ -865,6 +883,7 @@ joinable!(emails -> users (user_id));
 joinable!(follows -> crates (crate_id));
 joinable!(follows -> users (user_id));
 joinable!(readme_renderings -> versions (version_id));
+joinable!(recent_crate_downloads -> crates (crate_id));
 joinable!(version_authors -> users (user_id));
 joinable!(version_authors -> versions (version_id));
 joinable!(version_downloads -> versions (version_id));
@@ -886,6 +905,7 @@ allow_tables_to_appear_in_same_query!(
     keywords,
     metadata,
     readme_renderings,
+    recent_crate_downloads,
     reserved_crate_names,
     teams,
     users,

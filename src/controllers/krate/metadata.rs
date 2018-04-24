@@ -14,7 +14,6 @@ use models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut Request) -> CargoResult<Response> {
-    use diesel::sql_query;
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -54,23 +53,12 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .limit(10)
         .load(&*conn)?;
 
-    // This query needs to be structured in this way to have the LIMIT
-    // happen before the joining/sorting for performance reasons.
-    // It needs to use sql_query because Diesel doesn't have a great way
-    // to join on subselects right now :(
-    let most_recently_downloaded = sql_query(
-        "SELECT crates.* \
-         FROM crates \
-         JOIN ( \
-         SELECT crate_downloads.crate_id, SUM(crate_downloads.downloads) \
-         FROM crate_downloads \
-         WHERE crate_downloads.date > date(CURRENT_TIMESTAMP - INTERVAL '90 days') \
-         GROUP BY crate_downloads.crate_id \
-         ORDER BY SUM(crate_downloads.downloads) DESC NULLS LAST \
-         LIMIT 10 \
-         ) cd ON crates.id = cd.crate_id \
-         ORDER BY cd.sum DESC NULLS LAST",
-    ).load::<Crate>(&*conn)?;
+    let most_recently_downloaded = crates
+        .inner_join(recent_crate_downloads::table)
+        .order(recent_crate_downloads::downloads.desc())
+        .select(ALL_COLUMNS)
+        .limit(10)
+        .load(&*conn)?;
 
     let popular_keywords = keywords::table
         .order(keywords::crates_cnt.desc())
