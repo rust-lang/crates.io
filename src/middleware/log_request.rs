@@ -2,6 +2,7 @@
 //! information that we care about like User-Agent and Referer
 
 use conduit::Request;
+use std::fmt;
 use std::time::Instant;
 use super::prelude::*;
 use util::request_header;
@@ -36,7 +37,7 @@ impl Handler for LogRequests {
              status={status} user_agent=\"{user_agent}\" referer=\"{referer}\"",
             level = level,
             method = req.method(),
-            path = req.path(),
+            path = FullPath(req),
             ip = request_header(req, "X-Forwarded-For"),
             time_ms = response_time,
             user_agent = request_header(req, "User-Agent"),
@@ -52,5 +53,17 @@ impl Handler for LogRequests {
         println!();
 
         res
+    }
+}
+
+struct FullPath<'a>(&'a Request);
+
+impl<'a> fmt::Display for FullPath<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0.path())?;
+        if let Some(q_string) = self.0.query_string() {
+            write!(f, "?{}", q_string)?;
+        }
+        Ok(())
     }
 }
