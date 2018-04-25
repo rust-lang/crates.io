@@ -144,7 +144,7 @@ impl<'a> MarkdownRenderer<'a> {
                 let offset = new_url.len() - 5;
                 new_url.drain(offset..offset + 4);
             }
-            // Assumes GitHub's URL scheme. GitHub renders text and markdown
+            // Assumes GitHub’s URL scheme. GitHub renders text and markdown
             // better in the "blob" view, but images need to be served raw.
             new_url += if is_media_url(url) {
                 "raw/master"
@@ -360,7 +360,7 @@ mod tests {
                 assert_eq!(
                     result,
                     format!(
-                        "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
+                 "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
                         host
                     )
                 );
