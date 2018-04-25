@@ -1,7 +1,7 @@
 //! Endpoints for managing a per user list of followed crates
 
-use diesel::associations::Identifiable;
 use diesel;
+use diesel::associations::Identifiable;
 
 use controllers::prelude::*;
 use models::{Crate, Follow};

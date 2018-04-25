@@ -4,8 +4,8 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use semver;
 use git2;
+use semver;
 use serde_json;
 
 use app::App;

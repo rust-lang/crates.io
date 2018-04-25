@@ -28,9 +28,9 @@ use std::io::Read;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
+use cargo_registry::Replica;
 use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
-use cargo_registry::Replica;
 use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
@@ -40,39 +40,45 @@ use flate2::write::GzEncoder;
 
 pub use cargo_registry::{models, schema, views};
 
-use views::EncodableCrate;
-use views::krate_publish as u;
 use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
+use views::EncodableCrate;
+use views::krate_publish as u;
 
 macro_rules! t {
-    ($e:expr) => (
+    ($e:expr) => {
         match $e {
             Ok(e) => e,
             Err(m) => panic!("{} failed with: {}", stringify!($e), m),
         }
-    )
+    };
 }
 
-macro_rules! t_resp { ($e:expr) => (t!($e)) }
+macro_rules! t_resp {
+    ($e:expr) => {
+        t!($e)
+    };
+}
 
 macro_rules! ok_resp {
-    ($e:expr) => ({
+    ($e:expr) => {{
         let resp = t_resp!($e);
-        if !::ok_resp(&resp) { panic!("bad response: {:?}", resp.status); }
+        if !::ok_resp(&resp) {
+            panic!("bad response: {:?}", resp.status);
+        }
         resp
-    })
+    }};
 }
 
 macro_rules! bad_resp {
-    ($e:expr) => ({
+    ($e:expr) => {{
         let mut resp = t_resp!($e);
         match ::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }
-    })
+    }};
 }
 
 #[derive(Deserialize, Debug)]
@@ -509,8 +515,8 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
-    use diesel::insert_into;
     use cargo_registry::schema::dependencies::dsl::*;
+    use diesel::insert_into;
 
     insert_into(dependencies)
         .values((

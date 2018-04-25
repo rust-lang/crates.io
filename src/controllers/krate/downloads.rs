@@ -4,11 +4,12 @@
 //! download counts are located in `krate::downloads`.
 
 use std::cmp;
+
 use controllers::prelude::*;
 
-use views::EncodableVersionDownload;
 use models::{Crate, Version, VersionDownload};
 use schema::version_downloads;
+use views::EncodableVersionDownload;
 
 use models::krate::to_char;
 

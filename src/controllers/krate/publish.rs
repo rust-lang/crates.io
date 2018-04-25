@@ -9,13 +9,13 @@ use serde_json;
 
 use git;
 use render;
-use util::{read_fill, read_le_u32};
 use util::{internal, ChainError};
+use util::{read_fill, read_le_u32};
 
 use controllers::prelude::*;
-use views::{EncodableCrate, EncodableCrateUpload};
-use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use models::dependency;
+use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use views::{EncodableCrate, EncodableCrateUpload};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an

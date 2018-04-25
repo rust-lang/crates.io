@@ -5,11 +5,11 @@ extern crate serde_json;
 
 use serde_json::Value;
 
-use conduit::{Handler, Method};
 use self::diesel::prelude::*;
+use conduit::{Handler, Method};
 
-use views::EncodableVersion;
 use schema::versions;
+use views::EncodableVersion;
 
 #[derive(Deserialize)]
 struct VersionList {

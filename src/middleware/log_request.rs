@@ -1,10 +1,10 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent and Referer
 
+use super::prelude::*;
 use conduit::Request;
 use std::fmt;
 use std::time::Instant;
-use super::prelude::*;
 use util::request_header;
 
 #[allow(missing_debug_implementations)] // We can't

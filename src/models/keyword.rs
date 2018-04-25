@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use diesel;
+use diesel::prelude::*;
 
 use models::Crate;
 use schema::*;

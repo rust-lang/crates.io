@@ -5,8 +5,8 @@ use curl::easy::{Easy, List};
 
 use oauth2::*;
 
-use serde_json;
 use serde::Deserialize;
+use serde_json;
 
 use std::str;
 

@@ -6,8 +6,8 @@
 
 use controllers::prelude::*;
 
-use views::{EncodableDependency, EncodablePublicUser};
 use schema::*;
+use views::{EncodableDependency, EncodablePublicUser};
 
 use super::version_and_crate;
 

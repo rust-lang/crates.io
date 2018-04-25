@@ -4,14 +4,14 @@
 //! integration tests.
 use std::collections::HashMap;
 
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use semver;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 use models::krate::MAX_NAME_LENGTH;
 
-use models::Keyword as CrateKeyword;
-use models::DependencyKind;
 use models::Crate;
+use models::DependencyKind;
+use models::Keyword as CrateKeyword;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewCrate {

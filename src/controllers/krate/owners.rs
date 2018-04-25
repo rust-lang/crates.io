@@ -3,8 +3,8 @@
 use serde_json;
 
 use controllers::prelude::*;
-use views::EncodableOwner;
 use models::{Crate, Owner, Rights, Team, User};
+use views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut Request) -> CargoResult<Response> {

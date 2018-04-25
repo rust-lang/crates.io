@@ -1,6 +1,6 @@
 mod prelude {
-    pub use diesel::prelude::*;
     pub use super::helpers::ok_true;
+    pub use diesel::prelude::*;
 
     pub use conduit::{Request, Response};
     pub use conduit_router::RequestParams;
@@ -11,10 +11,11 @@ mod prelude {
     pub use middleware::app::RequestApp;
     pub use middleware::current_user::RequestUser;
 
-    use std::io;
-    use url;
     use std::collections::HashMap;
+    use std::io;
+
     use serde::Serialize;
+    use url;
 
     pub trait RequestUtils {
         fn redirect(&self, url: String) -> Response;
@@ -86,5 +87,5 @@ pub mod krate;
 pub mod site_metadata;
 pub mod team;
 pub mod token;
-pub mod version;
 pub mod user;
+pub mod version;

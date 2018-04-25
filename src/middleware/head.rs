@@ -2,8 +2,8 @@
 
 use super::prelude::*;
 
-use std::io;
 use conduit::Method;
+use std::io;
 use util::RequestProxy;
 
 // Can't derive debug because of Handler.

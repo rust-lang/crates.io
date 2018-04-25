@@ -1,7 +1,7 @@
 mod prelude {
-    pub use std::error::Error;
     pub use conduit::{Handler, Request, Response};
     pub use conduit_middleware::{AroundMiddleware, Middleware};
+    pub use std::error::Error;
 }
 
 pub use self::app::AppMiddleware;
@@ -16,23 +16,23 @@ pub mod app;
 mod blacklist_ips;
 pub mod current_user;
 mod debug;
-mod ensure_well_formed_500;
 mod ember_index_rewrite;
-mod log_request;
+mod ensure_well_formed_500;
 mod head;
+mod log_request;
 mod security_headers;
 mod static_or_continue;
 
-use conduit_middleware::MiddlewareBuilder;
 use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
+use conduit_middleware::MiddlewareBuilder;
 
+use cookie;
 use std::env;
 use std::sync::Arc;
-use cookie;
 
-use {App, Env};
 use router::R404;
+use {App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);

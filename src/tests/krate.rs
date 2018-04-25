@@ -2,14 +2,14 @@ extern crate diesel;
 
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 use std::sync::Arc;
 
+use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::update;
-use self::diesel::prelude::*;
 use git2;
 use semver;
 use serde_json;
@@ -19,11 +19,11 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
 
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion, EncodableVersionDownload};
-use views::krate_publish as u;
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
+use views::krate_publish as u;
+use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
+            EncodableVersion, EncodableVersionDownload};
 
 #[derive(Deserialize)]
 struct VersionsList {
