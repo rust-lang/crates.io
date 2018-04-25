@@ -408,7 +408,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::{insert_into, update};
+        use diesel::{insert_into, select, update};
 
         let mut krate = self.krate
             .create_or_update(connection, None, self.owner_id)?;
@@ -444,6 +444,9 @@ impl<'a> CrateBuilder<'a> {
             insert_into(crate_downloads::table)
                 .values(&crate_download)
                 .execute(connection)?;
+
+            no_arg_sql_function!(refresh_recent_crate_downloads, ());
+            select(refresh_recent_crate_downloads).execute(connection)?;
         }
 
         if self.versions.is_empty() {

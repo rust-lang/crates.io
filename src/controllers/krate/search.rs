@@ -32,8 +32,7 @@ use models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
-    use diesel::dsl::*;
-    use diesel::sql_types::{BigInt, Bool, Nullable};
+    use diesel::sql_types::Bool;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -43,29 +42,14 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .map(|s| &**s)
         .unwrap_or("recent-downloads");
 
-    let recent_downloads = sql::<Nullable<BigInt>>("SUM(crate_downloads.downloads)");
-
     let mut query = crates::table
-        .left_join(
-            crate_downloads::table.on(crates::id
-                .eq(crate_downloads::crate_id)
-                .and(crate_downloads::date.gt(date(now - 90.days())))),
-        )
-        .group_by(crates::id)
+        .left_join(recent_crate_downloads::table)
         .select((
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
-            recent_downloads.clone(),
+            recent_crate_downloads::downloads.nullable(),
         ))
         .into_boxed();
-
-    if sort == "downloads" {
-        query = query.order(crates::downloads.desc())
-    } else if sort == "recent-downloads" {
-        query = query.order(recent_downloads.clone().desc().nulls_last())
-    } else {
-        query = query.order(crates::name.asc())
-    }
 
     if let Some(q_string) = params.get("q") {
         let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
@@ -78,16 +62,13 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         query = query.select((
             ALL_COLUMNS,
             Crate::with_name(q_string),
-            recent_downloads.clone(),
+            recent_crate_downloads::downloads.nullable(),
         ));
-        let perfect_match = Crate::with_name(q_string).desc();
-        if sort == "downloads" {
-            query = query.order((perfect_match, crates::downloads.desc()));
-        } else if sort == "recent-downloads" {
-            query = query.order((perfect_match, recent_downloads.clone().desc().nulls_last()));
-        } else {
+        query = query.order(Crate::with_name(q_string).desc());
+
+        if sort == "relevance" {
             let rank = ts_rank_cd(crates::textsearchable_index_col, q);
-            query = query.order((perfect_match, rank.desc()))
+            query = query.then_order_by(rank.desc())
         }
     }
 
@@ -154,6 +135,14 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
                     .filter(follows::user_id.eq(req.user()?.id)),
             ),
         );
+    }
+
+    if sort == "downloads" {
+        query = query.then_order_by(crates::downloads.desc())
+    } else if sort == "recent-downloads" {
+        query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+    } else {
+        query = query.then_order_by(crates::name.asc())
     }
 
     // The database query returns a tuple within a tuple , with the root
