@@ -13,7 +13,6 @@ export default Controller.extend(PaginationMixin, {
     q: alias('search.q'),
     page: '1',
     per_page: 10,
-    sort: null,
 
     model: readOnly('dataTask.lastSuccessful.value'),
 
