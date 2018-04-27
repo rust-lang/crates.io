@@ -1,7 +1,6 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate chrono;
 #[macro_use]
 extern crate diesel;
 
@@ -30,6 +29,7 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use diesel::dsl::now;
     use diesel::select;
     use version_downloads::dsl::*;
 
@@ -38,12 +38,22 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
         let rows = version_downloads
             .filter(processed.eq(false))
             .filter(id.gt(m))
+            .filter(downloads.ne(counted))
             .order(id)
             .limit(LIMIT)
             .load(conn)?;
         collect(conn, &rows)?;
         max = rows.last().map(|d| d.id);
     }
+
+    // Anything older than 24 hours ago will be frozen and will not be queried
+    // against again.
+    diesel::update(version_downloads)
+        .set(processed.eq(true))
+        .filter(date.lt(diesel::dsl::date(now)))
+        .filter(downloads.eq(counted))
+        .filter(processed.eq(false))
+        .execute(conn)?;
 
     no_arg_sql_function!(refresh_recent_crate_downloads, ());
     select(refresh_recent_crate_downloads).execute(conn)?;
@@ -53,28 +63,15 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     use diesel::{insert_into, update};
 
-    // Anything older than 24 hours ago will be frozen and will not be queried
-    // against again.
-    let now = chrono::Utc::now();
-    let cutoff = now.naive_utc().date() - chrono::Duration::days(1);
-
-    println!(
-        "updating {} versions (cutoff {})",
-        rows.len(),
-        now.to_rfc2822()
-    );
+    println!("updating {} versions", rows.len());
 
     for download in rows {
         let amt = download.downloads - download.counted;
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
-            // Flag this row as having been processed if we're passed the cutoff,
-            // and unconditionally increment the number of counted downloads.
+            // increment the number of counted downloads
             update(version_downloads::table.find(download.id))
-                .set((
-                    version_downloads::processed.eq(download.date < cutoff),
-                    version_downloads::counted.eq(version_downloads::counted + amt),
-                ))
+                .set(version_downloads::counted.eq(version_downloads::counted + amt))
                 .execute(conn)?;
 
             // Update the total number of version downloads
