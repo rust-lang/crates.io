@@ -160,12 +160,12 @@ dependencies = [
  "ammonia 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cargo-registry-s3 0.2.0",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "comrak 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-cookie 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "conduit-hyper 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-middleware 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-router 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -237,22 +237,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "civet"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "civet-sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
- "semver 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "civet-sys"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "cmake"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -320,6 +304,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 0.2.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "conduit-hyper"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures-cpupool 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "http 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hyper 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2298,8 +2296,6 @@ dependencies = [
 "checksum cc 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a9b13a57efd6b30ecd6598ebdb302cca617930b5470647570468a65d12ef9719"
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c20ebe0b2b08b0aeddba49c609fe7957ba2e33449882cb186a180bc60682fa9"
-"checksum civet 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6263e7af767a5bf9e4d3d0a6c3ceb5f3940ec85cf2fbfee59024b8a264be180f"
-"checksum civet-sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "958d15372bf28b7983cb35e1d4bf36dd843b0d42e507c1c73aad7150372c5936"
 "checksum cmake 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)" = "357c07e7a1fc95732793c1edb5901e1a1f305cfcf63a90eb12dbd22bdb6b789d"
 "checksum coco 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c06169f5beb7e31c7c67ebf5540b8b472d23e3eade3b2ec7d1f5b504a85f91bd"
 "checksum comrak 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)" = "f2c1e2cc9384b402a97e0f2b3f8bc1ef45425fe810e030a189f05ed701f4b5b1"
@@ -2307,6 +2303,7 @@ dependencies = [
 "checksum conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "614f67083e437fd0b8fb9f13067203f358f1c6f52989eb6539292fde007fc6d6"
 "checksum conduit-cookie 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)" = "2ed0c16befdfbb983fa822470af5480a150401824ed9f2fb928df440781f7e35"
 "checksum conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "027a1900afd70becd52b5061afc85a24de6af0d9199f39d4e1af8b7ac55fbe6e"
+"checksum conduit-hyper 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e7b715a34cd763c29bc0605243b878995fe1d93b16232d1a4265fc21dca31d00"
 "checksum conduit-middleware 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "19b4b5a3a60b976f9219490e895cf573a6d17547e009e3c0e9f01a584b5b74d0"
 "checksum conduit-mime-types 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "95ca30253581af809925ef68c2641cc140d6183f43e12e0af4992d53768bd7b8"
 "checksum conduit-router 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a70ad2d0c8c41ada8ad4ff35070652972d75da7e7bccfb6d1d23463b1714c3ec"
