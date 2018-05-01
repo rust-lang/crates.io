@@ -236,7 +236,7 @@ mod test {
                 version_downloads::version_id.eq(version.id),
                 version_downloads::downloads.eq(2),
                 version_downloads::counted.eq(2),
-                version_downloads::date.eq(date(now - 2.hours())),
+                version_downloads::date.eq(date(now)),
                 version_downloads::processed.eq(false),
             ))
             .execute(&conn)
