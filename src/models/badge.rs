@@ -8,6 +8,11 @@ use models::Crate;
 use schema::badges;
 use views::EncodableBadge;
 
+/// A combination of a `Badge` and a crate ID.
+///
+/// We don't typically care about the crate ID when dealing with badges.
+/// However, when we are eager loading all badges for a group of crates, we need
+/// the crate ID to group badges by their owner.
 #[derive(Debug, Queryable, Associations)]
 #[belongs_to(Crate)]
 #[table_name = "badges"]
