@@ -168,6 +168,7 @@
     ul {
         @include display-flex;
         @include flex-direction(row);
+        @include flex-wrap(wrap);
 
         font-size: 80%;
         list-style-type: none;
