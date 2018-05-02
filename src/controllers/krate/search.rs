@@ -177,15 +177,15 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .zip(badges)
         .map(
             |((((max_version, krate), perfect_match), recent_downloads), badges)| {
-                Ok(krate.minimal_encodable(
+                krate.minimal_encodable(
                     &max_version,
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
-                ))
+                )
             },
         )
-        .collect::<Result<_, ::diesel::result::Error>>()?;
+        .collect();
 
     #[derive(Serialize)]
     struct R {
