@@ -52,23 +52,25 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .into_boxed();
 
     if let Some(q_string) = params.get("q") {
-        let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
-        let q = plainto_tsquery(q_string);
-        query = query.filter(
-            q.matches(crates::textsearchable_index_col)
-                .or(Crate::with_name(q_string)),
-        );
+        if !q_string.is_empty() {
+            let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
+            let q = plainto_tsquery(q_string);
+            query = query.filter(
+                q.matches(crates::textsearchable_index_col)
+                    .or(Crate::with_name(q_string)),
+            );
 
-        query = query.select((
-            ALL_COLUMNS,
-            Crate::with_name(q_string),
-            recent_crate_downloads::downloads.nullable(),
-        ));
-        query = query.order(Crate::with_name(q_string).desc());
+            query = query.select((
+                ALL_COLUMNS,
+                Crate::with_name(q_string),
+                recent_crate_downloads::downloads.nullable(),
+            ));
+            query = query.order(Crate::with_name(q_string).desc());
 
-        if sort == "relevance" {
-            let rank = ts_rank_cd(crates::textsearchable_index_col, q);
-            query = query.then_order_by(rank.desc())
+            if sort == "relevance" {
+                let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+                query = query.then_order_by(rank.desc())
+            }
         }
     }
 
