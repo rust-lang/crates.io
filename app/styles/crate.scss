@@ -268,52 +268,64 @@
     }
 
     .install {
-        font-size: 120%;
         padding: 10px;
         background-color: darken($main-bg-dark, 8%);
-        @include display-flex;
 
-        .action {
-            display: none;
-            text-align: center;
-            padding-top: 18px;
-            padding-right: 10px;
-        }
-        code {
-            @include flex(1);
-            background: $main-color;
-            color: white;
-            padding: 20px;
-        }
-        button, button:active {
-            padding: 5px 0;
-            background-color: #FFFFFF;
-            border: none;
-            width: 60px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #edebdd;
-        }
-        @media only screen and (min-width: 500px) {
-            .action { @include flex(2); display: block; }
-            code { @include flex(8); }
-        }
-    }
-    .copy-result {
-        text-align: right;
+        .info {
+            @include display-flex;
 
-        span {
             font-size: 80%;
             font-weight: bold;
+            padding-bottom: 5px;
+            
+            .message {
+                @include flex(1);
+            }
+
+            .copy-result > span {
+                text-align: right;
+                
+                &.copy-success {
+                    color: $link-color;
+                }
+
+                &.copy-failure {
+                    color: red;
+                }
+            }
         }
-        .copy-success {
-            color: $link-color;
-        }
-        .copy-failure {
-            color: red;
+
+        .content {
+            @include display-flex;
+
+            font-size: 120%;
+
+            code {
+                @include flex(1);
+                background: $main-color;
+                color: white;
+                padding: 20px;
+            }
+
+            button, button:active {
+                padding: 5px 0;
+                background-color: #FFFFFF;
+                border: none;
+                width: 60px;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background: #edebdd;
+            }
+
+            @media only screen and (min-width: 500px) {
+                .action { @include flex(2); display: block; }
+                code { @include flex(8); }
+            }
         }
     }
+
     .crate-readme {
         line-height: 1.5;
         overflow-wrap: break-word;
