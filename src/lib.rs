@@ -53,6 +53,10 @@ extern crate conduit_router;
 extern crate conduit_static;
 extern crate cookie;
 
+#[cfg(test)]
+#[macro_use]
+extern crate lazy_static;
+
 pub use self::uploaders::{Bomb, Uploader};
 pub use app::App;
 pub use config::Config;
@@ -62,6 +66,7 @@ use std::sync::Arc;
 use conduit_middleware::MiddlewareBuilder;
 
 pub mod app;
+pub mod background;
 pub mod boot;
 pub mod config;
 pub mod db;
