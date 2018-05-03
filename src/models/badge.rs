@@ -1,3 +1,4 @@
+use diesel::associations::HasTable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde_json;
@@ -6,6 +7,19 @@ use std::collections::HashMap;
 use models::Crate;
 use schema::badges;
 use views::EncodableBadge;
+
+/// A combination of a `Badge` and a crate ID.
+///
+/// We don't typically care about the crate ID when dealing with badges.
+/// However, when we are eager loading all badges for a group of crates, we need
+/// the crate ID to group badges by their owner.
+#[derive(Debug, Queryable, Associations)]
+#[belongs_to(Crate)]
+#[table_name = "badges"]
+pub struct CrateBadge {
+    pub crate_id: i32,
+    pub badge: Badge,
+}
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
@@ -61,6 +75,15 @@ pub enum MaintenanceStatus {
     Experimental,
     LookingForMaintainer,
     Deprecated,
+}
+
+// FIXME: Derive this in Diesel 1.3.
+impl HasTable for CrateBadge {
+    type Table = badges::table;
+
+    fn table() -> Self::Table {
+        badges::table
+    }
 }
 
 impl Queryable<badges::SqlType, Pg> for Badge {

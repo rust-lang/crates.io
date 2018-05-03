@@ -5,7 +5,7 @@ use diesel_full_text_search::*;
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
 use views::EncodableCrate;
-use models::{Badge, Crate, OwnerKind, Version};
+use models::{Crate, CrateBadge, OwnerKind, Version};
 use schema::*;
 
 use models::krate::{canon_crate_name, ALL_COLUMNS};
@@ -147,23 +147,17 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         query = query.then_order_by(crates::name.asc())
     }
 
-    // The database query returns a tuple within a tuple , with the root
+    // The database query returns a tuple within a tuple, with the root
     // tuple containing 3 items.
     let data = query
         .paginate(limit, offset)
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
-    let crates = data.iter()
-        .map(|&((ref c, _, _), _)| c.clone())
+    let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
+    let recent_downloads = data.iter()
+        .map(|&((_, _, s), _)| s.unwrap_or(0))
         .collect::<Vec<_>>();
-    let perfect_matches = data.clone()
-        .into_iter()
-        .map(|((_, b, _), _)| b)
-        .collect::<Vec<_>>();
-    let recent_downloads = data.clone()
-        .into_iter()
-        .map(|((_, _, s), _)| s.unwrap_or(0))
-        .collect::<Vec<_>>();
+    let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
 
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
@@ -171,26 +165,29 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .into_iter()
         .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
 
+    let badges = CrateBadge::belonging_to(&crates)
+        .select((badges::crate_id, badges::all_columns))
+        .load::<CrateBadge>(&conn)?
+        .grouped_by(&crates)
+        .into_iter()
+        .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
+
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
         .zip(recent_downloads)
+        .zip(badges)
         .map(
-            |(((max_version, krate), perfect_match), recent_downloads)| {
-                // FIXME: If we add crate_id to the Badge enum we can eliminate
-                // this N+1
-                let badges = badges::table
-                    .filter(badges::crate_id.eq(krate.id))
-                    .load::<Badge>(&*conn)?;
-                Ok(krate.minimal_encodable(
+            |((((max_version, krate), perfect_match), recent_downloads), badges)| {
+                krate.minimal_encodable(
                     &max_version,
                     Some(badges),
                     perfect_match,
                     Some(recent_downloads),
-                ))
+                )
             },
         )
-        .collect::<Result<_, ::diesel::result::Error>>()?;
+        .collect();
 
     #[derive(Serialize)]
     struct R {

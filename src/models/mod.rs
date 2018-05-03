@@ -1,4 +1,4 @@
-pub use self::badge::{Badge, MaintenanceStatus};
+pub use self::badge::{Badge, CrateBadge, MaintenanceStatus};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitation};
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
