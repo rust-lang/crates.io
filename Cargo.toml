@@ -1,0 +1,6 @@
+[package]
+name = "conduit-hyper"
+version = "0.1.0"
+authors = ["Justin Geibel <jtgeibel@gmail.com>"]
+
+[dependencies]
