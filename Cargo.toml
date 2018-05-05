@@ -9,3 +9,5 @@ repository = "https://github.com/jtgeibel/conduit-hyper"
 [dependencies]
 conduit = "0.8"
 hyper = { git = "https://github.com/hyperium/hyper" }
+http = "0.1"
+semver = "0.5" # Must match version in conduit for now
