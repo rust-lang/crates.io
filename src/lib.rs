@@ -1,20 +1,27 @@
 extern crate hyper;
 
+use std::collections::HashMap;
 use std::net::SocketAddr;
 
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
-use hyper::{Body, Response, Server};
+use hyper::{Body, Request, Response, Server};
 
-static TEXT: &str = "Hello, World!";
+pub fn run(addr: SocketAddr) {
+    let new_svc = || service_fn_ok(handler);
 
-pub struct ConduitServer;
+    let server = Server::bind(&addr).serve(new_svc);
+    hyper::rt::run(server.map_err(|_| ()));
+}
 
-impl ConduitServer {
-    pub fn run(addr: SocketAddr) {
-        let new_svc = || service_fn_ok(|_req| Response::new(Body::from(TEXT)));
-
-        let server = Server::bind(&addr).serve(new_svc);
-        hyper::rt::run(server.map_err(|_| ()));
+fn handler(request: Request<Body>) -> Response<Body> {
+    let mut headers = HashMap::new();
+    for (key, value) in request.headers() {
+        headers
+            .entry(key.as_str().to_string())
+            .or_insert_with(Vec::new)
+            .push(value.to_str().unwrap_or("").to_string());
     }
+
+    Response::new(Body::from(format!("{:?}", headers)))
 }
