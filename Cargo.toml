@@ -7,4 +7,5 @@ description = "Use hyper as the server for a conduit stack"
 repository = "https://github.com/jtgeibel/conduit-hyper"
 
 [dependencies]
+conduit = "0.8"
 hyper = { git = "https://github.com/hyperium/hyper" }
