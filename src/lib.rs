@@ -236,7 +236,7 @@ impl<H: conduit::Handler> Service<H> {
 
 fn good_response(mut response: conduit::Response) -> Response<Body> {
     let mut body = Vec::new();
-    if let Err(_) = response.body.write_body(&mut body) {
+    if response.body.write_body(&mut body).is_err() {
         return error_response("Error writing body");
     }
 
