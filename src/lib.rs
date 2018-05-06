@@ -1,4 +1,5 @@
 extern crate conduit;
+extern crate futures;
 extern crate http;
 extern crate hyper;
 extern crate semver;
@@ -19,7 +20,8 @@ impl conduit::Headers for Parts {
     /// If the value of a header is not valid UTF-8, that value
     /// is replaced with the emtpy string.
     fn find(&self, key: &str) -> Option<Vec<&str>> {
-        let values = self.0.headers
+        let values = self.0
+            .headers
             .get_all(key)
             .iter()
             .map(|v| v.to_str().unwrap_or(""))
@@ -158,15 +160,17 @@ pub fn run(addr: SocketAddr) {
 
 fn handler(request: Request<Body>) -> Response<Body> {
     use conduit::Request;
+    use futures::{future, Stream};
 
-    // FIXME: buffer body until it is received in full
-    let (parts, _body) = request.into_parts();
-    let request = ConduitRequest::new(Parts(parts), Vec::new());
-    Response::new(Body::from(format!(
-        "all: {:?}\nfind A: {:?}\n",
-        request.headers().all(),
-        request.headers().find("A")
-    )))
+    let (parts, body) = request.into_parts();
+    let future = body.concat2().and_then(|mut c| {
+        let request = ConduitRequest::new(Parts(parts), Vec::new());
+        println!("{:?}", &*c);
+        let headers = format!("\n{:?}\n", request.headers().all());
+        c.extend(headers.into_bytes());
+        future::ok(c)
+    });
+    Response::new(Body::wrap_stream(future.into_stream()))
 }
 
 fn version(major: u64, minor: u64) -> semver::Version {
