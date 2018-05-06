@@ -7,6 +7,7 @@ extern crate semver;
 
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use futures::{future, Stream};
 use futures_cpupool::CpuPool;
@@ -153,17 +154,27 @@ impl<'a> ConduitRequest<'a> {
     }
 }
 
-#[derive(Clone)]
-pub struct Service {
+pub struct Service<H> {
     pool: CpuPool,
+    handler: Arc<H>,
 }
 
-impl hyper::service::NewService for Service {
+// #[derive(Clone)] results in cloning a ref, and not the Service
+impl<H> Clone for Service<H> {
+    fn clone(&self) -> Self {
+        Service {
+            pool: self.pool.clone(),
+            handler: self.handler.clone(),
+        }
+    }
+}
+
+impl<H: conduit::Handler> hyper::service::NewService for Service<H> {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = hyper::Error;
-    type Service = Service;
-    type Future = Box<Future<Item=Self::Service, Error=Self::InitError> + Send>;
+    type Service = Service<H>;
+    type Future = Box<Future<Item = Self::Service, Error = Self::InitError> + Send>;
     type InitError = hyper::Error;
 
     fn new_service(&self) -> Self::Future {
@@ -171,11 +182,11 @@ impl hyper::service::NewService for Service {
     }
 }
 
-impl hyper::service::Service for Service {
+impl<H> hyper::service::Service for Service<H> {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item=Response<Self::ResBody>, Error=Self::Error> + Send>;
+    type Future = Box<Future<Item = Response<Self::ResBody>, Error = Self::Error> + Send>;
 
     fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
         let pool = self.pool.clone();
@@ -188,13 +199,15 @@ impl hyper::service::Service for Service {
         let response = Response::new(Body::wrap_stream(future.into_stream()));
         Box::new(future::ok(response))
     }
-
 }
 
-impl Service {
-    pub fn new(threads: usize) -> Service {
+impl<H: conduit::Handler> Service<H> {
+    pub fn new(handler: H, threads: usize) -> Service<H> {
         let pool = CpuPool::new(threads);
-        Service { pool }
+        Service {
+            pool,
+            handler: Arc::new(handler),
+        }
     }
 
     pub fn run(&self, addr: SocketAddr) {
