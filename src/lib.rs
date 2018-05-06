@@ -23,8 +23,7 @@ impl conduit::Headers for Parts {
     /// If the value of a header is not valid UTF-8, that value
     /// is replaced with the emtpy string.
     fn find(&self, key: &str) -> Option<Vec<&str>> {
-        let values = self.0
-            .headers
+        let values = self.headers()
             .get_all(key)
             .iter()
             .map(|v| v.to_str().unwrap_or(""))
@@ -38,7 +37,7 @@ impl conduit::Headers for Parts {
     }
 
     fn has(&self, key: &str) -> bool {
-        self.0.headers.contains_key(key)
+        self.headers().contains_key(key)
     }
 
     /// Returns a representation of all headers
@@ -46,7 +45,7 @@ impl conduit::Headers for Parts {
     /// There is currently a bug where keys with mutliple values will be duplicated.
     /// See: https://github.com/hyperium/http/issues/199
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        let keys = self.0.headers.keys();
+        let keys = self.headers().keys();
         let mut all = Vec::new();
         for key in keys {
             let key = key.as_str();
@@ -55,6 +54,12 @@ impl conduit::Headers for Parts {
             all.push((key, values));
         }
         all
+    }
+}
+
+impl Parts {
+    fn headers(&self) -> &http::HeaderMap {
+        &self.0.headers
     }
 }
 
@@ -128,9 +133,16 @@ impl<'a> conduit::Request for ConduitRequest<'a> {
         &mut self.extensions
     }
 
+    /// Returns the value of the `Host` header
+    ///
+    /// If the header is not present or invalid UTF-8, then the empty string is returned
     fn host(&self) -> conduit::Host {
-        // FIXME: Ensure the hyper server always provides a host so that unwrap is okay
-        conduit::Host::Name(&self.parts.0.uri.host().unwrap())
+        let host = self.parts
+            .headers()
+            .get("host")
+            .map(|h| h.to_str().unwrap_or(""))
+            .unwrap_or("");
+        conduit::Host::Name(host)
     }
 
     fn query_string(&self) -> Option<&str> {
