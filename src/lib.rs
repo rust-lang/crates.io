@@ -1,5 +1,6 @@
 extern crate conduit;
 extern crate futures;
+extern crate futures_cpupool;
 extern crate http;
 extern crate hyper;
 extern crate semver;
@@ -7,8 +8,9 @@ extern crate semver;
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 
+use futures::{future, Stream};
+use futures_cpupool::CpuPool;
 use hyper::rt::Future;
-use hyper::service::service_fn_ok;
 use hyper::{Body, Method, Request, Response, Server, Version};
 
 #[derive(Debug)]
@@ -55,13 +57,13 @@ impl conduit::Headers for Parts {
     }
 }
 
-struct ConduitRequest {
+struct ConduitRequest<'a> {
     parts: Parts,
-    body: Cursor<Vec<u8>>,
+    body: Cursor<&'a [u8]>,
     extensions: conduit::Extensions,
 }
 
-impl conduit::Request for ConduitRequest {
+impl<'a> conduit::Request for ConduitRequest<'a> {
     fn http_version(&self) -> semver::Version {
         match self.parts.0.version {
             Version::HTTP_09 => version(0, 9),
@@ -141,8 +143,8 @@ impl conduit::Request for ConduitRequest {
     }
 }
 
-impl ConduitRequest {
-    fn new(parts: Parts, body: Vec<u8>) -> ConduitRequest {
+impl<'a> ConduitRequest<'a> {
+    fn new(parts: Parts, body: &'a [u8]) -> ConduitRequest<'a> {
         ConduitRequest {
             parts,
             body: Cursor::new(body),
@@ -151,26 +153,54 @@ impl ConduitRequest {
     }
 }
 
-pub fn run(addr: SocketAddr) {
-    let new_svc = || service_fn_ok(handler);
-
-    let server = Server::bind(&addr).serve(new_svc);
-    hyper::rt::run(server.map_err(|_| ()));
+#[derive(Clone)]
+pub struct Service {
+    pool: CpuPool,
 }
 
-fn handler(request: Request<Body>) -> Response<Body> {
-    use conduit::Request;
-    use futures::{future, Stream};
+impl hyper::service::NewService for Service {
+    type ReqBody = Body;
+    type ResBody = Body;
+    type Error = hyper::Error;
+    type Service = Service;
+    type Future = Box<Future<Item=Self::Service, Error=Self::InitError> + Send>;
+    type InitError = hyper::Error;
 
-    let (parts, body) = request.into_parts();
-    let future = body.concat2().and_then(|mut c| {
-        let request = ConduitRequest::new(Parts(parts), Vec::new());
-        println!("{:?}", &*c);
-        let headers = format!("\n{:?}\n", request.headers().all());
-        c.extend(headers.into_bytes());
-        future::ok(c)
-    });
-    Response::new(Body::wrap_stream(future.into_stream()))
+    fn new_service(&self) -> Self::Future {
+        Box::new(future::ok(self.clone()))
+    }
+}
+
+impl hyper::service::Service for Service {
+    type ReqBody = Body;
+    type ResBody = Body;
+    type Error = hyper::Error;
+    type Future = Box<Future<Item=Response<Self::ResBody>, Error=Self::Error> + Send>;
+
+    fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
+        let pool = self.pool.clone();
+
+        let (parts, body) = request.into_parts();
+        let future = body.concat2().and_then(|full_body| {
+            let request = ConduitRequest::new(Parts(parts), &*full_body);
+            future::ok("Hello, world!") // FIXME
+        });
+        let response = Response::new(Body::wrap_stream(future.into_stream()));
+        Box::new(future::ok(response))
+    }
+
+}
+
+impl Service {
+    pub fn new(threads: usize) -> Service {
+        let pool = CpuPool::new(threads);
+        Service { pool }
+    }
+
+    pub fn run(&self, addr: SocketAddr) {
+        let server = Server::bind(&addr).serve(self.clone());
+        hyper::rt::run(server.map_err(|_| ()));
+    }
 }
 
 fn version(major: u64, minor: u64) -> semver::Version {
