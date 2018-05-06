@@ -12,7 +12,7 @@ use std::sync::Arc;
 use futures::{future, Stream};
 use futures_cpupool::CpuPool;
 use hyper::rt::Future;
-use hyper::{Body, Method, Request, Response, Server, Version};
+use hyper::{Body, Method, Request, Response, Server, StatusCode, Version};
 
 #[derive(Debug)]
 struct Parts(http::request::Parts);
@@ -182,7 +182,7 @@ impl<H: conduit::Handler> hyper::service::NewService for Service<H> {
     }
 }
 
-impl<H> hyper::service::Service for Service<H> {
+impl<H: conduit::Handler> hyper::service::Service for Service<H> {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = hyper::Error;
@@ -190,14 +190,21 @@ impl<H> hyper::service::Service for Service<H> {
 
     fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
         let pool = self.pool.clone();
+        let handler = self.handler.clone();
 
         let (parts, body) = request.into_parts();
-        let future = body.concat2().and_then(|full_body| {
-            let request = ConduitRequest::new(Parts(parts), &*full_body);
-            future::ok("Hello, world!") // FIXME
+        let response = body.concat2().and_then(move |full_body| {
+            pool.spawn_fn(move || {
+                let mut request = ConduitRequest::new(Parts(parts), &*full_body);
+                let response = handler
+                    .call(&mut request)
+                    .map(good_response)
+                    .unwrap_or_else(|e| error_response(e.description()));
+
+                future::ok(response)
+            })
         });
-        let response = Response::new(Body::wrap_stream(future.into_stream()));
-        Box::new(future::ok(response))
+        Box::new(response)
     }
 }
 
@@ -212,8 +219,34 @@ impl<H: conduit::Handler> Service<H> {
 
     pub fn run(&self, addr: SocketAddr) {
         let server = Server::bind(&addr).serve(self.clone());
-        hyper::rt::run(server.map_err(|_| ()));
+        hyper::rt::run(server.map_err(|e| eprintln!("server error: {}", e)));
     }
+}
+
+fn good_response(mut response: conduit::Response) -> Response<Body> {
+    let mut body = Vec::new();
+    if let Err(_) = response.body.write_body(&mut body) {
+        return error_response("Error writing body");
+    }
+
+    let mut builder = Response::builder();
+    let status =
+        StatusCode::from_u16(response.status.0 as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    builder.status(status);
+
+    for (key, values) in response.headers {
+        for value in values {
+            builder.header(key.as_str(), value.as_str());
+        }
+    }
+
+    builder.body(body.into()).unwrap() // FIXME: unwrap
+}
+
+fn error_response(error: &str) -> Response<Body> {
+    eprintln!("Internal Server Error: {}", error);
+    let body = Body::from("Internal Server Error");
+    Response::builder().status(500).body(body).unwrap() // FIXME: unwrap
 }
 
 fn version(major: u64, minor: u64) -> semver::Version {
