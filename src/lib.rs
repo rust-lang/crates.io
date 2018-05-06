@@ -93,17 +93,16 @@ impl<'a> conduit::Request for ConduitRequest<'a> {
         }
     }
 
+    /// Always returns Http
     fn scheme(&self) -> conduit::Scheme {
-        match self.parts.0.uri.scheme_part() {
-            Some(s) if s.as_str() == "https" => conduit::Scheme::Https,
-            _ => conduit::Scheme::Http,
-        }
+        conduit::Scheme::Http
     }
 
     fn headers(&self) -> &conduit::Headers {
         &self.parts
     }
 
+    /// Returns the length of the buffered body
     fn content_length(&self) -> Option<u64> {
         Some(self.body.get_ref().len() as u64)
     }
