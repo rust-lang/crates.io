@@ -9,9 +9,8 @@ use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use futures::{future, Stream};
+use futures::{future, Future, Stream};
 use futures_cpupool::CpuPool;
-use hyper::rt::Future;
 use hyper::{Body, Chunk, Method, Request, Response, Server, StatusCode, Version};
 
 #[derive(Debug)]
@@ -242,8 +241,10 @@ fn good_response(mut response: conduit::Response) -> Response<Body> {
     }
 
     let mut builder = Response::builder();
-    let status =
-        StatusCode::from_u16(response.status.0 as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let status = match StatusCode::from_u16(response.status.0 as u16) {
+        Ok(s) => s,
+        Err(e) => return error_response(&e.to_string()),
+    };
     builder.status(status);
 
     for (key, values) in response.headers {
@@ -252,14 +253,19 @@ fn good_response(mut response: conduit::Response) -> Response<Body> {
         }
     }
 
-    builder.body(body.into()).unwrap() // FIXME: unwrap
+    builder
+        .body(body.into())
+        .unwrap_or_else(|e| error_response(&e.to_string()))
 }
 
 /// Logs an error message and returns a generic status 500 response
 fn error_response(message: &str) -> Response<Body> {
     eprintln!("Internal Server Error: {}", message);
     let body = Body::from("Internal Server Error");
-    Response::builder().status(500).body(body).unwrap() // FIXME: unwrap
+    Response::builder()
+        .status(500)
+        .body(body)
+        .expect("unexpected invalid header")
 }
 
 fn version(major: u64, minor: u64) -> semver::Version {
