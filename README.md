@@ -27,7 +27,7 @@ Header values that are not valid UTF-8 are replaced with an empty string.
 ### conduit::Request
 
 The following methods on the `Request` provided to the application have
-noteworth behavior:
+noteworthy behavior:
 
 * `scheme` always returns Http as https is not currently directly supported
 * `remote_addr` always returns 0.0.0.0:0

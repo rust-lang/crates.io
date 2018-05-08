@@ -3,7 +3,7 @@ name = "conduit-hyper"
 version = "0.1.0"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
-description = "Use hyper as the server for a conduit stack"
+description = "Host a conduit based web application on a hyper server"
 repository = "https://github.com/jtgeibel/conduit-hyper"
 
 [dependencies]

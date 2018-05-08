@@ -45,9 +45,8 @@ impl conduit::Headers for Parts {
     /// There is currently a bug where keys with mutliple values will be duplicated.
     /// See: https://github.com/hyperium/http/issues/199
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
-        let keys = self.headers().keys();
         let mut all = Vec::new();
-        for key in keys {
+        for key in self.headers().keys() {
             let key = key.as_str();
             let values = self.find(key)
                 .expect("all keys should have at least one value");
@@ -114,6 +113,7 @@ impl<'a> conduit::Request for ConduitRequest<'a> {
 
     /// Always returns an address of 0.0.0.0:0
     fn remote_addr(&self) -> SocketAddr {
+        // See: https://github.com/hyperium/hyper/issues/1410#issuecomment-356115678
         ([0, 0, 0, 0], 0).into()
     }
 
@@ -199,6 +199,7 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
     type Error = hyper::Error;
     type Future = Box<Future<Item = Response<Self::ResBody>, Error = Self::Error> + Send>;
 
+    /// Returns a future which buffers the response body and then calls the conduit handler from a thread pool
     fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
         let pool = self.pool.clone();
         let handler = self.handler.clone();
@@ -212,7 +213,7 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
                     .map(good_response)
                     .unwrap_or_else(|e| error_response(e.description()));
 
-                future::ok(response)
+                Ok(response)
             })
         });
         Box::new(response)
@@ -221,9 +222,8 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
 
 impl<H: conduit::Handler> Service<H> {
     pub fn new(handler: H, threads: usize) -> Service<H> {
-        let pool = CpuPool::new(threads);
         Service {
-            pool,
+            pool: CpuPool::new(threads),
             handler: Arc::new(handler),
         }
     }
@@ -234,6 +234,7 @@ impl<H: conduit::Handler> Service<H> {
     }
 }
 
+/// Builds a `hyper::Response` given a `conduit:Response`
 fn good_response(mut response: conduit::Response) -> Response<Body> {
     let mut body = Vec::new();
     if response.body.write_body(&mut body).is_err() {
@@ -254,8 +255,9 @@ fn good_response(mut response: conduit::Response) -> Response<Body> {
     builder.body(body.into()).unwrap() // FIXME: unwrap
 }
 
-fn error_response(error: &str) -> Response<Body> {
-    eprintln!("Internal Server Error: {}", error);
+/// Logs an error message and returns a generic status 500 response
+fn error_response(message: &str) -> Response<Body> {
+    eprintln!("Internal Server Error: {}", message);
     let body = Body::from("Internal Server Error");
     Response::builder().status(500).body(body).unwrap() // FIXME: unwrap
 }
