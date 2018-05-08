@@ -12,7 +12,7 @@ use std::sync::Arc;
 use futures::{future, Stream};
 use futures_cpupool::CpuPool;
 use hyper::rt::Future;
-use hyper::{Body, Method, Request, Response, Server, StatusCode, Version};
+use hyper::{Body, Chunk, Method, Request, Response, Server, StatusCode, Version};
 
 #[derive(Debug)]
 struct Parts(http::request::Parts);
@@ -62,13 +62,13 @@ impl Parts {
     }
 }
 
-struct ConduitRequest<'a> {
+struct ConduitRequest {
     parts: Parts,
-    body: Cursor<&'a [u8]>,
+    body: Cursor<Chunk>,
     extensions: conduit::Extensions,
 }
 
-impl<'a> conduit::Request for ConduitRequest<'a> {
+impl conduit::Request for ConduitRequest {
     fn http_version(&self) -> semver::Version {
         match self.parts.0.version {
             Version::HTTP_09 => version(0, 9),
@@ -155,8 +155,8 @@ impl<'a> conduit::Request for ConduitRequest<'a> {
     }
 }
 
-impl<'a> ConduitRequest<'a> {
-    fn new(parts: Parts, body: &'a [u8]) -> ConduitRequest<'a> {
+impl ConduitRequest {
+    fn new(parts: Parts, body: Chunk) -> ConduitRequest {
         ConduitRequest {
             parts,
             body: Cursor::new(body),
@@ -207,7 +207,7 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
         let (parts, body) = request.into_parts();
         let response = body.concat2().and_then(move |full_body| {
             pool.spawn_fn(move || {
-                let mut request = ConduitRequest::new(Parts(parts), &*full_body);
+                let mut request = ConduitRequest::new(Parts(parts), full_body);
                 let response = handler
                     .call(&mut request)
                     .map(good_response)
