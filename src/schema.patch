@@ -1,14 +1,16 @@
-diff --git a/src/schema.rs b/src/schema.rs
-index 3c2b80c..89da3e4 100644
 --- a/src/schema.rs
 +++ b/src/schema.rs
-@@ -1,3 +1,5 @@
+@@ -1,5 +1,7 @@
 +#![allow(unused_imports)]
 +
  table! {
      use diesel::sql_types::*;
      use diesel_full_text_search::{TsVector as Tsvector};
-@@ -590,6 +592,24 @@ table! {
+ 
+     /// Representation of the `api_tokens` table.
+@@ -588,10 +590,28 @@ table! {
+         rendered_at -> Timestamp,
+     }
  }
  
  table! {
@@ -33,7 +35,11 @@ index 3c2b80c..89da3e4 100644
      use diesel::sql_types::*;
      use diesel_full_text_search::{TsVector as Tsvector};
  
-@@ -851,7 +871,8 @@ joinable!(api_tokens -> users (user_id));
+     /// Representation of the `reserved_crate_names` table.
+     ///
+@@ -849,21 +869,23 @@ table! {
+ 
+ joinable!(api_tokens -> users (user_id));
  joinable!(crate_downloads -> crates (crate_id));
  joinable!(crate_owner_invitations -> crates (crate_id));
  joinable!(crate_owners -> crates (crate_id));
@@ -43,7 +49,10 @@ index 3c2b80c..89da3e4 100644
  joinable!(crates_categories -> categories (category_id));
  joinable!(crates_categories -> crates (crate_id));
  joinable!(crates_keywords -> crates (crate_id));
-@@ -862,6 +883,7 @@ joinable!(emails -> users (user_id));
+ joinable!(crates_keywords -> keywords (keyword_id));
+ joinable!(dependencies -> crates (crate_id));
+ joinable!(dependencies -> versions (version_id));
+ joinable!(emails -> users (user_id));
  joinable!(follows -> crates (crate_id));
  joinable!(follows -> users (user_id));
  joinable!(readme_renderings -> versions (version_id));
@@ -51,7 +60,11 @@ index 3c2b80c..89da3e4 100644
  joinable!(version_authors -> users (user_id));
  joinable!(version_authors -> versions (version_id));
  joinable!(version_downloads -> versions (version_id));
-@@ -883,6 +905,7 @@ allow_tables_to_appear_in_same_query!(
+ joinable!(versions -> crates (crate_id));
+ 
+@@ -881,10 +903,11 @@ allow_tables_to_appear_in_same_query!(
+     emails,
+     follows,
      keywords,
      metadata,
      readme_renderings,
@@ -59,4 +72,5 @@ index 3c2b80c..89da3e4 100644
      reserved_crate_names,
      teams,
      users,
-
+     version_authors,
+     version_downloads,
