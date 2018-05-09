@@ -5,6 +5,9 @@ extern crate http;
 extern crate hyper;
 extern crate semver;
 
+#[macro_use]
+extern crate log;
+
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -229,7 +232,7 @@ impl<H: conduit::Handler> Service<H> {
 
     pub fn run(&self, addr: SocketAddr) {
         let server = Server::bind(&addr).serve(self.clone());
-        hyper::rt::run(server.map_err(|e| eprintln!("server error: {}", e)));
+        hyper::rt::run(server.map_err(|e| error!("Server error: {}", e)));
     }
 }
 
@@ -260,7 +263,7 @@ fn good_response(mut response: conduit::Response) -> Response<Body> {
 
 /// Logs an error message and returns a generic status 500 response
 fn error_response(message: &str) -> Response<Body> {
-    eprintln!("Internal Server Error: {}", message);
+    error!("Internal Server Error: {}", message);
     let body = Body::from("Internal Server Error");
     Response::builder()
         .status(500)

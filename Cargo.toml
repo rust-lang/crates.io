@@ -12,4 +12,5 @@ futures = "0.1"
 futures-cpupool = "0.1"
 hyper = { git = "https://github.com/hyperium/hyper" }
 http = "0.1"
+log = "0.4"
 semver = "0.5" # Must match version in conduit for now

@@ -7,10 +7,10 @@ stack.
 
 ## Error and Panic Handling
 
-If the application handler returns an `Err(_)` the server will log a message to
-stderr and return a generic 500 status response.
+If the application handler returns an `Err(_)` the server will log the
+description via the `log` crate and then return a generic 500 status response.
 
-If the handler panics, the thread pool prints a message to stderr and the
+If the handler panics, the default panic handler prints a message to stderr and the
 connnection is closed without sending a response.  In the future, these panics
 will likely be turned into a generic 500 status response.
 
@@ -39,6 +39,10 @@ duplicate keys multiple times.  See [this issue] for further details.
 All other methods on `Request` should behave as expected.
 
 [this issue]: https://github.com/hyperium/http/issues/199
+
+## TODO
+
+* Include the `X-Request-Id` header when logging an error
 
 ## License
 
