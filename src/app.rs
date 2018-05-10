@@ -5,10 +5,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use curl::easy::Easy;
 use diesel::r2d2;
 use git2;
 use oauth2;
-use curl::easy::Easy;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 use {db, Config};

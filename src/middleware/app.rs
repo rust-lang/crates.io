@@ -1,7 +1,7 @@
 use super::prelude::*;
 
-use std::sync::Arc;
 use App;
+use std::sync::Arc;
 
 /// Middleware that injects the `App` instance into the `Request` extensions
 // Can't derive Debug because `App` can't.

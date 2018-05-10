@@ -5,10 +5,10 @@ use conduit::{Handler, Request, Response};
 use conduit_git_http_backend;
 use conduit_router::{RequestParams, RouteBuilder};
 
-use util::errors::{std_error, CargoError, CargoResult, NotFound};
-use util::RequestProxy;
-use {App, Env};
 use controllers::*;
+use util::RequestProxy;
+use util::errors::{std_error, CargoError, CargoResult, NotFound};
+use {App, Env};
 
 pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();

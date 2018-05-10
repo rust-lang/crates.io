@@ -93,8 +93,8 @@ impl Category {
         limit: i64,
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
-        use diesel::select;
         use diesel::dsl::*;
+        use diesel::select;
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",

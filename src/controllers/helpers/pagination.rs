@@ -1,7 +1,7 @@
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::sql_types::BigInt;
-use diesel::pg::Pg;
 
 #[derive(Debug)]
 pub struct Paginated<T> {

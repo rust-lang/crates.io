@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use chrono::NaiveDateTime;
+use std::collections::HashMap;
 
 use models::DependencyKind;
 
@@ -204,10 +204,10 @@ pub use self::krate_publish::NewCrate as EncodableCrateUpload;
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use super::*;
     use chrono::NaiveDate;
     use serde_json;
+    use std::collections::HashMap;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {

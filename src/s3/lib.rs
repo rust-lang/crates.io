@@ -7,12 +7,12 @@ extern crate openssl;
 
 use std::io::prelude::*;
 
+use base64::encode;
 use chrono::prelude::Utc;
 use curl::easy::{Easy, List, ReadError, Transfer};
 use openssl::hash::MessageDigest;
-use openssl::sign::Signer;
 use openssl::pkey::PKey;
-use base64::encode;
+use openssl::sign::Signer;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {

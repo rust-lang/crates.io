@@ -1,8 +1,8 @@
 use controllers::prelude::*;
 
 use conduit_cookie::RequestSession;
-use rand::{thread_rng, Rng};
 use github;
+use rand::{thread_rng, Rng};
 
 use models::NewUser;
 

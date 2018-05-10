@@ -1,7 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
+use diesel;
 use diesel::associations::Identifiable;
 use diesel::prelude::*;
-use diesel;
 use license_exprs;
 use semver;
 use url::Url;
@@ -9,12 +9,12 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
-use views::{EncodableCrate, EncodableCrateLinks};
 use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
              ReverseDependency, User, Version};
+use views::{EncodableCrate, EncodableCrateLinks};
 
-use schema::*;
 use models::helpers::with_count::*;
+use schema::*;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -189,9 +189,9 @@ impl<'a> NewCrate<'a> {
     }
 
     fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
-        use schema::reserved_crate_names::dsl::*;
-        use diesel::select;
         use diesel::dsl::exists;
+        use diesel::select;
+        use schema::reserved_crate_names::dsl::*;
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),

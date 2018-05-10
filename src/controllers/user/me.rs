@@ -3,12 +3,12 @@ use controllers::prelude::*;
 use serde_json;
 
 use controllers::helpers::Paginate;
-use util::bad_request;
 use email;
+use util::bad_request;
 
-use views::{EncodablePrivateUser, EncodableVersion};
 use models::{Email, Follow, NewEmail, User, Version};
 use schema::{crates, emails, follows, users, versions};
+use views::{EncodablePrivateUser, EncodableVersion};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut Request) -> CargoResult<Response> {
@@ -92,9 +92,9 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles the `PUT /user/:user_id` route.
 pub fn update_user(req: &mut Request) -> CargoResult<Response> {
-    use diesel::{insert_into, update};
     use self::emails::user_id;
     use self::users::dsl::{email, gh_login, users};
+    use diesel::{insert_into, update};
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -185,8 +185,8 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 
 /// Handles `PUT /user/:user_id/resend` route
 pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
-    use diesel::update;
     use diesel::dsl::sql;
+    use diesel::update;
 
     let user = req.user()?;
     let name = &req.params()["user_id"].parse::<i32>().ok().unwrap();

@@ -49,9 +49,9 @@ extern crate conduit_router;
 extern crate conduit_static;
 extern crate cookie;
 
+pub use self::uploaders::{Bomb, Uploader};
 pub use app::App;
 pub use config::Config;
-pub use self::uploaders::{Bomb, Uploader};
 
 use std::sync::Arc;
 
@@ -61,6 +61,7 @@ pub mod app;
 pub mod boot;
 pub mod config;
 pub mod db;
+pub mod email;
 pub mod git;
 pub mod github;
 pub mod middleware;
@@ -68,7 +69,6 @@ pub mod render;
 pub mod schema;
 pub mod uploaders;
 pub mod util;
-pub mod email;
 
 pub mod controllers;
 pub mod models;

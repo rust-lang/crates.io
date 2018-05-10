@@ -9,8 +9,8 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
 use std::fs::{self, File};
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 use std::net;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -18,13 +18,13 @@ use std::str;
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
 
-use curl::easy::{Easy, List};
-use self::futures::{Future, Stream};
 use self::futures::sync::oneshot;
+use self::futures::{Future, Stream};
 use self::hyper::server::Http;
 use self::tokio_core::net::TcpListener;
 use self::tokio_core::reactor::Core;
 use self::tokio_service::Service;
+use curl::easy::{Easy, List};
 use serde_json;
 
 use models::NewUser;

@@ -1,7 +1,7 @@
 use conduit::{Handler, Method};
 
-use views::{EncodableCategory, EncodableCategoryWithSubcategories};
 use models::Category;
+use views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 #[derive(Deserialize)]
 struct CategoryList {
@@ -86,11 +86,11 @@ fn update_crate() {
     let (_b, app, middle) = ::app();
     let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/categories/foo");
     macro_rules! cnt {
-        ($req: expr, $cat: expr) => {{
+        ($req:expr, $cat:expr) => {{
             $req.with_path(&format!("/api/v1/categories/{}", $cat));
             let mut response = ok_resp!(middle.call($req));
             ::json::<GoodCategory>(&mut response).category.crates_cnt as usize
-        }}
+        }};
     }
 
     let krate = {

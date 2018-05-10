@@ -8,9 +8,9 @@ use chrono::{Duration, NaiveDate, Utc};
 
 use Replica;
 
-use views::EncodableVersionDownload;
-use schema::*;
 use models::{Crate, VersionDownload};
+use schema::*;
+use views::EncodableVersionDownload;
 
 use super::version_and_crate;
 

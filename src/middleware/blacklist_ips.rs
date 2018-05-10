@@ -2,8 +2,8 @@
 
 use super::prelude::*;
 
-use std::io::Cursor;
 use std::collections::HashMap;
+use std::io::Cursor;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
