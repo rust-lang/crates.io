@@ -71,8 +71,8 @@ civet = "0.9"
 
 [dev-dependencies]
 conduit-test = "0.8"
-hyper = "0.11"
-hyper-tls = "0.1"
+hyper = "0.12"
+hyper-tls = "0.2"
 futures = "0.1"
 tokio-core = "0.1"
 tokio-service = "0.1"
