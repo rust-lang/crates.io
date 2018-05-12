@@ -1,3 +1,4 @@
+#![deny(warnings)]
 extern crate conduit;
 extern crate futures;
 extern crate futures_cpupool;
@@ -7,6 +8,9 @@ extern crate semver;
 
 #[macro_use]
 extern crate log;
+
+#[cfg(test)]
+mod tests;
 
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
