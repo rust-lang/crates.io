@@ -4,11 +4,13 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use models::{Crate, CrateBadge, OwnerKind, Version};
+use models::{Crate, CrateBadge, OwnerKind, Version, User};
 use schema::*;
 use views::EncodableCrate;
 
 use models::krate::{canon_crate_name, ALL_COLUMNS};
+
+use std::collections::HashMap;
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -32,7 +34,6 @@ use models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
-    use diesel::sql_types::Bool;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -41,6 +42,30 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .get("sort")
         .map(|s| &**s)
         .unwrap_or("recent-downloads");
+    let userId = req.user()?.id;
+
+
+    let crates = execute_search(&conn, offset, limit, params, sort, userId);
+    let total = crates.len() as i64;
+
+    #[derive(Serialize)]
+    struct R {
+        crates: Vec<EncodableCrate>,
+        meta: Meta,
+    }
+    #[derive(Serialize)]
+    struct Meta {
+        total: i64,
+    }
+
+    Ok(req.json(&R {
+        crates,
+        meta: Meta { total },
+    }))
+}
+
+fn execute_search(conn: &PgConnection, offset: i64, limit: i64, params: HashMap<String,String>, sort: &str, userId: i32) -> Vec<EncodableCrate> {
+    use diesel::sql_types::Bool;
 
     let mut query = crates::table
         .left_join(recent_crate_downloads::table)
@@ -50,7 +75,6 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             recent_crate_downloads::downloads.nullable(),
         ))
         .into_boxed();
-
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
@@ -73,7 +97,6 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             }
         }
     }
-
     if let Some(cat) = params.get("category") {
         query = query.filter(
             crates::id.eq_any(
@@ -88,7 +111,6 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             ),
         );
     }
-
     if let Some(kw) = params.get("keyword") {
         query = query.filter(
             crates::id.eq_any(
@@ -134,11 +156,10 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             crates::id.eq_any(
                 follows::table
                     .select(follows::crate_id)
-                    .filter(follows::user_id.eq(req.user()?.id)),
+                    .filter(follows::user_id.eq(currentUserId)),
             ),
         );
     }
-
     if sort == "downloads" {
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
@@ -146,9 +167,8 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
     } else {
         query = query.then_order_by(crates::name.asc())
     }
-
-    // The database query returns a tuple within a tuple, with the root
-    // tuple containing 3 items.
+// The database query returns a tuple within a tuple, with the root
+// tuple containing 3 items.
     let data = query
         .paginate(limit, offset)
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
@@ -158,20 +178,17 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .map(|&((_, _, s), _)| s.unwrap_or(0))
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
-
     let versions = Version::belonging_to(&crates)
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
-
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
         .load::<CrateBadge>(&conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
-
     let crates = versions
         .zip(crates)
         .zip(perfect_matches)
@@ -188,19 +205,51 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             },
         )
         .collect();
+    return crates;
+}
 
-    #[derive(Serialize)]
-    struct R {
-        crates: Vec<EncodableCrate>,
-        meta: Meta,
-    }
-    #[derive(Serialize)]
-    struct Meta {
-        total: i64,
+
+#[cfg(test)]
+mod test {
+    extern crate semver;
+
+    use std::collections::HashMap;
+
+    use super::*;
+    use std::env;
+    // use cargo_registry::env;
+    // use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use ::models::{NewCrate, NewVersion};
+    // use diesel::insert_into;
+
+    fn conn() -> PgConnection {
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        let conn = PgConnection::establish(&database_url).unwrap();
+        conn.begin_test_transaction().unwrap();
+        conn
     }
 
-    Ok(req.json(&R {
-        crates,
-        meta: Meta { total },
-    }))
+    fn crate_and_version(conn: &PgConnection, user_id: i32) -> (Crate, Version) {
+        let krate = NewCrate {
+            name: "foo",
+            ..Default::default()
+        }.create_or_update(&conn, None, user_id)
+            .unwrap();
+        let version = NewVersion::new(
+            krate.id,
+            &semver::Version::parse("1.0.0").unwrap(),
+            &HashMap::new(),
+            None,
+            None,
+        ).unwrap();
+        let version = version.save(&conn, &[]).unwrap();
+        (krate, version)
+    }
+//    //     #[test]
+//    //     fn increment() {
+//    //         use diesel::dsl::*;
+//    //     }
+//
+//    fn
 }
