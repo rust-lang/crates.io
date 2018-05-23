@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::sql_types::BigInt;
 
-#[derive(Debug)]
+#[derive(Debug, QueryId)]
 pub struct Paginated<T> {
     query: T,
     limit: i64,
@@ -42,5 +42,3 @@ where
         Ok(())
     }
 }
-
-impl_query_id!(Paginated<T>);

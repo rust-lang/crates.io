@@ -84,8 +84,9 @@ pub const ALL_COLUMNS: AllColumns = (
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
+type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
-type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
+type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
@@ -509,8 +510,8 @@ impl Crate {
 }
 
 use diesel::sql_types::{Date, Text};
-sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
-sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
+sql_function!(fn canon_crate_name(x: Text) -> Text);
+sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
