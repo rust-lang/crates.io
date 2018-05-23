@@ -119,7 +119,6 @@ mod test {
     use super::*;
     use cargo_registry::env;
     use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
-    use diesel::insert_into;
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();

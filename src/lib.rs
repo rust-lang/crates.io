@@ -127,4 +127,4 @@ pub fn env(s: &str) -> String {
     ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
 
-sql_function!(lower, lower_t, (x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);
+sql_function!(fn lower(x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

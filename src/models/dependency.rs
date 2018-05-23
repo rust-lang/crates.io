@@ -1,6 +1,6 @@
+use diesel::deserialize::QueryableByName;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::query_source::QueryableByName;
 use diesel::row::NamedRow;
 use semver;
 
