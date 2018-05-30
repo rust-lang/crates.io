@@ -241,7 +241,7 @@ mod test {
     use std::env;
     extern crate chrono;
     use chrono::Utc;
-    use models::{CrateDownload, NewCrate, NewUser, NewVersion, User};
+    use models::{CrateDownload, NewCrate, NewUser, User};
 
     fn conn() -> PgConnection {
         let database_url =
@@ -251,38 +251,73 @@ mod test {
         conn
     }
 
-    fn crate_and_version(conn: &PgConnection, name: &str, user_id: i32) -> (Crate, Version) {
-        let krate = NewCrate {
-            name,
-            ..Default::default()
-        }.create_or_update(&conn, None, user_id)
-            .unwrap();
-        let version = NewVersion::new(
-            krate.id,
-            &semver::Version::parse("1.0.0").unwrap(),
-            &HashMap::new(),
-            None,
-            None,
-        ).unwrap();
-        let version = version.save(&conn, &[]).unwrap();
-        (krate, version)
+    pub struct CrateBuilder<'a> {
+        owner_id: i32,
+        krate: NewCrate<'a>,
+        downloads: Option<i32>,
+        recent_downloads: Option<i32>,
     }
 
-    fn add_downloads_to_crate(conn: &PgConnection, mut krate: Crate, download_number: i32)  -> CargoResult<Crate> {
-        let now = Utc::now();
-        let old_date = now.naive_utc().date() - chrono::Duration::days(91);
-        let crate_download = CrateDownload {
-            crate_id: krate.id,
-            downloads: download_number,
-            date: old_date,
-        };
-        use diesel::{insert_into, update};
-        insert_into(crate_downloads::table)
-            .values(&crate_download)
-            .execute(conn)?;
-        krate.downloads = download_number;
-        update(&krate).set(&krate).execute(conn)?;
-        Ok(krate)
+    impl<'a> CrateBuilder<'a> {
+        fn new(name: &str, owner_id: i32) -> CrateBuilder {
+            CrateBuilder {
+                owner_id: owner_id,
+                krate: NewCrate {
+                    name: name,
+                    ..NewCrate::default()
+                },
+                downloads: None,
+                recent_downloads: None,
+            }
+        }
+
+        fn downloads(mut self, downloads: i32) -> Self {
+            self.downloads = Some(downloads);
+            self
+        }
+
+        fn build(self, connection: &PgConnection) -> CargoResult<Crate> {
+            use diesel::{insert_into, select, update};
+
+            let mut krate = self.krate
+                .create_or_update(connection, None, self.owner_id)?;
+
+            // Since we are using `NewCrate`, we can't set all the
+            // crate properties in a single DB call.
+
+            let old_downloads = self.downloads.unwrap_or(0) - self.recent_downloads.unwrap_or(0);
+            let now = Utc::now();
+            let old_date = now.naive_utc().date() - chrono::Duration::days(91);
+
+            if let Some(downloads) = self.downloads {
+                let crate_download = CrateDownload {
+                    crate_id: krate.id,
+                    downloads: old_downloads,
+                    date: old_date,
+                };
+
+                insert_into(crate_downloads::table)
+                    .values(&crate_download)
+                    .execute(connection)?;
+                krate.downloads = downloads;
+                update(&krate).set(&krate).execute(connection)?;
+            }
+            if self.recent_downloads.is_some() {
+                let crate_download = CrateDownload {
+                    crate_id: krate.id,
+                    downloads: self.recent_downloads.unwrap(),
+                    date: now.naive_utc().date(),
+                };
+
+                insert_into(crate_downloads::table)
+                    .values(&crate_download)
+                    .execute(connection)?;
+
+                no_arg_sql_function!(refresh_recent_crate_downloads, ());
+                select(refresh_recent_crate_downloads).execute(connection)?;
+            }
+            Ok(krate)
+        }
     }
 
     fn user(conn: &PgConnection) -> User {
@@ -295,9 +330,15 @@ mod test {
     fn no_parameters_or_sorting_returns_in_alphabetic_order() {
         let db_connection = conn();
         let user = user(&db_connection);
-        let (krate1, _version) = crate_and_version(&db_connection, "1 first crate", user.id);
-        let (krate3, _version) = crate_and_version(&db_connection, "thirgh crate", user.id);
-        let (krate2, _version) = crate_and_version(&db_connection, "second crate", user.id);
+        let krate1 = CrateBuilder::new("1 first crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let krate3 = CrateBuilder::new("third crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let krate2 = CrateBuilder::new("second crate", user.id)
+            .build(&db_connection)
+            .unwrap();
 
         let sort = "";
         let params: HashMap<String, String> = HashMap::new();
@@ -314,12 +355,18 @@ mod test {
     fn no_parameters_and_sorting_by_downloads_returns_crates_by_descending_order_of_downloads() {
         let db_connection = conn();
         let user = user(&db_connection);
-        let (mut krate2, _version) = crate_and_version(&db_connection, "100 Downloads", user.id);
-        krate2 = add_downloads_to_crate(&db_connection, krate2, 100).unwrap();
-        let (mut krate3, _version) = crate_and_version(&db_connection, "50 Downloads", user.id);
-        krate3 = add_downloads_to_crate(&db_connection, krate3, 50).unwrap();
-        let (mut krate1, _version) = crate_and_version(&db_connection, "300 Downloads", user.id);
-        krate1 = add_downloads_to_crate(&db_connection, krate1, 300).unwrap();
+        let krate2 = CrateBuilder::new("100 Downloads", user.id)
+            .downloads(100)
+            .build(&db_connection)
+            .unwrap();
+        let krate3 = CrateBuilder::new("50 Downloads", user.id)
+            .downloads(50)
+            .build(&db_connection)
+            .unwrap();
+        let krate1 = CrateBuilder::new("300 Downloads", user.id)
+            .downloads(300)
+            .build(&db_connection)
+            .unwrap();
 
         let sort = "downloads";
         let params: HashMap<String, String> = HashMap::new();
