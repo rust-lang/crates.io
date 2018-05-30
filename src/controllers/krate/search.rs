@@ -385,7 +385,7 @@ mod test {
     }
 
     #[test]
-    fn no_parameters_and_sorting_by_recent_downloads_returns_crates_by_descending_order_of_downloads(
+    fn no_parameters_and_sorting_by_recent_downloads_returns_crates_by_descending_order_of_recent_downloads(
 ) {
         let db_connection = conn();
         let user = user(&db_connection);
@@ -414,5 +414,52 @@ mod test {
         assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
         assert_eq!(list_of_krates.get(1).unwrap().name, krate2.name);
         assert_eq!(list_of_krates.get(2).unwrap().name, krate3.name);
+    }
+
+    #[test]
+    fn query_parameter_is_empty_returns_all_crates() {
+        let db_connection = conn();
+        let user = user(&db_connection);
+        CrateBuilder::new("100 recent downloads", user.id)
+            .build(&db_connection)
+            .unwrap();
+        CrateBuilder::new("50 recent downloads", user.id)
+            .build(&db_connection)
+            .unwrap();
+        CrateBuilder::new("300 recent downloads", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("q".to_string(), String::new());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 3);
+    }
+
+    #[test]
+    fn query_parameter_is_not_empty_returns_crates_that_match_query() {
+        let db_connection = conn();
+        let user = user(&db_connection);
+        CrateBuilder::new("Found Crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        CrateBuilder::new("Not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+        CrateBuilder::new("Another not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("q".to_string(), "Crate".to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(list_of_krates.get(0).unwrap().name, "Found Crate".to_string());
     }
 }
