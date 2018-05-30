@@ -75,6 +75,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     if env != Env::Test {
         m.around(StaticOrContinue::new("dist"));
         m.around(EmberIndexRewrite::default());
+        m.around(StaticOrContinue::new("dist"));
         // Note: around middleware is run from bottom to top, so the rewrite occurs first
     }
 
