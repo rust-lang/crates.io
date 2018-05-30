@@ -42,17 +42,15 @@ impl SecurityHeaders {
         // or if we switch to a different graph generation library.
         headers.insert(
             "Content-Security-Policy".into(),
-            vec![
-                format!(
-                    "default-src 'self'; \
-                     connect-src 'self' https://docs.rs https://{}; \
-                     script-src 'self' 'unsafe-eval' https://www.google.com; \
-                     style-src 'self' https://www.google.com https://ajax.googleapis.com; \
-                     img-src *; \
-                     object-src 'none'",
-                    s3_host
-                ),
-            ],
+            vec![format!(
+                "default-src 'self'; \
+                 connect-src 'self' https://docs.rs https://{}; \
+                 script-src 'self' 'unsafe-eval' https://www.google.com; \
+                 style-src 'self' https://www.google.com https://ajax.googleapis.com; \
+                 img-src *; \
+                 object-src 'none'",
+                s3_host
+            )],
         );
 
         SecurityHeaders { headers }

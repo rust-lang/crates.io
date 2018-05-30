@@ -9,8 +9,8 @@ use cargo_registry::{env, Env};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
-use std::sync::Arc;
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 
 fn main() {
     // Initialize logging

@@ -50,10 +50,7 @@ impl Owner {
     ) -> CargoResult<Owner> {
         if name.contains(':') {
             Ok(Owner::Team(Team::create_or_update(
-                app,
-                conn,
-                name,
-                req_user,
+                app, conn, name, req_user,
             )?))
         } else {
             users::table

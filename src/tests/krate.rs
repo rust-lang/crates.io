@@ -625,17 +625,15 @@ fn new_krate_with_dependency() {
 #[test]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
-    let deps = vec![
-        u::CrateDependency {
-            name: u::CrateName("foo-dep".to_string()),
-            optional: false,
-            default_features: true,
-            features: Vec::new(),
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-            target: None,
-            kind: None,
-        },
-    ];
+    let deps = vec![u::CrateDependency {
+        name: u::CrateName("foo-dep".to_string()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+        target: None,
+        kind: None,
+    }];
     let mut req = ::new_req_full(Arc::clone(&app), ::krate("new_dep"), "1.0.0", deps);
     {
         let conn = app.diesel_database.get().unwrap();

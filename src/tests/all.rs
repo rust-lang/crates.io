@@ -25,26 +25,26 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
 use std::io::Read;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::sync::Arc;
 
-use cargo_registry::Replica;
 use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
+use cargo_registry::Replica;
 use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use flate2::Compression;
 use flate2::write::GzEncoder;
+use flate2::Compression;
 
 pub use cargo_registry::{models, schema, views};
 
 use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
-use views::EncodableCrate;
 use views::krate_publish as u;
+use views::EncodableCrate;
 
 macro_rules! t {
     ($e:expr) => {

@@ -134,10 +134,9 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
         let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) =
-            app.config
-                .uploader
-                .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config
+            .uploader
+            .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
 
         // Register this crate in our local git repo.

@@ -3,11 +3,11 @@ use std::path::Path;
 
 use dotenv::dotenv;
 use lettre::email::{Email, EmailBuilder};
-use lettre::transport::EmailTransport;
 use lettre::transport::file::FileEmailTransport;
-use lettre::transport::smtp::SUBMISSION_PORT;
 use lettre::transport::smtp::authentication::Mechanism;
+use lettre::transport::smtp::SUBMISSION_PORT;
 use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
+use lettre::transport::EmailTransport;
 use util::{bad_request, CargoResult};
 
 #[derive(Debug)]
