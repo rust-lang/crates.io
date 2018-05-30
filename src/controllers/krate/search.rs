@@ -4,7 +4,7 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use models::{Crate, CrateBadge, OwnerKind, Version, User};
+use models::{Crate, CrateBadge, OwnerKind, Version};
 use schema::*;
 use views::EncodableCrate;
 
@@ -34,18 +34,26 @@ use std::collections::HashMap;
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut Request) -> CargoResult<Response> {
-
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    let sort = params
+    let temp_params = params.clone();
+
+    let sort = temp_params
         .get("sort")
         .map(|s| &**s)
-        .unwrap_or("recent-downloads");
-    let userId = req.user()?.id;
+        .unwrap_or("recent-downloads")
+        .clone();
+    let current_user_id = req.user()?.id;
 
-
-    let crates = execute_search(&conn, offset, limit, params, sort, userId);
+    let crates = execute_search(
+        &conn,
+        offset,
+        limit,
+        params,
+        sort.to_string(),
+        current_user_id,
+    );
     let total = crates.len() as i64;
 
     #[derive(Serialize)]
@@ -64,7 +72,14 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
     }))
 }
 
-fn execute_search(conn: &PgConnection, offset: i64, limit: i64, params: HashMap<String,String>, sort: &str, userId: i32) -> Vec<EncodableCrate> {
+fn execute_search(
+    conn: &PgConnection,
+    offset: i64,
+    limit: i64,
+    params: HashMap<String, String>,
+    sort: String,
+    current_user_id: i32,
+) -> Vec<EncodableCrate> {
     use diesel::sql_types::Bool;
 
     let mut query = crates::table
@@ -156,36 +171,43 @@ fn execute_search(conn: &PgConnection, offset: i64, limit: i64, params: HashMap<
             crates::id.eq_any(
                 follows::table
                     .select(follows::crate_id)
-                    .filter(follows::user_id.eq(currentUserId)),
+                    .filter(follows::user_id.eq(current_user_id)),
             ),
         );
     }
+    println!("Sort value is: {}", sort);
     if sort == "downloads" {
+        println!("Downloads");
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
+        println!("Recent-Downloads");
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
     } else {
+        println!("Alphabetic");
         query = query.then_order_by(crates::name.asc())
     }
-// The database query returns a tuple within a tuple, with the root
-// tuple containing 3 items.
+    // The database query returns a tuple within a tuple, with the root
+    // tuple containing 3 items.
     let data = query
         .paginate(limit, offset)
-        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
-    let total = data.first().map(|&(_, t)| t).unwrap_or(0);
+        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)
+        .unwrap();
+    let _total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
     let recent_downloads = data.iter()
         .map(|&((_, _, s), _)| s.unwrap_or(0))
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
     let versions = Version::belonging_to(&crates)
-        .load::<Version>(&*conn)?
+        .load::<Version>(&*conn)
+        .unwrap()
         .grouped_by(&crates)
         .into_iter()
         .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
-        .load::<CrateBadge>(&conn)?
+        .load::<CrateBadge>(&*conn)
+        .unwrap()
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
@@ -208,19 +230,18 @@ fn execute_search(conn: &PgConnection, offset: i64, limit: i64, params: HashMap<
     return crates;
 }
 
-
 #[cfg(test)]
 mod test {
+    extern crate conduit_test;
     extern crate semver;
 
     use std::collections::HashMap;
 
     use super::*;
     use std::env;
-    // use cargo_registry::env;
-    // use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
-    use ::models::{NewCrate, NewVersion};
-    // use diesel::insert_into;
+    extern crate chrono;
+    use chrono::Utc;
+    use models::{CrateDownload, NewCrate, NewUser, NewVersion, User};
 
     fn conn() -> PgConnection {
         let database_url =
@@ -230,9 +251,9 @@ mod test {
         conn
     }
 
-    fn crate_and_version(conn: &PgConnection, user_id: i32) -> (Crate, Version) {
+    fn crate_and_version(conn: &PgConnection, name: &str, user_id: i32) -> (Crate, Version) {
         let krate = NewCrate {
-            name: "foo",
+            name,
             ..Default::default()
         }.create_or_update(&conn, None, user_id)
             .unwrap();
@@ -246,10 +267,76 @@ mod test {
         let version = version.save(&conn, &[]).unwrap();
         (krate, version)
     }
-//    //     #[test]
-//    //     fn increment() {
-//    //         use diesel::dsl::*;
-//    //     }
-//
-//    fn
+
+    fn add_downloads_to_crate(conn: &PgConnection, mut krate: Crate, download_number: i32)  -> CargoResult<Crate> {
+        let now = Utc::now();
+        let old_date = now.naive_utc().date() - chrono::Duration::days(91);
+        let crate_download = CrateDownload {
+            crate_id: krate.id,
+            downloads: download_number,
+            date: old_date,
+        };
+        use diesel::{insert_into, update};
+        insert_into(crate_downloads::table)
+            .values(&crate_download)
+            .execute(conn)?;
+        krate.downloads = download_number;
+        update(&krate).set(&krate).execute(conn)?;
+        Ok(krate)
+    }
+
+    fn user(conn: &PgConnection) -> User {
+        NewUser::new(2, "login", None, None, None, "access_token")
+            .create_or_update(conn)
+            .unwrap()
+    }
+
+    #[test]
+    fn no_parameters_or_sorting_returns_in_alphabetic_order() {
+        let db_connection = conn();
+        let user = user(&db_connection);
+        let (krate1, _version) = crate_and_version(&db_connection, "1 first crate", user.id);
+        let (krate3, _version) = crate_and_version(&db_connection, "thirgh crate", user.id);
+        let (krate2, _version) = crate_and_version(&db_connection, "second crate", user.id);
+
+        let sort = "";
+        let params: HashMap<String, String> = HashMap::new();
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 3);
+        assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
+        assert_eq!(list_of_krates.get(1).unwrap().name, krate2.name);
+        assert_eq!(list_of_krates.get(2).unwrap().name, krate3.name);
+    }
+
+    #[test]
+    fn no_parameters_and_sorting_by_downloads_returns_crates_by_descending_order_of_downloads() {
+        let db_connection = conn();
+        let user = user(&db_connection);
+        let (mut krate2, _version) = crate_and_version(&db_connection, "100 Downloads", user.id);
+        krate2 = add_downloads_to_crate(&db_connection, krate2, 100).unwrap();
+        let (mut krate3, _version) = crate_and_version(&db_connection, "50 Downloads", user.id);
+        krate3 = add_downloads_to_crate(&db_connection, krate3, 50).unwrap();
+        let (mut krate1, _version) = crate_and_version(&db_connection, "300 Downloads", user.id);
+        krate1 = add_downloads_to_crate(&db_connection, krate1, 300).unwrap();
+
+        let sort = "downloads";
+        let params: HashMap<String, String> = HashMap::new();
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        let query = crates::table
+            .left_join(recent_crate_downloads::table)
+            .select((ALL_COLUMNS, recent_crate_downloads::downloads.nullable()))
+            .then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+            .load::<((Crate), Option<i64>)>(&db_connection);
+        let data = query.unwrap();
+        println!("{:?}", data);
+
+        assert_eq!(list_of_krates.len(), 3);
+        assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
+        assert_eq!(list_of_krates.get(1).unwrap().name, krate2.name);
+        assert_eq!(list_of_krates.get(2).unwrap().name, krate3.name);
+    }
 }
