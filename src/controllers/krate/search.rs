@@ -276,6 +276,11 @@ mod test {
             self
         }
 
+        fn recent_downloads(mut self, recent_downloads: i32) -> Self {
+            self.recent_downloads = Some(recent_downloads);
+            self
+        }
+
         fn build(self, connection: &PgConnection) -> CargoResult<Crate> {
             use diesel::{insert_into, select, update};
 
@@ -373,13 +378,37 @@ mod test {
         let list_of_krates =
             execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
 
-        let query = crates::table
-            .left_join(recent_crate_downloads::table)
-            .select((ALL_COLUMNS, recent_crate_downloads::downloads.nullable()))
-            .then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
-            .load::<((Crate), Option<i64>)>(&db_connection);
-        let data = query.unwrap();
-        println!("{:?}", data);
+        assert_eq!(list_of_krates.len(), 3);
+        assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
+        assert_eq!(list_of_krates.get(1).unwrap().name, krate2.name);
+        assert_eq!(list_of_krates.get(2).unwrap().name, krate3.name);
+    }
+
+    #[test]
+    fn no_parameters_and_sorting_by_recent_downloads_returns_crates_by_descending_order_of_downloads(
+) {
+        let db_connection = conn();
+        let user = user(&db_connection);
+        let krate2 = CrateBuilder::new("100 recent downloads", user.id)
+            .downloads(5000)
+            .recent_downloads(100)
+            .build(&db_connection)
+            .unwrap();
+        let krate3 = CrateBuilder::new("50 recent downloads", user.id)
+            .downloads(50)
+            .recent_downloads(50)
+            .build(&db_connection)
+            .unwrap();
+        let krate1 = CrateBuilder::new("300 recent downloads", user.id)
+            .downloads(1000)
+            .recent_downloads(300)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "recent-downloads";
+        let params: HashMap<String, String> = HashMap::new();
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
 
         assert_eq!(list_of_krates.len(), 3);
         assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
