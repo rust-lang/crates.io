@@ -7,7 +7,7 @@ use semver;
 use tar;
 
 use util::{human, internal, CargoResult, ChainError};
-use util::{LimitErrorReader, read_le_u32};
+use util::{read_le_u32, LimitErrorReader};
 
 use std::env;
 use std::fs::{self, File};

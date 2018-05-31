@@ -6,8 +6,8 @@ use conduit_git_http_backend;
 use conduit_router::{RequestParams, RouteBuilder};
 
 use controllers::*;
-use util::RequestProxy;
 use util::errors::{std_error, CargoError, CargoResult, NotFound};
+use util::RequestProxy;
 use {App, Env};
 
 pub fn build_router(app: &App) -> R404 {

@@ -8,7 +8,7 @@ use conduit::Response;
 
 pub use self::errors::{bad_request, human, internal, internal_error, CargoError, CargoResult};
 pub use self::errors::{std_error, ChainError};
-pub use self::io_util::{read_fill, LimitErrorReader, read_le_u32};
+pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
 pub use self::request_proxy::RequestProxy;
 
