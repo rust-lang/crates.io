@@ -18,7 +18,7 @@ export default Controller.extend({
     isDownloading: false,
 
     downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
-        return this.get('requestedVersion') ? this.get('model') : this.get('crate');
+        return this.requestedVersion ? this.model : this.crate;
     }),
     downloads: alias('downloadsContext.version_downloads'),
     extraDownloads: alias('downloads.content.meta.extra_downloads'),
@@ -37,7 +37,7 @@ export default Controller.extend({
     sortedVersions: readOnly('crate.versions'),
 
     smallSortedVersions: computed('sortedVersions', function() {
-        return this.get('sortedVersions').slice(0, NUM_VERSIONS);
+        return this.sortedVersions.slice(0, NUM_VERSIONS);
     }),
 
     hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
@@ -87,12 +87,12 @@ export default Controller.extend({
     }),
 
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
-        let downloads = this.get('downloads');
+        let downloads = this.downloads;
         if (!downloads) {
             return;
         }
 
-        let extra = this.get('extraDownloads') || [];
+        let extra = this.extraDownloads || [];
 
         let dates = {};
         let versions = [];
@@ -117,10 +117,10 @@ export default Controller.extend({
                 dates[key].cnt[null] = prev + d.downloads;
             }
         });
-        if (this.get('requestedVersion')) {
-            versions.push(this.get('model').getProperties('id', 'num'));
+        if (this.requestedVersion) {
+            versions.push(this.model.getProperties('id', 'num'));
         } else {
-            this.get('smallSortedVersions').forEach(version => {
+            this.smallSortedVersions.forEach(version => {
                 versions.push(version.getProperties('id', 'num'));
             });
         }
@@ -171,7 +171,7 @@ export default Controller.extend({
         toggleFollow() {
             this.set('fetchingFollowing', true);
 
-            let crate = this.get('crate');
+            let crate = this.crate;
             let op = this.toggleProperty('following') ?
                 crate.follow() : crate.unfollow();
 

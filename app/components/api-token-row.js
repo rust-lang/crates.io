@@ -15,7 +15,7 @@ export default Component.extend({
     actions: {
         async saveToken() {
             try {
-                await this.get('api_token').save();
+                await this.api_token.save();
                 this.set('serverError', null);
             } catch(err) {
                 let msg;
@@ -30,7 +30,7 @@ export default Component.extend({
 
         async revokeToken() {
             try {
-                await this.get('api_token').destroyRecord();
+                await this.api_token.destroyRecord();
             } catch(err) {
                 let msg;
                 if (err.errors && err.errors[0] && err.errors[0].detail) {

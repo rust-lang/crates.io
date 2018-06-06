@@ -12,7 +12,7 @@ export default Controller.extend({
             this.set('error', false);
             this.set('invited', false);
 
-            const username = this.get('username');
+            const username = this.username;
 
             if (!username) {
                 this.set('error', 'Please enter a username');
@@ -20,7 +20,7 @@ export default Controller.extend({
             }
 
             try {
-                await this.get('crate').inviteOwner(username);
+                await this.crate.inviteOwner(username);
                 this.set('invited', `An invite has been sent to ${username}`);
 
             } catch(error) {
@@ -36,7 +36,7 @@ export default Controller.extend({
             this.set('removed', false);
 
             try {
-                await this.get('crate').removeOwner(user.get('login'));
+                await this.crate.removeOwner(user.get('login'));
                 this.set('removed', `User ${user.get('login')} removed as crate owner`);
 
                 this.get('crate.owner_user').removeObject(user);

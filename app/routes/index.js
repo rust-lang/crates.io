@@ -12,6 +12,6 @@ export default Route.extend({
     },
 
     setupController(controller) {
-        controller.get('dataTask').perform();
+        controller.dataTask.perform();
     },
 });

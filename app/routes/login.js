@@ -58,19 +58,19 @@ export default Route.extend({
                 return;
             }
             if (!response.ok) {
-                this.get('flashMessages').show('Failed to log in');
+                this.flashMessages.show('Failed to log in');
                 return;
             }
             let { data } = response;
             if (data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
-                this.get('flashMessages').show(error);
+                this.flashMessages.show(error);
                 return;
             }
 
             let user = this.store.push(this.store.normalize('user', data.user));
             let transition = this.get('session.savedTransition');
-            this.get('session').loginUser(user);
+            this.session.loginUser(user);
             if (transition) {
                 transition.retry();
             }

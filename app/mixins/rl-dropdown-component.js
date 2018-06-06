@@ -29,26 +29,26 @@ export default Mixin.create({
         toggleDropdown() {
             this.toggleProperty('dropdownExpanded');
 
-            if (this.get('dropdownExpanded')) {
-                this.get('onOpen')();
+            if (this.dropdownExpanded) {
+                this.onOpen();
             } else {
-                this.get('onClose')();
+                this.onClose();
             }
         },
 
         openDropdown() {
             this.set('dropdownExpanded', true);
-            this.get('onOpen')();
+            this.onOpen();
         },
 
         closeDropdown() {
             this.set('dropdownExpanded', false);
-            this.get('onClose')();
+            this.onClose();
         }
     },
 
     manageClosingEvents: on('didInsertElement', observer('dropdownExpanded', function() {
-        let namespace = this.get('closingEventNamespace');
+        let namespace = this.closingEventNamespace;
         let clickEventName = `click.${namespace}`;
         let focusEventName = `focusin.${namespace}`;
         let touchEventName = `touchstart.${namespace}`;
@@ -56,7 +56,7 @@ export default Mixin.create({
         let component = this;
         let $document = $(document);
 
-        if (this.get('dropdownExpanded')) {
+        if (this.dropdownExpanded) {
 
             /* Add clickout handler with 1ms delay, to allow opening the dropdown
              * by clicking e.g. a checkbox and binding to dropdownExpanded, without
@@ -67,7 +67,7 @@ export default Mixin.create({
                 $document.bind(touchEventName, { component }, component.boundClickoutHandler);
             }, 1);
 
-            if (this.get('closeOnEscape')) {
+            if (this.closeOnEscape) {
                 $document.bind(escapeEventName, { component }, component.boundEscapeHandler);
             }
         } else {
@@ -79,7 +79,7 @@ export default Mixin.create({
     })),
 
     unbindClosingEvents: on('willDestroyElement', function() {
-        let namespace = this.get('closingEventNamespace');
+        let namespace = this.closingEventNamespace;
         let $document = $(document);
 
         $document.unbind(`click.${namespace}`, this.boundClickoutHandler);

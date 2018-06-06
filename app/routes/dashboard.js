@@ -12,7 +12,7 @@ export default Route.extend(AuthenticatedRoute, {
         controller.set('myFollowing', this.get('data.myFollowing'));
         controller.set('myStats', this.get('data.myStats'));
 
-        if (!controller.get('loadingMore')) {
+        if (!controller.loadingMore) {
             controller.set('myFeed', A());
             controller.send('loadMore');
         }
