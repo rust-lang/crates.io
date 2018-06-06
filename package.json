@@ -31,7 +31,7 @@
     "ember-a11y-testing": "^0.5.0",
     "ember-cli": "~3.1.0",
     "ember-cli-app-version": "^3.1.3",
-    "ember-cli-babel": "^6.8.2",
+    "ember-cli-babel": "^6.14.1",
     "ember-cli-cjs-transform": "^1.1.1",
     "ember-cli-clipboard": "^0.9.0",
     "ember-cli-code-coverage": "kategengler/ember-cli-code-coverage#77b5b92",
