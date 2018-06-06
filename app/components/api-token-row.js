@@ -17,7 +17,7 @@ export default Component.extend({
             try {
                 await this.api_token.save();
                 this.set('serverError', null);
-            } catch(err) {
+            } catch (err) {
                 let msg;
                 if (err.errors && err.errors[0] && err.errors[0].detail) {
                     msg = `An error occurred while saving this token, ${err.errors[0].detail}`;
@@ -31,7 +31,7 @@ export default Component.extend({
         async revokeToken() {
             try {
                 await this.api_token.destroyRecord();
-            } catch(err) {
+            } catch (err) {
                 let msg;
                 if (err.errors && err.errors[0] && err.errors[0].detail) {
                     msg = `An error occurred while revoking this token, ${err.errors[0].detail}`;
@@ -41,5 +41,5 @@ export default Component.extend({
                 this.set('serverError', msg);
             }
         },
-    }
+    },
 });

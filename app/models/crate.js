@@ -22,7 +22,7 @@ export default DS.Model.extend({
     badges: DS.attr(),
     enhanced_badges: map('badges', badge => ({
         ...badge,
-        component_name: `badge-${badge.badge_type}`
+        component_name: `badge-${badge.badge_type}`,
     })),
 
     // eslint-disable-next-line ember/avoid-leaking-state-in-ember-objects

@@ -5,5 +5,5 @@ export default DS.Model.extend({
     crate_name: DS.attr('string'),
     crate_id: DS.attr('number'),
     created_at: DS.attr('date'),
-    accepted: DS.attr('boolean', { defaultValue: false })
+    accepted: DS.attr('boolean', { defaultValue: false }),
 });

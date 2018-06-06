@@ -5,5 +5,5 @@ export default Route.extend({
         this._super(...arguments);
         let crate = this.modelFor('crate');
         controller.set('crate', crate);
-    }
+    },
 });

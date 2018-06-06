@@ -10,6 +10,6 @@ export default Component.extend({
         return encodeURIComponent(this.get('badge.attributes.branch') || 'master');
     }),
     text: computed('branch', function() {
-        return `Circle CI build status for the ${ this.branch } branch`;
-    })
+        return `Circle CI build status for the ${this.branch} branch`;
+    }),
 });

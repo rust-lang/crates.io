@@ -12,7 +12,7 @@ export default Controller.extend({
         return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
     }),
 
-    dataTask: task(function* () {
+    dataTask: task(function*() {
         let data = yield ajax('/api/v1/summary');
 
         addCrates(this.store, data.new_crates);

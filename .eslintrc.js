@@ -4,41 +4,35 @@ module.exports = {
         ecmaVersion: 2017,
         sourceType: 'module',
         ecmaFeatures: {
-            'experimentalObjectRestSpread': true,
+            experimentalObjectRestSpread: true,
         },
     },
-    plugins: [
-        'ember',
-    ],
-    extends: [
-        'eslint:recommended',
-        'plugin:ember/recommended',
-    ],
+    plugins: ['ember'],
+    extends: ['eslint:recommended', 'plugin:ember/recommended'],
     env: {
         browser: true,
     },
     rules: {
         'arrow-parens': 'off',
         'brace-style': 'off',
-        'camelcase': 'off',
+        camelcase: 'off',
         'comma-dangle': 'off',
         'dot-notation': 'off',
-        'indent': ['error', 4],
+        indent: ['error', 4],
         'operator-linebreak': 'off',
-        'quotes': ['error', 'single', {
-            'allowTemplateLiterals': true,
-            'avoidEscape': true,
-        }],
+        quotes: [
+            'error',
+            'single',
+            {
+                allowTemplateLiterals: true,
+                avoidEscape: true,
+            },
+        ],
     },
     overrides: [
         // node files
         {
-            files: [
-                'testem.js',
-                'ember-cli-build.js',
-                'config/**/*.js',
-                'lib/*/index.js',
-            ],
+            files: ['testem.js', 'ember-cli-build.js', 'config/**/*.js', 'lib/*/index.js'],
             parserOptions: {
                 sourceType: 'script',
                 ecmaVersion: 2015,

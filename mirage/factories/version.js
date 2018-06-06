@@ -26,5 +26,5 @@ export default Factory.extend({
     afterCreate(version, server) {
         let crate = server.schema.crates.find(version.crate);
         crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });
-    }
+    },
 });

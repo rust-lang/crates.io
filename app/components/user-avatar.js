@@ -26,5 +26,5 @@ export default Component.extend({
 
     src: computed('size', 'user', function() {
         return `${this.get('user.avatar')}&s=${this.width * 2}`;
-    })
+    }),
 });

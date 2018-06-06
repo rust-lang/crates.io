@@ -158,7 +158,8 @@ module('Acceptance | crate page', function(hooks) {
 
         await visit('/crates/nanomsg');
 
-        assert.dom('[data-test-owners] [data-test-team-link="github:org:thehydroimpulse"] img')
+        assert
+            .dom('[data-test-owners] [data-test-team-link="github:org:thehydroimpulse"] img')
             .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=64');
 
         assert.dom('[data-test-owners] li').exists({ count: 4 });
@@ -194,12 +195,15 @@ module('Acceptance | crate page', function(hooks) {
     test('navigating to the owners page when not an owner', async function(assert) {
         this.server.loadFixtures();
 
-        this.owner.register('service:session', Service.extend({
-            get currentUser() {
-                return { login: 'iain8' };
-            },
-            loadUser() {},
-        }));
+        this.owner.register(
+            'service:session',
+            Service.extend({
+                get currentUser() {
+                    return { login: 'iain8' };
+                },
+                loadUser() {},
+            }),
+        );
 
         await visit('/crates/nanomsg');
 
@@ -209,12 +213,15 @@ module('Acceptance | crate page', function(hooks) {
     test('navigating to the owners page', async function(assert) {
         this.server.loadFixtures();
 
-        this.owner.register('service:session', Service.extend({
-            get currentUser() {
-                return { login: 'thehydroimpulse' };
-            },
-            loadUser() {},
-        }));
+        this.owner.register(
+            'service:session',
+            Service.extend({
+                get currentUser() {
+                    return { login: 'thehydroimpulse' };
+                },
+                loadUser() {},
+            }),
+        );
 
         await visit('/crates/nanomsg');
         await click('#crate-owners p a');

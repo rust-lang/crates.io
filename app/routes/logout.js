@@ -12,5 +12,5 @@ export default Route.extend({
             this.session.logoutUser();
             this.transitionTo('index');
         });
-    }
+    },
 });

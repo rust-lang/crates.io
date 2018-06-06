@@ -2,16 +2,7 @@ import Component from '@ember/component';
 import $ from 'jquery';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
-const COLORS = [
-    '#67001f',
-    '#b2182b',
-    '#d6604d',
-    '#f4a582',
-    '#92c5de',
-    '#4393c3',
-    '#2166ac',
-    '#053061'
-];
+const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
 export default Component.extend({
     classNames: 'graph-data',
@@ -110,7 +101,7 @@ export default Component.extend({
                 let avg = total / days;
                 return {
                     v: avg,
-                    f: avg.toFixed(2)
+                    f: avg.toFixed(2),
                 };
             };
         };
@@ -123,10 +114,11 @@ export default Component.extend({
 
         range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
             columns.push(dataCol); // add the column itself
-            columns.push({ // add a 'calculated' column, the moving average
+            columns.push({
+                // add a 'calculated' column, the moving average
                 type: 'number',
                 label: `${headers[dataCol]} ${days}-day avg.`,
-                calc: moving_avg_func_for_col(dataCol)
+                calc: moving_avg_func_for_col(dataCol),
             });
             // Note: while the columns start with index 1 (because 0 is the time
             // axis), the series configuration starts with index 0.
@@ -134,32 +126,32 @@ export default Component.extend({
                 type: 'scatter',
                 color: COLORS[i % COLORS.length],
                 pointSize: 3,
-                pointShape: 'square'
+                pointShape: 'square',
             };
             seriesOption[i * 2 + 1] = {
                 type: 'area',
                 color: COLORS[i % COLORS.length],
                 lineWidth: 2,
                 curveType: 'function',
-                visibleInLegend: false
+                visibleInLegend: false,
             };
         });
         view.setColumns(columns);
 
         let chart = new window.google.visualization.ComboChart(this.element);
         chart.draw(view, {
-            chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
+            chartArea: { left: 85, width: '77%', height: '80%' },
             hAxis: {
                 minorGridlines: { count: 8 },
             },
             vAxis: {
                 minorGridlines: { count: 5 },
-                viewWindow: { min: 0, },
+                viewWindow: { min: 0 },
             },
             isStacked: true,
             focusTarget: 'category',
             seriesType: 'scatter',
-            series: seriesOption
+            series: seriesOption,
         });
     },
 });

@@ -34,7 +34,8 @@ module('Acceptance | user page', function(hooks) {
 
         await visit('/users/thehydroimpulse');
 
-        assert.dom('[data-test-heading] [data-test-user-link]')
+        assert
+            .dom('[data-test-heading] [data-test-user-link]')
             .hasAttribute('href', 'https://github.com/thehydroimpulse');
     });
 
@@ -43,8 +44,7 @@ module('Acceptance | user page', function(hooks) {
 
         await visit('/users/thehydroimpulse');
 
-        assert.dom('[data-test-heading] [data-test-user-link] img')
-            .hasAttribute('src', '/assets/GitHub-Mark.svg');
+        assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
     });
 
     test('user details has github profile icon', async function(assert) {
@@ -52,7 +52,8 @@ module('Acceptance | user page', function(hooks) {
 
         await visit('/users/thehydroimpulse');
 
-        assert.dom('[data-test-heading] [data-test-avatar]')
+        assert
+            .dom('[data-test-heading] [data-test-avatar]')
             .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
     });
 });

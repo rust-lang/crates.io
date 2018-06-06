@@ -11,8 +11,8 @@ export default Component.extend({
                 callback() {
                     window.googleChartsLoaded = true;
                     $(document).trigger('googleChartsLoaded');
-                }
+                },
             });
         });
-    }
+    },
 });

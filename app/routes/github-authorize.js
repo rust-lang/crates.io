@@ -24,7 +24,7 @@ export default Route.extend({
             if (window.opener) {
                 window.opener.github_response = item;
             }
-        } catch(d) {
+        } catch (d) {
             let item = JSON.stringify({ ok: false, data: d });
             if (window.opener) {
                 window.opener.github_response = item;

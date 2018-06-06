@@ -36,5 +36,5 @@ export default Component.extend({
         if (propagateClicks === false || propagateClicks === 'false') {
             event.stopPropagation();
         }
-    }
+    },
 });

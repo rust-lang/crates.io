@@ -13,5 +13,5 @@ export default DS.Model.extend({
         let login = this.login;
         let login_split = login.split(':');
         return login_split[1];
-    })
+    }),
 });

@@ -20,15 +20,17 @@ export default Route.extend({
     },
 
     setHeadTags(model) {
-        let headTags = [{
-            type: 'meta',
-            tagId: 'meta-description-tag',
-            attrs: {
-                name: 'description',
-                content: model.get('description') || 'A package for Rust.'
-            }
-        }];
+        let headTags = [
+            {
+                type: 'meta',
+                tagId: 'meta-description-tag',
+                attrs: {
+                    name: 'description',
+                    content: model.get('description') || 'A package for Rust.',
+                },
+            },
+        ];
 
         this.set('headTags', headTags);
-    }
+    },
 });

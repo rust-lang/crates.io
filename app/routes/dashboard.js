@@ -24,15 +24,15 @@ export default Route.extend(AuthenticatedRoute, {
 
     async afterModel(user) {
         let myCrates = this.store.query('crate', {
-            user_id: user.get('id')
+            user_id: user.get('id'),
         });
 
         let myFollowing = this.store.query('crate', {
-            following: 1
+            following: 1,
         });
 
         let myStats = user.stats();
 
         this.set('data', await RSVP.hash({ myCrates, myFollowing, myStats }));
-    }
+    },
 });

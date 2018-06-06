@@ -40,7 +40,7 @@ export default Controller.extend({
     actions: {
         async loadMore() {
             this.set('loadingMore', true);
-            let page = (this.myFeed.length / 10) + 1;
+            let page = this.myFeed.length / 10 + 1;
 
             try {
                 let data = await ajax(`/api/v1/me/updates?page=${page}`);
@@ -48,10 +48,9 @@ export default Controller.extend({
 
                 this.myFeed.pushObjects(versions);
                 this.set('hasMore', data.meta.more);
-
             } finally {
                 this.set('loadingMore', false);
             }
-        }
-    }
+        },
+    },
 });

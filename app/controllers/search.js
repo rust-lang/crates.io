@@ -38,7 +38,7 @@ export default Controller.extend(PaginationMixin, {
 
     hasItems: bool('totalItems'),
 
-    dataTask: task(function* (params) {
+    dataTask: task(function*(params) {
         if (params.q !== null) {
             params.q = params.q.trim();
         }

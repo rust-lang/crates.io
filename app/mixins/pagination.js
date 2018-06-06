@@ -5,7 +5,6 @@ import { computed } from '@ember/object';
 const VIEWABLE_PAGES = 9;
 
 export default Mixin.create({
-
     // Gives page numbers to the surrounding 9 pages.
     pages: computed('currentPage', 'availablePages', function() {
         let pages = [];
@@ -44,10 +43,7 @@ export default Mixin.create({
     }),
 
     currentPageEnd: computed('currentPage', 'itemsPerPage', 'totalItems', function() {
-        return Math.min(
-            this.currentPage * this.itemsPerPage,
-            this.totalItems
-        );
+        return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
     }),
 
     nextPage: computed('currentPage', 'availablePages', function() {
@@ -70,11 +66,10 @@ export default Mixin.create({
     }),
 
     availablePages: computed('totalItems', 'itemsPerPage', function() {
-        return Math.ceil((this.totalItems /
-                          this.itemsPerPage) || 1);
+        return Math.ceil(this.totalItems / this.itemsPerPage || 1);
     }),
 
     // wire up these ember-style variables to the expected query parameters
     itemsPerPage: readOnly('per_page'),
-    selectedPage: readOnly('page')
+    selectedPage: readOnly('page'),
 });

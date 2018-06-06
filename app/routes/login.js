@@ -15,7 +15,7 @@ export default Route.extend({
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
 
@@ -28,14 +28,10 @@ export default Route.extend({
             'status=1',
             'resizable=1',
             'location=1',
-            'menuBar=0'
+            'menuBar=0',
         ].join(',');
 
-        let win = window.open(
-            '/github_login',
-            'Authorization',
-            windowDimensions
-        );
+        let win = window.open('/github_login', 'Authorization', windowDimensions);
         if (!win) {
             return;
         }
@@ -77,5 +73,5 @@ export default Route.extend({
         }, 200);
 
         transition.abort();
-    }
+    },
 });
