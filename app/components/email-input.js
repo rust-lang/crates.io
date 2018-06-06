@@ -16,13 +16,13 @@ export default Component.extend({
     prevEmail: '',
     emailIsNull: computed('user.email', function() {
         let email = this.get('user.email');
-        return (email == null);
+        return email == null;
     }),
     emailNotVerified: computed('user.{email,email_verified}', function() {
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
 
-        return (email != null && !verified);
+        return email != null && !verified;
     }),
     isError: false,
     emailError: '',
@@ -41,7 +41,7 @@ export default Component.extend({
         editEmail() {
             let email = this.value;
             let isEmailNull = function(email) {
-                return (email == null);
+                return email == null;
             };
 
             this.set('emailIsNull', isEmailNull(email));
@@ -98,7 +98,7 @@ export default Component.extend({
             try {
                 await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
                 this.set('disableResend', true);
-            } catch(error) {
+            } catch (error) {
                 if (error.payload) {
                     this.set('isError', true);
                     this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
@@ -107,6 +107,6 @@ export default Component.extend({
                     this.set('emailError', 'Unknown error in resending message');
                 }
             }
-        }
-    }
+        },
+    },
 });

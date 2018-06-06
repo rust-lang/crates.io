@@ -21,5 +21,5 @@ export default Controller.extend({
                 created_at: new Date(Date.now() + 2000),
             });
         },
-    }
+    },
 });

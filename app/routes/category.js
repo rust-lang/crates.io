@@ -11,5 +11,5 @@ export default Route.extend({
                 return this.replaceWith('index');
             }
         });
-    }
+    },
 });

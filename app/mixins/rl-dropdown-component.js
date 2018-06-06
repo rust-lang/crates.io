@@ -12,8 +12,8 @@ export default Mixin.create({
         this.set('boundEscapeHandler', bind(this, this.escapeHandler));
     },
 
-    onOpen() { },
-    onClose() { },
+    onOpen() {},
+    onClose() {},
 
     dropdownExpanded: false,
 
@@ -44,39 +44,41 @@ export default Mixin.create({
         closeDropdown() {
             this.set('dropdownExpanded', false);
             this.onClose();
-        }
+        },
     },
 
-    manageClosingEvents: on('didInsertElement', observer('dropdownExpanded', function() {
-        let namespace = this.closingEventNamespace;
-        let clickEventName = `click.${namespace}`;
-        let focusEventName = `focusin.${namespace}`;
-        let touchEventName = `touchstart.${namespace}`;
-        let escapeEventName = `keydown.${namespace}`;
-        let component = this;
-        let $document = $(document);
+    manageClosingEvents: on(
+        'didInsertElement',
+        observer('dropdownExpanded', function() {
+            let namespace = this.closingEventNamespace;
+            let clickEventName = `click.${namespace}`;
+            let focusEventName = `focusin.${namespace}`;
+            let touchEventName = `touchstart.${namespace}`;
+            let escapeEventName = `keydown.${namespace}`;
+            let component = this;
+            let $document = $(document);
 
-        if (this.dropdownExpanded) {
-
-            /* Add clickout handler with 1ms delay, to allow opening the dropdown
+            if (this.dropdownExpanded) {
+                /* Add clickout handler with 1ms delay, to allow opening the dropdown
              * by clicking e.g. a checkbox and binding to dropdownExpanded, without
              * having the handler close the dropdown immediately. */
-            later(() => {
-                $document.bind(clickEventName, { component }, component.boundClickoutHandler);
-                $document.bind(focusEventName, { component }, component.boundClickoutHandler);
-                $document.bind(touchEventName, { component }, component.boundClickoutHandler);
-            }, 1);
+                later(() => {
+                    $document.bind(clickEventName, { component }, component.boundClickoutHandler);
+                    $document.bind(focusEventName, { component }, component.boundClickoutHandler);
+                    $document.bind(touchEventName, { component }, component.boundClickoutHandler);
+                }, 1);
 
-            if (this.closeOnEscape) {
-                $document.bind(escapeEventName, { component }, component.boundEscapeHandler);
+                if (this.closeOnEscape) {
+                    $document.bind(escapeEventName, { component }, component.boundEscapeHandler);
+                }
+            } else {
+                $document.unbind(clickEventName, component.boundClickoutHandler);
+                $document.unbind(focusEventName, component.boundClickoutHandler);
+                $document.unbind(touchEventName, component.boundClickoutHandler);
+                $document.unbind(escapeEventName, component.boundEscapeHandler);
             }
-        } else {
-            $document.unbind(clickEventName, component.boundClickoutHandler);
-            $document.unbind(focusEventName, component.boundClickoutHandler);
-            $document.unbind(touchEventName, component.boundClickoutHandler);
-            $document.unbind(escapeEventName, component.boundEscapeHandler);
-        }
-    })),
+        }),
+    ),
 
     unbindClosingEvents: on('willDestroyElement', function() {
         let namespace = this.closingEventNamespace;
@@ -101,9 +103,13 @@ export default Mixin.create({
          * should have closed, seems to be less bad for usability than occasionaly
          * closing the dropdown when it should not have closed.
          */
-        if (component.get('dropdownExpanded') && $target.closest('html').length &&
-            !($target.closest($c.find(component.get('dropdownToggleSelector'))).length ||
-                $target.closest($c.find(component.get('dropdownSelector'))).length)
+        if (
+            component.get('dropdownExpanded') &&
+            $target.closest('html').length &&
+            !(
+                $target.closest($c.find(component.get('dropdownToggleSelector'))).length ||
+                $target.closest($c.find(component.get('dropdownSelector'))).length
+            )
         ) {
             component.send('closeDropdown');
         }
@@ -113,5 +119,5 @@ export default Mixin.create({
         if (event.keyCode === 27) {
             event.data.component.send('closeDropdown');
         }
-    }
+    },
 });

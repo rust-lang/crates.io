@@ -30,16 +30,19 @@ module('Acceptance | search', function(hooks) {
         await triggerEvent('[data-test-search-form]', 'submit');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
+        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
 
-        assert.dom('[data-test-heading]')
-            .hasText('Search Results for \'rust\'');
+        assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
         assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
-        assert.dom('[data-test-search-sort]').hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads');
+        assert
+            .dom('[data-test-search-sort]')
+            .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads');
         assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
         assert.dom('[data-test-crate-row="0"] [data-test-version-badge]').hasAttribute('alt', '0.0.16');
 
-        assert.dom('[data-test-crate-row="0"] [data-test-description]').hasText('A Kinetic protocol library written in Rust');
+        assert
+            .dom('[data-test-crate-row="0"] [data-test-description]')
+            .hasText('A Kinetic protocol library written in Rust');
         assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
         assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
     });
@@ -50,12 +53,10 @@ module('Acceptance | search', function(hooks) {
         await visit('/search?q=rust');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
+        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
 
-        assert.dom('[data-test-search-input]')
-            .hasValue('rust');
-        assert.dom('[data-test-heading]')
-            .hasText('Search Results for \'rust\'');
+        assert.dom('[data-test-search-input]').hasValue('rust');
+        assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
         assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
     });
 

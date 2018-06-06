@@ -13,4 +13,3 @@ export default Route.extend(AuthenticatedRoute, {
         return this.store.query('crate', params);
     },
 });
-

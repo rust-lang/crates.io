@@ -18,6 +18,7 @@
   "scripts": {
     "build": "ember build",
     "lint:js": "eslint ./*.js app config lib mirage server tests",
+    "prettier": "prettier --write '{app,tests,mirage}/**/*.js'",
     "start": "ember serve",
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
@@ -68,10 +69,13 @@
     "ember-test-selectors": "^0.3.7",
     "ember-web-app": "^2.2.0",
     "emberx-select": "^3.1.1",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-ember": "^5.1.0",
+    "eslint-plugin-prettier": "^2.6.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
     "nyc": "^11.6.0",
+    "prettier": "^1.13.4",
     "qunit-dom": "^0.6.3",
     "timekeeper": "^2.1.0"
   },
@@ -79,5 +83,11 @@
     "node": "^8.1.3",
     "npm": "^5.1.0"
   },
-  "private": true
+  "private": true,
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
 }

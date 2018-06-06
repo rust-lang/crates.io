@@ -34,5 +34,5 @@ export default Component.extend({
     focusOut() {
         this._super(...arguments);
         this.set('showValidations', true);
-    }
+    },
 });

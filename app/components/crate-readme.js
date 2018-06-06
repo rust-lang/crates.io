@@ -7,5 +7,5 @@ export default Component.extend({
         this.$('pre > code').each(function() {
             window.Prism.highlightElement(this);
         });
-    }
+    },
 });

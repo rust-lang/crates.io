@@ -17,18 +17,23 @@ export default function() {
         let num_crates = crates.length;
         let num_downloads = crates.models.reduce((sum, crate) => sum + crate.downloads, 0);
 
-        let popular_categories = schema.categories.all().sort((a, b) => b.crates_cnt - a.crates_cnt).slice(0, 10);
-        let popular_keywords = schema.keywords.all().sort((a, b) => b.crates_cnt - a.crates_cnt).slice(0, 10);
+        let popular_categories = schema.categories
+            .all()
+            .sort((a, b) => b.crates_cnt - a.crates_cnt)
+            .slice(0, 10);
+        let popular_keywords = schema.keywords
+            .all()
+            .sort((a, b) => b.crates_cnt - a.crates_cnt)
+            .slice(0, 10);
 
         return {
-            just_updated: this.serialize(just_updated).crates
-                .map(it => ({ ...it, versions: null })),
-            most_downloaded: this.serialize(most_downloaded).crates
-                .map(it => ({ ...it, versions: null })),
-            new_crates: this.serialize(new_crates).crates
-                .map(it => ({ ...it, versions: null })),
-            most_recently_downloaded: this.serialize(most_recently_downloaded).crates
-                .map(it => ({ ...it, versions: null })),
+            just_updated: this.serialize(just_updated).crates.map(it => ({ ...it, versions: null })),
+            most_downloaded: this.serialize(most_downloaded).crates.map(it => ({ ...it, versions: null })),
+            new_crates: this.serialize(new_crates).crates.map(it => ({ ...it, versions: null })),
+            most_recently_downloaded: this.serialize(most_recently_downloaded).crates.map(it => ({
+                ...it,
+                versions: null,
+            })),
             num_crates,
             num_downloads,
             popular_categories: this.serialize(popular_categories).categories,
@@ -71,11 +76,12 @@ export default function() {
     this.get('/crates/:crate_id', function(schema, request) {
         let crateId = request.params.crate_id;
         let crate = schema.crates.find(crateId);
-        let categories = schema.categories.all()
+        let categories = schema.categories
+            .all()
             .filter(category => (crate.categories || []).indexOf(category.id) !== -1);
-        let keywords = schema.keywords.all()
-            .filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
-        let versions = schema.versions.all()
+        let keywords = schema.keywords.all().filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
+        let versions = schema.versions
+            .all()
             .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
 
         return {
@@ -164,7 +170,8 @@ export default function() {
     this.get('/crates/:crate_id/downloads', function(schema, request) {
         let crateId = request.params.crate_id;
         let crate = schema.crates.find(crateId);
-        let versionDownloads = schema.versionDownloads.all()
+        let versionDownloads = schema.versionDownloads
+            .all()
             .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
 
         return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
@@ -254,9 +261,13 @@ export default function() {
 }
 
 function notFound() {
-    return new Response(404, { 'Content-Type': 'application/json' }, {
-        'errors': [{ 'detail': 'Not Found' }]
-    });
+    return new Response(
+        404,
+        { 'Content-Type': 'application/json' },
+        {
+            errors: [{ detail: 'Not Found' }],
+        },
+    );
 }
 
 function pageParams(request) {
@@ -277,11 +288,11 @@ function withMeta(response, meta) {
 }
 
 function compareStrings(a, b) {
-    return (a < b) ? -1 : (a > b) ? 1 : 0;
+    return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function compareIsoDates(a, b) {
     let aDate = new Date(a);
     let bDate = new Date(b);
-    return (aDate < bDate) ? -1 : (aDate > bDate) ? 1 : 0;
+    return aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
 }

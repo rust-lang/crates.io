@@ -16,7 +16,7 @@ export default Service.extend({
         let isLoggedIn;
         try {
             isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
-        } catch(e) {
+        } catch (e) {
             isLoggedIn = false;
         }
         this.set('isLoggedIn', isLoggedIn);
@@ -28,7 +28,7 @@ export default Service.extend({
         this.set('currentUser', user);
         try {
             localStorage.setItem('isLoggedIn', '1');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
     },
@@ -41,7 +41,7 @@ export default Service.extend({
 
         try {
             localStorage.removeItem('isLoggedIn');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
     },
@@ -64,10 +64,9 @@ export default Service.extend({
     },
 
     fetchUser() {
-        return ajax('/api/v1/me')
-            .then((response) => {
-                this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
-            });
+        return ajax('/api/v1/me').then(response => {
+            this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
+        });
     },
 
     checkCurrentUser(transition, beforeRedirect) {
@@ -89,5 +88,5 @@ export default Service.extend({
             }
             return this.router.transitionTo('index');
         }
-    }
+    },
 });

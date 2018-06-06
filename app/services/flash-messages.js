@@ -15,5 +15,5 @@ export default Service.extend({
     step() {
         this.set('message', this._nextMessage);
         this.set('_nextMessage', null);
-    }
+    },
 });

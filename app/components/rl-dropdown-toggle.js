@@ -38,5 +38,5 @@ export default Component.extend({
                 event.stopPropagation();
             }
         }
-    }
+    },
 });

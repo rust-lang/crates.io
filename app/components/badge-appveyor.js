@@ -27,8 +27,9 @@ export default Component.extend({
     }),
 
     projectName: computed('badge.attributes.project_name', function() {
-        return this.get('badge.attributes.project_name') ||
-            this.get('badge.attributes.repository').replace(/[_.]/g, '-');
+        return (
+            this.get('badge.attributes.project_name') || this.get('badge.attributes.repository').replace(/[_.]/g, '-')
+        );
     }),
 
     service: computed('badge.attributes.service', function() {
@@ -36,6 +37,6 @@ export default Component.extend({
     }),
 
     text: computed('badge', function() {
-        return `Appveyor build status for the ${ this.branch } branch`;
-    })
+        return `Appveyor build status for the ${this.branch} branch`;
+    }),
 });

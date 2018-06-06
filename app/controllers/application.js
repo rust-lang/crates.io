@@ -27,10 +27,9 @@ export default Controller.extend(EKMixin, {
             this.transitionToRoute('search', {
                 queryParams: {
                     q: this.searchQuery,
-                    page: 1
-                }
+                    page: 1,
+                },
             });
         },
     },
 });
-
