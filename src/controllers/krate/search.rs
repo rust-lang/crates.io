@@ -175,15 +175,11 @@ fn execute_search(
             ),
         );
     }
-    println!("Sort value is: {}", sort);
     if sort == "downloads" {
-        println!("Downloads");
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
-        println!("Recent-Downloads");
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
     } else {
-        println!("Alphabetic");
         query = query.then_order_by(crates::name.asc())
     }
     // The database query returns a tuple within a tuple, with the root
@@ -241,7 +237,11 @@ mod test {
     use std::env;
     extern crate chrono;
     use chrono::Utc;
-    use models::{CrateDownload, NewCrate, NewUser, User};
+    use models::{Category, CrateDownload, CrateOwner, Follow, Keyword, NewCrate, NewTeam, NewUser,
+                 Team, User};
+    use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+
+    static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
     fn conn() -> PgConnection {
         let database_url =
@@ -256,6 +256,9 @@ mod test {
         krate: NewCrate<'a>,
         downloads: Option<i32>,
         recent_downloads: Option<i32>,
+        categories: Vec<&'a str>,
+        keywords: Vec<&'a str>,
+        team: Option<&'a Team>,
     }
 
     impl<'a> CrateBuilder<'a> {
@@ -268,6 +271,9 @@ mod test {
                 },
                 downloads: None,
                 recent_downloads: None,
+                categories: Vec::new(),
+                keywords: Vec::new(),
+                team: None,
             }
         }
 
@@ -278,6 +284,21 @@ mod test {
 
         fn recent_downloads(mut self, recent_downloads: i32) -> Self {
             self.recent_downloads = Some(recent_downloads);
+            self
+        }
+
+        fn category(mut self, category: &'a str) -> Self {
+            self.categories.push(category);
+            self
+        }
+
+        fn keyword(mut self, keyword: &'a str) -> Self {
+            self.keywords.push(keyword);
+            self
+        }
+
+        fn team(mut self, team: &'a Team) -> Self {
+            self.team = Some(&team);
             self
         }
 
@@ -321,20 +342,55 @@ mod test {
                 no_arg_sql_function!(refresh_recent_crate_downloads, ());
                 select(refresh_recent_crate_downloads).execute(connection)?;
             }
+
+            if let Some(team) = self.team {
+                let crate_owner = CrateOwner {
+                    crate_id: krate.id,
+                    owner_id: team.id,
+                    created_by: self.owner_id,
+                    owner_kind: 1, // Team owner kind is 1 according to owner.rs
+                };
+                insert_into(crate_owners::table)
+                    .values(&crate_owner)
+                    .on_conflict(crate_owners::table.primary_key())
+                    .do_update()
+                    .set(crate_owners::deleted.eq(false))
+                    .execute(connection)?;
+            }
+
+            if self.categories.len() > 0 {
+                Category::update_crate(&connection, &krate, &self.categories)?;
+            }
+
+            if !self.keywords.is_empty() {
+                Keyword::update_crate(connection, &krate, &self.keywords)?;
+            }
+
             Ok(krate)
         }
     }
 
-    fn user(conn: &PgConnection) -> User {
-        NewUser::new(2, "login", None, None, None, "access_token")
+    fn create_user(conn: &PgConnection) -> User {
+        let user_id = NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
+        NewUser::new(user_id, "login", None, None, None, "access_token")
             .create_or_update(conn)
             .unwrap()
+    }
+
+    fn create_team(conn: &PgConnection, login: &str) -> Team {
+        let team = NewTeam {
+            github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+            login: login,
+            name: None,
+            avatar: None,
+        };
+        return team.create_or_update(conn).unwrap();
     }
 
     #[test]
     fn no_parameters_or_sorting_returns_in_alphabetic_order() {
         let db_connection = conn();
-        let user = user(&db_connection);
+        let user = create_user(&db_connection);
         let krate1 = CrateBuilder::new("1 first crate", user.id)
             .build(&db_connection)
             .unwrap();
@@ -359,7 +415,7 @@ mod test {
     #[test]
     fn no_parameters_and_sorting_by_downloads_returns_crates_by_descending_order_of_downloads() {
         let db_connection = conn();
-        let user = user(&db_connection);
+        let user = create_user(&db_connection);
         let krate2 = CrateBuilder::new("100 Downloads", user.id)
             .downloads(100)
             .build(&db_connection)
@@ -388,7 +444,7 @@ mod test {
     fn no_parameters_and_sorting_by_recent_downloads_returns_crates_by_descending_order_of_recent_downloads(
 ) {
         let db_connection = conn();
-        let user = user(&db_connection);
+        let user = create_user(&db_connection);
         let krate2 = CrateBuilder::new("100 recent downloads", user.id)
             .downloads(5000)
             .recent_downloads(100)
@@ -419,7 +475,7 @@ mod test {
     #[test]
     fn query_parameter_is_empty_returns_all_crates() {
         let db_connection = conn();
-        let user = user(&db_connection);
+        let user = create_user(&db_connection);
         CrateBuilder::new("100 recent downloads", user.id)
             .build(&db_connection)
             .unwrap();
@@ -442,7 +498,7 @@ mod test {
     #[test]
     fn query_parameter_is_not_empty_returns_crates_that_match_query() {
         let db_connection = conn();
-        let user = user(&db_connection);
+        let user = create_user(&db_connection);
         CrateBuilder::new("Found Crate", user.id)
             .build(&db_connection)
             .unwrap();
@@ -460,6 +516,207 @@ mod test {
             execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
 
         assert_eq!(list_of_krates.len(), 1);
-        assert_eq!(list_of_krates.get(0).unwrap().name, "Found Crate".to_string());
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn when_searching_by_category_returns_crates_that_match_category() {
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        CrateBuilder::new("Found Crate", user.id)
+            .category(&"category1")
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user.id)
+            .category(&"category1")
+            .category(&"category2")
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user.id)
+            .category(&"category2")
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("category".to_string(), "category1".to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 2);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    fn when_searching_by_keyword_returns_crates_that_match_keyword() {
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        CrateBuilder::new("Found Crate", user.id)
+            .keyword(&"found")
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user.id)
+            .keyword(&"not found")
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user.id)
+            .keyword(&"not found")
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("keyword".to_string(), "found".to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn when_searching_by_letter_in_name_returns_crates_that_match_the_letters() {
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        CrateBuilder::new("Found Crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("letter".to_string(), "c".to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    fn when_searching_by_user_returns_crates_that_where_create_by_the_user() {
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        let user1 = create_user(&db_connection);
+        let user2 = create_user(&db_connection);
+        CrateBuilder::new("Found Crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user1.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user2.id)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("user_id".to_string(), user.id.to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    fn when_searching_by_team_returns_crates_that_where_create_by_the_team() {
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        let team = create_team(&db_connection, "team@ecrates.com");
+        CrateBuilder::new("Found Crate", user.id)
+            .team(&team)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("team_id".to_string(), team.id.to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), team.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
+    }
+
+    #[test]
+    fn when_searching_by_crates_user_follows_returns_all_crates_the_user_follows() {
+        use diesel::insert_into;
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        let user1 = create_user(&db_connection);
+        let krate = CrateBuilder::new("Found Crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+
+        CrateBuilder::new("Another not found", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let follow = Follow {
+            user_id: user1.id,
+            crate_id: krate.id,
+        };
+        insert_into(follows::table)
+            .values(&follow)
+            .on_conflict_do_nothing()
+            .execute(&db_connection)
+            .unwrap();
+
+        let sort = "";
+        let mut params: HashMap<String, String> = HashMap::new();
+        params.insert("following".to_string(), "".to_string());
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user1.id);
+
+        assert_eq!(list_of_krates.len(), 1);
+        assert_eq!(
+            list_of_krates.get(0).unwrap().name,
+            "Found Crate".to_string()
+        );
     }
 }
