@@ -63,7 +63,7 @@
     "ember-prism": "^0.2.0",
     "ember-resolver": "^4.1.0",
     "ember-router-scroll": "^0.4.0",
-    "ember-source": "~2.17.0",
+    "ember-source": "~2.18.0",
     "ember-svg-jar": "^1.1.1",
     "ember-test-selectors": "^0.3.7",
     "ember-web-app": "^2.2.0",
