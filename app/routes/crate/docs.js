@@ -14,7 +14,7 @@ export default Route.extend({
             // Redirect to the crate's main page and show a flash error if
             // no documentation is found
             let message = 'Crate does not supply a documentation URL';
-            this.get('flashMessages').queue(message);
+            this.flashMessages.queue(message);
             this.replaceWith('crate', crate);
         }
     },

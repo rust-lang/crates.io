@@ -47,12 +47,12 @@ export default Service.extend({
     },
 
     loadUser() {
-        if (this.get('isLoggedIn') && !this.get('currentUser')) {
+        if (this.isLoggedIn && !this.currentUser) {
             this.fetchUser()
                 .catch(() => this.logoutUser())
                 .finally(() => {
                     this.set('currentUserDetected', true);
-                    let transition = this.get('abortedTransition');
+                    let transition = this.abortedTransition;
                     if (transition) {
                         transition.retry();
                         this.set('abortedTransition', null);
@@ -66,12 +66,12 @@ export default Service.extend({
     fetchUser() {
         return ajax('/api/v1/me')
             .then((response) => {
-                this.set('currentUser', this.get('store').push(this.get('store').normalize('user', response.user)));
+                this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
             });
     },
 
     checkCurrentUser(transition, beforeRedirect) {
-        if (this.get('currentUser')) {
+        if (this.currentUser) {
             return;
         }
 
@@ -79,7 +79,7 @@ export default Service.extend({
         // loaded the current user yet then we need to wait for it to be loaded.
         // Once we've done that we can retry the transition and start the whole
         // process over again!
-        if (!this.get('currentUserDetected')) {
+        if (!this.currentUserDetected) {
             transition.abort();
             this.set('abortedTransition', transition);
         } else {
@@ -87,7 +87,7 @@ export default Service.extend({
             if (beforeRedirect) {
                 beforeRedirect();
             }
-            return this.get('router').transitionTo('index');
+            return this.router.transitionTo('index');
         }
     }
 });

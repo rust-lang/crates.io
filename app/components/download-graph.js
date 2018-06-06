@@ -31,7 +31,7 @@ export default Component.extend({
     didRender() {
         this._super(...arguments);
 
-        let data = this.get('data');
+        let data = this.data;
 
         let subarray_length = (data[1] || []).length;
 
@@ -146,7 +146,7 @@ export default Component.extend({
         });
         view.setColumns(columns);
 
-        let chart = new window.google.visualization.ComboChart(this.get('element'));
+        let chart = new window.google.visualization.ComboChart(this.element);
         chart.draw(view, {
             chartArea: { 'left': 85, 'width': '77%', 'height': '80%' },
             hAxis: {

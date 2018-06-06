@@ -11,6 +11,6 @@ export default DS.Model.extend({
     kind: DS.attr('string'),
 
     stats() {
-        return this.store.adapterFor('user').stats(this.get('id'));
+        return this.store.adapterFor('user').stats(this.id);
     },
 });

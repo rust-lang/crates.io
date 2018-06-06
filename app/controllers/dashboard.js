@@ -18,15 +18,15 @@ export default Controller.extend({
     },
 
     visibleCrates: computed('myCrates.[]', function() {
-        return this.get('myCrates').slice(0, TO_SHOW);
+        return this.myCrates.slice(0, TO_SHOW);
     }),
 
     visibleFollowing: computed('myFollowing.[]', function() {
-        return this.get('myFollowing').slice(0, TO_SHOW);
+        return this.myFollowing.slice(0, TO_SHOW);
     }),
 
     visibleStats: computed('myStats', function() {
-        return this.get('myStats');
+        return this.myStats;
     }),
 
     hasMoreCrates: computed('myCrates.[]', function() {
@@ -40,13 +40,13 @@ export default Controller.extend({
     actions: {
         async loadMore() {
             this.set('loadingMore', true);
-            let page = (this.get('myFeed').length / 10) + 1;
+            let page = (this.myFeed.length / 10) + 1;
 
             try {
                 let data = await ajax(`/api/v1/me/updates?page=${page}`);
                 let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
-                this.get('myFeed').pushObjects(versions);
+                this.myFeed.pushObjects(versions);
                 this.set('hasMore', data.meta.more);
 
             } finally {

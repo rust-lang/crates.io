@@ -38,18 +38,18 @@ export default DS.Model.extend({
     reverse_dependencies: DS.hasMany('dependency', { async: true }),
 
     follow() {
-        return this.store.adapterFor('crate').follow(this.get('id'));
+        return this.store.adapterFor('crate').follow(this.id);
     },
 
     inviteOwner(username) {
-        return this.store.adapterFor('crate').inviteOwner(this.get('id'), username);
+        return this.store.adapterFor('crate').inviteOwner(this.id, username);
     },
 
     removeOwner(username) {
-        return this.store.adapterFor('crate').removeOwner(this.get('id'), username);
+        return this.store.adapterFor('crate').removeOwner(this.id, username);
     },
 
     unfollow() {
-        return this.store.adapterFor('crate').unfollow(this.get('id'));
+        return this.store.adapterFor('crate').unfollow(this.id);
     },
 });

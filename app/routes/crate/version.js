@@ -97,7 +97,7 @@ export default Route.extend({
 
         const version = versions.find(version => version.get('num') === params.version_num);
         if (params.version_num && !version) {
-            this.get('flashMessages').queue(
+            this.flashMessages.queue(
                 `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
         }
 

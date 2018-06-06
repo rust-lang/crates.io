@@ -28,7 +28,7 @@ export default Component.extend({
     emailError: '',
     disableResend: false,
     resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
-        if (this.get('disableResend')) {
+        if (this.disableResend) {
             return 'Sent!';
         } else if (this.get('user.email_verification_sent')) {
             return 'Resend';
@@ -39,19 +39,19 @@ export default Component.extend({
 
     actions: {
         editEmail() {
-            let email = this.get('value');
+            let email = this.value;
             let isEmailNull = function(email) {
                 return (email == null);
             };
 
             this.set('emailIsNull', isEmailNull(email));
             this.set('isEditing', true);
-            this.set('prevEmail', this.get('value'));
+            this.set('prevEmail', this.value);
         },
 
         saveEmail() {
-            let userEmail = this.get('value');
-            let user = this.get('user');
+            let userEmail = this.value;
+            let user = this.user;
 
             let emailIsProperFormat = function(userEmail) {
                 let regExp = /^\S+@\S+\.\S+$/;
@@ -89,11 +89,11 @@ export default Component.extend({
 
         cancelEdit() {
             this.set('isEditing', false);
-            this.set('value', this.get('prevEmail'));
+            this.set('value', this.prevEmail);
         },
 
         async resendEmail() {
-            let user = this.get('user');
+            let user = this.user;
 
             try {
                 await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });

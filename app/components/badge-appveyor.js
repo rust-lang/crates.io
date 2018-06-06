@@ -11,12 +11,12 @@ export default Component.extend({
 
     imageUrl: computed('badge.attributes.id', function() {
         let id = this.get('badge.attributes.id');
-        let branch = this.get('branch');
+        let branch = this.branch;
         if (id !== undefined && id !== null) {
             return `https://ci.appveyor.com/api/projects/status/${id}/branch/${branch}?svg=true`;
         } else {
-            let service = this.get('service');
-            let repository = this.get('repository');
+            let service = this.service;
+            let repository = this.repository;
 
             return `https://ci.appveyor.com/api/projects/status/${service}/${repository}?svg=true&branch=${branch}`;
         }
@@ -36,6 +36,6 @@ export default Component.extend({
     }),
 
     text: computed('badge', function() {
-        return `Appveyor build status for the ${ this.get('branch') } branch`;
+        return `Appveyor build status for the ${ this.branch } branch`;
     })
 });
