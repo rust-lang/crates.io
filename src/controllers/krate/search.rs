@@ -182,6 +182,8 @@ fn execute_search(
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+    } else if sort == "last-updated" {
+        query = query.then_order_by(crates::updated_at.desc().nulls_last())
     } else {
         query = query.then_order_by(crates::name.asc())
     }
@@ -464,6 +466,44 @@ mod test {
             .unwrap();
 
         let sort = "recent-downloads";
+        let params: HashMap<String, String> = HashMap::new();
+        let list_of_krates =
+            execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
+
+        assert_eq!(list_of_krates.len(), 3);
+        assert_eq!(list_of_krates.get(0).unwrap().name, krate1.name);
+        assert_eq!(list_of_krates.get(1).unwrap().name, krate2.name);
+        assert_eq!(list_of_krates.get(2).unwrap().name, krate3.name);
+    }
+
+    #[test]
+    fn no_parameters_and_sorting_by_recent_updated_returns_crates_by_descending_order_of_updated_crates(
+) {
+        // use chrono::prelude::*;
+        use chrono::prelude::*;
+
+        use diesel::update;
+        let db_connection = conn();
+        let user = create_user(&db_connection);
+        let mut krate2 = CrateBuilder::new("Yet another crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let mut krate3 = CrateBuilder::new("Some other crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let mut krate1 = CrateBuilder::new("Some crate", user.id)
+            .build(&db_connection)
+            .unwrap();
+        let now = Utc::now();
+
+        krate3.updated_at = now.naive_utc() - chrono::Duration::days(10);
+        update(&krate3).set(&krate3).execute(&db_connection).unwrap();
+        krate2.updated_at = now.naive_utc() - chrono::Duration::days(6);
+        update(&krate2).set(&krate2).execute(&db_connection).unwrap();
+        krate1.updated_at = now.naive_utc() - chrono::Duration::days(1);
+        update(&krate1).set(&krate1).execute(&db_connection).unwrap();
+
+        let sort = "last-updated";
         let params: HashMap<String, String> = HashMap::new();
         let list_of_krates =
             execute_search(&db_connection, 0, 100, params, sort.to_string(), user.id);
