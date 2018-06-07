@@ -35,7 +35,7 @@
     "ember-cli-babel": "^6.14.1",
     "ember-cli-cjs-transform": "^1.1.1",
     "ember-cli-clipboard": "^0.9.0",
-    "ember-cli-code-coverage": "kategengler/ember-cli-code-coverage#77b5b92",
+    "ember-cli-code-coverage": "^1.0.0-beta.4",
     "ember-cli-dependency-checker": "^2.0.1",
     "ember-cli-eslint": "^4.2.1",
     "ember-cli-htmlbars": "^2.0.3",
