@@ -90,6 +90,7 @@ fn execute_search(
             recent_crate_downloads::downloads.nullable(),
         ))
         .into_boxed();
+
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
@@ -112,6 +113,7 @@ fn execute_search(
             }
         }
     }
+
     if let Some(cat) = params.get("category") {
         query = query.filter(
             crates::id.eq_any(
@@ -126,6 +128,7 @@ fn execute_search(
             ),
         );
     }
+
     if let Some(kw) = params.get("keyword") {
         query = query.filter(
             crates::id.eq_any(
@@ -188,7 +191,6 @@ fn execute_search(
         .paginate(limit, offset)
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)
         .unwrap();
-    let _total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
     let recent_downloads = data.iter()
         .map(|&((_, _, s), _)| s.unwrap_or(0))
