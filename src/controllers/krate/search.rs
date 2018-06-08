@@ -227,7 +227,7 @@ fn execute_search(
             },
         )
         .collect();
-    return crates;
+    crates
 }
 
 #[cfg(test)]
