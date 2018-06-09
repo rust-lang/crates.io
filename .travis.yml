@@ -24,7 +24,7 @@ env:
     - PERCY_PROJECT=crates-io/crates.io
 
 before_install:
-  - nvm install 8
+  - nvm install 10
 
 install:
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
