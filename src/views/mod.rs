@@ -323,7 +323,7 @@ mod tests {
                 reverse_dependencies: "".to_string(),
             },
             exact_match: false,
-            crate_size: None
+            crate_size: None,
         };
         let json = serde_json::to_string(&crt).unwrap();
         assert!(
