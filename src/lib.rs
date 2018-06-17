@@ -5,7 +5,7 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
-#![recursion_limit = "128"]
+#![recursion_limit = "256"]
 
 extern crate ammonia;
 extern crate chrono;

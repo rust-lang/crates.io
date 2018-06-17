@@ -31,6 +31,7 @@ pub struct NewCrate {
     pub license_file: Option<String>,
     pub repository: Option<String>,
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
+    pub crate_size: Option<i32>,
     #[serde(default)]
     pub links: Option<String>,
 }

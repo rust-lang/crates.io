@@ -82,6 +82,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         repository: None,
         badges: None,
         links: None,
+        crate_size: None,
     }
 }
 

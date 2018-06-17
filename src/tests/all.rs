@@ -498,6 +498,7 @@ fn krate(name: &str) -> Crate {
         license: None,
         repository: None,
         max_upload_size: None,
+        crate_size: None,
     }
 }
 
@@ -681,6 +682,7 @@ fn new_req_body(
             repository: krate.repository,
             badges: Some(badges),
             links: None,
+            crate_size: krate.crate_size,
         },
         &[],
     )

@@ -66,6 +66,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             repository: repo,
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
+            crate_size: new_crate.crate_size
         };
 
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
@@ -201,8 +202,10 @@ fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, Us
     let mut json = vec![0; amt as usize];
     read_fill(req.body(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| human("json body was not valid utf-8"))?;
-    let new: EncodableCrateUpload = serde_json::from_str(&json)
+    let mut new: EncodableCrateUpload = serde_json::from_str(&json)
         .map_err(|e| human(&format_args!("invalid upload request: {}", e)))?;
+
+    new.crate_size = Some(amt as i32);
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {

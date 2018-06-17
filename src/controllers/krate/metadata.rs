@@ -143,6 +143,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
             Some(badges),
             false,
             recent_downloads,
+            krate.crate_size
         ),
         versions: versions
             .into_iter()
