@@ -17,6 +17,7 @@ export default DS.Model.extend({
     documentation: DS.attr('string'),
     repository: DS.attr('string'),
     exact_match: DS.attr('boolean'),
+    crate_size: DS.attr('number'),
 
     versions: DS.hasMany('versions', { async: true }),
     badges: DS.attr(),
