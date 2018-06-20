@@ -31,7 +31,9 @@ pub fn read_le_u32<R: Read + ?Sized>(r: &mut R) -> io::Result<u32> {
     let mut b = [0; 4];
     read_fill(r, &mut b)?;
     Ok(
-        u32::from(b[0]) | (u32::from(b[1]) << 8) | (u32::from(b[2]) << 16)
+        u32::from(b[0])
+            | (u32::from(b[1]) << 8)
+            | (u32::from(b[2]) << 16)
             | (u32::from(b[3]) << 24),
     )
 }
