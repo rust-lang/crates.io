@@ -61,7 +61,7 @@ fn main() {
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
-    let config: Config = Default::default();
+    let config = Config::default();
     let conn = cargo_registry::db::connect_now().unwrap();
 
     let start_time = Utc::now();
@@ -133,10 +133,12 @@ fn main() {
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
             let config = config.clone();
-            version.record_readme_rendering(&conn).expect(&format!(
-                "[{}-{}] Couldn't record rendering time",
-                krate_name, version.num
-            ));
+            version.record_readme_rendering(&conn).unwrap_or_else(|_| {
+                panic!(
+                    "[{}-{}] Couldn't record rendering time",
+                    krate_name, version.num
+                )
+            });
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
                 let readme = get_readme(&config, &version, &krate_name);
@@ -155,10 +157,12 @@ fn main() {
                         "text/html",
                         readme_len as u64,
                     )
-                    .expect(&format!(
-                        "[{}-{}] Couldn't upload file to S3",
-                        krate_name, version.num
-                    ));
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "[{}-{}] Couldn't upload file to S3",
+                            krate_name, version.num
+                        )
+                    });
             });
             tasks.push(handle);
         }
@@ -181,10 +185,8 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
         None => return None,
     };
     let date = Utc::now().to_rfc2822();
-    let url = Url::parse(&location).expect(&format!(
-        "[{}-{}] Couldn't parse crate URL",
-        krate_name, version.num
-    ));
+    let url = Url::parse(&location)
+        .unwrap_or_else(|_| panic!("[{}-{}] Couldn't parse crate URL", krate_name, version.num));
 
     let mut headers = List::new();
     headers
@@ -222,17 +224,21 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     let reader = Cursor::new(response);
     let reader = GzDecoder::new(reader);
     let mut archive = Archive::new(reader);
-    let mut entries = archive.entries().expect(&format!(
-        "[{}-{}] Invalid tar archive entries",
-        krate_name, version.num
-    ));
+    let mut entries = archive.entries().unwrap_or_else(|_| {
+        panic!(
+            "[{}-{}] Invalid tar archive entries",
+            krate_name, version.num
+        )
+    });
     let manifest: Manifest = {
         let path = format!("{}-{}/Cargo.toml", krate_name, version.num);
         let contents = find_file_by_path(&mut entries, Path::new(&path), version, krate_name);
-        toml::from_str(&contents).expect(&format!(
-            "[{}-{}] Syntax error in manifest file",
-            krate_name, version.num
-        ))
+        toml::from_str(&contents).unwrap_or_else(|_| {
+            panic!(
+                "[{}-{}] Syntax error in manifest file",
+                krate_name, version.num
+            )
+        })
     };
 
     let rendered = {
@@ -249,10 +255,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
                 .as_ref()
                 .map_or("README.md", |e| &**e),
             manifest.package.repository.as_ref().map(|e| &**e),
-        ).expect(&format!(
-            "[{}-{}] Couldn't render README",
-            krate_name, version.num
-        ))
+        ).unwrap_or_else(|_| panic!("[{}-{}] Couldn't render README", krate_name, version.num))
     };
     return Some(rendered);
 
@@ -287,22 +290,28 @@ fn find_file_by_path<R: Read>(
                 filepath == path
             }
         })
-        .expect(&format!(
-            "[{}-{}] couldn't open file: {}",
-            krate_name,
-            version.num,
-            path.display()
-        ))
-        .expect(&format!(
-            "[{}-{}] file is not present: {}",
-            krate_name,
-            version.num,
-            path.display()
-        ));
+        .unwrap_or_else(|| {
+            panic!(
+                "[{}-{}] couldn't open file: {}",
+                krate_name,
+                version.num,
+                path.display()
+            )
+        })
+        .unwrap_or_else(|_| {
+            panic!(
+                "[{}-{}] file is not present: {}",
+                krate_name,
+                version.num,
+                path.display()
+            )
+        });
     let mut contents = String::new();
-    file.read_to_string(&mut contents).expect(&format!(
-        "[{}-{}] Couldn't read file contents",
-        krate_name, version.num
-    ));
+    file.read_to_string(&mut contents).unwrap_or_else(|_| {
+        panic!(
+            "[{}-{}] Couldn't read file contents",
+            krate_name, version.num
+        )
+    });
     contents
 }
