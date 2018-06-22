@@ -9,7 +9,7 @@ use semver;
 use models::{Crate, Version};
 use schema::versions;
 
-fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
+fn version_and_crate(req: &mut dyn Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];
     let semver = &req.params()["version"];
     if semver::Version::parse(semver).is_err() {

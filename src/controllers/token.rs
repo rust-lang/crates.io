@@ -10,7 +10,7 @@ use schema::api_tokens;
 use views::EncodableApiTokenWithToken;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: &mut Request) -> CargoResult<Response> {
+pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
     let tokens = ApiToken::belonging_to(req.user()?)
         .order(api_tokens::created_at.desc())
         .load(&*req.db_conn()?)?;
@@ -22,7 +22,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(req: &mut Request) -> CargoResult<Response> {
+pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -87,7 +87,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: &mut Request) -> CargoResult<Response> {
+pub fn revoke(req: &mut dyn Request) -> CargoResult<Response> {
     let id = req.params()["id"]
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;

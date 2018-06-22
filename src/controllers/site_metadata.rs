@@ -4,7 +4,7 @@ use super::prelude::*;
 ///
 /// The sha is contained within the `HEROKU_SLUG_COMMIT` environment variable.
 /// If `HEROKU_SLUG_COMMIT` is not set, returns `"unknown"`.
-pub fn show_deployed_sha(req: &mut Request) -> CargoResult<Response> {
+pub fn show_deployed_sha(req: &mut dyn Request) -> CargoResult<Response> {
     let deployed_sha =
         ::std::env::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
 
