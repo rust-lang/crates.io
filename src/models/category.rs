@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use diesel::*;
+use diesel::{*, self};
 
 use models::Crate;
 use schema::*;
@@ -16,6 +16,40 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
+/// We literally never want to select `categories.path`
+/// so we provide this type and constant to pass to `.select`
+type AllColumns = (
+    categories::id,
+    categories::category,
+    categories::slug,
+    categories::description,
+    categories::crates_cnt,
+    categories::created_at,
+);
+
+pub const ALL_COLUMNS: AllColumns = (
+    categories::id,
+    categories::category,
+    categories::slug,
+    categories::description,
+    categories::crates_cnt,
+    categories::created_at,
+);
+
+type All = diesel::dsl::Select<categories::table, AllColumns>;
+type WithSlug<'a> = diesel::dsl::Eq<categories::slug, ::lower::HelperType<&'a str>>;
+type BySlug<'a> = diesel::dsl::Filter<All, WithSlug<'a>>;
+type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
+    categories::slug,
+    diesel::pg::expression::array_comparison::Any<
+        diesel::expression::bound::Bound<
+            diesel::sql_types::Array<diesel::sql_types::Text>,
+            &'a [&'a str]
+        >
+    >
+>;
+type BySlugsCaseSensitive<'a> = diesel::dsl::Filter<All, WithSlugsCaseSensitive<'a>>;
+
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Category)]
 #[belongs_to(Crate)]
@@ -27,6 +61,27 @@ pub struct CrateCategory {
 }
 
 impl Category {
+    pub fn with_slug(slug: &str) -> WithSlug {
+        categories::slug.eq(::lower(slug))
+    }
+
+    pub fn by_slug(slug: &str) -> BySlug {
+        Category::all().filter(Self::with_slug(slug))
+    }
+
+    pub fn with_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> WithSlugsCaseSensitive<'a> {
+        use diesel::dsl::any;
+        categories::slug.eq(any(slugs))
+    }
+
+    pub fn by_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> BySlugsCaseSensitive<'a> {
+        Category::all().filter(Self::with_slugs_case_sensitive(slugs))
+    }
+
+    pub fn all() -> All {
+        categories::table.select(ALL_COLUMNS)
+    }
+
     pub fn encodable(self) -> EncodableCategory {
         let Category {
             crates_cnt,
@@ -51,11 +106,9 @@ impl Category {
         krate: &Crate,
         slugs: &[&'a str],
     ) -> QueryResult<Vec<&'a str>> {
-        use diesel::dsl::any;
 
         conn.transaction(|| {
-            let categories = categories::table
-                .filter(categories::slug.eq(any(slugs)))
+            let categories = Category::by_slugs_case_sensitive(slugs)
                 .load::<Category>(conn)?;
             let invalid_categories = slugs
                 .iter()
@@ -121,8 +174,7 @@ impl Category {
     /// The intention is to be able to have slugs or parent categories arrayed in order, to
     /// offer the frontend, for examples, slugs to create links to each parent category in turn.
     pub fn parent_categories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
-        use diesel::expression::dsl::*;
-        use diesel::types::Text;
+        use diesel::sql_types::Text;
 
         sql_query(include_str!("../parent_categories.sql"))
             .bind::<Text, _>(&self.slug)
@@ -147,6 +199,7 @@ impl<'a> NewCategory<'a> {
             .on_conflict(slug)
             .do_update()
             .set(self)
+            .returning(ALL_COLUMNS)
             .get_result(conn)
     }
 }
@@ -370,8 +423,7 @@ mod tests {
             .execute(&conn)
             .unwrap();
 
-        let cat = categories
-            .filter(slug.eq("cat1::sub1"))
+        let cat = Category::by_slug("cat1::sub1")
             .first::<Category>(&conn)
             .unwrap();
         let subcats = cat.subcategories(&conn).unwrap();

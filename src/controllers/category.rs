@@ -37,8 +37,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 pub fn show(req: &mut Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
-    let cat = categories::table
-        .filter(categories::slug.eq(::lower(slug)))
+    let cat = Category::by_slug(slug)
         .first::<Category>(&*conn)?;
     let subcats = cat.subcategories(&conn)?
         .into_iter()

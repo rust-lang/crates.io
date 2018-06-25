@@ -17,7 +17,7 @@ pub use self::version::{NewVersion, Version};
 pub mod helpers;
 
 mod badge;
-mod category;
+pub mod category;
 mod crate_owner_invitation;
 pub mod dependency;
 mod download;
