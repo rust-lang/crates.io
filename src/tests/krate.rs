@@ -2,14 +2,14 @@ extern crate diesel;
 
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 use std::sync::Arc;
 
+use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::update;
-use self::diesel::prelude::*;
 use git2;
 use semver;
 use serde_json;
@@ -19,11 +19,13 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
 
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion, EncodableVersionDownload};
-use views::krate_publish as u;
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
+use views::krate_publish as u;
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+    EncodableVersionDownload,
+};
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -625,17 +627,15 @@ fn new_krate_with_dependency() {
 #[test]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
-    let deps = vec![
-        u::CrateDependency {
-            name: u::CrateName("foo-dep".to_string()),
-            optional: false,
-            default_features: true,
-            features: Vec::new(),
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-            target: None,
-            kind: None,
-        },
-    ];
+    let deps = vec![u::CrateDependency {
+        name: u::CrateName("foo-dep".to_string()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+        target: None,
+        kind: None,
+    }];
     let mut req = ::new_req_full(Arc::clone(&app), ::krate("new_dep"), "1.0.0", deps);
     {
         let conn = app.diesel_database.get().unwrap();
@@ -1974,7 +1974,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1985,7 +1986,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1997,7 +1999,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        !json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        !json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors

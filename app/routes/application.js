@@ -6,12 +6,12 @@ export default Route.extend({
     session: service(),
 
     beforeModel() {
-        this.get('session').loadUser();
+        this.session.loadUser();
     },
 
     actions: {
         didTransition() {
-            this.get('flashMessages').step();
+            this.flashMessages.step();
         },
     },
 });

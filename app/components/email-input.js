@@ -16,19 +16,19 @@ export default Component.extend({
     prevEmail: '',
     emailIsNull: computed('user.email', function() {
         let email = this.get('user.email');
-        return (email == null);
+        return email == null;
     }),
     emailNotVerified: computed('user.{email,email_verified}', function() {
         let email = this.get('user.email');
         let verified = this.get('user.email_verified');
 
-        return (email != null && !verified);
+        return email != null && !verified;
     }),
     isError: false,
     emailError: '',
     disableResend: false,
     resendButtonText: computed('disableResend', 'user.email_verification_sent', function() {
-        if (this.get('disableResend')) {
+        if (this.disableResend) {
             return 'Sent!';
         } else if (this.get('user.email_verification_sent')) {
             return 'Resend';
@@ -39,19 +39,19 @@ export default Component.extend({
 
     actions: {
         editEmail() {
-            let email = this.get('value');
+            let email = this.value;
             let isEmailNull = function(email) {
-                return (email == null);
+                return email == null;
             };
 
             this.set('emailIsNull', isEmailNull(email));
             this.set('isEditing', true);
-            this.set('prevEmail', this.get('value'));
+            this.set('prevEmail', this.value);
         },
 
         saveEmail() {
-            let userEmail = this.get('value');
-            let user = this.get('user');
+            let userEmail = this.value;
+            let user = this.user;
 
             let emailIsProperFormat = function(userEmail) {
                 let regExp = /^\S+@\S+\.\S+$/;
@@ -89,16 +89,16 @@ export default Component.extend({
 
         cancelEdit() {
             this.set('isEditing', false);
-            this.set('value', this.get('prevEmail'));
+            this.set('value', this.prevEmail);
         },
 
         async resendEmail() {
-            let user = this.get('user');
+            let user = this.user;
 
             try {
                 await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
                 this.set('disableResend', true);
-            } catch(error) {
+            } catch (error) {
                 if (error.payload) {
                     this.set('isError', true);
                     this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
@@ -107,6 +107,6 @@ export default Component.extend({
                     this.set('emailError', 'Unknown error in resending message');
                 }
             }
-        }
-    }
+        },
+    },
 });

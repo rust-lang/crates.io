@@ -6,9 +6,11 @@ use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
 
-use views::{EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse};
 use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
+use views::{
+    EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+};
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -187,7 +189,7 @@ fn owners_can_remove_self() {
         middle.call(
             req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
                 .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes())
+                .with_body(body.to_string().as_bytes()),
         )
     );
 

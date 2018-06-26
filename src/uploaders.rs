@@ -7,12 +7,12 @@ use semver;
 use tar;
 
 use util::{human, internal, CargoResult, ChainError};
-use util::{LimitErrorReader, read_le_u32};
+use util::{read_le_u32, LimitErrorReader};
 
-use std::sync::Arc;
-use std::fs::{self, File};
 use std::env;
+use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::sync::Arc;
 
 use app::App;
 use middleware::app::RequestApp;

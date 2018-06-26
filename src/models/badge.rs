@@ -77,7 +77,7 @@ pub enum MaintenanceStatus {
     Deprecated,
 }
 
-// FIXME: Derive this in Diesel 1.3.
+// FIXME: Derive this in Diesel 1.4.
 impl HasTable for CrateBadge {
     type Table = badges::table;
 

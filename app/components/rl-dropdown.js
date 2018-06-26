@@ -20,8 +20,8 @@ export default Component.extend({
     propagateClicks: true,
 
     click(event) {
-        let closeOnChildClick = this.get('closeOnChildClick');
-        let propagateClicks = this.get('propagateClicks');
+        let closeOnChildClick = this.closeOnChildClick;
+        let propagateClicks = this.propagateClicks;
         let $target = $(event.target);
         let $c = this.$();
 
@@ -36,5 +36,5 @@ export default Component.extend({
         if (propagateClicks === false || propagateClicks === 'false') {
             event.stopPropagation();
         }
-    }
+    },
 });

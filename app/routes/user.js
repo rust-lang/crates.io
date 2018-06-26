@@ -13,19 +13,19 @@ export default Route.extend({
     model(params) {
         const { user_id } = params;
         return this.store.queryRecord('user', { user_id }).then(
-            (user) => {
+            user => {
                 params.user_id = user.get('id');
                 return RSVP.hash({
                     crates: this.store.query('crate', params),
-                    user
+                    user,
                 });
             },
-            (e) => {
+            e => {
                 if (e.errors.some(e => e.detail === 'Not Found')) {
-                    this.get('flashMessages').queue(`User '${params.user_id}' does not exist`);
+                    this.flashMessages.queue(`User '${params.user_id}' does not exist`);
                     return this.replaceWith('index');
                 }
-            }
+            },
         );
     },
 });

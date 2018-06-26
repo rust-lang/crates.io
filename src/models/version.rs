@@ -7,8 +7,8 @@ use diesel::prelude::*;
 use semver;
 use serde_json;
 
-use util::{human, CargoResult};
 use license_exprs;
+use util::{human, CargoResult};
 
 use models::{Crate, Dependency};
 use schema::*;
@@ -98,8 +98,8 @@ impl Version {
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
-        use schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
+        use schema::readme_renderings::dsl::*;
 
         diesel::insert_into(readme_renderings)
             .values(version_id.eq(self.id))
@@ -133,10 +133,10 @@ impl NewVersion {
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
-        use diesel::{insert_into, select};
         use diesel::dsl::exists;
-        use schema::versions::dsl::*;
+        use diesel::{insert_into, select};
         use schema::version_authors::{name, version_id};
+        use schema::versions::dsl::*;
 
         conn.transaction(|| {
             let already_uploaded = versions

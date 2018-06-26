@@ -19,10 +19,10 @@ extern crate tar;
 extern crate toml;
 extern crate url;
 
-use curl::easy::{Easy, List};
 use chrono::{TimeZone, Utc};
-use diesel::prelude::*;
+use curl::easy::{Easy, List};
 use diesel::dsl::any;
+use diesel::prelude::*;
 use docopt::Docopt;
 use flate2::read::GzDecoder;
 use itertools::Itertools;
@@ -32,8 +32,8 @@ use std::thread;
 use tar::Archive;
 use url::Url;
 
-use cargo_registry::Config;
 use cargo_registry::render::readme_to_html;
+use cargo_registry::Config;
 
 use cargo_registry::models::Version;
 use cargo_registry::schema::*;

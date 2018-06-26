@@ -15,7 +15,7 @@ export default Route.extend({
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
 
@@ -28,14 +28,10 @@ export default Route.extend({
             'status=1',
             'resizable=1',
             'location=1',
-            'menuBar=0'
+            'menuBar=0',
         ].join(',');
 
-        let win = window.open(
-            '/github_login',
-            'Authorization',
-            windowDimensions
-        );
+        let win = window.open('/github_login', 'Authorization', windowDimensions);
         if (!win) {
             return;
         }
@@ -58,24 +54,24 @@ export default Route.extend({
                 return;
             }
             if (!response.ok) {
-                this.get('flashMessages').show('Failed to log in');
+                this.flashMessages.show('Failed to log in');
                 return;
             }
             let { data } = response;
             if (data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
-                this.get('flashMessages').show(error);
+                this.flashMessages.show(error);
                 return;
             }
 
             let user = this.store.push(this.store.normalize('user', data.user));
             let transition = this.get('session.savedTransition');
-            this.get('session').loginUser(user);
+            this.session.loginUser(user);
             if (transition) {
                 transition.retry();
             }
         }, 200);
 
         transition.abort();
-    }
+    },
 });

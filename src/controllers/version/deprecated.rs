@@ -9,9 +9,9 @@ use controllers::prelude::*;
 
 use url;
 
-use views::EncodableVersion;
 use models::Version;
 use schema::*;
+use views::EncodableVersion;
 
 use super::version_and_crate;
 

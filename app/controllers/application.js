@@ -26,11 +26,10 @@ export default Controller.extend(EKMixin, {
         search() {
             this.transitionToRoute('search', {
                 queryParams: {
-                    q: this.get('searchQuery'),
-                    page: 1
-                }
+                    q: this.searchQuery,
+                    page: 1,
+                },
             });
         },
     },
 });
-

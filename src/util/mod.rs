@@ -1,22 +1,22 @@
 use std::collections::HashMap;
 use std::io::Cursor;
 
-use serde_json;
 use serde::Serialize;
+use serde_json;
 
 use conduit::Response;
 
 pub use self::errors::{bad_request, human, internal, internal_error, CargoError, CargoResult};
 pub use self::errors::{std_error, ChainError};
-pub use self::io_util::{read_fill, LimitErrorReader, read_le_u32};
-pub use self::request_proxy::RequestProxy;
+pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
+pub use self::request_proxy::RequestProxy;
 
 pub mod errors;
-pub mod rfc3339;
 mod io_util;
 mod request_helpers;
 mod request_proxy;
+pub mod rfc3339;
 
 pub fn json_response<T: Serialize>(t: &T) -> Response {
     let json = serde_json::to_string(t).unwrap();

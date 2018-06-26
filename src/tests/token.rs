@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use diesel::prelude::*;
 use conduit::{Handler, Method};
+use diesel::prelude::*;
 
-use views::EncodableApiTokenWithToken;
 use models::ApiToken;
+use views::EncodableApiTokenWithToken;
 
 #[derive(Deserialize)]
 struct DecodableApiToken {
@@ -28,7 +28,7 @@ macro_rules! assert_contains {
         if !$e.contains($f) {
             panic!(format!("expected '{}' to contain '{}'", $e, $f));
         }
-    }
+    };
 }
 
 #[test]

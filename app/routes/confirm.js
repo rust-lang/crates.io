@@ -21,19 +21,18 @@ export default Route.extend({
                 Suggestions of a more ideomatic way to fix/test this are welcome!
             */
             if (this.get('session.isLoggedIn')) {
-                ajax('/api/v1/me').then((response) => {
-                    this.get('session').set('currentUser', this.store.push(this.store.normalize('user', response.user)));
+                ajax('/api/v1/me').then(response => {
+                    this.session.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
                 });
             }
-
-        } catch(error) {
+        } catch (error) {
             if (error.payload) {
-                this.get('flashMessages').queue(`Error in email confirmation: ${error.payload.errors[0].detail}`);
+                this.flashMessages.queue(`Error in email confirmation: ${error.payload.errors[0].detail}`);
                 return this.replaceWith('index');
             } else {
-                this.get('flashMessages').queue(`Unknown error in email confirmation`);
+                this.flashMessages.queue(`Unknown error in email confirmation`);
                 return this.replaceWith('index');
             }
         }
-    }
+    },
 });

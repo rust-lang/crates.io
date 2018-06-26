@@ -11,11 +11,11 @@ export default Component.extend({
     attributeBindings: ['type', 'role', 'disabled'],
 
     type: computed('tagName', function() {
-        return this.get('tagName') === 'button' ? 'button' : null;
+        return this.tagName === 'button' ? 'button' : null;
     }),
 
     role: computed('tagName', function() {
-        return this.get('tagName') === 'a' ? 'button' : null;
+        return this.tagName === 'a' ? 'button' : null;
     }),
 
     dropdownContainer: computed(function() {
@@ -29,14 +29,14 @@ export default Component.extend({
     disabled: false,
 
     click(event) {
-        if (!this.get('disabled')) {
-            let propagateClicks = this.get('propagateClicks');
+        if (!this.disabled) {
+            let propagateClicks = this.propagateClicks;
 
-            this.get('dropdownContainer').send(this.get('action'));
+            this.dropdownContainer.send(this.action);
 
             if (propagateClicks === false || propagateClicks === 'false') {
                 event.stopPropagation();
             }
         }
-    }
+    },
 });

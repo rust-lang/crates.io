@@ -25,7 +25,7 @@ export default Component.extend({
 
     init() {
         this._super(...arguments);
-        let valuePath = this.get('valuePath');
+        let valuePath = this.valuePath;
 
         defineProperty(this, 'validation', readOnly(`model.validations.attrs.${valuePath}`));
         defineProperty(this, 'value', alias(`model.${valuePath}`));
@@ -34,5 +34,5 @@ export default Component.extend({
     focusOut() {
         this._super(...arguments);
         this.set('showValidations', true);
-    }
+    },
 });

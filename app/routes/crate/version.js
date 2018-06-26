@@ -43,16 +43,14 @@ export default Route.extend({
         };
 
         const fetchCrateDocumentation = () => {
-            if (!crate.get('documentation') ||
-                crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
+            if (!crate.get('documentation') || crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' })
-                    .then((r) => {
-                        if (r.length > 0 && r[0].build_status === true) {
-                            crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
-                        }
-                    });
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' }).then(r => {
+                    if (r.length > 0 && r[0].build_status === true) {
+                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
+                    }
+                });
             }
         };
 
@@ -60,20 +58,23 @@ export default Route.extend({
         // If `max_version` is `0.0.0` then all versions have been yanked
         if (!requestedVersion && maxVersion !== '0.0.0') {
             if (isUnstableVersion(maxVersion)) {
-                crate.get('versions').then(versions => {
-                    const latestStableVersion = versions.find(version => {
-                        if (!isUnstableVersion(version.get('num'))) {
-                            return version;
-                        }
-                    });
+                crate
+                    .get('versions')
+                    .then(versions => {
+                        const latestStableVersion = versions.find(version => {
+                            if (!isUnstableVersion(version.get('num'))) {
+                                return version;
+                            }
+                        });
 
-                    if (latestStableVersion == null) {
-                        // If no stable version exists, fallback to `maxVersion`
-                        params.version_num = maxVersion;
-                    } else {
-                        params.version_num = latestStableVersion.get('num');
-                    }
-                }).then(fetchCrateDocumentation);
+                        if (latestStableVersion == null) {
+                            // If no stable version exists, fallback to `maxVersion`
+                            params.version_num = maxVersion;
+                        } else {
+                            params.version_num = latestStableVersion.get('num');
+                        }
+                    })
+                    .then(fetchCrateDocumentation);
             } else {
                 params.version_num = maxVersion;
                 fetchCrateDocumentation();
@@ -88,7 +89,7 @@ export default Route.extend({
 
         if (this.get('session.currentUser')) {
             ajax(`/api/v1/crates/${crate.get('name')}/following`)
-                .then((d) => controller.set('following', d.following))
+                .then(d => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
 
@@ -97,17 +98,14 @@ export default Route.extend({
 
         const version = versions.find(version => version.get('num') === params.version_num);
         if (params.version_num && !version) {
-            this.get('flashMessages').queue(
-                `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+            this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
         }
 
-        const result = version ||
-            versions.find(version => version.get('num') === maxVersion) ||
-            versions.objectAt(0);
+        const result = version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
 
         if (result.get('readme_path')) {
             fetch(result.get('readme_path'))
-                .then(async (r) => {
+                .then(async r => {
                     if (r.ok) {
                         crate.set('readme', await r.text());
                     } else {

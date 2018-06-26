@@ -9,8 +9,8 @@ export default Route.extend({
     async activate() {
         await ajax(`/logout`, { method: 'DELETE' });
         run(() => {
-            this.get('session').logoutUser();
+            this.session.logoutUser();
             this.transitionTo('index');
         });
-    }
+    },
 });

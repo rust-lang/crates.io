@@ -10,8 +10,8 @@ export default DS.Model.extend({
     url: DS.attr('string'),
     kind: DS.attr('string'),
     org_name: computed('login', function() {
-        let login = this.get('login');
+        let login = this.login;
         let login_split = login.split(':');
         return login_split[1];
-    })
+    }),
 });

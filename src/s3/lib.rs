@@ -7,12 +7,12 @@ extern crate openssl;
 
 use std::io::prelude::*;
 
+use base64::encode;
 use chrono::prelude::Utc;
 use curl::easy::{Easy, List, ReadError, Transfer};
 use openssl::hash::MessageDigest;
-use openssl::sign::Signer;
 use openssl::pkey::PKey;
-use base64::encode;
+use openssl::sign::Signer;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -134,7 +134,7 @@ impl Bucket {
             let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
             let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
             signer.update(string.as_bytes()).unwrap();
-            encode(&signer.finish().unwrap()[..])
+            encode(&signer.sign_to_vec().unwrap()[..])
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

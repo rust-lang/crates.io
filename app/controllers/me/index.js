@@ -17,9 +17,9 @@ export default Controller.extend({
 
     actions: {
         startNewToken() {
-            this.get('store').createRecord('api-token', {
+            this.store.createRecord('api-token', {
                 created_at: new Date(Date.now() + 2000),
             });
         },
-    }
+    },
 });

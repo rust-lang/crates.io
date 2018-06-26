@@ -12,7 +12,7 @@ export default Route.extend(AuthenticatedRoute, {
         controller.set('myFollowing', this.get('data.myFollowing'));
         controller.set('myStats', this.get('data.myStats'));
 
-        if (!controller.get('loadingMore')) {
+        if (!controller.loadingMore) {
             controller.set('myFeed', A());
             controller.send('loadMore');
         }
@@ -24,15 +24,15 @@ export default Route.extend(AuthenticatedRoute, {
 
     async afterModel(user) {
         let myCrates = this.store.query('crate', {
-            user_id: user.get('id')
+            user_id: user.get('id'),
         });
 
         let myFollowing = this.store.query('crate', {
-            following: 1
+            following: 1,
         });
 
         let myStats = user.stats();
 
         this.set('data', await RSVP.hash({ myCrates, myFollowing, myStats }));
-    }
+    },
 });

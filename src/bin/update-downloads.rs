@@ -116,7 +116,6 @@ mod test {
 
     use std::collections::HashMap;
 
-    use diesel::insert_into;
     use super::*;
     use cargo_registry::env;
     use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
@@ -151,13 +150,13 @@ mod test {
     }
 
     macro_rules! crate_downloads {
-        ($conn: expr, $id: expr, $expected: expr) => {
+        ($conn:expr, $id:expr, $expected:expr) => {
             let dl = crate_downloads::table
                 .filter(crate_downloads::crate_id.eq($id))
                 .select(crate_downloads::downloads)
                 .first($conn);
             assert_eq!(Ok($expected as i32), dl);
-        }
+        };
     }
 
     #[test]
@@ -315,8 +314,8 @@ mod test {
 
     #[test]
     fn set_processed_no_set_updated_at() {
-        use diesel::update;
         use diesel::dsl::*;
+        use diesel::update;
 
         let conn = conn();
         let user = user(&conn);

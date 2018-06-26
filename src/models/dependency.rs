@@ -1,6 +1,6 @@
+use diesel::deserialize::QueryableByName;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::query_source::QueryableByName;
 use diesel::row::NamedRow;
 use semver;
 
@@ -78,8 +78,8 @@ pub fn add_dependencies(
     deps: &[::views::EncodableCrateDependency],
     target_version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
-    use diesel::insert_into;
     use self::dependencies::dsl::*;
+    use diesel::insert_into;
 
     let git_and_new_dependencies = deps.iter()
         .map(|dep| {
@@ -173,8 +173,8 @@ impl Queryable<dependencies::SqlType, Pg> for Dependency {
 
 impl QueryableByName<Pg> for Dependency {
     fn build<R: NamedRow<Pg>>(row: &R) -> deserialize::Result<Self> {
-        use schema::dependencies::*;
         use diesel::dsl::SqlTypeOf;
+        use schema::dependencies::*;
 
         let req_str = row.get::<SqlTypeOf<req>, String>("req")?;
         Ok(Dependency {

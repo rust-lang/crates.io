@@ -6,8 +6,8 @@ export default Mixin.create({
     session: service(),
 
     beforeModel(transition) {
-        return this.get('session').checkCurrentUser(transition, () => {
-            this.get('flashMessages').queue('Please log in to proceed');
+        return this.session.checkCurrentUser(transition, () => {
+            this.flashMessages.queue('Please log in to proceed');
         });
     },
 });

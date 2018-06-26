@@ -9,9 +9,9 @@ export default Component.extend({
     tagName: 'img',
 
     width: computed('size', function() {
-        if (this.get('size') === 'small') {
+        if (this.size === 'small') {
             return 22;
-        } else if (this.get('size') === 'medium-small') {
+        } else if (this.size === 'medium-small') {
             return 32;
         } else {
             return 85; // medium
@@ -25,6 +25,6 @@ export default Component.extend({
     }),
 
     src: computed('size', 'user', function() {
-        return `${this.get('user.avatar')}&s=${this.get('width') * 2}`;
-    })
+        return `${this.get('user.avatar')}&s=${this.width * 2}`;
+    }),
 });

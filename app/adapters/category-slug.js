@@ -5,9 +5,7 @@ import ApplicationAdapter from './application';
 
 export default ApplicationAdapter.extend({
     pathForType(modelName) {
-        let decamelized = underscore(
-            decamelize(modelName)
-        );
+        let decamelized = underscore(decamelize(modelName));
         return pluralize(decamelized);
-    }
+    },
 });

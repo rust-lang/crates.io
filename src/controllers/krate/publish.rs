@@ -9,13 +9,13 @@ use serde_json;
 
 use git;
 use render;
-use util::{read_fill, read_le_u32};
 use util::{internal, ChainError};
+use util::{read_fill, read_le_u32};
 
 use controllers::prelude::*;
-use views::{EncodableCrate, EncodableCrateUpload};
-use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use models::dependency;
+use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use views::{EncodableCrate, EncodableCrateUpload};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -134,17 +134,19 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
         let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) =
-            app.config
-                .uploader
-                .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config
+            .uploader
+            .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;
+
+        let mut hex_cksum = String::new();
+        cksum.write_hex(&mut hex_cksum)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
             name: name.to_string(),
             vers: vers.to_string(),
-            cksum: cksum.to_hex(),
+            cksum: hex_cksum,
             features,
             deps: git_deps,
             yanked: Some(false),

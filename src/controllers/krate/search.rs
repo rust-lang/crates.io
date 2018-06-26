@@ -4,9 +4,9 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use views::EncodableCrate;
 use models::{Crate, CrateBadge, OwnerKind, Version};
 use schema::*;
+use views::EncodableCrate;
 
 use models::krate::{canon_crate_name, ALL_COLUMNS};
 

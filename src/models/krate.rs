@@ -1,7 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
+use diesel;
 use diesel::associations::Identifiable;
 use diesel::prelude::*;
-use diesel;
 use license_exprs;
 use semver;
 use url::Url;
@@ -9,12 +9,14 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
+use models::{
+    Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
+    ReverseDependency, User, Version,
+};
 use views::{EncodableCrate, EncodableCrateLinks};
-use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
-             ReverseDependency, User, Version};
 
-use schema::*;
 use models::helpers::with_count::*;
+use schema::*;
 
 /// Hosts in this blacklist are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -84,8 +86,9 @@ pub const ALL_COLUMNS: AllColumns = (
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
+type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
-type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
+type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
@@ -189,9 +192,9 @@ impl<'a> NewCrate<'a> {
     }
 
     fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
-        use schema::reserved_crate_names::dsl::*;
-        use diesel::select;
         use diesel::dsl::exists;
+        use diesel::select;
+        use schema::reserved_crate_names::dsl::*;
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
@@ -509,8 +512,8 @@ impl Crate {
 }
 
 use diesel::sql_types::{Date, Text};
-sql_function!(canon_crate_name, canon_crate_name_t, (x: Text) -> Text);
-sql_function!(to_char, to_char_t, (a: Date, b: Text) -> Text);
+sql_function!(fn canon_crate_name(x: Text) -> Text);
+sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {

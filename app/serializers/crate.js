@@ -9,5 +9,5 @@ export default DS.RESTSerializer.extend({
         }
 
         return this._super(...arguments);
-    }
+    },
 });

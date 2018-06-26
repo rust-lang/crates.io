@@ -4,8 +4,8 @@ use std::sync::Arc;
 use conduit::{Handler, Method};
 use diesel::prelude::*;
 
-use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 use models::{ApiToken, Email, NewUser, User};
+use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 
 #[derive(Deserialize)]
 struct AuthResponse {

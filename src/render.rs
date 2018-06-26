@@ -75,29 +75,27 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
-        let allowed_classes = [
-            (
-                "code",
-                [
-                    "language-bash",
-                    "language-clike",
-                    "language-glsl",
-                    "language-go",
-                    "language-ini",
-                    "language-javascript",
-                    "language-json",
-                    "language-markup",
-                    "language-protobuf",
-                    "language-ruby",
-                    "language-rust",
-                    "language-scss",
-                    "language-sql",
-                    "yaml",
-                ].iter()
-                    .cloned()
-                    .collect(),
-            ),
-        ].iter()
+        let allowed_classes = [(
+            "code",
+            [
+                "language-bash",
+                "language-clike",
+                "language-glsl",
+                "language-go",
+                "language-ini",
+                "language-javascript",
+                "language-json",
+                "language-markup",
+                "language-protobuf",
+                "language-ruby",
+                "language-rust",
+                "language-scss",
+                "language-sql",
+                "yaml",
+            ].iter()
+                .cloned()
+                .collect(),
+        )].iter()
             .cloned()
             .collect();
 
@@ -160,7 +158,8 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
+                url.host_str() == Some("github.com")
+                    || url.host_str() == Some("gitlab.com")
                     || url.host_str() == Some("bitbucket.org")
             } else {
                 false

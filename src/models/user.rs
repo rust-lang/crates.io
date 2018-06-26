@@ -53,10 +53,10 @@ impl<'a> NewUser<'a> {
 
     /// Inserts the user into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
-        use diesel::insert_into;
         use diesel::dsl::sql;
-        use diesel::sql_types::Integer;
+        use diesel::insert_into;
         use diesel::pg::upsert::excluded;
+        use diesel::sql_types::Integer;
         use diesel::NotFound;
         use schema::users::dsl::*;
 
