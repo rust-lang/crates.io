@@ -91,8 +91,10 @@ pub struct EncodableCrate {
     pub badges: Option<Vec<EncodableBadge>>,
     #[serde(with = "::util::rfc3339")]
     pub created_at: NaiveDateTime,
+    // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
     pub recent_downloads: Option<i64>,
+    // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
     pub description: Option<String>,
     pub homepage: Option<String>,
@@ -183,9 +185,11 @@ pub struct EncodableVersion {
     pub updated_at: NaiveDateTime,
     #[serde(with = "::util::rfc3339")]
     pub created_at: NaiveDateTime,
+    // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: bool,
+    // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
     pub links: EncodableVersionLinks,
 }
