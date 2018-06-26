@@ -30,7 +30,7 @@ rustdoc-args = [
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 rand = "0.3"
 git2 = "0.6.4"
-flate2 = "0.2"
+flate2 = "1.0"
 semver = "0.5"
 url = "1.2.1"
 tar = "0.4.13"
