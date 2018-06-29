@@ -273,13 +273,12 @@ fn verify_tarball(
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links from overwriting arbitrary files on
-        // the filesystem.
-        //
-        // As a bit of a hammer we reject any tarball with a hard link. Cargo
-        // doesn't currently ever generate a tarball with a hard link so this
-        // should work for now.
-        if entry.header().entry_type().is_hard_link() {
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
             return Err(human("invalid tarball uploaded"));
         }
     }
