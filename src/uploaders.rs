@@ -271,6 +271,17 @@ fn verify_tarball(
         if !entry.path()?.starts_with(&prefix) {
             return Err(human("invalid tarball uploaded"));
         }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links from overwriting arbitrary files on
+        // the filesystem.
+        //
+        // As a bit of a hammer we reject any tarball with a hard link. Cargo
+        // doesn't currently ever generate a tarball with a hard link so this
+        // should work for now.
+        if entry.header().entry_type().is_hard_link() {
+            return Err(human("invalid tarball uploaded"));
+        }
     }
     Ok(())
 }
