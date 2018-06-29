@@ -1,18 +1,22 @@
 use conduit::Request;
 use curl::easy::Easy;
 use flate2::read::GzDecoder;
-use krate::Crate;
+use openssl::hash::{Hasher, MessageDigest};
 use s3;
 use semver;
 use tar;
-use util::{human, internal, CargoResult, ChainError};
-use util::{hash, LimitErrorReader, read_le_u32};
 
-use app::{App, RequestApp};
-use std::sync::Arc;
-use std::fs::{self, File};
+use util::{human, internal, CargoResult, ChainError};
+use util::{read_le_u32, LimitErrorReader};
+
 use std::env;
+use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::sync::Arc;
+
+use app::App;
+use middleware::app::RequestApp;
+use models::Crate;
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -246,7 +250,7 @@ fn verify_tarball(
     max_unpack: u64,
 ) -> CargoResult<()> {
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball)?;
+    let decoder = GzDecoder::new(tarball);
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
@@ -267,6 +271,23 @@ fn verify_tarball(
         if !entry.path()?.starts_with(&prefix) {
             return Err(human("invalid tarball uploaded"));
         }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links from overwriting arbitrary files on
+        // the filesystem.
+        //
+        // As a bit of a hammer we reject any tarball with a hard link. Cargo
+        // doesn't currently ever generate a tarball with a hard link so this
+        // should work for now.
+        if entry.header().entry_type().is_hard_link() {
+            return Err(human("invalid tarball uploaded"));
+        }
     }
     Ok(())
+}
+
+fn hash(data: &[u8]) -> Vec<u8> {
+    let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
+    hasher.update(data).unwrap();
+    hasher.finish2().unwrap().to_vec()
 }

@@ -9,8 +9,7 @@ export default Route.extend(AuthenticatedRoute, {
     },
 
     model(params) {
-        params.user_id = this.session.get('currentUser.id');
+        params.user_id = this.get('session.currentUser.id');
         return this.store.query('crate', params);
     },
 });
-

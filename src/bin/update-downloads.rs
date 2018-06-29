@@ -1,19 +1,18 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate chrono;
+#[macro_use]
 extern crate diesel;
 
 use diesel::prelude::*;
 use std::env;
 use std::time::Duration;
 
-use cargo_registry::VersionDownload;
+use cargo_registry::models::VersionDownload;
 use cargo_registry::schema::*;
 
 static LIMIT: i64 = 1000;
 
-#[allow(dead_code)] // dead in tests
 fn main() {
     let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
@@ -30,81 +29,83 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use diesel::dsl::now;
+    use diesel::select;
     use version_downloads::dsl::*;
+
     let mut max = Some(0);
     while let Some(m) = max {
-        conn.transaction::<_, diesel::result::Error, _>(|| {
-            let rows = version_downloads
-                .filter(processed.eq(false))
-                .filter(id.gt(m))
-                .order(id)
-                .limit(LIMIT)
-                .load(conn)?;
-            collect(conn, &rows)?;
-            max = rows.last().map(|d| d.id);
-            Ok(())
-        })?;
+        let rows = version_downloads
+            .filter(processed.eq(false))
+            .filter(id.gt(m))
+            .filter(downloads.ne(counted))
+            .order(id)
+            .limit(LIMIT)
+            .load(conn)?;
+        collect(conn, &rows)?;
+        max = rows.last().map(|d| d.id);
     }
+
+    // Anything older than 24 hours ago will be frozen and will not be queried
+    // against again.
+    diesel::update(version_downloads)
+        .set(processed.eq(true))
+        .filter(date.lt(diesel::dsl::date(now)))
+        .filter(downloads.eq(counted))
+        .filter(processed.eq(false))
+        .execute(conn)?;
+
+    no_arg_sql_function!(refresh_recent_crate_downloads, ());
+    select(refresh_recent_crate_downloads).execute(conn)?;
     Ok(())
 }
 
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
     use diesel::{insert_into, update};
 
-    // Anything older than 24 hours ago will be frozen and will not be queried
-    // against again.
-    let now = chrono::Utc::now();
-    let cutoff = now.naive_utc().date() - chrono::Duration::days(1);
+    println!("updating {} versions", rows.len());
 
-    println!(
-        "updating {} versions (cutoff {})",
-        rows.len(),
-        now.to_rfc2822()
-    );
-
-    let mut total = 0;
     for download in rows {
         let amt = download.downloads - download.counted;
-        total += i64::from(amt);
 
-        // Flag this row as having been processed if we're passed the cutoff,
-        // and unconditionally increment the number of counted downloads.
-        update(version_downloads::table.find(download.id))
-            .set((
-                version_downloads::processed.eq(download.date < cutoff),
-                version_downloads::counted.eq(version_downloads::counted + amt),
-            ))
-            .execute(conn)?;
+        conn.transaction::<_, diesel::result::Error, _>(|| {
+            // increment the number of counted downloads
+            update(version_downloads::table.find(download.id))
+                .set(version_downloads::counted.eq(version_downloads::counted + amt))
+                .execute(conn)?;
 
-        // Update the total number of version downloads
-        let crate_id = update(versions::table.find(download.version_id))
-            .set(versions::downloads.eq(versions::downloads + amt))
-            .returning(versions::crate_id)
-            .get_result::<i32>(conn)?;
+            // Update the total number of version downloads
+            let crate_id = update(versions::table.find(download.version_id))
+                .set(versions::downloads.eq(versions::downloads + amt))
+                .returning(versions::crate_id)
+                .get_result::<i32>(conn)?;
 
-        // Update the total number of crate downloads
-        update(crates::table.find(crate_id))
-            .set(crates::downloads.eq(crates::downloads + amt))
-            .execute(conn)?;
+            // Update the total number of crate downloads
+            update(crates::table.find(crate_id))
+                .set(crates::downloads.eq(crates::downloads + amt))
+                .execute(conn)?;
 
-        // Update the total number of crate downloads for today
-        insert_into(crate_downloads::table)
-            .values((
-                crate_downloads::crate_id.eq(crate_id),
-                crate_downloads::downloads.eq(amt),
-                crate_downloads::date.eq(download.date),
-            ))
-            .on_conflict(crate_downloads::table.primary_key())
-            .do_update()
-            .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
-            .execute(conn)?;
+            // Update the total number of crate downloads for today
+            insert_into(crate_downloads::table)
+                .values((
+                    crate_downloads::crate_id.eq(crate_id),
+                    crate_downloads::downloads.eq(amt),
+                    crate_downloads::date.eq(download.date),
+                ))
+                .on_conflict(crate_downloads::table.primary_key())
+                .do_update()
+                .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
+                .execute(conn)?;
+
+            // Now that everything else for this crate is done, update the global counter of total
+            // downloads
+            update(metadata::table)
+                .set(metadata::total_downloads.eq(metadata::total_downloads + i64::from(amt)))
+                .execute(conn)?;
+
+            Ok(())
+        })?;
     }
-
-    // After everything else is done, update the global counter of total
-    // downloads.
-    update(metadata::table)
-        .set(metadata::total_downloads.eq(metadata::total_downloads + total))
-        .execute(conn)?;
 
     Ok(())
 }
@@ -115,12 +116,9 @@ mod test {
 
     use std::collections::HashMap;
 
-    use diesel::insert_into;
     use super::*;
     use cargo_registry::env;
-    use cargo_registry::krate::{Crate, NewCrate};
-    use cargo_registry::user::{NewUser, User};
-    use cargo_registry::version::{NewVersion, Version};
+    use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();
@@ -152,13 +150,13 @@ mod test {
     }
 
     macro_rules! crate_downloads {
-        ($conn: expr, $id: expr, $expected: expr) => {
+        ($conn:expr, $id:expr, $expected:expr) => {
             let dl = crate_downloads::table
                 .filter(crate_downloads::crate_id.eq($id))
                 .select(crate_downloads::downloads)
                 .first($conn);
             assert_eq!(Ok($expected as i32), dl);
-        }
+        };
     }
 
     #[test]
@@ -237,7 +235,7 @@ mod test {
                 version_downloads::version_id.eq(version.id),
                 version_downloads::downloads.eq(2),
                 version_downloads::counted.eq(2),
-                version_downloads::date.eq(date(now - 2.hours())),
+                version_downloads::date.eq(date(now)),
                 version_downloads::processed.eq(false),
             ))
             .execute(&conn)
@@ -316,8 +314,8 @@ mod test {
 
     #[test]
     fn set_processed_no_set_updated_at() {
-        use diesel::update;
         use diesel::dsl::*;
+        use diesel::update;
 
         let conn = conn();
         let user = user(&conn);

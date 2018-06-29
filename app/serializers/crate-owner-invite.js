@@ -7,5 +7,5 @@ export default DS.RESTSerializer.extend({
     },
     payloadKeyFromModelName() {
         return 'crate_owner_invite';
-    }
+    },
 });

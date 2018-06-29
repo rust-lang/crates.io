@@ -98,19 +98,13 @@ body {
     }
 
     .current-user-links {
-        display: none;
         left: auto;
         right: 0;
         min-width: 200px;
-
-        &.open { display: block; }
     }
     #doc-links {
-        display: none;
         left: auto;
         min-width: 150px;
-
-        &.open { display: block; }
     }
     form.search {
         @include display-flex;
@@ -279,6 +273,7 @@ button.dropdown, a.dropdown {
 }
 
 ul.dropdown {
+    display: none;
     position: absolute;
     top: 100%;
     left: 0;

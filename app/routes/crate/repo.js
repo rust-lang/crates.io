@@ -14,7 +14,7 @@ export default Route.extend({
             // Redirect to the crate's main page and show a flash error if
             // no repository is found
             let message = 'Crate does not supply a repository URL';
-            this.get('flashMessages').queue(message);
+            this.flashMessages.queue(message);
             this.replaceWith('crate', crate);
         }
     },

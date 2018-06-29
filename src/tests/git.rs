@@ -1,8 +1,8 @@
-use std::fs;
 use std::env;
-use std::thread;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::{Once, ONCE_INIT};
+use std::thread;
 
 use git2;
 use url::Url;

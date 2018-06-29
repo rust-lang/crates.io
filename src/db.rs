@@ -1,11 +1,11 @@
 use std::env;
 
 use conduit::Request;
-use diesel::prelude::{ConnectionResult, PgConnection};
-use diesel::r2d2::{self, ConnectionManager};
+use diesel::prelude::*;
+use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use url::Url;
 
-use app::RequestApp;
+use middleware::app::RequestApp;
 use util::CargoResult;
 
 pub type DieselPool = r2d2::Pool<ConnectionManager<PgConnection>>;
@@ -42,5 +42,19 @@ pub trait RequestTransaction {
 impl<T: Request + ?Sized> RequestTransaction for T {
     fn db_conn(&self) -> CargoResult<DieselPooledConn> {
         self.app().diesel_database.get().map_err(Into::into)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SetStatementTimeout(pub u64);
+
+impl CustomizeConnection<PgConnection, r2d2::Error> for SetStatementTimeout {
+    fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), r2d2::Error> {
+        use diesel::sql_query;
+
+        sql_query(format!("SET statement_timeout = {}", self.0 * 1000))
+            .execute(conn)
+            .map_err(r2d2::Error::QueryError)?;
+        Ok(())
     }
 }

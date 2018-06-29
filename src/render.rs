@@ -2,6 +2,7 @@ use ammonia::{Builder, UrlRelative};
 use comrak;
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
+use std::path::Path;
 use url::Url;
 
 use util::CargoResult;
@@ -74,29 +75,27 @@ impl<'a> MarkdownRenderer<'a> {
         ].iter()
             .cloned()
             .collect();
-        let allowed_classes = [
-            (
-                "code",
-                [
-                    "language-bash",
-                    "language-clike",
-                    "language-glsl",
-                    "language-go",
-                    "language-ini",
-                    "language-javascript",
-                    "language-json",
-                    "language-markup",
-                    "language-protobuf",
-                    "language-ruby",
-                    "language-rust",
-                    "language-scss",
-                    "language-sql",
-                    "yaml",
-                ].iter()
-                    .cloned()
-                    .collect(),
-            ),
-        ].iter()
+        let allowed_classes = [(
+            "code",
+            [
+                "language-bash",
+                "language-clike",
+                "language-glsl",
+                "language-go",
+                "language-ini",
+                "language-javascript",
+                "language-json",
+                "language-markup",
+                "language-protobuf",
+                "language-ruby",
+                "language-rust",
+                "language-scss",
+                "language-sql",
+                "yaml",
+            ].iter()
+                .cloned()
+                .collect(),
+        )].iter()
             .cloned()
             .collect();
 
@@ -119,6 +118,16 @@ impl<'a> MarkdownRenderer<'a> {
             None
         });
 
+        fn is_media_url(url: &str) -> bool {
+            Path::new(url)
+                .extension()
+                .and_then(|e| e.to_str())
+                .map_or(false, |e| match e {
+                    "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
+                    _ => false,
+                })
+        }
+
         let relative_url_sanitizer = constrain_closure(move |url| {
             // sanitizer_base_url is Some(String); use it to fix the relative URL.
             if url.starts_with('#') {
@@ -133,7 +142,13 @@ impl<'a> MarkdownRenderer<'a> {
                 let offset = new_url.len() - 5;
                 new_url.drain(offset..offset + 4);
             }
-            new_url += "blob/master";
+            // Assumes GitHub’s URL scheme. GitHub renders text and markdown
+            // better in the "blob" view, but images need to be served raw.
+            new_url += if is_media_url(url) {
+                "raw/master"
+            } else {
+                "blob/master"
+            };
             if !url.starts_with('/') {
                 new_url.push('/');
             }
@@ -143,7 +158,8 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
+                url.host_str() == Some("github.com")
+                    || url.host_str() == Some("gitlab.com")
                     || url.host_str() == Some("bitbucket.org")
             } else {
                 false
@@ -165,9 +181,7 @@ impl<'a> MarkdownRenderer<'a> {
             })
             .id_prefix(Some("user-content-"));
 
-        MarkdownRenderer {
-            html_sanitizer: html_sanitizer,
-        }
+        MarkdownRenderer { html_sanitizer }
     }
 
     /// Renders the given markdown to HTML using the current settings.
@@ -312,6 +326,7 @@ mod tests {
     fn relative_links() {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
+        let image = "![alt](img.png)";
 
         for host in &["github.com", "gitlab.com", "bitbucket.org"] {
             for (&extra_slash, &dot_git) in [true, false].iter().zip(&[true, false]) {
@@ -336,6 +351,15 @@ mod tests {
                     result,
                     format!(
                         "<p><a href=\"https://{}/rust-lang/test/blob/master/there\" rel=\"nofollow noopener noreferrer\">there</a></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(image, Some(&url)).unwrap();
+                assert_eq!(
+                    result,
+                    format!(
+                 "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
                         host
                     )
                 );

@@ -15,10 +15,9 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, Version};
+use cargo_registry::models::{Crate, Version};
 use cargo_registry::schema::versions;
 
-#[allow(dead_code)]
 fn main() {
     let conn = cargo_registry::db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {

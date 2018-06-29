@@ -5,29 +5,25 @@ extern crate tokio_core;
 extern crate tokio_service;
 
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::collections::HashSet;
 use std::env;
-use std::fs::File;
-use std::fs;
-use std::io::prelude::*;
+use std::fs::{self, File};
 use std::io;
+use std::io::prelude::*;
 use std::net;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::str;
 use std::sync::{Arc, Mutex, Once};
 use std::thread;
 
-use cargo_registry::user::NewUser;
-use curl::easy::{Easy, List};
-use self::futures::{Future, Stream};
 use self::futures::sync::oneshot;
-use self::hyper::server::Http;
+use self::futures::{future, Future, Stream};
 use self::tokio_core::net::TcpListener;
 use self::tokio_core::reactor::Core;
-use self::tokio_service::Service;
+use curl::easy::{Easy, List};
 use serde_json;
+
+use models::NewUser;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -117,27 +113,20 @@ pub fn proxy() -> (String, Bomb) {
         let handle = core.handle();
         let addr = t!(a.local_addr());
         let listener = t!(TcpListener::from_listener(a, &addr, &handle));
-        let client = hyper::Client::configure()
-            .connector(hyper_tls::HttpsConnector::new(4, &handle).unwrap())
-            .build(&handle);
+        let client = hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap());
 
-        let record = Rc::new(RefCell::new(record));
-        let srv = listener.incoming().for_each(|(socket, addr)| {
-            Http::new().bind_connection(
-                &handle,
-                socket,
-                addr,
-                Proxy {
-                    sink: sink2.clone(),
-                    record: Rc::clone(&record),
-                    client: client.clone(),
-                },
-            );
-            Ok(())
-        });
+        let record = Arc::new(Mutex::new(record));
+        let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
+            .serve(Proxy {
+                sink: sink2,
+                record: Arc::clone(&record),
+                client,
+            })
+            .map_err(|e| eprintln!("server connection error: {}", e));
+
         drop(core.run(srv.select2(quitrx)));
 
-        let record = record.borrow();
+        let record = record.lock().unwrap();
         match *record {
             Record::Capture(ref data, ref path) => {
                 let data = t!(serde_json::to_string(data));
@@ -157,35 +146,47 @@ pub fn proxy() -> (String, Bomb) {
     )
 }
 
+#[derive(Clone)]
 struct Proxy {
     sink: Sink,
-    record: Rc<RefCell<Record>>,
+    record: Arc<Mutex<Record>>,
     client: Client,
 }
 
-impl Service for Proxy {
-    type Request = hyper::Request;
-    type Response = hyper::Response;
+impl hyper::service::Service for Proxy {
+    type ReqBody = hyper::Body;
+    type ResBody = hyper::Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
+    type Future = Box<Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
 
-    fn call(&self, req: hyper::Request) -> Self::Future {
-        match *self.record.borrow_mut() {
-            Record::Capture(_, _) => {
-                let record = Rc::clone(&self.record);
-                Box::new(
-                    record_http(req, &self.client).map(move |(response, exchange)| {
-                        if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
-                            d.push(exchange);
-                        }
-                        response
-                    }),
-                )
-            }
+    fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
+        let record2 = self.record.clone();
+        match *self.record.lock().unwrap() {
+            Record::Capture(_, _) => Box::new(record_http(req, &self.client).map(
+                move |(response, exchange)| {
+                    if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
+                        d.push(exchange);
+                    }
+                    response
+                },
+            )),
             Record::Replay(ref mut exchanges) => {
                 replay_http(req, exchanges.remove(0), &mut &self.sink)
             }
         }
+    }
+}
+
+impl hyper::service::NewService for Proxy {
+    type ReqBody = hyper::Body;
+    type ResBody = hyper::Body;
+    type Error = hyper::Error;
+    type Service = Proxy;
+    type Future = Box<Future<Item = Self::Service, Error = Self::InitError> + Send>;
+    type InitError = hyper::Error;
+
+    fn new_service(&self) -> Self::Future {
+        Box::new(future::ok(self.clone()))
     }
 }
 
@@ -213,17 +214,20 @@ struct Response {
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
 fn record_http(
-    req: hyper::Request,
+    req: hyper::Request<hyper::Body>,
     client: &Client,
-) -> Box<Future<Item = (hyper::Response, Exchange), Error = hyper::Error>> {
-    let (method, uri, _version, headers, body) = req.deconstruct();
+) -> Box<Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+    let (header_parts, body) = req.into_parts();
+    let method = header_parts.method;
+    let uri = header_parts.uri;
+    let headers = header_parts.headers;
 
     let mut request = Request {
         uri: uri.to_string(),
         method: method.to_string(),
         headers: headers
             .iter()
-            .map(|h| (h.name().to_string(), h.value_string()))
+            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
         body: Vec::new(),
     };
@@ -233,9 +237,13 @@ fn record_http(
     let response = body.and_then(move |body| {
         request.body = body.to_vec();
         let uri = uri.to_string().replace("http://", "https://");
-        let mut req = hyper::Request::new(method, uri.parse().unwrap());
-        *req.headers_mut() = headers;
-        req.set_body(body);
+        let uri = uri.parse::<hyper::Uri>().unwrap();
+        let mut req = hyper::Request::builder()
+            .method(method.clone())
+            .uri(uri)
+            .body(body.into())
+            .unwrap();
+        *req.headers_mut() = headers.clone();
         client.request(req).map(|r| (r, request))
     });
 
@@ -246,16 +254,16 @@ fn record_http(
             status: status.as_u16(),
             headers: headers
                 .iter()
-                .map(|h| (h.name().to_string(), h.value_string()))
+                .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
                 .collect(),
             body: Vec::new(),
         };
 
-        hyper_response.body().concat2().map(move |body| {
+        hyper_response.into_body().concat2().map(move |body| {
             response.body = body.to_vec();
-            let mut hyper_response = hyper::Response::new();
-            hyper_response.set_body(body);
-            hyper_response.set_status(status);
+            let mut hyper_response = hyper::Response::builder();
+            hyper_response.status(status);
+            let mut hyper_response = hyper_response.body(body.into()).unwrap();
             *hyper_response.headers_mut() = headers;
             (
                 hyper_response,
@@ -269,10 +277,10 @@ fn record_http(
 }
 
 fn replay_http(
-    req: hyper::Request,
+    req: hyper::Request<hyper::Body>,
     mut exchange: Exchange,
     stdout: &mut Write,
-) -> Box<Future<Item = hyper::Response, Error = hyper::Error>> {
+) -> Box<Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
     t!(writeln!(
@@ -280,13 +288,16 @@ fn replay_http(
         "expecting: {:?}",
         exchange.request.headers
     ));
-    for header in req.headers().iter() {
-        let pair = (header.name().to_string(), header.value_string());
+    for (name, value) in req.headers().iter() {
+        let pair = (
+            name.as_str().to_string(),
+            value.to_str().unwrap().to_string(),
+        );
         t!(writeln!(stdout, "received: {:?}", pair));
-        if header.name().starts_with("Date") {
+        if name.as_str().starts_with("date") {
             continue;
         }
-        if header.name().starts_with("Authorization") {
+        if name.as_str().starts_with("authorization") {
             continue;
         }
         if !exchange.request.headers.remove(&pair) {
@@ -294,25 +305,25 @@ fn replay_http(
         }
     }
     for (name, value) in exchange.request.headers.drain() {
-        if name.starts_with("Date") {
+        if name.starts_with("date") {
             continue;
         }
-        if name.starts_with("Authorization") {
+        if name.starts_with("authorization") {
             continue;
         }
         panic!("didn't find header {:?}", (name, value));
     }
     let req_body = exchange.request.body;
-    let verify_body = req.body().concat2().map(move |body| {
+    let verify_body = req.into_body().concat2().map(move |body| {
         assert_eq!(&body[..], &req_body[..]);
     });
 
-    let mut response = hyper::Response::new();
-    response.set_status(hyper::StatusCode::try_from(exchange.response.status).unwrap());
+    let mut response = hyper::Response::builder();
+    response.status(hyper::StatusCode::from_u16(exchange.response.status).unwrap());
     for (key, value) in exchange.response.headers {
-        response.headers_mut().append_raw(key, value);
+        response.header(key.as_str(), value.as_str());
     }
-    response.set_body(exchange.response.body);
+    let response = response.body(exchange.response.body.into()).unwrap();
 
     Box::new(verify_body.map(|()| response))
 }

@@ -1,47 +1,56 @@
-import { test } from 'qunit';
-import { visit } from 'ember-native-dom-helpers';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
 import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | categories');
+module('Acceptance | categories', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('is accessible', async function(assert) {
-    assert.expect(0);
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    server.create('category', { category: 'API bindings', crates_cnt: 0 });
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-    server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
-    await visit('/categories');
-    await a11yAudit(axeConfig);
-});
+        await visit('/categories');
+        percySnapshot(assert);
 
-test('category/:category_id is accessible', async function(assert) {
-    assert.expect(0);
+        await a11yAudit(axeConfig);
+    });
 
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+    test('category/:category_id is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/categories/algorithms');
-    await a11yAudit(axeConfig);
-});
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
 
-test('listing categories', async function(assert) {
-    server.create('category', { category: 'API bindings', crates_cnt: 0 });
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-    server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+        await visit('/categories/algorithms');
+        percySnapshot(assert);
 
-    await visit('/categories');
+        await a11yAudit(axeConfig);
+    });
 
-    assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
-    assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
-    assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
-});
+    test('listing categories', async function(assert) {
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
-test('category/:category_id index default sort is recent-downloads', async function(assert) {
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        await visit('/categories');
 
-    await visit('/categories/algorithms');
+        assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
+        assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
+        assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
+    });
 
-    assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
+    test('category/:category_id index default sort is recent-downloads', async function(assert) {
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+
+        await visit('/categories/algorithms');
+
+        assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
+    });
 });

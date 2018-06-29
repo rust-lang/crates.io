@@ -1,4 +1,5 @@
 import Service, { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 export default Service.extend({
     savedTransition: null,
@@ -7,7 +8,6 @@ export default Service.extend({
     currentUser: null,
     currentUserDetected: false,
 
-    ajax: service(),
     store: service(),
     router: service(),
 
@@ -16,7 +16,7 @@ export default Service.extend({
         let isLoggedIn;
         try {
             isLoggedIn = localStorage.getItem('isLoggedIn') === '1';
-        } catch(e) {
+        } catch (e) {
             isLoggedIn = false;
         }
         this.set('isLoggedIn', isLoggedIn);
@@ -28,7 +28,7 @@ export default Service.extend({
         this.set('currentUser', user);
         try {
             localStorage.setItem('isLoggedIn', '1');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
     },
@@ -41,18 +41,18 @@ export default Service.extend({
 
         try {
             localStorage.removeItem('isLoggedIn');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
     },
 
     loadUser() {
-        if (this.get('isLoggedIn') && !this.get('currentUser')) {
+        if (this.isLoggedIn && !this.currentUser) {
             this.fetchUser()
                 .catch(() => this.logoutUser())
                 .finally(() => {
                     this.set('currentUserDetected', true);
-                    let transition = this.get('abortedTransition');
+                    let transition = this.abortedTransition;
                     if (transition) {
                         transition.retry();
                         this.set('abortedTransition', null);
@@ -64,14 +64,13 @@ export default Service.extend({
     },
 
     fetchUser() {
-        return this.get('ajax').request('/api/v1/me')
-            .then((response) => {
-                this.set('currentUser', this.get('store').push(this.get('store').normalize('user', response.user)));
-            });
+        return ajax('/api/v1/me').then(response => {
+            this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
+        });
     },
 
     checkCurrentUser(transition, beforeRedirect) {
-        if (this.get('currentUser')) {
+        if (this.currentUser) {
             return;
         }
 
@@ -79,7 +78,7 @@ export default Service.extend({
         // loaded the current user yet then we need to wait for it to be loaded.
         // Once we've done that we can retry the transition and start the whole
         // process over again!
-        if (!this.get('currentUserDetected')) {
+        if (!this.currentUserDetected) {
             transition.abort();
             this.set('abortedTransition', transition);
         } else {
@@ -87,7 +86,7 @@ export default Service.extend({
             if (beforeRedirect) {
                 beforeRedirect();
             }
-            return this.get('router').transitionTo('index');
+            return this.router.transitionTo('index');
         }
-    }
+    },
 });

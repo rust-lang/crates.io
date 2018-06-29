@@ -13,6 +13,6 @@ export default Controller.extend(PaginationMixin, {
     totalItems: readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        return (this.get('sort') === 'crates') ? '# Crates' : 'Alphabetical';
+        return this.sort === 'crates' ? '# Crates' : 'Alphabetical';
     }),
 });

@@ -46,7 +46,8 @@ struct FkConstraint {
     #[sql_type = "Text"]
     #[column_name = "conname"]
     name: String,
-    #[sql_type = "Text"] definition: String,
+    #[sql_type = "Text"]
+    definition: String,
 }
 
 #[derive(QueryableByName)]
@@ -54,7 +55,8 @@ struct TableNameAndConstraint {
     #[sql_type = "Text"]
     #[column_name = "relname"]
     table_name: String,
-    #[diesel(embed)] constraint: Option<FkConstraint>,
+    #[diesel(embed)]
+    constraint: Option<FkConstraint>,
 }
 
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {

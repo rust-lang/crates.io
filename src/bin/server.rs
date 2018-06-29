@@ -9,14 +9,13 @@ use cargo_registry::{env, Env};
 use civet::Server;
 use std::env;
 use std::fs::{self, File};
-use std::sync::Arc;
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 
-#[allow(dead_code)]
 fn main() {
     // Initialize logging
     env_logger::init().unwrap();
-    let config: cargo_registry::Config = Default::default();
+    let config = cargo_registry::Config::default();
 
     // If there isn't a git checkout containing the crate index repo at the path specified
     // by `GIT_REPO_CHECKOUT`, delete that directory and clone the repo specified by `GIT_REPO_URL`
@@ -46,7 +45,7 @@ fn main() {
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
     let app = cargo_registry::App::new(&config);
-    let app = cargo_registry::middleware(Arc::new(app));
+    let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.

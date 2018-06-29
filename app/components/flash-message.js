@@ -8,5 +8,5 @@ export default Component.extend({
 
     elementId: 'flash',
     tagName: 'p',
-    classNameBindings: ['message:shown']
+    classNameBindings: ['message:shown'],
 });

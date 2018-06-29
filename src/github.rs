@@ -5,8 +5,8 @@ use curl::easy::{Easy, List};
 
 use oauth2::*;
 
-use serde_json;
 use serde::Deserialize;
+use serde_json;
 
 use std::str;
 
@@ -54,9 +54,10 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
     data: &'a [u8],
 ) -> CargoResult<T> {
     match resp.response_code().unwrap() {
-        200 => {}
         // Ok!
-        403 => {
+        200 => {}
+        // Unauthorized or Forbidden
+        401 | 403 => {
             return Err(human(
                 "It looks like you don't have permission \
                  to query a necessary property from Github \
@@ -67,6 +68,7 @@ pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
                  https://crates.io/login",
             ));
         }
+        // Something else
         n => {
             let resp = String::from_utf8_lossy(data);
             return Err(internal(&format_args!(
@@ -92,4 +94,13 @@ pub fn token(token: String) -> Token {
         scopes: Vec::new(),
         token_type: String::new(),
     }
+}
+
+pub fn team_url(login: &str) -> String {
+    let mut login_pieces = login.split(':');
+    login_pieces.next();
+    format!(
+        "https://github.com/{}",
+        login_pieces.next().expect("org failed"),
+    )
 }

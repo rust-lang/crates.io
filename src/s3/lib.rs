@@ -7,12 +7,12 @@ extern crate openssl;
 
 use std::io::prelude::*;
 
+use base64::encode;
 use chrono::prelude::Utc;
 use curl::easy::{Easy, List, ReadError, Transfer};
 use openssl::hash::MessageDigest;
-use openssl::sign::Signer;
 use openssl::pkey::PKey;
-use base64::encode;
+use openssl::sign::Signer;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -32,10 +32,10 @@ impl Bucket {
         proto: &str,
     ) -> Bucket {
         Bucket {
-            name: name,
-            region: region,
-            access_key: access_key,
-            secret_key: secret_key,
+            name,
+            region,
+            access_key,
+            secret_key,
             proto: proto.to_string(),
         }
     }
@@ -48,7 +48,7 @@ impl Bucket {
         content_type: &str,
         content_length: u64,
     ) -> Transfer<'a, 'b> {
-        let path = if path.starts_with("/") {
+        let path = if path.starts_with('/') {
             &path[1..]
         } else {
             path
@@ -82,11 +82,11 @@ impl Bucket {
             .read_function(move |data| content.read(data).map_err(|_| ReadError::Abort))
             .unwrap();
 
-        return transfer;
+        transfer
     }
 
     pub fn delete<'a, 'b>(&self, easy: &'a mut Easy, path: &str) -> Transfer<'a, 'b> {
-        let path = if path.starts_with("/") {
+        let path = if path.starts_with('/') {
             &path[1..]
         } else {
             path
@@ -105,7 +105,7 @@ impl Bucket {
         easy.url(&url).unwrap();
         easy.http_headers(headers).unwrap();
 
-        return easy.transfer();
+        easy.transfer()
     }
 
     pub fn host(&self) -> String {
@@ -134,7 +134,7 @@ impl Bucket {
             let key = PKey::hmac(self.secret_key.as_bytes()).unwrap();
             let mut signer = Signer::new(MessageDigest::sha1(), &key).unwrap();
             signer.update(string.as_bytes()).unwrap();
-            encode(&signer.finish().unwrap()[..])
+            encode(&signer.sign_to_vec().unwrap()[..])
         };
         format!("AWS {}:{}", self.access_key, signature)
     }

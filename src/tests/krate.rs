@@ -2,32 +2,30 @@ extern crate diesel;
 
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 use std::sync::Arc;
 
+use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::update;
-use self::diesel::prelude::*;
 use git2;
 use semver;
 use serde_json;
 
-use cargo_registry::dependency::EncodableDependency;
-use cargo_registry::download::EncodableVersionDownload;
 use cargo_registry::git;
-use cargo_registry::keyword::EncodableKeyword;
-use cargo_registry::krate::{Crate, EncodableCrate, MAX_NAME_LENGTH};
-
-use cargo_registry::token::ApiToken;
-use cargo_registry::schema::{crates, metadata, versions};
-
-use cargo_registry::upload as u;
-use cargo_registry::version::EncodableVersion;
-use cargo_registry::category::{Category, EncodableCategory};
+use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
+
+use models::{ApiToken, Category, Crate};
+use schema::{crates, metadata, versions};
+use views::krate_publish as u;
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+    EncodableVersionDownload,
+};
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -35,7 +33,8 @@ struct VersionsList {
 }
 #[derive(Deserialize)]
 struct CrateResponse {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }
@@ -84,6 +83,7 @@ fn new_crate(name: &str) -> u::NewCrate {
         license_file: None,
         repository: None,
         badges: None,
+        links: None,
     }
 }
 
@@ -627,17 +627,15 @@ fn new_krate_with_dependency() {
 #[test]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = ::app();
-    let deps = vec![
-        u::CrateDependency {
-            name: u::CrateName("foo-dep".to_string()),
-            optional: false,
-            default_features: true,
-            features: Vec::new(),
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-            target: None,
-            kind: None,
-        },
-    ];
+    let deps = vec![u::CrateDependency {
+        name: u::CrateName("foo-dep".to_string()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+        target: None,
+        kind: None,
+    }];
     let mut req = ::new_req_full(Arc::clone(&app), ::krate("new_dep"), "1.0.0", deps);
     {
         let conn = app.diesel_database.get().unwrap();
@@ -755,11 +753,12 @@ fn new_krate_bad_name() {
 
 #[test]
 fn valid_feature_names() {
-    assert!(Crate::valid_feature_name("foo"));
-    assert!(!Crate::valid_feature_name(""));
-    assert!(!Crate::valid_feature_name("/"));
-    assert!(!Crate::valid_feature_name("%/%"));
-    assert!(Crate::valid_feature_name("a/a"));
+    assert!(Crate::valid_feature("foo"));
+    assert!(!Crate::valid_feature(""));
+    assert!(!Crate::valid_feature("/"));
+    assert!(!Crate::valid_feature("%/%"));
+    assert!(Crate::valid_feature("a/a"));
+    assert!(Crate::valid_feature("32-column-tables"));
 }
 
 #[test]
@@ -1576,6 +1575,66 @@ fn publish_after_yank_max_version() {
 }
 
 #[test]
+fn publish_after_removing_documentation() {
+    let (_b, app, middle) = ::app();
+
+    let user;
+
+    // 1. Start with a crate with no documentation
+    {
+        let conn = app.diesel_database.get().unwrap();
+        user = ::new_user("foo").create_or_update(&conn).unwrap();
+        ::CrateBuilder::new("docscrate", user.id)
+            .version("0.2.0")
+            .expect_build(&conn);
+    }
+
+    // Verify that crates start without any documentation so the next assertion can *prove*
+    // that it was the one that added the documentation
+    {
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+
+    // 2. Add documentation
+    {
+        let mut req =
+            ::new_req_with_documentation(Arc::clone(&app), "docscrate", "0.2.1", "http://foo.rs");
+        ::sign_in_as(&mut req, &user);
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: GoodCrate = ::json(&mut response);
+        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
+    }
+
+    // Ensure latest version also has the same documentation
+    {
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
+    }
+
+    // 3. Remove the documentation
+    {
+        let mut req = ::new_req(Arc::clone(&app), "docscrate", "0.2.2");
+        ::sign_in_as(&mut req, &user);
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: GoodCrate = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+
+    // Ensure latest version no longer has documentation
+    {
+        let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates/docscrate");
+        let mut response = ok_resp!(middle.call(&mut req));
+        let json: CrateResponse = ::json(&mut response);
+        assert_eq!(json.krate.documentation, None);
+    }
+}
+
+#[test]
 fn bad_keywords() {
     let (_b, app, middle) = ::app();
     let mut req = ::new_req(Arc::clone(&app), "foobar", "1.0.0");
@@ -1915,7 +1974,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1926,7 +1986,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1938,7 +1999,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        !json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        !json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors

@@ -1,13 +1,14 @@
-use dotenv::dotenv;
 use std::env;
 use std::path::Path;
-use util::{bad_request, CargoResult};
+
+use dotenv::dotenv;
 use lettre::email::{Email, EmailBuilder};
 use lettre::transport::file::FileEmailTransport;
-use lettre::transport::EmailTransport;
-use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
-use lettre::transport::smtp::SUBMISSION_PORT;
 use lettre::transport::smtp::authentication::Mechanism;
+use lettre::transport::smtp::SUBMISSION_PORT;
+use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
+use lettre::transport::EmailTransport;
+use util::{bad_request, CargoResult};
 
 #[derive(Debug)]
 pub struct MailgunConfigVars {
@@ -33,7 +34,7 @@ pub fn init_config_vars() -> Option<MailgunConfigVars> {
     }
 }
 
-pub fn build_email(
+fn build_email(
     recipient: &str,
     subject: &str,
     body: &str,
@@ -54,7 +55,23 @@ pub fn build_email(
     Ok(email)
 }
 
-pub fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
+pub fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
+    // Create a URL with token string as path to send to user
+    // If user clicks on path, look email/user up in database,
+    // make sure tokens match
+
+    let subject = "Please confirm your email address";
+    let body = format!(
+        "Hello {}! Welcome to Crates.io. Please click the
+link below to verify your email address. Thank you!\n
+https://crates.io/confirm/{}",
+        user_name, token
+    );
+
+    send_email(email, subject, &body)
+}
+
+fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
     let mailgun_config = init_config_vars();
     let email = build_email(recipient, subject, body, &mailgun_config)?;
 
