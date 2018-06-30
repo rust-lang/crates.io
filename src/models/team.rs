@@ -116,14 +116,14 @@ impl Team {
         // check that `team` is the `slug` in results, and grab its data
 
         // "sanitization"
-        fn whitelist(c: &char) -> bool {
-            match *c {
+        fn whitelist(c: char) -> bool {
+            match c {
                 'a'...'z' | 'A'...'Z' | '0'...'9' | '-' | '_' => false,
                 _ => true,
             }
         }
 
-        if let Some(c) = org_name.chars().find(whitelist) {
+        if let Some(c) = org_name.chars().find(|c| whitelist(*c)) {
             return Err(human(&format_args!(
                 "organization cannot contain special \
                  characters like {}",

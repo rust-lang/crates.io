@@ -158,7 +158,8 @@ impl<'a> MarkdownRenderer<'a> {
 
         let use_relative = if let Some(base_url) = base_url {
             if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com") || url.host_str() == Some("gitlab.com")
+                url.host_str() == Some("github.com")
+                    || url.host_str() == Some("gitlab.com")
                     || url.host_str() == Some("bitbucket.org")
             } else {
                 false

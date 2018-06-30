@@ -58,7 +58,7 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
         .map_err(|e| bad_request(&format!("invalid new token request: {:?}", e)))?;
 
     let name = &new.api_token.name;
-    if name.len() < 1 {
+    if name.is_empty() {
         return Err(bad_request("name must have a value"));
     }
 

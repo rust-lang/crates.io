@@ -250,7 +250,7 @@ fn verify_tarball(
     max_unpack: u64,
 ) -> CargoResult<()> {
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball)?;
+    let decoder = GzDecoder::new(tarball);
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
@@ -269,6 +269,16 @@ fn verify_tarball(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         if !entry.path()?.starts_with(&prefix) {
+            return Err(human("invalid tarball uploaded"));
+        }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
             return Err(human("invalid tarball uploaded"));
         }
     }

@@ -22,8 +22,10 @@ use {CrateList, CrateMeta, GoodCrate};
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion, EncodableVersionDownload};
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+    EncodableVersionDownload,
+};
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -1972,7 +1974,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1983,7 +1986,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1995,7 +1999,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        !json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        !json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors

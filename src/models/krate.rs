@@ -9,8 +9,10 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
-use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
-             ReverseDependency, User, Version};
+use models::{
+    Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
+    ReverseDependency, User, Version,
+};
 use views::{EncodableCrate, EncodableCrateLinks};
 
 use models::helpers::with_count::*;

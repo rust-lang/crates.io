@@ -7,8 +7,9 @@
 use controllers::prelude::*;
 use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
 use schema::*;
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion};
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+};
 
 use models::krate::ALL_COLUMNS;
 

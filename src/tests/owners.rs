@@ -8,7 +8,9 @@ use diesel::prelude::*;
 
 use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
-use views::{EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse};
+use views::{
+    EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+};
 
 #[derive(Deserialize)]
 struct TeamResponse {
