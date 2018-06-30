@@ -30,7 +30,7 @@ rustdoc-args = [
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
 rand = "0.3"
 git2 = "0.6.4"
-flate2 = "0.2"
+flate2 = "1.0"
 semver = "0.5"
 url = "1.2.1"
 tar = "0.4.13"
@@ -43,7 +43,7 @@ env_logger = "0.5"
 hex = "0.3"
 htmlescape = "0.3.1"
 license-exprs = "^1.3"
-dotenv = "0.10.0"
+dotenv = "0.11.0"
 toml = "0.4"
 diesel = { version = "1.3.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
 diesel_full_text_search = "1.0.0"
@@ -78,7 +78,7 @@ tokio-core = "0.1"
 tokio-service = "0.1"
 
 [build-dependencies]
-dotenv = "0.10"
+dotenv = "0.11"
 diesel = { version = "1.3.0", features = ["postgres"] }
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
 
