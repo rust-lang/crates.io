@@ -6,13 +6,16 @@ use std::io;
 use std::io::prelude::*;
 use std::sync::Arc;
 
-use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::update;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 use git2;
+use self::diesel::prelude::*;
 use semver;
 use serde_json;
+use tar;
 
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
@@ -2235,3 +2238,25 @@ fn test_cargo_invite_owners() {
 //     assert_eq!(json.krate.name, "foo_new");
 //     assert_eq!(json.krate.max_version, "1.0.0");
 // }
+
+#[test]
+fn new_krate_hard_links() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(Arc::clone(&app), "foo", "1.1.0");
+    ::sign_in(&mut req, &app);
+
+    let mut tarball = Vec::new();
+    {
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+        let mut header = tar::Header::new_gnu();
+        t!(header.set_path("foo-1.1.0/bar"));
+        header.set_size(0);
+        header.set_cksum();
+        header.set_entry_type(tar::EntryType::hard_link());
+        t!(header.set_link_name("foo-1.1.0/another"));
+        t!(ar.append(&header, &[][..]));
+        t!(ar.finish());
+    }
+    let body = ::new_crate_to_body_with_tarball(&new_crate("foo"), &tarball);
+    bad_resp!(middle.call(req.with_body(&body)));
+}

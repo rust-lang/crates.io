@@ -715,6 +715,13 @@ fn new_crate_to_body_with_io(
         }
         t!(ar.finish());
     }
+    new_crate_to_body_with_tarball(new_crate, &tarball)
+}
+
+fn new_crate_to_body_with_tarball(
+    new_crate: &u::NewCrate,
+    tarball: &[u8],
+) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
