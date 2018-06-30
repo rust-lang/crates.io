@@ -212,7 +212,6 @@ mod tests {
     use super::*;
     use chrono::NaiveDate;
     use serde_json;
-    use std::collections::HashMap;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {
@@ -278,7 +277,7 @@ mod tests {
             updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
             downloads: 0,
-            features: HashMap::new(),
+            features: serde_json::from_str("{}").unwrap(),
             yanked: false,
             license: None,
             links: EncodableVersionLinks {
