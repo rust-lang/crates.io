@@ -5,6 +5,7 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
+#![deny(bare_trait_objects)]
 #![recursion_limit = "128"]
 
 extern crate ammonia;

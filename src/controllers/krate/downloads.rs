@@ -14,7 +14,7 @@ use views::EncodableVersionDownload;
 use models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
+pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 

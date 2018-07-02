@@ -5,7 +5,7 @@ use schema::categories;
 use views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
+pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
@@ -34,7 +34,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
     let cat = categories::table
@@ -66,7 +66,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut Request) -> CargoResult<Response> {
+pub fn slugs(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let slugs = categories::table
         .select((categories::slug, categories::slug))

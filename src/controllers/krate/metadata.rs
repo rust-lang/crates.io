@@ -14,7 +14,7 @@ use views::{
 use models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: &mut Request) -> CargoResult<Response> {
+pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -98,7 +98,7 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::*;
 
     let name = &req.params()["crate_id"];
@@ -155,7 +155,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: &mut Request) -> CargoResult<Response> {
+pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -179,7 +179,7 @@ pub fn readme(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: &mut Request) -> CargoResult<Response> {
+pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -198,7 +198,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
+pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];

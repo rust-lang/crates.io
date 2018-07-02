@@ -10,17 +10,17 @@ use util::request_header;
 #[allow(missing_debug_implementations)] // We can't
 #[derive(Default)]
 pub struct LogRequests {
-    handler: Option<Box<Handler>>,
+    handler: Option<Box<dyn Handler>>,
 }
 
 impl AroundMiddleware for LogRequests {
-    fn with_handler(&mut self, handler: Box<Handler>) {
+    fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for LogRequests {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let request_start = Instant::now();
         let res = self.handler.as_ref().unwrap().call(req);
         let (level, response_code) = match res {
@@ -60,7 +60,7 @@ impl Handler for LogRequests {
     }
 }
 
-struct FullPath<'a>(&'a Request);
+struct FullPath<'a>(&'a dyn Request);
 
 impl<'a> fmt::Display for FullPath<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

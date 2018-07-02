@@ -158,7 +158,7 @@ impl Uploader {
     /// file, and bombs for the uploaded crate and the uploaded readme.
     pub fn upload_crate(
         &self,
-        req: &mut Request,
+        req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
         max: u64,

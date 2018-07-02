@@ -7,7 +7,7 @@ use models::{Crate, Owner, Rights, Team, User};
 use views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: &mut Request) -> CargoResult<Response> {
+pub fn owners(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -25,7 +25,7 @@ pub fn owners(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
+pub fn owner_team(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -42,7 +42,7 @@ pub fn owner_team(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
+pub fn owner_user(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -59,16 +59,16 @@ pub fn owner_user(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(req: &mut Request) -> CargoResult<Response> {
+pub fn add_owners(req: &mut dyn Request) -> CargoResult<Response> {
     modify_owners(req, true)
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(req: &mut Request) -> CargoResult<Response> {
+pub fn remove_owners(req: &mut dyn Request) -> CargoResult<Response> {
     modify_owners(req, false)
 }
 
-fn modify_owners(req: &mut Request, add: bool) -> CargoResult<Response> {
+fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 

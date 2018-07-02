@@ -26,7 +26,7 @@ mod prelude {
         fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
     }
 
-    impl<'a> RequestUtils for Request + 'a {
+    impl<'a> RequestUtils for dyn Request + 'a {
         fn json<T: Serialize>(&self, t: &T) -> Response {
             ::util::json_response(t)
         }

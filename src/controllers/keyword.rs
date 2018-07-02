@@ -5,7 +5,7 @@ use models::Keyword;
 use views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
+pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     use schema::keywords;
 
     let conn = req.db_conn()?;
@@ -46,7 +46,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let name = &req.params()["keyword_id"];
     let conn = req.db_conn()?;
 

@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use serde_json;
 use std::collections::HashMap;
 
 use models::DependencyKind;
@@ -187,7 +188,7 @@ pub struct EncodableVersion {
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: serde_json::Value,
     pub yanked: bool,
     // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
@@ -211,7 +212,6 @@ mod tests {
     use super::*;
     use chrono::NaiveDate;
     use serde_json;
-    use std::collections::HashMap;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {
@@ -277,7 +277,7 @@ mod tests {
             updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
             downloads: 0,
-            features: HashMap::new(),
+            features: serde_json::from_str("{}").unwrap(),
             yanked: false,
             license: None,
             links: EncodableVersionLinks {
