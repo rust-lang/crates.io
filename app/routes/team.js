@@ -9,32 +9,24 @@ export default Route.extend({
         page: { refreshModel: true },
         sort: { refreshModel: true },
     },
-    data: {},
-
-    setupController(controller) {
-        this._super(...arguments);
-
-        controller.set('fetchingFeed', true);
-        controller.set('crates', this.get('data.crates'));
-    },
 
     model(params) {
         const { team_id } = params;
 
         return this.store.queryRecord('team', { team_id }).then(
-            (team) => {
+            team => {
                 params.team_id = team.get('id');
                 return RSVP.hash({
                     crates: this.store.query('crate', params),
-                    team
+                    team,
                 });
             },
-            (e) => {
+            e => {
                 if (e.errors.some(e => e.detail === 'Not Found')) {
-                    this.get('flashMessages').queue(`Team '${params.team_id}' does not exist`);
+                    this.flashMessages.queue(`Team '${params.team_id}' does not exist`);
                     return this.replaceWith('index');
                 }
-            }
+            },
         );
     },
 });

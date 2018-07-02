@@ -4,6 +4,6 @@ import AuthenticatedRoute from '../../mixins/authenticated-route';
 
 export default Route.extend(AuthenticatedRoute, {
     model() {
-        return this.get('store').findAll('crate-owner-invite');
-    }
+        return this.store.findAll('crate-owner-invite');
+    },
 });

@@ -13,9 +13,9 @@ export default Controller.extend(PaginationMixin, {
     totalItems: readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort') === 'downloads') {
+        if (this.sort === 'downloads') {
             return 'All-Time Downloads';
-        } else if (this.get('sort') === 'alpha') {
+        } else if (this.sort === 'alpha') {
             return 'Alphabetical';
         } else {
             return 'Recent Downloads';

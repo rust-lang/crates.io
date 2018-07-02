@@ -9,5 +9,5 @@ export default DS.Model.extend({
 
     subcategories: DS.attr(),
 
-    crates: DS.hasMany('crate', { async: true })
+    crates: DS.hasMany('crate', { async: true }),
 });

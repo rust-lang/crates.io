@@ -57,9 +57,9 @@ fn categories_from_toml(
     let mut result = vec![];
 
     for (slug, details) in categories {
-        let details = details.as_table().chain_error(|| {
-            internal(&format_args!("category {} was not a TOML table", slug))
-        })?;
+        let details = details
+            .as_table()
+            .chain_error(|| internal(&format_args!("category {} was not a TOML table", slug)))?;
 
         let category = Category::from_parent(
             slug,
@@ -91,8 +91,8 @@ pub fn sync(toml_str: &str) -> CargoResult<()> {
 }
 
 pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<()> {
-    use diesel::pg::upsert::excluded;
     use diesel::dsl::all;
+    use diesel::pg::upsert::excluded;
     use schema::categories::dsl::*;
 
     let toml: toml::value::Table =

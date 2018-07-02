@@ -1,13 +1,13 @@
 import Component from '@ember/component';
-import { on } from '@ember/object/evented';
 import { alias } from '@ember/object/computed';
-import { computed, observer } from '@ember/object';
+import { computed } from '@ember/object';
 import $ from 'jquery';
 
 import RlDropdownContainer from './rl-dropdown-container';
 
 export default Component.extend({
     classNames: ['rl-dropdown'],
+    classNameBindings: ['isExpanded:open'],
 
     dropdownContainer: computed(function() {
         return this.nearestOfType(RlDropdownContainer);
@@ -19,17 +19,9 @@ export default Component.extend({
 
     propagateClicks: true,
 
-    manageVisibility: on('didInsertElement', observer('isExpanded', function() {
-        if (this.get('isExpanded')) {
-            this.$().css('display', 'block');
-        } else {
-            this.$().css('display', 'none');
-        }
-    })),
-
     click(event) {
-        let closeOnChildClick = this.get('closeOnChildClick');
-        let propagateClicks = this.get('propagateClicks');
+        let closeOnChildClick = this.closeOnChildClick;
+        let propagateClicks = this.propagateClicks;
         let $target = $(event.target);
         let $c = this.$();
 
@@ -44,5 +36,5 @@ export default Component.extend({
         if (propagateClicks === false || propagateClicks === 'false') {
             event.stopPropagation();
         }
-    }
+    },
 });

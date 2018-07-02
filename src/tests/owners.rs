@@ -2,16 +2,15 @@ use std::sync::Arc;
 
 use {CrateList, GoodCrate};
 
-use cargo_registry::owner::EncodableOwner;
-use cargo_registry::user::EncodablePublicUser;
-use cargo_registry::crate_owner_invitation::{EncodableCrateOwnerInvitation, InvitationResponse,
-                                             NewCrateOwnerInvitation};
-use cargo_registry::schema::crate_owner_invitations;
-use cargo_registry::krate::Crate;
-
 use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
+
+use models::{Crate, NewCrateOwnerInvitation};
+use schema::crate_owner_invitations;
+use views::{
+    EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+};
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -86,12 +85,6 @@ fn new_crate_owner() {
     #[derive(Deserialize)]
     struct CrateOwnerInvitation {
         crate_owner_invitation: InvitationResponse,
-    }
-
-    #[derive(Deserialize)]
-    struct InvitationResponse {
-        crate_id: i32,
-        accepted: bool,
     }
 
     let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
@@ -196,19 +189,13 @@ fn owners_can_remove_self() {
         middle.call(
             req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
                 .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes())
+                .with_body(body.to_string().as_bytes()),
         )
     );
 
     #[derive(Deserialize)]
     struct CrateOwnerInvitation {
         crate_owner_invitation: InvitationResponse,
-    }
-
-    #[derive(Deserialize)]
-    struct InvitationResponse {
-        crate_id: i32,
-        accepted: bool,
     }
 
     let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
@@ -499,7 +486,6 @@ fn test_accept_invitation() {
     assert_eq!(json.users.len(), 2);
 }
 
-
 /*  Given a user inviting a different user to be a crate
     owner, check that the user invited can decline their
     invitation and the invitation will be deleted from
@@ -571,7 +557,6 @@ fn test_decline_invitation() {
     let json: T = ::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, false);
     assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
-
 
     // then check to make sure that decline_invite did what it
     // was supposed to

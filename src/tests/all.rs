@@ -25,55 +25,60 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
 use std::io::Read;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::sync::Arc;
 
 use cargo_registry::app::App;
-use cargo_registry::category::NewCategory;
-use cargo_registry::dependency::NewDependency;
-use cargo_registry::keyword::Keyword;
-use cargo_registry::krate::{CrateDownload, EncodableCrate, NewCrate};
-use cargo_registry::schema::*;
-use cargo_registry::upload as u;
-use cargo_registry::user::NewUser;
-use cargo_registry::owner::{CrateOwner, NewTeam, Team};
-use cargo_registry::version::NewVersion;
-use cargo_registry::user::AuthenticationSource;
-use cargo_registry::{Crate, Dependency, Replica, User, Version};
+use cargo_registry::middleware::current_user::AuthenticationSource;
+use cargo_registry::Replica;
 use chrono::Utc;
 use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use flate2::Compression;
 use flate2::write::GzEncoder;
+use flate2::Compression;
+
+pub use cargo_registry::{models, schema, views};
+
+use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
+use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
+use schema::*;
+use views::krate_publish as u;
+use views::EncodableCrate;
 
 macro_rules! t {
-    ($e:expr) => (
+    ($e:expr) => {
         match $e {
             Ok(e) => e,
             Err(m) => panic!("{} failed with: {}", stringify!($e), m),
         }
-    )
+    };
 }
 
-macro_rules! t_resp { ($e:expr) => (t!($e)) }
+macro_rules! t_resp {
+    ($e:expr) => {
+        t!($e)
+    };
+}
 
 macro_rules! ok_resp {
-    ($e:expr) => ({
+    ($e:expr) => {{
         let resp = t_resp!($e);
-        if !::ok_resp(&resp) { panic!("bad response: {:?}", resp.status); }
+        if !::ok_resp(&resp) {
+            panic!("bad response: {:?}", resp.status);
+        }
         resp
-    })
+    }};
 }
 
 macro_rules! bad_resp {
-    ($e:expr) => ({
+    ($e:expr) => {{
         let mut resp = t_resp!($e);
         match ::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }
-    })
+    }};
 }
 
 #[derive(Deserialize, Debug)]
@@ -101,7 +106,8 @@ mod version;
 
 #[derive(Deserialize, Debug)]
 struct GoodCrate {
-    #[serde(rename = "crate")] krate: EncodableCrate,
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
@@ -161,8 +167,8 @@ fn app() -> (
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
-    let middleware = cargo_registry::middleware(Arc::clone(&app));
-    (bomb, app, middleware)
+    let handler = cargo_registry::build_handler(Arc::clone(&app));
+    (bomb, app, handler)
 }
 
 // Return the environment variable only if it has been defined
@@ -313,13 +319,15 @@ impl<'a> VersionBuilder<'a> {
         let new_deps = self.dependencies
             .into_iter()
             .map(|(crate_id, target)| {
-                NewDependency {
-                    version_id: vers.id,
-                    req: ">= 0".into(),
-                    crate_id,
-                    target,
-                    ..Default::default()
-                }
+                (
+                    dependencies::version_id.eq(vers.id),
+                    dependencies::req.eq(">= 0"),
+                    dependencies::crate_id.eq(crate_id),
+                    dependencies::target.eq(target),
+                    dependencies::optional.eq(false),
+                    dependencies::default_features.eq(false),
+                    dependencies::features.eq(Vec::<String>::new()),
+                )
             })
             .collect::<Vec<_>>();
         insert_into(dependencies::table)
@@ -406,7 +414,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::{insert_into, update};
+        use diesel::{insert_into, select, update};
 
         let mut krate = self.krate
             .create_or_update(connection, None, self.owner_id)?;
@@ -442,6 +450,9 @@ impl<'a> CrateBuilder<'a> {
             insert_into(crate_downloads::table)
                 .values(&crate_download)
                 .execute(connection)?;
+
+            no_arg_sql_function!(refresh_recent_crate_downloads, ());
+            select(refresh_recent_crate_downloads).execute(connection)?;
         }
 
         if self.versions.is_empty() {
@@ -473,7 +484,7 @@ fn new_version(crate_id: i32, num: &str) -> NewVersion {
 }
 
 fn krate(name: &str) -> Crate {
-    cargo_registry::krate::Crate {
+    Crate {
         id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),
@@ -504,17 +515,18 @@ fn sign_in(req: &mut Request, app: &App) -> User {
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
+    use cargo_registry::schema::dependencies::dsl::*;
     use diesel::insert_into;
-    use cargo_registry::schema::dependencies;
 
-    insert_into(dependencies::table)
-        .values(&NewDependency {
-            version_id: version.id,
-            crate_id: krate.id,
-            req: ">= 0".into(),
-            optional: false,
-            ..Default::default()
-        })
+    insert_into(dependencies)
+        .values((
+            version_id.eq(version.id),
+            crate_id.eq(krate.id),
+            req.eq(">= 0"),
+            optional.eq(false),
+            default_features.eq(false),
+            features.eq(Vec::<String>::new()),
+        ))
         .get_result(conn)
         .unwrap()
 }
@@ -543,6 +555,17 @@ fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str)
 
 fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
     new_req_full(app, ::krate(krate), version, Vec::new())
+}
+
+fn new_req_with_documentation(
+    app: Arc<App>,
+    krate: &str,
+    version: &str,
+    documentation: &str,
+) -> MockRequest {
+    let mut krate = ::krate(krate);
+    krate.documentation = Some(documentation.into());
+    new_req_full(app, krate, version, Vec::new())
 }
 
 fn new_req_full(
@@ -657,6 +680,7 @@ fn new_req_body(
             license_file: None,
             repository: krate.repository,
             badges: Some(badges),
+            links: None,
         },
         &[],
     )
@@ -681,7 +705,7 @@ fn new_crate_to_body_with_io(
 ) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
         for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));
@@ -691,6 +715,13 @@ fn new_crate_to_body_with_io(
         }
         t!(ar.finish());
     }
+    new_crate_to_body_with_tarball(new_crate, &tarball)
+}
+
+fn new_crate_to_body_with_tarball(
+    new_crate: &u::NewCrate,
+    tarball: &[u8],
+) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(

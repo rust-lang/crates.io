@@ -1,0 +1,4 @@
+DROP INDEX reserved_crate_names_canon_crate_name_idx;
+DROP INDEX index_users_gh_id;
+DROP INDEX index_version_downloads_version_id;
+DROP INDEX index_version_downloads_date;

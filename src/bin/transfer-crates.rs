@@ -13,8 +13,7 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use cargo_registry::{Crate, User};
-use cargo_registry::owner::OwnerKind;
+use cargo_registry::models::{Crate, OwnerKind, User};
 use cargo_registry::schema::*;
 
 fn main() {
@@ -64,8 +63,7 @@ fn transfer(conn: &PgConnection) {
 
     println!(
         "Are you sure you want to transfer crates from {} to {}",
-        from.gh_login,
-        to.gh_login
+        from.gh_login, to.gh_login
     );
     get_confirm("continue");
 

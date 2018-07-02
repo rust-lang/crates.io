@@ -57,3 +57,12 @@ categories will be synced from this file.
 ## Running a mirror
 
 Please see [docs/MIRROR.md](https://github.com/rust-lang/crates.io/blob/master/docs/MIRROR.md) for instructions on setting up a mirror of crates.io.
+
+## License
+
+Licensed under either of these:
+
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+   https://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+   https://opensource.org/licenses/MIT)

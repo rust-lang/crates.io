@@ -4,13 +4,14 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use semver;
 use git2;
+use semver;
 use serde_json;
 
 use app::App;
-use dependency::Kind;
 use util::{internal, CargoResult};
+
+use models::DependencyKind;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -20,6 +21,8 @@ pub struct Crate {
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: Option<bool>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,7 +33,7 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Option<Kind>,
+    pub kind: Option<DependencyKind>,
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {

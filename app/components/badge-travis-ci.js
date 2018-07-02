@@ -10,6 +10,6 @@ export default Component.extend({
         return this.get('badge.attributes.branch') || 'master';
     }),
     text: computed('branch', function() {
-        return `Travis CI build status for the ${ this.get('branch') } branch`;
-    })
+        return `Travis CI build status for the ${this.branch} branch`;
+    }),
 });

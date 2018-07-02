@@ -125,7 +125,7 @@ impl Default for Config {
             }
         };
         Config {
-            uploader: uploader,
+            uploader,
             session_key: env("SESSION_KEY"),
             git_repo_checkout: checkout,
             gh_client_id: env("GH_CLIENT_ID"),
@@ -134,8 +134,8 @@ impl Default for Config {
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            mirror: mirror,
-            api_protocol: api_protocol,
+            mirror,
+            api_protocol,
         }
     }
 }

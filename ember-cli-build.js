@@ -1,7 +1,5 @@
 'use strict';
 
-/* eslint-env node */
-
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = function(defaults) {
@@ -29,7 +27,12 @@ module.exports = function(defaults) {
         'ember-prism': {
             theme: 'twilight',
             components: highlightedLanguages,
-        }
+        },
+        sassOptions: {
+            includePaths: [
+                'node_modules/normalize.css',
+            ],
+        },
     });
 
     // Use `app.import` to add additional libraries to the generated
@@ -44,5 +47,11 @@ module.exports = function(defaults) {
     // modules that you would like to import into your application
     // please specify an object with the list of modules as keys
     // along with the exports of each module as its value.
+    app.import('node_modules/timekeeper/lib/timekeeper.js', {
+        using: [
+            { transformation: 'cjs', as: 'timekeeper' },
+        ],
+    });
+
     return app.toTree();
 };

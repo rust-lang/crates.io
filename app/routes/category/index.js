@@ -15,5 +15,5 @@ export default Route.extend({
         this._super(...arguments);
         let category = this.modelFor('category');
         controller.set('category', category);
-    }
+    },
 });

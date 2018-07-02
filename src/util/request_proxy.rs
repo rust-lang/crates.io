@@ -8,7 +8,7 @@ use semver;
 // Can't derive Debug because of Request.
 #[allow(missing_debug_implementations)]
 pub struct RequestProxy<'a> {
-    pub other: &'a mut (Request + 'a),
+    pub other: &'a mut (dyn Request + 'a),
     pub path: Option<&'a str>,
     pub method: Option<conduit::Method>,
 }
@@ -35,7 +35,7 @@ impl<'a> Request for RequestProxy<'a> {
         self.other.virtual_root()
     }
     fn path(&self) -> &str {
-        self.path.map(|s| &*s).unwrap_or_else(|| self.other.path())
+        self.path.unwrap_or_else(|| self.other.path())
     }
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()
@@ -46,10 +46,10 @@ impl<'a> Request for RequestProxy<'a> {
     fn content_length(&self) -> Option<u64> {
         self.other.content_length()
     }
-    fn headers(&self) -> &conduit::Headers {
+    fn headers(&self) -> &dyn conduit::Headers {
         self.other.headers()
     }
-    fn body(&mut self) -> &mut Read {
+    fn body(&mut self) -> &mut dyn Read {
         self.other.body()
     }
     fn extensions(&self) -> &conduit::Extensions {

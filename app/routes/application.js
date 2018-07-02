@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 
 export default Route.extend({
     flashMessages: service(),
+    session: service(),
 
     beforeModel() {
         this.session.loadUser();
@@ -10,7 +11,7 @@ export default Route.extend({
 
     actions: {
         didTransition() {
-            this.get('flashMessages').step();
+            this.flashMessages.step();
         },
     },
 });

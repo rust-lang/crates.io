@@ -7,9 +7,11 @@ import { on } from '@ember/object/evented';
 export default Controller.extend(EKMixin, {
     search: service(),
     searchQuery: oneWay('search.q'),
+    session: service(),
 
     keyboardActivated: true,
-    focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), function(event) {
+
+    focusSearch: on(keyDown('KeyS'), keyPress('KeyS'), keyDown('shift+KeyS'), function(event) {
         if (event.ctrlKey || event.altKey || event.metaKey) {
             return;
         }
@@ -21,18 +23,13 @@ export default Controller.extend(EKMixin, {
     }),
 
     actions: {
-        search(q) {
-            if (q !== undefined) {
-                this.set('searchQuery', q);
-            }
-
+        search() {
             this.transitionToRoute('search', {
                 queryParams: {
-                    q: this.get('searchQuery'),
-                    page: 1
-                }
+                    q: this.searchQuery,
+                    page: 1,
+                },
             });
         },
     },
 });
-

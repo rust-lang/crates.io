@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel::types::Text;
+use diesel::sql_types::Text;
 
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
@@ -15,8 +15,7 @@ fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
             panic!(
                 "Foreign key {} on table {} should have `ON DELETE CASCADE` \
                  but it doesn't.",
-                constraint.name,
-                row.table_name
+                constraint.name, row.table_name
             );
         }
     }
@@ -36,8 +35,7 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
             panic!(
                 "Foreign key {} on table {} should have `ON DELETE CASCADE` \
                  but it doesn't.",
-                constraint.name,
-                row.table_name
+                constraint.name, row.table_name
             );
         }
     }
@@ -46,17 +44,19 @@ fn all_columns_called_version_id_have_a_cascading_foreign_key() {
 #[derive(QueryableByName)]
 struct FkConstraint {
     #[sql_type = "Text"]
-    #[column_name(conname)]
+    #[column_name = "conname"]
     name: String,
-    #[sql_type = "Text"] definition: String,
+    #[sql_type = "Text"]
+    definition: String,
 }
 
 #[derive(QueryableByName)]
 struct TableNameAndConstraint {
     #[sql_type = "Text"]
-    #[column_name(relname)]
+    #[column_name = "relname"]
     table_name: String,
-    #[diesel(embed)] constraint: Option<FkConstraint>,
+    #[diesel(embed)]
+    constraint: Option<FkConstraint>,
 }
 
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
