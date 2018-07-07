@@ -211,7 +211,7 @@
             </div>
 
             <div class='section' id='crate-dependencies'>
-                <h3>Dependencies</h3>
+                <h3>Dependencies (<a {{action "showDeps"}}>See dependencies graph</a>)</h3>
                     <ul>
                         {{#each currentDependencies as |dep|}}
                             {{link-to-dep tagName="li" dep=dep}}
@@ -233,6 +233,64 @@
             {{/if}}
         </div>
     </section>
+</div>
+
+<div id="show-deps" style="{{if showingDeps 'display:block;' 'display:none;'}}position:fixed;z-index:100000;background:#ddd;border: 1px solid #333;max-width:94%;right:3%;
+max-height:94%;top:3%;overflow:scroll;">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+{{!--<style>
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+</style>--}}
+<style>
+.node circle {
+  fill: #999;
+}
+
+.node text {
+  font: 10px sans-serif;
+}
+
+.node--internal circle {
+  fill: #555;
+}
+
+.node--internal text {
+  text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+}
+
+.link {
+  fill: none;
+  stroke: #555;
+  stroke-opacity: 0.4;
+  stroke-width: 1.5px;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-array/1.2.1/d3-array.min.js" integrity="sha384-c+16cUIc0b/tqEZ9mRvDfI/r1Dg1Yq3JpWgZFW4mjN2QU7XXFWVB90PDFlV8SIAm" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-collection/1.0.4/d3-collection.min.js" integrity="sha384-H/Didu3qLpyrVmUqlvWapaxyhCzc+anaMa9uw+CHWHu+GNfClr91w8QgiLFIp7/V" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-dispatch/1.0.3/d3-dispatch.min.js" integrity="sha384-dGRK/lIqGrmmAoVA9K4pwKI4YL4BxIpaGa1dwU6lcRdpp5OJR6FoMZqxqzvCzFBS" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-request/1.0.6/d3-request.min.js" integrity="sha384-xsZEl8WRzIEBs+gkv/88ttcv7hmGnFJX8t8k6V+fZcrG2y5o1SXsCRLzl2S9HkFU" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-selection/1.1.0/d3-selection.min.js" integrity="sha384-AOxWgfcHKw/K6u7UX8IJ4vy418+zXnA6wB6P4/sobPFG0mM34UlLPHELGvI+aEX5" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.1/showdown.min.js" integrity="sha384-Mcx6WhltjdlkIwTWetAJIBNgD0lLtUcl//A7Ksp/vmVZVD2rzQ949wtmoehrDJd/" crossorigin="anonymous"></script>
+    <svg id="deps-rendering" style="width:2000px;height:2000px;"></svg>
 </div>
 
 <div id='crate-downloads'>
