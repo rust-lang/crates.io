@@ -5,7 +5,9 @@
 //! `Cargo.toml` file.
 
 use controllers::prelude::*;
-use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
+use models::{
+    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, Version,
+};
 use schema::*;
 use views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
@@ -24,9 +26,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .get_result(&*conn)?;
 
     let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
-        Version::belonging_to(&krates)
-            .filter(versions::yanked.eq(false))
-            .load::<Version>(&*conn)?
+        let versions = krates.versions().load::<Version>(&*conn)?;
+        versions
             .grouped_by(&krates)
             .into_iter()
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
@@ -105,7 +106,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let ids = versions.iter().map(|v| v.id).collect();
 
@@ -183,7 +184,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let versions = versions
         .into_iter()

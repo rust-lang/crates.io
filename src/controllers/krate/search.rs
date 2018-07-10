@@ -4,7 +4,7 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use models::{Crate, CrateBadge, OwnerKind, Version};
+use models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
 use schema::*;
 use views::EncodableCrate;
 
@@ -159,7 +159,8 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
 
-    let versions = Version::belonging_to(&crates)
+    let versions = crates
+        .versions()
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()

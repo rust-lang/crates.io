@@ -6,7 +6,7 @@ pub mod yank;
 use super::prelude::*;
 use semver;
 
-use models::{Crate, Version};
+use models::{Crate, CrateVersions, Version};
 use schema::versions;
 
 fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
@@ -17,7 +17,8 @@ fn version_and_crate(req: &mut Request) -> CargoResult<(Version, Crate)> {
     };
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let version = Version::belonging_to(&krate)
+    let version = krate
+        .all_versions()
         .filter(versions::num.eq(semver))
         .first(&*conn)
         .map_err(|_| {
