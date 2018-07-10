@@ -6,9 +6,10 @@
 </div>
 
 <div class='white-rows'>
-    <ul>
+    <dl>
       {{#each model as |slug|}}
-          <li>{{slug.slug}}</li>
+          <dt>{{slug.slug}}</dt>
+          <dd>{{slug.description}}</dd>
       {{/each}}
-    </ul>
+    </dl>
 </div>
