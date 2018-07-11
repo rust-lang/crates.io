@@ -33,12 +33,7 @@ noteworthy behavior:
 * `remote_addr` always returns 0.0.0.0:0
 * `host` returns an empty string if the `Host` header is not valid UTF-8
 
-There is currently a bug where the `all` method of `headers` may include
-duplicate keys multiple times.  See [this issue] for further details.
-
 All other methods on `Request` should behave as expected.
-
-[this issue]: https://github.com/hyperium/http/issues/199
 
 ## TODO
 
