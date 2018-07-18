@@ -1,10 +1,11 @@
 [package]
 name = "conduit-hyper"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
 repository = "https://github.com/jtgeibel/conduit-hyper"
+readme = "README.md"
 
 [dependencies]
 conduit = "0.8"
