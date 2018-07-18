@@ -273,6 +273,7 @@ struct VersionBuilder<'a> {
     license_file: Option<&'a str>,
     features: HashMap<String, Vec<String>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
+    yanked: bool,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -287,6 +288,7 @@ impl<'a> VersionBuilder<'a> {
             license_file: None,
             features: HashMap::new(),
             dependencies: Vec::new(),
+            yanked: false,
         }
     }
 
@@ -300,21 +302,31 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    fn yanked(self, yanked: bool) -> Self {
+        Self { yanked, ..self }
+    }
+
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert_into;
+        use diesel::{insert_into, update};
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
             None => None,
         };
 
-        let vers = NewVersion::new(
+        let mut vers = NewVersion::new(
             crate_id,
             &self.num,
             &self.features,
             license,
             self.license_file,
         )?.save(connection, &[])?;
+
+        if self.yanked {
+            vers = update(&vers)
+                .set(versions::yanked.eq(true))
+                .get_result(connection)?;
+        }
 
         let new_deps = self.dependencies
             .into_iter()

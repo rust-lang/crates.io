@@ -423,6 +423,28 @@ fn show() {
 }
 
 #[test]
+fn yanked_versions_are_not_considered_for_max_version() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        ::CrateBuilder::new("foo_yanked_version", user.id)
+            .description("foo")
+            .version("1.0.0")
+            .version(::VersionBuilder::new("1.1.0").yanked(true))
+            .expect_build(&conn);
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 1);
+    assert_eq!(json.crates[0].max_version, "1.0.0");
+}
+
+#[test]
 fn versions() {
     let (_b, app, middle) = ::app();
 
