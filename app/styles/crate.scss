@@ -127,21 +127,23 @@
 }
 
 @media only screen and (max-width: 639px) {
-    .white-rows div {
-        margin: auto auto 0.2rem auto;
-        text-align: center;
-    }
-    .white-rows > div .row {
-        flex-flow: column wrap;
-    }
-    .row > div.stats {
-        width: 100%;
-        display: flex;
-        margin: auto;
-    }
-    .crate-link {
-        text-align: center;
-        display: block;
+    #crates {
+        .white-rows div {
+            margin: auto auto 0.2rem auto;
+            text-align: center;
+        }
+        .white-rows > div .row {
+            flex-flow: column wrap;
+        }
+        .row > div.stats {
+            width: 100%;
+            display: flex;
+            margin: auto;
+        }
+        .crate-link {
+            text-align: center;
+            display: block;
+        }
     }
 }
 
