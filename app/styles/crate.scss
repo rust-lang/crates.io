@@ -25,10 +25,6 @@
         .team-info {
             @include flex-direction(column);
         }
-        h1 {
-            position: relative;
-            bottom: 0.3rem;
-        }
     }
     h1 {
         padding-left: 10px;
