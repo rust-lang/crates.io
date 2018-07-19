@@ -171,6 +171,7 @@ impl ConduitRequest {
     }
 }
 
+/// Serve a `conduit::Handler` on a thread pool
 pub struct Service<H> {
     pool: CpuPool,
     handler: Arc<H>,
@@ -227,6 +228,7 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
 }
 
 impl<H: conduit::Handler> Service<H> {
+    /// Create a multi-threaded `Service` from a `Handler`
     pub fn new(handler: H, threads: usize) -> Service<H> {
         Service {
             pool: CpuPool::new(threads),
@@ -234,6 +236,7 @@ impl<H: conduit::Handler> Service<H> {
         }
     }
 
+    /// Run the `Service` bound to a given `SocketAddr`
     pub fn run(&self, addr: SocketAddr) {
         let server = Server::bind(&addr).serve(self.clone());
         hyper::rt::run(server.map_err(|e| error!("Server error: {}", e)));
