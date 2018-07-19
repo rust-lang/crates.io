@@ -78,7 +78,7 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
 
     match mailgun_config {
         Some(mailgun_config) => {
-            let mut transport = SmtpTransport::simple_builder(mailgun_config.smtp_server)?
+            let mut transport = SmtpTransport::simple_builder(&mailgun_config.smtp_server)?
                 .credentials(Credentials::new(
                     mailgun_config.smtp_login,
                     mailgun_config.smtp_password,
