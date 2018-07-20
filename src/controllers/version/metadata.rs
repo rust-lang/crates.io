@@ -22,7 +22,8 @@ pub fn dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let deps = version.dependencies(&*conn)?;
-    let deps = deps.into_iter()
+    let deps = deps
+        .into_iter()
         .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
         .collect();
 

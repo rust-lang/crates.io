@@ -81,7 +81,8 @@ pub fn add_dependencies(
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
-    let git_and_new_dependencies = deps.iter()
+    let git_and_new_dependencies = deps
+        .iter()
         .map(|dep| {
             let krate = Crate::by_name(&dep.name)
                 .first::<Crate>(&*conn)

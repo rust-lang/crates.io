@@ -329,7 +329,8 @@ impl<'a> VersionBuilder<'a> {
                 .get_result(connection)?;
         }
 
-        let new_deps = self.dependencies
+        let new_deps = self
+            .dependencies
             .into_iter()
             .map(|(crate_id, target)| {
                 (
@@ -429,7 +430,8 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
-        let mut krate = self.krate
+        let mut krate = self
+            .krate
             .create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
@@ -732,10 +734,7 @@ fn new_crate_to_body_with_io(
     new_crate_to_body_with_tarball(new_crate, &tarball)
 }
 
-fn new_crate_to_body_with_tarball(
-    new_crate: &u::NewCrate,
-    tarball: &[u8],
-) -> Vec<u8> {
+fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
