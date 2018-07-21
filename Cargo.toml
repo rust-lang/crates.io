@@ -55,9 +55,11 @@ comrak = { version = "0.2.3", default-features = false }
 ammonia = "1.0.0"
 docopt = "0.8.1"
 itertools = "0.6.0"
-lettre = "0.6"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
+
+lettre = "0.8"
+lettre_email = "0.8"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
