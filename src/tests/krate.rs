@@ -182,10 +182,10 @@ fn index_queries() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
-        ::new_category("Category 1::Ba'r", "cat1::bar")
+        ::new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
@@ -1056,7 +1056,7 @@ fn summary_new_crates() {
             .downloads(1000)
             .expect_build(&conn);
 
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
@@ -1685,7 +1685,7 @@ fn good_categories() {
     ::sign_in(&mut req, &app);
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
     }
@@ -2135,7 +2135,7 @@ fn test_default_sort_recent() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Animal", "animal")
+        ::new_category("Animal", "animal", "animal crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &green_crate, &["animal"]).unwrap();

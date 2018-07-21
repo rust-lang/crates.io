@@ -531,10 +531,11 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .unwrap()
 }
 
-fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
+fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
     NewCategory {
-        category: category,
-        slug: slug,
+        category,
+        slug,
+        description,
     }
 }
 
