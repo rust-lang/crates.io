@@ -8,9 +8,9 @@
 
     <div class='white-rows'>
         <dl>
-          {{#each model as |slug|}}
-              <dt>{{slug.slug}}</dt>
-              <dd>{{slug.description}}</dd>
+          {{#each model as |category|}}
+              <dt data-test-category-slug={{category.slug}}>{{category.slug}}</dt>
+              <dd data-test-category-description={{category.slug}}>{{category.description}}</dd>
           {{/each}}
         </dl>
     </div>
