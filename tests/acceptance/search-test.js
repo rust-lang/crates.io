@@ -36,7 +36,7 @@ module('Acceptance | search', function(hooks) {
         assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
         assert
             .dom('[data-test-search-sort]')
-            .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads');
+            .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates');
         assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
         assert.dom('[data-test-crate-row="0"] [data-test-version-badge]').hasAttribute('alt', '0.0.16');
 
