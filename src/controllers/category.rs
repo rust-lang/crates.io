@@ -69,7 +69,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
 pub fn slugs(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let slugs = categories::table
-        .select((categories::slug, categories::slug))
+        .select((categories::slug, categories::slug, categories::description))
         .order(categories::slug)
         .load(&*conn)?;
 
@@ -77,6 +77,7 @@ pub fn slugs(req: &mut dyn Request) -> CargoResult<Response> {
     struct Slug {
         id: String,
         slug: String,
+        description: String,
     }
 
     #[derive(Serialize)]
