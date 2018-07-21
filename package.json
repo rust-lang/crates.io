@@ -76,7 +76,7 @@
     "normalize.css": "^7.0.0",
     "nyc": "^11.6.0",
     "prettier": "^1.13.4",
-    "qunit-dom": "^0.6.3",
+    "qunit-dom": "^0.7.1",
     "timekeeper": "^2.1.0"
   },
   "engines": {
