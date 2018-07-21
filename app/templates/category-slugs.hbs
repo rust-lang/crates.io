@@ -1,15 +1,17 @@
 {{ title 'Category Slugs' }}
 
-<div id='crates-heading'>
-    {{svg-jar "crate"}}
-    <h1>All Valid Category Slugs</h1>
-</div>
+<div id='category-slugs'>
+    <div id='crates-heading'>
+        {{svg-jar "crate"}}
+        <h1>All Valid Category Slugs</h1>
+    </div>
 
-<div class='white-rows'>
-    <dl>
-      {{#each model as |slug|}}
-          <dt>{{slug.slug}}</dt>
-          <dd>{{slug.description}}</dd>
-      {{/each}}
-    </dl>
+    <div class='white-rows'>
+        <dl>
+          {{#each model as |slug|}}
+              <dt>{{slug.slug}}</dt>
+              <dd>{{slug.description}}</dd>
+          {{/each}}
+        </dl>
+    </div>
 </div>
