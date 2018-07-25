@@ -19,7 +19,7 @@ pub enum AuthenticationSource {
 }
 
 impl Middleware for CurrentUser {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
+    fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {
             req.session()
@@ -62,7 +62,7 @@ pub trait RequestUser {
     fn authentication_source(&self) -> CargoResult<AuthenticationSource>;
 }
 
-impl<'a> RequestUser for Request + 'a {
+impl<'a> RequestUser for dyn Request + 'a {
     fn user(&self) -> CargoResult<&User> {
         self.extensions()
             .find::<User>()

@@ -10,17 +10,17 @@ use util::RequestProxy;
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct Head {
-    handler: Option<Box<Handler>>,
+    handler: Option<Box<dyn Handler>>,
 }
 
 impl AroundMiddleware for Head {
-    fn with_handler(&mut self, handler: Box<Handler>) {
+    fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for Head {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         if req.method() == Method::Head {
             let mut req = RequestProxy {
                 other: req,

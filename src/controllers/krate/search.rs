@@ -4,7 +4,7 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use models::{Crate, CrateBadge, OwnerKind, Version};
+use models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
 use schema::*;
 use views::EncodableCrate;
 
@@ -31,7 +31,7 @@ use models::krate::{canon_crate_name, ALL_COLUMNS};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub fn search(req: &mut Request) -> CargoResult<Response> {
+pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::sql_types::Bool;
 
     let conn = req.db_conn()?;
@@ -143,6 +143,8 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+    } else if sort == "recent-updates" {
+        query = query.order(crates::updated_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
     }
@@ -159,7 +161,8 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
 
-    let versions = Version::belonging_to(&crates)
+    let versions = crates
+        .versions()
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()

@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel;
 use diesel::associations::Identifiable;
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use license_exprs;
 use semver;
@@ -9,8 +10,10 @@ use url::Url;
 use app::App;
 use util::{human, CargoResult};
 
-use models::{Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
-             ReverseDependency, User, Version};
+use models::{
+    Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
+    ReverseDependency, User, Version,
+};
 use views::{EncodableCrate, EncodableCrateLinks};
 
 use models::helpers::with_count::*;
@@ -394,9 +397,8 @@ impl Crate {
     pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
         use schema::versions::dsl::*;
 
-        let vs = Version::belonging_to(self)
+        let vs = self.versions()
             .select(num)
-            .filter(yanked.eq(false))
             .load::<String>(conn)?
             .into_iter()
             .map(|s| semver::Version::parse(&s).unwrap());
@@ -555,5 +557,31 @@ mod tests {
             ),),),
             None
         );
+    }
+}
+
+pub trait CrateVersions {
+    fn versions(&self) -> versions::BoxedQuery<Pg> {
+        self.all_versions().filter(versions::yanked.eq(false))
+    }
+
+    fn all_versions(&self) -> versions::BoxedQuery<Pg>;
+}
+
+impl CrateVersions for Crate {
+    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+        Version::belonging_to(self).into_boxed()
+    }
+}
+
+impl CrateVersions for Vec<Crate> {
+    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+        self.as_slice().all_versions()
+    }
+}
+
+impl CrateVersions for [Crate] {
+    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+        Version::belonging_to(self).into_boxed()
     }
 }

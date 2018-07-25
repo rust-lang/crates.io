@@ -5,6 +5,7 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
+#![deny(bare_trait_objects)]
 #![recursion_limit = "256"]
 
 extern crate ammonia;
@@ -22,6 +23,7 @@ extern crate git2;
 extern crate hex;
 extern crate htmlescape;
 extern crate lettre;
+extern crate lettre_email;
 extern crate license_exprs;
 #[macro_use]
 extern crate log;

@@ -273,6 +273,7 @@ struct VersionBuilder<'a> {
     license_file: Option<&'a str>,
     features: HashMap<String, Vec<String>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
+    yanked: bool,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -287,6 +288,7 @@ impl<'a> VersionBuilder<'a> {
             license_file: None,
             features: HashMap::new(),
             dependencies: Vec::new(),
+            yanked: false,
         }
     }
 
@@ -300,21 +302,31 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    fn yanked(self, yanked: bool) -> Self {
+        Self { yanked, ..self }
+    }
+
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert_into;
+        use diesel::{insert_into, update};
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
             None => None,
         };
 
-        let vers = NewVersion::new(
+        let mut vers = NewVersion::new(
             crate_id,
             &self.num,
             &self.features,
             license,
             self.license_file,
         )?.save(connection, &[])?;
+
+        if self.yanked {
+            vers = update(&vers)
+                .set(versions::yanked.eq(true))
+                .get_result(connection)?;
+        }
 
         let new_deps = self.dependencies
             .into_iter()
@@ -532,10 +544,11 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .unwrap()
 }
 
-fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
+fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
     NewCategory {
-        category: category,
-        slug: slug,
+        category,
+        slug,
+        description,
     }
 }
 
@@ -707,7 +720,7 @@ fn new_crate_to_body_with_io(
 ) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
         for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));
@@ -717,6 +730,13 @@ fn new_crate_to_body_with_io(
         }
         t!(ar.finish());
     }
+    new_crate_to_body_with_tarball(new_crate, &tarball)
+}
+
+fn new_crate_to_body_with_tarball(
+    new_crate: &u::NewCrate,
+    tarball: &[u8],
+) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(

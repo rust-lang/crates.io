@@ -24,7 +24,7 @@ use views::{EncodableCrate, EncodableCrateUpload};
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut Request) -> CargoResult<Response> {
+pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let app = Arc::clone(req.app());
     let (new_crate, user) = parse_new_headers(req)?;
 
@@ -192,7 +192,7 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, User)> {
+fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let amt = u64::from(read_le_u32(req.body())?);
     let max = req.app().config.max_upload_size;

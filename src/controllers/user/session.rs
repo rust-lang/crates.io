@@ -21,7 +21,7 @@ use models::NewUser;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
+pub fn github_authorize(req: &mut dyn Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
     let state: String = thread_rng().gen_ascii_chars().take(16).collect();
     req.session()
@@ -68,7 +68,7 @@ pub fn github_authorize(req: &mut Request) -> CargoResult<Response> {
 ///     }
 /// }
 /// ```
-pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
+pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
     // Parse the url query
     let mut query = req.query();
     let code = query.remove("code").unwrap_or_default();
@@ -117,7 +117,7 @@ pub fn github_access_token(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /logout` route.
-pub fn logout(req: &mut Request) -> CargoResult<Response> {
+pub fn logout(req: &mut dyn Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
