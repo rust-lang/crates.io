@@ -23,6 +23,7 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use {CrateList, CrateMeta, GoodCrate};
 
+use Bad;
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
@@ -1138,7 +1139,7 @@ fn new_krate_dependency_missing() {
     let mut req = ::new_req_full(Arc::clone(&app), ::krate("foo_missing"), "1.0.0", vec![dep]);
     ::sign_in(&mut req, &app);
     let mut response = ok_resp!(middle.call(&mut req));
-    let json = ::json::<::Bad>(&mut response);
+    let json = ::json::<Bad>(&mut response);
     assert!(
         json.errors[0]
             .detail
@@ -1348,7 +1349,7 @@ fn dependencies() {
 
     req.with_path("/api/v1/crates/foo_deps/1.0.2/dependencies");
     let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<::Bad>(&mut response);
+    ::json::<Bad>(&mut response);
 }
 
 #[test]
@@ -1524,7 +1525,7 @@ fn yank_not_owner() {
     req.with_method(Method::Delete)
         .with_path("/api/v1/crates/foo_not/1.0.0/yank");
     let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<::Bad>(&mut response);
+    ::json::<Bad>(&mut response);
 }
 
 #[test]
@@ -1794,7 +1795,7 @@ fn bad_keywords() {
         let mut req = ::new_req_with_keywords(Arc::clone(&app), krate, "1.0.0", kws);
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<::Bad>(&mut response);
+        ::json::<Bad>(&mut response);
     }
     {
         let krate = ::krate("foo_bad_key2");
@@ -1802,7 +1803,7 @@ fn bad_keywords() {
         let mut req = ::new_req_with_keywords(Arc::clone(&app), krate, "1.0.0", kws);
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<::Bad>(&mut response);
+        ::json::<Bad>(&mut response);
     }
     {
         let krate = ::krate("foo_bad_key_3");
@@ -1810,7 +1811,7 @@ fn bad_keywords() {
         let mut req = ::new_req_with_keywords(Arc::clone(&app), krate, "1.0.0", kws);
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<::Bad>(&mut response);
+        ::json::<Bad>(&mut response);
     }
     {
         let krate = ::krate("foo_bad_key4");
@@ -1818,7 +1819,7 @@ fn bad_keywords() {
         let mut req = ::new_req_with_keywords(Arc::clone(&app), krate, "1.0.0", kws);
         ::sign_in_as(&mut req, &user);
         let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<::Bad>(&mut response);
+        ::json::<Bad>(&mut response);
     }
 }
 

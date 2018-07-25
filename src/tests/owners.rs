@@ -6,6 +6,7 @@ use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
 
+use Bad;
 use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
 use views::{
@@ -151,7 +152,7 @@ fn owners_can_remove_self() {
     let body = r#"{"users":["firstowner"]}"#;
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<::Bad>(&mut response);
+    let json = ::json::<Bad>(&mut response);
     assert!(
         json.errors[0]
             .detail
@@ -220,7 +221,7 @@ fn owners_can_remove_self() {
     let body = r#"{"users":["secondowner"]}"#;
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<::Bad>(&mut response);
+    let json = ::json::<Bad>(&mut response);
     assert!(
         json.errors[0]
             .detail
