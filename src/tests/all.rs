@@ -425,6 +425,11 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    fn crate_size(mut self, size: i32) -> Self {
+        self.krate.crate_size = Some(size);
+        self
+    }
+
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 

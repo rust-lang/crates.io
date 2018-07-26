@@ -515,6 +515,7 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
+            .crate_size(54321)
             .expect_build(&conn);
     }
 
@@ -527,6 +528,7 @@ fn show() {
     assert_eq!(json.krate.documentation, krate.documentation);
     assert_eq!(json.krate.keywords, Some(vec!["kw1".into()]));
     assert_eq!(json.krate.recent_downloads, Some(10));
+    assert_eq!(json.krate.crate_size, Some(54321));
     let versions = json.krate.versions.as_ref().unwrap();
     assert_eq!(versions.len(), 3);
     assert_eq!(json.versions.len(), 3);
@@ -685,6 +687,7 @@ fn new_krate() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
+    assert_eq!(json.krate.crate_size, None);
 }
 
 #[test]
