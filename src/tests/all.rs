@@ -521,7 +521,7 @@ fn sign_in_as(req: &mut Request, user: &User) {
 
 fn sign_in(req: &mut Request, app: &App) -> User {
     let conn = app.diesel_database.get().unwrap();
-    let user = ::new_user("foo").create_or_update(&conn).unwrap();
+    let user = new_user("foo").create_or_update(&conn).unwrap();
     sign_in_as(req, &user);
     user
 }
@@ -561,7 +561,7 @@ fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str)
         let conn = app.diesel_database.get().unwrap();
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
-        ::CrateBuilder::new(krate, user.id).expect_build(&conn);
+        CrateBuilder::new(krate, user.id).expect_build(&conn);
     }
     req
 }
@@ -587,7 +587,7 @@ fn new_req_full(
     version: &str,
     deps: Vec<u::CrateDependency>,
 ) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -605,7 +605,7 @@ fn new_req_with_keywords(
     version: &str,
     kws: Vec<String>,
 ) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -623,7 +623,7 @@ fn new_req_with_categories(
     version: &str,
     cats: Vec<String>,
 ) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -641,7 +641,7 @@ fn new_req_with_badges(
     version: &str,
     badges: HashMap<String, HashMap<String, String>>,
 ) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(app, Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -731,10 +731,7 @@ fn new_crate_to_body_with_io(
     new_crate_to_body_with_tarball(new_crate, &tarball)
 }
 
-fn new_crate_to_body_with_tarball(
-    new_crate: &u::NewCrate,
-    tarball: &[u8],
-) -> Vec<u8> {
+fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(

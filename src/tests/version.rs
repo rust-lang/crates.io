@@ -10,6 +10,7 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
+use {app, new_user, new_version, req, CrateBuilder, VersionBuilder};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -22,18 +23,18 @@ struct VersionResponse {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
 
     let (v1, v2) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("foo_vers_index", u.id)
-            .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
-            .version(::VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")))
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        CrateBuilder::new("foo_vers_index", u.id)
+            .version(VersionBuilder::new("2.0.0").license(Some("MIT")))
+            .version(VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")))
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)
@@ -57,13 +58,13 @@ fn index() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
     let v = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
-        ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
+        let user = new_user("foo").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
+        new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -73,17 +74,17 @@ fn show() {
 
 #[test]
 fn authors() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/foo_authors/1.0.0/authors",
     );
     {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap();
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        new_version(c.id, "1.0.0").save(&conn, &[]).unwrap();
     }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
@@ -96,12 +97,12 @@ fn authors() {
 
 #[test]
 fn record_rerendered_readme_time() {
-    let (_b, app, _middle) = ::app();
+    let (_b, app, _middle) = app();
     let version = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap()
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        new_version(c.id, "1.0.0").save(&conn, &[]).unwrap()
     };
     {
         let conn = app.diesel_database.get().unwrap();

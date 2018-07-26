@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use App;
-
 use models::{Badge, Crate, MaintenanceStatus};
+use {app, new_user, App, CrateBuilder};
 
 struct BadgeRef {
     appveyor: Badge,
@@ -27,12 +26,12 @@ struct BadgeRef {
 }
 
 fn set_up() -> (Arc<App>, Crate, BadgeRef) {
-    let (_b, app, _middle) = ::app();
+    let (_b, app, _middle) = app();
 
     let krate = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
     };
 
     let appveyor = Badge::Appveyor {

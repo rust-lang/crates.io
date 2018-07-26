@@ -11,7 +11,7 @@ use git2;
 use oauth2;
 use scheduled_thread_pool::ScheduledThreadPool;
 
-use {db, Config};
+use {db, Config, Env};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
@@ -56,25 +56,25 @@ impl App {
 
         let db_pool_size = match (env::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
-            (_, ::Env::Production) => 10,
+            (_, Env::Production) => 10,
             _ => 1,
         };
 
         let db_min_idle = match (env::var("DB_MIN_IDLE"), config.env) {
             (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
-            (_, ::Env::Production) => Some(5),
+            (_, Env::Production) => Some(5),
             _ => None,
         };
 
         let db_helper_threads = match (env::var("DB_HELPER_THREADS"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            (_, ::Env::Production) => 3,
+            (_, Env::Production) => 3,
             _ => 1,
         };
 
         let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
-            (_, ::Env::Production) => 10,
+            (_, Env::Production) => 10,
             _ => 30,
         };
 
