@@ -66,7 +66,6 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             repository: repo,
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
-            crate_size: new_crate.crate_size,
         };
 
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
@@ -103,7 +102,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let license = new_crate.license.clone();
 
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?
+        let version = NewVersion::new(krate.id, vers, &features, license, license_file, new_crate.crate_size)?
             .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies

@@ -27,6 +27,7 @@ pub struct Version {
     pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
+    pub crate_size: Option<i32>
 }
 
 #[derive(Insertable, Debug)]
@@ -36,6 +37,7 @@ pub struct NewVersion {
     num: String,
     features: serde_json::Value,
     license: Option<String>,
+    crate_size: Option<i32>
 }
 
 impl Version {
@@ -49,6 +51,7 @@ impl Version {
             features,
             yanked,
             license,
+            crate_size,
             ..
         } = self;
         let num = num.to_string();
@@ -69,6 +72,7 @@ impl Version {
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
+            crate_size
         }
     }
 
@@ -117,6 +121,7 @@ impl NewVersion {
         features: &HashMap<String, Vec<String>>,
         license: Option<String>,
         license_file: Option<&str>,
+        crate_size: Option<i32>,
     ) -> CargoResult<Self> {
         let features = serde_json::to_value(features)?;
 
@@ -125,6 +130,7 @@ impl NewVersion {
             num: num.to_string(),
             features,
             license,
+            crate_size,
         };
 
         new_version.validate_license(license_file)?;
@@ -200,6 +206,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
         serde_json::Value,
         bool,
         Option<String>,
+        Option<i32>,
     );
 
     fn build(row: Self::Row) -> Self {
@@ -213,6 +220,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             features: row.6,
             yanked: row.7,
             license: row.8,
+            crate_size: row.9
         }
     }
 }

@@ -320,6 +320,7 @@ impl<'a> VersionBuilder<'a> {
             &self.features,
             license,
             self.license_file,
+            None,
         )?.save(connection, &[])?;
 
         if self.yanked {
@@ -425,11 +426,6 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn crate_size(mut self, size: i32) -> Self {
-        self.krate.crate_size = Some(size);
-        self
-    }
-
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
@@ -495,9 +491,9 @@ impl<'a> CrateBuilder<'a> {
     }
 }
 
-fn new_version(crate_id: i32, num: &str) -> NewVersion {
+fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -515,7 +511,6 @@ fn krate(name: &str) -> Crate {
         license: None,
         repository: None,
         max_upload_size: None,
-        crate_size: None,
     }
 }
 
@@ -700,7 +695,7 @@ fn new_req_body(
             repository: krate.repository,
             badges: Some(badges),
             links: None,
-            crate_size: krate.crate_size,
+            crate_size: None,
         },
         &[],
     )

@@ -18,7 +18,6 @@ export default BaseSerializer.extend({
         'repository',
         'updated_at',
         'versions',
-        'crate_size',
     ],
 
     links(crate) {

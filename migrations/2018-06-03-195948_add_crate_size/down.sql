@@ -1,2 +1,2 @@
-ALTER TABLE crates 
+ALTER TABLE versions
 DROP COLUMN crate_size;

@@ -23,7 +23,6 @@ export default [
         repository: 'https://github.com/thehydroimpulse/nanomsg.rs',
         updated_at: '2016-12-28T08:40:00Z',
         versions: [40906, 40905, 28431, 21273, 18445, 17384, 13574, 9014, 8236, 7190, 4944, 940, 924],
-        crate_size: 8123545,
         _extra_downloads: [
             {
                 date: '2017-02-02',

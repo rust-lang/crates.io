@@ -49,7 +49,6 @@ pub struct Crate {
     pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
-    pub crate_size: Option<i32>,
 }
 
 /// We literally never want to select `textsearchable_index_col`
@@ -68,7 +67,6 @@ type AllColumns = (
     crates::license,
     crates::repository,
     crates::max_upload_size,
-    crates::crate_size,
 );
 
 pub const ALL_COLUMNS: AllColumns = (
@@ -85,7 +83,6 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::license,
     crates::repository,
     crates::max_upload_size,
-    crates::crate_size,
 );
 
 pub const MAX_NAME_LENGTH: usize = 64;
@@ -108,7 +105,6 @@ pub struct NewCrate<'a> {
     pub readme_file: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
-    pub crate_size: Option<i32>,
     pub license: Option<&'a str>,
 }
 
@@ -301,7 +297,6 @@ impl Crate {
             badges,
             exact_match,
             recent_downloads,
-            None,
         )
     }
 
@@ -315,7 +310,6 @@ impl Crate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
-        crate_size: Option<i32>,
     ) -> EncodableCrate {
         let Crate {
             name,
@@ -354,7 +348,6 @@ impl Crate {
             exact_match,
             description,
             repository,
-            crate_size,
             links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{}/downloads", name),
                 versions: versions_link,

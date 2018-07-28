@@ -21,4 +21,5 @@ export default DS.Model.extend({
     crateName: computed('crate', function() {
         return this.belongsTo('crate').id();
     }),
+    crate_size: DS.attr('number'),
 });
