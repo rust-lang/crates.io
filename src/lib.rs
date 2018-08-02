@@ -142,7 +142,7 @@ impl conduit::Request for ConduitRequest {
     /// Returns the value of the `Host` header
     ///
     /// If the header is not present or invalid UTF-8, then the empty string is returned
-    fn host(&self) -> conduit::Host {
+    fn host(&self) -> conduit::Host<'_> {
         let host = self.parts
             .headers()
             .get("host")
