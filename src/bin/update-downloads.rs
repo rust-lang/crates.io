@@ -1,4 +1,5 @@
 #![deny(warnings)]
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
 extern crate cargo_registry;
 #[macro_use]
