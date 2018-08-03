@@ -28,7 +28,7 @@ impl<'a> Request for RequestProxy<'a> {
     fn scheme(&self) -> conduit::Scheme {
         self.other.scheme()
     }
-    fn host(&self) -> conduit::Host {
+    fn host(&self) -> conduit::Host<'_> {
         self.other.host()
     }
     fn virtual_root(&self) -> Option<&str> {

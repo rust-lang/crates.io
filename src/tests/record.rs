@@ -329,7 +329,7 @@ fn replay_http(
 }
 
 impl GhUser {
-    pub fn user(&'static self) -> NewUser {
+    pub fn user(&'static self) -> NewUser<'_> {
         self.init.call_once(|| self.init());
         let mut u = ::new_user(self.login);
         u.gh_access_token = Cow::Owned(self.token());
