@@ -30,7 +30,8 @@ pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
         increment_download_counts(req, crate_name, version)?;
     }
 
-    let redirect_url = req.app()
+    let redirect_url = req
+        .app()
         .config
         .uploader
         .crate_location(crate_name, version)
@@ -69,7 +70,8 @@ fn increment_download_counts(
 pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
-    let cutoff_end_date = req.query()
+    let cutoff_end_date = req
+        .query()
         .get("before_date")
         .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
         .unwrap_or_else(|| Utc::today().naive_utc());

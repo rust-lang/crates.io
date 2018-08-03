@@ -88,7 +88,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             )));
         }
 
-        let length = req.content_length()
+        let length = req
+            .content_length()
             .chain_error(|| human("missing header: Content-Length"))?;
         let max = krate
             .max_upload_size
@@ -134,7 +135,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
         let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) = app.config
+        let (cksum, mut crate_bomb, mut readme_bomb) = app
+            .config
             .uploader
             .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
         version.record_readme_rendering(&conn)?;

@@ -42,7 +42,8 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     let max_size = 2000;
-    let length = req.content_length()
+    let length = req
+        .content_length()
         .chain_error(|| bad_request("missing header: Content-Length"))?;
 
     if length > max_size {

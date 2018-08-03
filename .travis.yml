@@ -56,7 +56,7 @@ matrix:
     - rust: stable
       script:
         - rustup component add rustfmt-preview
-        - cargo fmt -- --write-mode=diff
+        - cargo fmt -- --check
         - cargo build
         - cargo test
         - npm install

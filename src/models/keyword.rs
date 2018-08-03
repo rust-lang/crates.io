@@ -55,7 +55,8 @@ impl Keyword {
             return false;
         }
         name.chars().next().unwrap().is_alphanumeric()
-            && name.chars()
+            && name
+                .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }

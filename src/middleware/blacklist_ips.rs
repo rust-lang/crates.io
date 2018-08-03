@@ -27,7 +27,8 @@ impl AroundMiddleware for BlockIps {
 
 impl Handler for BlockIps {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        let has_blacklisted_ip = req.headers()
+        let has_blacklisted_ip = req
+            .headers()
             .find("X-Forwarded-For")
             .unwrap()
             .iter()

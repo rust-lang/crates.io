@@ -5,9 +5,9 @@ use dotenv::dotenv;
 use util::{bad_request, CargoResult};
 
 use lettre::file::FileEmailTransport;
-use lettre::EmailTransport;
-use lettre::smtp::SmtpTransport;
 use lettre::smtp::authentication::{Credentials, Mechanism};
+use lettre::smtp::SmtpTransport;
+use lettre::EmailTransport;
 
 use lettre_email::{Email, EmailBuilder};
 

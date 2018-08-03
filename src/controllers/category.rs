@@ -40,7 +40,8 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let cat = categories::table
         .filter(categories::slug.eq(::lower(slug)))
         .first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&conn)?
+    let subcats = cat
+        .subcategories(&conn)?
         .into_iter()
         .map(Category::encodable)
         .collect();
