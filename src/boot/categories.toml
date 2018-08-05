@@ -375,6 +375,12 @@ Loading and parsing of data formats related to 2D or 3D rendering, like \
 3D models or animation sheets.\
 """
 
+[robotics]
+name = "Robotics"
+description = """
+Crates related to robotics.\
+"""
+
 [rust-patterns]
 name = "Rust patterns"
 description = """
