@@ -21,7 +21,7 @@ use tar;
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
-use {CrateList, CrateMeta, GoodCrate};
+use {CrateList, CrateMeta, GoodCrate, CrateResponse};
 
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
@@ -34,13 +34,6 @@ use views::{
 #[derive(Deserialize)]
 struct VersionsList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct CrateResponse {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
-    versions: Vec<EncodableVersion>,
-    keywords: Vec<EncodableKeyword>,
 }
 #[derive(Deserialize)]
 struct Deps {

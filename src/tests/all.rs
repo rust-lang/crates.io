@@ -44,7 +44,7 @@ use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, 
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
-use views::EncodableCrate;
+use views::{EncodableCrate, EncodableVersion, EncodableKeyword};
 
 macro_rules! t {
     ($e:expr) => {
@@ -123,6 +123,13 @@ struct Warnings {
 #[derive(Deserialize)]
 struct CrateMeta {
     total: i32,
+}
+#[derive(Deserialize)]
+struct CrateResponse {
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
+    versions: Vec<EncodableVersion>,
+    keywords: Vec<EncodableKeyword>,
 }
 
 fn app() -> (

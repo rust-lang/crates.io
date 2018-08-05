@@ -10,6 +10,7 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
+use {GoodCrate, CrateResponse};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -109,4 +110,41 @@ fn record_rerendered_readme_time() {
         version.record_readme_rendering(&conn).unwrap();
         version.record_readme_rendering(&conn).unwrap();
     }
+}
+
+#[test]
+fn version_size() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(Arc::clone(&app), "foo_version_size", "1.0.0");
+    ::sign_in(&mut req, &app);
+    let mut response = ok_resp!(middle.call(&mut req));
+    let json: GoodCrate = ::json(&mut response);
+    assert_eq!(json.krate.name, "foo_version_size");
+
+    // Add a file to version 2 so that it's a different size than version 1
+    let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
+    let body = ::new_crate_to_body(&::new_crate("foo_version_size", "2.0.0"), &files);
+
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path("/api/v1/crates/new")
+                .with_method(Method::Put)
+                .with_body(&body),
+        )
+    );
+    ::json::<GoodCrate>(&mut response);
+
+    let mut show_req = ::req(
+        Arc::clone(&app),
+        Method::Get,
+        "/api/v1/crates/foo_version_size",
+    );
+    let mut response = ok_resp!(middle.call(&mut show_req));
+    let json: CrateResponse = ::json(&mut response);
+
+    let version1 = json.versions.iter().find(|v| v.num == "1.0.0").expect("Could not find v1.0.0");
+    assert_eq!(version1.crate_size, Some(35));
+
+    let version2 = json.versions.iter().find(|v| v.num == "2.0.0").expect("Could not find v2.0.0");
+    assert_eq!(version2.crate_size, Some(91));
 }
