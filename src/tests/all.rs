@@ -159,7 +159,7 @@ fn app() -> (
         gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
-        max_upload_size: 1000,
+        max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
         api_protocol: api_protocol,
