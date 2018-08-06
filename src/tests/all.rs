@@ -514,6 +514,29 @@ fn krate(name: &str) -> Crate {
     }
 }
 
+fn new_crate(name: &str, version: &str) -> u::NewCrate {
+    u::NewCrate {
+        name: u::CrateName(name.to_string()),
+        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+        features: HashMap::new(),
+        deps: Vec::new(),
+        authors: vec!["foo".to_string()],
+        description: Some("desc".to_string()),
+        homepage: None,
+        documentation: None,
+        readme: None,
+        readme_file: None,
+        keywords: None,
+        categories: None,
+        license: Some("MIT".to_string()),
+        license_file: None,
+        repository: None,
+        badges: None,
+        links: None,
+        crate_size: None,
+    }
+}
+
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
