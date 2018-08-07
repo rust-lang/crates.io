@@ -540,7 +540,6 @@ fn new_crate(name: &str, version: &str) -> u::NewCrate {
         repository: None,
         badges: None,
         links: None,
-        crate_size: None,
     }
 }
 
@@ -725,7 +724,6 @@ fn new_req_body(
             repository: krate.repository,
             badges: Some(badges),
             links: None,
-            crate_size: None,
         },
         &[],
     )
