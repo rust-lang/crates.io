@@ -255,7 +255,8 @@ impl Crate {
 
     fn valid_ident(name: &str) -> bool {
         Self::valid_feature_name(name)
-            && name.chars()
+            && name
+                .chars()
                 .nth(0)
                 .map(char::is_alphabetic)
                 .unwrap_or(false)
@@ -263,7 +264,8 @@ impl Crate {
 
     pub fn valid_feature_name(name: &str) -> bool {
         !name.is_empty()
-            && name.chars()
+            && name
+                .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }
@@ -390,7 +392,8 @@ impl Crate {
     pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
         use schema::versions::dsl::*;
 
-        let vs = self.versions()
+        let vs = self
+            .versions()
             .select(num)
             .load::<String>(conn)?
             .into_iter()

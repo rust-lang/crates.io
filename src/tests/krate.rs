@@ -6,14 +6,14 @@ use std::io;
 use std::io::prelude::*;
 use std::sync::Arc;
 
+use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::dsl::*;
 use diesel::update;
-use flate2::Compression;
 use flate2::write::GzEncoder;
+use flate2::Compression;
 use git2;
-use self::diesel::prelude::*;
 use semver;
 use serde_json;
 use tar;

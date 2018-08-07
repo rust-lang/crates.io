@@ -25,7 +25,8 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
         .paginate(limit, offset)
         .load::<(Keyword, i64)>(&*conn)?;
     let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
-    let kws = data.into_iter()
+    let kws = data
+        .into_iter()
         .map(|(k, _)| k.encodable())
         .collect::<Vec<_>>();
 

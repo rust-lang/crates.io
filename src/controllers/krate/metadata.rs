@@ -160,7 +160,8 @@ pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let redirect_url = req.app()
+    let redirect_url = req
+        .app()
         .config
         .uploader
         .readme_location(crate_name, version)

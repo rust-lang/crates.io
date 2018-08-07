@@ -156,7 +156,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
-    let recent_downloads = data.iter()
+    let recent_downloads = data
+        .iter()
         .map(|&((_, _, s), _)| s.unwrap_or(0))
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();

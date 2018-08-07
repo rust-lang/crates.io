@@ -67,11 +67,13 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
         .paginate(limit, offset)
         .load::<((Version, String), i64)>(&*conn)?;
 
-    let more = data.get(0)
+    let more = data
+        .get(0)
         .map(|&(_, count)| count > offset + limit)
         .unwrap_or(false);
 
-    let versions = data.into_iter()
+    let versions = data
+        .into_iter()
         .map(|((version, crate_name), _)| version.encodable(&crate_name))
         .collect();
 
