@@ -108,7 +108,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         // this file length.
         let file_length = read_le_u32(req.body())?;
 
-        let content_length = req.content_length()
+        let content_length = req
+            .content_length()
             .chain_error(|| human("missing header: Content-Length"))?;
         let max = krate
             .max_upload_size
@@ -130,9 +131,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             license_file,
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
-            Some(file_length as i32)
-        )?
-            .save(&conn, &new_crate.authors)?;
+            Some(file_length as i32),
+        )?.save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -163,10 +163,15 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
         let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) = app
-            .config
-            .uploader
-            .upload_crate(req, &krate, readme, file_length, max, max_unpack, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload_crate(
+            req,
+            &krate,
+            readme,
+            file_length,
+            max,
+            max_unpack,
+            vers,
+        )?;
         version.record_readme_rendering(&conn)?;
 
         let mut hex_cksum = String::new();

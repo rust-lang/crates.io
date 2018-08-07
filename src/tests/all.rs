@@ -45,7 +45,7 @@ use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, 
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
-use views::{EncodableCrate, EncodableVersion, EncodableKeyword};
+use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
 
 macro_rules! t {
     ($e:expr) => {

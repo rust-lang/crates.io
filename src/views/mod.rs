@@ -193,7 +193,7 @@ pub struct EncodableVersion {
     // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
     pub links: EncodableVersionLinks,
-    pub crate_size: Option<i32>
+    pub crate_size: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

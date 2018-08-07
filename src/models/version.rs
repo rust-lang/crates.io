@@ -27,7 +27,7 @@ pub struct Version {
     pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
-    pub crate_size: Option<i32>
+    pub crate_size: Option<i32>,
 }
 
 #[derive(Insertable, Debug)]
@@ -37,7 +37,7 @@ pub struct NewVersion {
     num: String,
     features: serde_json::Value,
     license: Option<String>,
-    crate_size: Option<i32>
+    crate_size: Option<i32>,
 }
 
 impl Version {
@@ -72,7 +72,7 @@ impl Version {
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
-            crate_size
+            crate_size,
         }
     }
 
@@ -220,7 +220,7 @@ impl Queryable<versions::SqlType, Pg> for Version {
             features: row.6,
             yanked: row.7,
             license: row.8,
-            crate_size: row.9
+            crate_size: row.9,
         }
     }
 }

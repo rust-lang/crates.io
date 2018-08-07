@@ -10,7 +10,7 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
-use {GoodCrate, CrateResponse};
+use {CrateResponse, GoodCrate};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -64,7 +64,9 @@ fn show() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
-        ::new_version(krate.id, "2.0.0", Some(1234)).save(&conn, &[]).unwrap()
+        ::new_version(krate.id, "2.0.0", Some(1234))
+            .save(&conn, &[])
+            .unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -142,9 +144,17 @@ fn version_size() {
     let mut response = ok_resp!(middle.call(&mut show_req));
     let json: CrateResponse = ::json(&mut response);
 
-    let version1 = json.versions.iter().find(|v| v.num == "1.0.0").expect("Could not find v1.0.0");
+    let version1 = json
+        .versions
+        .iter()
+        .find(|v| v.num == "1.0.0")
+        .expect("Could not find v1.0.0");
     assert_eq!(version1.crate_size, Some(35));
 
-    let version2 = json.versions.iter().find(|v| v.num == "2.0.0").expect("Could not find v2.0.0");
+    let version2 = json
+        .versions
+        .iter()
+        .find(|v| v.num == "2.0.0")
+        .expect("Could not find v2.0.0");
     assert_eq!(version2.crate_size, Some(91));
 }

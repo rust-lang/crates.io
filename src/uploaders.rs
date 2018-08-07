@@ -6,8 +6,8 @@ use s3;
 use semver;
 use tar;
 
-use util::{human, internal, CargoResult, ChainError};
 use util::LimitErrorReader;
+use util::{human, internal, CargoResult, ChainError};
 
 use std::env;
 use std::fs::{self, File};

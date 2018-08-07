@@ -21,7 +21,7 @@ use tar;
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
-use {CrateList, CrateMeta, GoodCrate, CrateResponse};
+use {CrateList, CrateMeta, CrateResponse, GoodCrate};
 
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
@@ -927,8 +927,10 @@ fn new_krate_gzip_bomb() {
     ::sign_in(&mut req, &app);
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
-    let body =
-        ::new_crate_to_body_with_io(&::new_crate("foo", "1.1.0"), &mut [("foo-1.1.0/a", &mut body, len)]);
+    let body = ::new_crate_to_body_with_io(
+        &::new_crate("foo", "1.1.0"),
+        &mut [("foo-1.1.0/a", &mut body, len)],
+    );
     let json = bad_resp!(middle.call(req.with_body(&body)));
     assert!(
         json.errors[0]
@@ -1308,7 +1310,9 @@ fn dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         let c1 = ::CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = ::new_version(c1.id, "1.0.0", None).save(&conn, &[]).unwrap();
+        let v = ::new_version(c1.id, "1.0.0", None)
+            .save(&conn, &[])
+            .unwrap();
         let c2 = ::CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         ::new_dependency(&conn, &v, &c2);
     }
