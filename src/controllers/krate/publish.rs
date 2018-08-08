@@ -1,6 +1,5 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -9,7 +8,7 @@ use serde_json;
 
 use git;
 use render;
-use util::{internal, ChainError};
+use util::{internal, ChainError, Maximums};
 use util::{read_fill, read_le_u32};
 
 use controllers::prelude::*;
@@ -111,12 +110,18 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let content_length = req
             .content_length()
             .chain_error(|| human("missing header: Content-Length"))?;
-        let max = krate
-            .max_upload_size
-            .map(|m| m as u64)
-            .unwrap_or(app.config.max_upload_size);
-        if content_length > max {
-            return Err(human(&format_args!("max upload size is: {}", max)));
+
+        let maximums = Maximums::new(
+            krate.max_upload_size,
+            app.config.max_upload_size,
+            app.config.max_unpack_size,
+        );
+
+        if content_length > maximums.max_upload_size {
+            return Err(human(&format_args!(
+                "max upload size is: {}",
+                maximums.max_upload_size
+            )));
         }
 
         // This is only redundant for now. Eventually the duplication will be removed.
@@ -162,16 +167,10 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) = app.config.uploader.upload_crate(
-            req,
-            &krate,
-            readme,
-            file_length,
-            max,
-            max_unpack,
-            vers,
-        )?;
+        let (cksum, mut crate_bomb, mut readme_bomb) =
+            app.config
+                .uploader
+                .upload_crate(req, &krate, readme, file_length, maximums, vers)?;
         version.record_readme_rendering(&conn)?;
 
         let mut hex_cksum = String::new();

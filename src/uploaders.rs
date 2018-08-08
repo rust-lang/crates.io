@@ -7,7 +7,7 @@ use semver;
 use tar;
 
 use util::LimitErrorReader;
-use util::{human, internal, CargoResult, ChainError};
+use util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -162,16 +162,15 @@ impl Uploader {
         krate: &Crate,
         readme: Option<String>,
         file_length: u32,
-        max: u64,
-        max_unpack: u64,
+        maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body, max_unpack)?;
+            LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
+            verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(
                 app.handle(),
                 &path,
