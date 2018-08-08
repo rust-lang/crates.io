@@ -6,8 +6,8 @@ use s3;
 use semver;
 use tar;
 
-use util::{human, internal, CargoResult, ChainError};
-use util::{read_le_u32, LimitErrorReader};
+use util::LimitErrorReader;
+use util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -111,7 +111,7 @@ impl Uploader {
         path: &str,
         body: &[u8],
         content_type: &str,
-        content_length: u64,
+        file_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
         let hash = hash(body);
         match *self {
@@ -120,7 +120,7 @@ impl Uploader {
                     let mut response = Vec::new();
                     {
                         let mut s3req =
-                            bucket.put(&mut handle, path, body, content_type, content_length);
+                            bucket.put(&mut handle, path, body, content_type, file_length);
                         s3req
                             .write_function(|data| {
                                 response.extend(data);
@@ -161,23 +161,22 @@ impl Uploader {
         req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
-        max: u64,
-        max_unpack: u64,
+        file_length: u32,
+        maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
-            let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body, max_unpack)?;
+            LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
+            verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(
                 app.handle(),
                 &path,
                 &body,
                 "application/x-tar",
-                u64::from(length),
+                u64::from(file_length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the

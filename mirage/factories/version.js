@@ -27,4 +27,5 @@ export default Factory.extend({
         let crate = server.schema.crates.find(version.crate);
         crate.update({ versions: crate.versions.concat(parseInt(version.id, 10)) });
     },
+    crate_size: () => faker.random.number({ max: 10000000 }),
 });

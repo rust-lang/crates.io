@@ -6,7 +6,7 @@
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![deny(bare_trait_objects)]
-#![recursion_limit = "128"]
+#![recursion_limit = "256"]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
 extern crate ammonia;
