@@ -223,7 +223,7 @@ where
 
 static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
-fn new_user(login: &str) -> NewUser {
+fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
         gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
@@ -246,7 +246,7 @@ fn user(login: &str) -> User {
     }
 }
 
-fn new_team(login: &str) -> NewTeam {
+fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
         github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         login: login,
@@ -376,7 +376,7 @@ struct CrateBuilder<'a> {
 }
 
 impl<'a> CrateBuilder<'a> {
-    fn new(name: &str, owner_id: i32) -> CrateBuilder {
+    fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
             owner_id: owner_id,
             krate: NewCrate {
@@ -588,7 +588,11 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str) -> MockRequest {
+fn request_with_user_and_mock_crate(
+    app: &Arc<App>,
+    user: &NewUser<'_>,
+    krate: &str,
+) -> MockRequest {
     let mut req = new_req(Arc::clone(app), krate, "1.0.0");
     {
         let conn = app.diesel_database.get().unwrap();

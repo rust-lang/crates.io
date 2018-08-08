@@ -42,7 +42,7 @@ pub trait CargoError: Send + fmt::Display + 'static {
 }
 
 impl fmt::Debug for Box<dyn CargoError> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
 }
@@ -150,7 +150,7 @@ impl<E: CargoError> CargoError for ChainedError<E> {
 }
 
 impl<E: CargoError> fmt::Display for ChainedError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} caused by {}", self.error, self.cause)
     }
 }
@@ -173,7 +173,7 @@ impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
             }
         }
         impl<E: fmt::Display> fmt::Display for Shim<E> {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.0.fmt(f)
             }
         }
@@ -210,7 +210,7 @@ struct ConcreteCargoError {
 }
 
 impl fmt::Display for ConcreteCargoError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
         if let Some(ref s) = self.detail {
             write!(f, " ({})", s)?;
@@ -251,7 +251,7 @@ impl CargoError for NotFound {
 }
 
 impl fmt::Display for NotFound {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Not Found".fmt(f)
     }
 }
@@ -276,7 +276,7 @@ impl CargoError for Unauthorized {
 }
 
 impl fmt::Display for Unauthorized {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "must be logged in to perform that action".fmt(f)
     }
 }
@@ -300,7 +300,7 @@ impl CargoError for BadRequest {
 }
 
 impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
@@ -352,7 +352,7 @@ pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
         }
     }
     impl fmt::Display for E {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.0)?;
 
             let mut err = &*self.0;
