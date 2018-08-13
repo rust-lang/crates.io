@@ -170,7 +170,7 @@ dependencies = [
  "conduit-router 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-test 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cookie 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cookie 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive_deref 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -380,7 +380,15 @@ version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ring 0.11.1 (git+https://github.com/SergioBenitez/ring?branch=v0.11)",
+ "ring 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cookie"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -798,6 +806,11 @@ dependencies = [
  "futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "num_cpus 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "gcc"
+version = "0.3.54"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "generic-array"
@@ -1566,10 +1579,10 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.11.1"
-source = "git+https://github.com/SergioBenitez/ring?branch=v0.11#ca9fe986137a2dd494c1cd318ae0a04797aac4b0"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2313,6 +2326,7 @@ dependencies = [
 "checksum conduit-static 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c5dadad9ced84acc9f67c778c25cec1c1065d6503d283cc6a1b2a4e545752d51"
 "checksum conduit-test 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "75684ce3713e1507fbf85796c9e74e7c4c8148bc82bcf823fec83b551189d429"
 "checksum constant_time_eq 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8ff012e225ce166d4422e0e78419d901719760f62ae2b7969ca6b564d1b54a9e"
+"checksum cookie 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1465f8134efa296b4c19db34d909637cb2bf0f7aaf21299e23e18fa29ac557cf"
 "checksum cookie 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "477eb650753e319be2ae77ec368a58c638f9f0c4d941c39bad95e950fb1d1d0d"
 "checksum core-foundation 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "25bfd746d203017f7d5cbd31ee5d8e17f94b6521c7af77ece6c9e4b2d4b16c67"
 "checksum core-foundation-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "065a5d7ffdcbc8fa145d6f0746f3555025b9097a9e9cda59f7467abae670c78d"
@@ -2361,6 +2375,7 @@ dependencies = [
 "checksum futf 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "51f93f3de6ba1794dcd5810b3546d004600a59a98266487c8407bc4b24e398f3"
 "checksum futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)" = "1a70b146671de62ec8c8ed572219ca5d594d9b06c0b364d5e67b722fc559b48c"
 "checksum futures-cpupool 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "e86f49cc0d92fe1b97a5980ec32d56208272cbb00f15044ea9e2799dde766fdf"
+"checksum gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)" = "5e33ec290da0d127825013597dbdfc28bee4964690c7ce1166cbc2a7bd08b1bb"
 "checksum generic-array 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ef25c5683767570c2bbd7deba372926a55eaae9982d7726ee2a1050239d45b9d"
 "checksum git2 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)" = "0c1c0203d653f4140241da0c1375a404f0a397249ec818cd2076c6280c50f6fa"
 "checksum h2 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c91a0ee01fcf961ae004d88f1a77fc47dc5db6164f7d57605cc9f2c93d535686"
@@ -2449,7 +2464,7 @@ dependencies = [
 "checksum regex-syntax 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "f9ec002c35e86791825ed294b50008eea9ddfc8def4420124fbc6b08db834957"
 "checksum regex-syntax 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ad890a5eef7953f55427c50575c680c42841653abd2b028b68cd223d157f62db"
 "checksum regex-syntax 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "05b06a75f5217880fc5e905952a42750bf44787e56a6c6d6852ed0992f5e1d54"
-"checksum ring 0.11.1 (git+https://github.com/SergioBenitez/ring?branch=v0.11)" = "<none>"
+"checksum ring 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1f2a6dc7fc06a05e6de183c5b97058582e9da2de0c136eafe49609769c507724"
 "checksum route-recognizer 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3255338088df8146ba63d60a9b8e3556f1146ce2973bc05a75181a42ce2256"
 "checksum rustc-demangle 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "aee45432acc62f7b9a108cc054142dac51f979e69e71ddce7d6fc7adf29e817e"
 "checksum rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)" = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
