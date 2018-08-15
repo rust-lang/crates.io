@@ -12,6 +12,8 @@ extern crate diesel;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
+#[macro_use]
+extern crate lazy_static;
 extern crate s3;
 extern crate semver;
 extern crate serde;
@@ -33,7 +35,7 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::Replica;
 use chrono::Utc;
-use conduit::{Method, Request};
+use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use flate2::write::GzEncoder;
@@ -787,4 +789,141 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
     ]);
     body.extend(tarball);
     body
+}
+
+/// A struct representing a browser session to be used for the duration of a test.
+/// Has useful methods for making common HTTP requests.
+struct BrowserSession {
+    // The bomb needs to be held in scope until the end of the test.
+    _bomb: record::Bomb,
+    middle: conduit_middleware::MiddlewareBuilder,
+    request: MockRequest,
+    _user: User,
+}
+
+impl BrowserSession {
+    /// Create a browser session logged in with an arbitrary user.
+    fn logged_in() -> Self {
+        let (bomb, app, middle) = app();
+
+        let mut request = MockRequest::new(Method::Get, "/");
+        let user = {
+            let conn = app.diesel_database.get().unwrap();
+            let user = new_user("foo").create_or_update(&conn).unwrap();
+            request.mut_extensions().insert(user.clone());
+            request.mut_extensions()
+                .insert(AuthenticationSource::SessionCookie);
+
+            user
+        };
+
+        BrowserSession {
+            _bomb: bomb, middle, request, _user: user,
+        }
+    }
+
+    /// Request the JSON used for a crate's page.
+    fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
+        self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
+        let mut response = ok_resp!(self.middle.call(&mut self.request));
+        json(&mut response)
+    }
+}
+
+lazy_static!{
+    static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
+        let mut empty_tarball = vec![];
+        {
+            let mut ar = tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
+            t!(ar.finish());
+        }
+        empty_tarball
+    };
+}
+
+/// A builder for constructing a crate for the purposes of testing publishing. If you only need
+/// a crate to exist and don't need to test behavior caused by the publish request, inserting
+/// a crate into the database directly by using CrateBuilder will be faster.
+struct PublishBuilder {
+    krate_name: String,
+    version: semver::Version,
+    tarball: Vec<u8>,
+}
+
+impl PublishBuilder {
+    /// Create a request to publish a crate with the given name, version 1.0.0, and no files
+    /// in its tarball.
+    fn new(krate_name: &str) -> Self {
+        PublishBuilder {
+            krate_name: krate_name.into(),
+            version: semver::Version::parse("1.0.0").unwrap(),
+            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+        }
+    }
+
+    /// Set the version of the crate being published to something other than the default of 1.0.0.
+    fn version(mut self, version: &str) -> Self {
+        self.version = semver::Version::parse(version).unwrap();
+        self
+    }
+
+    /// Set the files in the crate's tarball.
+    fn files(mut self, files: &[(&str, &[u8])]) -> Self {
+        let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
+        let files = files
+            .iter()
+            .zip(&mut slices)
+            .map(|(&(name, _), data)| {
+                let len = data.len() as u64;
+                (name, data as &mut Read, len)
+            })
+            .collect::<Vec<_>>();
+
+        let mut tarball = Vec::new();
+        {
+            let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+            for (name, ref mut data, size) in files {
+                let mut header = tar::Header::new_gnu();
+                t!(header.set_path(name));
+                header.set_size(size);
+                header.set_cksum();
+                t!(ar.append(&header, data));
+            }
+            t!(ar.finish());
+        }
+
+        self.tarball = tarball;
+        self
+    }
+
+    /// Publish the crate in the context of the given session, which must have a logged in user.
+    fn publish(self, session: &mut BrowserSession) {
+        let new_crate = u::NewCrate {
+            name: u::CrateName(self.krate_name.clone()),
+            vers: u::CrateVersion(self.version),
+            features: HashMap::new(),
+            deps: Vec::new(),
+            authors: vec!["foo".to_string()],
+            description: Some("description".to_string()),
+            homepage: None,
+            documentation: None,
+            readme: None,
+            readme_file: None,
+            keywords: Some(u::KeywordList(Vec::new())),
+            categories: Some(u::CategoryList(Vec::new())),
+            license: Some("MIT".to_string()),
+            license_file: None,
+            repository: None,
+            badges: Some(HashMap::new()),
+            links: None,
+        };
+
+        session.request
+            .with_method(Method::Put).with_path("/api/v1/crates/new")
+            .with_body(&::new_crate_to_body_with_tarball(&new_crate, &self.tarball));
+
+        let mut response = ok_resp!(session.middle.call(&mut session.request));
+        let json: GoodCrate = json(&mut response);
+        assert_eq!(json.krate.name, self.krate_name);
+    }
 }
