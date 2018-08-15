@@ -1,15 +1,14 @@
 #![deny(warnings)]
 
 extern crate cargo_registry;
-extern crate civet;
+extern crate conduit_hyper;
 extern crate env_logger;
 extern crate git2;
 
 use cargo_registry::{env, Env};
-use civet::Server;
+use conduit_hyper::Service;
 use std::env;
 use std::fs::{self, File};
-use std::sync::mpsc::channel;
 use std::sync::Arc;
 
 fn main() {
@@ -66,9 +65,8 @@ fn main() {
     } else {
         50
     };
-    let mut cfg = civet::Config::new();
-    cfg.port(port).threads(threads).keep_alive(true);
-    let _a = Server::start(cfg, app);
+    let addr = ([127, 0, 0, 1], port).into();
+    let server = Service::new(app, threads);
 
     println!("listening on port {}", port);
 
@@ -79,6 +77,5 @@ fn main() {
     }
 
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
-    let (_tx, rx) = channel::<()>();
-    rx.recv().unwrap();
+    server.run(addr);
 }
