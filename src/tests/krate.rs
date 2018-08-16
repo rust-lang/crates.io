@@ -2381,3 +2381,15 @@ fn new_krate_hard_links() {
     let body = ::new_crate_to_body_with_tarball(&::new_crate("foo", "1.1.0"), &tarball);
     bad_resp!(middle.call(req.with_body(&body)));
 }
+
+#[test]
+fn double_slash_in_publish_urls() {
+    // Turns out `cargo publish` actually makes a request to `crates.io//api/v1/crates/new`,
+    // so we should be testing that.
+    let (_b, app, middle) = ::app();
+    let mut req = ::req(app, Method::Put, "//api/v1/crates/new");
+    let new_crate = ::new_crate("foo_double_slash", "1.0.0");
+    req.with_body(&::new_crate_to_body(&new_crate, &[]));
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<GoodCrate>(&mut response);
+}
