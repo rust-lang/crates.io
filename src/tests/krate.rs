@@ -29,23 +29,17 @@ use views::{
     EncodableVersionDownload,
 };
 use {
-    app, krate, logout, new_category, new_crate_to_body, new_crate_to_body_with_io,
+    app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, request_with_user_and_mock_crate, sign_in,
-    sign_in_as, user, Bad, CrateBuilder, CrateList, CrateMeta, GoodCrate, VersionBuilder,
+    sign_in_as, user, Bad, CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate,
+    VersionBuilder,
 };
 
 #[derive(Deserialize)]
 struct VersionsList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct CrateResponse {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
-    versions: Vec<EncodableVersion>,
-    keywords: Vec<EncodableKeyword>,
 }
 #[derive(Deserialize)]
 struct Deps {
@@ -72,28 +66,6 @@ struct SummaryResponse {
     just_updated: Vec<EncodableCrate>,
     popular_keywords: Vec<EncodableKeyword>,
     popular_categories: Vec<EncodableCategory>,
-}
-
-fn new_crate(name: &str) -> u::NewCrate {
-    u::NewCrate {
-        name: u::CrateName(name.to_string()),
-        vers: u::CrateVersion(semver::Version::parse("1.1.0").unwrap()),
-        features: HashMap::new(),
-        deps: Vec::new(),
-        authors: vec!["foo".to_string()],
-        description: Some("desc".to_string()),
-        homepage: None,
-        documentation: None,
-        readme: None,
-        readme_file: None,
-        keywords: None,
-        categories: None,
-        license: Some("MIT".to_string()),
-        license_file: None,
-        repository: None,
-        badges: None,
-        links: None,
-    }
 }
 
 #[test]
@@ -921,7 +893,7 @@ fn new_krate_too_big() {
     let mut req = new_req(Arc::clone(&app), "foo_big", "1.0.0");
     sign_in(&mut req, &app);
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
-    let body = new_crate_to_body(&new_crate("foo_big"), &files);
+    let body = new_crate_to_body(&new_crate("foo_big", "1.0.0"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
@@ -938,7 +910,7 @@ fn new_krate_too_big_but_whitelisted() {
             .expect_build(&conn);
     }
     let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
-    let body = new_crate_to_body(&new_crate("foo_whitelist"), &files);
+    let body = new_crate_to_body(&new_crate("foo_whitelist", "1.1.0"), &files);
     let mut response = ok_resp!(middle.call(req.with_body(&body)));
     ::json::<GoodCrate>(&mut response);
 }
@@ -950,7 +922,7 @@ fn new_krate_wrong_files() {
     sign_in(&mut req, &app);
     let data: &[u8] = &[1];
     let files = [("foo-1.1.0/a", data), ("bar-1.1.0/a", data)];
-    let body = new_crate_to_body(&new_crate("foo"), &files);
+    let body = new_crate_to_body(&new_crate("foo", "1.1.0"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
@@ -961,7 +933,10 @@ fn new_krate_gzip_bomb() {
     sign_in(&mut req, &app);
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
-    let body = new_crate_to_body_with_io(&new_crate("foo"), &mut [("foo-1.1.0/a", &mut body, len)]);
+    let body = new_crate_to_body_with_io(
+        &new_crate("foo", "1.1.0"),
+        &mut [("foo-1.1.0/a", &mut body, len)],
+    );
     let json = bad_resp!(middle.call(req.with_body(&body)));
     assert!(
         json.errors[0]
@@ -1341,7 +1316,7 @@ fn dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = new_version(c1.id, "1.0.0").save(&conn, &[]).unwrap();
+        let v = new_version(c1.id, "1.0.0", None).save(&conn, &[]).unwrap();
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         new_dependency(&conn, &v, &c2);
     }
@@ -2120,7 +2095,7 @@ fn author_license_and_description_required() {
     user("foo");
 
     let mut req = req(app, Method::Put, "/api/v1/crates/new");
-    let mut new_crate = new_crate("foo_metadata");
+    let mut new_crate = new_crate("foo_metadata", "1.1.0");
     new_crate.license = None;
     new_crate.description = None;
     new_crate.authors = Vec::new();
@@ -2407,6 +2382,6 @@ fn new_krate_hard_links() {
         t!(ar.append(&header, &[][..]));
         t!(ar.finish());
     }
-    let body = new_crate_to_body_with_tarball(&new_crate("foo"), &tarball);
+    let body = new_crate_to_body_with_tarball(&new_crate("foo", "1.1.0"), &tarball);
     bad_resp!(middle.call(req.with_body(&body)));
 }

@@ -63,7 +63,7 @@ impl Handler for LogRequests {
 struct FullPath<'a>(&'a dyn Request);
 
 impl<'a> fmt::Display for FullPath<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0.path())?;
         if let Some(q_string) = self.0.query_string() {
             write!(f, "?{}", q_string)?;

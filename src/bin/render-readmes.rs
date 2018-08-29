@@ -274,7 +274,7 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
 
 /// Search an entry by its path in a Tar archive.
 fn find_file_by_path<R: Read>(
-    entries: &mut tar::Entries<R>,
+    entries: &mut tar::Entries<'_, R>,
     path: &Path,
     version: &Version,
     krate_name: &str,

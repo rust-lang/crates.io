@@ -236,11 +236,11 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
-    pub fn with_name(name: &str) -> WithName {
+    pub fn with_name(name: &str) -> WithName<'_> {
         canon_crate_name(crates::name).eq(canon_crate_name(name))
     }
 
-    pub fn by_name(name: &str) -> ByName {
+    pub fn by_name(name: &str) -> ByName<'_> {
         Crate::all().filter(Self::with_name(name))
     }
 
@@ -255,7 +255,8 @@ impl Crate {
 
     fn valid_ident(name: &str) -> bool {
         Self::valid_feature_name(name)
-            && name.chars()
+            && name
+                .chars()
                 .nth(0)
                 .map(char::is_alphabetic)
                 .unwrap_or(false)
@@ -263,7 +264,8 @@ impl Crate {
 
     pub fn valid_feature_name(name: &str) -> bool {
         !name.is_empty()
-            && name.chars()
+            && name
+                .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }
@@ -390,7 +392,8 @@ impl Crate {
     pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
         use schema::versions::dsl::*;
 
-        let vs = self.versions()
+        let vs = self
+            .versions()
             .select(num)
             .load::<String>(conn)?
             .into_iter()
@@ -554,27 +557,27 @@ mod tests {
 }
 
 pub trait CrateVersions {
-    fn versions(&self) -> versions::BoxedQuery<Pg> {
+    fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
         self.all_versions().filter(versions::yanked.eq(false))
     }
 
-    fn all_versions(&self) -> versions::BoxedQuery<Pg>;
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
 }
 
 impl CrateVersions for Crate {
-    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
         Version::belonging_to(self).into_boxed()
     }
 }
 
 impl CrateVersions for Vec<Crate> {
-    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
         self.as_slice().all_versions()
     }
 }
 
 impl CrateVersions for [Crate] {
-    fn all_versions(&self) -> versions::BoxedQuery<Pg> {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
         Version::belonging_to(self).into_boxed()
     }
 }

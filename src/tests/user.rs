@@ -718,10 +718,12 @@ fn test_confirm_user_email() {
             .unwrap()
     };
 
-    let mut response = ok_resp!(middle.call(req.with_path(&format!(
-        "/api/v1/confirm/{}",
-        email_token
-    )).with_method(Method::Put),));
+    let mut response = ok_resp!(
+        middle.call(
+            req.with_path(&format!("/api/v1/confirm/{}", email_token))
+                .with_method(Method::Put),
+        )
+    );
     assert!(::json::<S>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));

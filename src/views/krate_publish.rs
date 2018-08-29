@@ -221,7 +221,7 @@ use diesel::sql_types::Text;
 use std::io::Write;
 
 impl ToSql<Text, Pg> for Feature {
-    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
 }
