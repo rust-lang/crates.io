@@ -38,10 +38,10 @@ fn index() {
     // Create a category and a subcategory
     {
         let conn = t!(app.diesel_database.get());
-        ::new_category("foo", "foo")
+        ::new_category("foo", "foo", "Foo crates")
             .create_or_update(&conn)
             .unwrap();
-        ::new_category("foo::bar", "foo::bar")
+        ::new_category("foo::bar", "foo::bar", "Bar crates")
             .create_or_update(&conn)
             .unwrap();
     }
@@ -68,8 +68,8 @@ fn show() {
     {
         let conn = t!(app.diesel_database.get());
 
-        t!(::new_category("Foo Bar", "foo-bar").create_or_update(&conn));
-        t!(::new_category("Foo Bar::Baz", "foo-bar::baz").create_or_update(&conn));
+        t!(::new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(&conn));
+        t!(::new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(&conn));
     }
 
     // The category and its subcategories should be in the json
@@ -96,8 +96,8 @@ fn update_crate() {
     let krate = {
         let conn = t!(app.diesel_database.get());
         let user = t!(::new_user("foo").create_or_update(&conn));
-        t!(::new_category("cat1", "cat1").create_or_update(&conn));
-        t!(::new_category("Category 2", "category-2").create_or_update(&conn));
+        t!(::new_category("cat1", "cat1", "Category 1 crates").create_or_update(&conn));
+        t!(::new_category("Category 2", "category-2", "Category 2 crates").create_or_update(&conn));
         ::CrateBuilder::new("foo_crate", user.id).expect_build(&conn)
     };
 
@@ -161,7 +161,7 @@ fn update_crate() {
     // Add a category and its subcategory
     {
         let conn = t!(app.diesel_database.get());
-        t!(::new_category("cat1::bar", "cat1::bar").create_or_update(&conn,));
+        t!(::new_category("cat1::bar", "cat1::bar", "bar crates").create_or_update(&conn,));
         Category::update_crate(&conn, &krate, &["cat1", "cat1::bar"]).unwrap();
     }
     assert_eq!(cnt!(&mut req, "cat1"), 1);
@@ -174,10 +174,10 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
     let (_b, app, middle) = ::app();
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Foo", "foo")
+        ::new_category("Foo", "foo", "For crates that foo")
             .create_or_update(&conn)
             .unwrap();
-        ::new_category("Bar", "bar")
+        ::new_category("Bar", "bar", "For crates that bar")
             .create_or_update(&conn)
             .unwrap();
     }
@@ -188,6 +188,7 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
     struct Slug {
         id: String,
         slug: String,
+        description: String,
     }
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -201,10 +202,12 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
             Slug {
                 id: "bar".into(),
                 slug: "bar".into(),
+                description: "For crates that bar".into(),
             },
             Slug {
                 id: "foo".into(),
                 slug: "foo".into(),
+                description: "For crates that foo".into(),
             },
         ],
     };

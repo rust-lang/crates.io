@@ -16,7 +16,7 @@ use super::version_and_crate;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
-pub fn download(req: &mut Request) -> CargoResult<Response> {
+pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -30,7 +30,8 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
         increment_download_counts(req, crate_name, version)?;
     }
 
-    let redirect_url = req.app()
+    let redirect_url = req
+        .app()
         .config
         .uploader
         .crate_location(crate_name, version)
@@ -47,7 +48,11 @@ pub fn download(req: &mut Request) -> CargoResult<Response> {
     }
 }
 
-fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> CargoResult<()> {
+fn increment_download_counts(
+    req: &dyn Request,
+    crate_name: &str,
+    version: &str,
+) -> CargoResult<()> {
     use self::versions::dsl::*;
 
     let conn = req.db_conn()?;
@@ -62,10 +67,11 @@ fn increment_download_counts(req: &Request, crate_name: &str, version: &str) -> 
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
+pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
-    let cutoff_end_date = req.query()
+    let cutoff_end_date = req
+        .query()
         .get("before_date")
         .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
         .unwrap_or_else(|| Utc::today().naive_utc());

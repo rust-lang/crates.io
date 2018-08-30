@@ -1,4 +1,5 @@
 #![deny(warnings)]
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
 extern crate cargo_registry;
 extern crate chrono;
@@ -44,7 +45,7 @@ use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, 
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
-use views::EncodableCrate;
+use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
 
 macro_rules! t {
     ($e:expr) => {
@@ -124,6 +125,13 @@ struct Warnings {
 struct CrateMeta {
     total: i32,
 }
+#[derive(Deserialize)]
+struct CrateResponse {
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
+    versions: Vec<EncodableVersion>,
+    keywords: Vec<EncodableKeyword>,
+}
 
 fn app() -> (
     record::Bomb,
@@ -159,7 +167,7 @@ fn app() -> (
         gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
-        max_upload_size: 1000,
+        max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
         api_protocol: api_protocol,
@@ -215,7 +223,7 @@ where
 
 static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
-fn new_user(login: &str) -> NewUser {
+fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
         gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
@@ -238,7 +246,7 @@ fn user(login: &str) -> User {
     }
 }
 
-fn new_team(login: &str) -> NewTeam {
+fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
         github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         login: login,
@@ -273,6 +281,7 @@ struct VersionBuilder<'a> {
     license_file: Option<&'a str>,
     features: HashMap<String, Vec<String>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
+    yanked: bool,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -287,6 +296,7 @@ impl<'a> VersionBuilder<'a> {
             license_file: None,
             features: HashMap::new(),
             dependencies: Vec::new(),
+            yanked: false,
         }
     }
 
@@ -300,23 +310,35 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    fn yanked(self, yanked: bool) -> Self {
+        Self { yanked, ..self }
+    }
+
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert_into;
+        use diesel::{insert_into, update};
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
             None => None,
         };
 
-        let vers = NewVersion::new(
+        let mut vers = NewVersion::new(
             crate_id,
             &self.num,
             &self.features,
             license,
             self.license_file,
+            None,
         )?.save(connection, &[])?;
 
-        let new_deps = self.dependencies
+        if self.yanked {
+            vers = update(&vers)
+                .set(versions::yanked.eq(true))
+                .get_result(connection)?;
+        }
+
+        let new_deps = self
+            .dependencies
             .into_iter()
             .map(|(crate_id, target)| {
                 (
@@ -354,7 +376,7 @@ struct CrateBuilder<'a> {
 }
 
 impl<'a> CrateBuilder<'a> {
-    fn new(name: &str, owner_id: i32) -> CrateBuilder {
+    fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
             owner_id: owner_id,
             krate: NewCrate {
@@ -416,7 +438,8 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
-        let mut krate = self.krate
+        let mut krate = self
+            .krate
             .create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
@@ -478,9 +501,9 @@ impl<'a> CrateBuilder<'a> {
     }
 }
 
-fn new_version(crate_id: i32, num: &str) -> NewVersion {
+fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -498,6 +521,28 @@ fn krate(name: &str) -> Crate {
         license: None,
         repository: None,
         max_upload_size: None,
+    }
+}
+
+fn new_crate(name: &str, version: &str) -> u::NewCrate {
+    u::NewCrate {
+        name: u::CrateName(name.to_string()),
+        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+        features: HashMap::new(),
+        deps: Vec::new(),
+        authors: vec!["foo".to_string()],
+        description: Some("desc".to_string()),
+        homepage: None,
+        documentation: None,
+        readme: None,
+        readme_file: None,
+        keywords: None,
+        categories: None,
+        license: Some("MIT".to_string()),
+        license_file: None,
+        repository: None,
+        badges: None,
+        links: None,
     }
 }
 
@@ -531,10 +576,11 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
         .unwrap()
 }
 
-fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
+fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
     NewCategory {
-        category: category,
-        slug: slug,
+        category,
+        slug,
+        description,
     }
 }
 
@@ -542,7 +588,11 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str) -> MockRequest {
+fn request_with_user_and_mock_crate(
+    app: &Arc<App>,
+    user: &NewUser<'_>,
+    krate: &str,
+) -> MockRequest {
     let mut req = new_req(Arc::clone(app), krate, "1.0.0");
     {
         let conn = app.diesel_database.get().unwrap();
@@ -705,7 +755,7 @@ fn new_crate_to_body_with_io(
 ) -> Vec<u8> {
     let mut tarball = Vec::new();
     {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::Default));
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
         for &mut (name, ref mut data, size) in files {
             let mut header = tar::Header::new_gnu();
             t!(header.set_path(name));
@@ -715,6 +765,10 @@ fn new_crate_to_body_with_io(
         }
         t!(ar.finish());
     }
+    new_crate_to_body_with_tarball(new_crate, &tarball)
+}
+
+fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(

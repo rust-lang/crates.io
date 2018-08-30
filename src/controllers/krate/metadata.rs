@@ -5,15 +5,18 @@
 //! `Cargo.toml` file.
 
 use controllers::prelude::*;
-use models::{Category, Crate, CrateCategory, CrateDownload, CrateKeyword, Keyword, Version};
+use models::{
+    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, Version,
+};
 use schema::*;
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion};
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+};
 
 use models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: &mut Request) -> CargoResult<Response> {
+pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
     use schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -23,9 +26,8 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
         .get_result(&*conn)?;
 
     let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
-        Version::belonging_to(&krates)
-            .filter(versions::yanked.eq(false))
-            .load::<Version>(&*conn)?
+        let versions = krates.versions().load::<Version>(&*conn)?;
+        versions
             .grouped_by(&krates)
             .into_iter()
             .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
@@ -97,14 +99,14 @@ pub fn summary(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::*;
 
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let ids = versions.iter().map(|v| v.id).collect();
 
@@ -154,11 +156,12 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: &mut Request) -> CargoResult<Response> {
+pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    let redirect_url = req.app()
+    let redirect_url = req
+        .app()
         .config
         .uploader
         .readme_location(crate_name, version)
@@ -178,11 +181,11 @@ pub fn readme(req: &mut Request) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: &mut Request) -> CargoResult<Response> {
+pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let versions = versions
         .into_iter()
@@ -197,7 +200,7 @@ pub fn versions(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: &mut Request) -> CargoResult<Response> {
+pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];

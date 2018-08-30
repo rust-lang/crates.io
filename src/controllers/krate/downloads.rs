@@ -7,14 +7,14 @@ use std::cmp;
 
 use controllers::prelude::*;
 
-use models::{Crate, Version, VersionDownload};
+use models::{Crate, CrateVersions, Version, VersionDownload};
 use schema::version_downloads;
 use views::EncodableVersionDownload;
 
 use models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub fn downloads(req: &mut Request) -> CargoResult<Response> {
+pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 
@@ -22,7 +22,7 @@ pub fn downloads(req: &mut Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
 
-    let mut versions = Version::belonging_to(&krate).load::<Version>(&*conn)?;
+    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 

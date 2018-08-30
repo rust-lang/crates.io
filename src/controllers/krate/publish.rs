@@ -1,6 +1,5 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -9,7 +8,7 @@ use serde_json;
 
 use git;
 use render;
-use util::{internal, ChainError};
+use util::{internal, ChainError, Maximums};
 use util::{read_fill, read_le_u32};
 
 use controllers::prelude::*;
@@ -24,8 +23,22 @@ use views::{EncodableCrate, EncodableCrateUpload};
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut Request) -> CargoResult<Response> {
+pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let app = Arc::clone(req.app());
+
+    // The format of the req.body() of a publish request is as follows:
+    //
+    // metadata length
+    // metadata in JSON about the crate being published
+    // .crate tarball length
+    // .crate tarball file
+    //
+    // - The metadata is read and interpreted in the parse_new_headers function.
+    // - The .crate tarball length is read in this function in order to save the size of the file
+    //   in the version record in the database.
+    // - Then the .crate tarball length is passed to the upload_crate function where the actual
+    //   file is read and uploaded.
+
     let (new_crate, user) = parse_new_headers(req)?;
 
     let name = &*new_crate.name;
@@ -88,22 +101,43 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
             )));
         }
 
-        let length = req.content_length()
+        // Length of the .crate tarball, which appears after the metadata in the request body.
+        // TODO: Not sure why we're using the total content length (metadata + .crate file length)
+        // to compare against the max upload size... investigate that and perhaps change to use
+        // this file length.
+        let file_length = read_le_u32(req.body())?;
+
+        let content_length = req
+            .content_length()
             .chain_error(|| human("missing header: Content-Length"))?;
-        let max = krate
-            .max_upload_size
-            .map(|m| m as u64)
-            .unwrap_or(app.config.max_upload_size);
-        if length > max {
-            return Err(human(&format_args!("max upload size is: {}", max)));
+
+        let maximums = Maximums::new(
+            krate.max_upload_size,
+            app.config.max_upload_size,
+            app.config.max_unpack_size,
+        );
+
+        if content_length > maximums.max_upload_size {
+            return Err(human(&format_args!(
+                "max upload size is: {}",
+                maximums.max_upload_size
+            )));
         }
 
         // This is only redundant for now. Eventually the duplication will be removed.
         let license = new_crate.license.clone();
 
         // Persist the new version of this crate
-        let version = NewVersion::new(krate.id, vers, &features, license, license_file)?
-            .save(&conn, &new_crate.authors)?;
+        let version = NewVersion::new(
+            krate.id,
+            vers,
+            &features,
+            license,
+            license_file,
+            // Downcast is okay because the file length must be less than the max upload size
+            // to get here, and max upload sizes are way less than i32 max
+            Some(file_length as i32),
+        )?.save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -133,10 +167,10 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let max_unpack = cmp::max(app.config.max_unpack_size, max);
-        let (cksum, mut crate_bomb, mut readme_bomb) = app.config
-            .uploader
-            .upload_crate(req, &krate, readme, max, max_unpack, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) =
+            app.config
+                .uploader
+                .upload_crate(req, &krate, readme, file_length, maximums, vers)?;
         version.record_readme_rendering(&conn)?;
 
         let mut hex_cksum = String::new();
@@ -191,14 +225,14 @@ pub fn publish(req: &mut Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut Request) -> CargoResult<(EncodableCrateUpload, User)> {
+fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
-    let amt = u64::from(read_le_u32(req.body())?);
+    let metadata_length = u64::from(read_le_u32(req.body())?);
     let max = req.app().config.max_upload_size;
-    if amt > max {
+    if metadata_length > max {
         return Err(human(&format_args!("max upload size is: {}", max)));
     }
-    let mut json = vec![0; amt as usize];
+    let mut json = vec![0; metadata_length as usize];
     read_fill(req.body(), &mut json)?;
     let json = String::from_utf8(json).map_err(|_| human("json body was not valid utf-8"))?;
     let new: EncodableCrateUpload = serde_json::from_str(&json)

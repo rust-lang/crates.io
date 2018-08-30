@@ -182,11 +182,14 @@ impl Category {
     }
 }
 
+/// Struct for inserting categories; only used in tests. Actual categories are inserted
+/// in src/boot/categories.rs.
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "categories"]
 pub struct NewCategory<'a> {
     pub category: &'a str,
     pub slug: &'a str,
+    pub description: &'a str,
 }
 
 impl<'a> NewCategory<'a> {

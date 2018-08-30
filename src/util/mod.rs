@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::HashMap;
 use std::io::Cursor;
 
@@ -30,5 +31,26 @@ pub fn json_response<T: Serialize>(t: &T) -> Response {
         status: (200, "OK"),
         headers,
         body: Box::new(Cursor::new(json.into_bytes())),
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Maximums {
+    pub max_upload_size: u64,
+    pub max_unpack_size: u64,
+}
+
+impl Maximums {
+    pub fn new(
+        krate_max_upload: Option<i32>,
+        app_max_upload: u64,
+        app_max_unpack: u64,
+    ) -> Maximums {
+        let max_upload_size = krate_max_upload.map(|m| m as u64).unwrap_or(app_max_upload);
+        let max_unpack_size = cmp::max(app_max_unpack, max_upload_size);
+        Maximums {
+            max_upload_size,
+            max_unpack_size,
+        }
     }
 }

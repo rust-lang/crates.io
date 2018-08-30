@@ -18,11 +18,12 @@ use super::version_and_crate;
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
-pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
+pub fn dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let deps = version.dependencies(&*conn)?;
-    let deps = deps.into_iter()
+    let deps = deps
+        .into_iter()
         .map(|(dep, crate_name)| dep.encodable(&crate_name, None))
         .collect();
 
@@ -34,7 +35,7 @@ pub fn dependencies(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub fn authors(req: &mut Request) -> CargoResult<Response> {
+pub fn authors(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let names = version_authors::table

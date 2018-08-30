@@ -9,32 +9,31 @@ use std::sync::Arc;
 use self::diesel::prelude::*;
 use chrono::Utc;
 use conduit::{Handler, Method};
+use diesel::dsl::*;
 use diesel::update;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use git2;
 use semver;
 use serde_json;
+use tar;
 
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
-use {CrateList, CrateMeta, GoodCrate};
+use {CrateList, CrateMeta, CrateResponse, GoodCrate};
 
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
-use views::{EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword,
-            EncodableVersion, EncodableVersionDownload};
+use views::{
+    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+    EncodableVersionDownload,
+};
 
 #[derive(Deserialize)]
 struct VersionsList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct CrateResponse {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
-    versions: Vec<EncodableVersion>,
-    keywords: Vec<EncodableKeyword>,
 }
 #[derive(Deserialize)]
 struct Deps {
@@ -61,28 +60,6 @@ struct SummaryResponse {
     just_updated: Vec<EncodableCrate>,
     popular_keywords: Vec<EncodableKeyword>,
     popular_categories: Vec<EncodableCategory>,
-}
-
-fn new_crate(name: &str) -> u::NewCrate {
-    u::NewCrate {
-        name: u::CrateName(name.to_string()),
-        vers: u::CrateVersion(semver::Version::parse("1.1.0").unwrap()),
-        features: HashMap::new(),
-        deps: Vec::new(),
-        authors: vec!["foo".to_string()],
-        description: Some("desc".to_string()),
-        homepage: None,
-        documentation: None,
-        readme: None,
-        readme_file: None,
-        keywords: None,
-        categories: None,
-        license: Some("MIT".to_string()),
-        license_file: None,
-        repository: None,
-        badges: None,
-        links: None,
-    }
 }
 
 #[test]
@@ -177,10 +154,10 @@ fn index_queries() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
-        ::new_category("Category 1::Ba'r", "cat1::bar")
+        ::new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
@@ -284,35 +261,151 @@ fn exact_match_first_on_queries() {
 }
 
 #[test]
-fn exact_match_on_queries_with_sort() {
+fn index_sorting() {
     let (_b, app, middle) = ::app();
+    let krate1;
+    let krate2;
+    let krate3;
+    let krate4;
 
     {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
 
-        ::CrateBuilder::new("foo_sort", user.id)
+        krate1 = ::CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
             .recent_downloads(50)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("bar_sort", user.id)
+        krate2 = ::CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
             .recent_downloads(0)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("baz_sort", user.id)
+        krate3 = ::CrateBuilder::new("baz_sort", user.id)
             .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
             .downloads(100_000)
             .recent_downloads(10)
             .expect_build(&conn);
 
-        ::CrateBuilder::new("other_sort", user.id)
+        krate4 = ::CrateBuilder::new("other_sort", user.id)
             .description("other_sort const")
             .downloads(999_999)
             .expect_build(&conn);
+
+        // Set the updated at column for each crate
+        update(&krate1)
+            .set(crates::updated_at.eq(now - 3.weeks()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::updated_at.eq(now - 5.days()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::updated_at.eq(now - 10.seconds()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::updated_at.eq(now))
+            .execute(&*conn)
+            .unwrap();
+    }
+
+    // Sort by downloads
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("sort=downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "other_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Sort by recent-downloads
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
+
+    // Sort by recent-updates
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-updates"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "other_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "foo_sort");
+
+    // Test for bug with showing null results first when sorting
+    // by descending downloads
+    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "foo_sort");
+    assert_eq!(json.crates[1].name, "baz_sort");
+    assert_eq!(json.crates[2].name, "bar_sort");
+    assert_eq!(json.crates[3].name, "other_sort");
+}
+
+#[test]
+fn exact_match_on_queries_with_sort() {
+    let (_b, app, middle) = ::app();
+
+    let krate1;
+    let krate2;
+    let krate3;
+    let krate4;
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        krate1 = ::CrateBuilder::new("foo_sort", user.id)
+            .description("bar_sort baz_sort const")
+            .downloads(50)
+            .recent_downloads(50)
+            .expect_build(&conn);
+
+        krate2 = ::CrateBuilder::new("bar_sort", user.id)
+            .description("foo_sort baz_sort foo_sort baz_sort const")
+            .downloads(3333)
+            .recent_downloads(0)
+            .expect_build(&conn);
+
+        krate3 = ::CrateBuilder::new("baz_sort", user.id)
+            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+            .downloads(100_000)
+            .recent_downloads(10)
+            .expect_build(&conn);
+
+        krate4 = ::CrateBuilder::new("other_sort", user.id)
+            .description("other_sort const")
+            .downloads(999_999)
+            .expect_build(&conn);
+
+        // Set the updated at column for each crate
+        update(&krate1)
+            .set(crates::updated_at.eq(now - 3.weeks()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate2)
+            .set(crates::updated_at.eq(now - 5.days()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate3)
+            .set(crates::updated_at.eq(now - 10.seconds()))
+            .execute(&*conn)
+            .unwrap();
+        update(&krate4)
+            .set(crates::updated_at.eq(now))
+            .execute(&*conn)
+            .unwrap();
     }
 
     // Sort by downloads
@@ -354,9 +447,16 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[1].name, "foo_sort");
     assert_eq!(json.crates[2].name, "baz_sort");
 
+    // Sort by recent-updates
+    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-updates"),));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "baz_sort");
+    assert_eq!(json.crates[1].name, "bar_sort");
+    assert_eq!(json.crates[2].name, "foo_sort");
+
     // Test for bug with showing null results first when sorting
-    // by descending
-    // This has nothing to do with querying for exact match I'm sorry
+    // by descending downloads
     let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
     let json: CrateList = ::json(&mut response);
     assert_eq!(json.meta.total, 4);
@@ -415,6 +515,28 @@ fn show() {
 
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+}
+
+#[test]
+fn yanked_versions_are_not_considered_for_max_version() {
+    let (_b, app, middle) = ::app();
+
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = ::new_user("foo").create_or_update(&conn).unwrap();
+
+        ::CrateBuilder::new("foo_yanked_version", user.id)
+            .description("foo")
+            .version("1.0.0")
+            .version(::VersionBuilder::new("1.1.0").yanked(true))
+            .expect_build(&conn);
+    }
+
+    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
+    let json: CrateList = ::json(&mut response);
+    assert_eq!(json.meta.total, 1);
+    assert_eq!(json.crates[0].max_version, "1.0.0");
 }
 
 #[test]
@@ -765,7 +887,7 @@ fn new_krate_too_big() {
     let mut req = ::new_req(Arc::clone(&app), "foo_big", "1.0.0");
     ::sign_in(&mut req, &app);
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
-    let body = ::new_crate_to_body(&new_crate("foo_big"), &files);
+    let body = ::new_crate_to_body(&::new_crate("foo_big", "1.0.0"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
@@ -782,7 +904,7 @@ fn new_krate_too_big_but_whitelisted() {
             .expect_build(&conn);
     }
     let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
-    let body = ::new_crate_to_body(&new_crate("foo_whitelist"), &files);
+    let body = ::new_crate_to_body(&::new_crate("foo_whitelist", "1.1.0"), &files);
     let mut response = ok_resp!(middle.call(req.with_body(&body)));
     ::json::<GoodCrate>(&mut response);
 }
@@ -794,7 +916,7 @@ fn new_krate_wrong_files() {
     ::sign_in(&mut req, &app);
     let data: &[u8] = &[1];
     let files = [("foo-1.1.0/a", data), ("bar-1.1.0/a", data)];
-    let body = ::new_crate_to_body(&new_crate("foo"), &files);
+    let body = ::new_crate_to_body(&::new_crate("foo", "1.1.0"), &files);
     bad_resp!(middle.call(req.with_body(&body)));
 }
 
@@ -805,8 +927,10 @@ fn new_krate_gzip_bomb() {
     ::sign_in(&mut req, &app);
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
-    let body =
-        ::new_crate_to_body_with_io(&new_crate("foo"), &mut [("foo-1.1.0/a", &mut body, len)]);
+    let body = ::new_crate_to_body_with_io(
+        &::new_crate("foo", "1.1.0"),
+        &mut [("foo-1.1.0/a", &mut body, len)],
+    );
     let json = bad_resp!(middle.call(req.with_body(&body)));
     assert!(
         json.errors[0]
@@ -1051,7 +1175,7 @@ fn summary_new_crates() {
             .downloads(1000)
             .expect_build(&conn);
 
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
@@ -1186,7 +1310,9 @@ fn dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = ::new_user("foo").create_or_update(&conn).unwrap();
         let c1 = ::CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = ::new_version(c1.id, "1.0.0").save(&conn, &[]).unwrap();
+        let v = ::new_version(c1.id, "1.0.0", None)
+            .save(&conn, &[])
+            .unwrap();
         let c2 = ::CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         ::new_dependency(&conn, &v, &c2);
     }
@@ -1680,7 +1806,7 @@ fn good_categories() {
     ::sign_in(&mut req, &app);
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Category 1", "cat1")
+        ::new_category("Category 1", "cat1", "Category 1 crates")
             .create_or_update(&conn)
             .unwrap();
     }
@@ -1965,14 +2091,15 @@ fn author_license_and_description_required() {
     ::user("foo");
 
     let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
-    let mut new_crate = new_crate("foo_metadata");
+    let mut new_crate = ::new_crate("foo_metadata", "1.1.0");
     new_crate.license = None;
     new_crate.description = None;
     new_crate.authors = Vec::new();
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1983,7 +2110,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -1995,7 +2123,8 @@ fn author_license_and_description_required() {
     req.with_body(&::new_crate_to_body(&new_crate, &[]));
     let json = bad_resp!(middle.call(&mut req));
     assert!(
-        !json.errors[0].detail.contains("author") && json.errors[0].detail.contains("description")
+        !json.errors[0].detail.contains("author")
+            && json.errors[0].detail.contains("description")
             && !json.errors[0].detail.contains("license"),
         "{:?}",
         json.errors
@@ -2127,7 +2256,7 @@ fn test_default_sort_recent() {
 
     {
         let conn = app.diesel_database.get().unwrap();
-        ::new_category("Animal", "animal")
+        ::new_category("Animal", "animal", "animal crates")
             .create_or_update(&conn)
             .unwrap();
         Category::update_crate(&conn, &green_crate, &["animal"]).unwrap();
@@ -2230,3 +2359,25 @@ fn test_cargo_invite_owners() {
 //     assert_eq!(json.krate.name, "foo_new");
 //     assert_eq!(json.krate.max_version, "1.0.0");
 // }
+
+#[test]
+fn new_krate_hard_links() {
+    let (_b, app, middle) = ::app();
+    let mut req = ::new_req(Arc::clone(&app), "foo", "1.1.0");
+    ::sign_in(&mut req, &app);
+
+    let mut tarball = Vec::new();
+    {
+        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+        let mut header = tar::Header::new_gnu();
+        t!(header.set_path("foo-1.1.0/bar"));
+        header.set_size(0);
+        header.set_cksum();
+        header.set_entry_type(tar::EntryType::hard_link());
+        t!(header.set_link_name("foo-1.1.0/another"));
+        t!(ar.append(&header, &[][..]));
+        t!(ar.finish());
+    }
+    let body = ::new_crate_to_body_with_tarball(&::new_crate("foo", "1.1.0"), &tarball);
+    bad_resp!(middle.call(req.with_body(&body)));
+}

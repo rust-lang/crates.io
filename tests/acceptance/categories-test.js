@@ -53,4 +53,16 @@ module('Acceptance | categories', function(hooks) {
 
         assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
     });
+
+    test('listing category slugs', async function(assert) {
+        this.server.create('category', { category: 'Algorithms', description: 'Crates for algorithms' });
+        this.server.create('category', { category: 'Asynchronous', description: 'Async crates' });
+
+        await visit('/category_slugs');
+
+        assert.dom('[data-test-category-slug="algorithms"]').hasText('algorithms');
+        assert.dom('[data-test-category-description="algorithms"]').hasText('Crates for algorithms');
+        assert.dom('[data-test-category-slug="asynchronous"]').hasText('asynchronous');
+        assert.dom('[data-test-category-description="asynchronous"]').hasText('Async crates');
+    });
 });
