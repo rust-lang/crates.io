@@ -9,7 +9,7 @@ use util::{human, CargoResult};
 
 use models::{Crate, Version};
 use schema::*;
-use views::EncodableDependency;
+use views::{EncodableCrateDependency, EncodableDependency};
 
 #[derive(Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
@@ -75,7 +75,7 @@ impl ReverseDependency {
 
 pub fn add_dependencies(
     conn: &PgConnection,
-    deps: &[::views::EncodableCrateDependency],
+    deps: &[EncodableCrateDependency],
     target_version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
     use self::dependencies::dsl::*;

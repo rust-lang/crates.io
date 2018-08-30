@@ -4,6 +4,7 @@ use diesel::prelude::*;
 
 use models::User;
 use schema::api_tokens;
+use util::rfc3339;
 use views::EncodableApiTokenWithToken;
 
 /// The model representing a row in the `api_tokens` database table.
@@ -16,9 +17,9 @@ pub struct ApiToken {
     #[serde(skip)]
     pub token: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")]
+    #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
 }
 

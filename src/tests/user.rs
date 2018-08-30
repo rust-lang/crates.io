@@ -6,6 +6,7 @@ use diesel::prelude::*;
 
 use models::{ApiToken, Email, NewUser, User};
 use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
+use {app, logout, new_user, req, sign_in, sign_in_as, Bad, CrateBuilder, VersionBuilder, NEXT_ID};
 
 #[derive(Deserialize)]
 struct AuthResponse {
@@ -25,8 +26,8 @@ pub struct UserShowPrivateResponse {
 
 #[test]
 fn auth_gives_a_token() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/authorize_url");
+    let (_b, app, middle) = app();
+    let mut req = req(app, Method::Get, "/authorize_url");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: AuthResponse = ::json(&mut response);
     assert!(json.url.contains(&json.state));
@@ -34,21 +35,21 @@ fn auth_gives_a_token() {
 
 #[test]
 fn access_token_needs_data() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app, Method::Get, "/authorize");
+    let (_b, app, middle) = app();
+    let mut req = req(app, Method::Get, "/authorize");
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: ::Bad = ::json(&mut response);
+    let json: Bad = ::json(&mut response);
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
 #[test]
 fn me() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 403);
 
-    let user = ::sign_in(&mut req, &app);
+    let user = sign_in(&mut req, &app);
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPrivateResponse = ::json(&mut response);
@@ -58,7 +59,7 @@ fn me() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     {
         let conn = t!(app.diesel_database.get());
 
@@ -66,7 +67,7 @@ fn show() {
         t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar").create_or_update(&conn));
     }
 
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/users/foo");
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/users/foo");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!("foo", json.user.login);
@@ -79,7 +80,7 @@ fn show() {
 
 #[test]
 fn show_latest_user_case_insensitively() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     {
         let conn = t!(app.diesel_database.get());
 
@@ -107,7 +108,7 @@ fn show_latest_user_case_insensitively() {
             "bar"
         ).create_or_update(&conn));
     }
-    let mut req = ::req(Arc::clone(&app), Method::Get, "api/v1/users/fOObAr");
+    let mut req = req(Arc::clone(&app), Method::Get, "api/v1/users/fOObAr");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserShowPublicResponse = ::json(&mut response);
     assert_eq!(
@@ -118,15 +119,15 @@ fn show_latest_user_case_insensitively() {
 
 #[test]
 fn crates_by_user_id() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
-        u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
+        u = new_user("foo").create_or_update(&conn).unwrap();
+        CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
     }
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(app, Method::Get, "/api/v1/crates");
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -140,16 +141,16 @@ fn crates_by_user_id() {
 
 #[test]
 fn crates_by_user_id_not_including_deleted_owners() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
-        u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
+        u = new_user("foo").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
         krate.owner_remove(&app, &conn, &u, "foo").unwrap();
     }
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(app, Method::Get, "/api/v1/crates");
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -173,19 +174,19 @@ fn following() {
         more: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/");
     {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        let user = new_user("foo").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
 
-        ::CrateBuilder::new("foo_fighters", user.id)
-            .version(::VersionBuilder::new("1.0.0"))
+        CrateBuilder::new("foo_fighters", user.id)
+            .version(VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
 
-        ::CrateBuilder::new("bar_fighters", user.id)
-            .version(::VersionBuilder::new("1.0.0"))
+        CrateBuilder::new("bar_fighters", user.id)
+            .version(VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
 
@@ -257,25 +258,25 @@ fn following() {
 fn user_total_downloads() {
     use diesel::update;
 
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
 
-        u = ::new_user("foo").create_or_update(&conn).unwrap();
+        u = new_user("foo").create_or_update(&conn).unwrap();
 
-        let mut krate = ::CrateBuilder::new("foo_krate1", u.id).expect_build(&conn);
+        let mut krate = CrateBuilder::new("foo_krate1", u.id).expect_build(&conn);
         krate.downloads = 10;
         update(&krate).set(&krate).execute(&*conn).unwrap();
 
-        let mut krate2 = ::CrateBuilder::new("foo_krate2", u.id).expect_build(&conn);
+        let mut krate2 = CrateBuilder::new("foo_krate2", u.id).expect_build(&conn);
         krate2.downloads = 20;
         update(&krate2).set(&krate2).execute(&*conn).unwrap();
 
-        let another_user = ::new_user("bar").create_or_update(&conn).unwrap();
+        let another_user = new_user("bar").create_or_update(&conn).unwrap();
 
         let mut another_krate =
-            ::CrateBuilder::new("bar_krate1", another_user.id).expect_build(&conn);
+            CrateBuilder::new("bar_krate1", another_user.id).expect_build(&conn);
         another_krate.downloads = 2;
         update(&another_krate)
             .set(&another_krate)
@@ -283,7 +284,7 @@ fn user_total_downloads() {
             .unwrap();
     }
 
-    let mut req = ::req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
+    let mut req = req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[derive(Deserialize)]
@@ -297,15 +298,15 @@ fn user_total_downloads() {
 
 #[test]
 fn user_total_downloads_no_crates() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let u;
     {
         let conn = app.diesel_database.get().unwrap();
 
-        u = ::new_user("foo").create_or_update(&conn).unwrap();
+        u = new_user("foo").create_or_update(&conn).unwrap();
     }
 
-    let mut req = ::req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
+    let mut req = req(app, Method::Get, &format!("/api/v1/users/{}/stats", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
     #[derive(Deserialize)]
@@ -318,10 +319,10 @@ fn user_total_downloads_no_crates() {
 
 #[test]
 fn updating_existing_user_doesnt_change_api_token() {
-    let (_b, app, _middle) = ::app();
+    let (_b, app, _middle) = app();
     let conn = t!(app.diesel_database.get());
 
-    let gh_user_id = ::NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
+    let gh_user_id = NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
 
     let original_user =
         t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
@@ -356,17 +357,17 @@ fn test_github_login_does_not_overwrite_email() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            ..::new_user("apricot")
+            ..new_user("apricot")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
         user
     };
 
@@ -386,17 +387,17 @@ fn test_github_login_does_not_overwrite_email() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    ::logout(&mut req);
+    logout(&mut req);
 
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
-            ..::new_user("apricot")
+            ..new_user("apricot")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
@@ -421,12 +422,12 @@ fn test_email_get_and_put() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("mango").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        let user = new_user("mango").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
         user
     };
 
@@ -466,12 +467,12 @@ fn test_email_get_and_put() {
 */
 #[test]
 fn test_empty_email_not_added() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("papaya").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        let user = new_user("papaya").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
         user
     };
 
@@ -518,14 +519,14 @@ fn test_empty_email_not_added() {
 */
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/me");
 
     let not_signed_in_user = {
         let conn = app.diesel_database.get().unwrap();
-        let signed_user = ::new_user("pineapple").create_or_update(&conn).unwrap();
-        let unsigned_user = ::new_user("coconut").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &signed_user);
+        let signed_user = new_user("pineapple").create_or_update(&conn).unwrap();
+        let unsigned_user = new_user("coconut").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &signed_user);
         unsigned_user
     };
 
@@ -562,18 +563,18 @@ fn test_insert_into_email_table() {
         user: EncodablePrivateUser,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
             email: Some("apple@example.com"),
-            ..::new_user("apple")
+            ..new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
@@ -581,7 +582,7 @@ fn test_insert_into_email_table() {
     assert_eq!(r.user.email.unwrap(), "apple@example.com");
     assert_eq!(r.user.login, "apple");
 
-    ::logout(&mut req);
+    logout(&mut req);
 
     // What if user changes their github user email
     {
@@ -589,11 +590,11 @@ fn test_insert_into_email_table() {
         let user = NewUser {
             gh_id: 1,
             email: Some("banana@example.com"),
-            ..::new_user("apple")
+            ..new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
@@ -619,18 +620,18 @@ fn test_insert_into_email_table_with_email_change() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             gh_id: 1,
             email: Some("test_insert_with_change@example.com"),
-            ..::new_user("potato")
+            ..new_user("potato")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
         user
     };
 
@@ -652,7 +653,7 @@ fn test_insert_into_email_table_with_email_change() {
     );
     assert!(::json::<S>(&mut response).ok);
 
-    ::logout(&mut req);
+    logout(&mut req);
 
     // What if user changes their github user email
     {
@@ -660,11 +661,11 @@ fn test_insert_into_email_table_with_email_change() {
         let user = NewUser {
             gh_id: 1,
             email: Some("banana2@example.com"),
-            ..::new_user("potato")
+            ..new_user("potato")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
@@ -695,17 +696,17 @@ fn test_confirm_user_email() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
             email: Some("potato2@example.com"),
-            ..::new_user("potato")
+            ..new_user("potato")
         };
 
         let user = user.create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
         user
     };
 
@@ -748,13 +749,13 @@ fn test_existing_user_email() {
         user: EncodablePrivateUser,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/me");
+    let (_b, app, middle) = app();
+    let mut req = req(Arc::clone(&app), Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
         let new_user = NewUser {
             email: Some("potahto@example.com"),
-            ..::new_user("potahto")
+            ..new_user("potahto")
         };
         let user = new_user.create_or_update(&conn).unwrap();
         update(Email::belonging_to(&user))
@@ -763,7 +764,7 @@ fn test_existing_user_email() {
             .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
             .execute(&*conn)
             .unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));

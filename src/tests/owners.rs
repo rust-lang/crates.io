@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use {CrateList, GoodCrate};
-
 use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
@@ -10,6 +8,10 @@ use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
 use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+};
+use {
+    add_team_to_crate, app, logout, new_req, new_req_body_version_2, new_team, new_user, req,
+    sign_in, sign_in_as, Bad, CrateBuilder, CrateList, GoodCrate,
 };
 
 #[derive(Deserialize)]
@@ -28,15 +30,15 @@ fn new_crate_owner() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
     // Create a crate under one user
-    let mut req = ::new_req(Arc::clone(&app), "foo_owner", "1.0.0");
-    ::sign_in(&mut req, &app);
+    let mut req = new_req(Arc::clone(&app), "foo_owner", "1.0.0");
+    sign_in(&mut req, &app);
     let u2;
     {
         let conn = app.diesel_database.get().unwrap();
-        u2 = ::new_user("bar").create_or_update(&conn).unwrap();
+        u2 = new_user("bar").create_or_update(&conn).unwrap();
     }
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
@@ -70,8 +72,8 @@ fn new_crate_owner() {
         }
     });
 
-    ::logout(&mut req);
-    ::sign_in_as(&mut req, &u2);
+    logout(&mut req);
+    sign_in_as(&mut req, &u2);
 
     // accept invitation for user to be added as owner
     let mut response = ok_resp!(
@@ -103,8 +105,8 @@ fn new_crate_owner() {
     assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
 
     // And upload a new crate as the first user
-    let body = ::new_req_body_version_2(::krate("foo_owner"));
-    ::sign_in_as(&mut req, &u2);
+    let body = new_req_body_version_2(::krate("foo_owner"));
+    sign_in_as(&mut req, &u2);
     let mut response = ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/new")
@@ -128,18 +130,18 @@ fn owners_can_remove_self() {
         ok: bool,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/owners_selfremove/owners",
     );
     let (first_owner, second_owner) = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("firstowner").create_or_update(&conn).unwrap();
-        let user_two = ::new_user("secondowner").create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
-        ::CrateBuilder::new("owners_selfremove", user.id).expect_build(&conn);
+        let user = new_user("firstowner").create_or_update(&conn).unwrap();
+        let user_two = new_user("secondowner").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
+        CrateBuilder::new("owners_selfremove", user.id).expect_build(&conn);
         (user, user_two)
     };
 
@@ -151,7 +153,7 @@ fn owners_can_remove_self() {
     let body = r#"{"users":["firstowner"]}"#;
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<::Bad>(&mut response);
+    let json = ::json::<Bad>(&mut response);
     assert!(
         json.errors[0]
             .detail
@@ -182,8 +184,8 @@ fn owners_can_remove_self() {
         }
     });
 
-    ::logout(&mut req);
-    ::sign_in_as(&mut req, &second_owner);
+    logout(&mut req);
+    sign_in_as(&mut req, &second_owner);
 
     let mut response = ok_resp!(
         middle.call(
@@ -202,8 +204,8 @@ fn owners_can_remove_self() {
     assert!(crate_owner_invite.crate_owner_invitation.accepted);
     assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
 
-    ::logout(&mut req);
-    ::sign_in_as(&mut req, &first_owner);
+    logout(&mut req);
+    sign_in_as(&mut req, &first_owner);
 
     // Deleting yourself when there are other owners is allowed.
     let body = r#"{"users":["firstowner"]}"#;
@@ -220,7 +222,7 @@ fn owners_can_remove_self() {
     let body = r#"{"users":["secondowner"]}"#;
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<::Bad>(&mut response);
+    let json = ::json::<Bad>(&mut response);
     assert!(
         json.errors[0]
             .detail
@@ -237,24 +239,24 @@ fn owners_can_remove_self() {
 */
 #[test]
 fn check_ownership_two_crates() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
     let (krate_owned_by_team, team) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
-        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        let u = new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("foo", u.id).expect_build(&conn);
+        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         (krate, t)
     };
 
     let (krate_not_owned_by_team, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_bar").create_or_update(&conn).unwrap();
+        let u = new_user("user_bar").create_or_update(&conn).unwrap();
         (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
     };
 
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/crates");
+    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/crates");
 
     let query = format!("user_id={}", user.id);
     let mut response = ok_resp!(middle.call(req.with_query(&query)));
@@ -281,20 +283,20 @@ fn check_ownership_two_crates() {
 */
 #[test]
 fn check_ownership_one_crate() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
     let (team, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_cat").create_or_update(&conn).unwrap();
-        let t = ::new_team("github:test_org:team_sloth")
+        let u = new_user("user_cat").create_or_update(&conn).unwrap();
+        let t = new_team("github:test_org:team_sloth")
             .create_or_update(&conn)
             .unwrap();
-        let krate = ::CrateBuilder::new("best_crate", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        let krate = CrateBuilder::new("best_crate", u.id).expect_build(&conn);
+        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         (t, u)
     };
 
-    let mut req = ::req(
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/crates/best_crate/owner_team",
@@ -324,8 +326,8 @@ fn invitations_are_empty_by_default() {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
@@ -333,11 +335,9 @@ fn invitations_are_empty_by_default() {
 
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        ::new_user("user_no_invites")
-            .create_or_update(&conn)
-            .unwrap()
+        new_user("user_no_invites").create_or_update(&conn).unwrap()
     };
-    ::sign_in_as(&mut req, &user);
+    sign_in_as(&mut req, &user);
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: R = ::json(&mut response);
@@ -352,17 +352,17 @@ fn invitations_list() {
         crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let owner = ::new_user("inviting_user").create_or_update(&conn).unwrap();
-        let user = ::new_user("invited_user").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+        let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
+        let user = new_user("invited_user").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
@@ -376,7 +376,7 @@ fn invitations_list() {
             .unwrap();
         (krate, user)
     };
-    ::sign_in_as(&mut req, &user);
+    sign_in_as(&mut req, &user);
 
     let mut response = ok_resp!(middle.call(&mut req));
     let json: R = ::json(&mut response);
@@ -413,17 +413,17 @@ fn test_accept_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let owner = ::new_user("inviting_user").create_or_update(&conn).unwrap();
-        let user = ::new_user("invited_user").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+        let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
+        let user = new_user("invited_user").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
@@ -437,7 +437,7 @@ fn test_accept_invitation() {
             .unwrap();
         (krate, user)
     };
-    ::sign_in_as(&mut req, &user);
+    sign_in_as(&mut req, &user);
 
     let body = json!({
         "crate_owner_invite": {
@@ -508,17 +508,17 @@ fn test_decline_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
+    let (_b, app, middle) = app();
+    let mut req = req(
         Arc::clone(&app),
         Method::Get,
         "/api/v1/me/crate_owner_invitations",
     );
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
-        let owner = ::new_user("inviting_user").create_or_update(&conn).unwrap();
-        let user = ::new_user("invited_user").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+        let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
+        let user = new_user("invited_user").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
 
         // This should be replaced by an actual call to the route that `owner --add` hits once
         // that route creates an invitation.
@@ -532,7 +532,7 @@ fn test_decline_invitation() {
             .unwrap();
         (krate, user)
     };
-    ::sign_in_as(&mut req, &user);
+    sign_in_as(&mut req, &user);
 
     let body = json!({
         "crate_owner_invite": {

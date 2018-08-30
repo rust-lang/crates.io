@@ -13,7 +13,7 @@ pub struct Config {
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
-    pub env: ::Env,
+    pub env: Env,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
     pub mirror: Replica,

@@ -3,6 +3,7 @@ use serde_json;
 use std::collections::HashMap;
 
 use models::DependencyKind;
+use util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
@@ -16,7 +17,7 @@ pub struct EncodableCategory {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
@@ -27,7 +28,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
@@ -39,7 +40,7 @@ pub struct EncodableCrateOwnerInvitation {
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
 }
 
@@ -75,7 +76,7 @@ pub struct EncodableVersionDownload {
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
@@ -84,13 +85,13 @@ pub struct EncodableKeyword {
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub updated_at: NaiveDateTime,
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub badges: Option<Vec<EncodableBadge>>,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
@@ -142,9 +143,9 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")]
+    #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
 }
 
@@ -182,9 +183,9 @@ pub struct EncodableVersion {
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub updated_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
