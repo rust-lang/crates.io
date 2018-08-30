@@ -32,6 +32,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
+    pub parent_categories: Vec<EncodableCategory>,
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
@@ -243,6 +244,7 @@ mod tests {
             crates_cnt: 1,
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             subcategories: vec![],
+            parent_categories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
         assert!(

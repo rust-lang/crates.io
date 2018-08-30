@@ -1,5 +1,6 @@
 /target
 .cargo
+.vscode/
 
 # compiled output
 /dist
@@ -21,3 +22,5 @@ yarn-error.log
 testem.log
 .env
 docker-compose.override.yml
+*~
+

@@ -18,6 +18,7 @@ extern crate derive_deref;
 #[macro_use]
 extern crate diesel;
 extern crate diesel_full_text_search;
+extern crate diesel_ltree;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;

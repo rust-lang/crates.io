@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use diesel::*;
+use diesel::{self, *};
 
 use models::Crate;
 use schema::*;
@@ -16,6 +16,40 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
+/// We literally never want to select `categories.path`
+/// so we provide this type and constant to pass to `.select`
+type AllColumns = (
+    categories::id,
+    categories::category,
+    categories::slug,
+    categories::description,
+    categories::crates_cnt,
+    categories::created_at,
+);
+
+pub const ALL_COLUMNS: AllColumns = (
+    categories::id,
+    categories::category,
+    categories::slug,
+    categories::description,
+    categories::crates_cnt,
+    categories::created_at,
+);
+
+type All = diesel::dsl::Select<categories::table, AllColumns>;
+type WithSlug<'a> = diesel::dsl::Eq<categories::slug, ::lower::HelperType<&'a str>>;
+type BySlug<'a> = diesel::dsl::Filter<All, WithSlug<'a>>;
+type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
+    categories::slug,
+    diesel::pg::expression::array_comparison::Any<
+        diesel::expression::bound::Bound<
+            diesel::sql_types::Array<diesel::sql_types::Text>,
+            &'a [&'a str],
+        >,
+    >,
+>;
+type BySlugsCaseSensitive<'a> = diesel::dsl::Filter<All, WithSlugsCaseSensitive<'a>>;
+
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Category)]
 #[belongs_to(Crate)]
@@ -27,6 +61,27 @@ pub struct CrateCategory {
 }
 
 impl Category {
+    pub fn with_slug(slug: &str) -> WithSlug {
+        categories::slug.eq(::lower(slug))
+    }
+
+    pub fn by_slug(slug: &str) -> BySlug {
+        Category::all().filter(Self::with_slug(slug))
+    }
+
+    pub fn with_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> WithSlugsCaseSensitive<'a> {
+        use diesel::dsl::any;
+        categories::slug.eq(any(slugs))
+    }
+
+    pub fn by_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> BySlugsCaseSensitive<'a> {
+        Category::all().filter(Self::with_slugs_case_sensitive(slugs))
+    }
+
+    pub fn all() -> All {
+        categories::table.select(ALL_COLUMNS)
+    }
+
     pub fn encodable(self) -> EncodableCategory {
         let Category {
             crates_cnt,
@@ -42,7 +97,7 @@ impl Category {
             description: description.clone(),
             created_at,
             crates_cnt,
-            category,
+            category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
         }
     }
 
@@ -51,12 +106,8 @@ impl Category {
         krate: &Crate,
         slugs: &[&'a str],
     ) -> QueryResult<Vec<&'a str>> {
-        use diesel::dsl::any;
-
         conn.transaction(|| {
-            let categories = categories::table
-                .filter(categories::slug.eq(any(slugs)))
-                .load::<Category>(conn)?;
+            let categories = Category::by_slugs_case_sensitive(slugs).load::<Category>(conn)?;
             let invalid_categories = slugs
                 .iter()
                 .cloned()
@@ -93,8 +144,7 @@ impl Category {
         limit: i64,
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
-        use diesel::dsl::*;
-        use diesel::select;
+        use diesel::sql_types::Int8;
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -103,33 +153,29 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        select(sql::<categories::SqlType>(&format!(
-            "c.id, c.category, c.slug, c.description,
-                sum(c2.crates_cnt)::int as crates_cnt, c.created_at
-             FROM categories as c
-             INNER JOIN categories c2 ON split_part(c2.slug, '::', 1) = c.slug
-             WHERE split_part(c.slug, '::', 1) = c.slug
-             GROUP BY c.id
-             {} LIMIT {} OFFSET {}",
-            sort_sql, limit, offset
-        ))).load(conn)
+        sql_query(format!(include_str!("toplevel.sql"), sort_sql))
+            .bind::<Int8, _>(limit)
+            .bind::<Int8, _>(offset)
+            .load(conn)
     }
 
     pub fn subcategories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
-        sql_query(
-            "SELECT c.id, c.category, c.slug, c.description, \
-             COALESCE (( \
-             SELECT sum(c2.crates_cnt)::int \
-             FROM categories as c2 \
-             WHERE c2.slug = c.slug \
-             OR c2.slug LIKE c.slug || '::%' \
-             ), 0) as crates_cnt, c.created_at \
-             FROM categories as c \
-             WHERE c.category ILIKE $1 || '::%' \
-             AND c.category NOT ILIKE $1 || '::%::%'",
-        ).bind::<Text, _>(&self.category)
+        sql_query(include_str!("../subcategories.sql"))
+            .bind::<Text, _>(&self.category)
+            .load(conn)
+    }
+
+    /// Gathers the parent categories from the top-level Category to the direct parent of this Category.
+    /// Returns categories as a Vector in order of traversal, not including this Category.
+    /// The intention is to be able to have slugs or parent categories arrayed in order, to
+    /// offer the frontend, for examples, slugs to create links to each parent category in turn.
+    pub fn parent_categories(&self, conn: &PgConnection) -> QueryResult<Vec<Category>> {
+        use diesel::sql_types::Text;
+
+        sql_query(include_str!("../parent_categories.sql"))
+            .bind::<Text, _>(&self.slug)
             .load(conn)
     }
 }
@@ -154,6 +200,7 @@ impl<'a> NewCategory<'a> {
             .on_conflict(slug)
             .do_update()
             .set(self)
+            .returning(ALL_COLUMNS)
             .get_result(conn)
     }
 }
@@ -178,32 +225,40 @@ mod tests {
 
     #[test]
     fn category_toplevel_excludes_subcategories() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
-            ('Cat 2', 'cat2'), ('Cat 1', 'cat1'), ('Cat 1::sub', 'cat1::sub')
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 2"), slug.eq("cat2")),
+                (category.eq("Cat 1"), slug.eq("cat1")),
+                (category.eq("Cat 1::sub"), slug.eq("cat1::sub")),
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "", 10, 0)
+        let cats = Category::toplevel(&conn, "", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 1".to_string(), "Cat 2".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 0), ('Cat 2', 'cat2', 2), ('Cat 3', 'cat3', 1)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(0)),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(2)),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(1)),
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 10, 0)
+        let cats = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
@@ -213,47 +268,67 @@ mod tests {
             "Cat 3".to_string(),
             "Cat 1".to_string(),
         ];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_applies_limit_and_offset() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug) VALUES
-            ('Cat 1', 'cat1'), ('Cat 2', 'cat2')
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1")),
+                (category.eq("Cat 2"), slug.eq("cat2")),
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "", 1, 0)
+        let cats = Category::toplevel(&conn, "", 1, 0)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 1".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
 
-        let categories = Category::toplevel(&conn, "", 1, 1)
+        let cats = Category::toplevel(&conn, "", 1, 1)
             .unwrap()
             .into_iter()
             .map(|c| c.category)
             .collect::<Vec<_>>();
         let expected = vec!["Cat 2".to_string()];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_includes_subcategories_in_crate_cnt() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
-            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
-            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (
+                    category.eq("Cat 1::sub"),
+                    slug.eq("cat1::sub"),
+                    crates_cnt.eq(2),
+                ),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 10, 0)
+        let cats = Category::toplevel(&conn, "crates", 10, 0)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
@@ -263,34 +338,102 @@ mod tests {
             ("Cat 3".to_string(), 6),
             ("Cat 1".to_string(), 3),
         ];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
     }
 
     #[test]
     fn category_toplevel_applies_limit_and_offset_after_grouping() {
+        use self::categories::dsl::*;
         let conn = pg_connection();
-        conn.batch_execute(
-            "INSERT INTO categories (category, slug, crates_cnt) VALUES
-            ('Cat 1', 'cat1', 1), ('Cat 1::sub', 'cat1::sub', 2),
-            ('Cat 2', 'cat2', 3), ('Cat 2::Sub 1', 'cat2::sub1', 4),
-            ('Cat 2::Sub 2', 'cat2::sub2', 5), ('Cat 3', 'cat3', 6)
-            ",
-        ).unwrap();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (
+                    category.eq("Cat 1::sub"),
+                    slug.eq("cat1::sub"),
+                    crates_cnt.eq(2),
+                ),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
+            ])
+            .execute(&conn)
+            .unwrap();
 
-        let categories = Category::toplevel(&conn, "crates", 2, 0)
+        let cats = Category::toplevel(&conn, "crates", 2, 0)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
             .collect::<Vec<_>>();
         let expected = vec![("Cat 2".to_string(), 12), ("Cat 3".to_string(), 6)];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
 
-        let categories = Category::toplevel(&conn, "crates", 2, 1)
+        let cats = Category::toplevel(&conn, "crates", 2, 1)
             .unwrap()
             .into_iter()
             .map(|c| (c.category, c.crates_cnt))
             .collect::<Vec<_>>();
         let expected = vec![("Cat 3".to_string(), 6), ("Cat 1".to_string(), 3)];
-        assert_eq!(expected, categories);
+        assert_eq!(expected, cats);
+    }
+
+    #[test]
+    fn category_parent_categories_includes_path_to_node_with_count() {
+        use self::categories::dsl::*;
+        let conn = pg_connection();
+        insert_into(categories)
+            .values(&vec![
+                (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(1)),
+                (
+                    category.eq("Cat 1::sub1"),
+                    slug.eq("cat1::sub1"),
+                    crates_cnt.eq(2),
+                ),
+                (
+                    category.eq("Cat 1::sub2"),
+                    slug.eq("cat1::sub2"),
+                    crates_cnt.eq(2),
+                ),
+                (
+                    category.eq("Cat 1::sub1::subsub1"),
+                    slug.eq("cat1::sub1::subsub1"),
+                    crates_cnt.eq(2),
+                ),
+                (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(3)),
+                (
+                    category.eq("Cat 2::Sub 1"),
+                    slug.eq("cat2::sub1"),
+                    crates_cnt.eq(4),
+                ),
+                (
+                    category.eq("Cat 2::Sub 2"),
+                    slug.eq("cat2::sub2"),
+                    crates_cnt.eq(5),
+                ),
+                (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(200)),
+            ])
+            .execute(&conn)
+            .unwrap();
+
+        let cat = Category::by_slug("cat1::sub1")
+            .first::<Category>(&conn)
+            .unwrap();
+        let subcats = cat.subcategories(&conn).unwrap();
+        let parents = cat.parent_categories(&conn).unwrap();
+
+        assert_eq!(parents.len(), 1);
+        assert_eq!(parents[0].slug, "cat1");
+        assert_eq!(parents[0].crates_cnt, 7);
+        assert_eq!(subcats.len(), 1);
+        assert_eq!(subcats[0].slug, "cat1::sub1::subsub1");
     }
 }

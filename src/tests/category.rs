@@ -79,7 +79,7 @@ fn show() {
     assert_eq!(json.category.category, "Foo Bar");
     assert_eq!(json.category.slug, "foo-bar");
     assert_eq!(json.category.subcategories.len(), 1);
-    assert_eq!(json.category.subcategories[0].category, "Foo Bar::Baz");
+    assert_eq!(json.category.subcategories[0].category, "Baz");
 }
 
 #[test]
