@@ -37,14 +37,14 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
-    let cat = Category::by_slug(slug)
-        .first::<Category>(&*conn)?;
+    let cat = Category::by_slug(slug).first::<Category>(&*conn)?;
     let subcats = cat
         .subcategories(&conn)?
         .into_iter()
         .map(Category::encodable)
         .collect();
-    let parents = cat.parent_categories(&conn)?
+    let parents = cat
+        .parent_categories(&conn)?
         .into_iter()
         .map(Category::encodable)
         .collect();

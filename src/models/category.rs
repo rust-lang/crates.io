@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use diesel::{*, self};
+use diesel::{self, *};
 
 use models::Crate;
 use schema::*;
@@ -44,9 +44,9 @@ type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
     diesel::pg::expression::array_comparison::Any<
         diesel::expression::bound::Bound<
             diesel::sql_types::Array<diesel::sql_types::Text>,
-            &'a [&'a str]
-        >
-    >
+            &'a [&'a str],
+        >,
+    >,
 >;
 type BySlugsCaseSensitive<'a> = diesel::dsl::Filter<All, WithSlugsCaseSensitive<'a>>;
 
@@ -106,10 +106,8 @@ impl Category {
         krate: &Crate,
         slugs: &[&'a str],
     ) -> QueryResult<Vec<&'a str>> {
-
         conn.transaction(|| {
-            let categories = Category::by_slugs_case_sensitive(slugs)
-                .load::<Category>(conn)?;
+            let categories = Category::by_slugs_case_sensitive(slugs).load::<Category>(conn)?;
             let invalid_categories = slugs
                 .iter()
                 .cloned()
