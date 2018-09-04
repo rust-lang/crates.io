@@ -72,7 +72,8 @@ impl<'de> Deserialize<'de> for CrateName {
             let value = de::Unexpected::Str(&s);
             let expected = format!(
                 "a valid crate name to start with a letter, contain only letters, \
-                 numbers, hyphens, or underscores and have at most {} characters",
+                 numbers, hyphens, or underscores, have at most {} characters \
+                 and not a reserved keyword",
                 MAX_NAME_LENGTH
             );
             Err(de::Error::invalid_value(value, &expected.as_ref()))

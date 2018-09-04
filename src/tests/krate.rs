@@ -878,6 +878,18 @@ fn new_krate_bad_name() {
 }
 
 #[test]
+fn valid_crate_name() {
+    // Bad names
+    // Reserved keywords are blacklisted
+    assert!(!Crate::valid_name("if"));
+    assert!(!Crate::valid_name("bête"));
+    assert!(!Crate::valid_name("test"));
+    // Good names
+    assert!(Crate::valid_name("ok"));
+    assert!(Crate::valid_name("a-good-test-1"));
+}
+
+#[test]
 fn valid_feature_names() {
     assert!(Crate::valid_feature("foo"));
     assert!(!Crate::valid_feature(""));
