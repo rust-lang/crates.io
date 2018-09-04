@@ -57,6 +57,7 @@ matrix:
       script:
         - rustup component add rustfmt-preview
         - cargo fmt -- --check
+        - diesel migration run # check that the schema.patch file applies
         - cargo build
         - cargo test
         - npm install
