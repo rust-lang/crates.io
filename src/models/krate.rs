@@ -249,8 +249,19 @@ impl Crate {
     }
 
     pub fn valid_name(name: &str) -> bool {
+        // This is the same blacklist as Cargo
+        // https://github.com/rust-lang/cargo/blob/master/src/cargo/ops/cargo_new.rs#L131
+        let blacklist = [
+            "abstract", "alignof", "as", "become", "box", "break", "const", "continue", "crate",
+            "do", "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in",
+            "let", "loop", "macro", "match", "mod", "move", "mut", "offsetof", "override", "priv",
+            "proc", "pub", "pure", "ref", "return", "self", "sizeof", "static", "struct", "super",
+            "test", "trait", "true", "type", "typeof", "unsafe", "unsized", "use", "virtual",
+            "where", "while", "yield",
+        ];
+
         let under_max_length = name.chars().take(MAX_NAME_LENGTH + 1).count() <= MAX_NAME_LENGTH;
-        Crate::valid_ident(name) && under_max_length
+        !blacklist.contains(&name) && Crate::valid_ident(name) && under_max_length
     }
 
     fn valid_ident(name: &str) -> bool {
