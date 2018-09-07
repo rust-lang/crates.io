@@ -1,5 +1,6 @@
 use super::prelude::*;
 
+use conduit::Method;
 use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
@@ -29,7 +30,7 @@ impl Middleware for CurrentUser {
 
         let conn = req.db_conn().map_err(std_error)?;
 
-        if let Some(id) = id {
+        if let (Some(id), Method::Get) = (id, req.method()) {
             // If it did, look for a user in the database with the given `user_id`
             let maybe_user = users::table.find(id).first::<User>(&*conn);
             if let Ok(user) = maybe_user {
