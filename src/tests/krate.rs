@@ -724,6 +724,7 @@ fn new_krate_with_dependency() {
         version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         target: None,
         kind: None,
+        explicit_name_in_toml: None,
     };
     let mut req = new_req_full(Arc::clone(&app), krate("new_dep"), "1.0.0", vec![dep]);
     {
@@ -751,6 +752,45 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+fn new_renamed_crate() {
+    let (_b, app, middle) = app();
+    let dep = u::CrateDependency {
+        name: u::CrateName("package-name".to_string()),
+        optional: false,
+        default_features: true,
+        features: Vec::new(),
+        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+        target: None,
+        kind: None,
+        explicit_name_in_toml: Some(u::CrateName("my-name".to_string())),
+    };
+    let mut req = new_req_full(Arc::clone(&app), krate("new-krate"), "1.0.0", vec![dep]);
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = new_user("user").create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
+        CrateBuilder::new("package-name", user.id).expect_build(&conn);
+    }
+
+    let mut response = ok_resp!(middle.call(&mut req));
+    ::json::<GoodCrate>(&mut response);
+
+    let path = ::git::checkout().join("ne/w-/new-krate");
+    assert!(path.exists());
+    let mut contents = String::new();
+    File::open(&path)
+        .unwrap()
+        .read_to_string(&mut contents)
+        .unwrap();
+    let p: git::Crate = serde_json::from_str(&contents).unwrap();
+    assert_eq!(p.name, "new-krate");
+    assert_eq!(p.vers, "1.0.0");
+    assert_eq!(p.deps.len(), 1);
+    assert_eq!(p.deps[0].name, "my-name");
+    assert_eq!(p.deps[0].package, Some("package-name".to_string()));
+}
+
+#[test]
 fn new_krate_non_canon_crate_name_dependencies() {
     let (_b, app, middle) = app();
     let deps = vec![u::CrateDependency {
@@ -761,6 +801,7 @@ fn new_krate_non_canon_crate_name_dependencies() {
         version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         target: None,
         kind: None,
+        explicit_name_in_toml: None,
     }];
     let mut req = new_req_full(Arc::clone(&app), krate("new_dep"), "1.0.0", deps);
     {
@@ -785,6 +826,7 @@ fn new_krate_with_wildcard_dependency() {
         version_req: u::CrateVersionReq(semver::VersionReq::parse("*").unwrap()),
         target: None,
         kind: None,
+        explicit_name_in_toml: None,
     };
     let mut req = new_req_full(Arc::clone(&app), krate("new_wild"), "1.0.0", vec![dep]);
     {
@@ -1113,6 +1155,7 @@ fn new_krate_dependency_missing() {
         version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0.0.0").unwrap()),
         target: None,
         kind: None,
+        explicit_name_in_toml: None,
     };
     let mut req = new_req_full(Arc::clone(&app), krate("foo_missing"), "1.0.0", vec![dep]);
     sign_in(&mut req, &app);

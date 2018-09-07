@@ -96,15 +96,26 @@ pub fn add_dependencies(
                 ));
             }
 
+            // If this dependency has an explicit name in `Cargo.toml` that
+            // means that the `name` we have listed is actually the package name
+            // that we're depending on. The `name` listed in the index is the
+            // Cargo.toml-written-name which is what cargo uses for
+            // `--extern foo=...`
+            let (name, package) = match &dep.explicit_name_in_toml {
+                Some(explicit) => (explicit.to_string(), Some(dep.name.to_string())),
+                None => (dep.name.to_string(), None),
+            };
+
             Ok((
                 git::Dependency {
-                    name: dep.name.to_string(),
+                    name,
                     req: dep.version_req.to_string(),
                     features: dep.features.iter().map(|s| s.to_string()).collect(),
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),
                     kind: dep.kind.or(Some(DependencyKind::Normal)),
+                    package,
                 },
                 (
                     version_id.eq(target_version_id),

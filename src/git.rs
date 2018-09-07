@@ -34,6 +34,8 @@ pub struct Dependency {
     pub default_features: bool,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package: Option<String>,
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {
