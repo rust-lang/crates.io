@@ -254,12 +254,11 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_name(name)
-            && name
-                .chars()
-                .nth(0)
-                .map(char::is_alphabetic)
-                .unwrap_or(false)
+        Self::valid_feature_name(name) && name
+            .chars()
+            .nth(0)
+            .map(char::is_alphabetic)
+            .unwrap_or(false)
     }
 
     pub fn valid_feature_name(name: &str) -> bool {
@@ -440,8 +439,7 @@ impl Crate {
                         invited_user_id: owner.id(),
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
-                    })
-                    .on_conflict_do_nothing()
+                    }).on_conflict_do_nothing()
                     .execute(conn)?;
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
@@ -457,8 +455,7 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
-                    })
-                    .on_conflict(crate_owners::table.primary_key())
+                    }).on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;

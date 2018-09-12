@@ -56,7 +56,8 @@ impl<'a> MarkdownRenderer<'a> {
             "ul",
             "hr",
             "span",
-        ].iter()
+        ]
+            .iter()
             .cloned()
             .collect();
         let tag_attributes = [
@@ -72,7 +73,8 @@ impl<'a> MarkdownRenderer<'a> {
                 "input",
                 ["checked", "disabled", "type"].iter().cloned().collect(),
             ),
-        ].iter()
+        ]
+            .iter()
             .cloned()
             .collect();
         let allowed_classes = [(
@@ -92,10 +94,12 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-scss",
                 "language-sql",
                 "yaml",
-            ].iter()
+            ]
+                .iter()
                 .cloned()
                 .collect(),
-        )].iter()
+        )]
+            .iter()
             .cloned()
             .collect();
 
@@ -178,8 +182,7 @@ impl<'a> MarkdownRenderer<'a> {
                 UrlRelative::Custom(Box::new(relative_url_sanitizer))
             } else {
                 UrlRelative::Custom(Box::new(unrelative_url_sanitizer))
-            })
-            .id_prefix(Some("user-content-"));
+            }).id_prefix(Some("user-content-"));
 
         MarkdownRenderer { html_sanitizer }
     }

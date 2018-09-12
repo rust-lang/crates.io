@@ -34,8 +34,7 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
             .zip(krates)
             .map(|(max_version, krate)| {
                 Ok(krate.minimal_encodable(&max_version, None, false, None))
-            })
-            .collect()
+            }).collect()
     };
 
     let new_crates = crates

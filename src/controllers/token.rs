@@ -53,7 +53,8 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
 
-    let json = String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
+    let json =
+        String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
 
     let new: NewApiTokenRequest = json::from_str(&json)
         .map_err(|e| bad_request(&format!("invalid new token request: {:?}", e)))?;

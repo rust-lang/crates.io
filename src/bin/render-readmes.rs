@@ -84,8 +84,7 @@ fn main() {
             readme_renderings::rendered_at
                 .lt(older_than)
                 .or(readme_renderings::version_id.is_null()),
-        )
-        .select(versions::id)
+        ).select(versions::id)
         .into_boxed();
 
     if let Some(crate_name) = args.flag_crate {
@@ -156,8 +155,7 @@ fn main() {
                         readme.as_bytes(),
                         "text/html",
                         readme_len as u64,
-                    )
-                    .unwrap_or_else(|_| {
+                    ).unwrap_or_else(|_| {
                         panic!(
                             "[{}-{}] Couldn't upload file to S3",
                             krate_name, version.num
@@ -289,16 +287,14 @@ fn find_file_by_path<R: Read>(
                 };
                 filepath == path
             }
-        })
-        .unwrap_or_else(|| {
+        }).unwrap_or_else(|| {
             panic!(
                 "[{}-{}] couldn't open file: {}",
                 krate_name,
                 version.num,
                 path.display()
             )
-        })
-        .unwrap_or_else(|_| {
+        }).unwrap_or_else(|_| {
             panic!(
                 "[{}-{}] file is not present: {}",
                 krate_name,

@@ -78,8 +78,7 @@ impl<'a> NewUser<'a> {
                     name.eq(excluded(name)),
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
-                ))
-                .get_result::<User>(conn)?;
+                )).get_result::<User>(conn)?;
 
             // To send the user an account verification email...
             if let Some(user_email) = user.email.as_ref() {

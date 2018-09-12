@@ -350,8 +350,7 @@ impl<'a> VersionBuilder<'a> {
                     dependencies::default_features.eq(false),
                     dependencies::features.eq(Vec::<String>::new()),
                 )
-            })
-            .collect::<Vec<_>>();
+            }).collect::<Vec<_>>();
         insert_into(dependencies::table)
             .values(&new_deps)
             .execute(connection)?;
@@ -571,8 +570,7 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
             optional.eq(false),
             default_features.eq(false),
             features.eq(Vec::<String>::new()),
-        ))
-        .get_result(conn)
+        )).get_result(conn)
         .unwrap()
 }
 
@@ -744,8 +742,7 @@ fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8
         .map(|(&(name, _), data)| {
             let len = data.len() as u64;
             (name, data as &mut Read, len)
-        })
-        .collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
     new_crate_to_body_with_io(new_crate, &mut files)
 }
 
@@ -777,7 +774,8 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
             (json.len() >> 8) as u8,
             (json.len() >> 16) as u8,
             (json.len() >> 24) as u8,
-        ].iter()
+        ]
+            .iter()
             .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());

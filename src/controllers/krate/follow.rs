@@ -11,7 +11,9 @@ fn follow_target(req: &mut dyn Request) -> CargoResult<Follow> {
     let user = req.user()?;
     let conn = req.db_conn()?;
     let crate_name = &req.params()["crate_id"];
-    let crate_id = Crate::by_name(crate_name).select(crates::id).first(&*conn)?;
+    let crate_id = Crate::by_name(crate_name)
+        .select(crates::id)
+        .first(&*conn)?;
     Ok(Follow {
         user_id: user.id,
         crate_id,

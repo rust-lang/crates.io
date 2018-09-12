@@ -95,7 +95,8 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
         owners: Option<Vec<String>>,
     }
 
-    let request: Request = serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+    let request: Request =
+        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
 
     let logins = request
         .owners

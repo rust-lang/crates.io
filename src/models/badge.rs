@@ -22,7 +22,11 @@ pub struct CrateBadge {
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case", tag = "badge_type", content = "attributes")]
+#[serde(
+    rename_all = "kebab-case",
+    tag = "badge_type",
+    content = "attributes"
+)]
 pub enum Badge {
     TravisCi {
         repository: String,

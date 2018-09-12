@@ -122,8 +122,7 @@ pub fn proxy() -> (String, Bomb) {
                 sink: sink2,
                 record: Arc::clone(&record),
                 client,
-            })
-            .map_err(|e| eprintln!("server connection error: {}", e));
+            }).map_err(|e| eprintln!("server connection error: {}", e));
 
         drop(core.run(srv.select2(quitrx)));
 

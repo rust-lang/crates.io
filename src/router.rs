@@ -220,7 +220,7 @@ mod tests {
                 0,
                 0
             ))).call(&mut req)
-                .is_err()
+            .is_err()
         );
         assert!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))
