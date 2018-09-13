@@ -125,8 +125,7 @@ impl Uploader {
                             .write_function(|data| {
                                 response.extend(data);
                                 Ok(data.len())
-                            })
-                            .unwrap();
+                            }).unwrap();
                         s3req.perform().chain_error(|| {
                             internal(&format_args!("failed to upload to S3: `{}`", path))
                         })?;
@@ -259,8 +258,9 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry
-            .chain_error(|| human("uploaded tarball is malformed or too large when decompressed"))?;
+        let entry = entry.chain_error(|| {
+            human("uploaded tarball is malformed or too large when decompressed")
+        })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could

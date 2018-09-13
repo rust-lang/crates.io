@@ -53,8 +53,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
                 k[..].to_string(),
                 v.iter().map(|v| v[..].to_string()).collect(),
             )
-        })
-        .collect::<HashMap<String, Vec<String>>>();
+        }).collect::<HashMap<String, Vec<String>>>();
     let keywords = new_crate
         .keywords
         .as_ref()
