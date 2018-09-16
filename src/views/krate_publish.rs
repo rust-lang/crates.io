@@ -63,6 +63,7 @@ pub struct CrateDependency {
     pub version_req: CrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+    pub explicit_name_in_toml: Option<CrateName>,
 }
 
 impl<'de> Deserialize<'de> for CrateName {
