@@ -56,7 +56,7 @@
     "ember-exam": "^1.0.0",
     "ember-export-application-global": "^2.0.0",
     "ember-fetch": "^5.0.0",
-    "ember-keyboard": "^3.0.2",
+    "ember-keyboard": "^4.0.0",
     "ember-load-initializers": "^1.0.0",
     "ember-maybe-import-regenerator": "^0.1.6",
     "ember-moment": "^7.5.0",
