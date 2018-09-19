@@ -794,6 +794,7 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
 /// A struct representing a browser session to be used for the duration of a test.
 /// Has useful methods for making common HTTP requests.
 struct BrowserSession {
+    app: Arc<App>,
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
     middle: conduit_middleware::MiddlewareBuilder,
@@ -818,8 +819,23 @@ impl BrowserSession {
         };
 
         BrowserSession {
-            _bomb: bomb, middle, request, _user: user,
+            app, _bomb: bomb, middle, request, _user: user,
         }
+    }
+
+    /// Create a browser session logged in with the given user.
+    // fn logged_in_as(_user: &User) -> Self {
+    //     unimplemented!();
+    // }
+
+    /// Log out the currently logged in user.
+    fn logout(&mut self) {
+        logout(&mut self.request);
+    }
+
+    /// Using the same session, log in as a different user.
+    fn log_in_as(&mut self, user: &User) {
+        sign_in_as(&mut self.request, user);
     }
 
     /// Request the JSON used for a crate's page.
@@ -827,6 +843,76 @@ impl BrowserSession {
         self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
         let mut response = ok_resp!(self.middle.call(&mut self.request));
         json(&mut response)
+    }
+
+    /// Add a user as an owner for a crate.
+    fn add_owner(&mut self, krate_name: &str, user: &User) {
+        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
+        self.request
+            .with_path(&format!("/api/v1/crates/{}/owners", krate_name))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes());
+
+        let mut response = ok_resp!(self.middle.call(&mut self.request));
+
+        #[derive(Deserialize)]
+        struct O {
+            ok: bool,
+        }
+        assert!(json::<O>(&mut response).ok);
+    }
+
+    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// crate.
+    fn accept_ownership_invitation(&mut self, krate_name: &str) {
+        use views::InvitationResponse;
+
+        let krate_id = {
+            let conn = self.app.diesel_database.get().unwrap();
+            Crate::by_name(krate_name)
+                .first::<Crate>(&*conn)
+                .unwrap()
+                .id
+        };
+
+        let body = json!({
+            "crate_owner_invite": {
+                "invited_by_username": "",
+                "crate_name": krate_name,
+                "crate_id": krate_id,
+                "created_at": "",
+                "accepted": true
+            }
+        });
+
+        self.request
+            .with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes());
+
+        let mut response = ok_resp!(self.middle.call(&mut self.request));
+
+        #[derive(Deserialize)]
+        struct CrateOwnerInvitation {
+            crate_owner_invitation: InvitationResponse,
+        }
+
+        let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
+        assert!(crate_owner_invite.crate_owner_invitation.accepted);
+        assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
+    }
+
+    /// Get the crates owned by the specified user.
+    fn crates_owned_by(&mut self, user: &User) -> CrateList {
+        let query = format!("user_id={}", user.id);
+        self.request
+            .with_path("/api/v1/crates")
+            .with_method(Method::Get)
+            .with_query(&query);
+
+        let mut response = ok_resp!(self.middle.call(&mut self.request));
+
+        json::<CrateList>(&mut response)
     }
 }
 

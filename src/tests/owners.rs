@@ -10,8 +10,8 @@ use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 use {
-    add_team_to_crate, app, logout, new_req, new_req_body_version_2, new_team, new_user, req,
-    sign_in, sign_in_as, Bad, CrateBuilder, CrateList, GoodCrate,
+    add_team_to_crate, app, logout, new_team, new_user, req,
+    sign_in_as, Bad, BrowserSession, CrateBuilder, CrateList, PublishBuilder,
 };
 
 #[derive(Deserialize)]
@@ -25,96 +25,31 @@ struct UserResponse {
 
 #[test]
 fn new_crate_owner() {
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
-
-    let (_b, app, middle) = app();
-
     // Create a crate under one user
-    let mut req = new_req(Arc::clone(&app), "foo_owner", "1.0.0");
-    sign_in(&mut req, &app);
+    let mut session = BrowserSession::logged_in();
+    PublishBuilder::new("foo_owner").version("1.0.0").publish(&mut session);
+
     let u2;
     {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.app.diesel_database.get().unwrap();
         u2 = new_user("bar").create_or_update(&conn).unwrap();
     }
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
 
-    // Flag the second user as an owner
-    let body = r#"{"users":["bar"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
-    assert!(::json::<O>(&mut response).ok);
+    // Add the second user as an owner
+    session.add_owner("foo_owner", &u2);
+    session.logout();
 
-    let krate_id = {
-        let conn = app.diesel_database.get().unwrap();
-        Crate::by_name("foo_owner")
-            .first::<Crate>(&*conn)
-            .unwrap()
-            .id
-    };
-
-    let body = json!({
-        "crate_owner_invite": {
-            "invited_by_username": "foo",
-            "crate_name": "foo_owner",
-            "crate_id": krate_id,
-            "created_at": "",
-            "accepted": true
-        }
-    });
-
-    logout(&mut req);
-    sign_in_as(&mut req, &u2);
+    session.log_in_as(&u2);
 
     // accept invitation for user to be added as owner
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
-                .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes()),
-        )
-    );
-
-    #[derive(Deserialize)]
-    struct CrateOwnerInvitation {
-        crate_owner_invitation: InvitationResponse,
-    }
-
-    let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
-    assert!(crate_owner_invite.crate_owner_invitation.accepted);
-    assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
+    session.accept_ownership_invitation("foo_owner");
 
     // Make sure this shows up as one of their crates.
-    let query = format!("user_id={}", u2.id);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates")
-                .with_method(Method::Get)
-                .with_query(&query),
-        )
-    );
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
+    let crates = session.crates_owned_by(&u2);
+    assert_eq!(crates.crates.len(), 1);
 
-    // And upload a new crate as the first user
-    let body = new_req_body_version_2(::krate("foo_owner"));
-    sign_in_as(&mut req, &u2);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    ::json::<GoodCrate>(&mut response);
+    // And upload a new crate as the second user
+    PublishBuilder::new("foo_owner").version("2.0.0").publish(&mut session);
 }
 
 // Ensures that so long as at least one owner remains associated with the crate,
