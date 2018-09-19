@@ -797,8 +797,8 @@ pub struct BrowserSession {
     app: Arc<App>,
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
-    pub middle: conduit_middleware::MiddlewareBuilder,
-    pub request: MockRequest,
+    middle: conduit_middleware::MiddlewareBuilder,
+    request: MockRequest,
     _user: User,
 }
 
@@ -828,6 +828,11 @@ impl BrowserSession {
     //     unimplemented!();
     // }
 
+    /// For internal use only: make the current request
+    fn make_request(&mut self) -> conduit::Response {
+        ok_resp!(self.middle.call(&mut self.request))
+    }
+
     /// Log out the currently logged in user.
     pub fn logout(&mut self) {
         logout(&mut self.request);
@@ -841,7 +846,7 @@ impl BrowserSession {
     /// Request the JSON used for a crate's page.
     pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
         self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
-        let mut response = ok_resp!(self.middle.call(&mut self.request));
+        let mut response = self.make_request();
         json(&mut response)
     }
 
@@ -853,7 +858,7 @@ impl BrowserSession {
             .with_method(Method::Put)
             .with_body(body.as_bytes());
 
-        let mut response = ok_resp!(self.middle.call(&mut self.request));
+        let mut response = self.make_request();
 
         #[derive(Deserialize)]
         struct O {
@@ -890,7 +895,7 @@ impl BrowserSession {
             .with_method(Method::Put)
             .with_body(body.to_string().as_bytes());
 
-        let mut response = ok_resp!(self.middle.call(&mut self.request));
+        let mut response = self.make_request();
 
         #[derive(Deserialize)]
         struct CrateOwnerInvitation {
@@ -910,7 +915,7 @@ impl BrowserSession {
             .with_method(Method::Get)
             .with_query(&query);
 
-        let mut response = ok_resp!(self.middle.call(&mut self.request));
+        let mut response = self.make_request();
 
         json::<CrateList>(&mut response)
     }
@@ -1008,7 +1013,7 @@ impl PublishBuilder {
             .with_method(Method::Put).with_path("/api/v1/crates/new")
             .with_body(&::new_crate_to_body_with_tarball(&new_crate, &self.tarball));
 
-        let mut response = ok_resp!(session.middle.call(&mut session.request));
+        let mut response = session.make_request();
         let json: GoodCrate = json(&mut response);
         assert_eq!(json.krate.name, self.krate_name);
     }
