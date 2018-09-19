@@ -114,7 +114,7 @@ struct GoodCrate {
     warnings: Warnings,
 }
 #[derive(Deserialize)]
-struct CrateList {
+pub struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
@@ -128,7 +128,7 @@ struct CrateMeta {
     total: i32,
 }
 #[derive(Deserialize)]
-struct CrateResponse {
+pub struct CrateResponse {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
@@ -793,18 +793,18 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
 
 /// A struct representing a browser session to be used for the duration of a test.
 /// Has useful methods for making common HTTP requests.
-struct BrowserSession {
+pub struct BrowserSession {
     app: Arc<App>,
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
-    middle: conduit_middleware::MiddlewareBuilder,
-    request: MockRequest,
+    pub middle: conduit_middleware::MiddlewareBuilder,
+    pub request: MockRequest,
     _user: User,
 }
 
 impl BrowserSession {
     /// Create a browser session logged in with an arbitrary user.
-    fn logged_in() -> Self {
+    pub fn logged_in() -> Self {
         let (bomb, app, middle) = app();
 
         let mut request = MockRequest::new(Method::Get, "/");
@@ -824,29 +824,29 @@ impl BrowserSession {
     }
 
     /// Create a browser session logged in with the given user.
-    // fn logged_in_as(_user: &User) -> Self {
+    // pub fn logged_in_as(_user: &User) -> Self {
     //     unimplemented!();
     // }
 
     /// Log out the currently logged in user.
-    fn logout(&mut self) {
+    pub fn logout(&mut self) {
         logout(&mut self.request);
     }
 
     /// Using the same session, log in as a different user.
-    fn log_in_as(&mut self, user: &User) {
+    pub fn log_in_as(&mut self, user: &User) {
         sign_in_as(&mut self.request, user);
     }
 
     /// Request the JSON used for a crate's page.
-    fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
+    pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
         self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
         let mut response = ok_resp!(self.middle.call(&mut self.request));
         json(&mut response)
     }
 
     /// Add a user as an owner for a crate.
-    fn add_owner(&mut self, krate_name: &str, user: &User) {
+    pub fn add_owner(&mut self, krate_name: &str, user: &User) {
         let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
         self.request
             .with_path(&format!("/api/v1/crates/{}/owners", krate_name))
@@ -864,7 +864,7 @@ impl BrowserSession {
 
     /// As the currently logged in user, accept an invitation to become an owner of the named
     /// crate.
-    fn accept_ownership_invitation(&mut self, krate_name: &str) {
+    pub fn accept_ownership_invitation(&mut self, krate_name: &str) {
         use views::InvitationResponse;
 
         let krate_id = {
@@ -903,7 +903,7 @@ impl BrowserSession {
     }
 
     /// Get the crates owned by the specified user.
-    fn crates_owned_by(&mut self, user: &User) -> CrateList {
+    pub fn crates_owned_by(&mut self, user: &User) -> CrateList {
         let query = format!("user_id={}", user.id);
         self.request
             .with_path("/api/v1/crates")
