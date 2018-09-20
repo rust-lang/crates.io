@@ -588,21 +588,6 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(
-    app: &Arc<App>,
-    user: &NewUser<'_>,
-    krate: &str,
-) -> MockRequest {
-    let mut req = new_req(Arc::clone(app), krate, "1.0.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new(krate, user.id).expect_build(&conn);
-    }
-    req
-}
-
 fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
     new_req_full(app, ::krate(krate), version, Vec::new())
 }
