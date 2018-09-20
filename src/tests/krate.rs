@@ -32,9 +32,9 @@ use {
     app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, request_with_user_and_mock_crate, sign_in,
-    sign_in_as, user, Bad, CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate,
-    VersionBuilder,
+    new_req_with_keywords, new_user, new_version, req, sign_in,
+    sign_in_as, user, Bad, BrowserSession, CrateBuilder, CrateList, CrateMeta, CrateResponse,
+    GoodCrate, VersionBuilder,
 };
 
 #[derive(Deserialize)]
@@ -1539,12 +1539,15 @@ fn yank() {
 
 #[test]
 fn yank_not_owner() {
-    let (_b, app, middle) = app();
-    let mut req = request_with_user_and_mock_crate(&app, &new_user("bar"), "foo_not");
-    sign_in(&mut req, &app);
-    req.with_method(Method::Delete)
-        .with_path("/api/v1/crates/foo_not/1.0.0/yank");
-    let mut response = ok_resp!(middle.call(&mut req));
+    let mut session = BrowserSession::logged_in();
+    {
+        let conn = session.app.diesel_database.get().unwrap();
+        let another_user = new_user("bar").create_or_update(&conn).unwrap();
+        CrateBuilder::new("foo_not", another_user.id).expect_build(&conn);
+    }
+
+    let mut response = session.yank("foo_not", "1.0.0");
+
     ::json::<Bad>(&mut response);
 }
 

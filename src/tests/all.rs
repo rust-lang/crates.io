@@ -862,6 +862,14 @@ impl BrowserSession {
         json(&mut response)
     }
 
+    /// Yank the specified version of the specified crate.
+    pub fn yank(&mut self, krate_name: &str, version: &str) -> conduit::Response {
+        self.request
+            .with_path(&format!("/api/v1/crates/{}/{}/yank", krate_name, version))
+            .with_method(Method::Delete);
+        self.make_request()
+    }
+
     /// Add a user as an owner for a crate.
     pub fn add_owner(&mut self, krate_name: &str, user: &User) {
         let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
