@@ -265,13 +265,7 @@ fn record_http(
             hyper_response.status(status);
             let mut hyper_response = hyper_response.body(body.into()).unwrap();
             *hyper_response.headers_mut() = headers;
-            (
-                hyper_response,
-                Exchange {
-                    response: response,
-                    request: request,
-                },
-            )
+            (hyper_response, Exchange { response, request })
         })
     }))
 }
