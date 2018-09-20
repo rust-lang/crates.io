@@ -118,11 +118,13 @@ fn record_rerendered_readme_time() {
 #[test]
 fn version_size() {
     let mut session = BrowserSession::logged_in();
-    PublishBuilder::new("foo_version_size").version("1.0.0").publish(&mut session);
+    let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
+    session.publish(crate_to_publish);
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
-    PublishBuilder::new("foo_version_size").version("2.0.0").files(&files).publish(&mut session);
+    let crate_to_publish = PublishBuilder::new("foo_version_size").version("2.0.0").files(&files);
+    session.publish(crate_to_publish);
 
     let crate_json = session.show_crate("foo_version_size");
 

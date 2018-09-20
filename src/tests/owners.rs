@@ -27,7 +27,8 @@ struct UserResponse {
 fn new_crate_owner() {
     // Create a crate under one user
     let mut session = BrowserSession::logged_in();
-    PublishBuilder::new("foo_owner").version("1.0.0").publish(&mut session);
+    let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
+    session.publish(crate_to_publish);
 
     let u2;
     {
@@ -49,7 +50,8 @@ fn new_crate_owner() {
     assert_eq!(crates.crates.len(), 1);
 
     // And upload a new crate as the second user
-    PublishBuilder::new("foo_owner").version("2.0.0").publish(&mut session);
+    let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
+    session.publish(crate_to_publish);
 }
 
 // Ensures that so long as at least one owner remains associated with the crate,

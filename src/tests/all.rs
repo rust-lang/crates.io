@@ -843,6 +843,18 @@ impl BrowserSession {
         sign_in_as(&mut self.request, user);
     }
 
+    /// Publish the crate as specified by the given builder
+    pub fn publish(&mut self, publish_builder: PublishBuilder) {
+        let krate_name = publish_builder.krate_name.clone();
+        self.request
+            .with_path("/api/v1/crates/new")
+            .with_method(Method::Put)
+            .with_body(&publish_builder.body());
+        let mut response = self.make_request();
+        let json: GoodCrate = json(&mut response);
+        assert_eq!(json.krate.name, krate_name);
+    }
+
     /// Request the JSON used for a crate's page.
     pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
         self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
@@ -935,8 +947,8 @@ lazy_static!{
 /// A builder for constructing a crate for the purposes of testing publishing. If you only need
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
 /// a crate into the database directly by using CrateBuilder will be faster.
-struct PublishBuilder {
-    krate_name: String,
+pub struct PublishBuilder {
+    pub krate_name: String,
     version: semver::Version,
     tarball: Vec<u8>,
 }
@@ -987,8 +999,8 @@ impl PublishBuilder {
         self
     }
 
-    /// Publish the crate in the context of the given session, which must have a logged in user.
-    fn publish(self, session: &mut BrowserSession) {
+    /// Consume this builder to make the Put request body
+    fn body(self) -> Vec<u8> {
         let new_crate = u::NewCrate {
             name: u::CrateName(self.krate_name.clone()),
             vers: u::CrateVersion(self.version),
@@ -1009,12 +1021,6 @@ impl PublishBuilder {
             links: None,
         };
 
-        session.request
-            .with_method(Method::Put).with_path("/api/v1/crates/new")
-            .with_body(&::new_crate_to_body_with_tarball(&new_crate, &self.tarball));
-
-        let mut response = session.make_request();
-        let json: GoodCrate = json(&mut response);
-        assert_eq!(json.krate.name, self.krate_name);
+        ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
     }
 }
