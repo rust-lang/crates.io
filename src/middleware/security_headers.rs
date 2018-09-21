@@ -22,9 +22,7 @@ impl SecurityHeaders {
 
         let s3_host = match *uploader {
             Uploader::S3 {
-                ref host,
-                ref cdn,
-                ..
+                ref host, ref cdn, ..
             } => match *cdn {
                 Some(ref s) => s.clone(),
                 None => host.clone(),

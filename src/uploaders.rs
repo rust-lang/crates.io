@@ -16,8 +16,8 @@ use std::sync::Arc;
 use futures::future::{result, FutureResult};
 use futures::{Future, Poll};
 
-use rusoto_core::{Region, ProvideAwsCredentials};
 use rusoto_core::request::HttpClient;
+use rusoto_core::{ProvideAwsCredentials, Region};
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use rusoto_s3::{DeleteObjectRequest, PutObjectRequest, S3, S3Client};
 
@@ -49,13 +49,9 @@ pub enum Uploader {
 impl fmt::Debug for Uploader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Uploader::S3 {
-                ..
-            } => {
-                write!(f, "Uploader::S3")
-            }
-            Uploader::Local  => write!(f, "Uploader::Local"),
-            Uploader::NoOp  => write!(f, "Uploader::NoOp")
+            Uploader::S3 { .. } => write!(f, "Uploader::S3"),
+            Uploader::Local => write!(f, "Uploader::Local"),
+            Uploader::NoOp => write!(f, "Uploader::NoOp"),
         }
     }
 }
@@ -86,8 +82,7 @@ impl Uploader {
             endpoint: host.clone(),
         };
 
-        let dispatcher = HttpClient::new()
-            .expect("failed to create request dispatcher");
+        let dispatcher = HttpClient::new().expect("failed to create request dispatcher");
         let credentials = S3CredentialsProvider::new(access_key, secret_key);
 
         let s3client = S3Client::new_with(dispatcher, credentials, region);
@@ -184,7 +179,7 @@ impl Uploader {
             Uploader::S3 {
                 ref client,
                 ref bucket,
-                 ..
+                ..
             } => {
                 let req = PutObjectRequest {
                     bucket: bucket.to_string(),
@@ -195,9 +190,10 @@ impl Uploader {
                     ..Default::default()
                 };
 
-                client.put_object(req).sync().chain_error(|| {
-                    internal(&format_args!("failed to upload to S3: `{}`", path))
-                })?;
+                client
+                    .put_object(req)
+                    .sync()
+                    .chain_error(|| internal(&format_args!("failed to upload to S3: `{}`", path)))?;
 
                 Ok((Some(String::from(path)), hash))
             }
@@ -230,12 +226,7 @@ impl Uploader {
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-            self.upload(
-                &path,
-                &body,
-                "application/x-tar",
-                u64::from(file_length),
-            )?
+            self.upload(&path, &body, "application/x-tar", u64::from(file_length))?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
@@ -246,12 +237,7 @@ impl Uploader {
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
             let length = rendered.len();
-            self.upload(
-                &path,
-                rendered.as_bytes(),
-                "text/html",
-                length as u64,
-            )?
+            self.upload(&path, rendered.as_bytes(), "text/html", length as u64)?
         } else {
             (None, vec![])
         };
@@ -279,9 +265,10 @@ impl Uploader {
                     ..Default::default()
                 };
 
-                client.delete_object(req).sync().chain_error(|| {
-                    internal(&format_args!("failed to upload to S3: `{}`", path))
-                })?;
+                client
+                    .delete_object(req)
+                    .sync()
+                    .chain_error(|| internal(&format_args!("failed to upload to S3: `{}`", path)))?;
 
                 Ok(())
             }
@@ -332,7 +319,7 @@ impl ProvideAwsCredentials for S3CredentialsProvider {
         let secret_key = self.secret_key.clone();
 
         S3CredentialsProviderFuture {
-            inner: result(Ok(AwsCredentials::new(access_key, secret_key, None, None)))
+            inner: result(Ok(AwsCredentials::new(access_key, secret_key, None, None))),
         }
     }
 }
