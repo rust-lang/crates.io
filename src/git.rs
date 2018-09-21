@@ -206,11 +206,19 @@ where
 
 pub fn credentials(
     _user: &str,
-    _user_from_url: Option<&str>,
+    user_from_url: Option<&str>,
     _cred: git2::CredentialType,
 ) -> Result<git2::Cred, git2::Error> {
     match (env::var("GIT_HTTP_USER"), env::var("GIT_HTTP_PWD")) {
         (Ok(u), Ok(p)) => git2::Cred::userpass_plaintext(&u, &p),
-        _ => Err(git2::Error::from_str("no authentication set")),
+        _ => {
+            // If there is no user, or password, try and use SSH keys using
+            // the SSH agent.
+            if let Some(user) = user_from_url {
+                git2::Cred::ssh_key_from_agent(user)
+            } else {
+                Err(git2::Error::from_str("no authentication set"))
+            }
+        }
     }
 }

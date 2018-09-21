@@ -199,6 +199,18 @@ impl CargoError for ::std::io::Error {
     }
 }
 
+impl CargoError for ::rusoto_s3::PutObjectError {
+    fn description(&self) -> &str {
+        Error::description(self)
+    }
+}
+
+impl CargoError for ::rusoto_s3::DeleteObjectError {
+    fn description(&self) -> &str {
+        Error::description(self)
+    }
+}
+
 // =============================================================================
 // Concrete errors
 

@@ -28,7 +28,7 @@ services:
     volumes:
       # Mount the src/ directory so we don't have to rebuild the Docker image
       # when we want to change some code
-      - ./src:/app/src:ro
+      - ./src:/app/src
 
       - index:/app/tmp
       - cargo-cache:/usr/local/cargo/registry
@@ -37,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    entrypoint: npm run start --proxy http://backend:8888
+    entrypoint: npm run start -- --proxy http://backend:8888
     links:
       - backend
     ports:

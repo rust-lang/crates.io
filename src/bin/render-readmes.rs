@@ -150,7 +150,6 @@ fn main() {
                 config
                     .uploader
                     .upload(
-                        Easy::new(),
                         &readme_path,
                         readme.as_bytes(),
                         "text/html",

@@ -1,8 +1,6 @@
 use conduit::Request;
-use curl::easy::Easy;
 use flate2::read::GzDecoder;
 use openssl::hash::{Hasher, MessageDigest};
-use s3;
 use semver;
 use tar;
 
@@ -10,20 +8,32 @@ use util::LimitErrorReader;
 use util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
+use std::fmt;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::sync::Arc;
 
+use futures::future::{result, FutureResult};
+use futures::{Future, Poll};
+
+use rusoto_core::{Region, ProvideAwsCredentials};
+use rusoto_core::request::HttpClient;
+use rusoto_credential::{AwsCredentials, CredentialsError};
+use rusoto_s3::{DeleteObjectRequest, PutObjectRequest, S3, S3Client};
+
 use app::App;
+
 use middleware::app::RequestApp;
 use models::Crate;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
     /// For test usage with a proxy.
     S3 {
-        bucket: s3::Bucket,
+        client: Arc<S3Client>,
+        bucket: String,
+        host: String,
         cdn: Option<String>,
         proxy: Option<String>,
     },
@@ -36,7 +46,61 @@ pub enum Uploader {
     NoOp,
 }
 
+impl fmt::Debug for Uploader {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Uploader::S3 {
+                ..
+            } => {
+                write!(f, "Uploader::S3")
+            }
+            Uploader::Local  => write!(f, "Uploader::Local"),
+            Uploader::NoOp  => write!(f, "Uploader::NoOp")
+        }
+    }
+}
+
 impl Uploader {
+    /// Creates a new S3 uploader object.
+    pub fn new_s3(
+        bucket: String,
+        region: Option<String>,
+        access_key: String,
+        secret_key: String,
+        host: Option<String>,
+        cdn: Option<String>,
+    ) -> Uploader {
+        let host = host.unwrap_or(format!(
+            "{}.s3{}.amazonaws.com",
+            bucket,
+            match region {
+                Some(ref r) if r != "" => format!("-{}", r),
+                Some(_) => String::new(),
+                None => String::new(),
+            }
+        ));
+
+        // Use the custom handler as we always provide an endpoint to connect to.
+        let region = Region::Custom {
+            name: region.unwrap_or("us-east-1".to_string()),
+            endpoint: host.clone(),
+        };
+
+        let dispatcher = HttpClient::new()
+            .expect("failed to create request dispatcher");
+        let credentials = S3CredentialsProvider::new(access_key, secret_key);
+
+        let s3client = S3Client::new_with(dispatcher, credentials, region);
+
+        Uploader::S3 {
+            client: Arc::new(s3client),
+            bucket: bucket,
+            host: host,
+            cdn: cdn,
+            proxy: None,
+        }
+    }
+
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
@@ -51,16 +115,18 @@ impl Uploader {
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 {
+                ref host,
                 ref bucket,
                 ref cdn,
                 ..
             } => {
                 let host = match *cdn {
                     Some(ref s) => s.clone(),
-                    None => bucket.host(),
+                    None => host.clone(),
                 };
+
                 let path = Uploader::crate_path(crate_name, version);
-                Some(format!("https://{}/{}", host, path))
+                Some(format!("https://{}/{}/{}", host, bucket, path))
             }
             Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
             Uploader::NoOp => None,
@@ -74,16 +140,17 @@ impl Uploader {
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 {
+                ref host,
                 ref bucket,
                 ref cdn,
                 ..
             } => {
                 let host = match *cdn {
                     Some(ref s) => s.clone(),
-                    None => bucket.host(),
+                    None => host.clone(),
                 };
                 let path = Uploader::readme_path(crate_name, version);
-                Some(format!("https://{}/{}", host, path))
+                Some(format!("https://{}/{}/{}", host, bucket, path))
             }
             Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
             Uploader::NoOp => None,
@@ -107,7 +174,6 @@ impl Uploader {
     /// and its checksum.
     pub fn upload(
         &self,
-        mut handle: Easy,
         path: &str,
         body: &[u8],
         content_type: &str,
@@ -115,31 +181,25 @@ impl Uploader {
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
         let hash = hash(body);
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                let (response, cksum) = {
-                    let mut response = Vec::new();
-                    {
-                        let mut s3req =
-                            bucket.put(&mut handle, path, body, content_type, file_length);
-                        s3req
-                            .write_function(|data| {
-                                response.extend(data);
-                                Ok(data.len())
-                            }).unwrap();
-                        s3req.perform().chain_error(|| {
-                            internal(&format_args!("failed to upload to S3: `{}`", path))
-                        })?;
-                    }
-                    (response, hash)
+            Uploader::S3 {
+                ref client,
+                ref bucket,
+                 ..
+            } => {
+                let req = PutObjectRequest {
+                    bucket: bucket.to_string(),
+                    key: path.to_string(),
+                    content_type: Some(content_type.to_string()),
+                    content_length: Some(file_length as i64),
+                    body: Some(body.to_vec().into()),
+                    ..Default::default()
                 };
-                if handle.response_code().unwrap() != 200 {
-                    let response = String::from_utf8_lossy(&response);
-                    return Err(internal(&format_args!(
-                        "failed to get a 200 response from S3: {}",
-                        response
-                    )));
-                }
-                Ok((Some(String::from(path)), cksum))
+
+                client.put_object(req).sync().chain_error(|| {
+                    internal(&format_args!("failed to upload to S3: `{}`", path))
+                })?;
+
+                Ok((Some(String::from(path)), hash))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
@@ -171,7 +231,6 @@ impl Uploader {
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(
-                app.handle(),
                 &path,
                 &body,
                 "application/x-tar",
@@ -188,7 +247,6 @@ impl Uploader {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
             let length = rendered.len();
             self.upload(
-                app.handle(),
                 &path,
                 rendered.as_bytes(),
                 "text/html",
@@ -208,11 +266,23 @@ impl Uploader {
     }
 
     /// Deletes an uploaded file.
-    fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
+    fn delete(&self, path: &str) -> CargoResult<()> {
         match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                let mut handle = app.handle();
-                bucket.delete(&mut handle, path).perform()?;
+            Uploader::S3 {
+                ref client,
+                ref bucket,
+                ..
+            } => {
+                let req = DeleteObjectRequest {
+                    bucket: bucket.to_string(),
+                    key: path.to_string(),
+                    ..Default::default()
+                };
+
+                client.delete_object(req).sync().chain_error(|| {
+                    internal(&format_args!("failed to upload to S3: `{}`", path))
+                })?;
+
                 Ok(())
             }
             Uploader::Local => {
@@ -220,6 +290,49 @@ impl Uploader {
                 Ok(())
             }
             Uploader::NoOp => Ok(()),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct S3CredentialsProvider {
+    access_key: String,
+    secret_key: String,
+}
+
+impl S3CredentialsProvider {
+    fn new(access_key: String, secret_key: String) -> S3CredentialsProvider {
+        S3CredentialsProvider {
+            access_key: access_key,
+            secret_key: secret_key,
+        }
+    }
+}
+
+/// Provides AWS credentials from an S3CredentialsProvider object as a Future.
+#[derive(Debug)]
+pub struct S3CredentialsProviderFuture {
+    inner: FutureResult<AwsCredentials, CredentialsError>,
+}
+
+impl Future for S3CredentialsProviderFuture {
+    type Item = AwsCredentials;
+    type Error = CredentialsError;
+
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.inner.poll()
+    }
+}
+
+impl ProvideAwsCredentials for S3CredentialsProvider {
+    type Future = S3CredentialsProviderFuture;
+
+    fn credentials(&self) -> Self::Future {
+        let access_key = self.access_key.clone();
+        let secret_key = self.secret_key.clone();
+
+        S3CredentialsProviderFuture {
+            inner: result(Ok(AwsCredentials::new(access_key, secret_key, None, None)))
         }
     }
 }
@@ -234,7 +347,7 @@ pub struct Bomb {
 impl Drop for Bomb {
     fn drop(&mut self) {
         if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(&self.app, path) {
+            if let Err(e) = self.app.config.uploader.delete(path) {
                 println!("unable to delete {}, {:?}", path, e);
             }
         }
