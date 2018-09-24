@@ -41,16 +41,18 @@ impl Event {
         handle.post(true)?;
         handle.http_headers(headers)?;
 
-        let full_event = FullEvent { service_key, event: self };
+        let full_event = FullEvent {
+            service_key,
+            event: self,
+        };
         let json_body = serde_json::to_string(&full_event)?;
         let mut bytes_to_write = json_body.as_bytes();
         let mut data = Vec::new();
 
         {
             let mut handle = handle.transfer();
-            handle.read_function(|bytes| {
-                bytes_to_write.read(bytes).map_err(|_| ReadError::Abort)
-            })?;
+            handle
+                .read_function(|bytes| bytes_to_write.read(bytes).map_err(|_| ReadError::Abort))?;
             handle.write_function(|buf| {
                 data.extend_from_slice(buf);
                 Ok(buf.len())
@@ -63,12 +65,14 @@ impl Event {
             400 => {
                 let error = serde_json::from_slice::<InvalidEvent>(&data)?;
                 Err(internal(&format_args!("pagerduty error: {:?}", error)))
-            },
+            }
             403 => Err(internal("rate limited by pagerduty")),
             n => {
                 let resp = String::from_utf8_lossy(&data);
                 Err(internal(&format_args!(
-                    "Got a non 200 response code from pagerduty: {} with {}", n, resp)))
+                    "Got a non 200 response code from pagerduty: {} with {}",
+                    n, resp
+                )))
             }
         }
     }
