@@ -8,10 +8,12 @@ use std::time::Duration;
 use curl::easy::Easy;
 use diesel::r2d2;
 use git2;
+use reqwest;
 use oauth2;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 use {db, Config, Env};
+use util::CargoResult;
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
@@ -110,5 +112,18 @@ impl App {
             handle.proxy(proxy).unwrap();
         }
         handle
+    }
+
+    /// Returns a client for making HTTP requests to upload crate files.
+    ///
+    /// The handle will go through a proxy if the uploader being used has specified one, which
+    /// is only done in test mode in order to be able to record and inspect the HTTP requests
+    /// that tests make.
+    pub fn http_client(&self) -> CargoResult<reqwest::Client> {
+        let mut builder = reqwest::Client::builder();
+        if let Some(proxy) = self.config.uploader.proxy() {
+            builder = builder.proxy(reqwest::Proxy::all(proxy)?);
+        }
+        Ok(builder.build()?)
     }
 }

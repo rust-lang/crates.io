@@ -1,88 +1,57 @@
 //! This module implements functionality for interacting with GitHub.
 
-use curl;
-use curl::easy::{Easy, List};
-
+use reqwest::{self, header};
 use oauth2::*;
 
-use serde::Deserialize;
-use serde_json;
+use serde::de::DeserializeOwned;
 
 use std::str;
 
 use app::App;
-use util::{human, internal, CargoResult, ChainError};
+use util::{human, internal, CargoResult, CargoError, errors::NotFound};
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
 /// `parse_github_response` to handle the "common" processing of responses.
-pub fn github(app: &App, url: &str, auth: &Token) -> Result<(Easy, Vec<u8>), curl::Error> {
+pub fn github<T>(app: &App, url: &str, auth: &Token) -> CargoResult<T>
+where
+    T: DeserializeOwned,
+{
     let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
     info!("GITHUB HTTP: {}", url);
 
-    let mut headers = List::new();
-    headers
-        .append("Accept: application/vnd.github.v3+json")
-        .unwrap();
-    headers.append("User-Agent: hello!").unwrap();
-    headers
-        .append(&format!("Authorization: token {}", auth.access_token))
-        .unwrap();
-
-    let mut handle = app.handle();
-    handle.url(&url).unwrap();
-    handle.get(true).unwrap();
-    handle.http_headers(headers).unwrap();
-
-    let mut data = Vec::new();
-    {
-        let mut transfer = handle.transfer();
-        transfer
-            .write_function(|buf| {
-                data.extend_from_slice(buf);
-                Ok(buf.len())
-            }).unwrap();
-        transfer.perform()?;
-    }
-    Ok((handle, data))
+    let client = app.http_client()?;
+    client.get(&url)
+        .header(header::ACCEPT, "application/vnd.github.v3+json")
+        .header(header::AUTHORIZATION, format!("token {}", auth.access_token))
+        .send()?
+        .error_for_status()
+        .map_err(handle_error_response)?
+        .json()
+        .map_err(Into::into)
 }
 
-/// Checks for normal responses
-pub fn parse_github_response<'de, 'a: 'de, T: Deserialize<'de>>(
-    mut resp: Easy,
-    data: &'a [u8],
-) -> CargoResult<T> {
-    match resp.response_code().unwrap() {
-        // Ok!
-        200 => {}
-        // Unauthorized or Forbidden
-        401 | 403 => {
-            return Err(human(
-                "It looks like you don't have permission \
-                 to query a necessary property from Github \
-                 to complete this request. \
-                 You may need to re-authenticate on \
-                 crates.io to grant permission to read \
-                 github org memberships. Just go to \
-                 https://crates.io/login",
-            ));
-        }
-        // Something else
-        n => {
-            let resp = String::from_utf8_lossy(data);
-            return Err(internal(&format_args!(
-                "didn't get a 200 result from \
-                 github, got {} with: {}",
-                n, resp
-            )));
+fn handle_error_response(error: reqwest::Error) -> Box<dyn CargoError> {
+    use reqwest::StatusCode as Status;
+
+    match error.status() {
+        Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => human(
+            "It looks like you don't have permission \
+             to query a necessary property from Github \
+             to complete this request. \
+             You may need to re-authenticate on \
+             crates.io to grant permission to read \
+             github org memberships. Just go to \
+             https://crates.io/login",
+        ),
+        Some(Status::NOT_FOUND) => Box::new(NotFound),
+        _ => {
+            internal(&format_args!(
+                "didn't get a 200 result from github: {}",
+                error
+            ))
         }
     }
-
-    let json = str::from_utf8(data)
-        .ok()
-        .chain_error(|| internal("github didn't send a utf8-response"))?;
-
-    serde_json::from_str(json).chain_error(|| internal("github didn't send a valid json response"))
 }
 
 /// Gets a token with the given string as the access token, but all

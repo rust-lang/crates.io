@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use app::App;
 use github;
-use util::{human, CargoResult};
+use util::{human, CargoResult, errors::NotFound};
 
 use models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use schema::{crate_owners, teams};
@@ -142,8 +142,7 @@ impl Team {
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
         let token = github::token(req_user.gh_access_token.clone());
-        let (handle, data) = github::github(app, &url, &token)?;
-        let teams: Vec<GithubTeam> = github::parse_github_response(handle, &data)?;
+        let teams = github::github::<Vec<GithubTeam>>(app, &url, &token)?;
 
         let team = teams
             .into_iter()
@@ -165,8 +164,7 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let (handle, resp) = github::github(app, &url, &token)?;
-        let org: Org = github::parse_github_response(handle, &resp)?;
+        let org = github::github::<Org>(app, &url, &token)?;
 
         NewTeam::new(&login.to_lowercase(), team.id, team.name, org.avatar_url)
             .create_or_update(conn)
@@ -225,14 +223,11 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
 
     let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
     let token = github::token(user.gh_access_token.clone());
-    let (mut handle, resp) = github::github(app, &url, &token)?;
-
-    // Officially how `false` is returned
-    if handle.response_code().unwrap() == 404 {
-        return Ok(false);
-    }
-
-    let membership: Membership = github::parse_github_response(handle, &resp)?;
+    let membership = match github::github::<Membership>(app, &url, &token) {
+        // Officially how `false` is returned
+        Err(ref e) if e.is::<NotFound>() => return Ok(false),
+        x => x?,
+    };
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
