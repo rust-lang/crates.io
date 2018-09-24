@@ -191,12 +191,6 @@ impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
     }
 }
 
-impl CargoError for ::curl::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
 impl CargoError for ::serde_json::Error {
     fn description(&self) -> &str {
         Error::description(self)

@@ -169,7 +169,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let (cksum, mut crate_bomb, mut readme_bomb) =
             app.config
                 .uploader
-                .upload_crate(req, &krate, readme, file_length, maximums, vers)?;
+                .upload_crate(req, &krate, readme, maximums, vers)?;
         version.record_readme_rendering(&conn)?;
 
         let mut hex_cksum = String::new();

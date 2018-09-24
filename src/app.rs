@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use curl::easy::Easy;
 use diesel::r2d2;
 use git2;
 use reqwest;
@@ -99,19 +98,6 @@ impl App {
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
         }
-    }
-
-    /// Returns a handle for making HTTP requests to upload crate files.
-    ///
-    /// The handle will go through a proxy if the uploader being used has specified one, which
-    /// is only done in test mode in order to be able to record and inspect the HTTP requests
-    /// that tests make.
-    pub fn handle(&self) -> Easy {
-        let mut handle = Easy::new();
-        if let Some(proxy) = self.config.uploader.proxy() {
-            handle.proxy(proxy).unwrap();
-        }
-        handle
     }
 
     /// Returns a client for making HTTP requests to upload crate files.

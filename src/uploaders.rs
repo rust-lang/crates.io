@@ -1,6 +1,6 @@
 use conduit::Request;
-use curl::easy::Easy;
 use flate2::read::GzDecoder;
+use reqwest;
 use openssl::hash::{Hasher, MessageDigest};
 use s3;
 use semver;
@@ -107,46 +107,29 @@ impl Uploader {
     /// and its checksum.
     pub fn upload(
         &self,
-        mut handle: Easy,
+        client: reqwest::Client,
         path: &str,
-        body: &[u8],
+        body: Vec<u8>,
         content_type: &str,
-        file_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
-        let hash = hash(body);
+        let hash = hash(&body);
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let (response, cksum) = {
-                    let mut response = Vec::new();
-                    {
-                        let mut s3req =
-                            bucket.put(&mut handle, path, body, content_type, file_length);
-                        s3req
-                            .write_function(|data| {
-                                response.extend(data);
-                                Ok(data.len())
-                            }).unwrap();
-                        s3req.perform().chain_error(|| {
-                            internal(&format_args!("failed to upload to S3: `{}`", path))
-                        })?;
-                    }
-                    (response, hash)
-                };
-                if handle.response_code().unwrap() != 200 {
-                    let response = String::from_utf8_lossy(&response);
-                    return Err(internal(&format_args!(
-                        "failed to get a 200 response from S3: {}",
-                        response
-                    )));
-                }
-                Ok((Some(String::from(path)), cksum))
+                bucket.put(&client, path, body, content_type)
+                    .map_err(|e| {
+                        internal(&format_args!(
+                            "failed to upload to S3: {}",
+                            e
+                        ))
+                    })?;
+                Ok((Some(String::from(path)), hash))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                file.write_all(body)?;
+                file.write_all(&body)?;
                 Ok((filename.to_str().map(String::from), hash))
             }
             Uploader::NoOp => Ok((None, vec![])),
@@ -160,7 +143,6 @@ impl Uploader {
         req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
-        file_length: u32,
         maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
@@ -171,11 +153,10 @@ impl Uploader {
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(
-                app.handle(),
+                app.http_client()?,
                 &path,
-                &body,
+                body,
                 "application/x-tar",
-                u64::from(file_length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
@@ -186,13 +167,11 @@ impl Uploader {
         };
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
-            let length = rendered.len();
             self.upload(
-                app.handle(),
+                app.http_client()?,
                 &path,
-                rendered.as_bytes(),
+                rendered.into_bytes(),
                 "text/html",
-                length as u64,
             )?
         } else {
             (None, vec![])
@@ -211,8 +190,7 @@ impl Uploader {
     fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let mut handle = app.handle();
-                bucket.delete(&mut handle, path).perform()?;
+                bucket.delete(&app.http_client()?, path)?;
                 Ok(())
             }
             Uploader::Local => {

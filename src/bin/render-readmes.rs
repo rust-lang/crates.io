@@ -10,7 +10,6 @@ extern crate serde_derive;
 
 extern crate cargo_registry;
 extern crate chrono;
-extern crate curl;
 extern crate diesel;
 extern crate docopt;
 extern crate flate2;
@@ -20,7 +19,6 @@ extern crate tar;
 extern crate toml;
 
 use chrono::{TimeZone, Utc};
-use curl::easy::Easy;
 use diesel::dsl::any;
 use diesel::prelude::*;
 use docopt::Docopt;
@@ -145,15 +143,13 @@ fn main() {
                 }
                 let readme = readme.unwrap();
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
-                let readme_len = readme.len();
                 config
                     .uploader
                     .upload(
-                        Easy::new(),
+                        reqwest::Client::new(),
                         &readme_path,
-                        readme.as_bytes(),
+                        readme.into_bytes(),
                         "text/html",
-                        readme_len as u64,
                     ).unwrap_or_else(|_| {
                         panic!(
                             "[{}-{}] Couldn't upload file to S3",

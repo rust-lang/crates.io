@@ -12,7 +12,6 @@
 extern crate ammonia;
 extern crate chrono;
 extern crate comrak;
-extern crate curl;
 #[macro_use]
 extern crate derive_deref;
 #[macro_use]
