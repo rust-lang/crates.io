@@ -15,22 +15,21 @@ extern crate diesel;
 extern crate docopt;
 extern crate flate2;
 extern crate itertools;
+extern crate reqwest;
 extern crate tar;
 extern crate toml;
-extern crate url;
 
 use chrono::{TimeZone, Utc};
-use curl::easy::{Easy, List};
+use curl::easy::Easy;
 use diesel::dsl::any;
 use diesel::prelude::*;
 use docopt::Docopt;
 use flate2::read::GzDecoder;
 use itertools::Itertools;
-use std::io::{Cursor, Read};
+use std::io::Read;
 use std::path::Path;
 use std::thread;
 use tar::Archive;
-use url::Url;
 
 use cargo_registry::render::readme_to_html;
 use cargo_registry::Config;
@@ -174,53 +173,30 @@ fn main() {
 
 /// Renders the readme of an uploaded crate version.
 fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
-    let mut handle = Easy::new();
-    let location = match config
+    let location = config
         .uploader
-        .crate_location(krate_name, &version.num.to_string())
-    {
-        Some(l) => l,
-        None => return None,
-    };
-    let date = Utc::now().to_rfc2822();
-    let url = Url::parse(&location)
-        .unwrap_or_else(|_| panic!("[{}-{}] Couldn't parse crate URL", krate_name, version.num));
+        .crate_location(krate_name, &version.num.to_string())?;
 
-    let mut headers = List::new();
-    headers
-        .append(&format!("Host: {}", url.host().unwrap()))
-        .unwrap();
-    headers.append(&format!("Date: {}", date)).unwrap();
-
-    handle.url(url.as_str()).unwrap();
-    handle.get(true).unwrap();
-    handle.http_headers(headers).unwrap();
-
-    let mut response = Vec::new();
-    {
-        let mut req = handle.transfer();
-        req.write_function(|data| {
-            response.extend(data);
-            Ok(data.len())
-        }).unwrap();
-        if let Err(err) = req.perform() {
+    let mut response = match reqwest::get(&location) {
+        Ok(r) => r,
+        Err(err) => {
             println!(
                 "[{}-{}] Unable to fetch crate: {}",
                 krate_name, version.num, err
             );
             return None;
         }
-    }
-    if handle.response_code().unwrap() != 200 {
-        let response = String::from_utf8_lossy(&response);
+    };
+
+    if !response.status().is_success() {
         println!(
             "[{}-{}] Failed to get a 200 response: {}",
-            krate_name, version.num, response
+            krate_name, version.num, response.text().unwrap()
         );
         return None;
     }
-    let reader = Cursor::new(response);
-    let reader = GzDecoder::new(reader);
+
+    let reader = GzDecoder::new(response);
     let mut archive = Archive::new(reader);
     let mut entries = archive.entries().unwrap_or_else(|_| {
         panic!(
