@@ -2,15 +2,15 @@
 
 extern crate base64;
 extern crate chrono;
-extern crate reqwest;
 extern crate openssl;
+extern crate reqwest;
 
 use base64::encode;
 use chrono::prelude::Utc;
-use reqwest::header;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
+use reqwest::header;
 
 #[derive(Clone, Debug)]
 pub struct Bucket {
@@ -54,7 +54,8 @@ impl Bucket {
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = self.url(path);
 
-        client.put(&url)
+        client
+            .put(&url)
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
@@ -63,7 +64,11 @@ impl Bucket {
             .error_for_status()
     }
 
-    pub fn delete(&self, client: &reqwest::Client, path: &str) -> reqwest::Result<reqwest::Response> {
+    pub fn delete(
+        &self,
+        client: &reqwest::Client,
+        path: &str,
+    ) -> reqwest::Result<reqwest::Response> {
         let path = if path.starts_with('/') {
             &path[1..]
         } else {
@@ -73,7 +78,8 @@ impl Bucket {
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = self.url(path);
 
-        client.delete(&url)
+        client
+            .delete(&url)
             .header(header::DATE, date)
             .header(header::AUTHORIZATION, auth)
             .send()?

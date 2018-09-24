@@ -1,7 +1,7 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
-use reqwest;
 use openssl::hash::{Hasher, MessageDigest};
+use reqwest;
 use s3;
 use semver;
 use tar;
@@ -115,13 +115,9 @@ impl Uploader {
         let hash = hash(&body);
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                bucket.put(&client, path, body, content_type)
-                    .map_err(|e| {
-                        internal(&format_args!(
-                            "failed to upload to S3: {}",
-                            e
-                        ))
-                    })?;
+                bucket
+                    .put(&client, path, body, content_type)
+                    .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
                 Ok((Some(String::from(path)), hash))
             }
             Uploader::Local => {
@@ -152,12 +148,7 @@ impl Uploader {
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-            self.upload(
-                app.http_client()?,
-                &path,
-                body,
-                "application/x-tar",
-            )?
+            self.upload(app.http_client()?, &path, body, "application/x-tar")?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.

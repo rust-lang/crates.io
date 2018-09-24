@@ -1,14 +1,14 @@
 //! This module implements functionality for interacting with GitHub.
 
-use reqwest::{self, header};
 use oauth2::*;
+use reqwest::{self, header};
 
 use serde::de::DeserializeOwned;
 
 use std::str;
 
 use app::App;
-use util::{human, internal, CargoResult, CargoError, errors::NotFound};
+use util::{errors::NotFound, human, internal, CargoError, CargoResult};
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
@@ -21,10 +21,13 @@ where
     info!("GITHUB HTTP: {}", url);
 
     let client = app.http_client()?;
-    client.get(&url)
+    client
+        .get(&url)
         .header(header::ACCEPT, "application/vnd.github.v3+json")
-        .header(header::AUTHORIZATION, format!("token {}", auth.access_token))
-        .send()?
+        .header(
+            header::AUTHORIZATION,
+            format!("token {}", auth.access_token),
+        ).send()?
         .error_for_status()
         .map_err(handle_error_response)?
         .json()
@@ -45,12 +48,10 @@ fn handle_error_response(error: reqwest::Error) -> Box<dyn CargoError> {
              https://crates.io/login",
         ),
         Some(Status::NOT_FOUND) => Box::new(NotFound),
-        _ => {
-            internal(&format_args!(
-                "didn't get a 200 result from github: {}",
-                error
-            ))
-        }
+        _ => internal(&format_args!(
+            "didn't get a 200 result from github: {}",
+            error
+        )),
     }
 }
 

@@ -166,10 +166,10 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
-        let (cksum, mut crate_bomb, mut readme_bomb) =
-            app.config
-                .uploader
-                .upload_crate(req, &krate, readme, maximums, vers)?;
+        let (cksum, mut crate_bomb, mut readme_bomb) = app
+            .config
+            .uploader
+            .upload_crate(req, &krate, readme, maximums, vers)?;
         version.record_readme_rendering(&conn)?;
 
         let mut hex_cksum = String::new();

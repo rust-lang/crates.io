@@ -7,12 +7,12 @@ use std::time::Duration;
 
 use diesel::r2d2;
 use git2;
-use reqwest;
 use oauth2;
+use reqwest;
 use scheduled_thread_pool::ScheduledThreadPool;
 
-use {db, Config, Env};
 use util::CargoResult;
+use {db, Config, Env};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations

@@ -187,7 +187,9 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
     if !response.status().is_success() {
         println!(
             "[{}-{}] Failed to get a 200 response: {}",
-            krate_name, version.num, response.text().unwrap()
+            krate_name,
+            version.num,
+            response.text().unwrap()
         );
         return None;
     }

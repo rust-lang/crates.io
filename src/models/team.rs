@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use app::App;
 use github;
-use util::{human, CargoResult, errors::NotFound};
+use util::{errors::NotFound, human, CargoResult};
 
 use models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use schema::{crate_owners, teams};

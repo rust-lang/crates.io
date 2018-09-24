@@ -363,14 +363,14 @@ impl GhUser {
             client_secret: String,
         }
         let client = reqwest::Client::new();
-        let req = client.post("https://api.github.com/authorizations")
+        let req = client
+            .post("https://api.github.com/authorizations")
             .json(&Authorization {
                 scopes: vec!["read:org".to_string()],
                 note: "crates.io test".to_string(),
                 client_id: ::env("GH_CLIENT_ID"),
                 client_secret: ::env("GH_CLIENT_SECRET"),
-            })
-            .basic_auth(self.login, Some(password));
+            }).basic_auth(self.login, Some(password));
 
         let mut response = t!(req.send().and_then(|r| r.error_for_status()));
 
