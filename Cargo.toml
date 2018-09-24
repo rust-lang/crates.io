@@ -74,7 +74,6 @@ civet = "0.9"
 
 [dev-dependencies]
 conduit-test = "0.8"
-curl = "0.4"
 hyper = "0.12"
 hyper-tls = "0.2"
 futures = "0.1"
