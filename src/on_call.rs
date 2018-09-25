@@ -36,8 +36,7 @@ impl Event {
             .json(&FullEvent {
                 service_key,
                 event: self,
-            })
-            .send()?;
+            }).send()?;
 
         match response.status() {
             s if s.is_success() => Ok(()),
@@ -46,12 +45,10 @@ impl Event {
                 Err(internal(&format_args!("pagerduty error: {:?}", error)))
             }
             Status::FORBIDDEN => Err(internal("rate limited by pagerduty")),
-            n => {
-                Err(internal(&format_args!(
-                    "Got a non 200 response code from pagerduty: {} with {:?}",
-                    n, response
-                )))
-            }
+            n => Err(internal(&format_args!(
+                "Got a non 200 response code from pagerduty: {} with {:?}",
+                n, response
+            ))),
         }
     }
 }
