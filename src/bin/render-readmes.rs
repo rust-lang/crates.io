@@ -146,7 +146,7 @@ fn main() {
                 config
                     .uploader
                     .upload(
-                        reqwest::Client::new(),
+                        &reqwest::Client::new(),
                         &readme_path,
                         readme.into_bytes(),
                         "text/html",

@@ -107,7 +107,7 @@ impl Uploader {
     /// and its checksum.
     pub fn upload(
         &self,
-        client: reqwest::Client,
+        client: &reqwest::Client,
         path: &str,
         body: Vec<u8>,
         content_type: &str,
@@ -148,7 +148,7 @@ impl Uploader {
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-            self.upload(app.http_client()?, &path, body, "application/x-tar")?
+            self.upload(&app.http_client()?, &path, body, "application/x-tar")?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
@@ -159,7 +159,7 @@ impl Uploader {
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
             self.upload(
-                app.http_client()?,
+                &app.http_client()?,
                 &path,
                 rendered.into_bytes(),
                 "text/html",

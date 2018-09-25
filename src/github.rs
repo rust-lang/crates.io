@@ -29,12 +29,12 @@ where
             format!("token {}", auth.access_token),
         ).send()?
         .error_for_status()
-        .map_err(handle_error_response)?
+        .map_err(|e| handle_error_response(&e))?
         .json()
         .map_err(Into::into)
 }
 
-fn handle_error_response(error: reqwest::Error) -> Box<dyn CargoError> {
+fn handle_error_response(error: &reqwest::Error) -> Box<dyn CargoError> {
     use reqwest::StatusCode as Status;
 
     match error.status() {
