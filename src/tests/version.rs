@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+extern crate conduit_middleware;
 extern crate diesel;
 extern crate serde_json;
 
@@ -10,7 +11,9 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, CrateBuilder, CrateResponse, GoodCrate, VersionBuilder};
+use {
+    app, new_user, new_version, req, CrateBuilder, MockUserSession, PublishBuilder, VersionBuilder,
+};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -116,42 +119,27 @@ fn record_rerendered_readme_time() {
 
 #[test]
 fn version_size() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::new_req(Arc::clone(&app), "foo_version_size", "1.0.0");
-    ::sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name, "foo_version_size");
+    let mut session = MockUserSession::logged_in();
+    let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
+    session.publish(crate_to_publish);
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
-    let body = ::new_crate_to_body(&::new_crate("foo_version_size", "2.0.0"), &files);
+    let crate_to_publish = PublishBuilder::new("foo_version_size")
+        .version("2.0.0")
+        .files(&files);
+    session.publish(crate_to_publish);
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    ::json::<GoodCrate>(&mut response);
+    let crate_json = session.show_crate("foo_version_size");
 
-    let mut show_req = ::req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/foo_version_size",
-    );
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
-
-    let version1 = json
+    let version1 = crate_json
         .versions
         .iter()
         .find(|v| v.num == "1.0.0")
         .expect("Could not find v1.0.0");
     assert_eq!(version1.crate_size, Some(35));
 
-    let version2 = json
+    let version2 = crate_json
         .versions
         .iter()
         .find(|v| v.num == "2.0.0")

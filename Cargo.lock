@@ -188,6 +188,7 @@ dependencies = [
  "hyper 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper-tls 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lettre 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lettre_email 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "license-exprs 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
