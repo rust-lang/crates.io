@@ -11,7 +11,7 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, BrowserSession, CrateBuilder, PublishBuilder, VersionBuilder};
+use {app, new_user, new_version, req, MockUserSession, CrateBuilder, PublishBuilder, VersionBuilder};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -117,7 +117,7 @@ fn record_rerendered_readme_time() {
 
 #[test]
 fn version_size() {
-    let mut session = BrowserSession::logged_in();
+    let mut session = MockUserSession::logged_in();
     let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
     session.publish(crate_to_publish);
 

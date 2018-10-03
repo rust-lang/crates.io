@@ -776,9 +776,11 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
     body
 }
 
-/// A struct representing a browser session to be used for the duration of a test.
+/// A struct representing a user's session to be used for the duration of a test.
+/// This injects requests directly into the router, so doesn't quite exercise the application
+/// exactly as in production, but it's close enough for most testing purposes.
 /// Has useful methods for making common HTTP requests.
-pub struct BrowserSession {
+pub struct MockUserSession {
     app: Arc<App>,
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
@@ -787,8 +789,8 @@ pub struct BrowserSession {
     _user: User,
 }
 
-impl BrowserSession {
-    /// Create a browser session logged in with an arbitrary user.
+impl MockUserSession {
+    /// Create a session logged in with an arbitrary user.
     pub fn logged_in() -> Self {
         let (bomb, app, middle) = app();
 
@@ -803,12 +805,12 @@ impl BrowserSession {
             user
         };
 
-        BrowserSession {
+        MockUserSession {
             app, _bomb: bomb, middle, request, _user: user,
         }
     }
 
-    /// Create a browser session logged in with the given user.
+    /// Create a session logged in with the given user.
     // pub fn logged_in_as(_user: &User) -> Self {
     //     unimplemented!();
     // }

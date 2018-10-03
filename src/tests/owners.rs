@@ -11,7 +11,7 @@ use views::{
 };
 use {
     add_team_to_crate, app, logout, new_team, new_user, req,
-    sign_in_as, Bad, BrowserSession, CrateBuilder, CrateList, PublishBuilder,
+    sign_in_as, Bad, MockUserSession, CrateBuilder, CrateList, PublishBuilder,
 };
 
 #[derive(Deserialize)]
@@ -26,7 +26,7 @@ struct UserResponse {
 #[test]
 fn new_crate_owner() {
     // Create a crate under one user
-    let mut session = BrowserSession::logged_in();
+    let mut session = MockUserSession::logged_in();
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
     session.publish(crate_to_publish);
 

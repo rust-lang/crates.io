@@ -33,7 +33,7 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in,
-    sign_in_as, user, Bad, BrowserSession, CrateBuilder, CrateList, CrateMeta, CrateResponse,
+    sign_in_as, user, Bad, MockUserSession, CrateBuilder, CrateList, CrateMeta, CrateResponse,
     GoodCrate, VersionBuilder,
 };
 
@@ -1539,7 +1539,7 @@ fn yank() {
 
 #[test]
 fn yank_not_owner() {
-    let mut session = BrowserSession::logged_in();
+    let mut session = MockUserSession::logged_in();
     {
         let conn = session.app.diesel_database.get().unwrap();
         let another_user = new_user("bar").create_or_update(&conn).unwrap();
