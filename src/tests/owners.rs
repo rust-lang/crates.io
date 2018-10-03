@@ -10,8 +10,8 @@ use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 use {
-    add_team_to_crate, app, logout, new_team, new_user, req,
-    sign_in_as, Bad, MockUserSession, CrateBuilder, CrateList, PublishBuilder,
+    add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder,
+    CrateList, MockUserSession, PublishBuilder,
 };
 
 #[derive(Deserialize)]

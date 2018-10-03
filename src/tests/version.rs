@@ -11,7 +11,9 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, MockUserSession, CrateBuilder, PublishBuilder, VersionBuilder};
+use {
+    app, new_user, new_version, req, CrateBuilder, MockUserSession, PublishBuilder, VersionBuilder,
+};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -123,7 +125,9 @@ fn version_size() {
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
-    let crate_to_publish = PublishBuilder::new("foo_version_size").version("2.0.0").files(&files);
+    let crate_to_publish = PublishBuilder::new("foo_version_size")
+        .version("2.0.0")
+        .files(&files);
     session.publish(crate_to_publish);
 
     let crate_json = session.show_crate("foo_version_size");

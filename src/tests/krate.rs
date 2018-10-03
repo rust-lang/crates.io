@@ -32,9 +32,8 @@ use {
     app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in,
-    sign_in_as, user, Bad, MockUserSession, CrateBuilder, CrateList, CrateMeta, CrateResponse,
-    GoodCrate, VersionBuilder,
+    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, user, Bad,
+    CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, VersionBuilder,
 };
 
 #[derive(Deserialize)]

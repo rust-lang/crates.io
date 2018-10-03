@@ -799,14 +799,19 @@ impl MockUserSession {
             let conn = app.diesel_database.get().unwrap();
             let user = new_user("foo").create_or_update(&conn).unwrap();
             request.mut_extensions().insert(user.clone());
-            request.mut_extensions()
+            request
+                .mut_extensions()
                 .insert(AuthenticationSource::SessionCookie);
 
             user
         };
 
         MockUserSession {
-            app, _bomb: bomb, middle, request, _user: user,
+            app,
+            _bomb: bomb,
+            middle,
+            request,
+            _user: user,
         }
     }
 
@@ -844,7 +849,9 @@ impl MockUserSession {
 
     /// Request the JSON used for a crate's page.
     pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
-        self.request.with_method(Method::Get).with_path(&format!("/api/v1/crates/{}", krate_name));
+        self.request
+            .with_method(Method::Get)
+            .with_path(&format!("/api/v1/crates/{}", krate_name));
         let mut response = self.make_request();
         json(&mut response)
     }
@@ -928,11 +935,12 @@ impl MockUserSession {
     }
 }
 
-lazy_static!{
+lazy_static! {
     static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
         let mut empty_tarball = vec![];
         {
-            let mut ar = tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
+            let mut ar =
+                tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
             t!(ar.finish());
         }
         empty_tarball
@@ -974,8 +982,7 @@ impl PublishBuilder {
             .map(|(&(name, _), data)| {
                 let len = data.len() as u64;
                 (name, data as &mut Read, len)
-            })
-            .collect::<Vec<_>>();
+            }).collect::<Vec<_>>();
 
         let mut tarball = Vec::new();
         {
