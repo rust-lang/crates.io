@@ -61,6 +61,7 @@ macro_rules! t {
     };
 }
 
+// TODO: Remove, this is equivalent to t!
 macro_rules! t_resp {
     ($e:expr) => {
         t!($e)
@@ -69,7 +70,7 @@ macro_rules! t_resp {
 
 macro_rules! ok_resp {
     ($e:expr) => {{
-        let resp = t_resp!($e);
+        let resp = t!($e);
         if !::ok_resp(&resp) {
             panic!("bad response: {:?}", resp.status);
         }
@@ -79,7 +80,7 @@ macro_rules! ok_resp {
 
 macro_rules! bad_resp {
     ($e:expr) => {{
-        let mut resp = t_resp!($e);
+        let mut resp = t!($e);
         match ::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
@@ -94,6 +95,44 @@ struct Error {
 #[derive(Deserialize)]
 struct Bad {
     errors: Vec<Error>,
+}
+
+type ResponseResult = Result<conduit::Response, Box<std::error::Error + Send>>;
+
+#[must_use]
+struct Response<T> {
+    response: conduit::Response,
+    callback_on_good: Option<Box<Fn(&T)>>,
+}
+
+impl<T> Response<T>
+where
+    for<'de> T: serde::Deserialize<'de>,
+{
+    pub fn with_callback(response: ResponseResult, callback_on_good: Box<Fn(&T)>) -> Self {
+        Self {
+            response: t!(response),
+            callback_on_good: Some(callback_on_good),
+        }
+    }
+
+    pub fn good(mut self) -> T {
+        if !::ok_resp(&self.response) {
+            panic!("bad response: {:?}", self.response.status);
+        }
+        let good = json(&mut self.response);
+        if let Some(callback) = self.callback_on_good {
+            callback(&good)
+        }
+        good
+    }
+
+    pub fn bad(mut self) -> Bad {
+        match ::bad_resp(&mut self.response) {
+            None => panic!("ok response: {:?}", self.response.status),
+            Some(b) => b,
+        }
+    }
 }
 
 mod badge;
@@ -762,7 +801,7 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
 /// This injects requests directly into the router, so doesn't quite exercise the application
 /// exactly as in production, but it's close enough for most testing purposes.
 /// Has useful methods for making common HTTP requests.
-pub struct MockUserSession {
+struct MockUserSession {
     app: Arc<App>,
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
@@ -818,15 +857,15 @@ impl MockUserSession {
     }
 
     /// Publish the crate as specified by the given builder
-    pub fn publish(&mut self, publish_builder: PublishBuilder) {
+    pub fn publish(&mut self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
         let krate_name = publish_builder.krate_name.clone();
         self.request
             .with_path("/api/v1/crates/new")
             .with_method(Method::Put)
             .with_body(&publish_builder.body());
-        let mut response = self.make_request();
-        let json: GoodCrate = json(&mut response);
-        assert_eq!(json.krate.name, krate_name);
+        let response = self.middle.call(&mut self.request);
+        let callback_on_good = move |json: &GoodCrate| assert_eq!(json.krate.name, krate_name);
+        Response::with_callback(response, Box::new(callback_on_good))
     }
 
     /// Request the JSON used for a crate's page.
@@ -932,7 +971,7 @@ lazy_static! {
 /// A builder for constructing a crate for the purposes of testing publishing. If you only need
 /// a crate to exist and don't need to test behavior caused by the publish request, inserting
 /// a crate into the database directly by using CrateBuilder will be faster.
-pub struct PublishBuilder {
+struct PublishBuilder {
     pub krate_name: String,
     version: semver::Version,
     tarball: Vec<u8>,

@@ -32,7 +32,8 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, user, Bad,
-    CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, VersionBuilder,
+    CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, PublishBuilder,
+    VersionBuilder,
 };
 
 #[derive(Deserialize)]
@@ -921,12 +922,14 @@ fn valid_feature_names() {
 
 #[test]
 fn new_krate_too_big() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_big", "1.0.0");
-    sign_in(&mut req, &app);
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
-    let body = new_crate_to_body(&new_crate("foo_big", "1.0.0"), &files);
-    bad_resp!(middle.call(req.with_body(&body)));
+    let builder = PublishBuilder::new("foo_big").files(&files);
+    let json = MockUserSession::logged_in().publish(builder).bad();
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("uploaded tarball is malformed or too large when decompressed")
+    );
 }
 
 #[test]

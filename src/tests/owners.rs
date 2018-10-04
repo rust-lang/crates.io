@@ -26,7 +26,7 @@ fn new_crate_owner() {
     // Create a crate under one user
     let mut session = MockUserSession::logged_in();
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
-    session.publish(crate_to_publish);
+    session.publish(crate_to_publish).good();
 
     let u2;
     {
@@ -49,7 +49,7 @@ fn new_crate_owner() {
 
     // And upload a new crate as the second user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
-    session.publish(crate_to_publish);
+    session.publish(crate_to_publish).good();
 }
 
 // Ensures that so long as at least one owner remains associated with the crate,

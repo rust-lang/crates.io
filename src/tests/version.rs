@@ -115,14 +115,14 @@ fn record_rerendered_readme_time() {
 fn version_size() {
     let mut session = MockUserSession::logged_in();
     let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
-    session.publish(crate_to_publish);
+    session.publish(crate_to_publish).good();
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
     let crate_to_publish = PublishBuilder::new("foo_version_size")
         .version("2.0.0")
         .files(&files);
-    session.publish(crate_to_publish);
+    session.publish(crate_to_publish).good();
 
     let crate_json = session.show_crate("foo_version_size");
 
