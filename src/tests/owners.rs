@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
@@ -68,11 +66,7 @@ fn owners_can_remove_self() {
     }
 
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/owners_selfremove/owners",
-    );
+    let mut req = req(Method::Get, "/api/v1/crates/owners_selfremove/owners");
     let (first_owner, second_owner) = {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("firstowner").create_or_update(&conn).unwrap();
@@ -193,7 +187,7 @@ fn check_ownership_two_crates() {
         (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
     };
 
-    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
 
     let query = format!("user_id={}", user.id);
     let mut response = ok_resp!(middle.call(req.with_query(&query)));
@@ -233,22 +227,14 @@ fn check_ownership_one_crate() {
         (t, u)
     };
 
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/best_crate/owner_team",
-    );
+    let mut req = req(Method::Get, "/api/v1/crates/best_crate/owner_team");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: TeamResponse = ::json(&mut response);
 
     assert_eq!(json.teams[0].kind, "team");
     assert_eq!(json.teams[0].name, team.name);
 
-    let mut req = ::req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/best_crate/owner_user",
-    );
+    let mut req = ::req(Method::Get, "/api/v1/crates/best_crate/owner_user");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: UserResponse = ::json(&mut response);
 
@@ -264,11 +250,7 @@ fn invitations_are_empty_by_default() {
     }
 
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/me/crate_owner_invitations",
-    );
+    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
 
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -290,11 +272,7 @@ fn invitations_list() {
     }
 
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/me/crate_owner_invitations",
-    );
+    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
         let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
@@ -350,11 +328,7 @@ fn test_accept_invitation() {
     }
 
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/me/crate_owner_invitations",
-    );
+    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
         let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
@@ -444,11 +418,7 @@ fn test_decline_invitation() {
     }
 
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/me/crate_owner_invitations",
-    );
+    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
         let owner = new_user("inviting_user").create_or_update(&conn).unwrap();

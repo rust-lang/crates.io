@@ -48,7 +48,7 @@ fn request_with_user_and_mock_crate(
     user: &NewUser<'_>,
     krate: &str,
 ) -> MockRequest {
-    let mut req = new_req(Arc::clone(app), krate, "1.0.0");
+    let mut req = new_req(krate, "1.0.0");
     {
         let conn = app.diesel_database.get().unwrap();
         let user = user.create_or_update(&conn).unwrap();
@@ -479,7 +479,7 @@ fn crates_by_team_id() {
         t
     };
 
-    let mut req = req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -507,7 +507,7 @@ fn crates_by_team_id_not_including_deleted_owners() {
         t
     };
 
-    let mut req = req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
