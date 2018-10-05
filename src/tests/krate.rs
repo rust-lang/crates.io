@@ -1509,7 +1509,7 @@ fn yank() {
 fn yank_not_owner() {
     let mut session = MockUserSession::logged_in();
     {
-        let conn = session.app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         let another_user = new_user("bar").create_or_update(&conn).unwrap();
         CrateBuilder::new("foo_not", another_user.id).expect_build(&conn);
     }

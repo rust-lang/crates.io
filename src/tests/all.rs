@@ -97,6 +97,8 @@ struct Bad {
     errors: Vec<Error>,
 }
 
+type DieselConnection =
+    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 type ResponseResult = Result<conduit::Response, Box<std::error::Error + Send>>;
 
 #[must_use]
@@ -865,9 +867,7 @@ impl MockUserSession {
     // }
 
     /// Obtain the database connection
-    pub fn db_conn(
-        &self,
-    ) -> diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>> {
+    pub fn db_conn(&self) -> DieselConnection {
         self.app.diesel_database.get().unwrap()
     }
 
@@ -949,7 +949,7 @@ impl MockUserSession {
         use views::InvitationResponse;
 
         let krate_id = {
-            let conn = self.app.diesel_database.get().unwrap();
+            let conn = self.db_conn();
             Crate::by_name(krate_name)
                 .first::<Crate>(&*conn)
                 .unwrap()
