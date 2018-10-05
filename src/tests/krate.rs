@@ -69,21 +69,19 @@ struct SummaryResponse {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateList = ::json(&mut response);
+    let url = "/api/v1/crates";
+    let mut session = MockUserSession::anonymous();
+    let json: CrateList = session.get(url).good();
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
     let krate = {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         let u = new_user("foo").create_or_update(&conn).unwrap();
         CrateBuilder::new("fooindex", u.id).expect_build(&conn)
     };
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateList = ::json(&mut response);
+    let json: CrateList = session.get(url).good();
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].name, krate.name);
@@ -546,11 +544,9 @@ fn yanked_versions_are_not_considered_for_max_version() {
 
 #[test]
 fn versions() {
-    let (_b, app, middle) = app();
-
-    let mut req = req(Method::Get, "/api/v1/crates/foo_versions/versions");
+    let mut session = MockUserSession::anonymous();
     {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         let u = new_user("foo").create_or_update(&conn).unwrap();
         CrateBuilder::new("foo_versions", u.id)
             .version("0.5.1")
@@ -559,8 +555,7 @@ fn versions() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: VersionsList = ::json(&mut response);
+    let json: VersionsList = session.get("/api/v1/crates/foo_versions/versions").good();
 
     assert_eq!(json.versions.len(), 3);
     assert_eq!(json.versions[0].num, "1.0.0");
