@@ -136,7 +136,7 @@ where
         good
     }
 
-    pub fn bad(mut self) -> Bad {
+    pub fn bad(&mut self) -> Bad {
         match ::bad_resp(&mut self.response) {
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
@@ -237,16 +237,15 @@ fn app() -> (
 }
 
 // Return the environment variable only if it has been defined
-fn env(s: &str) -> String {
-    // Handles both the `None` and empty string cases e.g. VAR=
-    // by converting `None` to an empty string
-    let env_result = env::var(s).ok().unwrap_or_default();
-
-    if env_result == "" {
-        panic!("must have `{}` defined", s);
+fn env(var: &str) -> String {
+    match env::var(var) {
+        Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
+        Ok(s) => s,
+        Err(_) => panic!(
+            "environment variable `{}` must be defined and valid unicode",
+            var
+        ),
     }
-
-    env_result
 }
 
 fn req(method: conduit::Method, path: &str) -> MockRequest {
@@ -278,11 +277,11 @@ where
     }
 }
 
-static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
         email: None,
         name: None,
@@ -291,22 +290,10 @@ fn new_user(login: &str) -> NewUser<'_> {
     }
 }
 
-fn user(login: &str) -> User {
-    User {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_login: login.to_string(),
-        email: None,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token".into(),
-    }
-}
-
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
-        github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        login,
+        github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        login: login,
         name: None,
         avatar: None,
     }
@@ -563,8 +550,10 @@ fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion 
 }
 
 fn krate(name: &str) -> Crate {
+    static NEXT_CRATE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
     Crate {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        id: NEXT_CRATE_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),
         created_at: Utc::now().naive_utc(),

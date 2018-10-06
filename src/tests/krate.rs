@@ -31,8 +31,8 @@ use {
     app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, user, Bad,
-    CrateBuilder, CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, PublishBuilder,
+    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
+    CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, PublishBuilder,
     VersionBuilder,
 };
 
@@ -2083,7 +2083,6 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
 #[test]
 fn author_license_and_description_required() {
     let (_b, _, middle) = app();
-    user("foo");
 
     let mut req = req(Method::Put, "/api/v1/crates/new");
     let mut new_crate = new_crate("foo_metadata", "1.1.0");

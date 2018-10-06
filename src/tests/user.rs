@@ -5,7 +5,9 @@ use diesel::prelude::*;
 
 use models::{ApiToken, Email, NewUser, User};
 use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
-use {app, logout, new_user, req, sign_in, sign_in_as, Bad, CrateBuilder, VersionBuilder, NEXT_ID};
+use {
+    app, logout, new_user, req, sign_in, sign_in_as, Bad, CrateBuilder, VersionBuilder, NEXT_GH_ID,
+};
 
 #[derive(Deserialize)]
 struct AuthResponse {
@@ -321,7 +323,7 @@ fn updating_existing_user_doesnt_change_api_token() {
     let (_b, app, _middle) = app();
     let conn = t!(app.diesel_database.get());
 
-    let gh_user_id = NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32;
+    let gh_user_id = NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32;
 
     let original_user =
         t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
