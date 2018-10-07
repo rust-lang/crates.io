@@ -190,7 +190,7 @@ pub struct CrateResponse {
     keywords: Vec<EncodableKeyword>,
 }
 #[derive(Deserialize)]
-struct Ok {
+struct OkBool {
     ok: bool,
 }
 
@@ -882,8 +882,8 @@ impl MockUserSession {
     }
 
     /// Using the same session, log in as a different user.
-    pub fn log_in_as(&mut self, user: &User) {
-        self.user = Some(user.clone());
+    pub fn log_in_as(&mut self, user: User) {
+        self.user = Some(user);
     }
 
     /// Publish the crate as specified by the given builder
@@ -903,7 +903,7 @@ impl MockUserSession {
     }
 
     /// Yank the specified version of the specified crate.
-    pub fn yank(&mut self, krate_name: &str, version: &str) -> Response<Ok> {
+    pub fn yank(&mut self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
         let mut request = self.request_builder(Method::Delete, &url);
         Response::new(self.middle.call(&mut request))
@@ -916,7 +916,7 @@ impl MockUserSession {
         let mut builder = self.request_builder(Method::Put, &url);
         let request = builder.with_body(body.as_bytes());
 
-        let response: Ok = Response::new(self.middle.call(request)).good();
+        let response: OkBool = Response::new(self.middle.call(request)).good();
         assert!(response.ok);
     }
 

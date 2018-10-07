@@ -32,7 +32,7 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, PublishBuilder,
+    CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, OkBool, PublishBuilder,
     VersionBuilder,
 };
 
@@ -1367,10 +1367,6 @@ fn following() {
     struct F {
         following: bool,
     }
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
 
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/crates/foo_following/following");
@@ -1389,9 +1385,9 @@ fn following() {
     req.with_path("/api/v1/crates/foo_following/follow")
         .with_method(Method::Put);
     let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     req.with_path("/api/v1/crates/foo_following/following")
         .with_method(Method::Get);
@@ -1408,9 +1404,9 @@ fn following() {
     req.with_path("/api/v1/crates/foo_following/follow")
         .with_method(Method::Delete);
     let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
     let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     req.with_path("/api/v1/crates/foo_following/following")
         .with_method(Method::Get);
@@ -1426,10 +1422,6 @@ fn following() {
 
 #[test]
 fn yank() {
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
     #[derive(Deserialize)]
     struct V {
         version: EncodableVersion,
@@ -1465,7 +1457,7 @@ fn yank() {
                 .with_path("/api/v1/crates/fyk/1.0.0/yank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut contents = String::new();
     File::open(&path)
         .unwrap()
@@ -1487,7 +1479,7 @@ fn yank() {
                 .with_path("/api/v1/crates/fyk/1.0.0/unyank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut contents = String::new();
     File::open(&path)
         .unwrap()
@@ -1520,10 +1512,6 @@ fn yank_not_owner() {
 
 #[test]
 fn yank_max_version() {
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
     let (_b, app, middle) = app();
 
     // Upload a new crate
@@ -1554,7 +1542,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1571,7 +1559,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1588,7 +1576,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/2.0.0/yank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1605,7 +1593,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1622,7 +1610,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/2.0.0/unyank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1639,7 +1627,7 @@ fn yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1652,10 +1640,6 @@ fn yank_max_version() {
 
 #[test]
 fn publish_after_yank_max_version() {
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
-    }
     let (_b, app, middle) = app();
 
     // Upload a new crate
@@ -1674,7 +1658,7 @@ fn publish_after_yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)
@@ -1703,7 +1687,7 @@ fn publish_after_yank_max_version() {
                 .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
         )
     );
-    assert!(::json::<O>(&mut r).ok);
+    assert!(::json::<OkBool>(&mut r).ok);
     let mut response = ok_resp!(
         middle.call(
             req.with_method(Method::Get,)

@@ -9,7 +9,7 @@ use views::{
 };
 use {
     add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder,
-    CrateList, MockUserSession, PublishBuilder,
+    CrateList, MockUserSession, OkBool, PublishBuilder,
 };
 
 #[derive(Deserialize)]
@@ -28,17 +28,13 @@ fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
     session.publish(crate_to_publish).good();
 
-    let u2;
-    {
-        let conn = session.app.diesel_database.get().unwrap();
-        u2 = new_user("bar").create_or_update(&conn).unwrap();
-    }
+    let u2 = session.db(|conn| new_user("bar").create_or_update(&conn).unwrap());
 
     // Add the second user as an owner
     session.add_owner("foo_owner", &u2);
     session.logout();
 
-    session.log_in_as(&u2);
+    session.log_in_as(u2.clone());
 
     // accept invitation for user to be added as owner
     session.accept_ownership_invitation("foo_owner");
@@ -59,10 +55,6 @@ fn owners_can_remove_self() {
     #[derive(Deserialize)]
     struct R {
         users: Vec<EncodablePublicUser>,
-    }
-    #[derive(Deserialize)]
-    struct O {
-        ok: bool,
     }
 
     let (_b, app, middle) = app();
@@ -94,7 +86,7 @@ fn owners_can_remove_self() {
     let body = r#"{"users":["secondowner"]}"#;
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     // Need to accept owner invitation to add secondowner as owner
     let krate_id = {
@@ -147,7 +139,7 @@ fn owners_can_remove_self() {
                 .with_body(body.as_bytes())
         )
     );
-    assert!(::json::<O>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     // After you delete yourself, you no longer have permisions to manage the crate.
     let body = r#"{"users":["secondowner"]}"#;
