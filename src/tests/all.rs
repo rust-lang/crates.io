@@ -189,6 +189,10 @@ pub struct CrateResponse {
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
 }
+#[derive(Deserialize)]
+struct Ok {
+    ok: bool,
+}
 
 fn app() -> (
     record::Bomb,
@@ -808,45 +812,31 @@ struct MockUserSession {
     // The bomb needs to be held in scope until the end of the test.
     _bomb: record::Bomb,
     middle: conduit_middleware::MiddlewareBuilder,
-    request: MockRequest,
-    _user: Option<User>,
+    user: Option<User>,
 }
 
 impl MockUserSession {
     pub fn anonymous() -> Self {
         let (bomb, app, middle) = app();
-        let request = MockRequest::new(Method::Get, "/");
         MockUserSession {
             app,
             _bomb: bomb,
             middle,
-            request,
-            _user: None,
+            user: None,
         }
     }
 
     /// Create a session logged in with an arbitrary user.
     pub fn logged_in() -> Self {
         let (bomb, app, middle) = app();
-
-        let mut request = MockRequest::new(Method::Get, "/");
-        let user = {
-            let conn = app.diesel_database.get().unwrap();
-            let user = new_user("foo").create_or_update(&conn).unwrap();
-            request.mut_extensions().insert(user.clone());
-            request
-                .mut_extensions()
-                .insert(AuthenticationSource::SessionCookie);
-
-            user
-        };
+        let conn = app.diesel_database.get().unwrap();
+        let user = new_user("foo").create_or_update(&conn).unwrap();
 
         MockUserSession {
             app,
             _bomb: bomb,
             middle,
-            request,
-            _user: Some(user),
+            user: Some(user),
         }
     }
 
@@ -865,76 +855,69 @@ impl MockUserSession {
         f(&conn)
     }
 
-    /// For internal use only: make the current request
-    fn make_request(&mut self) -> conduit::Response {
-        ok_resp!(self.middle.call(&mut self.request))
+    /// Build a MockRequest with a User if one is present
+    fn request_builder(&self, method: Method, path: &str) -> MockRequest {
+        let mut request = MockRequest::new(method, path);
+        if let Some(ref user) = self.user {
+            request.mut_extensions().insert(user.clone());
+            request
+                .mut_extensions()
+                .insert(AuthenticationSource::SessionCookie);
+        }
+        request
     }
 
     /// Issue a GET request
-    pub fn get<T>(&mut self, path: &str) -> Response<T>
+    pub fn get<T>(&self, path: &str) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        self.request.with_path(path).with_method(Method::Get);
-        Response::new(self.middle.call(&mut self.request))
+        let mut request = self.request_builder(Method::Get, path);
+        Response::new(self.middle.call(&mut request))
     }
 
     /// Log out the currently logged in user.
     pub fn logout(&mut self) {
-        logout(&mut self.request);
-        self._user = None;
+        self.user = None;
     }
 
     /// Using the same session, log in as a different user.
     pub fn log_in_as(&mut self, user: &User) {
-        sign_in_as(&mut self.request, user);
-        self._user = Some(user.clone());
+        self.user = Some(user.clone());
     }
 
     /// Publish the crate as specified by the given builder
-    pub fn publish(&mut self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
+    pub fn publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
         let krate_name = publish_builder.krate_name.clone();
-        self.request
-            .with_path("/api/v1/crates/new")
-            .with_method(Method::Put)
-            .with_body(&publish_builder.body());
-        let response = self.middle.call(&mut self.request);
+        let mut builder = self.request_builder(Method::Put, "/api/v1/crates/new");
+        let request = builder.with_body(&publish_builder.body());
+        let response = self.middle.call(request);
         let callback_on_good = move |json: &GoodCrate| assert_eq!(json.krate.name, krate_name);
         Response::with_callback(response, Box::new(callback_on_good))
     }
 
     /// Request the JSON used for a crate's page.
     pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
-        self.request
-            .with_method(Method::Get)
-            .with_path(&format!("/api/v1/crates/{}", krate_name));
-        let mut response = self.make_request();
-        json(&mut response)
+        let url = format!("/api/v1/crates/{}", krate_name);
+        self.get(&url).good()
     }
 
     /// Yank the specified version of the specified crate.
-    pub fn yank(&mut self, krate_name: &str, version: &str) -> conduit::Response {
-        self.request
-            .with_path(&format!("/api/v1/crates/{}/{}/yank", krate_name, version))
-            .with_method(Method::Delete);
-        self.make_request()
+    pub fn yank(&mut self, krate_name: &str, version: &str) -> Response<Ok> {
+        let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
+        let mut request = self.request_builder(Method::Delete, &url);
+        Response::new(self.middle.call(&mut request))
     }
 
     /// Add a user as an owner for a crate.
     pub fn add_owner(&mut self, krate_name: &str, user: &User) {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
-        self.request
-            .with_path(&format!("/api/v1/crates/{}/owners", krate_name))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes());
+        let mut builder = self.request_builder(Method::Put, &url);
+        let request = builder.with_body(body.as_bytes());
 
-        let mut response = self.make_request();
-
-        #[derive(Deserialize)]
-        struct O {
-            ok: bool,
-        }
-        assert!(json::<O>(&mut response).ok);
+        let response: Ok = Response::new(self.middle.call(request)).good();
+        assert!(response.ok);
     }
 
     /// As the currently logged in user, accept an invitation to become an owner of the named
@@ -954,19 +937,17 @@ impl MockUserSession {
             }
         });
 
-        self.request
-            .with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
-            .with_method(Method::Put)
-            .with_body(body.to_string().as_bytes());
-
-        let mut response = self.make_request();
+        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
+        let mut builder = self.request_builder(Method::Put, &url);
+        let request = builder.with_body(body.to_string().as_bytes());
 
         #[derive(Deserialize)]
         struct CrateOwnerInvitation {
             crate_owner_invitation: InvitationResponse,
         }
 
-        let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
+        let crate_owner_invite: CrateOwnerInvitation =
+            Response::new(self.middle.call(request)).good();
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
@@ -974,14 +955,9 @@ impl MockUserSession {
     /// Get the crates owned by the specified user.
     pub fn crates_owned_by(&mut self, user: &User) -> CrateList {
         let query = format!("user_id={}", user.id);
-        self.request
-            .with_path("/api/v1/crates")
-            .with_method(Method::Get)
-            .with_query(&query);
-
-        let mut response = self.make_request();
-
-        json::<CrateList>(&mut response)
+        let mut builder = self.request_builder(Method::Get, "/api/v1/crates");
+        let request = builder.with_query(&query);
+        Response::new(self.middle.call(request)).good()
     }
 }
 

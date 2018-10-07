@@ -70,7 +70,7 @@ struct SummaryResponse {
 #[test]
 fn index() {
     let url = "/api/v1/crates";
-    let mut session = MockUserSession::anonymous();
+    let session = MockUserSession::anonymous();
     let json: CrateList = session.get(url).good();
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
@@ -543,7 +543,7 @@ fn yanked_versions_are_not_considered_for_max_version() {
 
 #[test]
 fn versions() {
-    let mut session = MockUserSession::anonymous();
+    let session = MockUserSession::anonymous();
     session.db(|conn| {
         let u = new_user("foo").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_versions", u.id)
@@ -1511,9 +1511,11 @@ fn yank_not_owner() {
         CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
     });
 
-    let mut response = session.yank("foo_not", "1.0.0");
-
-    ::json::<Bad>(&mut response);
+    let json = session.yank("foo_not", "1.0.0").bad();
+    assert_eq!(
+        json.errors[0].detail,
+        "crate `foo_not` does not have a version `1.0.0`"
+    );
 }
 
 #[test]
