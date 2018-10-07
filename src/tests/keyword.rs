@@ -27,10 +27,10 @@ fn index() {
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    {
-        let conn = session.db_conn();
-        Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
-    }
+    session.db(|conn| {
+        Keyword::find_or_create_all(conn, &["foo"]).unwrap();
+    });
+
     let json: KeywordList = session.get(url).good();
     assert_eq!(json.keywords.len(), 1);
     assert_eq!(json.meta.total, 1);
@@ -43,10 +43,9 @@ fn show() {
     let mut session = MockUserSession::anonymous();
     session.get::<()>(url).assert_status(404);
 
-    {
-        let conn = session.db_conn();
-        Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
-    }
+    session.db(|conn| {
+        Keyword::find_or_create_all(conn, &["foo"]).unwrap();
+    });
     let json: GoodKeyword = session.get(url).good();
     assert_eq!(json.keyword.keyword, "foo".to_string());
 }
@@ -57,10 +56,9 @@ fn uppercase() {
     let mut session = MockUserSession::anonymous();
     session.get::<()>(url).assert_status(404);
 
-    {
-        let conn = session.db_conn();
-        Keyword::find_or_create_all(&conn, &["UPPER"]).unwrap();
-    }
+    session.db(|conn| {
+        Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
+    });
     let json: GoodKeyword = session.get(url).good();
     assert_eq!(json.keyword.keyword, "upper".to_string());
 }

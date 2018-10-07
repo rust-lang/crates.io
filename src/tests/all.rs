@@ -241,7 +241,7 @@ fn env(var: &str) -> String {
     match env::var(var) {
         Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
         Ok(s) => s,
-        Err(_) => panic!(
+        _ => panic!(
             "environment variable `{}` must be defined and valid unicode",
             var
         ),
@@ -855,9 +855,14 @@ impl MockUserSession {
     //     unimplemented!();
     // }
 
-    /// Obtain the database connection
-    pub fn db_conn(&self) -> DieselConnection {
-        self.app.diesel_database.get().unwrap()
+    /// Obtain the database connection and pass it to the closure
+    ///
+    /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
+    /// connection before making any API calls.  Once the closure returns, the connection is
+    /// dropped, ensuring it is available for any API calls.
+    pub fn db<T, F: FnOnce(&DieselConnection) -> T>(&self, f: F) -> T {
+        let conn = self.app.diesel_database.get().unwrap();
+        f(&conn)
     }
 
     /// For internal use only: make the current request
@@ -937,13 +942,7 @@ impl MockUserSession {
     pub fn accept_ownership_invitation(&mut self, krate_name: &str) {
         use views::InvitationResponse;
 
-        let krate_id = {
-            let conn = self.db_conn();
-            Crate::by_name(krate_name)
-                .first::<Crate>(&*conn)
-                .unwrap()
-                .id
-        };
+        let krate_id = self.db(|conn| Crate::by_name(krate_name).first::<Crate>(conn).unwrap().id);
 
         let body = json!({
             "crate_owner_invite": {

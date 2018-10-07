@@ -75,11 +75,10 @@ fn index() {
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    let krate = {
-        let conn = session.db_conn();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("fooindex", u.id).expect_build(&conn)
-    };
+    let krate = session.db(|conn| {
+        let u = new_user("foo").create_or_update(conn).unwrap();
+        CrateBuilder::new("fooindex", u.id).expect_build(conn)
+    });
 
     let json: CrateList = session.get(url).good();
     assert_eq!(json.crates.len(), 1);
@@ -545,15 +544,14 @@ fn yanked_versions_are_not_considered_for_max_version() {
 #[test]
 fn versions() {
     let mut session = MockUserSession::anonymous();
-    {
-        let conn = session.db_conn();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
+    session.db(|conn| {
+        let u = new_user("foo").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_versions", u.id)
             .version("0.5.1")
             .version("1.0.0")
             .version("0.5.0")
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
     let json: VersionsList = session.get("/api/v1/crates/foo_versions/versions").good();
 
@@ -1508,11 +1506,10 @@ fn yank() {
 #[test]
 fn yank_not_owner() {
     let mut session = MockUserSession::logged_in();
-    {
-        let conn = session.db_conn();
-        let another_user = new_user("bar").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_not", another_user.id).expect_build(&conn);
-    }
+    session.db(|conn| {
+        let another_user = new_user("bar").create_or_update(conn).unwrap();
+        CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
+    });
 
     let mut response = session.yank("foo_not", "1.0.0");
 
