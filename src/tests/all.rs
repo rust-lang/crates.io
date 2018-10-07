@@ -142,9 +142,11 @@ where
             Some(b) => b,
         }
     }
+}
 
-    pub fn assert_status(&self, status: u32) {
-        assert_eq!(self.response.status.0, status);
+impl Response<()> {
+    pub fn assert_not_found(&self) {
+        assert_eq!((404, "Not Found"), self.response.status);
     }
 }
 

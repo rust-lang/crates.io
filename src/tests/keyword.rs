@@ -38,7 +38,7 @@ fn index() {
 fn show() {
     let url = "/api/v1/keywords/foo";
     let session = MockUserSession::anonymous();
-    session.get::<()>(url).assert_status(404);
+    session.get(url).assert_not_found();
 
     session.db(|conn| {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
@@ -51,7 +51,7 @@ fn show() {
 fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
     let session = MockUserSession::anonymous();
-    session.get::<()>(url).assert_status(404);
+    session.get(url).assert_not_found();
 
     session.db(|conn| {
         Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
