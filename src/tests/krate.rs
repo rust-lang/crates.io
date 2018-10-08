@@ -771,7 +771,7 @@ fn new_renamed_crate() {
     assert_eq!(p.vers, "1.0.0");
     assert_eq!(p.deps.len(), 1);
     assert_eq!(p.deps[0].name, "my-name");
-    assert_eq!(p.deps[0].package, Some("package-name".to_string()));
+    assert_eq!(p.deps[0].package.as_ref().unwrap(), "package-name");
 }
 
 #[test]
@@ -1821,7 +1821,7 @@ fn ignored_categories() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_ignored_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(json.warnings.invalid_categories, vec!["bar".to_string()]);
+    assert_eq!(json.warnings.invalid_categories, vec!["bar"]);
 }
 
 #[test]

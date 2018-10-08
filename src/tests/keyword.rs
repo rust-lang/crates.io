@@ -31,7 +31,7 @@ fn index() {
     let json: KeywordList = session.get(url).good();
     assert_eq!(json.keywords.len(), 1);
     assert_eq!(json.meta.total, 1);
-    assert_eq!(json.keywords[0].keyword, "foo".to_string());
+    assert_eq!(json.keywords[0].keyword.as_str(), "foo");
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn show() {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
     });
     let json: GoodKeyword = session.get(url).good();
-    assert_eq!(json.keyword.keyword, "foo".to_string());
+    assert_eq!(json.keyword.keyword.as_str(), "foo");
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn uppercase() {
         Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
     });
     let json: GoodKeyword = session.get(url).good();
-    assert_eq!(json.keyword.keyword, "upper".to_string());
+    assert_eq!(json.keyword.keyword.as_str(), "upper");
 }
 
 #[test]

@@ -92,7 +92,7 @@ fn authors() {
     let s = ::std::str::from_utf8(&data).unwrap();
     let json: Value = serde_json::from_str(s).unwrap();
     let json = json.as_object().unwrap();
-    assert!(json.contains_key(&"users".to_string()));
+    assert!(json.contains_key("users"));
 }
 
 #[test]
