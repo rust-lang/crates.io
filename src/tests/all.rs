@@ -197,7 +197,7 @@ fn env(s: &str) -> String {
     env_result
 }
 
-fn req(_: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
+fn req(method: conduit::Method, path: &str) -> MockRequest {
     MockRequest::new(method, path)
 }
 
@@ -591,28 +591,18 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
-    new_req_full(app, ::krate(krate), version, Vec::new())
+fn new_req(krate: &str, version: &str) -> MockRequest {
+    new_req_full(::krate(krate), version, Vec::new())
 }
 
-fn new_req_with_documentation(
-    app: Arc<App>,
-    krate: &str,
-    version: &str,
-    documentation: &str,
-) -> MockRequest {
+fn new_req_with_documentation(krate: &str, version: &str, documentation: &str) -> MockRequest {
     let mut krate = ::krate(krate);
     krate.documentation = Some(documentation.into());
-    new_req_full(app, krate, version, Vec::new())
+    new_req_full(krate, version, Vec::new())
 }
 
-fn new_req_full(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    deps: Vec<u::CrateDependency>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -624,13 +614,8 @@ fn new_req_full(
     req
 }
 
-fn new_req_with_keywords(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    kws: Vec<String>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_keywords(krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -642,13 +627,8 @@ fn new_req_with_keywords(
     req
 }
 
-fn new_req_with_categories(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    cats: Vec<String>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_categories(krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -661,12 +641,11 @@ fn new_req_with_categories(
 }
 
 fn new_req_with_badges(
-    app: Arc<App>,
     krate: Crate,
     version: &str,
     badges: HashMap<String, HashMap<String, String>>,
 ) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,

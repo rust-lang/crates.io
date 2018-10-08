@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 extern crate conduit_middleware;
 extern crate diesel;
 extern crate serde_json;
@@ -27,7 +25,7 @@ struct VersionResponse {
 #[test]
 fn index() {
     let (_b, app, middle) = app();
-    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let mut req = req(Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
@@ -62,7 +60,7 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = app();
-    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let mut req = req(Method::Get, "/api/v1/versions");
     let v = {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
@@ -81,11 +79,7 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/foo_authors/1.0.0/authors",
-    );
+    let mut req = req(Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
     {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
