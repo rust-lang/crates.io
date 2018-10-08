@@ -136,7 +136,8 @@ where
         good
     }
 
-    pub fn bad(&mut self) -> Bad {
+    pub fn bad_with_status(&mut self, code: u32) -> Bad {
+        assert_eq!(self.response.status.0, code);
         match ::bad_resp(&mut self.response) {
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
@@ -873,7 +874,7 @@ impl MockUserSession {
         request
     }
 
-    /// Issue a GET request
+    /// Issue a GET request as the current user
     pub fn get<T>(&self, path: &str) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
@@ -882,7 +883,7 @@ impl MockUserSession {
         Response::new(self.middle.call(&mut request))
     }
 
-    /// Issue a PUT request
+    /// Issue a PUT request as the current user
     pub fn put<T>(&self, path: &str, body: &[u8]) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
@@ -890,6 +891,15 @@ impl MockUserSession {
         let mut builder = self.request_builder(Method::Put, path);
         let request = builder.with_body(body);
         Response::new(self.middle.call(request))
+    }
+
+    /// Issue a DELETE request as the current user
+    pub fn delete<T>(&self, path: &str) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        let mut request = self.request_builder(Method::Delete, path);
+        Response::new(self.middle.call(&mut request))
     }
 
     /// Log out the currently logged in user.

@@ -917,7 +917,9 @@ fn valid_feature_names() {
 fn new_krate_too_big() {
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
-    let json = MockUserSession::logged_in().publish(builder).bad();
+    let json = MockUserSession::logged_in()
+        .publish(builder)
+        .bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -1497,7 +1499,7 @@ fn yank_not_owner() {
         CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
     });
 
-    let json = session.yank("foo_not", "1.0.0").bad();
+    let json = session.yank("foo_not", "1.0.0").bad_with_status(200);
     assert_eq!(
         json.errors[0].detail,
         "crate `foo_not` does not have a version `1.0.0`"

@@ -5,7 +5,7 @@ use diesel::prelude::*;
 
 use models::ApiToken;
 use views::EncodableApiTokenWithToken;
-use {app, new_user, req, sign_in_as, user, Bad, MockUserSession};
+use {app, new_user, req, user, Bad, MockUserSession};
 
 #[derive(Deserialize)]
 struct DecodableApiToken {
@@ -52,8 +52,8 @@ fn list_tokens() {
     let user = session.user();
     let tokens = session.db(|conn| {
         vec![
-            t!(ApiToken::insert(&conn, user.id, "bar")),
-            t!(ApiToken::insert(&conn, user.id, "baz")),
+            t!(ApiToken::insert(conn, user.id, "bar")),
+            t!(ApiToken::insert(conn, user.id, "baz")),
         ]
     });
 
@@ -77,81 +77,42 @@ fn create_token_logged_out() {
 
 #[test]
 fn create_token_invalid_request() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
+    let session = MockUserSession::logged_in();
+    let invalid = br#"{ "name": "" }"#;
+    let json = session.put::<()>(URL, invalid).bad_with_status(400);
 
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-    req.with_body(br#"{ "name": "" }"#);
-
-    let mut response = t_resp!(middle.call(&mut req));
-    let json: Bad = ::json(&mut response);
-
-    assert_eq!(response.status.0, 400);
     assert_contains!(json.errors[0].detail, "invalid new token request");
 }
 
 #[test]
 fn create_token_no_name() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
+    let session = MockUserSession::logged_in();
+    let empty_name = br#"{ "api_token": { "name": "" } }"#;
+    let json = session.put::<()>(URL, empty_name).bad_with_status(400);
 
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-    req.with_body(br#"{ "api_token": { "name": "" } }"#);
-
-    let mut response = t_resp!(middle.call(&mut req));
-    let json: Bad = ::json(&mut response);
-
-    assert_eq!(response.status.0, 400);
     assert_eq!(json.errors[0].detail, "name must have a value");
 }
 
 #[test]
 fn create_token_long_body() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
+    let session = MockUserSession::logged_in();
+    let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
+    let json = session.put::<()>(URL, too_big).bad_with_status(400);
 
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-    req.with_body(&[5; 5192]); // Send a request with a 5kB body of 5's
-
-    let mut response = t_resp!(middle.call(&mut req));
-    let json: Bad = ::json(&mut response);
-
-    assert_eq!(response.status.0, 400);
     assert_contains!(json.errors[0].detail, "max content length");
 }
 
 #[test]
 fn create_token_exceeded_tokens_per_user() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
-
-    let user;
-    {
-        let conn = t!(app.diesel_database.get());
-        user = t!(new_user("foo").create_or_update(&conn));
+    let session = MockUserSession::logged_in();
+    let user = session.user();
+    session.db(|conn| {
         for i in 0..1000 {
-            t!(ApiToken::insert(&conn, user.id, &format!("token {}", i)));
+            t!(ApiToken::insert(conn, user.id, &format!("token {}", i)));
         }
-    };
-    sign_in_as(&mut req, &user);
-    req.with_body(NEW_BAR);
+    });
+    let json = session.put::<()>(URL, NEW_BAR).bad_with_status(400);
 
-    let mut response = t_resp!(middle.call(&mut req));
-    let json: Bad = ::json(&mut response);
-
-    assert_eq!(response.status.0, 400);
     assert_contains!(json.errors[0].detail, "maximum tokens per user");
 }
 
@@ -185,7 +146,7 @@ fn create_token_multiple_users_have_different_values() {
     let mut session = MockUserSession::logged_in();
     let first_token: NewResponse = session.put(URL, NEW_BAR).good();
 
-    let second_user = session.db(|conn| t!(new_user("bar").create_or_update(&conn)));
+    let second_user = session.db(|conn| t!(new_user("bar").create_or_update(conn)));
     session.log_in_as(second_user);
     let second_token: NewResponse = session.put(URL, NEW_BAR).good();
 
@@ -218,94 +179,67 @@ fn cannot_create_token_with_token() {
 
 #[test]
 fn revoke_token_non_existing() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Delete, "/api/v1/me/tokens/5");
-
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<RevokedResponse>(&mut response);
+    let session = MockUserSession::logged_in();
+    let _json: RevokedResponse = session.delete("/api/v1/me/tokens/5").good();
 }
 
 #[test]
 fn revoke_token_doesnt_revoke_other_users_token() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Delete, "/api/v1/me/tokens");
+    let mut session = MockUserSession::logged_in();
+    let user1 = session.user().clone();
 
     // Create one user with a token and sign in with a different user
-    let (user1, token, user2);
-    {
-        let conn = t!(app.diesel_database.get());
-        user1 = t!(new_user("foo").create_or_update(&conn));
-        token = t!(ApiToken::insert(&conn, user1.id, "bar"));
-        user2 = t!(new_user("baz").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user2);
+    let (token, user2) = session.db(|conn| {
+        (
+            t!(ApiToken::insert(conn, user1.id, "bar")),
+            t!(new_user("baz").create_or_update(conn)),
+        )
+    });
+    session.log_in_as(user2);
 
     // List tokens for first user contains the token
-    {
-        let conn = t!(app.diesel_database.get());
-        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(&*conn));
+    session.db(|conn| {
+        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
-    }
+    });
 
     // Try revoke the token as second user
-    {
-        req.with_path(&format!("/api/v1/me/tokens/{}", token.id));
-
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<RevokedResponse>(&mut response);
-    }
+    let _json: RevokedResponse = session
+        .delete(&format!("/api/v1/me/tokens/{}", token.id))
+        .good();
 
     // List tokens for first user still contains the token
-    {
-        let conn = t!(app.diesel_database.get());
-        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(&*conn));
+    session.db(|conn| {
+        let tokens = t!(ApiToken::belonging_to(&user1).load::<ApiToken>(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
-    }
+    });
 }
 
 #[test]
 fn revoke_token_success() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Delete, "/api/v1/me/tokens");
-
-    let (user, token);
-    {
-        let conn = t!(app.diesel_database.get());
-        user = t!(new_user("foo").create_or_update(&conn));
-        token = t!(ApiToken::insert(&conn, user.id, "bar"));
-    }
-    sign_in_as(&mut req, &user);
+    let session = MockUserSession::logged_in();
+    let user = session.user();
+    let token = session.db(|conn| t!(ApiToken::insert(conn, user.id, "bar")));
 
     // List tokens contains the token
-    {
-        let conn = t!(app.diesel_database.get());
-        let tokens = t!(ApiToken::belonging_to(&user).load::<ApiToken>(&*conn));
+    session.db(|conn| {
+        let tokens = t!(ApiToken::belonging_to(user).load::<ApiToken>(conn));
         assert_eq!(tokens.len(), 1);
         assert_eq!(tokens[0].name, token.name);
-    }
+    });
 
     // Revoke the token
-    {
-        req.with_path(&format!("/api/v1/me/tokens/{}", token.id));
-
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<RevokedResponse>(&mut response);
-    }
+    let _json: RevokedResponse = session
+        .delete(&format!("/api/v1/me/tokens/{}", token.id))
+        .good();
 
     // List tokens no longer contains the token
-    {
-        let conn = t!(app.diesel_database.get());
-        let tokens = ApiToken::belonging_to(&user).count().get_result(&*conn);
+    session.db(|conn| {
+        let tokens = ApiToken::belonging_to(user).count().get_result(conn);
         assert_eq!(tokens, Ok(0));
-    }
+    });
 }
 
 #[test]
