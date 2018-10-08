@@ -1,5 +1,8 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
+
+// Several test methods trip this clippy lint
+#![cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 
 extern crate cargo_registry;
 extern crate chrono;
@@ -162,7 +165,7 @@ fn app() -> (
     };
 
     let config = cargo_registry::Config {
-        uploader: uploader,
+        uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
@@ -172,7 +175,7 @@ fn app() -> (
         max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
-        api_protocol: api_protocol,
+        api_protocol,
     };
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
@@ -251,7 +254,7 @@ fn user(login: &str) -> User {
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
         github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        login: login,
+        login,
         name: None,
         avatar: None,
     }
@@ -379,9 +382,9 @@ struct CrateBuilder<'a> {
 impl<'a> CrateBuilder<'a> {
     fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
-            owner_id: owner_id,
+            owner_id,
             krate: NewCrate {
-                name: name,
+                name,
                 ..NewCrate::default()
             },
             downloads: None,
@@ -702,7 +705,7 @@ fn new_req_body(
             name: u::CrateName(krate.name),
             vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
             features: HashMap::new(),
-            deps: deps,
+            deps,
             authors: vec!["foo".to_string()],
             description: Some("description".to_string()),
             homepage: krate.homepage,
