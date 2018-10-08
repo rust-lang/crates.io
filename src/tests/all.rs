@@ -148,6 +148,10 @@ impl Response<()> {
     pub fn assert_not_found(&self) {
         assert_eq!((404, "Not Found"), self.response.status);
     }
+
+    pub fn assert_forbidden(&self) {
+        assert_eq!((403, "Forbidden"), self.response.status);
+    }
 }
 
 mod badge;
@@ -878,6 +882,16 @@ impl MockUserSession {
         Response::new(self.middle.call(&mut request))
     }
 
+    /// Issue a PUT request
+    pub fn put<T>(&self, path: &str, body: &[u8]) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        let mut builder = self.request_builder(Method::Put, path);
+        let request = builder.with_body(body);
+        Response::new(self.middle.call(request))
+    }
+
     /// Log out the currently logged in user.
     pub fn logout(&mut self) {
         self.user = None;
@@ -886,6 +900,15 @@ impl MockUserSession {
     /// Using the same session, log in as a different user.
     pub fn log_in_as(&mut self, user: User) {
         self.user = Some(user);
+    }
+
+    /// Return a reference to the current user
+    ///
+    /// # Panics
+    ///
+    /// This function panics if there is no current user.
+    pub fn user(&self) -> &User {
+        self.user.as_ref().unwrap()
     }
 
     /// Publish the crate as specified by the given builder

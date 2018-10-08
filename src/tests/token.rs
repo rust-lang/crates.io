@@ -1,12 +1,11 @@
 use std::collections::HashSet;
-use std::sync::Arc;
 
 use conduit::{Handler, Method};
 use diesel::prelude::*;
 
 use models::ApiToken;
 use views::EncodableApiTokenWithToken;
-use {app, new_user, req, sign_in_as, user, Bad};
+use {app, new_user, req, sign_in_as, user, Bad, MockUserSession};
 
 #[derive(Deserialize)]
 struct DecodableApiToken {
@@ -32,51 +31,33 @@ macro_rules! assert_contains {
     };
 }
 
+// Default values used by many tests
+static URL: &str = "/api/v1/me/tokens";
+static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
+
 #[test]
 fn list_logged_out() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me/tokens");
-
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 403);
+    MockUserSession::anonymous().get(URL).assert_forbidden();
 }
 
 #[test]
 fn list_empty() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me/tokens");
-
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: ListResponse = ::json(&mut response);
-
+    let json: ListResponse = MockUserSession::logged_in().get(URL).good();
     assert_eq!(json.api_tokens.len(), 0);
 }
 
 #[test]
 fn list_tokens() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me/tokens");
-
-    let (user, tokens);
-    {
-        let conn = t!(app.diesel_database.get());
-        user = t!(new_user("foo").create_or_update(&conn));
-        tokens = vec![
+    let session = MockUserSession::logged_in();
+    let user = session.user();
+    let tokens = session.db(|conn| {
+        vec![
             t!(ApiToken::insert(&conn, user.id, "bar")),
             t!(ApiToken::insert(&conn, user.id, "baz")),
-        ];
-    }
-    sign_in_as(&mut req, &user);
+        ]
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: ListResponse = ::json(&mut response);
-
+    let json: ListResponse = session.get(URL).good();
     assert_eq!(json.api_tokens.len(), tokens.len());
     assert_eq!(
         json.api_tokens
@@ -89,13 +70,9 @@ fn list_tokens() {
 
 #[test]
 fn create_token_logged_out() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
-
-    req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
-
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 403);
+    MockUserSession::anonymous()
+        .put(URL, NEW_BAR)
+        .assert_forbidden();
 }
 
 #[test]
@@ -169,7 +146,7 @@ fn create_token_exceeded_tokens_per_user() {
         }
     };
     sign_in_as(&mut req, &user);
-    req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
+    req.with_body(NEW_BAR);
 
     let mut response = t_resp!(middle.call(&mut req));
     let json: Bad = ::json(&mut response);
@@ -180,24 +157,14 @@ fn create_token_exceeded_tokens_per_user() {
 
 #[test]
 fn create_token_success() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Put, "/api/v1/me/tokens");
+    let session = MockUserSession::logged_in();
 
-    let user = {
-        let conn = t!(app.diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-    sign_in_as(&mut req, &user);
-    req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: NewResponse = ::json(&mut response);
-
+    let json: NewResponse = session.put(URL, NEW_BAR).good();
     assert_eq!(json.api_token.name, "bar");
     assert!(!json.api_token.token.is_empty());
 
-    let conn = t!(app.diesel_database.get());
-    let tokens = t!(ApiToken::belonging_to(&user).load::<ApiToken>(&*conn));
+    let tokens =
+        session.db(|conn| t!(ApiToken::belonging_to(session.user()).load::<ApiToken>(conn)));
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert_eq!(tokens[0].token, json.api_token.token);
@@ -206,63 +173,27 @@ fn create_token_success() {
 
 #[test]
 fn create_token_multiple_have_different_values() {
-    let (_b, app, middle) = app();
-
-    let user = {
-        let conn = t!(Arc::clone(&app).diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-
-    let first = {
-        let mut req = req(Method::Put, "/api/v1/me/tokens");
-        sign_in_as(&mut req, &user);
-        req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
-        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
-    };
-
-    let second = {
-        let mut req = req(Method::Put, "/api/v1/me/tokens");
-        sign_in_as(&mut req, &user);
-        req.with_body(br#"{ "api_token": { "name": "bar" } }"#);
-        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
-    };
+    let session = MockUserSession::logged_in();
+    let first: NewResponse = session.put(URL, NEW_BAR).good();
+    let second: NewResponse = session.put(URL, NEW_BAR).good();
 
     assert_ne!(first.api_token.token, second.api_token.token);
 }
 
 #[test]
 fn create_token_multiple_users_have_different_values() {
-    let (_b, app, middle) = app();
+    let mut session = MockUserSession::logged_in();
+    let first_token: NewResponse = session.put(URL, NEW_BAR).good();
 
-    let first_user = {
-        let conn = t!(Arc::clone(&app).diesel_database.get());
-        t!(new_user("foo").create_or_update(&conn))
-    };
-
-    let second_user = {
-        let conn = t!(Arc::clone(&app).diesel_database.get());
-        t!(new_user("bar").create_or_update(&conn))
-    };
-
-    let first_token = {
-        let mut req = req(Method::Put, "/api/v1/me/tokens");
-        sign_in_as(&mut req, &first_user);
-        req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
-        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
-    };
-
-    let second_token = {
-        let mut req = req(Method::Put, "/api/v1/me/tokens");
-        sign_in_as(&mut req, &second_user);
-        req.with_body(br#"{ "api_token": { "name": "baz" } }"#);
-        ::json::<NewResponse>(&mut ok_resp!(middle.call(&mut req)))
-    };
+    let second_user = session.db(|conn| t!(new_user("bar").create_or_update(&conn)));
+    session.log_in_as(second_user);
+    let second_token: NewResponse = session.put(URL, NEW_BAR).good();
 
     assert_ne!(first_token.api_token.token, second_token.api_token.token);
 }
 
 #[test]
-fn create_token_with_token() {
+fn cannot_create_token_with_token() {
     let (_b, app, middle) = app();
     let mut req = req(Method::Put, "/api/v1/me/tokens");
 
