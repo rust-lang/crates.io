@@ -2,6 +2,7 @@ language: rust
 sudo: required
 dist: trusty
 
+# Ignore this branch per bors-ng documentation
 branches:
   except:
     - staging.tmp
@@ -22,9 +23,6 @@ env:
     # on community-submitted PRs
     - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
     - PERCY_PROJECT=crates-io/crates.io
-
-before_install:
-  - nvm install 10
 
 install:
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
@@ -49,14 +47,15 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-    - rust: nightly-2018-03-31
-      script:
-        - cargo install --force clippy --vers 0.0.191
-        - cargo clippy
     - rust: stable
-      script:
+      before_install:
+        - nvm install 10
         - rustup component add rustfmt-preview
-        - cargo fmt -- --write-mode=diff
+        - rustup component add clippy-preview
+      script:
+        - cargo fmt -- --check
+        # TODO: Once clippy:: lint syntax is stable, remove everything after the -- below
+        - cargo clippy --all-targets -- -A renamed_and_removed_lints
         - cargo build
         - cargo test
         - npm install
@@ -69,6 +68,9 @@ matrix:
       script:
         - cargo build
         - cargo test
+      # This portion of the cache is quickly invalidated anyway
+      before_cache:
+        - cargo clean
 
 notifications:
   email:

@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+extern crate conduit_middleware;
 extern crate diesel;
 extern crate serde_json;
 
@@ -10,6 +9,9 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
+use {
+    app, new_user, new_version, req, CrateBuilder, MockUserSession, PublishBuilder, VersionBuilder,
+};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -22,18 +24,18 @@ struct VersionResponse {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
 
     let (v1, v2) = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("foo_vers_index", u.id)
-            .version(::VersionBuilder::new("2.0.0").license(Some("MIT")))
-            .version(::VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")))
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        CrateBuilder::new("foo_vers_index", u.id)
+            .version(VersionBuilder::new("2.0.0").license(Some("MIT")))
+            .version(VersionBuilder::new("2.0.1").license(Some("MIT/Apache-2.0")))
             .expect_build(&conn);
         let ids = versions::table
             .select(versions::id)
@@ -57,33 +59,32 @@ fn index() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/versions");
     let v = {
         let conn = app.diesel_database.get().unwrap();
-        let user = ::new_user("foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
-        ::new_version(krate.id, "2.0.0").save(&conn, &[]).unwrap()
+        let user = new_user("foo").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
+        new_version(krate.id, "2.0.0", Some(1234))
+            .save(&conn, &[])
+            .unwrap()
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionResponse = ::json(&mut response);
     assert_eq!(json.version.id, v.id);
+    assert_eq!(json.version.crate_size, Some(1234));
 }
 
 #[test]
 fn authors() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/foo_authors/1.0.0/authors",
-    );
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
     {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap();
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        new_version(c.id, "1.0.0", None).save(&conn, &[]).unwrap();
     }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
@@ -96,16 +97,46 @@ fn authors() {
 
 #[test]
 fn record_rerendered_readme_time() {
-    let (_b, app, _middle) = ::app();
+    let (_b, app, _middle) = app();
     let version = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        let c = ::CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        ::new_version(c.id, "1.0.0").save(&conn, &[]).unwrap()
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
+        new_version(c.id, "1.0.0", None).save(&conn, &[]).unwrap()
     };
     {
         let conn = app.diesel_database.get().unwrap();
         version.record_readme_rendering(&conn).unwrap();
         version.record_readme_rendering(&conn).unwrap();
     }
+}
+
+#[test]
+fn version_size() {
+    let mut session = MockUserSession::logged_in();
+    let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
+    session.publish(crate_to_publish);
+
+    // Add a file to version 2 so that it's a different size than version 1
+    let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
+    let crate_to_publish = PublishBuilder::new("foo_version_size")
+        .version("2.0.0")
+        .files(&files);
+    session.publish(crate_to_publish);
+
+    let crate_json = session.show_crate("foo_version_size");
+
+    let version1 = crate_json
+        .versions
+        .iter()
+        .find(|v| v.num == "1.0.0")
+        .expect("Could not find v1.0.0");
+    assert_eq!(version1.crate_size, Some(35));
+
+    let version2 = crate_json
+        .versions
+        .iter()
+        .find(|v| v.num == "2.0.0")
+        .expect("Could not find v2.0.0");
+    assert_eq!(version2.crate_size, Some(91));
 }

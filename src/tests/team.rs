@@ -1,10 +1,18 @@
 use conduit::{Handler, Method};
+use conduit_test::MockRequest;
 use diesel::*;
-use record::GhUser;
+use std::sync::Arc;
 use std::sync::ONCE_INIT;
 
+use cargo_registry::app::App;
+
 use models::{Crate, NewUser};
+use record::GhUser;
 use views::EncodableCrate;
+use {
+    add_team_to_crate, app, new_req, new_req_body_version_2, new_team, new_user, req, sign_in_as,
+    CrateBuilder,
+};
 
 // Users: `crates-tester-1` and `crates-tester-2`
 // Passwords: ask acrichto or gankro
@@ -35,12 +43,26 @@ fn body_for_team_x() -> &'static str {
     r#"{"users":["github:crates-test-org:core"]}"#
 }
 
+fn request_with_user_and_mock_crate(
+    app: &Arc<App>,
+    user: &NewUser<'_>,
+    krate: &str,
+) -> MockRequest {
+    let mut req = new_req(krate, "1.0.0");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = user.create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
+        CrateBuilder::new(krate, user.id).expect_build(&conn);
+    }
+    req
+}
+
 // Test adding team without `github:`
 #[test]
 fn not_github() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_github");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_github");
 
     let body = r#"{"users":["dropbox:foo:foo"]}"#;
     let json = bad_resp!(
@@ -59,9 +81,8 @@ fn not_github() {
 
 #[test]
 fn weird_name() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_weird_name");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_weird_name");
 
     let body = r#"{"users":["github:foo/../bar:wut"]}"#;
     let json = bad_resp!(
@@ -83,9 +104,8 @@ fn weird_name() {
 // Test adding team without second `:`
 #[test]
 fn one_colon() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_one_colon");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_one_colon");
 
     let body = r#"{"users":["github:foo"]}"#;
     let json = bad_resp!(
@@ -104,9 +124,9 @@ fn one_colon() {
 
 #[test]
 fn nonexistent_team() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_nonexistent");
+        request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_nonexistent");
 
     let body = r#"{"users":["github:crates-test-org:this-does-not-exist"]}"#;
     let json = bad_resp!(
@@ -128,9 +148,8 @@ fn nonexistent_team() {
 // Test adding team names with mixed case
 #[test]
 fn add_team_mixed_case() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_mixed_case");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_mixed_case");
 
     let body = r#"{"users":["github:Crates-Test-Org:Core"]}"#;
 
@@ -171,9 +190,9 @@ fn add_team_mixed_case() {
 // Test adding team as owner when on it
 #[test]
 fn add_team_as_member() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_member");
+        request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_member");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -196,9 +215,9 @@ fn add_team_as_member() {
 // Test adding team as owner when not on it
 #[test]
 fn add_team_as_non_member() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_only_x(), "foo_team_non_member");
+        request_with_user_and_mock_crate(&app, &mock_user_on_only_x(), "foo_team_non_member");
 
     let body = body_for_team_y();
     let json = bad_resp!(
@@ -219,9 +238,9 @@ fn add_team_as_non_member() {
 
 #[test]
 fn remove_team_as_named_owner() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team");
+        request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -252,9 +271,9 @@ fn remove_team_as_named_owner() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
-    let body = ::new_req_body_version_2(::krate("foo_remove_team"));
+    let body = new_req_body_version_2(::krate("foo_remove_team"));
     let json = bad_resp!(
         middle.call(
             req.with_path("/api/v1/crates/new")
@@ -273,9 +292,9 @@ fn remove_team_as_named_owner() {
 
 #[test]
 fn remove_team_as_team_owner() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
     let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team_owner");
+        request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team_owner");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -295,7 +314,7 @@ fn remove_team_as_team_owner() {
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
 
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
     let body = body_for_team_x();
     let json = bad_resp!(
@@ -314,7 +333,7 @@ fn remove_team_as_team_owner() {
         json.errors
     );
 
-    let body = ::new_req_body_version_2(::krate("foo_remove_team_owner"));
+    let body = new_req_body_version_2(::krate("foo_remove_team_owner"));
     ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/new")
@@ -327,10 +346,9 @@ fn remove_team_as_team_owner() {
 // Test trying to publish a krate we don't own
 #[test]
 fn publish_not_owned() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_owned");
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_owned");
 
     let body = body_for_team_y();
     ok_resp!(
@@ -350,9 +368,9 @@ fn publish_not_owned() {
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
 
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
-    let body = ::new_req_body_version_2(::krate("foo_not_owned"));
+    let body = new_req_body_version_2(::krate("foo_not_owned"));
     let json = bad_resp!(
         middle.call(
             req.with_path("/api/v1/crates/new")
@@ -372,9 +390,8 @@ fn publish_not_owned() {
 // Test trying to publish a krate we do own (but only because of teams)
 #[test]
 fn publish_owned() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_owned");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_owned");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -394,9 +411,9 @@ fn publish_owned() {
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
 
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
-    let body = ::new_req_body_version_2(::krate("foo_team_owned"));
+    let body = new_req_body_version_2(::krate("foo_team_owned"));
     ok_resp!(
         middle.call(
             req.with_path("/api/v1/crates/new")
@@ -409,9 +426,8 @@ fn publish_owned() {
 // Test trying to change owners (when only on an owning team)
 #[test]
 fn add_owners_as_team_owner() {
-    let (_b, app, middle) = ::app();
-    let mut req =
-        ::request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_add_owner");
+    let (_b, app, middle) = app();
+    let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_add_owner");
 
     let body = body_for_team_x();
     ok_resp!(
@@ -431,7 +447,7 @@ fn add_owners_as_team_owner() {
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
 
         let user = mock_user_on_only_x().create_or_update(&conn).unwrap();
-        ::sign_in_as(&mut req, &user);
+        sign_in_as(&mut req, &user);
     }
     let body = r#"{"users":["FlashCat"]}"#; // User doesn't matter
     let json = bad_resp!(
@@ -452,18 +468,18 @@ fn add_owners_as_team_owner() {
 
 #[test]
 fn crates_by_team_id() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
     let team = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("user_foo").create_or_update(&conn).unwrap();
-        let t = ::new_team("team_foo").create_or_update(&conn).unwrap();
-        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        let u = new_user("user_foo").create_or_update(&conn).unwrap();
+        let t = new_team("team_foo").create_or_update(&conn).unwrap();
+        let krate = CrateBuilder::new("foo", u.id).expect_build(&conn);
+        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         t
     };
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -477,21 +493,21 @@ fn crates_by_team_id() {
 
 #[test]
 fn crates_by_team_id_not_including_deleted_owners() {
-    let (_b, app, middle) = ::app();
+    let (_b, app, middle) = app();
 
     let team = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user(GH_USER_2.login).create_or_update(&conn).unwrap();
-        let t = ::new_team("github:crates-test-org:core")
+        let u = new_user(GH_USER_2.login).create_or_update(&conn).unwrap();
+        let t = new_team("github:crates-test-org:core")
             .create_or_update(&conn)
             .unwrap();
-        let krate = ::CrateBuilder::new("foo", u.id).expect_build(&conn);
-        ::add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+        let krate = CrateBuilder::new("foo", u.id).expect_build(&conn);
+        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
         krate.owner_remove(&app, &conn, &u, &t.login).unwrap();
         t
     };
 
-    let mut req = ::req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 

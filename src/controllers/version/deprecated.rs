@@ -16,7 +16,7 @@ use views::EncodableVersion;
 use super::version_and_crate;
 
 /// Handles the `GET /versions` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
+pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;
     let conn = req.db_conn()?;
 
@@ -50,7 +50,7 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 ///
 /// FIXME: These two routes have very different semantics and should be split into
 /// a separate function for each endpoint.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, krate) = match req.params().find("crate_id") {
         Some(..) => version_and_crate(req)?,
         None => {

@@ -1,4 +1,8 @@
 #![deny(warnings)]
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
+
+// Several test methods trip this clippy lint
+#![cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 
 extern crate cargo_registry;
 extern crate chrono;
@@ -11,6 +15,8 @@ extern crate diesel;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
+#[macro_use]
+extern crate lazy_static;
 extern crate s3;
 extern crate semver;
 extern crate serde;
@@ -32,7 +38,7 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::Replica;
 use chrono::Utc;
-use conduit::{Method, Request};
+use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use flate2::write::GzEncoder;
@@ -44,7 +50,7 @@ use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, 
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
-use views::EncodableCrate;
+use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
 
 macro_rules! t {
     ($e:expr) => {
@@ -111,7 +117,7 @@ struct GoodCrate {
     warnings: Warnings,
 }
 #[derive(Deserialize)]
-struct CrateList {
+pub struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
@@ -123,6 +129,13 @@ struct Warnings {
 #[derive(Deserialize)]
 struct CrateMeta {
     total: i32,
+}
+#[derive(Deserialize)]
+pub struct CrateResponse {
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
+    versions: Vec<EncodableVersion>,
+    keywords: Vec<EncodableKeyword>,
 }
 
 fn app() -> (
@@ -152,17 +165,17 @@ fn app() -> (
     };
 
     let config = cargo_registry::Config {
-        uploader: uploader,
+        uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: cargo_registry::Env::Test,
-        max_upload_size: 1000,
+        max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
-        api_protocol: api_protocol,
+        api_protocol,
     };
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
@@ -184,7 +197,7 @@ fn env(s: &str) -> String {
     env_result
 }
 
-fn req(_: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
+fn req(method: conduit::Method, path: &str) -> MockRequest {
     MockRequest::new(method, path)
 }
 
@@ -215,7 +228,7 @@ where
 
 static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
-fn new_user(login: &str) -> NewUser {
+fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
         gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
@@ -238,10 +251,10 @@ fn user(login: &str) -> User {
     }
 }
 
-fn new_team(login: &str) -> NewTeam {
+fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
         github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        login: login,
+        login,
         name: None,
         avatar: None,
     }
@@ -273,6 +286,7 @@ struct VersionBuilder<'a> {
     license_file: Option<&'a str>,
     features: HashMap<String, Vec<String>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
+    yanked: bool,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -287,6 +301,7 @@ impl<'a> VersionBuilder<'a> {
             license_file: None,
             features: HashMap::new(),
             dependencies: Vec::new(),
+            yanked: false,
         }
     }
 
@@ -300,23 +315,35 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
+    fn yanked(self, yanked: bool) -> Self {
+        Self { yanked, ..self }
+    }
+
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
-        use diesel::insert_into;
+        use diesel::{insert_into, update};
 
         let license = match self.license {
             Some(license) => Some(license.to_owned()),
             None => None,
         };
 
-        let vers = NewVersion::new(
+        let mut vers = NewVersion::new(
             crate_id,
             &self.num,
             &self.features,
             license,
             self.license_file,
+            None,
         )?.save(connection, &[])?;
 
-        let new_deps = self.dependencies
+        if self.yanked {
+            vers = update(&vers)
+                .set(versions::yanked.eq(true))
+                .get_result(connection)?;
+        }
+
+        let new_deps = self
+            .dependencies
             .into_iter()
             .map(|(crate_id, target)| {
                 (
@@ -328,8 +355,7 @@ impl<'a> VersionBuilder<'a> {
                     dependencies::default_features.eq(false),
                     dependencies::features.eq(Vec::<String>::new()),
                 )
-            })
-            .collect::<Vec<_>>();
+            }).collect::<Vec<_>>();
         insert_into(dependencies::table)
             .values(&new_deps)
             .execute(connection)?;
@@ -354,11 +380,11 @@ struct CrateBuilder<'a> {
 }
 
 impl<'a> CrateBuilder<'a> {
-    fn new(name: &str, owner_id: i32) -> CrateBuilder {
+    fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
-            owner_id: owner_id,
+            owner_id,
             krate: NewCrate {
-                name: name,
+                name,
                 ..NewCrate::default()
             },
             downloads: None,
@@ -416,7 +442,8 @@ impl<'a> CrateBuilder<'a> {
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
-        let mut krate = self.krate
+        let mut krate = self
+            .krate
             .create_or_update(connection, None, self.owner_id)?;
 
         // Since we are using `NewCrate`, we can't set all the
@@ -478,9 +505,9 @@ impl<'a> CrateBuilder<'a> {
     }
 }
 
-fn new_version(crate_id: i32, num: &str) -> NewVersion {
+fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
@@ -501,6 +528,28 @@ fn krate(name: &str) -> Crate {
     }
 }
 
+fn new_crate(name: &str, version: &str) -> u::NewCrate {
+    u::NewCrate {
+        name: u::CrateName(name.to_string()),
+        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
+        features: HashMap::new(),
+        deps: Vec::new(),
+        authors: vec!["foo".to_string()],
+        description: Some("desc".to_string()),
+        homepage: None,
+        documentation: None,
+        readme: None,
+        readme_file: None,
+        keywords: None,
+        categories: None,
+        license: Some("MIT".to_string()),
+        license_file: None,
+        repository: None,
+        badges: None,
+        links: None,
+    }
+}
+
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
@@ -509,7 +558,7 @@ fn sign_in_as(req: &mut Request, user: &User) {
 
 fn sign_in(req: &mut Request, app: &App) -> User {
     let conn = app.diesel_database.get().unwrap();
-    let user = ::new_user("foo").create_or_update(&conn).unwrap();
+    let user = new_user("foo").create_or_update(&conn).unwrap();
     sign_in_as(req, &user);
     user
 }
@@ -526,15 +575,15 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
             optional.eq(false),
             default_features.eq(false),
             features.eq(Vec::<String>::new()),
-        ))
-        .get_result(conn)
+        )).get_result(conn)
         .unwrap()
 }
 
-fn new_category<'a>(category: &'a str, slug: &'a str) -> NewCategory<'a> {
+fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
     NewCategory {
-        category: category,
-        slug: slug,
+        category,
+        slug,
+        description,
     }
 }
 
@@ -542,39 +591,18 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(app: &Arc<App>, user: &NewUser, krate: &str) -> MockRequest {
-    let mut req = new_req(Arc::clone(app), krate, "1.0.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        ::CrateBuilder::new(krate, user.id).expect_build(&conn);
-    }
-    req
+fn new_req(krate: &str, version: &str) -> MockRequest {
+    new_req_full(::krate(krate), version, Vec::new())
 }
 
-fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
-    new_req_full(app, ::krate(krate), version, Vec::new())
-}
-
-fn new_req_with_documentation(
-    app: Arc<App>,
-    krate: &str,
-    version: &str,
-    documentation: &str,
-) -> MockRequest {
+fn new_req_with_documentation(krate: &str, version: &str, documentation: &str) -> MockRequest {
     let mut krate = ::krate(krate);
     krate.documentation = Some(documentation.into());
-    new_req_full(app, krate, version, Vec::new())
+    new_req_full(krate, version, Vec::new())
 }
 
-fn new_req_full(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    deps: Vec<u::CrateDependency>,
-) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -586,13 +614,8 @@ fn new_req_full(
     req
 }
 
-fn new_req_with_keywords(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    kws: Vec<String>,
-) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_keywords(krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -604,13 +627,8 @@ fn new_req_with_keywords(
     req
 }
 
-fn new_req_with_categories(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    cats: Vec<String>,
-) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_categories(krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -623,12 +641,11 @@ fn new_req_with_categories(
 }
 
 fn new_req_with_badges(
-    app: Arc<App>,
     krate: Crate,
     version: &str,
     badges: HashMap<String, HashMap<String, String>>,
 ) -> MockRequest {
-    let mut req = ::req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -667,7 +684,7 @@ fn new_req_body(
             name: u::CrateName(krate.name),
             vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
             features: HashMap::new(),
-            deps: deps,
+            deps,
             authors: vec!["foo".to_string()],
             description: Some("description".to_string()),
             homepage: krate.homepage,
@@ -694,8 +711,7 @@ fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8
         .map(|(&(name, _), data)| {
             let len = data.len() as u64;
             (name, data as &mut Read, len)
-        })
-        .collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
     new_crate_to_body_with_io(new_crate, &mut files)
 }
 
@@ -715,6 +731,10 @@ fn new_crate_to_body_with_io(
         }
         t!(ar.finish());
     }
+    new_crate_to_body_with_tarball(new_crate, &tarball)
+}
+
+fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Vec<u8> {
     let json = serde_json::to_string(&new_crate).unwrap();
     let mut body = Vec::new();
     body.extend(
@@ -723,7 +743,8 @@ fn new_crate_to_body_with_io(
             (json.len() >> 8) as u8,
             (json.len() >> 16) as u8,
             (json.len() >> 24) as u8,
-        ].iter()
+        ]
+            .iter()
             .cloned(),
     );
     body.extend(json.as_bytes().iter().cloned());
@@ -735,4 +756,255 @@ fn new_crate_to_body_with_io(
     ]);
     body.extend(tarball);
     body
+}
+
+/// A struct representing a user's session to be used for the duration of a test.
+/// This injects requests directly into the router, so doesn't quite exercise the application
+/// exactly as in production, but it's close enough for most testing purposes.
+/// Has useful methods for making common HTTP requests.
+pub struct MockUserSession {
+    app: Arc<App>,
+    // The bomb needs to be held in scope until the end of the test.
+    _bomb: record::Bomb,
+    middle: conduit_middleware::MiddlewareBuilder,
+    request: MockRequest,
+    _user: User,
+}
+
+impl MockUserSession {
+    /// Create a session logged in with an arbitrary user.
+    pub fn logged_in() -> Self {
+        let (bomb, app, middle) = app();
+
+        let mut request = MockRequest::new(Method::Get, "/");
+        let user = {
+            let conn = app.diesel_database.get().unwrap();
+            let user = new_user("foo").create_or_update(&conn).unwrap();
+            request.mut_extensions().insert(user.clone());
+            request
+                .mut_extensions()
+                .insert(AuthenticationSource::SessionCookie);
+
+            user
+        };
+
+        MockUserSession {
+            app,
+            _bomb: bomb,
+            middle,
+            request,
+            _user: user,
+        }
+    }
+
+    /// Create a session logged in with the given user.
+    // pub fn logged_in_as(_user: &User) -> Self {
+    //     unimplemented!();
+    // }
+
+    /// For internal use only: make the current request
+    fn make_request(&mut self) -> conduit::Response {
+        ok_resp!(self.middle.call(&mut self.request))
+    }
+
+    /// Log out the currently logged in user.
+    pub fn logout(&mut self) {
+        logout(&mut self.request);
+    }
+
+    /// Using the same session, log in as a different user.
+    pub fn log_in_as(&mut self, user: &User) {
+        sign_in_as(&mut self.request, user);
+    }
+
+    /// Publish the crate as specified by the given builder
+    pub fn publish(&mut self, publish_builder: PublishBuilder) {
+        let krate_name = publish_builder.krate_name.clone();
+        self.request
+            .with_path("/api/v1/crates/new")
+            .with_method(Method::Put)
+            .with_body(&publish_builder.body());
+        let mut response = self.make_request();
+        let json: GoodCrate = json(&mut response);
+        assert_eq!(json.krate.name, krate_name);
+    }
+
+    /// Request the JSON used for a crate's page.
+    pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
+        self.request
+            .with_method(Method::Get)
+            .with_path(&format!("/api/v1/crates/{}", krate_name));
+        let mut response = self.make_request();
+        json(&mut response)
+    }
+
+    /// Yank the specified version of the specified crate.
+    pub fn yank(&mut self, krate_name: &str, version: &str) -> conduit::Response {
+        self.request
+            .with_path(&format!("/api/v1/crates/{}/{}/yank", krate_name, version))
+            .with_method(Method::Delete);
+        self.make_request()
+    }
+
+    /// Add a user as an owner for a crate.
+    pub fn add_owner(&mut self, krate_name: &str, user: &User) {
+        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
+        self.request
+            .with_path(&format!("/api/v1/crates/{}/owners", krate_name))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes());
+
+        let mut response = self.make_request();
+
+        #[derive(Deserialize)]
+        struct O {
+            ok: bool,
+        }
+        assert!(json::<O>(&mut response).ok);
+    }
+
+    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// crate.
+    pub fn accept_ownership_invitation(&mut self, krate_name: &str) {
+        use views::InvitationResponse;
+
+        let krate_id = {
+            let conn = self.app.diesel_database.get().unwrap();
+            Crate::by_name(krate_name)
+                .first::<Crate>(&*conn)
+                .unwrap()
+                .id
+        };
+
+        let body = json!({
+            "crate_owner_invite": {
+                "invited_by_username": "",
+                "crate_name": krate_name,
+                "crate_id": krate_id,
+                "created_at": "",
+                "accepted": true
+            }
+        });
+
+        self.request
+            .with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes());
+
+        let mut response = self.make_request();
+
+        #[derive(Deserialize)]
+        struct CrateOwnerInvitation {
+            crate_owner_invitation: InvitationResponse,
+        }
+
+        let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
+        assert!(crate_owner_invite.crate_owner_invitation.accepted);
+        assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
+    }
+
+    /// Get the crates owned by the specified user.
+    pub fn crates_owned_by(&mut self, user: &User) -> CrateList {
+        let query = format!("user_id={}", user.id);
+        self.request
+            .with_path("/api/v1/crates")
+            .with_method(Method::Get)
+            .with_query(&query);
+
+        let mut response = self.make_request();
+
+        json::<CrateList>(&mut response)
+    }
+}
+
+lazy_static! {
+    static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
+        let mut empty_tarball = vec![];
+        {
+            let mut ar =
+                tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
+            t!(ar.finish());
+        }
+        empty_tarball
+    };
+}
+
+/// A builder for constructing a crate for the purposes of testing publishing. If you only need
+/// a crate to exist and don't need to test behavior caused by the publish request, inserting
+/// a crate into the database directly by using CrateBuilder will be faster.
+pub struct PublishBuilder {
+    pub krate_name: String,
+    version: semver::Version,
+    tarball: Vec<u8>,
+}
+
+impl PublishBuilder {
+    /// Create a request to publish a crate with the given name, version 1.0.0, and no files
+    /// in its tarball.
+    fn new(krate_name: &str) -> Self {
+        PublishBuilder {
+            krate_name: krate_name.into(),
+            version: semver::Version::parse("1.0.0").unwrap(),
+            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+        }
+    }
+
+    /// Set the version of the crate being published to something other than the default of 1.0.0.
+    fn version(mut self, version: &str) -> Self {
+        self.version = semver::Version::parse(version).unwrap();
+        self
+    }
+
+    /// Set the files in the crate's tarball.
+    fn files(mut self, files: &[(&str, &[u8])]) -> Self {
+        let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
+        let files = files
+            .iter()
+            .zip(&mut slices)
+            .map(|(&(name, _), data)| {
+                let len = data.len() as u64;
+                (name, data as &mut Read, len)
+            }).collect::<Vec<_>>();
+
+        let mut tarball = Vec::new();
+        {
+            let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+            for (name, ref mut data, size) in files {
+                let mut header = tar::Header::new_gnu();
+                t!(header.set_path(name));
+                header.set_size(size);
+                header.set_cksum();
+                t!(ar.append(&header, data));
+            }
+            t!(ar.finish());
+        }
+
+        self.tarball = tarball;
+        self
+    }
+
+    /// Consume this builder to make the Put request body
+    fn body(self) -> Vec<u8> {
+        let new_crate = u::NewCrate {
+            name: u::CrateName(self.krate_name.clone()),
+            vers: u::CrateVersion(self.version),
+            features: HashMap::new(),
+            deps: Vec::new(),
+            authors: vec!["foo".to_string()],
+            description: Some("description".to_string()),
+            homepage: None,
+            documentation: None,
+            readme: None,
+            readme_file: None,
+            keywords: Some(u::KeywordList(Vec::new())),
+            categories: Some(u::CategoryList(Vec::new())),
+            license: Some("MIT".to_string()),
+            license_file: None,
+            repository: None,
+            badges: Some(HashMap::new()),
+            links: None,
+        };
+
+        ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
+    }
 }

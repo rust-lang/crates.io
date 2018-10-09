@@ -24,6 +24,7 @@ use curl::easy::{Easy, List};
 use serde_json;
 
 use models::NewUser;
+use new_user;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -121,8 +122,7 @@ pub fn proxy() -> (String, Bomb) {
                 sink: sink2,
                 record: Arc::clone(&record),
                 client,
-            })
-            .map_err(|e| eprintln!("server connection error: {}", e));
+            }).map_err(|e| eprintln!("server connection error: {}", e));
 
         drop(core.run(srv.select2(quitrx)));
 
@@ -265,13 +265,7 @@ fn record_http(
             hyper_response.status(status);
             let mut hyper_response = hyper_response.body(body.into()).unwrap();
             *hyper_response.headers_mut() = headers;
-            (
-                hyper_response,
-                Exchange {
-                    response: response,
-                    request: request,
-                },
-            )
+            (hyper_response, Exchange { response, request })
         })
     }))
 }
@@ -329,9 +323,9 @@ fn replay_http(
 }
 
 impl GhUser {
-    pub fn user(&'static self) -> NewUser {
+    pub fn user(&'static self) -> NewUser<'_> {
         self.init.call_once(|| self.init());
-        let mut u = ::new_user(self.login);
+        let mut u = new_user(self.login);
         u.gh_access_token = Cow::Owned(self.token());
         u
     }

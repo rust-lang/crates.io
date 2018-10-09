@@ -5,7 +5,7 @@ use schema::categories;
 use views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
-pub fn index(req: &mut Request) -> CargoResult<Response> {
+pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
@@ -34,13 +34,17 @@ pub fn index(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /categories/:category_id` route.
-pub fn show(req: &mut Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let slug = &req.params()["category_id"];
     let conn = req.db_conn()?;
-    let cat = categories::table
-        .filter(categories::slug.eq(::lower(slug)))
-        .first::<Category>(&*conn)?;
-    let subcats = cat.subcategories(&conn)?
+    let cat = Category::by_slug(slug).first::<Category>(&*conn)?;
+    let subcats = cat
+        .subcategories(&conn)?
+        .into_iter()
+        .map(Category::encodable)
+        .collect();
+    let parents = cat
+        .parent_categories(&conn)?
         .into_iter()
         .map(Category::encodable)
         .collect();
@@ -54,6 +58,7 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
         created_at: cat.created_at,
         crates_cnt: cat.crates_cnt,
         subcategories: subcats,
+        parent_categories: parents,
     };
 
     #[derive(Serialize)]
@@ -66,10 +71,10 @@ pub fn show(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /category_slugs` route.
-pub fn slugs(req: &mut Request) -> CargoResult<Response> {
+pub fn slugs(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let slugs = categories::table
-        .select((categories::slug, categories::slug))
+        .select((categories::slug, categories::slug, categories::description))
         .order(categories::slug)
         .load(&*conn)?;
 
@@ -77,6 +82,7 @@ pub fn slugs(req: &mut Request) -> CargoResult<Response> {
     struct Slug {
         id: String,
         slug: String,
+        description: String,
     }
 
     #[derive(Serialize)]

@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel;
 use diesel::associations::Identifiable;
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use license_exprs;
 use semver;
@@ -235,11 +236,11 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
-    pub fn with_name(name: &str) -> WithName {
+    pub fn with_name(name: &str) -> WithName<'_> {
         canon_crate_name(crates::name).eq(canon_crate_name(name))
     }
 
-    pub fn by_name(name: &str) -> ByName {
+    pub fn by_name(name: &str) -> ByName<'_> {
         Crate::all().filter(Self::with_name(name))
     }
 
@@ -253,16 +254,17 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_name(name)
-            && name.chars()
-                .nth(0)
-                .map(char::is_alphabetic)
-                .unwrap_or(false)
+        Self::valid_feature_name(name) && name
+            .chars()
+            .nth(0)
+            .map(char::is_alphabetic)
+            .unwrap_or(false)
     }
 
     pub fn valid_feature_name(name: &str) -> bool {
         !name.is_empty()
-            && name.chars()
+            && name
+                .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }
@@ -389,9 +391,9 @@ impl Crate {
     pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
         use schema::versions::dsl::*;
 
-        let vs = Version::belonging_to(self)
+        let vs = self
+            .versions()
             .select(num)
-            .filter(yanked.eq(false))
             .load::<String>(conn)?
             .into_iter()
             .map(|s| semver::Version::parse(&s).unwrap());
@@ -437,8 +439,7 @@ impl Crate {
                         invited_user_id: owner.id(),
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
-                    })
-                    .on_conflict_do_nothing()
+                    }).on_conflict_do_nothing()
                     .execute(conn)?;
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
@@ -454,8 +455,7 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
-                    })
-                    .on_conflict(crate_owners::table.primary_key())
+                    }).on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;
@@ -550,5 +550,31 @@ mod tests {
             ),),),
             None
         );
+    }
+}
+
+pub trait CrateVersions {
+    fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        self.all_versions().filter(versions::yanked.eq(false))
+    }
+
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
+}
+
+impl CrateVersions for Crate {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        Version::belonging_to(self).into_boxed()
+    }
+}
+
+impl CrateVersions for Vec<Crate> {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        self.as_slice().all_versions()
+    }
+}
+
+impl CrateVersions for [Crate] {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        Version::belonging_to(self).into_boxed()
     }
 }

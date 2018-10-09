@@ -41,8 +41,7 @@ pub fn github(app: &App, url: &str, auth: &Token) -> Result<(Easy, Vec<u8>), cur
             .write_function(|buf| {
                 data.extend_from_slice(buf);
                 Ok(buf.len())
-            })
-            .unwrap();
+            }).unwrap();
         transfer.perform()?;
     }
     Ok((handle, data))

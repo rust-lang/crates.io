@@ -24,9 +24,10 @@ pub struct Version {
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub downloads: i32,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
+    pub crate_size: Option<i32>,
 }
 
 #[derive(Insertable, Debug)]
@@ -34,8 +35,9 @@ pub struct Version {
 pub struct NewVersion {
     crate_id: i32,
     num: String,
-    features: String,
+    features: serde_json::Value,
     license: Option<String>,
+    crate_size: Option<i32>,
 }
 
 impl Version {
@@ -49,6 +51,7 @@ impl Version {
             features,
             yanked,
             license,
+            crate_size,
             ..
         } = self;
         let num = num.to_string();
@@ -69,6 +72,7 @@ impl Version {
                 version_downloads: format!("/api/v1/crates/{}/{}/downloads", crate_name, num),
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
+            crate_size,
         }
     }
 
@@ -117,14 +121,16 @@ impl NewVersion {
         features: &HashMap<String, Vec<String>>,
         license: Option<String>,
         license_file: Option<&str>,
+        crate_size: Option<i32>,
     ) -> CargoResult<Self> {
-        let features = serde_json::to_string(features)?;
+        let features = serde_json::to_value(features)?;
 
         let mut new_version = NewVersion {
             crate_id,
             num: num.to_string(),
             features,
             license,
+            crate_size,
         };
 
         new_version.validate_license(license_file)?;
@@ -197,15 +203,13 @@ impl Queryable<versions::SqlType, Pg> for Version {
         NaiveDateTime,
         NaiveDateTime,
         i32,
-        Option<String>,
+        serde_json::Value,
         bool,
         Option<String>,
+        Option<i32>,
     );
 
     fn build(row: Self::Row) -> Self {
-        let features = row.6
-            .map(|s| serde_json::from_str(&s).unwrap())
-            .unwrap_or_else(HashMap::new);
         Version {
             id: row.0,
             crate_id: row.1,
@@ -213,9 +217,10 @@ impl Queryable<versions::SqlType, Pg> for Version {
             updated_at: row.3,
             created_at: row.4,
             downloads: row.5,
-            features,
+            features: row.6,
             yanked: row.7,
             license: row.8,
+            crate_size: row.9,
         }
     }
 }

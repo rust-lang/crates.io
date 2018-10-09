@@ -126,10 +126,10 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-struct C(pub fn(&mut Request) -> CargoResult<Response>);
+struct C(pub fn(&mut dyn Request) -> CargoResult<Response>);
 
 impl Handler for C {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let C(f) = *self;
         match f(req) {
             Ok(resp) => Ok(resp),
@@ -144,7 +144,7 @@ impl Handler for C {
 struct R<H>(pub Arc<H>);
 
 impl<H: Handler> Handler for R<H> {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
         sub_router.call(&mut RequestProxy {
@@ -160,7 +160,7 @@ impl<H: Handler> Handler for R<H> {
 pub struct R404(pub RouteBuilder);
 
 impl Handler for R404 {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let R404(ref router) = *self;
         match router.recognize(&req.method(), req.path()) {
             Ok(m) => {
@@ -220,7 +220,7 @@ mod tests {
                 0,
                 0
             ))).call(&mut req)
-                .is_err()
+            .is_err()
         );
         assert!(
             C(|_| err(::std::io::Error::new(::std::io::ErrorKind::Other, "")))

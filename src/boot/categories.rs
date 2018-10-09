@@ -107,8 +107,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<
                 category.eq(c.name),
                 description.eq(c.description),
             )
-        })
-        .collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
 
     conn.transaction(|| {
         let slugs = diesel::insert_into(categories)
@@ -118,8 +117,7 @@ pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<
             .set((
                 category.eq(excluded(category)),
                 description.eq(excluded(description)),
-            ))
-            .returning(slug)
+            )).returning(slug)
             .get_results::<String>(&*conn)?;
 
         diesel::delete(categories)

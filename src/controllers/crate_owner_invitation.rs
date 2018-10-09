@@ -7,7 +7,7 @@ use schema::{crate_owner_invitations, crate_owners};
 use views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
-pub fn list(req: &mut Request) -> CargoResult<Response> {
+pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = &*req.db_conn()?;
     let user_id = req.user()?.id;
 
@@ -33,7 +33,7 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
+pub fn handle_invite(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = &*req.db_conn()?;
 
     let mut body = String::new();
@@ -52,7 +52,7 @@ pub fn handle_invite(req: &mut Request) -> CargoResult<Response> {
 }
 
 fn accept_invite(
-    req: &mut Request,
+    req: &mut dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
@@ -71,8 +71,7 @@ fn accept_invite(
                 owner_id: user_id,
                 created_by: pending_crate_owner.invited_by_user_id,
                 owner_kind: OwnerKind::User as i32,
-            })
-            .on_conflict(crate_owners::table.primary_key())
+            }).on_conflict(crate_owners::table.primary_key())
             .do_update()
             .set(crate_owners::deleted.eq(false))
             .execute(conn)?;
@@ -90,7 +89,7 @@ fn accept_invite(
 }
 
 fn decline_invite(
-    req: &mut Request,
+    req: &mut dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {

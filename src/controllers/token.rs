@@ -10,7 +10,7 @@ use schema::api_tokens;
 use views::EncodableApiTokenWithToken;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: &mut Request) -> CargoResult<Response> {
+pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
     let tokens = ApiToken::belonging_to(req.user()?)
         .order(api_tokens::created_at.desc())
         .load(&*req.db_conn()?)?;
@@ -22,7 +22,7 @@ pub fn list(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(req: &mut Request) -> CargoResult<Response> {
+pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -42,7 +42,8 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     }
 
     let max_size = 2000;
-    let length = req.content_length()
+    let length = req
+        .content_length()
         .chain_error(|| bad_request("missing header: Content-Length"))?;
 
     if length > max_size {
@@ -52,13 +53,14 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
     let mut json = vec![0; length as usize];
     read_fill(req.body(), &mut json)?;
 
-    let json = String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
+    let json =
+        String::from_utf8(json).map_err(|_| bad_request(&"json body was not valid utf-8"))?;
 
     let new: NewApiTokenRequest = json::from_str(&json)
         .map_err(|e| bad_request(&format!("invalid new token request: {:?}", e)))?;
 
     let name = &new.api_token.name;
-    if name.len() < 1 {
+    if name.is_empty() {
         return Err(bad_request("name must have a value"));
     }
 
@@ -87,7 +89,7 @@ pub fn new(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: &mut Request) -> CargoResult<Response> {
+pub fn revoke(req: &mut dyn Request) -> CargoResult<Response> {
     let id = req.params()["id"]
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;

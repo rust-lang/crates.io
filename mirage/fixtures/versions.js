@@ -13,6 +13,7 @@ export default [
         updated_at: '2016-12-27T08:40:00Z',
         yanked: false,
         license: 'MIT',
+        crate_size: 912355,
         _authors: [
             'Daniel Fagnan <someone@example.com>',
             'Jason E. Aten',
@@ -34,6 +35,7 @@ export default [
         },
         id: 40905,
         num: '0.6.1',
+        crate_size: 8123545,
         updated_at: '2016-12-27T08:40:00Z',
         yanked: false,
         license: 'Apache-2.0',

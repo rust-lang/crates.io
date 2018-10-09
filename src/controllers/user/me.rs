@@ -11,7 +11,7 @@ use schema::{crates, emails, follows, users, versions};
 use views::{EncodablePrivateUser, EncodableVersion};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut Request) -> CargoResult<Response> {
+pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     // Changed to getting User information from database because in
     // src/tests/user.rs, when testing put and get on updating email,
     // request seems to be somehow 'cached'. When we try to get a
@@ -34,8 +34,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
             emails::verified.nullable(),
             emails::email.nullable(),
             emails::token_generated_at.nullable().is_not_null(),
-        ))
-        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
+        )).first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
@@ -51,7 +50,7 @@ pub fn me(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut Request) -> CargoResult<Response> {
+pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;
 
     let user = req.user()?;
@@ -67,11 +66,13 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
         .paginate(limit, offset)
         .load::<((Version, String), i64)>(&*conn)?;
 
-    let more = data.get(0)
+    let more = data
+        .get(0)
         .map(|&(_, count)| count > offset + limit)
         .unwrap_or(false);
 
-    let versions = data.into_iter()
+    let versions = data
+        .into_iter()
         .map(|((version, crate_name), _)| version.encodable(&crate_name))
         .collect();
 
@@ -91,7 +92,7 @@ pub fn updates(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /user/:user_id` route.
-pub fn update_user(req: &mut Request) -> CargoResult<Response> {
+pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
     use self::emails::user_id;
     use self::users::dsl::{email, gh_login, users};
     use diesel::{insert_into, update};
@@ -162,7 +163,7 @@ pub fn update_user(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
+pub fn confirm_user_email(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::update;
 
     let conn = req.db_conn()?;
@@ -184,7 +185,7 @@ pub fn confirm_user_email(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut Request) -> CargoResult<Response> {
+pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::sql;
     use diesel::update;
 

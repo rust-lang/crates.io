@@ -1,6 +1,8 @@
 use diesel::prelude::*;
 use diesel::sql_types::Text;
 
+use app;
+
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
     for row in get_fk_constraint_definitions("crate_id") {
@@ -62,7 +64,7 @@ struct TableNameAndConstraint {
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
     use diesel::sql_query;
 
-    let (_r, app, _) = ::app();
+    let (_r, app, _) = app();
     let conn = app.diesel_database.get().unwrap();
 
     sql_query(include_str!("load_foreign_key_constraints.sql"))

@@ -193,6 +193,17 @@ export default function() {
         return category ? category : notFound();
     });
 
+    this.get('/category_slugs', function(schema) {
+        let allCategories = schema.categories.all().sort((a, b) => compareStrings(a.category, b.category));
+        return {
+            category_slugs: this.serialize(allCategories).categories.map(cat => ({
+                id: cat.id,
+                slug: cat.slug,
+                description: cat.description,
+            })),
+        };
+    });
+
     this.get('/keywords', function(schema, request) {
         let { start, end } = pageParams(request);
 

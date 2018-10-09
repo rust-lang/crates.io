@@ -10,7 +10,7 @@ use std::io::Cursor;
 #[derive(Default)]
 pub struct BlockIps {
     ips: Vec<String>,
-    handler: Option<Box<Handler>>,
+    handler: Option<Box<dyn Handler>>,
 }
 
 impl BlockIps {
@@ -20,14 +20,15 @@ impl BlockIps {
 }
 
 impl AroundMiddleware for BlockIps {
-    fn with_handler(&mut self, handler: Box<Handler>) {
+    fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for BlockIps {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
-        let has_blacklisted_ip = req.headers()
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+        let has_blacklisted_ip = req
+            .headers()
             .find("X-Forwarded-For")
             .unwrap()
             .iter()

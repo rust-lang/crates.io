@@ -6,8 +6,8 @@ use s3;
 use semver;
 use tar;
 
-use util::{human, internal, CargoResult, ChainError};
-use util::{read_le_u32, LimitErrorReader};
+use util::LimitErrorReader;
+use util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -111,7 +111,7 @@ impl Uploader {
         path: &str,
         body: &[u8],
         content_type: &str,
-        content_length: u64,
+        file_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
         let hash = hash(body);
         match *self {
@@ -120,13 +120,12 @@ impl Uploader {
                     let mut response = Vec::new();
                     {
                         let mut s3req =
-                            bucket.put(&mut handle, path, body, content_type, content_length);
+                            bucket.put(&mut handle, path, body, content_type, file_length);
                         s3req
                             .write_function(|data| {
                                 response.extend(data);
                                 Ok(data.len())
-                            })
-                            .unwrap();
+                            }).unwrap();
                         s3req.perform().chain_error(|| {
                             internal(&format_args!("failed to upload to S3: `{}`", path))
                         })?;
@@ -158,26 +157,25 @@ impl Uploader {
     /// file, and bombs for the uploaded crate and the uploaded readme.
     pub fn upload_crate(
         &self,
-        req: &mut Request,
+        req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
-        max: u64,
-        max_unpack: u64,
+        file_length: u32,
+        maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
-            let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body, max_unpack)?;
+            LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
+            verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(
                 app.handle(),
                 &path,
                 &body,
                 "application/x-tar",
-                u64::from(length),
+                u64::from(file_length),
             )?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
@@ -260,8 +258,9 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry
-            .chain_error(|| human("uploaded tarball is malformed or too large when decompressed"))?;
+        let entry = entry.chain_error(|| {
+            human("uploaded tarball is malformed or too large when decompressed")
+        })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could
@@ -269,6 +268,16 @@ fn verify_tarball(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         if !entry.path()?.starts_with(&prefix) {
+            return Err(human("invalid tarball uploaded"));
+        }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
             return Err(human("invalid tarball uploaded"));
         }
     }

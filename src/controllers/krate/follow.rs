@@ -7,11 +7,13 @@ use controllers::prelude::*;
 use models::{Crate, Follow};
 use schema::*;
 
-fn follow_target(req: &mut Request) -> CargoResult<Follow> {
+fn follow_target(req: &mut dyn Request) -> CargoResult<Follow> {
     let user = req.user()?;
     let conn = req.db_conn()?;
     let crate_name = &req.params()["crate_id"];
-    let crate_id = Crate::by_name(crate_name).select(crates::id).first(&*conn)?;
+    let crate_id = Crate::by_name(crate_name)
+        .select(crates::id)
+        .first(&*conn)?;
     Ok(Follow {
         user_id: user.id,
         crate_id,
@@ -19,7 +21,7 @@ fn follow_target(req: &mut Request) -> CargoResult<Follow> {
 }
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
-pub fn follow(req: &mut Request) -> CargoResult<Response> {
+pub fn follow(req: &mut dyn Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     diesel::insert_into(follows::table)
@@ -31,7 +33,7 @@ pub fn follow(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
-pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
+pub fn unfollow(req: &mut dyn Request) -> CargoResult<Response> {
     let follow = follow_target(req)?;
     let conn = req.db_conn()?;
     diesel::delete(&follow).execute(&*conn)?;
@@ -40,7 +42,7 @@ pub fn unfollow(req: &mut Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
-pub fn following(req: &mut Request) -> CargoResult<Response> {
+pub fn following(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::exists;
 
     let follow = follow_target(req)?;

@@ -63,6 +63,7 @@ pub struct CrateDependency {
     pub version_req: CrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+    pub explicit_name_in_toml: Option<CrateName>,
 }
 
 impl<'de> Deserialize<'de> for CrateName {
@@ -221,7 +222,7 @@ use diesel::sql_types::Text;
 use std::io::Write;
 
 impl ToSql<Text, Pg> for Feature {
-    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
 }

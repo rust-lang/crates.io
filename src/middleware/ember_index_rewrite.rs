@@ -8,7 +8,7 @@ use util::RequestProxy;
 // Can't derive debug because of Handler and Static.
 #[allow(missing_debug_implementations)]
 pub struct EmberIndexRewrite {
-    handler: Option<Box<Handler>>,
+    handler: Option<Box<dyn Handler>>,
 }
 
 impl Default for EmberIndexRewrite {
@@ -18,16 +18,17 @@ impl Default for EmberIndexRewrite {
 }
 
 impl AroundMiddleware for EmberIndexRewrite {
-    fn with_handler(&mut self, handler: Box<Handler>) {
+    fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.handler = Some(handler);
     }
 }
 
 impl Handler for EmberIndexRewrite {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         // If the client is requesting html, then we've only got one page so
         // rewrite the request.
-        let wants_html = req.headers()
+        let wants_html = req
+            .headers()
             .find("Accept")
             .map(|accept| accept.iter().any(|s| s.contains("html")))
             .unwrap_or(false);

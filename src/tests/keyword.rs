@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
 use conduit::{Handler, Method};
 use conduit_test::MockRequest;
 
 use models::Keyword;
 use views::EncodableKeyword;
+use {app, new_user, req, CrateBuilder};
 
 #[derive(Deserialize)]
 struct KeywordList {
@@ -22,8 +21,8 @@ struct GoodKeyword {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/keywords");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/keywords");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: KeywordList = ::json(&mut response);
     assert_eq!(json.keywords.len(), 0);
@@ -42,8 +41,8 @@ fn index() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/keywords/foo");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/keywords/foo");
     let response = t_resp!(middle.call(&mut req));
     assert_eq!(response.status.0, 404);
 
@@ -58,8 +57,8 @@ fn show() {
 
 #[test]
 fn uppercase() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/keywords/UPPER");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/keywords/UPPER");
     {
         let conn = app.diesel_database.get().unwrap();
         Keyword::find_or_create_all(&conn, &["UPPER"]).unwrap();
@@ -72,8 +71,8 @@ fn uppercase() {
 
 #[test]
 fn update_crate() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(Arc::clone(&app), Method::Get, "/api/v1/keywords/foo");
+    let (_b, app, middle) = app();
+    let mut req = req(Method::Get, "/api/v1/keywords/foo");
     let cnt = |req: &mut MockRequest, kw: &str| {
         req.with_path(&format!("/api/v1/keywords/{}", kw));
         let mut response = ok_resp!(middle.call(req));
@@ -82,9 +81,9 @@ fn update_crate() {
 
     let krate = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
+        let u = new_user("foo").create_or_update(&conn).unwrap();
         Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).unwrap();
-        ::CrateBuilder::new("fookey", u.id).expect_build(&conn)
+        CrateBuilder::new("fookey", u.id).expect_build(&conn)
     };
 
     {

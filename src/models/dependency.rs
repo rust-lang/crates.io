@@ -9,7 +9,7 @@ use util::{human, CargoResult};
 
 use models::{Crate, Version};
 use schema::*;
-use views::EncodableDependency;
+use views::{EncodableCrateDependency, EncodableDependency};
 
 #[derive(Identifiable, Associations, Debug)]
 #[belongs_to(Version)]
@@ -75,13 +75,14 @@ impl ReverseDependency {
 
 pub fn add_dependencies(
     conn: &PgConnection,
-    deps: &[::views::EncodableCrateDependency],
+    deps: &[EncodableCrateDependency],
     target_version_id: i32,
 ) -> CargoResult<Vec<git::Dependency>> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
-    let git_and_new_dependencies = deps.iter()
+    let git_and_new_dependencies = deps
+        .iter()
         .map(|dep| {
             let krate = Crate::by_name(&dep.name)
                 .first::<Crate>(&*conn)
@@ -95,15 +96,26 @@ pub fn add_dependencies(
                 ));
             }
 
+            // If this dependency has an explicit name in `Cargo.toml` that
+            // means that the `name` we have listed is actually the package name
+            // that we're depending on. The `name` listed in the index is the
+            // Cargo.toml-written-name which is what cargo uses for
+            // `--extern foo=...`
+            let (name, package) = match &dep.explicit_name_in_toml {
+                Some(explicit) => (explicit.to_string(), Some(dep.name.to_string())),
+                None => (dep.name.to_string(), None),
+            };
+
             Ok((
                 git::Dependency {
-                    name: dep.name.to_string(),
+                    name,
                     req: dep.version_req.to_string(),
                     features: dep.features.iter().map(|s| s.to_string()).collect(),
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),
                     kind: dep.kind.or(Some(DependencyKind::Normal)),
+                    package,
                 },
                 (
                     version_id.eq(target_version_id),
@@ -116,8 +128,7 @@ pub fn add_dependencies(
                     target.eq(dep.target.as_ref().map(|s| &**s)),
                 ),
             ))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+        }).collect::<Result<Vec<_>, _>>()?;
 
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();

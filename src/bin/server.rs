@@ -14,8 +14,8 @@ use std::sync::Arc;
 
 fn main() {
     // Initialize logging
-    env_logger::init().unwrap();
-    let config: cargo_registry::Config = Default::default();
+    env_logger::init();
+    let config = cargo_registry::Config::default();
 
     // If there isn't a git checkout containing the crate index repo at the path specified
     // by `GIT_REPO_CHECKOUT`, delete that directory and clone the repo specified by `GIT_REPO_URL`

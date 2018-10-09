@@ -7,7 +7,7 @@ use conduit_static::Static;
 // Can't derive debug because of Handler and Static.
 #[allow(missing_debug_implementations)]
 pub struct StaticOrContinue {
-    fallback_handler: Option<Box<Handler>>,
+    fallback_handler: Option<Box<dyn Handler>>,
     static_handler: Static,
 }
 
@@ -21,13 +21,13 @@ impl StaticOrContinue {
 }
 
 impl AroundMiddleware for StaticOrContinue {
-    fn with_handler(&mut self, handler: Box<Handler>) {
+    fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.fallback_handler = Some(handler);
     }
 }
 
 impl Handler for StaticOrContinue {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         match self.static_handler.call(req) {
             Ok(ref resp) if resp.status.0 == 404 => {}
             ret => return ret,

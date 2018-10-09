@@ -13,6 +13,7 @@ export default BaseSerializer.extend({
         'updated_at',
         'yanked',
         'license',
+        'crate_size',
     ],
 
     links(version) {

@@ -104,13 +104,20 @@
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{moment-from-now crate.updated_at}}</div>
+                <div class='{{if currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now crate.updated_at}}</div>
                 {{#each crate.annotated_badges as |badge|}}
                     <p>
                         {{component badge.component_name badge=badge}}
                     </p>
                 {{/each}}
             </div>
+
+            {{#if currentVersion.crate_size}}
+                <div>
+                    <div class='crate-size'><span class='small'>Crate Size</span></div>
+                    <div class='size'>{{format-crate-size currentVersion.crate_size}}</div>
+                </div>
+            {{/if}}
 
             <div class="authors">
                 <h3>Authors</h3>

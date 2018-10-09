@@ -39,8 +39,7 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
                     version_downloads::version_id.eq(id),
                     version_downloads::downloads.eq(dls),
                     version_downloads::date.eq(date(now - day.days())),
-                ))
-                .execute(conn)?;
+                )).execute(conn)?;
         }
     }
     Ok(())

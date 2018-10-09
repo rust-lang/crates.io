@@ -1,7 +1,9 @@
 use chrono::NaiveDateTime;
+use serde_json;
 use std::collections::HashMap;
 
 use models::DependencyKind;
+use util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {
@@ -15,7 +17,7 @@ pub struct EncodableCategory {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
@@ -26,10 +28,11 @@ pub struct EncodableCategoryWithSubcategories {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
+    pub parent_categories: Vec<EncodableCategory>,
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
@@ -38,7 +41,7 @@ pub struct EncodableCrateOwnerInvitation {
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
 }
 
@@ -74,7 +77,7 @@ pub struct EncodableVersionDownload {
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     pub crates_cnt: i32,
 }
@@ -83,13 +86,13 @@ pub struct EncodableKeyword {
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub updated_at: NaiveDateTime,
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub badges: Option<Vec<EncodableBadge>>,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
@@ -141,9 +144,9 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339::option")]
+    #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
 }
 
@@ -181,17 +184,18 @@ pub struct EncodableVersion {
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub updated_at: NaiveDateTime,
-    #[serde(with = "::util::rfc3339")]
+    #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
-    pub features: HashMap<String, Vec<String>>,
+    pub features: serde_json::Value,
     pub yanked: bool,
     // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
     pub links: EncodableVersionLinks,
+    pub crate_size: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -211,7 +215,6 @@ mod tests {
     use super::*;
     use chrono::NaiveDate;
     use serde_json;
-    use std::collections::HashMap;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {
@@ -241,6 +244,7 @@ mod tests {
             crates_cnt: 1,
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             subcategories: vec![],
+            parent_categories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
         assert!(
@@ -277,7 +281,7 @@ mod tests {
             updated_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12),
             downloads: 0,
-            features: HashMap::new(),
+            features: serde_json::from_str("{}").unwrap(),
             yanked: false,
             license: None,
             links: EncodableVersionLinks {
@@ -285,6 +289,7 @@ mod tests {
                 version_downloads: "".to_string(),
                 authors: "".to_string(),
             },
+            crate_size: Some(1234),
         };
         let json = serde_json::to_string(&ver).unwrap();
         assert!(

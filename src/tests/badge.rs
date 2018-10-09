@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use App;
-
 use models::{Badge, Crate, MaintenanceStatus};
+use {app, new_user, App, CrateBuilder};
 
 struct BadgeRef {
     appveyor: Badge,
@@ -27,12 +26,12 @@ struct BadgeRef {
 }
 
 fn set_up() -> (Arc<App>, Crate, BadgeRef) {
-    let (_b, app, _middle) = ::app();
+    let (_b, app, _middle) = app();
 
     let krate = {
         let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        ::CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
+        let u = new_user("foo").create_or_update(&conn).unwrap();
+        CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
     };
 
     let appveyor = Badge::Appveyor {
@@ -114,22 +113,22 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     );
 
     let badges = BadgeRef {
-        appveyor: appveyor,
+        appveyor,
         appveyor_attributes: badge_attributes_appveyor,
-        travis_ci: travis_ci,
+        travis_ci,
         travis_ci_attributes: badge_attributes_travis_ci,
-        gitlab: gitlab,
+        gitlab,
         gitlab_attributes: badge_attributes_gitlab,
-        isitmaintained_issue_resolution: isitmaintained_issue_resolution,
+        isitmaintained_issue_resolution,
         isitmaintained_issue_resolution_attributes:
             badge_attributes_isitmaintained_issue_resolution,
-        isitmaintained_open_issues: isitmaintained_open_issues,
+        isitmaintained_open_issues,
         isitmaintained_open_issues_attributes: badge_attributes_isitmaintained_open_issues,
-        codecov: codecov,
+        codecov,
         codecov_attributes: badge_attributes_codecov,
-        coveralls: coveralls,
+        coveralls,
         coveralls_attributes: badge_attributes_coveralls,
-        circle_ci: circle_ci,
+        circle_ci,
         circle_ci_attributes: badge_attributes_circle_ci,
         maintenance,
         maintenance_attributes,

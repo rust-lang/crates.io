@@ -5,7 +5,9 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 #![deny(warnings)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
-#![recursion_limit = "128"]
+#![deny(bare_trait_objects)]
+#![recursion_limit = "256"]
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
 extern crate ammonia;
 extern crate chrono;
@@ -16,12 +18,14 @@ extern crate derive_deref;
 #[macro_use]
 extern crate diesel;
 extern crate diesel_full_text_search;
+extern crate diesel_ltree;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
 extern crate hex;
 extern crate htmlescape;
 extern crate lettre;
+extern crate lettre_email;
 extern crate license_exprs;
 #[macro_use]
 extern crate log;

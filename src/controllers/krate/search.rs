@@ -4,7 +4,7 @@ use diesel_full_text_search::*;
 
 use controllers::helpers::Paginate;
 use controllers::prelude::*;
-use models::{Crate, CrateBadge, OwnerKind, Version};
+use models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
 use schema::*;
 use views::EncodableCrate;
 
@@ -31,7 +31,7 @@ use models::krate::{canon_crate_name, ALL_COLUMNS};
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub fn search(req: &mut Request) -> CargoResult<Response> {
+pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::sql_types::Bool;
 
     let conn = req.db_conn()?;
@@ -48,8 +48,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
             recent_crate_downloads::downloads.nullable(),
-        ))
-        .into_boxed();
+        )).into_boxed();
 
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
@@ -143,6 +142,8 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+    } else if sort == "recent-updates" {
+        query = query.order(crates::updated_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
     }
@@ -154,12 +155,14 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
         .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
-    let recent_downloads = data.iter()
+    let recent_downloads = data
+        .iter()
         .map(|&((_, _, s), _)| s.unwrap_or(0))
         .collect::<Vec<_>>();
     let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
 
-    let versions = Version::belonging_to(&crates)
+    let versions = crates
+        .versions()
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
@@ -186,8 +189,7 @@ pub fn search(req: &mut Request) -> CargoResult<Response> {
                     Some(recent_downloads),
                 )
             },
-        )
-        .collect();
+        ).collect();
 
     #[derive(Serialize)]
     struct R {

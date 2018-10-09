@@ -10,7 +10,7 @@ use conduit::Request;
 /// The C library rust-civet is wrapping does not document whether headers are
 /// case sensitive or not, so I have no clue if this follows the HTTP spec in
 /// that regard.
-pub fn request_header<'a>(req: &'a Request, header_name: &str) -> &'a str {
+pub fn request_header<'a>(req: &'a dyn Request, header_name: &str) -> &'a str {
     req.headers()
         .find(header_name)
         .and_then(|x| x.first().map(|&s| s))

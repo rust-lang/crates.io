@@ -389,6 +389,12 @@ Crates related to solving problems involving math, physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 
+[science.categories.robotics]
+name = "Robotics"
+description = """
+Crates related to robotics.\
+"""
+
 [simulation]
 name = "Simulation"
 description = """
