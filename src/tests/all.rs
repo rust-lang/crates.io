@@ -109,6 +109,13 @@ impl<T> Response<T>
 where
     for<'de> T: serde::Deserialize<'de>,
 {
+    pub fn new(response: ResponseResult) -> Self {
+        Self {
+            response: t!(response),
+            callback_on_good: None,
+        }
+    }
+
     pub fn with_callback(response: ResponseResult, callback_on_good: Box<Fn(&T)>) -> Self {
         Self {
             response: t!(response),
@@ -132,6 +139,10 @@ where
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
         }
+    }
+
+    pub fn assert_status(&self, status: u32) {
+        assert_eq!(self.response.status.0, status);
     }
 }
 
@@ -807,10 +818,22 @@ struct MockUserSession {
     _bomb: record::Bomb,
     middle: conduit_middleware::MiddlewareBuilder,
     request: MockRequest,
-    _user: User,
+    _user: Option<User>,
 }
 
 impl MockUserSession {
+    pub fn anonymous() -> Self {
+        let (bomb, app, middle) = app();
+        let request = MockRequest::new(Method::Get, "/");
+        MockUserSession {
+            app,
+            _bomb: bomb,
+            middle,
+            request,
+            _user: None,
+        }
+    }
+
     /// Create a session logged in with an arbitrary user.
     pub fn logged_in() -> Self {
         let (bomb, app, middle) = app();
@@ -832,7 +855,7 @@ impl MockUserSession {
             _bomb: bomb,
             middle,
             request,
-            _user: user,
+            _user: Some(user),
         }
     }
 
@@ -841,19 +864,37 @@ impl MockUserSession {
     //     unimplemented!();
     // }
 
+    /// Obtain the database connection
+    pub fn db_conn(
+        &self,
+    ) -> diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>> {
+        self.app.diesel_database.get().unwrap()
+    }
+
     /// For internal use only: make the current request
     fn make_request(&mut self) -> conduit::Response {
         ok_resp!(self.middle.call(&mut self.request))
     }
 
+    /// Issue a GET request
+    pub fn get<T>(&mut self, path: &str) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        self.request.with_path(path).with_method(Method::Get);
+        Response::new(self.middle.call(&mut self.request))
+    }
+
     /// Log out the currently logged in user.
     pub fn logout(&mut self) {
         logout(&mut self.request);
+        self._user = None;
     }
 
     /// Using the same session, log in as a different user.
     pub fn log_in_as(&mut self, user: &User) {
         sign_in_as(&mut self.request, user);
+        self._user = Some(user.clone());
     }
 
     /// Publish the crate as specified by the given builder

@@ -3,7 +3,7 @@ use conduit_test::MockRequest;
 
 use models::Keyword;
 use views::EncodableKeyword;
-use {app, new_user, req, CrateBuilder};
+use {app, new_user, req, CrateBuilder, MockUserSession};
 
 #[derive(Deserialize)]
 struct KeywordList {
@@ -21,19 +21,17 @@ struct GoodKeyword {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/keywords");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: KeywordList = ::json(&mut response);
+    let url = "/api/v1/keywords";
+    let mut session = MockUserSession::anonymous();
+    let json: KeywordList = session.get(url).good();
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
 
     {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
     }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: KeywordList = ::json(&mut response);
+    let json: KeywordList = session.get(url).good();
     assert_eq!(json.keywords.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.keywords[0].keyword, "foo".to_string());
@@ -41,31 +39,29 @@ fn index() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/keywords/foo");
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 404);
+    let url = "/api/v1/keywords/foo";
+    let mut session = MockUserSession::anonymous();
+    session.get::<()>(url).assert_status(404);
 
     {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
     }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodKeyword = ::json(&mut response);
+    let json: GoodKeyword = session.get(url).good();
     assert_eq!(json.keyword.keyword, "foo".to_string());
 }
 
 #[test]
 fn uppercase() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/keywords/UPPER");
+    let url = "/api/v1/keywords/UPPER";
+    let mut session = MockUserSession::anonymous();
+    session.get::<()>(url).assert_status(404);
+
     {
-        let conn = app.diesel_database.get().unwrap();
+        let conn = session.db_conn();
         Keyword::find_or_create_all(&conn, &["UPPER"]).unwrap();
     }
-
-    let mut res = ok_resp!(middle.call(&mut req));
-    let json: GoodKeyword = ::json(&mut res);
+    let json: GoodKeyword = session.get(url).good();
     assert_eq!(json.keyword.keyword, "upper".to_string());
 }
 
