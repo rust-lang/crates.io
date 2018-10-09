@@ -146,8 +146,7 @@ fn create_token_multiple_users_have_different_values() {
     let mut session = MockUserSession::logged_in();
     let first_token: NewResponse = session.put(URL, NEW_BAR).good();
 
-    let second_user = session.db(|conn| t!(new_user("bar").create_or_update(conn)));
-    session.log_in_as(second_user);
+    session.log_in_as_new("bar");
     let second_token: NewResponse = session.put(URL, NEW_BAR).good();
 
     assert_ne!(first_token.api_token.token, second_token.api_token.token);
@@ -189,13 +188,8 @@ fn revoke_token_doesnt_revoke_other_users_token() {
     let user1 = session.user().clone();
 
     // Create one user with a token and sign in with a different user
-    let (token, user2) = session.db(|conn| {
-        (
-            t!(ApiToken::insert(conn, user1.id, "bar")),
-            t!(new_user("baz").create_or_update(conn)),
-        )
-    });
-    session.log_in_as(user2);
+    let token = session.db(|conn| t!(ApiToken::insert(conn, user1.id, "bar")));
+    session.log_in_as_new("baz");
 
     // List tokens for first user contains the token
     session.db(|conn| {

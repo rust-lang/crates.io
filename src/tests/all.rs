@@ -126,7 +126,7 @@ where
     }
 
     pub fn good(mut self) -> T {
-        if !::ok_resp(&self.response) {
+        if !ok_resp(&self.response) {
             panic!("bad response: {:?}", self.response.status);
         }
         let good = json(&mut self.response);
@@ -138,7 +138,7 @@ where
 
     pub fn bad_with_status(&mut self, code: u32) -> Bad {
         assert_eq!(self.response.status.0, code);
-        match ::bad_resp(&mut self.response) {
+        match bad_resp(&mut self.response) {
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
         }
@@ -304,7 +304,7 @@ fn new_user(login: &str) -> NewUser<'_> {
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
         github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        login: login,
+        login,
         name: None,
         avatar: None,
     }
@@ -823,6 +823,7 @@ struct MockUserSession {
 }
 
 impl MockUserSession {
+    /// Create a session with no logged in user.
     pub fn anonymous() -> Self {
         let (bomb, app, middle) = app();
         MockUserSession {
@@ -846,11 +847,6 @@ impl MockUserSession {
             user: Some(user),
         }
     }
-
-    /// Create a session logged in with the given user.
-    // pub fn logged_in_as(_user: &User) -> Self {
-    //     unimplemented!();
-    // }
 
     /// Obtain the database connection and pass it to the closure
     ///
@@ -883,6 +879,16 @@ impl MockUserSession {
         Response::new(self.middle.call(&mut request))
     }
 
+    /// Issue a GET request as the current user
+    pub fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        let mut request = self.request_builder(Method::Get, path);
+        request.with_query(query);
+        Response::new(self.middle.call(&mut request))
+    }
+
     /// Issue a PUT request as the current user
     pub fn put<T>(&self, path: &str, body: &[u8]) -> Response<T>
     where
@@ -910,6 +916,13 @@ impl MockUserSession {
     /// Using the same session, log in as a different user.
     pub fn log_in_as(&mut self, user: User) {
         self.user = Some(user);
+    }
+
+    /// Create and log in as a new user, returning a reference to the user
+    pub fn log_in_as_new(&mut self, user: &str) -> &User {
+        let user = self.db(|conn| new_user(user).create_or_update(conn).unwrap());
+        self.user = Some(user);
+        self.user()
     }
 
     /// Return a reference to the current user

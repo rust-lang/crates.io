@@ -6,7 +6,8 @@ use diesel::prelude::*;
 use models::{ApiToken, Email, NewUser, User};
 use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 use {
-    app, logout, new_user, req, sign_in, sign_in_as, Bad, CrateBuilder, VersionBuilder, NEXT_GH_ID,
+    app, logout, new_user, req, sign_in_as, CrateBuilder, MockUserSession, OkBool, VersionBuilder,
+    NEXT_GH_ID,
 };
 
 #[derive(Deserialize)]
@@ -25,35 +26,33 @@ pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
 }
 
+#[derive(Deserialize)]
+struct CrateList {
+    crates: Vec<EncodableCrate>,
+}
+
 #[test]
 fn auth_gives_a_token() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Get, "/authorize_url");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: AuthResponse = ::json(&mut response);
+    let session = MockUserSession::anonymous();
+    let json: AuthResponse = session.get("/authorize_url").good();
     assert!(json.url.contains(&json.state));
 }
 
 #[test]
 fn access_token_needs_data() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Get, "/authorize");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: Bad = ::json(&mut response);
+    let session = MockUserSession::anonymous();
+    let json = session.get::<()>("/authorize").bad_with_status(200); // Change endpoint to 400?
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
 #[test]
 fn me() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me");
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 403);
+    let url = "/api/v1/me";
+    let mut session = MockUserSession::anonymous();
+    session.get(url).assert_forbidden();
 
-    let user = sign_in(&mut req, &app);
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowPrivateResponse = ::json(&mut response);
+    let user = session.log_in_as_new("foo").clone();
+    let json: UserShowPrivateResponse = session.get(url).good();
 
     assert_eq!(json.user.email, user.email);
 }
@@ -120,23 +119,15 @@ fn show_latest_user_case_insensitively() {
 
 #[test]
 fn crates_by_user_id() {
-    let (_b, app, middle) = app();
-    let u;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
-    }
+    let session = MockUserSession::logged_in();
+    let user = session.user();
+    session.db(|conn| {
+        CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    req.with_query(&format!("user_id={}", u.id));
-    let mut response = ok_resp!(middle.call(&mut req));
-
-    #[derive(Deserialize)]
-    struct Response {
-        crates: Vec<EncodableCrate>,
-    }
-    let response: Response = ::json(&mut response);
+    let response: CrateList = session
+        .get_with_query("/api/v1/crates", &format!("user_id={}", user.id))
+        .good();
     assert_eq!(response.crates.len(), 1);
 }
 
@@ -155,11 +146,7 @@ fn crates_by_user_id_not_including_deleted_owners() {
     req.with_query(&format!("user_id={}", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[derive(Deserialize)]
-    struct Response {
-        crates: Vec<EncodableCrate>,
-    }
-    let response: Response = ::json(&mut response);
+    let response: CrateList = ::json(&mut response);
     assert_eq!(response.crates.len(), 0);
 }
 
@@ -353,11 +340,6 @@ fn test_github_login_does_not_overwrite_email() {
         user: EncodablePrivateUser,
     }
 
-    #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
-
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
@@ -386,7 +368,7 @@ fn test_github_login_does_not_overwrite_email() {
                 .with_body(body.as_bytes()),
         )
     );
-    assert!(::json::<S>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     logout(&mut req);
 
