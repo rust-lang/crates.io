@@ -150,6 +150,11 @@ pub struct EncodableApiTokenWithToken {
     pub last_used_at: Option<NaiveDateTime>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EncodableMe {
+    pub user: EncodablePrivateUser,
+}
+
 /// The serialization format for the `User` model.
 /// Same as public user, except for addition of
 /// email field

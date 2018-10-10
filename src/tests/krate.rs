@@ -32,7 +32,7 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateList, CrateMeta, CrateResponse, GoodCrate, MockUserSession, OkBool, PublishBuilder,
+    CrateList, CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
     VersionBuilder,
 };
 
@@ -67,20 +67,28 @@ struct SummaryResponse {
     popular_categories: Vec<EncodableCategory>,
 }
 
+impl ::util::MockTokenUser {
+    /// Yank the specified version of the specified crate.
+    fn yank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
+        self.delete(&url)
+    }
+}
+
 #[test]
 fn index() {
     let url = "/api/v1/crates";
-    let session = MockUserSession::anonymous();
-    let json: CrateList = session.get(url).good();
+    let (app, anon) = TestApp::empty();
+    let json: CrateList = anon.get(url).good();
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    let krate = session.db(|conn| {
+    let krate = app.db(|conn| {
         let u = new_user("foo").create_or_update(conn).unwrap();
         CrateBuilder::new("fooindex", u.id).expect_build(conn)
     });
 
-    let json: CrateList = session.get(url).good();
+    let json: CrateList = anon.get(url).good();
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].name, krate.name);
@@ -543,8 +551,8 @@ fn yanked_versions_are_not_considered_for_max_version() {
 
 #[test]
 fn versions() {
-    let session = MockUserSession::anonymous();
-    session.db(|conn| {
+    let (app, anon) = TestApp::empty();
+    app.db(|conn| {
         let u = new_user("foo").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_versions", u.id)
             .version("0.5.1")
@@ -553,7 +561,7 @@ fn versions() {
             .expect_build(conn);
     });
 
-    let json: VersionsList = session.get("/api/v1/crates/foo_versions/versions").good();
+    let json: VersionsList = anon.get("/api/v1/crates/foo_versions/versions").good();
 
     assert_eq!(json.versions.len(), 3);
     assert_eq!(json.versions[0].num, "1.0.0");
@@ -915,11 +923,11 @@ fn valid_feature_names() {
 
 #[test]
 fn new_krate_too_big() {
+    let (_, _, user) = TestApp::with_user();
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
-    let json = MockUserSession::logged_in()
-        .publish(builder)
-        .bad_with_status(200);
+
+    let json = user.publish(builder).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -1261,7 +1269,7 @@ fn download() {
             .version(VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
     }
-    let resp = t_resp!(middle.call(&mut req));
+    let resp = t!(middle.call(&mut req));
     assert_eq!(resp.status.0, 302);
 
     req.with_path("/api/v1/crates/foo_download/1.0.0/downloads");
@@ -1274,7 +1282,7 @@ fn download() {
     assert_eq!(downloads.version_downloads.len(), 1);
 
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
-    let resp = t_resp!(middle.call(&mut req));
+    let resp = t!(middle.call(&mut req));
     assert_eq!(resp.status.0, 302);
 
     req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
@@ -1321,7 +1329,7 @@ fn download_bad() {
         let user = new_user("foo").create_or_update(&conn).unwrap();
         CrateBuilder::new("foo_bad", user.id).expect_build(&conn);
     }
-    let response = t_resp!(middle.call(&mut req));
+    let response = t!(middle.call(&mut req));
     assert_eq!(404, response.status.0)
 }
 
@@ -1350,10 +1358,9 @@ fn dependencies() {
 
 #[test]
 fn diesel_not_found_results_in_404() {
-    let session = MockUserSession::logged_in();
+    let (_, _, user) = TestApp::with_user();
 
-    session
-        .get("/api/v1/crates/foo_following/following")
+    user.get("/api/v1/crates/foo_following/following")
         .assert_not_found();
 }
 
@@ -1493,13 +1500,13 @@ fn yank() {
 
 #[test]
 fn yank_not_owner() {
-    let mut session = MockUserSession::logged_in();
-    session.db(|conn| {
+    let (app, _, _, token) = TestApp::with_token();
+    app.db(|conn| {
         let another_user = new_user("bar").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
     });
 
-    let json = session.yank("foo_not", "1.0.0").bad_with_status(200);
+    let json = token.yank("foo_not", "1.0.0").bad_with_status(200);
     assert_eq!(
         json.errors[0].detail,
         "crate `foo_not` does not have a version `1.0.0`"

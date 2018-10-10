@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use models::{Badge, Crate, MaintenanceStatus};
-use {app, new_user, CrateBuilder, DieselConnection};
+use {app, new_user, util::DieselConnection, CrateBuilder};
 
 struct BadgeRef {
     appveyor: Badge,

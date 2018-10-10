@@ -8,7 +8,7 @@ use util::bad_request;
 
 use models::{Email, Follow, NewEmail, User, Version};
 use schema::{crates, emails, follows, users, versions};
-use views::{EncodablePrivateUser, EncodableVersion};
+use views::{EncodableMe, EncodableVersion};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
@@ -40,11 +40,7 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     let verification_sent = verified || verification_sent;
     let user = User { email, ..user };
 
-    #[derive(Serialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-    Ok(req.json(&R {
+    Ok(req.json(&EncodableMe {
         user: user.encodable_private(verified, verification_sent),
     }))
 }

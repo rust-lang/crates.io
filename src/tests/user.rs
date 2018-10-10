@@ -4,9 +4,10 @@ use conduit::{Handler, Method};
 use diesel::prelude::*;
 
 use models::{ApiToken, Email, NewUser, User};
+use util::RequestHelper;
 use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 use {
-    app, logout, new_user, req, sign_in_as, CrateBuilder, MockUserSession, OkBool, VersionBuilder,
+    app, logout, new_user, req, sign_in_as, CrateBuilder, OkBool, TestApp, VersionBuilder,
     NEXT_GH_ID,
 };
 
@@ -33,28 +34,28 @@ struct CrateList {
 
 #[test]
 fn auth_gives_a_token() {
-    let session = MockUserSession::anonymous();
-    let json: AuthResponse = session.get("/authorize_url").good();
+    let (_, anon) = TestApp::empty();
+    let json: AuthResponse = anon.get("/authorize_url").good();
     assert!(json.url.contains(&json.state));
 }
 
 #[test]
 fn access_token_needs_data() {
-    let session = MockUserSession::anonymous();
-    let json = session.get::<()>("/authorize").bad_with_status(200); // Change endpoint to 400?
+    let (_, anon) = TestApp::empty();
+    let json = anon.get::<()>("/authorize").bad_with_status(200); // Change endpoint to 400?
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
 #[test]
 fn me() {
     let url = "/api/v1/me";
-    let mut session = MockUserSession::anonymous();
-    session.get(url).assert_forbidden();
+    let (app, anon) = TestApp::empty();
+    anon.get(url).assert_forbidden();
 
-    let user = session.log_in_as_new("foo").clone();
-    let json: UserShowPrivateResponse = session.get(url).good();
+    let user = app.db_new_user("foo");
+    let json: UserShowPrivateResponse = user.get(url).good();
 
-    assert_eq!(json.user.email, user.email);
+    assert_eq!(json.user.email, user.as_model().email);
 }
 
 #[test]
@@ -119,15 +120,13 @@ fn show_latest_user_case_insensitively() {
 
 #[test]
 fn crates_by_user_id() {
-    let session = MockUserSession::logged_in();
-    let user = session.user();
-    session.db(|conn| {
-        CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
+    let (app, _, user) = TestApp::with_user();
+    let id = user.as_model().id;
+    app.db(|conn| {
+        CrateBuilder::new("foo_my_packages", id).expect_build(conn);
     });
 
-    let response: CrateList = session
-        .get_with_query("/api/v1/crates", &format!("user_id={}", user.id))
-        .good();
+    let response = user.crates_owned_by_user_id(id);
     assert_eq!(response.crates.len(), 1);
 }
 

@@ -2,14 +2,15 @@ use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
 
-use models::{Crate, NewCrateOwnerInvitation};
+use models::{Crate, NewCrateOwnerInvitation, User};
 use schema::crate_owner_invitations;
+use util::RequestHelper;
 use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 use {
     add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder,
-    CrateList, MockUserSession, OkBool, PublishBuilder,
+    CrateList, OkBool, PublishBuilder, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -21,31 +22,71 @@ struct UserResponse {
     users: Vec<EncodableOwner>,
 }
 
+// Implementing locally for now, unless these are needed elsewhere
+impl ::util::MockCookieUser {
+    /// As the currently logged in user, accept an invitation to become an owner of the named
+    /// crate.
+    fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
+        use views::InvitationResponse;
+
+        let body = json!({
+            "crate_owner_invite": {
+                "invited_by_username": "",
+                "crate_name": krate_name,
+                "crate_id": krate_id,
+                "created_at": "",
+                "accepted": true
+            }
+        });
+
+        #[derive(Deserialize)]
+        struct CrateOwnerInvitation {
+            crate_owner_invitation: InvitationResponse,
+        }
+
+        let url = format!("/api/v1/me/crate_owner_invitations/{}", krate_id);
+        let crate_owner_invite: CrateOwnerInvitation =
+            self.put(&url, body.to_string().as_bytes()).good();
+        assert!(crate_owner_invite.crate_owner_invitation.accepted);
+        assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
+    }
+
+    /// Add a user as an owner for a crate.
+    pub fn add_owner(&self, krate_name: &str, user: &User) {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
+
+        let response: OkBool = self.put(&url, body.as_bytes()).good();
+        assert!(response.ok);
+    }
+}
+
 #[test]
 fn new_crate_owner() {
-    // Create a crate under one user
-    let mut session = MockUserSession::logged_in();
-    let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
-    session.publish(crate_to_publish).good();
+    let (app, _, user1, token) = TestApp::with_token();
 
-    let u2 = session.db(|conn| new_user("bar").create_or_update(&conn).unwrap());
+    // Create a crate under one user
+    let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
+    token.publish(crate_to_publish).good();
 
     // Add the second user as an owner
-    session.add_owner("foo_owner", &u2);
-    session.logout();
-
-    session.log_in_as(u2.clone());
+    let user2 = app.db_new_user("bar");
+    user1.add_owner("foo_owner", user2.as_model());
 
     // accept invitation for user to be added as owner
-    session.accept_ownership_invitation("foo_owner");
+    let crate_id = app.db(|conn| Crate::by_name("foo_owner").first::<Crate>(conn).unwrap().id);
+    user2.accept_ownership_invitation("foo_owner", crate_id);
 
     // Make sure this shows up as one of their crates.
-    let crates = session.crates_owned_by(&u2);
+    let crates = user2.crates_owned_by_user_id(user2.as_model().id);
     assert_eq!(crates.crates.len(), 1);
 
     // And upload a new crate as the second user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
-    session.publish(crate_to_publish).good();
+    user2
+        .db_new_token("bar_token")
+        .publish(crate_to_publish)
+        .good();
 }
 
 // Ensures that so long as at least one owner remains associated with the crate,
