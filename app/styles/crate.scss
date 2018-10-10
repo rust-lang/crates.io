@@ -38,7 +38,7 @@
         @include align-items(center);
     }
     @media only screen and (max-width: 650px) {
-        .right { display: none; }
+        .right { @include justify-content(center); }
     }
 
     &.crate-index, &.crate-search {
