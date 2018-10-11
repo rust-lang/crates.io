@@ -19,7 +19,7 @@ use futures::{Future, Poll};
 use rusoto_core::request::HttpClient;
 use rusoto_core::{ProvideAwsCredentials, Region};
 use rusoto_credential::{AwsCredentials, CredentialsError};
-use rusoto_s3::{DeleteObjectRequest, PutObjectRequest, S3, S3Client};
+use rusoto_s3::{DeleteObjectRequest, PutObjectRequest, S3Client, S3};
 
 use app::App;
 
@@ -66,15 +66,17 @@ impl Uploader {
         host: Option<String>,
         cdn: Option<String>,
     ) -> Uploader {
-        let host = host.unwrap_or_else(|| format!(
-            "{}.s3{}.amazonaws.com",
-            bucket,
-            match region {
-                Some(ref r) if r != "" => format!("-{}", r),
-                Some(_) => String::new(),
-                None => String::new(),
-            }
-        ));
+        let host = host.unwrap_or_else(|| {
+            format!(
+                "{}.s3{}.amazonaws.com",
+                bucket,
+                match region {
+                    Some(ref r) if r != "" => format!("-{}", r),
+                    Some(_) => String::new(),
+                    None => String::new(),
+                }
+            )
+        });
 
         // Use the custom handler as we always provide an endpoint to connect to.
         let region = Region::Custom {
@@ -190,10 +192,9 @@ impl Uploader {
                     ..Default::default()
                 };
 
-                client
-                    .put_object(req)
-                    .sync()
-                    .chain_error(|| internal(&format_args!("failed to upload to S3: `{}`", path)))?;
+                client.put_object(req).sync().chain_error(|| {
+                    internal(&format_args!("failed to upload to S3: `{}`", path))
+                })?;
 
                 Ok((Some(String::from(path)), hash))
             }
@@ -265,10 +266,9 @@ impl Uploader {
                     ..Default::default()
                 };
 
-                client
-                    .delete_object(req)
-                    .sync()
-                    .chain_error(|| internal(&format_args!("failed to upload to S3: `{}`", path)))?;
+                client.delete_object(req).sync().chain_error(|| {
+                    internal(&format_args!("failed to upload to S3: `{}`", path))
+                })?;
 
                 Ok(())
             }
