@@ -5,10 +5,10 @@ use diesel::prelude::*;
 
 use models::{ApiToken, Email, NewUser, User};
 use util::RequestHelper;
-use views::{EncodableCrate, EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
+use views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 use {
-    app, logout, new_user, req, sign_in_as, CrateBuilder, OkBool, TestApp, VersionBuilder,
-    NEXT_GH_ID,
+    app, logout, new_user, req, sign_in_as, CrateBuilder, CrateList, OkBool, TestApp,
+    VersionBuilder, NEXT_GH_ID,
 };
 
 #[derive(Deserialize)]
@@ -25,11 +25,6 @@ pub struct UserShowPublicResponse {
 #[derive(Deserialize)]
 pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
-}
-
-#[derive(Deserialize)]
-struct CrateList {
-    crates: Vec<EncodableCrate>,
 }
 
 #[test]
