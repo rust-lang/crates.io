@@ -34,7 +34,7 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateList, CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
+    CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
     VersionBuilder,
 };
 
@@ -1176,64 +1176,50 @@ fn summary_new_crates() {
 #[test]
 fn download() {
     use chrono::{Duration, Utc};
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
         CrateBuilder::new("foo_download", user.id)
             .version(VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
-    }
-    let resp = t!(middle.call(&mut req));
-    assert_eq!(resp.status.0, 302);
+    });
 
-    req.with_path("/api/v1/crates/foo_download/1.0.0/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/foo_download/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    let assert_dl_count = |name_and_version: &str, query: Option<&str>, count: usize| {
+        let url = format!("/api/v1/crates/{}/downloads", name_and_version);
+        let downloads: Downloads = if let Some(query) = query {
+            anon.get_with_query(&url, query).good()
+        } else {
+            anon.get(&url).good()
+        };
+        assert_eq!(downloads.version_downloads.len(), count);
+    };
 
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
-    let resp = t!(middle.call(&mut req));
-    assert_eq!(resp.status.0, 302);
+    let download = |name_and_version: &str| {
+        let url = format!("/api/v1/crates/{}/download", name_and_version);
+        anon.get::<()>(&url).assert_status(302);
+        // TODO: test the with_json code path
+    };
 
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    download("foo_download/1.0.0");
+    assert_dl_count("foo_download/1.0.0", None, 1);
+    assert_dl_count("foo_download", None, 1);
 
-    let yesterday = Utc::today() + Duration::days(-1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&format!("before_date={}", yesterday.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 0);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&format!("before_date={}", yesterday.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
+    download("FOO_DOWNLOAD/1.0.0");
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", None, 1);
+    assert_dl_count("FOO_DOWNLOAD", None, 1);
+    // TODO: Is the behavior above a bug?
+
+    let yesterday = (Utc::today() + Duration::days(-1)).format("%F");
+    let query = format!("before_date={}", yesterday);
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", Some(&query), 0);
     // crate/downloads always returns the last 90 days and ignores date params
-    assert_eq!(downloads.version_downloads.len(), 1);
+    assert_dl_count("FOO_DOWNLOAD", Some(&query), 1);
 
-    let tomorrow = Utc::today() + Duration::days(1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&format!("before_date={}", tomorrow.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&format!("before_date={}", tomorrow.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    let tomorrow = (Utc::today() + Duration::days(1)).format("%F");
+    let query = format!("before_date={}", tomorrow);
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", Some(&query), 1);
+    assert_dl_count("FOO_DOWNLOAD", Some(&query), 1);
 }
 
 #[test]
@@ -1282,61 +1268,50 @@ fn diesel_not_found_results_in_404() {
 
 #[test]
 fn following() {
-    #[derive(Deserialize)]
-    struct F {
-        following: bool,
-    }
+    // TODO: Test anon requests as well?
+    let (app, _, user) = TestApp::with_user();
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_following/following");
+    app.db(|conn| {
+        CrateBuilder::new("foo_following", user.as_model().id).expect_build(&conn);
+    });
 
-    let user;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_following", user.id).expect_build(&conn);
-    }
+    let is_following = || -> bool {
+        #[derive(Deserialize)]
+        struct F {
+            following: bool,
+        }
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(!::json::<F>(&mut response).following);
+        user.get::<F>("/api/v1/crates/foo_following/following")
+            .good()
+            .following
+    };
 
-    req.with_path("/api/v1/crates/foo_following/follow")
-        .with_method(Method::Put);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
+    let follow = || {
+        assert!(
+            user.put::<OkBool>("/api/v1/crates/foo_following/follow", b"")
+                .good()
+                .ok
+        );
+    };
 
-    req.with_path("/api/v1/crates/foo_following/following")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<F>(&mut response).following);
+    let unfollow = || {
+        assert!(
+            user.delete::<OkBool>("api/v1/crates/foo_following/follow")
+                .good()
+                .ok
+        );
+    };
 
-    req.with_path("/api/v1/crates")
-        .with_method(Method::Get)
-        .with_query("following=1");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let l = ::json::<CrateList>(&mut response);
-    assert_eq!(l.crates.len(), 1);
+    assert!(!is_following());
+    follow();
+    follow();
+    assert!(is_following());
+    assert_eq!(user.search("following=1").crates.len(), 1);
 
-    req.with_path("/api/v1/crates/foo_following/follow")
-        .with_method(Method::Delete);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-
-    req.with_path("/api/v1/crates/foo_following/following")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(!::json::<F>(&mut response).following);
-
-    req.with_path("/api/v1/crates")
-        .with_query("following=1")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    unfollow();
+    unfollow();
+    assert!(!is_following());
+    assert_eq!(user.search("following=1").crates.len(), 0);
 }
 
 #[test]

@@ -305,6 +305,11 @@ where
             Some(b) => b,
         }
     }
+
+    pub fn assert_status(&self, status: u32) -> &Self {
+        assert_eq!(status, self.response.status.0);
+        self
+    }
 }
 
 impl Response<()> {
