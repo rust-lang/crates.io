@@ -39,7 +39,8 @@ pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
         .select((
             to_char(version_downloads::date, "YYYY-MM-DD"),
             sum_downloads,
-        )).filter(version_downloads::date.gt(date(now - 90.days())))
+        ))
+        .filter(version_downloads::date.gt(date(now - 90.days())))
         .group_by(version_downloads::date)
         .order(version_downloads::date.asc())
         .load::<ExtraDownload>(&*conn)?;

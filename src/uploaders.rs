@@ -66,7 +66,7 @@ impl Uploader {
         host: Option<String>,
         cdn: Option<String>,
     ) -> Uploader {
-        let host = host.unwrap_or(format!(
+        let host = host.unwrap_or_else(|| format!(
             "{}.s3{}.amazonaws.com",
             bucket,
             match region {
@@ -78,7 +78,7 @@ impl Uploader {
 
         // Use the custom handler as we always provide an endpoint to connect to.
         let region = Region::Custom {
-            name: region.unwrap_or("us-east-1".to_string()),
+            name: region.unwrap_or_else(|| "us-east-1".to_string()),
             endpoint: host.clone(),
         };
 
@@ -89,9 +89,9 @@ impl Uploader {
 
         Uploader::S3 {
             client: Arc::new(s3client),
-            bucket: bucket,
-            host: host,
-            cdn: cdn,
+            bucket,
+            host,
+            cdn,
             proxy: None,
         }
     }
@@ -290,8 +290,8 @@ pub struct S3CredentialsProvider {
 impl S3CredentialsProvider {
     fn new(access_key: String, secret_key: String) -> S3CredentialsProvider {
         S3CredentialsProvider {
-            access_key: access_key,
-            secret_key: secret_key,
+            access_key,
+            secret_key,
         }
     }
 }

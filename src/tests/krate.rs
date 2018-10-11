@@ -1099,7 +1099,8 @@ fn new_krate_git_upload_appends() {
         .write_all(
             br#"{"name":"FPP","vers":"0.0.1","deps":[],"features":{},"cksum":"3j3"}
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
     let mut req = new_req(Arc::clone(&app), "FPP", "1.0.0");
     sign_in(&mut req, &app);
@@ -1985,7 +1986,8 @@ fn reverse_dependencies() {
                 VersionBuilder::new("1.1.0")
                     .dependency(&c1, None)
                     .dependency(&c1, Some("foo")),
-            ).expect_build(&conn);
+            )
+            .expect_build(&conn);
     }
 
     let mut response = ok_resp!(middle.call(&mut req));

@@ -99,7 +99,8 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
                 }
                 git_crate.yanked = Some(yanked);
                 Ok(serde_json::to_string(&git_crate).unwrap())
-            }).collect::<CargoResult<Vec<String>>>();
+            })
+            .collect::<CargoResult<Vec<String>>>();
         let new = new?.join("\n");
         let mut f = File::create(&dst)?;
         f.write_all(new.as_bytes())?;
