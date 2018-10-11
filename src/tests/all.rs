@@ -38,13 +38,14 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::Replica;
 use chrono::Utc;
-use conduit::{Handler, Method, Request};
+use conduit::{Method, Request};
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 
-pub use cargo_registry::{models, schema, views};
+use cargo_registry::{models, schema, views};
+use util::{Bad, RequestHelper, TestApp};
 
 use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
@@ -61,15 +62,9 @@ macro_rules! t {
     };
 }
 
-macro_rules! t_resp {
-    ($e:expr) => {
-        t!($e)
-    };
-}
-
 macro_rules! ok_resp {
     ($e:expr) => {{
-        let resp = t_resp!($e);
+        let resp = t!($e);
         if !::ok_resp(&resp) {
             panic!("bad response: {:?}", resp.status);
         }
@@ -79,21 +74,12 @@ macro_rules! ok_resp {
 
 macro_rules! bad_resp {
     ($e:expr) => {{
-        let mut resp = t_resp!($e);
+        let mut resp = t!($e);
         match ::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }
     }};
-}
-
-#[derive(Deserialize, Debug)]
-struct Error {
-    detail: String,
-}
-#[derive(Deserialize)]
-struct Bad {
-    errors: Vec<Error>,
 }
 
 mod badge;
@@ -108,10 +94,11 @@ mod schema_details;
 mod team;
 mod token;
 mod user;
+mod util;
 mod version;
 
 #[derive(Deserialize, Debug)]
-struct GoodCrate {
+pub struct GoodCrate {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
     warnings: Warnings,
@@ -136,6 +123,10 @@ pub struct CrateResponse {
     krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
+}
+#[derive(Deserialize)]
+struct OkBool {
+    ok: bool,
 }
 
 fn app() -> (
@@ -185,16 +176,15 @@ fn app() -> (
 }
 
 // Return the environment variable only if it has been defined
-fn env(s: &str) -> String {
-    // Handles both the `None` and empty string cases e.g. VAR=
-    // by converting `None` to an empty string
-    let env_result = env::var(s).ok().unwrap_or_default();
-
-    if env_result == "" {
-        panic!("must have `{}` defined", s);
+fn env(var: &str) -> String {
+    match env::var(var) {
+        Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
+        Ok(s) => s,
+        _ => panic!(
+            "environment variable `{}` must be defined and valid unicode",
+            var
+        ),
     }
-
-    env_result
 }
 
 fn req(method: conduit::Method, path: &str) -> MockRequest {
@@ -226,11 +216,11 @@ where
     }
 }
 
-static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
         email: None,
         name: None,
@@ -239,21 +229,9 @@ fn new_user(login: &str) -> NewUser<'_> {
     }
 }
 
-fn user(login: &str) -> User {
-    User {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_login: login.to_string(),
-        email: None,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token".into(),
-    }
-}
-
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
-        github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         login,
         name: None,
         avatar: None,
@@ -511,8 +489,10 @@ fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion 
 }
 
 fn krate(name: &str) -> Crate {
+    static NEXT_CRATE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
     Crate {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        id: NEXT_CRATE_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),
         created_at: Utc::now().naive_utc(),
@@ -756,165 +736,6 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
     ]);
     body.extend(tarball);
     body
-}
-
-/// A struct representing a user's session to be used for the duration of a test.
-/// This injects requests directly into the router, so doesn't quite exercise the application
-/// exactly as in production, but it's close enough for most testing purposes.
-/// Has useful methods for making common HTTP requests.
-pub struct MockUserSession {
-    app: Arc<App>,
-    // The bomb needs to be held in scope until the end of the test.
-    _bomb: record::Bomb,
-    middle: conduit_middleware::MiddlewareBuilder,
-    request: MockRequest,
-    _user: User,
-}
-
-impl MockUserSession {
-    /// Create a session logged in with an arbitrary user.
-    pub fn logged_in() -> Self {
-        let (bomb, app, middle) = app();
-
-        let mut request = MockRequest::new(Method::Get, "/");
-        let user = {
-            let conn = app.diesel_database.get().unwrap();
-            let user = new_user("foo").create_or_update(&conn).unwrap();
-            request.mut_extensions().insert(user.clone());
-            request
-                .mut_extensions()
-                .insert(AuthenticationSource::SessionCookie);
-
-            user
-        };
-
-        MockUserSession {
-            app,
-            _bomb: bomb,
-            middle,
-            request,
-            _user: user,
-        }
-    }
-
-    /// Create a session logged in with the given user.
-    // pub fn logged_in_as(_user: &User) -> Self {
-    //     unimplemented!();
-    // }
-
-    /// For internal use only: make the current request
-    fn make_request(&mut self) -> conduit::Response {
-        ok_resp!(self.middle.call(&mut self.request))
-    }
-
-    /// Log out the currently logged in user.
-    pub fn logout(&mut self) {
-        logout(&mut self.request);
-    }
-
-    /// Using the same session, log in as a different user.
-    pub fn log_in_as(&mut self, user: &User) {
-        sign_in_as(&mut self.request, user);
-    }
-
-    /// Publish the crate as specified by the given builder
-    pub fn publish(&mut self, publish_builder: PublishBuilder) {
-        let krate_name = publish_builder.krate_name.clone();
-        self.request
-            .with_path("/api/v1/crates/new")
-            .with_method(Method::Put)
-            .with_body(&publish_builder.body());
-        let mut response = self.make_request();
-        let json: GoodCrate = json(&mut response);
-        assert_eq!(json.krate.name, krate_name);
-    }
-
-    /// Request the JSON used for a crate's page.
-    pub fn show_crate(&mut self, krate_name: &str) -> CrateResponse {
-        self.request
-            .with_method(Method::Get)
-            .with_path(&format!("/api/v1/crates/{}", krate_name));
-        let mut response = self.make_request();
-        json(&mut response)
-    }
-
-    /// Yank the specified version of the specified crate.
-    pub fn yank(&mut self, krate_name: &str, version: &str) -> conduit::Response {
-        self.request
-            .with_path(&format!("/api/v1/crates/{}/{}/yank", krate_name, version))
-            .with_method(Method::Delete);
-        self.make_request()
-    }
-
-    /// Add a user as an owner for a crate.
-    pub fn add_owner(&mut self, krate_name: &str, user: &User) {
-        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
-        self.request
-            .with_path(&format!("/api/v1/crates/{}/owners", krate_name))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes());
-
-        let mut response = self.make_request();
-
-        #[derive(Deserialize)]
-        struct O {
-            ok: bool,
-        }
-        assert!(json::<O>(&mut response).ok);
-    }
-
-    /// As the currently logged in user, accept an invitation to become an owner of the named
-    /// crate.
-    pub fn accept_ownership_invitation(&mut self, krate_name: &str) {
-        use views::InvitationResponse;
-
-        let krate_id = {
-            let conn = self.app.diesel_database.get().unwrap();
-            Crate::by_name(krate_name)
-                .first::<Crate>(&*conn)
-                .unwrap()
-                .id
-        };
-
-        let body = json!({
-            "crate_owner_invite": {
-                "invited_by_username": "",
-                "crate_name": krate_name,
-                "crate_id": krate_id,
-                "created_at": "",
-                "accepted": true
-            }
-        });
-
-        self.request
-            .with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
-            .with_method(Method::Put)
-            .with_body(body.to_string().as_bytes());
-
-        let mut response = self.make_request();
-
-        #[derive(Deserialize)]
-        struct CrateOwnerInvitation {
-            crate_owner_invitation: InvitationResponse,
-        }
-
-        let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
-        assert!(crate_owner_invite.crate_owner_invitation.accepted);
-        assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
-    }
-
-    /// Get the crates owned by the specified user.
-    pub fn crates_owned_by(&mut self, user: &User) -> CrateList {
-        let query = format!("user_id={}", user.id);
-        self.request
-            .with_path("/api/v1/crates")
-            .with_method(Method::Get)
-            .with_query(&query);
-
-        let mut response = self.make_request();
-
-        json::<CrateList>(&mut response)
-    }
 }
 
 lazy_static! {

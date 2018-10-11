@@ -59,7 +59,7 @@ fn show() {
 
     // Return not found if a category doesn't exist
     let mut req = req(Method::Get, "/api/v1/categories/foo-bar");
-    let response = t_resp!(middle.call(&mut req));
+    let response = t!(middle.call(&mut req));
     assert_eq!(response.status.0, 404);
 
     // Create a category and a subcategory
