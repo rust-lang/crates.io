@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use models::{Badge, Crate, MaintenanceStatus};
-use {app, new_user, App, CrateBuilder};
+use {app, new_user, util::DieselConnection, CrateBuilder};
 
 struct BadgeRef {
     appveyor: Badge,
@@ -25,7 +24,7 @@ struct BadgeRef {
     maintenance_attributes: HashMap<String, String>,
 }
 
-fn set_up() -> (Arc<App>, Crate, BadgeRef) {
+fn set_up() -> (DieselConnection, Crate, BadgeRef) {
     let (_b, app, _middle) = app();
 
     let krate = {
@@ -113,34 +112,34 @@ fn set_up() -> (Arc<App>, Crate, BadgeRef) {
     );
 
     let badges = BadgeRef {
-        appveyor: appveyor,
+        appveyor,
         appveyor_attributes: badge_attributes_appveyor,
-        travis_ci: travis_ci,
+        travis_ci,
         travis_ci_attributes: badge_attributes_travis_ci,
-        gitlab: gitlab,
+        gitlab,
         gitlab_attributes: badge_attributes_gitlab,
-        isitmaintained_issue_resolution: isitmaintained_issue_resolution,
+        isitmaintained_issue_resolution,
         isitmaintained_issue_resolution_attributes:
             badge_attributes_isitmaintained_issue_resolution,
-        isitmaintained_open_issues: isitmaintained_open_issues,
+        isitmaintained_open_issues,
         isitmaintained_open_issues_attributes: badge_attributes_isitmaintained_open_issues,
-        codecov: codecov,
+        codecov,
         codecov_attributes: badge_attributes_codecov,
-        coveralls: coveralls,
+        coveralls,
         coveralls_attributes: badge_attributes_coveralls,
-        circle_ci: circle_ci,
+        circle_ci,
         circle_ci_attributes: badge_attributes_circle_ci,
         maintenance,
         maintenance_attributes,
     };
-    (app, krate, badges)
+    let conn = app.diesel_database.get().unwrap();
+    (conn, krate, badges)
 }
 
 #[test]
 fn update_no_badges() {
     // Add no badges
-    let (app, krate, _) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, _) = set_up();
 
     // Updating with no badges has no effect
     Badge::update_crate(&conn, &krate, None).unwrap();
@@ -150,8 +149,7 @@ fn update_no_badges() {
 #[test]
 fn update_add_appveyor() {
     // Add an appveyor badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
@@ -162,8 +160,7 @@ fn update_add_appveyor() {
 #[test]
 fn update_add_travis_ci() {
     // Add a travis ci badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
@@ -174,8 +171,7 @@ fn update_add_travis_ci() {
 #[test]
 fn update_add_gitlab() {
     // Add a gitlab badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
@@ -186,8 +182,7 @@ fn update_add_gitlab() {
 #[test]
 fn update_add_isitmaintained_issue_resolution() {
     // Add a isitmaintained_issue_resolution badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
@@ -204,8 +199,7 @@ fn update_add_isitmaintained_issue_resolution() {
 #[test]
 fn update_add_isitmaintained_open_issues() {
     // Add a isitmaintained_open_issues badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
@@ -222,8 +216,7 @@ fn update_add_isitmaintained_open_issues() {
 #[test]
 fn update_add_codecov() {
     // Add a codecov badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("codecov"), test_badges.codecov_attributes);
@@ -234,8 +227,7 @@ fn update_add_codecov() {
 #[test]
 fn update_add_coveralls() {
     // Add a coveralls badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
@@ -246,8 +238,7 @@ fn update_add_coveralls() {
 #[test]
 fn update_add_circle_ci() {
     // Add a CircleCI badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
@@ -258,8 +249,7 @@ fn update_add_circle_ci() {
 #[test]
 fn update_add_maintenance() {
     // Add a maintenance badge
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
@@ -273,8 +263,7 @@ fn update_add_maintenance() {
 #[test]
 fn replace_badge() {
     // Replacing one badge with another
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     // Add a badge
     let mut badges = HashMap::new();
@@ -295,8 +284,7 @@ fn replace_badge() {
 #[test]
 fn update_attributes() {
     // Update badge attributes
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     // Add a travis-ci badge
     let mut badges = HashMap::new();
@@ -327,8 +315,7 @@ fn update_attributes() {
 #[test]
 fn clear_badges() {
     // Add 3 badges and then remove them
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -353,8 +340,7 @@ fn clear_badges() {
 #[test]
 fn appveyor_extra_keys() {
     // Add a badge with extra invalid keys
-    let (app, krate, test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -370,8 +356,7 @@ fn appveyor_extra_keys() {
 #[test]
 fn travis_ci_required_keys() {
     // Add a travis ci badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -388,8 +373,7 @@ fn travis_ci_required_keys() {
 #[test]
 fn gitlab_required_keys() {
     // Add a gitlab badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -406,8 +390,7 @@ fn gitlab_required_keys() {
 #[test]
 fn isitmaintained_issue_resolution_required_keys() {
     // Add a isitmaintained_issue_resolution badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -429,8 +412,7 @@ fn isitmaintained_issue_resolution_required_keys() {
 #[test]
 fn isitmaintained_open_issues_required_keys() {
     // Add a isitmaintained_open_issues badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -452,8 +434,7 @@ fn isitmaintained_open_issues_required_keys() {
 #[test]
 fn codecov_required_keys() {
     // Add a codecov badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -470,8 +451,7 @@ fn codecov_required_keys() {
 #[test]
 fn coveralls_required_keys() {
     // Add a coveralls badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -488,8 +468,7 @@ fn coveralls_required_keys() {
 #[test]
 fn circle_ci_required_keys() {
     // Add a CircleCI badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -506,8 +485,7 @@ fn circle_ci_required_keys() {
 #[test]
 fn maintenance_required_keys() {
     // Add a maintenance badge missing a required field
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -527,8 +505,7 @@ fn maintenance_required_keys() {
 #[test]
 fn maintenance_invalid_values() {
     // Add a maintenance badge with an invalid value
-    let (app, krate, mut test_badges) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -550,8 +527,7 @@ fn maintenance_invalid_values() {
 #[test]
 fn unknown_badge() {
     // Add an unknown badge
-    let (app, krate, _) = set_up();
-    let conn = app.diesel_database.get().unwrap();
+    let (conn, krate, _) = set_up();
 
     let mut badges = HashMap::new();
 

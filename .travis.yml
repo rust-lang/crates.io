@@ -47,16 +47,15 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-    - rust: nightly-2018-06-26
-      script:
-        - cargo install --force clippy --vers 0.0.210
-        - cargo clippy
     - rust: stable
       before_install:
         - nvm install 10
         - rustup component add rustfmt-preview
+        - rustup component add clippy-preview
       script:
         - cargo fmt -- --check
+        # TODO: Once clippy:: lint syntax is stable, remove everything after the -- below
+        - cargo clippy --all-targets -- -A renamed_and_removed_lints
         - cargo build
         - cargo test
         - npm install

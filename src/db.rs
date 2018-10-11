@@ -36,6 +36,7 @@ pub trait RequestTransaction {
     /// Return the lazily initialized postgres connection for this request.
     ///
     /// The connection will live for the lifetime of the request.
+    // FIXME: This description does not match the implementation below.
     fn db_conn(&self) -> CargoResult<DieselPooledConn>;
 }
 
