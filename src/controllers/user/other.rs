@@ -37,8 +37,7 @@ pub fn stats(req: &mut dyn Request) -> CargoResult<Response> {
             crate_owners::owner_id
                 .eq(user_id)
                 .and(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
-        )
-        .select(sum(crates::downloads))
+        ).select(sum(crates::downloads))
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);
 

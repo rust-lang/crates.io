@@ -319,8 +319,7 @@ fn invitations_list() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            })
-            .execute(&*conn)
+            }).execute(&*conn)
             .unwrap();
         (krate, user)
     };
@@ -376,8 +375,7 @@ fn test_accept_invitation() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            })
-            .execute(&*conn)
+            }).execute(&*conn)
             .unwrap();
         (krate, user)
     };
@@ -467,8 +465,7 @@ fn test_decline_invitation() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            })
-            .execute(&*conn)
+            }).execute(&*conn)
             .unwrap();
         (krate, user)
     };
