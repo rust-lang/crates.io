@@ -9,8 +9,8 @@ use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 use {
-    add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder,
-    CrateList, OkBool, PublishBuilder, TestApp,
+    add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder, OkBool,
+    PublishBuilder, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -78,7 +78,7 @@ fn new_crate_owner() {
     user2.accept_ownership_invitation("foo_owner", crate_id);
 
     // Make sure this shows up as one of their crates.
-    let crates = user2.crates_owned_by_user_id(user2.as_model().id);
+    let crates = user2.search_by_user_id(user2.as_model().id);
     assert_eq!(crates.crates.len(), 1);
 
     // And upload a new crate as the second user
@@ -203,36 +203,26 @@ fn owners_can_remove_self() {
 */
 #[test]
 fn check_ownership_two_crates() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
 
-    let (krate_owned_by_team, team) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("user_foo").create_or_update(&conn).unwrap();
-        let t = new_team("team_foo").create_or_update(&conn).unwrap();
-        let krate = CrateBuilder::new("foo", u.id).expect_build(&conn);
-        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
+    let (krate_owned_by_team, team) = app.db(|conn| {
+        let t = new_team("team_foo").create_or_update(conn).unwrap();
+        let krate = CrateBuilder::new("foo", user.as_model().id).expect_build(conn);
+        add_team_to_crate(&t, &krate, user.as_model(), conn).unwrap();
         (krate, t)
-    };
+    });
 
-    let (krate_not_owned_by_team, user) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("user_bar").create_or_update(&conn).unwrap();
-        (::CrateBuilder::new("bar", u.id).expect_build(&conn), u)
-    };
+    let user2 = app.db_new_user("user_bar");
+    let user2_id = user2.as_model().id;
+    let krate_not_owned_by_team =
+        app.db(|conn| CrateBuilder::new("bar", user2_id).expect_build(&conn));
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-
-    let query = format!("user_id={}", user.id);
-    let mut response = ok_resp!(middle.call(req.with_query(&query)));
-    let json: CrateList = ::json(&mut response);
-
+    let json = anon.search_by_user_id(user2_id);
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
     assert_eq!(json.crates.len(), 1);
 
     let query = format!("team_id={}", team.id);
-    let mut response = ok_resp!(middle.call(req.with_query(&query)));
-
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search(&query);
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.crates[0].name, krate_owned_by_team.name);
 }

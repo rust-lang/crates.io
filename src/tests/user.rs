@@ -7,8 +7,8 @@ use models::{ApiToken, Email, NewUser, User};
 use util::RequestHelper;
 use views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
 use {
-    app, logout, new_user, req, sign_in_as, CrateBuilder, CrateList, OkBool, TestApp,
-    VersionBuilder, NEXT_GH_ID,
+    app, logout, new_user, req, sign_in_as, CrateBuilder, OkBool, TestApp, VersionBuilder,
+    NEXT_GH_ID,
 };
 
 #[derive(Deserialize)]
@@ -121,26 +121,23 @@ fn crates_by_user_id() {
         CrateBuilder::new("foo_my_packages", id).expect_build(conn);
     });
 
-    let response = user.crates_owned_by_user_id(id);
+    let response = user.search_by_user_id(id);
     assert_eq!(response.crates.len(), 1);
 }
 
 #[test]
 fn crates_by_user_id_not_including_deleted_owners() {
-    let (_b, app, middle) = app();
-    let u;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u = new_user("foo").create_or_update(&conn).unwrap();
-        let krate = CrateBuilder::new("foo_my_packages", u.id).expect_build(&conn);
-        krate.owner_remove(&app, &conn, &u, "foo").unwrap();
-    }
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    req.with_query(&format!("user_id={}", u.id));
-    let mut response = ok_resp!(middle.call(&mut req));
+    app.db(|conn| {
+        let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
+        krate
+            .owner_remove(app.as_inner(), conn, user, "foo")
+            .unwrap();
+    });
 
-    let response: CrateList = ::json(&mut response);
+    let response = anon.search_by_user_id(user.id);
     assert_eq!(response.crates.len(), 0);
 }
 

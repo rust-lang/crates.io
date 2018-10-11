@@ -83,6 +83,11 @@ impl TestApp {
             user,
         }
     }
+
+    /// Obtain a reference to the inner `App` value
+    pub fn as_inner(&self) -> &App {
+        &*self.0.app
+    }
 }
 
 /// A colleciton of helper methods for the 3 authentication types
@@ -130,10 +135,14 @@ pub trait RequestHelper {
         Response::new(self.app().0.middle.call(&mut request))
     }
 
+    /// Search for crates matching a query string
+    fn search(&self, query: &str) -> CrateList {
+        self.get_with_query("/api/v1/crates", query).good()
+    }
+
     /// Get the crates owned by the specified user.
-    fn crates_owned_by_user_id(&self, id: i32) -> CrateList {
-        let query = format!("user_id={}", id);
-        self.get_with_query("/api/v1/crates", &query).good()
+    fn search_by_user_id(&self, id: i32) -> CrateList {
+        self.search(&format!("user_id={}", id))
     }
 
     /// Publish a crate
