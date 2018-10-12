@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
@@ -39,6 +39,26 @@ pub trait CargoError: Send + fmt::Display + 'static {
     fn human(&self) -> bool {
         false
     }
+
+    fn get_type_id(&self) -> TypeId {
+        TypeId::of::<Self>()
+    }
+}
+
+impl dyn CargoError {
+    pub fn is<T: Any>(&self) -> bool {
+        self.get_type_id() == TypeId::of::<T>()
+    }
+
+    pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
+        if self.is::<T>() {
+            unsafe {
+                Some(&*(self as *const Self as *const T))
+            }
+        } else {
+            None
+        }
+    }
 }
 
 impl fmt::Debug for Box<dyn CargoError> {
@@ -48,20 +68,6 @@ impl fmt::Debug for Box<dyn CargoError> {
 }
 
 impl CargoError for Box<dyn CargoError> {
-    fn description(&self) -> &str {
-        (**self).description()
-    }
-    fn cause(&self) -> Option<&dyn CargoError> {
-        (**self).cause()
-    }
-    fn human(&self) -> bool {
-        (**self).human()
-    }
-    fn response(&self) -> Option<Response> {
-        (**self).response()
-    }
-}
-impl<T: CargoError> CargoError for Box<T> {
     fn description(&self) -> &str {
         (**self).description()
     }
@@ -158,47 +164,21 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
+impl<E: Error + Send + 'static> CargoError for E {
+    fn description(&self) -> &str {
+        Error::description(self)
+    }
+}
+
 impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
     fn from(err: E) -> Box<dyn CargoError> {
-        if let Some(err) = Any::downcast_ref::<DieselError>(&err) {
-            if let DieselError::NotFound = *err {
-                return Box::new(NotFound);
-            }
+        if let Some(DieselError::NotFound) = Any::downcast_ref::<DieselError>(&err) {
+            Box::new(NotFound)
+        } else {
+            Box::new(err)
         }
-
-        struct Shim<E>(E);
-        impl<E: Error + Send + 'static> CargoError for Shim<E> {
-            fn description(&self) -> &str {
-                Error::description(&self.0)
-            }
-        }
-        impl<E: fmt::Display> fmt::Display for Shim<E> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0.fmt(f)
-            }
-        }
-        Box::new(Shim(err))
     }
 }
-
-impl CargoError for ::curl::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
-impl CargoError for ::serde_json::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
-impl CargoError for ::std::io::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
 // =============================================================================
 // Concrete errors
 
