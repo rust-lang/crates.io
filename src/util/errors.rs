@@ -19,7 +19,7 @@ struct Bad {
 // =============================================================================
 // CargoError trait
 
-pub trait CargoError: Send + fmt::Display + 'static {
+pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
     fn description(&self) -> &str;
     fn cause(&self) -> Option<&(dyn CargoError)> {
         None
@@ -48,12 +48,6 @@ pub trait CargoError: Send + fmt::Display + 'static {
 impl dyn CargoError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
-    }
-}
-
-impl fmt::Debug for Box<dyn CargoError> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self, f)
     }
 }
 
@@ -98,6 +92,7 @@ pub trait ChainError<T> {
         F: FnOnce() -> E;
 }
 
+#[derive(Debug)]
 struct ChainedError<E> {
     error: E,
     cause: Box<dyn CargoError>,
@@ -176,6 +171,7 @@ impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
             }
         }
 
+        #[derive(Debug)]
         struct Shim<E>(E);
         impl<E: Error + Send + 'static> CargoError for Shim<E> {
             fn description(&self) -> &str {
@@ -206,6 +202,7 @@ impl CargoError for ::std::io::Error {
 // =============================================================================
 // Concrete errors
 
+#[derive(Debug)]
 struct ConcreteCargoError {
     description: String,
     detail: Option<String>,
@@ -285,6 +282,7 @@ impl fmt::Display for Unauthorized {
     }
 }
 
+#[derive(Debug)]
 struct BadRequest(String);
 
 impl CargoError for BadRequest {
