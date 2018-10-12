@@ -1,6 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use std::collections::HashMap;
+use std::io::empty;
 use std::sync::Arc;
 
 use hex::ToHex;
@@ -24,6 +25,8 @@ use views::{EncodableCrate, EncodableCrateUpload};
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
 pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
+    use diesel::result::Error::{self as DieselError, RollbackTransaction};
+
     let app = Arc::clone(req.app());
 
     // The format of the req.body() of a publish request is as follows:
@@ -66,7 +69,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
-    conn.transaction(|| {
+    let res = conn.transaction(|| {
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
             name,
@@ -163,6 +166,10 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             None => None,
         };
 
+        if req.query().get("dry_run").is_some() {
+            Err(RollbackTransaction)?;
+        }
+
         // Upload the crate, return way to delete the crate from the server
         // If the git commands fail below, we shouldn't keep the crate on the
         // server.
@@ -216,6 +223,18 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             krate: krate.minimal_encodable(&max_version, None, false, None),
             warnings,
         }))
+    });
+
+    res.or_else(|err| {
+        if let Some(DieselError::RollbackTransaction) = err.downcast_ref::<DieselError>() {
+            Ok(Response {
+                status: (200, "OK"),
+                headers: Default::default(),
+                body: Box::new(empty()),
+            })
+        } else {
+            Err(err)
+        }
     })
 }
 

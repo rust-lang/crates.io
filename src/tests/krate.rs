@@ -2361,3 +2361,14 @@ fn new_krate_hard_links() {
     let body = new_crate_to_body_with_tarball(&new_crate("foo", "1.1.0"), &tarball);
     bad_resp!(middle.call(req.with_body(&body)));
 }
+
+#[test]
+fn new_krate_dry_run() {
+    let (_b, app, middle) = app();
+    let mut req = new_req("new_crate_dry_run", "1.0.0");
+    req.with_query("dry_run=1");
+    sign_in(&mut req, &app);
+    ok_resp!(middle.call(&mut req));
+    // We know that nothing tried to talk to S3 or Github since there is no
+    // http-data file for this test.
+}

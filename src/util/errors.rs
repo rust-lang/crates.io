@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
@@ -38,6 +38,26 @@ pub trait CargoError: Send + fmt::Display + 'static {
     }
     fn human(&self) -> bool {
         false
+    }
+
+    fn get_type_id(&self) -> TypeId {
+        TypeId::of::<Self>()
+    }
+}
+
+impl dyn CargoError {
+    pub fn is<T: Any>(&self) -> bool {
+        self.get_type_id() == TypeId::of::<T>()
+    }
+
+    pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
+        if self.is::<T>() {
+            unsafe {
+                Some(&*(self as *const Self as *const T))
+            }
+        } else {
+            None
+        }
     }
 }
 
