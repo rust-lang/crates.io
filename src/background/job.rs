@@ -2,7 +2,7 @@ use diesel::PgConnection;
 use serde::{Serialize, de::DeserializeOwned};
 
 use super::storage;
-use util::CargoResult;
+use crate::util::CargoResult;
 
 /// A background job, meant to be run asynchronously.
 pub trait Job: Serialize + DeserializeOwned {

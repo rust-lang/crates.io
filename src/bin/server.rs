@@ -1,10 +1,10 @@
 #![deny(warnings)]
 
-use cargo_registry::{boot, build_handler, env, git, App, Config, Env};
+use cargo_registry::{boot, App, Env};
 use jemalloc_ctl;
 use std::{
     env,
-    fs::{self, File},
+    fs::File,
     sync::{mpsc::channel, Arc},
 };
 
@@ -23,37 +23,10 @@ fn main() {
 
     // Initialize logging
     env_logger::init();
-    let config = Config::default();
 
-    // If there isn't a git checkout containing the crate index repo at the path specified
-    // by `GIT_REPO_CHECKOUT`, delete that directory and clone the repo specified by `GIT_REPO_URL`
-    // into that directory instead. Uses the credentials specified in `GIT_HTTP_USER` and
-    // `GIT_HTTP_PWD` via the `cargo_registry::git::credentials` function.
-    let url = env("GIT_REPO_URL");
-    let repo = match git2::Repository::open(&config.git_repo_checkout) {
-        Ok(r) => r,
-        Err(..) => {
-            let _ = fs::remove_dir_all(&config.git_repo_checkout);
-            fs::create_dir_all(&config.git_repo_checkout).unwrap();
-            let mut cb = git2::RemoteCallbacks::new();
-            cb.credentials(git::credentials);
-            let mut opts = git2::FetchOptions::new();
-            opts.remote_callbacks(cb);
-            git2::build::RepoBuilder::new()
-                .fetch_options(opts)
-                .clone(&url, &config.git_repo_checkout)
-                .unwrap()
-        }
-    };
-
-    // All commits to the index registry made through crates.io will be made by bors, the Rust
-    // community's friendly GitHub bot.
-    let mut cfg = repo.config().unwrap();
-    cfg.set_str("user.name", "bors").unwrap();
-    cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
-
+    let config = cargo_registry::Config::default();
     let app = App::new(&config);
-    let app = build_handler(Arc::new(app));
+    let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.

@@ -34,6 +34,7 @@ static ALLOC: Jemalloc = Jemalloc;
 
 mod app;
 pub mod background;
+pub mod background_jobs;
 pub mod boot;
 mod config;
 pub mod db;
