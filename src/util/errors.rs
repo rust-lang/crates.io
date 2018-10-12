@@ -61,20 +61,6 @@ impl CargoError for Box<dyn CargoError> {
         (**self).response()
     }
 }
-impl<T: CargoError> CargoError for Box<T> {
-    fn description(&self) -> &str {
-        (**self).description()
-    }
-    fn cause(&self) -> Option<&dyn CargoError> {
-        (**self).cause()
-    }
-    fn human(&self) -> bool {
-        (**self).human()
-    }
-    fn response(&self) -> Option<Response> {
-        (**self).response()
-    }
-}
 
 pub type CargoResult<T> = Result<T, Box<dyn CargoError>>;
 
@@ -158,47 +144,21 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
+impl<E: Error + Send + 'static> CargoError for E {
+    fn description(&self) -> &str {
+        Error::description(self)
+    }
+}
+
 impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
     fn from(err: E) -> Box<dyn CargoError> {
-        if let Some(err) = Any::downcast_ref::<DieselError>(&err) {
-            if let DieselError::NotFound = *err {
-                return Box::new(NotFound);
-            }
+        if let Some(DieselError::NotFound) = Any::downcast_ref::<DieselError>(&err) {
+            Box::new(NotFound)
+        } else {
+            Box::new(err)
         }
-
-        struct Shim<E>(E);
-        impl<E: Error + Send + 'static> CargoError for Shim<E> {
-            fn description(&self) -> &str {
-                Error::description(&self.0)
-            }
-        }
-        impl<E: fmt::Display> fmt::Display for Shim<E> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0.fmt(f)
-            }
-        }
-        Box::new(Shim(err))
     }
 }
-
-impl CargoError for ::curl::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
-impl CargoError for ::serde_json::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
-impl CargoError for ::std::io::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
 // =============================================================================
 // Concrete errors
 
