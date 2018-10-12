@@ -17,7 +17,6 @@ extern crate flate2;
 extern crate git2;
 #[macro_use]
 extern crate lazy_static;
-extern crate s3;
 extern crate semver;
 extern crate serde;
 #[macro_use]
@@ -143,17 +142,15 @@ fn app() -> (
     // sniff/record it, but everywhere else we use https
     let api_protocol = String::from("http");
 
-    let uploader = cargo_registry::Uploader::S3 {
-        bucket: s3::Bucket::new(
-            String::from("alexcrichton-test"),
-            None,
-            std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
-            std::env::var("S3_SECRET_KEY").unwrap_or_default(),
-            &api_protocol,
-        ),
-        proxy: Some(proxy),
-        cdn: None,
-    };
+    let uploader = cargo_registry::Uploader::new_s3(
+        String::from("alexcrichton-test"),
+        None,
+        std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
+        std::env::var("S3_SECRET_KEY").unwrap_or_default(),
+        None,
+        api_protocol.clone(),
+        None,
+        Some(proxy));
 
     let config = cargo_registry::Config {
         uploader,

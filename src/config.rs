@@ -67,7 +67,9 @@ impl Default for Config {
                     env("S3_ACCESS_KEY"),
                     env("S3_SECRET_KEY"),
                     env::var("S3_HOST").ok(),
+                    "https".to_string(),
                     env::var("S3_CDN").ok(),
+                    None,
                 )
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
@@ -85,7 +87,9 @@ impl Default for Config {
                     env::var("S3_ACCESS_KEY").unwrap_or_default(),
                     env::var("S3_SECRET_KEY").unwrap_or_default(),
                     env::var("S3_HOST").ok(),
+                    "https".to_string(),
                     env::var("S3_CDN").ok(),
+                    None,
                 )
             }
             // In Development mode, either running as a primary instance or a read-only mirror
@@ -103,7 +107,9 @@ impl Default for Config {
                         env::var("S3_ACCESS_KEY").unwrap_or_default(),
                         env::var("S3_SECRET_KEY").unwrap_or_default(),
                         env::var("S3_HOST").ok(),
+                        "https".to_string(),
                         env::var("S3_CDN").ok(),
+                        None,
                     )
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only

@@ -64,11 +64,14 @@ impl Uploader {
         access_key: String,
         secret_key: String,
         host: Option<String>,
+        proto: String,
         cdn: Option<String>,
+        proxy: Option<String>,
     ) -> Uploader {
         let host = host.unwrap_or_else(|| {
             format!(
-                "{}.s3{}.amazonaws.com",
+                "{}://{}.s3{}.amazonaws.com",
+                proto,
                 bucket,
                 match region {
                     Some(ref r) if r != "" => format!("-{}", r),
@@ -94,7 +97,7 @@ impl Uploader {
             bucket,
             host,
             cdn,
-            proxy: None,
+            proxy,
         }
     }
 
