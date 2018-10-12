@@ -5,7 +5,7 @@ use super::Job;
 use util::CargoResult;
 
 #[doc(hidden)]
-pub type PerformFn<Env> = Box<dyn Fn(serde_json::Value, &Env) -> CargoResult<()>>;
+pub type PerformFn<Env> = Box<dyn Fn(serde_json::Value, &Env) -> CargoResult<()> + Send + Sync>;
 
 #[derive(Default)]
 #[allow(missing_debug_implementations)] // Can't derive debug
