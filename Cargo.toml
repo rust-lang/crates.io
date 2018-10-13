@@ -34,6 +34,7 @@ flate2 = "1.0"
 semver = "0.5"
 url = "1.2.1"
 tar = "0.4.13"
+base64 = "0.9"
 
 openssl = "0.9.14"
 oauth2 = "0.3"
