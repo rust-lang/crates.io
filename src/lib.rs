@@ -12,7 +12,6 @@
 extern crate ammonia;
 extern crate chrono;
 extern crate comrak;
-extern crate curl;
 #[macro_use]
 extern crate derive_deref;
 #[macro_use]
@@ -32,6 +31,7 @@ extern crate log;
 extern crate oauth2;
 extern crate openssl;
 extern crate rand;
+extern crate reqwest;
 extern crate s3;
 extern crate scheduled_thread_pool;
 extern crate semver;

@@ -9,7 +9,6 @@ extern crate chrono;
 extern crate conduit;
 extern crate conduit_middleware;
 extern crate conduit_test;
-extern crate curl;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
