@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate futures;
 extern crate hyper;
 extern crate hyper_tls;
@@ -129,7 +130,7 @@ pub fn proxy() -> (String, Bomb) {
         let record = record.lock().unwrap();
         match *record {
             Record::Capture(ref data, ref path) => {
-                let data = t!(serde_json::to_string(data));
+                let data = t!(serde_json::to_string_pretty(data));
                 Some((data.into_bytes(), path.clone()))
             }
             Record::Replay(..) => None,
@@ -201,14 +202,14 @@ struct Request {
     uri: String,
     method: String,
     headers: HashSet<(String, String)>,
-    body: Vec<u8>,
+    body: String,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Response {
     status: u16,
     headers: HashSet<(String, String)>,
-    body: Vec<u8>,
+    body: String,
 }
 
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
@@ -229,13 +230,13 @@ fn record_http(
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: Vec::new(),
+        body: String::new(),
     };
     let body = body.concat2();
 
     let client = client.clone();
     let response = body.and_then(move |body| {
-        request.body = body.to_vec();
+        request.body = base64::encode(&body.to_vec());
         let uri = uri.to_string().replace("http://", "https://");
         let uri = uri.parse::<hyper::Uri>().unwrap();
         let mut req = hyper::Request::builder()
@@ -256,11 +257,11 @@ fn record_http(
                 .iter()
                 .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
                 .collect(),
-            body: Vec::new(),
+            body: String::new(),
         };
 
         hyper_response.into_body().concat2().map(move |body| {
-            response.body = body.to_vec();
+            response.body = base64::encode(&body.to_vec());
             let mut hyper_response = hyper::Response::builder();
             hyper_response.status(status);
             let mut hyper_response = hyper_response.body(body.into()).unwrap();
@@ -275,6 +276,10 @@ fn replay_http(
     mut exchange: Exchange,
     stdout: &mut Write,
 ) -> Box<Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
+    fn check_ignored_request_header(name: &str) -> bool {
+        name == "date" || name == "authorization" || name == "user-agent"
+    }
+
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
     t!(writeln!(
@@ -288,10 +293,7 @@ fn replay_http(
             value.to_str().unwrap().to_string(),
         );
         t!(writeln!(stdout, "received: {:?}", pair));
-        if name.as_str().starts_with("date") {
-            continue;
-        }
-        if name.as_str().starts_with("authorization") {
+        if check_ignored_request_header(name.as_str()) {
             continue;
         }
         if !exchange.request.headers.remove(&pair) {
@@ -299,17 +301,15 @@ fn replay_http(
         }
     }
     for (name, value) in exchange.request.headers.drain() {
-        if name.starts_with("date") {
-            continue;
-        }
-        if name.starts_with("authorization") {
+        if check_ignored_request_header(&name) {
             continue;
         }
         panic!("didn't find header {:?}", (name, value));
     }
     let req_body = exchange.request.body;
     let verify_body = req.into_body().concat2().map(move |body| {
-        assert_eq!(&body[..], &req_body[..]);
+        let req_body = base64::decode(&req_body).unwrap();
+        assert_eq!(body.into_bytes(), req_body);
     });
 
     let mut response = hyper::Response::builder();
@@ -317,7 +317,8 @@ fn replay_http(
     for (key, value) in exchange.response.headers {
         response.header(key.as_str(), value.as_str());
     }
-    let response = response.body(exchange.response.body.into()).unwrap();
+    let req_body2 = base64::decode(exchange.response.body.as_bytes()).unwrap();
+    let response = response.body(req_body2.into()).unwrap();
 
     Box::new(verify_body.map(|()| response))
 }
