@@ -36,20 +36,20 @@ static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 
 #[test]
 fn list_logged_out() {
-    let (_, anon) = TestApp::empty();
+    let (_, anon) = TestApp::init().empty();
     anon.get(URL).assert_forbidden();
 }
 
 #[test]
 fn list_empty() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let json: ListResponse = user.get(URL).good();
     assert_eq!(json.api_tokens.len(), 0);
 }
 
 #[test]
 fn list_tokens() {
-    let (app, _, user) = TestApp::with_user();
+    let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
     let tokens = app.db(|conn| {
         vec![
@@ -71,13 +71,13 @@ fn list_tokens() {
 
 #[test]
 fn create_token_logged_out() {
-    let (_, anon) = TestApp::empty();
+    let (_, anon) = TestApp::init().empty();
     anon.put(URL, NEW_BAR).assert_forbidden();
 }
 
 #[test]
 fn create_token_invalid_request() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let invalid = br#"{ "name": "" }"#;
     let json = user.put::<()>(URL, invalid).bad_with_status(400);
 
@@ -86,7 +86,7 @@ fn create_token_invalid_request() {
 
 #[test]
 fn create_token_no_name() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let empty_name = br#"{ "api_token": { "name": "" } }"#;
     let json = user.put::<()>(URL, empty_name).bad_with_status(400);
 
@@ -95,7 +95,7 @@ fn create_token_no_name() {
 
 #[test]
 fn create_token_long_body() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let too_big = &[5; 5192]; // Send a request with a 5kB body of 5's
     let json = user.put::<()>(URL, too_big).bad_with_status(400);
 
@@ -104,7 +104,7 @@ fn create_token_long_body() {
 
 #[test]
 fn create_token_exceeded_tokens_per_user() {
-    let (app, _, user) = TestApp::with_user();
+    let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
     app.db(|conn| {
         for i in 0..1000 {
@@ -118,7 +118,7 @@ fn create_token_exceeded_tokens_per_user() {
 
 #[test]
 fn create_token_success() {
-    let (app, _, user) = TestApp::with_user();
+    let (app, _, user) = TestApp::init().with_user();
 
     let json: NewResponse = user.put(URL, NEW_BAR).good();
     assert_eq!(json.api_token.name, "bar");
@@ -133,7 +133,7 @@ fn create_token_success() {
 
 #[test]
 fn create_token_multiple_have_different_values() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let first: NewResponse = user.put(URL, NEW_BAR).good();
     let second: NewResponse = user.put(URL, NEW_BAR).good();
 
@@ -142,7 +142,7 @@ fn create_token_multiple_have_different_values() {
 
 #[test]
 fn create_token_multiple_users_have_different_values() {
-    let (app, _, user1) = TestApp::with_user();
+    let (app, _, user1) = TestApp::init().with_user();
     let first_token: NewResponse = user1.put(URL, NEW_BAR).good();
 
     let user2 = app.db_new_user("bar");
@@ -153,7 +153,7 @@ fn create_token_multiple_users_have_different_values() {
 
 #[test]
 fn cannot_create_token_with_token() {
-    let (_, _, _, token) = TestApp::with_token();
+    let (_, _, _, token) = TestApp::init().with_token();
     let json = token
         .put::<()>(
             "/api/v1/me/tokens",
@@ -168,13 +168,13 @@ fn cannot_create_token_with_token() {
 
 #[test]
 fn revoke_token_non_existing() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let _json: RevokedResponse = user.delete("/api/v1/me/tokens/5").good();
 }
 
 #[test]
 fn revoke_token_doesnt_revoke_other_users_token() {
-    let (app, _, user1, token) = TestApp::with_token();
+    let (app, _, user1, token) = TestApp::init().with_token();
     let user1 = user1.as_model();
     let token = token.as_model();
     let user2 = app.db_new_user("baz");
@@ -201,7 +201,7 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
 #[test]
 fn revoke_token_success() {
-    let (app, _, user, token) = TestApp::with_token();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     // List tokens contains the token
     app.db(|conn| {
@@ -227,7 +227,7 @@ fn revoke_token_success() {
 #[test]
 fn token_gives_access_to_me() {
     let url = "/api/v1/me";
-    let (_, anon, user, token) = TestApp::with_token();
+    let (_, anon, user, token) = TestApp::init().with_token();
 
     anon.get(url).assert_forbidden();
 
@@ -238,7 +238,7 @@ fn token_gives_access_to_me() {
 #[test]
 fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
-    let (app, anon, user, token) = TestApp::with_token();
+    let (app, anon, user, token) = TestApp::init().with_token();
 
     anon.get(url).assert_forbidden();
     user.get::<EncodableMe>(url).good();

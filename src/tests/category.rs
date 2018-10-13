@@ -24,7 +24,7 @@ struct CategoryWithSubcategories {
 
 #[test]
 fn index() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     let url = "/api/v1/categories";
 
     // List 0 categories if none exist
@@ -51,7 +51,7 @@ fn index() {
 
 #[test]
 fn show() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
@@ -161,7 +161,7 @@ fn update_crate() {
 
 #[test]
 fn category_slugs_returns_all_slugs_in_alphabetical_order() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     app.db(|conn| {
         new_category("Foo", "foo", "For crates that foo")
             .create_or_update(&conn)

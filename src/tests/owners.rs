@@ -63,7 +63,7 @@ impl ::util::MockCookieUser {
 
 #[test]
 fn new_crate_owner() {
-    let (app, _, user1, token) = TestApp::with_token();
+    let (app, _, user1, token) = TestApp::with_proxy().with_token();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
@@ -203,7 +203,7 @@ fn owners_can_remove_self() {
 */
 #[test]
 fn check_ownership_two_crates() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     let (krate_owned_by_team, team) = app.db(|conn| {

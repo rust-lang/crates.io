@@ -114,7 +114,7 @@ fn record_rerendered_readme_time() {
 
 #[test]
 fn version_size() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::with_proxy().with_user();
     let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
     user.publish(crate_to_publish).good();
 

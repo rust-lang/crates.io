@@ -103,8 +103,8 @@ impl App {
     /// Returns a client for making HTTP requests to upload crate files.
     ///
     /// The handle will go through a proxy if the uploader being used has specified one, which
-    /// is only done in test mode in order to be able to record and inspect the HTTP requests
-    /// that tests make.
+    /// is only done in tests with `TestApp::with_proxy()` in order to be able to record and
+    /// inspect the HTTP requests that tests make.
     pub fn http_client(&self) -> CargoResult<reqwest::Client> {
         let mut builder = reqwest::Client::builder();
         if let Some(proxy) = self.config.uploader.proxy() {
