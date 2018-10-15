@@ -213,7 +213,6 @@ mod tests {
 
         // All other error types are propogated up the middleware, eventually becoming status 500
         assert!(C(|_| Err(internal(""))).call(&mut req).is_err());
-        assert!(C(|_| err(::curl::Error::new(0))).call(&mut req).is_err());
         assert!(
             C(|_| err(::serde_json::Error::syntax(
                 ::serde_json::error::ErrorCode::ExpectedColon,

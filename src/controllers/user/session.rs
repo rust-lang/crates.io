@@ -100,8 +100,7 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         .exchange(code.clone())
         .map_err(|s| human(&s))?;
 
-    let (handle, resp) = github::github(req.app(), "/user", &token)?;
-    let ghuser: GithubUser = github::parse_github_response(handle, &resp)?;
+    let ghuser = github::github::<GithubUser>(req.app(), "/user", &token)?;
 
     let user = NewUser::new(
         ghuser.id,

@@ -131,11 +131,10 @@ impl Uploader {
     pub fn upload(
         &self,
         path: &str,
-        body: &[u8],
+        body: Vec<u8>,
         content_type: &str,
-        file_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
-        let hash = hash(body);
+        let hash = hash(&body);
         match *self {
             Uploader::S3 {
                 ref client,
@@ -162,7 +161,7 @@ impl Uploader {
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                file.write_all(body)?;
+                file.write_all(&body)?;
                 Ok((filename.to_str().map(String::from), hash))
             }
             Uploader::NoOp => Ok((None, vec![])),
@@ -176,7 +175,6 @@ impl Uploader {
         req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
-        file_length: u32,
         maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
