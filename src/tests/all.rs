@@ -142,15 +142,16 @@ fn app() -> (
     // sniff/record it, but everywhere else we use https
     let api_protocol = String::from("http");
 
-    let uploader = cargo_registry::Uploader::new_s3(
+    let s3_builder = cargo_registry::S3UploaderBuilder::new(
         String::from("alexcrichton-test"),
-        None,
         std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
         std::env::var("S3_SECRET_KEY").unwrap_or_default(),
-        None,
-        api_protocol.clone(),
-        None,
-        Some(proxy));
+    );
+
+    let uploader = s3_builder
+        .proto(String::from("http"))
+        .proxy(Some(proxy))
+        .build();
 
     let config = cargo_registry::Config {
         uploader,

@@ -56,7 +56,7 @@ extern crate conduit_router;
 extern crate conduit_static;
 extern crate cookie;
 
-pub use self::uploaders::{Bomb, Uploader};
+pub use self::uploaders::{Bomb, S3UploaderBuilder, Uploader};
 pub use app::App;
 pub use config::Config;
 

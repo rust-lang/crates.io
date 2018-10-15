@@ -1,7 +1,7 @@
 use std::env;
 use std::path::PathBuf;
 
-use {env, Env, Replica, Uploader};
+use {env, Env, Replica, S3UploaderBuilder, Uploader};
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -61,16 +61,11 @@ impl Default for Config {
                 // `env` panics if these vars are not set, and in production for a primary instance,
                 // that's what we want since we don't want to be able to start the server if the
                 // server doesn't know where to upload crates.
-                Uploader::new_s3(
-                    env("S3_BUCKET"),
-                    env::var("S3_REGION").ok(),
-                    env("S3_ACCESS_KEY"),
-                    env("S3_SECRET_KEY"),
-                    env::var("S3_HOST").ok(),
-                    "https".to_string(),
-                    env::var("S3_CDN").ok(),
-                    None,
-                )
+                S3UploaderBuilder::new(env("S3_BUCKET"), env("S3_ACCESS_KEY"), env("S3_SECRET_KEY"))
+                    .region(env::var("S3_REGION").ok())
+                    .host(env::var("S3_HOST").ok())
+                    .cdn(env::var("S3_CDN").ok())
+                    .build()
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
                 // Read-only mirrors don't need access key or secret key since by definition,
@@ -81,16 +76,17 @@ impl Default for Config {
                 //
                 // Read-only mirrors definitely need bucket though, so that they know where
                 // to serve crate files from.
-                Uploader::new_s3(
+                let mut s3_builder = S3UploaderBuilder::new(
                     env("S3_BUCKET"),
-                    env::var("S3_REGION").ok(),
                     env::var("S3_ACCESS_KEY").unwrap_or_default(),
                     env::var("S3_SECRET_KEY").unwrap_or_default(),
-                    env::var("S3_HOST").ok(),
-                    "https".to_string(),
-                    env::var("S3_CDN").ok(),
-                    None,
-                )
+                );
+
+                s3_builder
+                    .region(env::var("S3_REGION").ok())
+                    .host(env::var("S3_HOST").ok())
+                    .cdn(env::var("S3_CDN").ok())
+                    .build()
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
@@ -101,16 +97,17 @@ impl Default for Config {
                     // optional, like production read-only mirrors.
                     println!("Using S3 uploader");
 
-                    Uploader::new_s3(
+                    let mut s3_builder = S3UploaderBuilder::new(
                         env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
                         env::var("S3_ACCESS_KEY").unwrap_or_default(),
                         env::var("S3_SECRET_KEY").unwrap_or_default(),
-                        env::var("S3_HOST").ok(),
-                        "https".to_string(),
-                        env::var("S3_CDN").ok(),
-                        None,
-                    )
+                    );
+
+                    s3_builder
+                        .region(env::var("S3_REGION").ok())
+                        .host(env::var("S3_HOST").ok())
+                        .cdn(env::var("S3_CDN").ok())
+                        .build()
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
                     // uploader that makes it possible to run and publish to a locally-running

@@ -57,50 +57,6 @@ impl fmt::Debug for Uploader {
 }
 
 impl Uploader {
-    /// Creates a new S3 uploader object.
-    pub fn new_s3(
-        bucket: String,
-        region: Option<String>,
-        access_key: String,
-        secret_key: String,
-        host: Option<String>,
-        proto: String,
-        cdn: Option<String>,
-        proxy: Option<String>,
-    ) -> Uploader {
-        let host = host.unwrap_or_else(|| {
-            format!(
-                "{}://{}.s3{}.amazonaws.com",
-                proto,
-                bucket,
-                match region {
-                    Some(ref r) if r != "" => format!("-{}", r),
-                    Some(_) => String::new(),
-                    None => String::new(),
-                }
-            )
-        });
-
-        // Use the custom handler as we always provide an endpoint to connect to.
-        let region = Region::Custom {
-            name: region.unwrap_or_else(|| "us-east-1".to_string()),
-            endpoint: host.clone(),
-        };
-
-        let dispatcher = HttpClient::new().expect("failed to create request dispatcher");
-        let credentials = S3CredentialsProvider::new(access_key, secret_key);
-
-        let s3client = S3Client::new_with(dispatcher, credentials, region);
-
-        Uploader::S3 {
-            client: Arc::new(s3client),
-            bucket,
-            host,
-            cdn,
-            proxy,
-        }
-    }
-
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
@@ -323,6 +279,89 @@ impl ProvideAwsCredentials for S3CredentialsProvider {
 
         S3CredentialsProviderFuture {
             inner: result(Ok(AwsCredentials::new(access_key, secret_key, None, None))),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct S3UploaderBuilder {
+    bucket: String,
+    access_key: String,
+    secret_key: String,
+    proto: String,
+    region: Option<String>,
+    host: Option<String>,
+    cdn: Option<String>,
+    proxy: Option<String>,
+}
+
+impl S3UploaderBuilder {
+    pub fn new(bucket: String, access_key: String, secret_key: String) -> S3UploaderBuilder {
+        S3UploaderBuilder {
+            bucket,
+            access_key,
+            secret_key,
+            proto: "https".into(),
+            ..Default::default()
+        }
+    }
+
+    pub fn proto(mut self, proto: String) -> S3UploaderBuilder {
+        self.proto = proto;
+        self
+    }
+
+    pub fn region(mut self, region: Option<String>) -> S3UploaderBuilder {
+        self.region = region;
+        self
+    }
+
+    pub fn host(mut self, host: Option<String>) -> S3UploaderBuilder {
+        self.host = host;
+        self
+    }
+
+    pub fn cdn(mut self, cdn: Option<String>) -> S3UploaderBuilder {
+        self.cdn = cdn;
+        self
+    }
+
+    pub fn proxy(mut self, proxy: Option<String>) -> S3UploaderBuilder {
+        self.proxy = proxy;
+        self
+    }
+
+    pub fn build(self) -> Uploader {
+        let host = self.host.clone().unwrap_or_else(|| {
+            format!(
+                "{}://{}.s3{}.amazonaws.com",
+                self.proto,
+                self.bucket,
+                match self.region {
+                    Some(ref r) if r != "" => format!("-{}", r),
+                    Some(_) => String::new(),
+                    None => String::new(),
+                }
+            )
+        });
+
+        // Use the custom handler as we always provide an endpoint to connect to.
+        let region = Region::Custom {
+            name: self.region.unwrap_or_else(|| "us-east-1".to_string()),
+            endpoint: host.clone(),
+        };
+
+        let dispatcher = HttpClient::new().expect("failed to create request dispatcher");
+        let credentials = S3CredentialsProvider::new(self.access_key, self.secret_key);
+
+        let s3client = S3Client::new_with(dispatcher, credentials, region);
+
+        Uploader::S3 {
+            client: Arc::new(s3client),
+            bucket: self.bucket,
+            host,
+            cdn: self.cdn,
+            proxy: self.proxy,
         }
     }
 }
