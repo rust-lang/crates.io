@@ -1,1 +1,73 @@
-[{"request":{"uri":"http://alexcrichton-test.s3.amazonaws.com/crates/foobadger/foobadger-1.0.0.crate","method":"PUT","headers":[["accept","*/*"],["accept-encoding","gzip"],["user-agent","reqwest/0.9.1"],["authorization","AWS AKIAICL5IWUZYWWKA7JA:kDm23yhf8YuOKpTcbHhNBa6BtQw="],["content-length","35"],["content-type","application/x-tar"],["date","Fri, 15 Sep 2017 07:53:05 -0700"],["host","alexcrichton-test.s3.amazonaws.com"]],"body":[31,139,8,0,0,0,0,0,0,255,237,192,1,1,0,0,0,130,32,255,175,110,72,80,192,171,1,46,175,181,239,0,4,0,0]},"response":{"status":200,"headers":[["Server","AmazonS3"],["x-amz-id-2","0/6/0sEHhOcZrrbuV7bwaKRjkpt9tRXEElKebeZNRK8DoEfSdnTFO/gfr0Zj86ZR726bMeuwuv4="],["ETag","\"f9016ad360cebb4fe2e6e96e5949f022\""],["date","Fri, 15 Sep 2017 14:53:07 GMT"],["content-length","0"],["x-amz-request-id","042143F2421CB177"]],"body":[]}}]
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foobadger/foobadger-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:05 -0700"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:kDm23yhf8YuOKpTcbHhNBa6BtQw="
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-id-2",
+          "0/6/0sEHhOcZrrbuV7bwaKRjkpt9tRXEElKebeZNRK8DoEfSdnTFO/gfr0Zj86ZR726bMeuwuv4="
+        ],
+        [
+          "x-amz-request-id",
+          "042143F2421CB177"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

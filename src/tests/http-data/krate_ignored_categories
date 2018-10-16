@@ -1,1 +1,73 @@
-[{"request":{"uri":"http://alexcrichton-test.s3.amazonaws.com/crates/foo_ignored_cat/foo_ignored_cat-1.0.0.crate","method":"PUT","headers":[["content-type","application/x-tar"],["host","alexcrichton-test.s3.amazonaws.com"],["accept-encoding","gzip"],["user-agent","reqwest/0.9.1"],["accept","*/*"],["authorization","AWS AKIAICL5IWUZYWWKA7JA:V37kbEzeh57sB4yTSZIOJACPoP4="],["content-length","35"],["date","Fri, 15 Sep 2017 07:53:06 -0700"]],"body":[31,139,8,0,0,0,0,0,0,255,237,192,1,1,0,0,0,130,32,255,175,110,72,80,192,171,1,46,175,181,239,0,4,0,0]},"response":{"status":200,"headers":[["x-amz-id-2","m2T+IGVTurpCTLS3pmhcHrpbLGeL0mDQ90vroViQ2v2Sc1/woSi09kpm0BvRl24/0sMonCW7td4="],["content-length","0"],["date","Fri, 15 Sep 2017 14:53:07 GMT"],["x-amz-request-id","6435C4EA7602CE4E"],["ETag","\"f9016ad360cebb4fe2e6e96e5949f022\""],["Server","AmazonS3"]],"body":[]}}]
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_ignored_cat/foo_ignored_cat-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:V37kbEzeh57sB4yTSZIOJACPoP4="
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "x-amz-request-id",
+          "6435C4EA7602CE4E"
+        ],
+        [
+          "x-amz-id-2",
+          "m2T+IGVTurpCTLS3pmhcHrpbLGeL0mDQ90vroViQ2v2Sc1/woSi09kpm0BvRl24/0sMonCW7td4="
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ]
+      ],
+      "body": ""
+    }
+  }
+]
