@@ -276,9 +276,7 @@ fn replay_http(
     mut exchange: Exchange,
     stdout: &mut Write,
 ) -> Box<Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
-    fn check_ignored_request_header(name: &str) -> bool {
-        name == "date" || name == "authorization" || name == "user-agent"
-    }
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
@@ -293,7 +291,7 @@ fn replay_http(
             value.to_str().unwrap().to_string(),
         );
         t!(writeln!(stdout, "received: {:?}", pair));
-        if check_ignored_request_header(name.as_str()) {
+        if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }
         if !exchange.request.headers.remove(&pair) {
@@ -301,7 +299,7 @@ fn replay_http(
         }
     }
     for (name, value) in exchange.request.headers.drain() {
-        if check_ignored_request_header(&name) {
+        if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }
         panic!("didn't find header {:?}", (name, value));
