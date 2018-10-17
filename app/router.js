@@ -26,6 +26,8 @@ Router.map(function() {
         this.route('docs');
         this.route('repo');
     });
+    this.route('c');
+    this.route('c', { path: '/c/:crate_id' });
     this.route('me', function() {
         this.route('crates');
         this.route('following');
