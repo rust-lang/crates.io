@@ -15,5 +15,5 @@ path = "lib.rs"
 [dependencies]
 base64 = "0.6"
 chrono = "0.4"
-openssl = "0.9"
+openssl = "0.10.13"
 reqwest = "0.9.1"
