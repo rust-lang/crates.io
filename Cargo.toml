@@ -62,8 +62,8 @@ derive_deref = "1.0.0"
 reqwest = "0.9.1"
 tempdir = "0.3.7"
 
-lettre = "0.8"
-lettre_email = "0.8"
+lettre = {git = "https://github.com/lettre/lettre", version = "0.9"}
+lettre_email = {git = "https://github.com/lettre/lettre", version = "0.9"}
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
