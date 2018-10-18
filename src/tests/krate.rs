@@ -23,7 +23,7 @@ use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
-use models::{ApiToken, Category, Crate};
+use models::{Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
 use views::{
@@ -503,31 +503,24 @@ fn versions() {
 fn uploading_new_version_touches_crate() {
     use diesel::dsl::*;
 
-    let (_b, app, middle) = app();
+    let (app, _, user) = TestApp::with_proxy().with_user();
+    let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("1.0.0");
+    user.publish(crate_to_publish).good();
 
-    let mut upload_req = new_req("foo_versions_updated_at", "1.0.0");
-    let u = sign_in(&mut upload_req, &app);
-    ok_resp!(middle.call(&mut upload_req));
-
-    {
-        let conn = app.diesel_database.get().unwrap();
+    app.db(|conn| {
         diesel::update(crates::table)
             .set(crates::updated_at.eq(crates::updated_at - 1.hour()))
             .execute(&*conn)
             .unwrap();
-    }
+    });
 
-    let mut show_req = req(Method::Get, "/api/v1/crates/foo_versions_updated_at");
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
+    let json: CrateResponse = user.show_crate("foo_versions_updated_at");
     let updated_at_before = json.krate.updated_at;
 
-    let mut upload_req = new_req("foo_versions_updated_at", "2.0.0");
-    sign_in_as(&mut upload_req, &u);
-    ok_resp!(middle.call(&mut upload_req));
+    let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("2.0.0");
+    user.publish(crate_to_publish).good();
 
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
+    let json: CrateResponse = user.show_crate("foo_versions_updated_at");
     let updated_at_after = json.krate.updated_at;
 
     assert_ne!(updated_at_before, updated_at_after);
@@ -547,10 +540,10 @@ fn new_wrong_token() {
 #[test]
 fn invalid_names() {
     fn bad_name(name: &str, error_message: &str) {
-        let (_b, app, middle) = app();
-        let mut req = new_req(name, "1.0.0");
-        sign_in(&mut req, &app);
-        let json = bad_resp!(middle.call(&mut req));
+        let (_, _, _, token) = TestApp::with_proxy().with_token();
+        let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
+        let json = token.publish(crate_to_publish).bad_with_status(200);
+
         assert!(
             json.errors[0].detail.contains(error_message,),
             "{:?}",
@@ -575,40 +568,32 @@ fn invalid_names() {
 
 #[test]
 fn new_krate() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_new", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, user) = TestApp::with_proxy().with_user();
+    let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
+    let json: GoodCrate = user.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
 #[test]
 fn new_krate_with_token() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_new", "1.0.0");
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
 
-    {
-        let conn = t!(app.diesel_database.get());
-        let user = t!(new_user("foo").create_or_update(&conn));
-        let token = t!(ApiToken::insert(&conn, user.id, "bar"));
-        req.header("Authorization", &token.token);
-    }
+    let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
+    let json: GoodCrate = token.publish(crate_to_publish).good();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
 #[test]
 fn new_krate_weird_version() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_weird", "0.0.0-pre");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo_weird").version("0.0.0-pre");
+    let json: GoodCrate = token.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_weird");
     assert_eq!(json.krate.max_version, "0.0.0-pre");
 }
@@ -694,27 +679,17 @@ fn new_renamed_crate() {
 
 #[test]
 fn new_krate_non_canon_crate_name_dependencies() {
-    let (_b, app, middle) = app();
-    let deps = vec![u::CrateDependency {
-        name: u::CrateName("foo-dep".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    }];
-    let mut req = new_req_full(krate("new_dep"), "1.0.0", deps);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo-dep", user.id).expect_build(&conn);
-    }
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_dep can depend on it
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency("foo-dep");
+    token.publish(crate_to_publish).good();
 }
 
 #[test]
