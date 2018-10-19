@@ -28,6 +28,8 @@ http {
 	client_body_timeout 30;
 	client_max_body_size 50m;
 
+	limit_req_zone $binary_remote_addr zone=publish:1m rate=1r/s;
+
 	upstream app_server {
 		server localhost:8888 fail_timeout=0;
  	}
@@ -54,6 +56,11 @@ http {
 				rewrite ^ https://$host$request_uri? permanent;
 			}
 			proxy_pass http://app_server;
+		}
+
+		location ~ ^/api/v./crates/new$ {
+			limit_req zone=publish burst=10 nodelay;
+			limit_req_status 429;
 		}
 	}
 }
