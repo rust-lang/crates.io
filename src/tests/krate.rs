@@ -31,7 +31,7 @@ use views::{
     EncodableVersionDownload,
 };
 use {
-    app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
+    app, krate, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateMeta,
@@ -535,17 +535,11 @@ fn uploading_new_version_touches_crate() {
 
 #[test]
 fn new_wrong_token() {
-    let (_b, app, middle) = app();
+    let (_b, _app, middle) = app();
     let mut req = new_req("foo", "1.0.0");
     bad_resp!(middle.call(&mut req));
 
     let mut req = new_req("foo", "1.0.0");
-    req.header("Authorization", "bad");
-    bad_resp!(middle.call(&mut req));
-
-    let mut req = new_req("foo", "1.0.0");
-    sign_in(&mut req, &app);
-    logout(&mut req);
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
 }
