@@ -363,6 +363,24 @@ impl PublishBuilder {
         self
     }
 
+    /// Add a renamed dependency to this crate. Make sure the dependency already exists in the
+    /// database or publish will fail.
+    pub fn renamed_dependency(mut self, dep: &str, new_name: &str) -> Self {
+        let dep = u::CrateDependency {
+            name: u::CrateName(dep.to_string()),
+            optional: false,
+            default_features: true,
+            features: Vec::new(),
+            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+            target: None,
+            kind: None,
+            explicit_name_in_toml: Some(u::CrateName(new_name.to_string())),
+        };
+
+        self.deps.push(dep);
+        self
+    }
+
     /// Consume this builder to make the Put request body
     pub fn body(self) -> Vec<u8> {
         let new_crate = u::NewCrate {

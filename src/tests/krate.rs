@@ -628,28 +628,18 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
-fn new_renamed_crate() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("package-name".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: Some(u::CrateName("my-name".to_string())),
-    };
-    let mut req = new_req_full(krate("new-krate"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("user").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("package-name", user.id).expect_build(&conn);
-    }
+fn new_with_renamed_dependency() {
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("new-krate")
+        .version("1.0.0")
+        .renamed_dependency("package-name", "my-name");
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("ne/w-/new-krate");
