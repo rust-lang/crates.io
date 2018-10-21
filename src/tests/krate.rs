@@ -600,27 +600,17 @@ fn new_krate_weird_version() {
 
 #[test]
 fn new_krate_with_dependency() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("foo_dep".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    };
-    let mut req = new_req_full(krate("new_dep"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_dep", user.id).expect_build(&conn);
-    }
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_dep can depend on it
+        CrateBuilder::new("foo_dep", user.as_model().id).expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency("foo_dep");
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("ne/w_/new_dep");

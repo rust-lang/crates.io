@@ -296,6 +296,7 @@ pub struct PublishBuilder {
     pub krate_name: String,
     version: semver::Version,
     tarball: Vec<u8>,
+    deps: Vec<u::CrateDependency>,
 }
 
 impl PublishBuilder {
@@ -306,6 +307,7 @@ impl PublishBuilder {
             krate_name: krate_name.into(),
             version: semver::Version::parse("1.0.0").unwrap(),
             tarball: EMPTY_TARBALL_BYTES.to_vec(),
+            deps: vec![],
         }
     }
 
@@ -343,13 +345,31 @@ impl PublishBuilder {
         self
     }
 
+    /// Add a dependency to this crate. Make sure the dependency already exists in the
+    /// database or publish will fail.
+    pub fn dependency(mut self, dep: &str) -> Self {
+        let dep = u::CrateDependency {
+            name: u::CrateName(dep.to_string()),
+            optional: false,
+            default_features: true,
+            features: Vec::new(),
+            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+            target: None,
+            kind: None,
+            explicit_name_in_toml: None,
+        };
+
+        self.deps.push(dep);
+        self
+    }
+
     /// Consume this builder to make the Put request body
     pub fn body(self) -> Vec<u8> {
         let new_crate = u::NewCrate {
             name: u::CrateName(self.krate_name.clone()),
             vers: u::CrateVersion(self.version),
             features: HashMap::new(),
-            deps: Vec::new(),
+            deps: self.deps,
             authors: vec!["foo".to_string()],
             description: Some("description".to_string()),
             homepage: None,
