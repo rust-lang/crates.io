@@ -33,12 +33,13 @@ impl Handler for LogRequests {
 
         print!(
             "at={level} method={method} path=\"{path}\" \
-             request_id={request_id} fwd=\"{ip}\" service={time_ms}ms \
+             request_id={request_id} fwd=\"{ip}\" real_ip=\"{real_ip}\" service={time_ms}ms \
              status={status} user_agent=\"{user_agent}\" referer=\"{referer}\"",
             level = level,
             method = req.method(),
             path = FullPath(req),
             ip = request_header(req, "X-Forwarded-For"),
+            real_ip = req.remote_addr(),
             time_ms = response_time,
             user_agent = request_header(req, "User-Agent"),
             referer = request_header(req, "Referer"), // sic
