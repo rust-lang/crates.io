@@ -36,8 +36,10 @@ impl Handler for BlockIps {
         if has_blocked_ip {
             let body = format!(
                 "We are unable to process your request at this time. \
+                 This usually means that you are in violation of our crawler \
+                 policy (https://crates.io/policies#crawlers). \
                  Please open an issue at https://github.com/rust-lang/crates.io \
-                 or email crates-io@rust-lang.org \
+                 or email help@crates.io \
                  and provide the request id {}",
                 req.headers().find("X-Request-Id").unwrap()[0]
             );
