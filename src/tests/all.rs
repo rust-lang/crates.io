@@ -187,7 +187,9 @@ fn env(var: &str) -> String {
 }
 
 fn req(method: conduit::Method, path: &str) -> MockRequest {
-    MockRequest::new(method, path)
+    let mut request = MockRequest::new(method, path);
+    request.header("User-Agent", "conduit-test");
+    request
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {

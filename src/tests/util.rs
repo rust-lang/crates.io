@@ -158,7 +158,7 @@ pub struct MockAnonymousUser {
 
 impl RequestHelper for MockAnonymousUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        MockRequest::new(method, path)
+        ::req(method, path)
     }
 
     fn app(&self) -> &TestApp {
@@ -177,7 +177,7 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = MockRequest::new(method, path);
+        let mut request = ::req(method, path);
         request.mut_extensions().insert(self.user.clone());
         request
             .mut_extensions()
@@ -218,7 +218,7 @@ pub struct MockTokenUser {
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = MockRequest::new(method, path);
+        let mut request = ::req(method, path);
         request.header("Authorization", &self.token.token);
         request
     }

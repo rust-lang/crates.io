@@ -20,6 +20,7 @@ mod ember_index_rewrite;
 mod ensure_well_formed_500;
 mod head;
 mod log_request;
+mod require_user_agent;
 mod security_headers;
 mod static_or_continue;
 
@@ -85,6 +86,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         let ips = ip_list.split(',').map(String::from).collect();
         m.around(blacklist_ips::BlockIps::new(ips));
     }
+    m.around(require_user_agent::RequireUserAgent::default());
 
     if env != Env::Test {
         m.around(log_request::LogRequests::default());
