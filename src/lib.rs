@@ -69,7 +69,6 @@ pub mod email;
 pub mod git;
 pub mod github;
 pub mod middleware;
-pub mod on_call;
 pub mod render;
 pub mod schema;
 pub mod uploaders;

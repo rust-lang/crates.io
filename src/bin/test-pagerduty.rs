@@ -7,11 +7,12 @@
 
 #![deny(warnings)]
 
-extern crate cargo_registry;
+#[macro_use]
+extern crate serde_derive;
+
+mod on_call;
 
 use std::env::args;
-
-use cargo_registry::on_call;
 
 fn main() {
     let args = args().collect::<Vec<_>>();
