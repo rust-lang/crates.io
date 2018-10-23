@@ -2261,7 +2261,7 @@ fn test_default_sort_recent() {
 }
 
 #[test]
-fn block_blacklisted_documentation_url() {
+fn block_bad_documentation_url() {
     let (_b, app, middle) = app();
 
     let _ = {
