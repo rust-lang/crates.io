@@ -19,9 +19,9 @@ use views::{EncodableCrate, EncodableCrateLinks};
 use models::helpers::with_count::*;
 use schema::*;
 
-/// Hosts in this blacklist are known to not be hosting documentation,
+/// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
-const DOCUMENTATION_BLACKLIST: [&str; 1] = ["rust-ci.org"];
+const DOCUMENTATION_BLOCKLIST: [&str; 1] = ["rust-ci.org"];
 
 #[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
 #[belongs_to(Crate)]
@@ -330,7 +330,7 @@ impl Crate {
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
-        let documentation = Crate::remove_blacklisted_documentation_urls(documentation);
+        let documentation = Crate::remove_blocked_documentation_urls(documentation);
 
         EncodableCrate {
             id: name.clone(),
@@ -360,8 +360,8 @@ impl Crate {
         }
     }
 
-    /// Return `None` if the documentation URL host matches a blacklisted host
-    fn remove_blacklisted_documentation_urls(url: Option<String>) -> Option<String> {
+    /// Return `None` if the documentation URL host matches a blocked host
+    fn remove_blocked_documentation_urls(url: Option<String>) -> Option<String> {
         // Handles if documentation URL is None
         let url = match url {
             Some(url) => url,
@@ -380,8 +380,8 @@ impl Crate {
             None => return None,
         };
 
-        // Match documentation URL host against blacklisted host array elements
-        if DOCUMENTATION_BLACKLIST.contains(&url_host) {
+        // Match documentation URL host against blocked host array elements
+        if DOCUMENTATION_BLOCKLIST.contains(&url_host) {
             None
         } else {
             Some(url)
@@ -520,22 +520,22 @@ mod tests {
     use models::Crate;
 
     #[test]
-    fn documentation_blacklist_no_url_provided() {
-        assert_eq!(Crate::remove_blacklisted_documentation_urls(None), None);
+    fn documentation_blocked_no_url_provided() {
+        assert_eq!(Crate::remove_blocked_documentation_urls(None), None);
     }
 
     #[test]
-    fn documentation_blacklist_invalid_url() {
+    fn documentation_blocked_invalid_url() {
         assert_eq!(
-            Crate::remove_blacklisted_documentation_urls(Some(String::from("not a url"))),
+            Crate::remove_blocked_documentation_urls(Some(String::from("not a url"))),
             None
         );
     }
 
     #[test]
-    fn documentation_blacklist_url_contains_partial_match() {
+    fn documentation_blocked_url_contains_partial_match() {
         assert_eq!(
-            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+            Crate::remove_blocked_documentation_urls(Some(String::from(
                 "http://rust-ci.organists.com"
             )),),
             Some(String::from("http://rust-ci.organists.com"))
@@ -543,9 +543,9 @@ mod tests {
     }
 
     #[test]
-    fn documentation_blacklist_blacklisted_url() {
+    fn documentation_blocked_url() {
         assert_eq!(
-            Crate::remove_blacklisted_documentation_urls(Some(String::from(
+            Crate::remove_blocked_documentation_urls(Some(String::from(
                 "http://rust-ci.org/crate/crate-0.1/doc/crate-0.1",
             ),),),
             None
