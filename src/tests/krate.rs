@@ -416,14 +416,11 @@ fn exact_match_on_queries_with_sort() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_show");
-    let krate;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        krate = CrateBuilder::new("foo_show", user.id)
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+
+    let krate = app.db(|conn| {
+        CrateBuilder::new("foo_show", user.id)
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
@@ -433,11 +430,10 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(&conn);
-    }
+            .expect_build(&conn)
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateResponse = ::json(&mut response);
+    let json = anon.show_crate("foo_show");
     assert_eq!(json.krate.name, krate.name);
     assert_eq!(json.krate.id, krate.name);
     assert_eq!(json.krate.description, krate.description);
@@ -542,12 +538,10 @@ fn new_wrong_token() {
     let (_b, app, middle) = app();
     let mut req = new_req("foo", "1.0.0");
     bad_resp!(middle.call(&mut req));
-    drop(req);
 
     let mut req = new_req("foo", "1.0.0");
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
-    drop(req);
 
     let mut req = new_req("foo", "1.0.0");
     sign_in(&mut req, &app);
@@ -847,6 +841,7 @@ fn new_krate_bad_name() {
     }
 }
 
+// TODO: Move this test to the main crate
 #[test]
 fn valid_feature_names() {
     assert!(Crate::valid_feature("foo"));
@@ -1108,52 +1103,45 @@ fn new_krate_with_readme() {
 
 #[test]
 fn summary_doesnt_die() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/summary");
-    ok_resp!(middle.call(&mut req));
+    let (_, anon) = TestApp::empty();
+    anon.get::<SummaryResponse>("/api/v1/summary").good();
 }
 
 #[test]
 fn summary_new_crates() {
-    let (_b, app, middle) = app();
-    let u;
-    let krate;
-    let krate2;
-    let krate3;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u = new_user("foo").create_or_update(&conn).unwrap();
-
-        krate = CrateBuilder::new("some_downloads", u.id)
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        let krate = CrateBuilder::new("some_downloads", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .description("description")
             .keyword("popular")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate2 = CrateBuilder::new("most_recent_downloads", u.id)
+        let krate2 = CrateBuilder::new("most_recent_downloads", user.id)
             .version(VersionBuilder::new("0.2.0"))
             .keyword("popular")
             .downloads(5000)
             .recent_downloads(50)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate3 = CrateBuilder::new("just_updated", u.id)
+        let krate3 = CrateBuilder::new("just_updated", user.id)
             .version(VersionBuilder::new("0.1.0"))
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        CrateBuilder::new("with_downloads", u.id)
+        CrateBuilder::new("with_downloads", user.id)
             .version(VersionBuilder::new("0.3.0"))
             .keyword("popular")
             .downloads(1000)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-        Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(&conn, &krate2, &["cat1"]).unwrap();
+        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
+        Category::update_crate(conn, &krate2, &["cat1"]).unwrap();
 
         // set total_downloads global value for `num_downloads` prop
         update(metadata::table)
@@ -1167,11 +1155,9 @@ fn summary_new_crates() {
             .set(crates::updated_at.eq(updated))
             .execute(&*conn)
             .unwrap();
-    }
+    });
 
-    let mut req = req(Method::Get, "/api/v1/summary");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: SummaryResponse = ::json(&mut response);
+    let json: SummaryResponse = anon.get("/api/v1/summary").good();
 
     assert_eq!(json.num_crates, 4);
     assert_eq!(json.num_downloads, 6000);
@@ -2184,20 +2170,16 @@ fn test_default_sort_recent() {
 
 #[test]
 fn block_bad_documentation_url() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let _ = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_bad_doc_url", u.id)
+    let _ = app.db(|conn| {
+        CrateBuilder::new("foo_bad_doc_url", user.id)
             .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
-            .expect_build(&conn)
-    };
+            .expect_build(conn)
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates/foo_bad_doc_url");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateResponse = ::json(&mut response);
-
+    let json = anon.show_crate("foo_bad_doc_url");
     assert_eq!(json.krate.documentation, None);
 }
 
@@ -2206,16 +2188,12 @@ fn block_bad_documentation_url() {
 // which call the `PUT /crates/:crate_id/owners` route
 #[test]
 fn test_cargo_invite_owners() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/");
+    let (app, _, owner) = TestApp::with_user();
 
-    let new_user = {
-        let conn = app.diesel_database.get().unwrap();
-        let owner = new_user("avocado").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &owner);
-        CrateBuilder::new("guacamole", owner.id).expect_build(&conn);
-        new_user("cilantro").create_or_update(&conn).unwrap()
-    };
+    let new_user = app.db_new_user("cilantro");
+    app.db(|conn| {
+        CrateBuilder::new("guacamole", owner.as_model().id).expect_build(conn);
+    });
 
     #[derive(Serialize)]
     struct OwnerReq {
@@ -2223,30 +2201,26 @@ fn test_cargo_invite_owners() {
     }
     #[derive(Deserialize, Debug)]
     struct OwnerResp {
+        // server must include `ok: true` to support old cargo clients
         ok: bool,
         msg: String,
     }
 
     let body = serde_json::to_string(&OwnerReq {
-        owners: Some(vec![new_user.gh_login]),
+        owners: Some(vec![new_user.as_model().gh_login.clone()]),
     });
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/guacamole/owners")
-                .with_method(Method::Put)
-                .with_body(body.unwrap().as_bytes()),
-        )
-    );
+    let json: OwnerResp = owner
+        .put("/api/v1/crates/guacamole/owners", body.unwrap().as_bytes())
+        .good();
 
-    let r = ::json::<OwnerResp>(&mut response);
     // this ok:true field is what old versions of Cargo
     // need - do not remove unless you're cool with
     // dropping support for old versions
-    assert!(r.ok);
+    assert!(json.ok);
     // msg field is what is sent and used in updated
     // version of cargo
     assert_eq!(
-        r.msg,
+        json.msg,
         "user cilantro has been invited to be an owner of crate guacamole"
     )
 }
