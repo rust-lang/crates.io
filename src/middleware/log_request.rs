@@ -39,7 +39,7 @@ impl Handler for LogRequests {
             method = req.method(),
             path = FullPath(req),
             ip = request_header(req, "X-Forwarded-For"),
-            real_ip = req.remote_addr(),
+            real_ip = request_header(req, "X-Real-Ip"),
             time_ms = response_time,
             user_agent = request_header(req, "User-Agent"),
             referer = request_header(req, "Referer"), // sic
