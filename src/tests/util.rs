@@ -1,21 +1,22 @@
-/// This module provides utility types and traits for managing a test session
-///
-/// Tests start by using one of the `TestApp` constructors.  All constrcutors return at least a
-/// `TestApp` and `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests
-/// in an unauthenticated session.
-///
-/// A `TestApp` value provides raw access to the database through the `db` function and can
-/// construct new users via the `db_new_user` function.  This function returns a
-/// `MockCookieUser`, which can be used to generate one or more tokens via its `db_new_token`
-/// function, which in turn returns a `MockTokenUser`.
-///
-/// All three user types implement the `RequestHelper` trait which provides convenience methods for
-/// constructing requests.  Some of these methods, such as `publish` are expected to fail for an
-/// unauthenticated user (or for other reasons) and return a `Response<T>`.  The `Response<T>`
-/// provides several functions to check the response status and deserialize the JSON response.
-///
-/// `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
-/// to the underlying database model value (`User` and `ApiToken` respectively).
+//! This module provides utility types and traits for managing a test session
+//!
+//! Tests start by using one of the `TestApp` constructors.  All constructors return at least a
+//! `TestApp` and `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests
+//! in an unauthenticated session.
+//!
+//! A `TestApp` value provides raw access to the database through the `db` function and can
+//! construct new users via the `db_new_user` function.  This function returns a
+//! `MockCookieUser`, which can be used to generate one or more tokens via its `db_new_token`
+//! function, which in turn returns a `MockTokenUser`.
+//!
+//! All three user types implement the `RequestHelper` trait which provides convenience methods for
+//! constructing requests.  Some of these methods, such as `publish` are expected to fail for an
+//! unauthenticated user (or for other reasons) and return a `Response<T>`.  The `Response<T>`
+//! provides several functions to check the response status and deserialize the JSON response.
+//!
+//! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
+//! to the underlying database model value (`User` and `ApiToken` respectively).
+
 use std::{self, rc::Rc, sync::Arc};
 
 use {conduit, conduit_middleware, diesel, serde};
@@ -45,7 +46,7 @@ impl TestApp {
         let (_bomb, app, middle) = app();
         let inner = Rc::new(TestAppInner { app, _bomb, middle });
         let anon = MockAnonymousUser {
-            inner: TestApp(Rc::clone(&inner)),
+            app: TestApp(Rc::clone(&inner)),
         };
         (TestApp(inner), anon)
     }
@@ -76,12 +77,19 @@ impl TestApp {
     }
 
     /// Create a new user in the database and return a mock user session
+    ///
+    /// This method updates the database directly
     pub fn db_new_user(&self, user: &str) -> MockCookieUser {
         let user = self.db(|conn| ::new_user(user).create_or_update(conn).unwrap());
         MockCookieUser {
-            inner: TestApp(Rc::clone(&self.0)),
+            app: TestApp(Rc::clone(&self.0)),
             user,
         }
+    }
+
+    /// Obtain a reference to the inner `App` value
+    pub fn as_inner(&self) -> &App {
+        &*self.0.app
     }
 }
 
@@ -130,10 +138,14 @@ pub trait RequestHelper {
         Response::new(self.app().0.middle.call(&mut request))
     }
 
-    /// Get the crates owned by the specified user.
-    fn crates_owned_by_user_id(&self, id: i32) -> CrateList {
-        let query = format!("user_id={}", id);
-        self.get_with_query("/api/v1/crates", &query).good()
+    /// Search for crates matching a query string
+    fn search(&self, query: &str) -> CrateList {
+        self.get_with_query("/api/v1/crates", query).good()
+    }
+
+    /// Search for crates owned by the specified user.
+    fn search_by_user_id(&self, id: i32) -> CrateList {
+        self.search(&format!("user_id={}", id))
     }
 
     /// Publish a crate
@@ -153,7 +165,7 @@ pub trait RequestHelper {
 
 /// A type that can generate unauthenticated requests
 pub struct MockAnonymousUser {
-    inner: TestApp,
+    app: TestApp,
 }
 
 impl RequestHelper for MockAnonymousUser {
@@ -162,7 +174,7 @@ impl RequestHelper for MockAnonymousUser {
     }
 
     fn app(&self) -> &TestApp {
-        &self.inner
+        &self.app
     }
 }
 
@@ -171,7 +183,7 @@ impl RequestHelper for MockAnonymousUser {
 /// The `User` is directly injected into middleware extensions and thus the cookie logic is not
 /// exercised.
 pub struct MockCookieUser {
-    inner: TestApp,
+    app: TestApp,
     user: User,
 }
 
@@ -186,7 +198,7 @@ impl RequestHelper for MockCookieUser {
     }
 
     fn app(&self) -> &TestApp {
-        &self.inner
+        &self.app
     }
 }
 
@@ -201,10 +213,10 @@ impl MockCookieUser {
     /// This method updates the database directly
     pub fn db_new_token(&self, name: &str) -> MockTokenUser {
         let token = self
-            .inner
+            .app
             .db(|conn| ApiToken::insert(conn, self.user.id, name).unwrap());
         MockTokenUser {
-            inner: TestApp(Rc::clone(&self.inner.0)),
+            app: TestApp(Rc::clone(&self.app.0)),
             token,
         }
     }
@@ -212,7 +224,7 @@ impl MockCookieUser {
 
 /// A type that can generate token authenticated requests
 pub struct MockTokenUser {
-    inner: TestApp,
+    app: TestApp,
     token: ApiToken,
 }
 
@@ -224,7 +236,7 @@ impl RequestHelper for MockTokenUser {
     }
 
     fn app(&self) -> &TestApp {
-        &self.inner
+        &self.app
     }
 }
 
@@ -295,6 +307,11 @@ where
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
         }
+    }
+
+    pub fn assert_status(&self, status: u32) -> &Self {
+        assert_eq!(status, self.response.status.0);
+        self
     }
 }
 

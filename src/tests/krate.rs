@@ -34,7 +34,7 @@ use {
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
     new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateList, CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
+    CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
     VersionBuilder,
 };
 
@@ -79,9 +79,8 @@ impl ::util::MockTokenUser {
 
 #[test]
 fn index() {
-    let url = "/api/v1/crates";
     let (app, anon) = TestApp::empty();
-    let json: CrateList = anon.get(url).good();
+    let json = anon.search("");
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
 
@@ -90,7 +89,7 @@ fn index() {
         CrateBuilder::new("fooindex", u.id).expect_build(conn)
     });
 
-    let json: CrateList = anon.get(url).good();
+    let json = anon.search("");
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].name, krate.name);
@@ -99,173 +98,136 @@ fn index() {
 
 #[test]
 fn index_queries() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let u;
-    let krate;
-    let krate2;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u = new_user("foo").create_or_update(&conn).unwrap();
-
-        krate = CrateBuilder::new("foo_index_queries", u.id)
+    let (krate, krate2) = app.db(|conn| {
+        let krate = CrateBuilder::new("foo_index_queries", user.id)
             .readme("readme")
             .description("description")
             .keyword("kw1")
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", u.id)
+        let krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", user.id)
             .keyword("KW1")
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        CrateBuilder::new("foo", u.id)
+        CrateBuilder::new("foo", user.id)
             .keyword("kw3")
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+        (krate, krate2)
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("q=baz")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 0);
+    assert_eq!(anon.search("q=baz").meta.total, 0);
 
     // All of these fields should be indexed/searched by the queries
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 2);
-    let mut response = ok_resp!(middle.call(req.with_query("q=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 2);
-    let mut response = ok_resp!(middle.call(req.with_query("q=readme")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
-    let mut response = ok_resp!(middle.call(req.with_query("q=description")));
-    assert_eq!(::json::<CrateList>(&mut response).meta.total, 1);
+    assert_eq!(anon.search("q=foo").meta.total, 2);
+    assert_eq!(anon.search("q=kw1").meta.total, 2);
+    assert_eq!(anon.search("q=readme").meta.total, 1);
+    assert_eq!(anon.search("q=description").meta.total, 1);
 
-    let query = format!("user_id={}", u.id);
-    let mut response = ok_resp!(middle.call(req.with_query(&query)));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 3);
-    let mut response = ok_resp!(middle.call(req.with_query("user_id=0")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 3);
+    assert_eq!(anon.search_by_user_id(0).crates.len(), 0);
 
-    let mut response = ok_resp!(middle.call(req.with_query("letter=F")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
-    let mut response = ok_resp!(middle.call(req.with_query("letter=B")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
-    let mut response = ok_resp!(middle.call(req.with_query("letter=b")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
-    let mut response = ok_resp!(middle.call(req.with_query("letter=c")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    assert_eq!(anon.search("letter=F").crates.len(), 2);
+    assert_eq!(anon.search("letter=B").crates.len(), 1);
+    assert_eq!(anon.search("letter=b").crates.len(), 1);
+    assert_eq!(anon.search("letter=c").crates.len(), 0);
 
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=KW1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 2);
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=kw2")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    assert_eq!(anon.search("keyword=kw1").crates.len(), 2);
+    assert_eq!(anon.search("keyword=KW1").crates.len(), 2);
+    assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo&keyword=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 1);
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo2&keyword=kw1")));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
+    assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
+    app.db(|conn| {
         new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
         new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-        Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(&conn, &krate2, &["cat1::bar"]).unwrap();
-    }
-    let mut response = ok_resp!(middle.call(req.with_query("category=cat1")));
-    let cl = ::json::<CrateList>(&mut response);
+        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
+        Category::update_crate(conn, &krate2, &["cat1::bar"]).unwrap();
+    });
+
+    let cl = anon.search("category=cat1");
     assert_eq!(cl.crates.len(), 2);
     assert_eq!(cl.meta.total, 2);
-    let mut response = ok_resp!(middle.call(req.with_query("category=cat1::bar")));
-    let cl = ::json::<CrateList>(&mut response);
+
+    let cl = anon.search("category=cat1::bar");
     assert_eq!(cl.crates.len(), 1);
     assert_eq!(cl.meta.total, 1);
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=cat2")));
-    let cl = ::json::<CrateList>(&mut response);
+
+    let cl = anon.search("keyword=cat2");
     assert_eq!(cl.crates.len(), 0);
     assert_eq!(cl.meta.total, 0);
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=readme&category=cat1")));
-    let cl = ::json::<CrateList>(&mut response);
+    let cl = anon.search("q=readme&category=cat1");
     assert_eq!(cl.crates.len(), 1);
     assert_eq!(cl.meta.total, 1);
 
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=kw1&category=cat1")));
-    let cl = ::json::<CrateList>(&mut response);
+    let cl = anon.search("keyword=kw1&category=cat1");
     assert_eq!(cl.crates.len(), 2);
     assert_eq!(cl.meta.total, 2);
 
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=kw3&category=cat1")));
-    let cl = ::json::<CrateList>(&mut response);
+    let cl = anon.search("keyword=kw3&category=cat1");
     assert_eq!(cl.crates.len(), 0);
     assert_eq!(cl.meta.total, 0);
 }
 
 #[test]
 fn search_includes_crates_where_name_is_stopword() {
-    let (_b, app, middle) = app();
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-
-        CrateBuilder::new("which", u.id).expect_build(&conn);
-        CrateBuilder::new("should_be_excluded", u.id)
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        CrateBuilder::new("which", user.id).expect_build(conn);
+        CrateBuilder::new("should_be_excluded", user.id)
             .readme("crate which does things")
-            .expect_build(&conn);
-    }
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("q=which")));
-    let json = ::json::<CrateList>(&mut response);
+            .expect_build(conn);
+    });
+    let json = anon.search("q=which");
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.meta.total, 1);
 }
 
 #[test]
 fn exact_match_first_on_queries() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-
+    app.db(|conn| {
         CrateBuilder::new("foo_exact", user.id)
             .description("bar_exact baz_exact")
-            .expect_build(&conn);
+            .expect_build(conn);
 
         CrateBuilder::new("bar-exact", user.id)
             .description("foo_exact baz_exact foo-exact baz_exact")
-            .expect_build(&conn);
+            .expect_build(conn);
 
         CrateBuilder::new("baz_exact", user.id)
             .description("foo-exact bar_exact foo-exact bar_exact foo_exact bar_exact")
-            .expect_build(&conn);
+            .expect_build(conn);
 
         CrateBuilder::new("other_exact", user.id)
             .description("other_exact")
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo-exact")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=foo-exact");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "foo_exact");
     assert_eq!(json.crates[1].name, "baz_exact");
     assert_eq!(json.crates[2].name, "bar-exact");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_exact")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=bar_exact");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "bar-exact");
     assert_eq!(json.crates[1].name, "baz_exact");
     assert_eq!(json.crates[2].name, "foo_exact");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=baz_exact")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=baz_exact");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_exact");
     assert_eq!(json.crates[1].name, "bar-exact");
@@ -274,62 +236,54 @@ fn exact_match_first_on_queries() {
 
 #[test]
 fn index_sorting() {
-    let (_b, app, middle) = app();
-    let krate1;
-    let krate2;
-    let krate3;
-    let krate4;
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-
-        krate1 = CrateBuilder::new("foo_sort", user.id)
+    app.db(|conn| {
+        let krate1 = CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
             .recent_downloads(50)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate2 = CrateBuilder::new("bar_sort", user.id)
+        let krate2 = CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
             .recent_downloads(0)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate3 = CrateBuilder::new("baz_sort", user.id)
+        let krate3 = CrateBuilder::new("baz_sort", user.id)
             .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
             .downloads(100_000)
             .recent_downloads(10)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate4 = CrateBuilder::new("other_sort", user.id)
+        let krate4 = CrateBuilder::new("other_sort", user.id)
             .description("other_sort const")
             .downloads(999_999)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         // Set the updated at column for each crate
         update(&krate1)
             .set(crates::updated_at.eq(now - 3.weeks()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate2)
             .set(crates::updated_at.eq(now - 5.days()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate3)
             .set(crates::updated_at.eq(now - 10.seconds()))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
         update(&krate4)
             .set(crates::updated_at.eq(now))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
-    }
+    });
 
     // Sort by downloads
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("sort=downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=downloads");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "other_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -337,8 +291,7 @@ fn index_sorting() {
     assert_eq!(json.crates[3].name, "foo_sort");
 
     // Sort by recent-downloads
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads"),));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=recent-downloads");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "foo_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -346,8 +299,7 @@ fn index_sorting() {
     assert_eq!(json.crates[3].name, "other_sort");
 
     // Sort by recent-updates
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-updates"),));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=recent-updates");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "other_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -356,8 +308,7 @@ fn index_sorting() {
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=recent-downloads");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "foo_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -367,39 +318,32 @@ fn index_sorting() {
 
 #[test]
 fn exact_match_on_queries_with_sort() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let krate1;
-    let krate2;
-    let krate3;
-    let krate4;
-
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-
-        krate1 = CrateBuilder::new("foo_sort", user.id)
+    app.db(|conn| {
+        let krate1 = CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
             .downloads(50)
             .recent_downloads(50)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate2 = CrateBuilder::new("bar_sort", user.id)
+        let krate2 = CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
             .recent_downloads(0)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate3 = CrateBuilder::new("baz_sort", user.id)
+        let krate3 = CrateBuilder::new("baz_sort", user.id)
             .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
             .downloads(100_000)
             .recent_downloads(10)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate4 = CrateBuilder::new("other_sort", user.id)
+        let krate4 = CrateBuilder::new("other_sort", user.id)
             .description("other_sort const")
             .downloads(999_999)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         // Set the updated at column for each crate
         update(&krate1)
@@ -418,33 +362,28 @@ fn exact_match_on_queries_with_sort() {
             .set(crates::updated_at.eq(now))
             .execute(&*conn)
             .unwrap();
-    }
+    });
 
     // Sort by downloads
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo_sort&sort=downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=foo_sort&sort=downloads");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "foo_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "bar_sort");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=bar_sort&sort=downloads");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "bar_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
     assert_eq!(json.crates[2].name, "foo_sort");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=baz_sort&sort=downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=baz_sort&sort=downloads");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_sort");
     assert_eq!(json.crates[1].name, "bar_sort");
     assert_eq!(json.crates[2].name, "foo_sort");
 
-    let mut response = ok_resp!(middle.call(req.with_query("q=const&sort=downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=const&sort=downloads");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "other_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -452,16 +391,14 @@ fn exact_match_on_queries_with_sort() {
     assert_eq!(json.crates[3].name, "foo_sort");
 
     // Sort by recent-downloads
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-downloads"),));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=bar_sort&sort=recent-downloads");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "bar_sort");
     assert_eq!(json.crates[1].name, "foo_sort");
     assert_eq!(json.crates[2].name, "baz_sort");
 
     // Sort by recent-updates
-    let mut response = ok_resp!(middle.call(req.with_query("q=bar_sort&sort=recent-updates"),));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=bar_sort&sort=recent-updates");
     assert_eq!(json.meta.total, 3);
     assert_eq!(json.crates[0].name, "baz_sort");
     assert_eq!(json.crates[1].name, "bar_sort");
@@ -469,8 +406,7 @@ fn exact_match_on_queries_with_sort() {
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=recent-downloads");
     assert_eq!(json.meta.total, 4);
     assert_eq!(json.crates[0].name, "foo_sort");
     assert_eq!(json.crates[1].name, "baz_sort");
@@ -480,14 +416,11 @@ fn exact_match_on_queries_with_sort() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_show");
-    let krate;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        krate = CrateBuilder::new("foo_show", user.id)
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+
+    let krate = app.db(|conn| {
+        CrateBuilder::new("foo_show", user.id)
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
@@ -497,11 +430,10 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(&conn);
-    }
+            .expect_build(&conn)
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateResponse = ::json(&mut response);
+    let json = anon.show_crate("foo_show");
     assert_eq!(json.krate.name, krate.name);
     assert_eq!(json.krate.id, krate.name);
     assert_eq!(json.krate.description, krate.description);
@@ -531,22 +463,18 @@ fn show() {
 
 #[test]
 fn yanked_versions_are_not_considered_for_max_version() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-
+    app.db(|conn| {
         CrateBuilder::new("foo_yanked_version", user.id)
             .description("foo")
             .version("1.0.0")
             .version(VersionBuilder::new("1.1.0").yanked(true))
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("q=foo")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("q=foo");
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.crates[0].max_version, "1.0.0");
 }
@@ -610,12 +538,10 @@ fn new_wrong_token() {
     let (_b, app, middle) = app();
     let mut req = new_req("foo", "1.0.0");
     bad_resp!(middle.call(&mut req));
-    drop(req);
 
     let mut req = new_req("foo", "1.0.0");
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
-    drop(req);
 
     let mut req = new_req("foo", "1.0.0");
     sign_in(&mut req, &app);
@@ -915,6 +841,7 @@ fn new_krate_bad_name() {
     }
 }
 
+// TODO: Move this test to the main crate
 #[test]
 fn valid_feature_names() {
     assert!(Crate::valid_feature("foo"));
@@ -1176,52 +1103,45 @@ fn new_krate_with_readme() {
 
 #[test]
 fn summary_doesnt_die() {
-    let (_b, _, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/summary");
-    ok_resp!(middle.call(&mut req));
+    let (_, anon) = TestApp::empty();
+    anon.get::<SummaryResponse>("/api/v1/summary").good();
 }
 
 #[test]
 fn summary_new_crates() {
-    let (_b, app, middle) = app();
-    let u;
-    let krate;
-    let krate2;
-    let krate3;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        u = new_user("foo").create_or_update(&conn).unwrap();
-
-        krate = CrateBuilder::new("some_downloads", u.id)
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        let krate = CrateBuilder::new("some_downloads", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .description("description")
             .keyword("popular")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate2 = CrateBuilder::new("most_recent_downloads", u.id)
+        let krate2 = CrateBuilder::new("most_recent_downloads", user.id)
             .version(VersionBuilder::new("0.2.0"))
             .keyword("popular")
             .downloads(5000)
             .recent_downloads(50)
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        krate3 = CrateBuilder::new("just_updated", u.id)
+        let krate3 = CrateBuilder::new("just_updated", user.id)
             .version(VersionBuilder::new("0.1.0"))
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        CrateBuilder::new("with_downloads", u.id)
+        CrateBuilder::new("with_downloads", user.id)
             .version(VersionBuilder::new("0.3.0"))
             .keyword("popular")
             .downloads(1000)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-        Category::update_crate(&conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(&conn, &krate2, &["cat1"]).unwrap();
+        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
+        Category::update_crate(conn, &krate2, &["cat1"]).unwrap();
 
         // set total_downloads global value for `num_downloads` prop
         update(metadata::table)
@@ -1235,11 +1155,9 @@ fn summary_new_crates() {
             .set(crates::updated_at.eq(updated))
             .execute(&*conn)
             .unwrap();
-    }
+    });
 
-    let mut req = req(Method::Get, "/api/v1/summary");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: SummaryResponse = ::json(&mut response);
+    let json: SummaryResponse = anon.get("/api/v1/summary").good();
 
     assert_eq!(json.num_crates, 4);
     assert_eq!(json.num_downloads, 6000);
@@ -1258,64 +1176,50 @@ fn summary_new_crates() {
 #[test]
 fn download() {
     use chrono::{Duration, Utc};
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_download/1.0.0/download");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
         CrateBuilder::new("foo_download", user.id)
             .version(VersionBuilder::new("1.0.0"))
             .expect_build(&conn);
-    }
-    let resp = t!(middle.call(&mut req));
-    assert_eq!(resp.status.0, 302);
+    });
 
-    req.with_path("/api/v1/crates/foo_download/1.0.0/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/foo_download/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    let assert_dl_count = |name_and_version: &str, query: Option<&str>, count: usize| {
+        let url = format!("/api/v1/crates/{}/downloads", name_and_version);
+        let downloads: Downloads = if let Some(query) = query {
+            anon.get_with_query(&url, query).good()
+        } else {
+            anon.get(&url).good()
+        };
+        assert_eq!(downloads.version_downloads.len(), count);
+    };
 
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
-    let resp = t!(middle.call(&mut req));
-    assert_eq!(resp.status.0, 302);
+    let download = |name_and_version: &str| {
+        let url = format!("/api/v1/crates/{}/download", name_and_version);
+        anon.get::<()>(&url).assert_status(302);
+        // TODO: test the with_json code path
+    };
 
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    download("foo_download/1.0.0");
+    assert_dl_count("foo_download/1.0.0", None, 1);
+    assert_dl_count("foo_download", None, 1);
 
-    let yesterday = Utc::today() + Duration::days(-1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&format!("before_date={}", yesterday.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 0);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&format!("before_date={}", yesterday.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
+    download("FOO_DOWNLOAD/1.0.0");
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", None, 1);
+    assert_dl_count("FOO_DOWNLOAD", None, 1);
+    // TODO: Is the behavior above a bug?
+
+    let yesterday = (Utc::today() + Duration::days(-1)).format("%F");
+    let query = format!("before_date={}", yesterday);
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", Some(&query), 0);
     // crate/downloads always returns the last 90 days and ignores date params
-    assert_eq!(downloads.version_downloads.len(), 1);
+    assert_dl_count("FOO_DOWNLOAD", Some(&query), 1);
 
-    let tomorrow = Utc::today() + Duration::days(1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/1.0.0/downloads");
-    req.with_query(&format!("before_date={}", tomorrow.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
-    req.with_path("/api/v1/crates/FOO_DOWNLOAD/downloads");
-    req.with_query(&format!("before_date={}", tomorrow.format("%F")));
-    let mut resp = ok_resp!(middle.call(&mut req));
-    let downloads = ::json::<Downloads>(&mut resp);
-    assert_eq!(downloads.version_downloads.len(), 1);
+    let tomorrow = (Utc::today() + Duration::days(1)).format("%F");
+    let query = format!("before_date={}", tomorrow);
+    assert_dl_count("FOO_DOWNLOAD/1.0.0", Some(&query), 1);
+    assert_dl_count("FOO_DOWNLOAD", Some(&query), 1);
 }
 
 #[test]
@@ -1364,61 +1268,50 @@ fn diesel_not_found_results_in_404() {
 
 #[test]
 fn following() {
-    #[derive(Deserialize)]
-    struct F {
-        following: bool,
-    }
+    // TODO: Test anon requests as well?
+    let (app, _, user) = TestApp::with_user();
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_following/following");
+    app.db(|conn| {
+        CrateBuilder::new("foo_following", user.as_model().id).expect_build(&conn);
+    });
 
-    let user;
-    {
-        let conn = app.diesel_database.get().unwrap();
-        user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_following", user.id).expect_build(&conn);
-    }
+    let is_following = || -> bool {
+        #[derive(Deserialize)]
+        struct F {
+            following: bool,
+        }
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(!::json::<F>(&mut response).following);
+        user.get::<F>("/api/v1/crates/foo_following/following")
+            .good()
+            .following
+    };
 
-    req.with_path("/api/v1/crates/foo_following/follow")
-        .with_method(Method::Put);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
+    let follow = || {
+        assert!(
+            user.put::<OkBool>("/api/v1/crates/foo_following/follow", b"")
+                .good()
+                .ok
+        );
+    };
 
-    req.with_path("/api/v1/crates/foo_following/following")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<F>(&mut response).following);
+    let unfollow = || {
+        assert!(
+            user.delete::<OkBool>("api/v1/crates/foo_following/follow")
+                .good()
+                .ok
+        );
+    };
 
-    req.with_path("/api/v1/crates")
-        .with_method(Method::Get)
-        .with_query("following=1");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let l = ::json::<CrateList>(&mut response);
-    assert_eq!(l.crates.len(), 1);
+    assert!(!is_following());
+    follow();
+    follow();
+    assert!(is_following());
+    assert_eq!(user.search("following=1").crates.len(), 1);
 
-    req.with_path("/api/v1/crates/foo_following/follow")
-        .with_method(Method::Delete);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(::json::<OkBool>(&mut response).ok);
-
-    req.with_path("/api/v1/crates/foo_following/following")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert!(!::json::<F>(&mut response).following);
-
-    req.with_path("/api/v1/crates")
-        .with_query("following=1")
-        .with_method(Method::Get);
-    let mut response = ok_resp!(middle.call(&mut req));
-    assert_eq!(::json::<CrateList>(&mut response).crates.len(), 0);
+    unfollow();
+    unfollow();
+    assert!(!is_following());
+    assert_eq!(user.search("following=1").crates.len(), 0);
 }
 
 #[test]
@@ -2126,29 +2019,25 @@ fn author_license_and_description_required() {
 */
 #[test]
 fn test_recent_download_count() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("Oskar").create_or_update(&conn).unwrap();
-
+    app.db(|conn| {
         // More than 90 days ago
         CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .downloads(10)
             .recent_downloads(0)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         CrateBuilder::new("sweet_potato_snack", user.id)
             .description("For when better than usual")
             .downloads(5)
             .recent_downloads(2)
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("sort=recent-downloads");
 
     assert_eq!(json.meta.total, 2);
 
@@ -2168,26 +2057,20 @@ fn test_recent_download_count() {
  */
 #[test]
 fn test_zero_downloads() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("Oskar").create_or_update(&conn).unwrap();
-
+    app.db(|conn| {
         // More than 90 days ago
         CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .downloads(0)
             .recent_downloads(0)
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("sort=recent-downloads")));
-    let json: CrateList = ::json(&mut response);
-
+    let json = anon.search("sort=recent-downloads");
     assert_eq!(json.meta.total, 1);
-
     assert_eq!(json.crates[0].name, "green_ball");
     assert_eq!(json.crates[0].recent_downloads, Some(0));
     assert_eq!(json.crates[0].downloads, 0);
@@ -2199,35 +2082,31 @@ fn test_zero_downloads() {
 */
 #[test]
 fn test_default_sort_recent() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let (green_crate, potato_crate) = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("Oskar").create_or_update(&conn).unwrap();
-
+    let (green_crate, potato_crate) = app.db(|conn| {
         // More than 90 days ago
         let green_crate = CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .keyword("dog")
             .downloads(10)
             .recent_downloads(10)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         let potato_crate = CrateBuilder::new("sweet_potato_snack", user.id)
             .description("For when better than usual")
             .keyword("dog")
             .downloads(20)
             .recent_downloads(0)
-            .expect_build(&conn);
+            .expect_build(conn);
 
         (green_crate, potato_crate)
-    };
+    });
 
     // test that index for keywords is sorted by recent_downloads
     // by default
-    let mut req = req(Method::Get, "/api/v1/crates");
-    let mut response = ok_resp!(middle.call(req.with_query("keyword=dog")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("keyword=dog");
 
     assert_eq!(json.meta.total, 2);
 
@@ -2240,19 +2119,17 @@ fn test_default_sort_recent() {
     assert_eq!(json.crates[1].recent_downloads, Some(0));
     assert_eq!(json.crates[1].downloads, 20);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
+    app.db(|conn| {
         new_category("Animal", "animal", "animal crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-        Category::update_crate(&conn, &green_crate, &["animal"]).unwrap();
-        Category::update_crate(&conn, &potato_crate, &["animal"]).unwrap();
-    }
+        Category::update_crate(conn, &green_crate, &["animal"]).unwrap();
+        Category::update_crate(conn, &potato_crate, &["animal"]).unwrap();
+    });
 
     // test that index for categories is sorted by recent_downloads
     // by default
-    let mut response = ok_resp!(middle.call(req.with_query("category=animal")));
-    let json: CrateList = ::json(&mut response);
+    let json = anon.search("category=animal");
 
     assert_eq!(json.meta.total, 2);
 
@@ -2268,20 +2145,16 @@ fn test_default_sort_recent() {
 
 #[test]
 fn block_bad_documentation_url() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
-    let _ = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_bad_doc_url", u.id)
+    app.db(|conn| {
+        CrateBuilder::new("foo_bad_doc_url", user.id)
             .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
-            .expect_build(&conn)
-    };
+            .expect_build(conn)
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates/foo_bad_doc_url");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CrateResponse = ::json(&mut response);
-
+    let json = anon.show_crate("foo_bad_doc_url");
     assert_eq!(json.krate.documentation, None);
 }
 
@@ -2290,16 +2163,12 @@ fn block_bad_documentation_url() {
 // which call the `PUT /crates/:crate_id/owners` route
 #[test]
 fn test_cargo_invite_owners() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/");
+    let (app, _, owner) = TestApp::with_user();
 
-    let new_user = {
-        let conn = app.diesel_database.get().unwrap();
-        let owner = new_user("avocado").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &owner);
-        CrateBuilder::new("guacamole", owner.id).expect_build(&conn);
-        new_user("cilantro").create_or_update(&conn).unwrap()
-    };
+    let new_user = app.db_new_user("cilantro");
+    app.db(|conn| {
+        CrateBuilder::new("guacamole", owner.as_model().id).expect_build(conn);
+    });
 
     #[derive(Serialize)]
     struct OwnerReq {
@@ -2307,30 +2176,26 @@ fn test_cargo_invite_owners() {
     }
     #[derive(Deserialize, Debug)]
     struct OwnerResp {
+        // server must include `ok: true` to support old cargo clients
         ok: bool,
         msg: String,
     }
 
     let body = serde_json::to_string(&OwnerReq {
-        owners: Some(vec![new_user.gh_login]),
+        owners: Some(vec![new_user.as_model().gh_login.clone()]),
     });
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/guacamole/owners")
-                .with_method(Method::Put)
-                .with_body(body.unwrap().as_bytes()),
-        )
-    );
+    let json: OwnerResp = owner
+        .put("/api/v1/crates/guacamole/owners", body.unwrap().as_bytes())
+        .good();
 
-    let r = ::json::<OwnerResp>(&mut response);
     // this ok:true field is what old versions of Cargo
     // need - do not remove unless you're cool with
     // dropping support for old versions
-    assert!(r.ok);
+    assert!(json.ok);
     // msg field is what is sent and used in updated
     // version of cargo
     assert_eq!(
-        r.msg,
+        json.msg,
         "user cilantro has been invited to be an owner of crate guacamole"
     )
 }

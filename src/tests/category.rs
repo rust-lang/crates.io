@@ -2,7 +2,7 @@ use conduit::{Handler, Method};
 
 use models::Category;
 use views::{EncodableCategory, EncodableCategoryWithSubcategories};
-use {app, new_category, new_user, req, CrateBuilder};
+use {app, new_category, new_user, req, CrateBuilder, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct CategoryList {
@@ -24,30 +24,26 @@ struct CategoryWithSubcategories {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/categories");
+    let (app, anon) = TestApp::empty();
+    let url = "/api/v1/categories";
 
     // List 0 categories if none exist
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CategoryList = ::json(&mut response);
+    let json: CategoryList = anon.get(url).good();
     assert_eq!(json.categories.len(), 0);
     assert_eq!(json.meta.total, 0);
 
     // Create a category and a subcategory
-    {
-        let conn = t!(app.diesel_database.get());
+    app.db(|conn| {
         new_category("foo", "foo", "Foo crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
         new_category("foo::bar", "foo::bar", "Bar crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-    }
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CategoryList = ::json(&mut response);
+    });
 
     // Only the top-level categories should be on the page
+    let json: CategoryList = anon.get(url).good();
     assert_eq!(json.categories.len(), 1);
     assert_eq!(json.meta.total, 1);
     assert_eq!(json.categories[0].category, "foo");
@@ -55,24 +51,20 @@ fn index() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = app();
+    let (app, anon) = TestApp::empty();
+    let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
-    let mut req = req(Method::Get, "/api/v1/categories/foo-bar");
-    let response = t!(middle.call(&mut req));
-    assert_eq!(response.status.0, 404);
+    anon.get(&url).assert_not_found();
 
     // Create a category and a subcategory
-    {
-        let conn = t!(app.diesel_database.get());
-
-        t!(new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(&conn));
-        t!(new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(&conn));
-    }
+    app.db(|conn| {
+        t!(new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(conn));
+        t!(new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(conn));
+    });
 
     // The category and its subcategories should be in the json
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: CategoryWithSubcategories = ::json(&mut response);
+    let json: CategoryWithSubcategories = anon.get(&url).good();
     assert_eq!(json.category.category, "Foo Bar");
     assert_eq!(json.category.slug, "foo-bar");
     assert_eq!(json.category.subcategories.len(), 1);
@@ -169,18 +161,15 @@ fn update_crate() {
 
 #[test]
 fn category_slugs_returns_all_slugs_in_alphabetical_order() {
-    let (_b, app, middle) = app();
-    {
-        let conn = app.diesel_database.get().unwrap();
+    let (app, anon) = TestApp::empty();
+    app.db(|conn| {
         new_category("Foo", "foo", "For crates that foo")
             .create_or_update(&conn)
             .unwrap();
         new_category("Bar", "bar", "For crates that bar")
             .create_or_update(&conn)
             .unwrap();
-    }
-
-    let mut req = req(Method::Get, "/api/v1/category_slugs");
+    });
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct Slug {
@@ -194,7 +183,7 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
         category_slugs: Vec<Slug>,
     }
 
-    let response = ::json(&mut ok_resp!(middle.call(&mut req)));
+    let response = anon.get("/api/v1/category_slugs").good();
     let expected_response = Slugs {
         category_slugs: vec![
             Slug {
