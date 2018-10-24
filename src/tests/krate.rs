@@ -2148,7 +2148,7 @@ fn block_bad_documentation_url() {
     let (app, anon, user) = TestApp::with_user();
     let user = user.as_model();
 
-    let _ = app.db(|conn| {
+    app.db(|conn| {
         CrateBuilder::new("foo_bad_doc_url", user.id)
             .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
             .expect_build(conn)

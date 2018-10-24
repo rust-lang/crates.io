@@ -204,20 +204,21 @@ fn owners_can_remove_self() {
 #[test]
 fn check_ownership_two_crates() {
     let (app, anon, user) = TestApp::with_user();
+    let user = user.as_model();
 
     let (krate_owned_by_team, team) = app.db(|conn| {
         let t = new_team("team_foo").create_or_update(conn).unwrap();
-        let krate = CrateBuilder::new("foo", user.as_model().id).expect_build(conn);
-        add_team_to_crate(&t, &krate, user.as_model(), conn).unwrap();
+        let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
+        add_team_to_crate(&t, &krate, user, conn).unwrap();
         (krate, t)
     });
 
     let user2 = app.db_new_user("user_bar");
-    let user2_id = user2.as_model().id;
+    let user2 = user2.as_model();
     let krate_not_owned_by_team =
-        app.db(|conn| CrateBuilder::new("bar", user2_id).expect_build(&conn));
+        app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(&conn));
 
-    let json = anon.search_by_user_id(user2_id);
+    let json = anon.search_by_user_id(user2.id);
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
     assert_eq!(json.crates.len(), 1);
 
