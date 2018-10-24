@@ -1,4 +1,5 @@
 extern crate diesel;
+extern crate tempdir;
 
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -6,6 +7,7 @@ use std::io;
 use std::io::prelude::*;
 
 use self::diesel::prelude::*;
+use self::tempdir::TempDir;
 use chrono::Utc;
 use conduit::{Handler, Method};
 use diesel::dsl::*;
@@ -729,7 +731,8 @@ fn new_krate_with_dependency() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let path = ::git::checkout().join("ne/w_/new_dep");
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("ne/w_/new_dep");
     assert!(path.exists());
     let mut contents = String::new();
     File::open(&path)
@@ -767,7 +770,8 @@ fn new_renamed_crate() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let path = ::git::checkout().join("ne/w-/new-krate");
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("ne/w-/new-krate");
     assert!(path.exists());
     let mut contents = String::new();
     File::open(&path)
@@ -1068,7 +1072,8 @@ fn new_krate_git_upload() {
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let path = ::git::checkout().join("3/f/fgt");
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("3/f/fgt");
     assert!(path.exists());
     let mut contents = String::new();
     File::open(&path)
@@ -1088,25 +1093,18 @@ fn new_krate_git_upload() {
 #[test]
 fn new_krate_git_upload_appends() {
     let (_b, app, middle) = app();
-    let path = ::git::checkout().join("3/f/fpp");
-    fs::create_dir_all(path.parent().unwrap()).unwrap();
-    File::create(&path)
-        .unwrap()
-        .write_all(
-            br#"{"name":"FPP","vers":"0.0.1","deps":[],"features":{},"cksum":"3j3"}
-"#,
-        ).unwrap();
 
+    let mut req = new_req("FPP", "0.0.1");
+    let user = sign_in(&mut req, &app);
+    ok_resp!(middle.call(&mut req));
     let mut req = new_req("FPP", "1.0.0");
-    sign_in(&mut req, &app);
+    sign_in_as(&mut req, &user);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
 
-    let mut contents = String::new();
-    File::open(&path)
-        .unwrap()
-        .read_to_string(&mut contents)
-        .unwrap();
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("3/f/fpp");
+    let contents = fs::read_to_string(&path).unwrap();
     let mut lines = contents.lines();
     let p1: git::Crate = serde_json::from_str(lines.next().unwrap().trim()).unwrap();
     let p2: git::Crate = serde_json::from_str(lines.next().unwrap().trim()).unwrap();
@@ -1430,13 +1428,15 @@ fn yank() {
         version: EncodableVersion,
     }
     let (_b, app, middle) = app();
-    let path = ::git::checkout().join("3/f/fyk");
 
     // Upload a new crate, putting it in the git index
     let mut req = new_req("fyk", "1.0.0");
     sign_in(&mut req, &app);
     let mut response = ok_resp!(middle.call(&mut req));
     ::json::<GoodCrate>(&mut response);
+
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("3/f/fyk");
     let mut contents = String::new();
     File::open(&path)
         .unwrap()
@@ -1461,6 +1461,9 @@ fn yank() {
         )
     );
     assert!(::json::<OkBool>(&mut r).ok);
+
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("3/f/fyk");
     let mut contents = String::new();
     File::open(&path)
         .unwrap()
@@ -1483,6 +1486,9 @@ fn yank() {
         )
     );
     assert!(::json::<OkBool>(&mut r).ok);
+
+    let remote_contents = clone_remote_repo();
+    let path = remote_contents.path().join("3/f/fyk");
     let mut contents = String::new();
     File::open(&path)
         .unwrap()
@@ -2360,4 +2366,15 @@ fn new_krate_hard_links() {
     }
     let body = new_crate_to_body_with_tarball(&new_crate("foo", "1.1.0"), &tarball);
     bad_resp!(middle.call(req.with_body(&body)));
+}
+
+/// We want to observe the contents of our push, but we can't do that in a
+/// bare repo so we need to clone it to some random directory.
+fn clone_remote_repo() -> TempDir {
+    use url::Url;
+
+    let tempdir = TempDir::new("tests").unwrap();
+    let url = Url::from_file_path(::git::bare()).unwrap();
+    git2::Repository::clone(url.as_str(), tempdir.path()).unwrap();
+    tempdir
 }

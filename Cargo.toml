@@ -59,6 +59,7 @@ itertools = "0.6.0"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = "0.9.1"
+tempdir = "0.3.7"
 
 lettre = "0.8"
 lettre_email = "0.8"
