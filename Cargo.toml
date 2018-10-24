@@ -28,12 +28,14 @@ rustdoc-args = [
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
+old_semver = { path = "src/old_semver", version = "0.1.0" }
 rand = "0.3"
 git2 = "0.6.4"
 flate2 = "1.0"
-semver = "0.5"
+semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
 url = "1.2.1"
 tar = "0.4.13"
+base64 = "0.9"
 
 openssl = "0.9.14"
 oauth2 = "0.3"
@@ -58,6 +60,7 @@ itertools = "0.6.0"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = "0.9.1"
+tempdir = "0.3.7"
 
 lettre = "0.8"
 lettre_email = "0.8"
@@ -77,6 +80,7 @@ conduit-test = "0.8"
 hyper = "0.12"
 hyper-tls = "0.2"
 futures = "0.1"
+lazy_static = "1.0"
 tokio-core = "0.1"
 tokio-service = "0.1"
 

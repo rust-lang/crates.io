@@ -1,13 +1,17 @@
 use conduit::{Handler, Method};
+use conduit_test::MockRequest;
 use diesel::*;
+use std::sync::Arc;
 use std::sync::ONCE_INIT;
+
+use cargo_registry::app::App;
 
 use models::{Crate, NewUser};
 use record::GhUser;
 use views::EncodableCrate;
 use {
-    add_team_to_crate, app, new_req_body_version_2, new_team, new_user, req,
-    request_with_user_and_mock_crate, sign_in_as, CrateBuilder,
+    add_team_to_crate, app, new_req, new_req_body_version_2, new_team, new_user, req, sign_in_as,
+    CrateBuilder,
 };
 
 // Users: `crates-tester-1` and `crates-tester-2`
@@ -37,6 +41,21 @@ fn body_for_team_y() -> &'static str {
 
 fn body_for_team_x() -> &'static str {
     r#"{"users":["github:crates-test-org:core"]}"#
+}
+
+fn request_with_user_and_mock_crate(
+    app: &Arc<App>,
+    user: &NewUser<'_>,
+    krate: &str,
+) -> MockRequest {
+    let mut req = new_req(krate, "1.0.0");
+    {
+        let conn = app.diesel_database.get().unwrap();
+        let user = user.create_or_update(&conn).unwrap();
+        sign_in_as(&mut req, &user);
+        CrateBuilder::new(krate, user.id).expect_build(&conn);
+    }
+    req
 }
 
 // Test adding team without `github:`
@@ -460,7 +479,7 @@ fn crates_by_team_id() {
         t
     };
 
-    let mut req = req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
@@ -488,7 +507,7 @@ fn crates_by_team_id_not_including_deleted_owners() {
         t
     };
 
-    let mut req = req(app, Method::Get, "/api/v1/crates");
+    let mut req = req(Method::Get, "/api/v1/crates");
     req.with_query(&format!("team_id={}", team.id));
     let mut response = ok_resp!(middle.call(&mut req));
 

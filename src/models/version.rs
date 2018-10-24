@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
 use diesel;
-use diesel::pg::Pg;
 use diesel::prelude::*;
 use semver;
 use serde_json;
@@ -15,7 +14,7 @@ use schema::*;
 use views::{EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable)]
 #[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,
@@ -191,36 +190,5 @@ impl NewVersion {
             self.license = Some(String::from("non-standard"));
         }
         Ok(())
-    }
-}
-
-impl Queryable<versions::SqlType, Pg> for Version {
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
-    type Row = (
-        i32,
-        i32,
-        String,
-        NaiveDateTime,
-        NaiveDateTime,
-        i32,
-        serde_json::Value,
-        bool,
-        Option<String>,
-        Option<i32>,
-    );
-
-    fn build(row: Self::Row) -> Self {
-        Version {
-            id: row.0,
-            crate_id: row.1,
-            num: semver::Version::parse(&row.2).unwrap(),
-            updated_at: row.3,
-            created_at: row.4,
-            downloads: row.5,
-            features: row.6,
-            yanked: row.7,
-            license: row.8,
-            crate_size: row.9,
-        }
     }
 }

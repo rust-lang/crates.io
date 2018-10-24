@@ -217,7 +217,7 @@ module('Acceptance | crate page', function(hooks) {
             'service:session',
             Service.extend({
                 get currentUser() {
-                    return { login: 'thehydroimpulse' };
+                    return { login: 'thehydroimpulse', id: '2' };
                 },
                 loadUser() {},
             }),

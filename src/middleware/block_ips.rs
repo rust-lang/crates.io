@@ -27,13 +27,13 @@ impl AroundMiddleware for BlockIps {
 
 impl Handler for BlockIps {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        let has_blacklisted_ip = req
+        let has_blocked_ip = req
             .headers()
             .find("X-Forwarded-For")
             .unwrap()
             .iter()
             .any(|v| v.split(", ").any(|ip| self.ips.iter().any(|x| x == ip)));
-        if has_blacklisted_ip {
+        if has_blocked_ip {
             let body = format!(
                 "We are unable to process your request at this time. \
                  Please open an issue at https://github.com/rust-lang/crates.io \

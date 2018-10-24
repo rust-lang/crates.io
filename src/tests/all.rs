@@ -1,5 +1,8 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
+#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
+
+// Several test methods trip this clippy lint
+#![cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 
 extern crate cargo_registry;
 extern crate chrono;
@@ -11,6 +14,8 @@ extern crate diesel;
 extern crate dotenv;
 extern crate flate2;
 extern crate git2;
+#[macro_use]
+extern crate lazy_static;
 extern crate s3;
 extern crate semver;
 extern crate serde;
@@ -38,7 +43,8 @@ use diesel::prelude::*;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 
-pub use cargo_registry::{models, schema, views};
+use cargo_registry::{models, schema, views};
+use util::{Bad, RequestHelper, TestApp};
 
 use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
 use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
@@ -55,15 +61,9 @@ macro_rules! t {
     };
 }
 
-macro_rules! t_resp {
-    ($e:expr) => {
-        t!($e)
-    };
-}
-
 macro_rules! ok_resp {
     ($e:expr) => {{
-        let resp = t_resp!($e);
+        let resp = t!($e);
         if !::ok_resp(&resp) {
             panic!("bad response: {:?}", resp.status);
         }
@@ -73,21 +73,12 @@ macro_rules! ok_resp {
 
 macro_rules! bad_resp {
     ($e:expr) => {{
-        let mut resp = t_resp!($e);
+        let mut resp = t!($e);
         match ::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }
     }};
-}
-
-#[derive(Deserialize, Debug)]
-struct Error {
-    detail: String,
-}
-#[derive(Deserialize)]
-struct Bad {
-    errors: Vec<Error>,
 }
 
 mod badge;
@@ -99,19 +90,21 @@ mod krate;
 mod owners;
 mod record;
 mod schema_details;
+mod server;
 mod team;
 mod token;
 mod user;
+mod util;
 mod version;
 
 #[derive(Deserialize, Debug)]
-struct GoodCrate {
+pub struct GoodCrate {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
     warnings: Warnings,
 }
 #[derive(Deserialize)]
-struct CrateList {
+pub struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
 }
@@ -125,11 +118,15 @@ struct CrateMeta {
     total: i32,
 }
 #[derive(Deserialize)]
-struct CrateResponse {
+pub struct CrateResponse {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
     versions: Vec<EncodableVersion>,
     keywords: Vec<EncodableKeyword>,
+}
+#[derive(Deserialize)]
+struct OkBool {
+    ok: bool,
 }
 
 fn app() -> (
@@ -159,7 +156,7 @@ fn app() -> (
     };
 
     let config = cargo_registry::Config {
-        uploader: uploader,
+        uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
@@ -169,7 +166,7 @@ fn app() -> (
         max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
-        api_protocol: api_protocol,
+        api_protocol,
     };
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
@@ -179,20 +176,21 @@ fn app() -> (
 }
 
 // Return the environment variable only if it has been defined
-fn env(s: &str) -> String {
-    // Handles both the `None` and empty string cases e.g. VAR=
-    // by converting `None` to an empty string
-    let env_result = env::var(s).ok().unwrap_or_default();
-
-    if env_result == "" {
-        panic!("must have `{}` defined", s);
+fn env(var: &str) -> String {
+    match env::var(var) {
+        Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
+        Ok(s) => s,
+        _ => panic!(
+            "environment variable `{}` must be defined and valid unicode",
+            var
+        ),
     }
-
-    env_result
 }
 
-fn req(_: Arc<App>, method: conduit::Method, path: &str) -> MockRequest {
-    MockRequest::new(method, path)
+fn req(method: conduit::Method, path: &str) -> MockRequest {
+    let mut request = MockRequest::new(method, path);
+    request.header("User-Agent", "conduit-test");
+    request
 }
 
 fn ok_resp(r: &conduit::Response) -> bool {
@@ -220,11 +218,11 @@ where
     }
 }
 
-static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
         email: None,
         name: None,
@@ -233,22 +231,10 @@ fn new_user(login: &str) -> NewUser<'_> {
     }
 }
 
-fn user(login: &str) -> User {
-    User {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        gh_login: login.to_string(),
-        email: None,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token".into(),
-    }
-}
-
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
-        github_id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        login: login,
+        github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        login,
         name: None,
         avatar: None,
     }
@@ -376,9 +362,9 @@ struct CrateBuilder<'a> {
 impl<'a> CrateBuilder<'a> {
     fn new(name: &str, owner_id: i32) -> CrateBuilder<'_> {
         CrateBuilder {
-            owner_id: owner_id,
+            owner_id,
             krate: NewCrate {
-                name: name,
+                name,
                 ..NewCrate::default()
             },
             downloads: None,
@@ -505,8 +491,10 @@ fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion 
 }
 
 fn krate(name: &str) -> Crate {
+    static NEXT_CRATE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
     Crate {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        id: NEXT_CRATE_ID.fetch_add(1, Ordering::SeqCst) as i32,
         name: name.to_string(),
         updated_at: Utc::now().naive_utc(),
         created_at: Utc::now().naive_utc(),
@@ -585,43 +573,18 @@ fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
 }
 
-fn request_with_user_and_mock_crate(
-    app: &Arc<App>,
-    user: &NewUser<'_>,
-    krate: &str,
-) -> MockRequest {
-    let mut req = new_req(Arc::clone(app), krate, "1.0.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new(krate, user.id).expect_build(&conn);
-    }
-    req
+fn new_req(krate: &str, version: &str) -> MockRequest {
+    new_req_full(::krate(krate), version, Vec::new())
 }
 
-fn new_req(app: Arc<App>, krate: &str, version: &str) -> MockRequest {
-    new_req_full(app, ::krate(krate), version, Vec::new())
-}
-
-fn new_req_with_documentation(
-    app: Arc<App>,
-    krate: &str,
-    version: &str,
-    documentation: &str,
-) -> MockRequest {
+fn new_req_with_documentation(krate: &str, version: &str, documentation: &str) -> MockRequest {
     let mut krate = ::krate(krate);
     krate.documentation = Some(documentation.into());
-    new_req_full(app, krate, version, Vec::new())
+    new_req_full(krate, version, Vec::new())
 }
 
-fn new_req_full(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    deps: Vec<u::CrateDependency>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -633,13 +596,8 @@ fn new_req_full(
     req
 }
 
-fn new_req_with_keywords(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    kws: Vec<String>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_keywords(krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -651,13 +609,8 @@ fn new_req_with_keywords(
     req
 }
 
-fn new_req_with_categories(
-    app: Arc<App>,
-    krate: Crate,
-    version: &str,
-    cats: Vec<String>,
-) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+fn new_req_with_categories(krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -670,12 +623,11 @@ fn new_req_with_categories(
 }
 
 fn new_req_with_badges(
-    app: Arc<App>,
     krate: Crate,
     version: &str,
     badges: HashMap<String, HashMap<String, String>>,
 ) -> MockRequest {
-    let mut req = req(app, Method::Put, "/api/v1/crates/new");
+    let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
         krate,
         version,
@@ -714,7 +666,7 @@ fn new_req_body(
             name: u::CrateName(krate.name),
             vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
             features: HashMap::new(),
-            deps: deps,
+            deps,
             authors: vec!["foo".to_string()],
             description: Some("description".to_string()),
             homepage: krate.homepage,
@@ -786,4 +738,96 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
     ]);
     body.extend(tarball);
     body
+}
+
+lazy_static! {
+    static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
+        let mut empty_tarball = vec![];
+        {
+            let mut ar =
+                tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
+            t!(ar.finish());
+        }
+        empty_tarball
+    };
+}
+
+/// A builder for constructing a crate for the purposes of testing publishing. If you only need
+/// a crate to exist and don't need to test behavior caused by the publish request, inserting
+/// a crate into the database directly by using CrateBuilder will be faster.
+pub struct PublishBuilder {
+    pub krate_name: String,
+    version: semver::Version,
+    tarball: Vec<u8>,
+}
+
+impl PublishBuilder {
+    /// Create a request to publish a crate with the given name, version 1.0.0, and no files
+    /// in its tarball.
+    fn new(krate_name: &str) -> Self {
+        PublishBuilder {
+            krate_name: krate_name.into(),
+            version: semver::Version::parse("1.0.0").unwrap(),
+            tarball: EMPTY_TARBALL_BYTES.to_vec(),
+        }
+    }
+
+    /// Set the version of the crate being published to something other than the default of 1.0.0.
+    fn version(mut self, version: &str) -> Self {
+        self.version = semver::Version::parse(version).unwrap();
+        self
+    }
+
+    /// Set the files in the crate's tarball.
+    fn files(mut self, files: &[(&str, &[u8])]) -> Self {
+        let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
+        let files = files
+            .iter()
+            .zip(&mut slices)
+            .map(|(&(name, _), data)| {
+                let len = data.len() as u64;
+                (name, data as &mut Read, len)
+            }).collect::<Vec<_>>();
+
+        let mut tarball = Vec::new();
+        {
+            let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
+            for (name, ref mut data, size) in files {
+                let mut header = tar::Header::new_gnu();
+                t!(header.set_path(name));
+                header.set_size(size);
+                header.set_cksum();
+                t!(ar.append(&header, data));
+            }
+            t!(ar.finish());
+        }
+
+        self.tarball = tarball;
+        self
+    }
+
+    /// Consume this builder to make the Put request body
+    fn body(self) -> Vec<u8> {
+        let new_crate = u::NewCrate {
+            name: u::CrateName(self.krate_name.clone()),
+            vers: u::CrateVersion(self.version),
+            features: HashMap::new(),
+            deps: Vec::new(),
+            authors: vec!["foo".to_string()],
+            description: Some("description".to_string()),
+            homepage: None,
+            documentation: None,
+            readme: None,
+            readme_file: None,
+            keywords: Some(u::KeywordList(Vec::new())),
+            categories: Some(u::CategoryList(Vec::new())),
+            license: Some("MIT".to_string()),
+            license_file: None,
+            repository: None,
+            badges: Some(HashMap::new()),
+            links: None,
+        };
+
+        ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
+    }
 }

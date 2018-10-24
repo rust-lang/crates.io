@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+extern crate conduit_middleware;
 extern crate diesel;
 extern crate serde_json;
 
@@ -10,7 +9,10 @@ use conduit::{Handler, Method};
 
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, CrateBuilder, CrateResponse, GoodCrate, VersionBuilder};
+use {
+    app, new_user, new_version, req, CrateBuilder, PublishBuilder, RequestHelper, TestApp,
+    VersionBuilder,
+};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -24,7 +26,7 @@ struct VersionResponse {
 #[test]
 fn index() {
     let (_b, app, middle) = app();
-    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let mut req = req(Method::Get, "/api/v1/versions");
     let mut response = ok_resp!(middle.call(&mut req));
     let json: VersionList = ::json(&mut response);
     assert_eq!(json.versions.len(), 0);
@@ -59,7 +61,7 @@ fn index() {
 #[test]
 fn show() {
     let (_b, app, middle) = app();
-    let mut req = req(Arc::clone(&app), Method::Get, "/api/v1/versions");
+    let mut req = req(Method::Get, "/api/v1/versions");
     let v = {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
@@ -78,11 +80,7 @@ fn show() {
 #[test]
 fn authors() {
     let (_b, app, middle) = app();
-    let mut req = req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/foo_authors/1.0.0/authors",
-    );
+    let mut req = req(Method::Get, "/api/v1/crates/foo_authors/1.0.0/authors");
     {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
@@ -95,7 +93,7 @@ fn authors() {
     let s = ::std::str::from_utf8(&data).unwrap();
     let json: Value = serde_json::from_str(s).unwrap();
     let json = json.as_object().unwrap();
-    assert!(json.contains_key(&"users".to_string()));
+    assert!(json.contains_key("users"));
 }
 
 #[test]
@@ -116,42 +114,27 @@ fn record_rerendered_readme_time() {
 
 #[test]
 fn version_size() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::new_req(Arc::clone(&app), "foo_version_size", "1.0.0");
-    ::sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name, "foo_version_size");
+    let (_, _, user) = TestApp::with_user();
+    let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
+    user.publish(crate_to_publish).good();
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
-    let body = ::new_crate_to_body(&::new_crate("foo_version_size", "2.0.0"), &files);
+    let crate_to_publish = PublishBuilder::new("foo_version_size")
+        .version("2.0.0")
+        .files(&files);
+    user.publish(crate_to_publish).good();
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    ::json::<GoodCrate>(&mut response);
+    let crate_json = user.show_crate("foo_version_size");
 
-    let mut show_req = ::req(
-        Arc::clone(&app),
-        Method::Get,
-        "/api/v1/crates/foo_version_size",
-    );
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
-
-    let version1 = json
+    let version1 = crate_json
         .versions
         .iter()
         .find(|v| v.num == "1.0.0")
         .expect("Could not find v1.0.0");
     assert_eq!(version1.crate_size, Some(35));
 
-    let version2 = json
+    let version2 = crate_json
         .versions
         .iter()
         .find(|v| v.num == "2.0.0")

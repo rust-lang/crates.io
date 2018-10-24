@@ -1,0 +1,13 @@
+We require that all requests include a `User-Agent` header.  To allow us to determine the impact your bot has on our service, we ask that your user agent actually identify your bot, and not just report the HTTP client library you're using.  Including contact information will also reduce the chance that we will need to take action against your bot.
+
+Bad:
+  User-Agent: reqwest/0.9.1
+
+Better:
+  User-Agent: my_crawler
+
+Best:
+  User-Agent: my_crawler (my_crawler.com/info)
+  User-Agent: my_crawler (help@my_crawler.com)
+
+If you believe you've received this message in error, please email help@crates.io and include the request id {}.
