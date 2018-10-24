@@ -13,6 +13,6 @@ use conduit::Request;
 pub fn request_header<'a>(req: &'a dyn Request, header_name: &str) -> &'a str {
     req.headers()
         .find(header_name)
-        .and_then(|x| x.first().map(|&s| s))
+        .and_then(|x| x.first().cloned())
         .unwrap_or_default()
 }

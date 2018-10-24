@@ -32,7 +32,7 @@ use new_user;
 pub struct Bomb {
     iorx: Sink,
     quittx: Option<oneshot::Sender<()>>,
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
 }
 
