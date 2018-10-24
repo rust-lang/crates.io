@@ -90,6 +90,7 @@ mod krate;
 mod owners;
 mod record;
 mod schema_details;
+mod server;
 mod team;
 mod token;
 mod user;
