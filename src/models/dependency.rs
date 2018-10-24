@@ -1,7 +1,4 @@
-use diesel::deserialize::QueryableByName;
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::row::NamedRow;
 use semver;
 
 use git;
@@ -11,7 +8,7 @@ use models::{Crate, Version};
 use schema::*;
 use views::{EncodableCrateDependency, EncodableDependency};
 
-#[derive(Identifiable, Associations, Debug)]
+#[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]
 #[belongs_to(Crate)]
 #[table_name = "dependencies"]
@@ -141,6 +138,7 @@ pub fn add_dependencies(
 }
 
 use diesel::deserialize::{self, FromSql};
+use diesel::pg::Pg;
 use diesel::sql_types::Integer;
 
 impl FromSql<Integer, Pg> for DependencyKind {
@@ -151,53 +149,5 @@ impl FromSql<Integer, Pg> for DependencyKind {
             2 => Ok(DependencyKind::Dev),
             n => Err(format!("unknown kind: {}", n).into()),
         }
-    }
-}
-
-impl Queryable<dependencies::SqlType, Pg> for Dependency {
-    type Row = (
-        i32,
-        i32,
-        i32,
-        String,
-        bool,
-        bool,
-        Vec<String>,
-        Option<String>,
-        DependencyKind,
-    );
-
-    fn build(row: Self::Row) -> Self {
-        Dependency {
-            id: row.0,
-            version_id: row.1,
-            crate_id: row.2,
-            req: semver::VersionReq::parse(&row.3).unwrap(),
-            optional: row.4,
-            default_features: row.5,
-            features: row.6,
-            target: row.7,
-            kind: row.8,
-        }
-    }
-}
-
-impl QueryableByName<Pg> for Dependency {
-    fn build<R: NamedRow<Pg>>(row: &R) -> deserialize::Result<Self> {
-        use diesel::dsl::SqlTypeOf;
-        use schema::dependencies::*;
-
-        let req_str = row.get::<SqlTypeOf<req>, String>("req")?;
-        Ok(Dependency {
-            id: row.get::<SqlTypeOf<id>, _>("id")?,
-            version_id: row.get::<SqlTypeOf<version_id>, _>("version_id")?,
-            crate_id: row.get::<SqlTypeOf<crate_id>, _>("crate_id")?,
-            req: semver::VersionReq::parse(&req_str)?,
-            optional: row.get::<SqlTypeOf<optional>, _>("optional")?,
-            default_features: row.get::<SqlTypeOf<default_features>, _>("default_features")?,
-            features: row.get::<SqlTypeOf<features>, _>("features")?,
-            target: row.get::<SqlTypeOf<target>, _>("target")?,
-            kind: row.get::<SqlTypeOf<kind>, _>("kind")?,
-        })
     }
 }

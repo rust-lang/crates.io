@@ -28,10 +28,11 @@ rustdoc-args = [
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
+old_semver = { path = "src/old_semver", version = "0.1.0" }
 rand = "0.3"
 git2 = "0.6.4"
 flate2 = "1.0"
-semver = "0.5"
+semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
 url = "1.2.1"
 tar = "0.4.13"
 base64 = "0.9"
