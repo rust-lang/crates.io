@@ -135,26 +135,30 @@ fn app() -> (
     conduit_middleware::MiddlewareBuilder,
 ) {
     dotenv::dotenv().ok();
-    git::init();
 
     let (proxy, bomb) = record::proxy();
-
-    // When testing we route all API traffic over HTTP so we can
-    // sniff/record it, but everywhere else we use https
-    let api_protocol = String::from("http");
-
     let uploader = cargo_registry::Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
             std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
             std::env::var("S3_SECRET_KEY").unwrap_or_default(),
-            &api_protocol,
+            // When testing we route all API traffic over HTTP so we can
+            // sniff/record it, but everywhere else we use https
+            "http",
         ),
         proxy: Some(proxy),
         cdn: None,
     };
 
+    let (app, handler) = simple_app(uploader);
+    (bomb, app, handler)
+}
+
+fn simple_app(
+    uploader: cargo_registry::Uploader,
+) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    git::init();
     let config = cargo_registry::Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
@@ -166,13 +170,15 @@ fn app() -> (
         max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
-        api_protocol,
+        // When testing we route all API traffic over HTTP so we can
+        // sniff/record it, but everywhere else we use https
+        api_protocol: String::from("http"),
     };
     let app = App::new(&config);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
-    (bomb, app, handler)
+    (app, handler)
 }
 
 // Return the environment variable only if it has been defined

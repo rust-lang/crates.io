@@ -19,7 +19,7 @@ struct GoodKeyword {
 #[test]
 fn index() {
     let url = "/api/v1/keywords";
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     let json: KeywordList = anon.get(url).good();
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
@@ -37,7 +37,7 @@ fn index() {
 #[test]
 fn show() {
     let url = "/api/v1/keywords/foo";
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     anon.get(url).assert_not_found();
 
     app.db(|conn| {
@@ -50,7 +50,7 @@ fn show() {
 #[test]
 fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     anon.get(url).assert_not_found();
 
     app.db(|conn| {
@@ -62,7 +62,7 @@ fn uppercase() {
 
 #[test]
 fn update_crate() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     let cnt = |kw: &str| {
         let json: GoodKeyword = anon.get(&format!("/api/v1/keywords/{}", kw)).good();
         json.keyword.crates_cnt as usize

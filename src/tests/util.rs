@@ -1,8 +1,10 @@
 //! This module provides utility types and traits for managing a test session
 //!
-//! Tests start by using one of the `TestApp` constructors.  All constructors return at least a
-//! `TestApp` and `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests
-//! in an unauthenticated session.
+//! Tests start by using one of the `TestApp` constructors, `init` or `with_proxy`.  This returns a
+//! `TestAppBuilder` which provides convience methods for creating up to one user, optionally with
+//! a token.  The builder methods all return at least an initialized `TestApp` and a
+//! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
+//! unauthenticated session.
 //!
 //! A `TestApp` value provides raw access to the database through the `db` function and can
 //! construct new users via the `db_new_user` function.  This function returns a
@@ -19,7 +21,7 @@
 
 use std::{self, rc::Rc, sync::Arc};
 
-use {conduit, conduit_middleware, diesel, serde};
+use {cargo_registry, conduit, conduit_middleware, diesel, dotenv, serde};
 
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
@@ -32,8 +34,8 @@ use super::{app, record, CrateList, CrateResponse, GoodCrate, PublishBuilder};
 
 struct TestAppInner {
     app: Arc<App>,
-    // The bomb needs to be held in scope until the end of the test.
-    _bomb: record::Bomb,
+    // The bomb (if created) needs to be held in scope until the end of the test.
+    _bomb: Option<record::Bomb>,
     middle: conduit_middleware::MiddlewareBuilder,
 }
 
@@ -41,29 +43,27 @@ struct TestAppInner {
 pub struct TestApp(Rc<TestAppInner>);
 
 impl TestApp {
-    /// Create a `TestApp` with an empty database
-    pub fn empty() -> (Self, MockAnonymousUser) {
-        let (_bomb, app, middle) = app();
-        let inner = Rc::new(TestAppInner { app, _bomb, middle });
-        let anon = MockAnonymousUser {
-            app: TestApp(Rc::clone(&inner)),
-        };
-        (TestApp(inner), anon)
+    /// Initialize an application with an `Uploader` that panics
+    pub fn init() -> TestAppBuilder {
+        dotenv::dotenv().ok();
+        let (app, middle) = ::simple_app(cargo_registry::Uploader::Panic);
+        let inner = Rc::new(TestAppInner {
+            app,
+            _bomb: None,
+            middle,
+        });
+        TestAppBuilder(TestApp(inner))
     }
 
-    // Create a `TestApp` with a database including a default user
-    pub fn with_user() -> (Self, MockAnonymousUser, MockCookieUser) {
-        let (app, anon) = TestApp::empty();
-        let user = app.db_new_user("foo");
-        (app, anon, user)
-    }
-
-    /// Create a `TestApp` with a database including a default user and its token
-    pub fn with_token() -> (Self, MockAnonymousUser, MockCookieUser, MockTokenUser) {
-        let (app, anon) = TestApp::empty();
-        let user = app.db_new_user("foo");
-        let token = user.db_new_token("bar");
-        (app, anon, user, token)
+    /// Initialize a full application that can record and playback outgoing HTTP requests
+    pub fn with_proxy() -> TestAppBuilder {
+        let (bomb, app, middle) = app();
+        let inner = Rc::new(TestAppInner {
+            app,
+            _bomb: Some(bomb),
+            middle,
+        });
+        TestAppBuilder(TestApp(inner))
     }
 
     /// Obtain the database connection and pass it to the closure
@@ -90,6 +90,33 @@ impl TestApp {
     /// Obtain a reference to the inner `App` value
     pub fn as_inner(&self) -> &App {
         &*self.0.app
+    }
+}
+
+pub struct TestAppBuilder(TestApp);
+
+impl TestAppBuilder {
+    /// Create a `TestApp` with an empty database
+    pub fn empty(self) -> (TestApp, MockAnonymousUser) {
+        let anon = MockAnonymousUser {
+            app: TestApp(Rc::clone(&(self.0).0)),
+        };
+        (self.0, anon)
+    }
+
+    // Create a `TestApp` with a database including a default user
+    pub fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
+        let (app, anon) = self.empty();
+        let user = app.db_new_user("foo");
+        (app, anon, user)
+    }
+
+    /// Create a `TestApp` with a database including a default user and its token
+    pub fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
+        let (app, anon) = self.empty();
+        let user = app.db_new_user("foo");
+        let token = user.db_new_token("bar");
+        (app, anon, user, token)
     }
 }
 

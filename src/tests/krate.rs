@@ -79,7 +79,7 @@ impl ::util::MockTokenUser {
 
 #[test]
 fn index() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     let json = anon.search("");
     assert_eq!(json.crates.len(), 0);
     assert_eq!(json.meta.total, 0);
@@ -98,7 +98,7 @@ fn index() {
 
 #[test]
 fn index_queries() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     let (krate, krate2) = app.db(|conn| {
@@ -179,7 +179,7 @@ fn index_queries() {
 
 #[test]
 fn search_includes_crates_where_name_is_stopword() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
         CrateBuilder::new("which", user.id).expect_build(conn);
@@ -194,7 +194,7 @@ fn search_includes_crates_where_name_is_stopword() {
 
 #[test]
 fn exact_match_first_on_queries() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -236,7 +236,7 @@ fn exact_match_first_on_queries() {
 
 #[test]
 fn index_sorting() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -318,7 +318,7 @@ fn index_sorting() {
 
 #[test]
 fn exact_match_on_queries_with_sort() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -416,7 +416,7 @@ fn exact_match_on_queries_with_sort() {
 
 #[test]
 fn show() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     let krate = app.db(|conn| {
@@ -463,7 +463,7 @@ fn show() {
 
 #[test]
 fn yanked_versions_are_not_considered_for_max_version() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -481,7 +481,7 @@ fn yanked_versions_are_not_considered_for_max_version() {
 
 #[test]
 fn versions() {
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     app.db(|conn| {
         let u = new_user("foo").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_versions", u.id)
@@ -854,7 +854,7 @@ fn valid_feature_names() {
 
 #[test]
 fn new_krate_too_big() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
 
@@ -1103,13 +1103,13 @@ fn new_krate_with_readme() {
 
 #[test]
 fn summary_doesnt_die() {
-    let (_, anon) = TestApp::empty();
+    let (_, anon) = TestApp::init().empty();
     anon.get::<SummaryResponse>("/api/v1/summary").good();
 }
 
 #[test]
 fn summary_new_crates() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
         let krate = CrateBuilder::new("some_downloads", user.id)
@@ -1176,7 +1176,7 @@ fn summary_new_crates() {
 #[test]
 fn download() {
     use chrono::{Duration, Utc};
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::with_proxy().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -1260,7 +1260,7 @@ fn dependencies() {
 
 #[test]
 fn diesel_not_found_results_in_404() {
-    let (_, _, user) = TestApp::with_user();
+    let (_, _, user) = TestApp::init().with_user();
 
     user.get("/api/v1/crates/foo_following/following")
         .assert_not_found();
@@ -1269,7 +1269,7 @@ fn diesel_not_found_results_in_404() {
 #[test]
 fn following() {
     // TODO: Test anon requests as well?
-    let (app, _, user) = TestApp::with_user();
+    let (app, _, user) = TestApp::init().with_user();
 
     app.db(|conn| {
         CrateBuilder::new("foo_following", user.as_model().id).expect_build(&conn);
@@ -1399,7 +1399,7 @@ fn yank() {
 
 #[test]
 fn yank_not_owner() {
-    let (app, _, _, token) = TestApp::with_token();
+    let (app, _, _, token) = TestApp::init().with_token();
     app.db(|conn| {
         let another_user = new_user("bar").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
@@ -2019,7 +2019,7 @@ fn author_license_and_description_required() {
 */
 #[test]
 fn test_recent_download_count() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -2057,7 +2057,7 @@ fn test_recent_download_count() {
  */
 #[test]
 fn test_zero_downloads() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -2082,7 +2082,7 @@ fn test_zero_downloads() {
 */
 #[test]
 fn test_default_sort_recent() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     let (green_crate, potato_crate) = app.db(|conn| {
@@ -2145,7 +2145,7 @@ fn test_default_sort_recent() {
 
 #[test]
 fn block_bad_documentation_url() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -2163,7 +2163,7 @@ fn block_bad_documentation_url() {
 // which call the `PUT /crates/:crate_id/owners` route
 #[test]
 fn test_cargo_invite_owners() {
-    let (app, _, owner) = TestApp::with_user();
+    let (app, _, owner) = TestApp::init().with_user();
 
     let new_user = app.db_new_user("cilantro");
     app.db(|conn| {

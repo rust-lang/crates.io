@@ -29,14 +29,14 @@ pub struct UserShowPrivateResponse {
 
 #[test]
 fn auth_gives_a_token() {
-    let (_, anon) = TestApp::empty();
+    let (_, anon) = TestApp::init().empty();
     let json: AuthResponse = anon.get("/authorize_url").good();
     assert!(json.url.contains(&json.state));
 }
 
 #[test]
 fn access_token_needs_data() {
-    let (_, anon) = TestApp::empty();
+    let (_, anon) = TestApp::init().empty();
     let json = anon.get::<()>("/authorize").bad_with_status(200); // Change endpoint to 400?
     assert!(json.errors[0].detail.contains("invalid state"));
 }
@@ -44,7 +44,7 @@ fn access_token_needs_data() {
 #[test]
 fn me() {
     let url = "/api/v1/me";
-    let (app, anon) = TestApp::empty();
+    let (app, anon) = TestApp::init().empty();
     anon.get(url).assert_forbidden();
 
     let user = app.db_new_user("foo");
@@ -115,7 +115,7 @@ fn show_latest_user_case_insensitively() {
 
 #[test]
 fn crates_by_user_id() {
-    let (app, _, user) = TestApp::with_user();
+    let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
     app.db(|conn| {
         CrateBuilder::new("foo_my_packages", id).expect_build(conn);
@@ -127,7 +127,7 @@ fn crates_by_user_id() {
 
 #[test]
 fn crates_by_user_id_not_including_deleted_owners() {
-    let (app, anon, user) = TestApp::with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
