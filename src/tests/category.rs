@@ -1,8 +1,9 @@
 use conduit::{Handler, Method};
 
+use builders::CrateBuilder;
 use models::Category;
 use views::{EncodableCategory, EncodableCategoryWithSubcategories};
-use {app, new_category, new_user, req, CrateBuilder, RequestHelper, TestApp};
+use {app, new_category, new_user, req, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct CategoryList {

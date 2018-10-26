@@ -22,6 +22,7 @@ use tar;
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
+use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use models::{ApiToken, Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
@@ -33,9 +34,8 @@ use {
     app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
-    VersionBuilder,
+    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateMeta,
+    CrateResponse, GoodCrate, OkBool, RequestHelper, TestApp,
 };
 
 #[derive(Deserialize)]
