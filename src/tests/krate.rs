@@ -567,6 +567,58 @@ fn new_bd_names() {
 }
 
 #[test]
+fn new_krate_with_reserved_name() {
+    fn test_bad_name(name: &str) {
+        let (_b, app, middle) = app();
+        let mut req = new_req(name, "1.0.0");
+        sign_in(&mut req, &app);
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(
+            json.errors[0]
+                .detail
+                .contains("cannot upload a crate with a reserved name",)
+        );
+    }
+
+    test_bad_name("std");
+    test_bad_name("STD");
+    test_bad_name("compiler-rt");
+    test_bad_name("compiler_rt");
+    test_bad_name("coMpiLer_Rt");
+}
+
+#[test]
+fn new_krate_bad_name() {
+    let (_b, app, middle) = app();
+    let mut req = new_req("foobar", "2.0.0");
+    let user = sign_in(&mut req, &app);
+    {
+        let mut req = new_req("snow☃", "2.0.0");
+        sign_in_as(&mut req, &user);
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(
+            json.errors[0]
+                .detail
+                .contains("expected a valid crate name",),
+            "{:?}",
+            json.errors
+        );
+    }
+    {
+        let mut req = new_req("áccênts", "2.0.0");
+        sign_in_as(&mut req, &user);
+        let json = bad_resp!(middle.call(&mut req));
+        assert!(
+            json.errors[0]
+                .detail
+                .contains("expected a valid crate name",),
+            "{:?}",
+            json.errors
+        );
+    }
+}
+
+#[test]
 fn new_krate() {
     let (_b, app, middle) = app();
     let mut req = new_req("foo_new", "1.0.0");
@@ -593,27 +645,6 @@ fn new_krate_with_token() {
     let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
-}
-
-#[test]
-fn new_krate_with_reserved_name() {
-    fn test_bad_name(name: &str) {
-        let (_b, app, middle) = app();
-        let mut req = new_req(name, "1.0.0");
-        sign_in(&mut req, &app);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("cannot upload a crate with a reserved name",)
-        );
-    }
-
-    test_bad_name("std");
-    test_bad_name("STD");
-    test_bad_name("compiler-rt");
-    test_bad_name("compiler_rt");
-    test_bad_name("coMpiLer_Rt");
 }
 
 #[test]
@@ -802,37 +833,6 @@ fn new_krate_wrong_user() {
         "{:?}",
         json.errors
     );
-}
-
-#[test]
-fn new_krate_bad_name() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foobar", "2.0.0");
-    let user = sign_in(&mut req, &app);
-    {
-        let mut req = new_req("snow☃", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
-    {
-        let mut req = new_req("áccênts", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
 }
 
 // TODO: Move this test to the main crate
