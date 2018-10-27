@@ -545,48 +545,32 @@ fn new_wrong_token() {
 }
 
 #[test]
-fn new_bd_names() {
-    fn bad_name(name: &str) {
-        println!("testing: `{}`", name);
+fn invalid_names() {
+    fn bad_name(name: &str, error_message: &str) {
         let (_b, app, middle) = app();
         let mut req = new_req(name, "1.0.0");
         sign_in(&mut req, &app);
         let json = bad_resp!(middle.call(&mut req));
         assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
+            json.errors[0].detail.contains(error_message,),
             "{:?}",
             json.errors
         );
     }
 
-    bad_name("");
-    bad_name("foo bar");
-    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1));
-    bad_name("snow☃");
-    bad_name("áccênts");
-}
+    let error_message = "expected a valid crate name";
+    bad_name("", error_message);
+    bad_name("foo bar", error_message);
+    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1), error_message);
+    bad_name("snow☃", error_message);
+    bad_name("áccênts", error_message);
 
-#[test]
-fn new_krate_with_reserved_name() {
-    fn test_bad_name(name: &str) {
-        let (_b, app, middle) = app();
-        let mut req = new_req(name, "1.0.0");
-        sign_in(&mut req, &app);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("cannot upload a crate with a reserved name",)
-        );
-    }
-
-    test_bad_name("std");
-    test_bad_name("STD");
-    test_bad_name("compiler-rt");
-    test_bad_name("compiler_rt");
-    test_bad_name("coMpiLer_Rt");
+    let error_message = "cannot upload a crate with a reserved name";
+    bad_name("std", error_message);
+    bad_name("STD", error_message);
+    bad_name("compiler-rt", error_message);
+    bad_name("compiler_rt", error_message);
+    bad_name("coMpiLer_Rt", error_message);
 }
 
 #[test]
