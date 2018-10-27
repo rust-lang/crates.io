@@ -564,6 +564,8 @@ fn new_bd_names() {
     bad_name("");
     bad_name("foo bar");
     bad_name(&"a".repeat(MAX_NAME_LENGTH + 1));
+    bad_name("snow☃");
+    bad_name("áccênts");
 }
 
 #[test]
@@ -585,37 +587,6 @@ fn new_krate_with_reserved_name() {
     test_bad_name("compiler-rt");
     test_bad_name("compiler_rt");
     test_bad_name("coMpiLer_Rt");
-}
-
-#[test]
-fn new_krate_bad_name() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foobar", "2.0.0");
-    let user = sign_in(&mut req, &app);
-    {
-        let mut req = new_req("snow☃", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
-    {
-        let mut req = new_req("áccênts", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
 }
 
 #[test]
