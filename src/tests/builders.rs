@@ -348,17 +348,7 @@ impl PublishBuilder {
     /// Add a dependency to this crate. Make sure the dependency already exists in the
     /// database or publish will fail.
     pub fn dependency(mut self, dep: &str) -> Self {
-        let dep = u::CrateDependency {
-            name: u::CrateName(dep.to_string()),
-            optional: false,
-            default_features: true,
-            features: Vec::new(),
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-            target: None,
-            kind: None,
-            explicit_name_in_toml: None,
-        };
-
+        let dep = DependencyBuilder::new(dep).build();
         self.deps.push(dep);
         self
     }
@@ -404,5 +394,34 @@ impl PublishBuilder {
         };
 
         ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
+    }
+}
+
+/// A builder for constructing a dependency of another crate.
+struct DependencyBuilder {
+    name: String,
+}
+
+impl DependencyBuilder {
+    /// Create a dependency on the crate with the given name.
+    fn new(name: &str) -> Self {
+        DependencyBuilder {
+            name: name.to_string(),
+        }
+    }
+
+    /// Consume this builder to create a `u::CrateDependency`. If the dependent crate doesn't
+    /// already exist, publishing a crate with this dependency will fail.
+    fn build(self) -> u::CrateDependency {
+        u::CrateDependency {
+            name: u::CrateName(self.name),
+            optional: false,
+            default_features: true,
+            features: Vec::new(),
+            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+            target: None,
+            kind: None,
+            explicit_name_in_toml: None,
+        }
     }
 }
