@@ -347,17 +347,8 @@ impl PublishBuilder {
 
     /// Add a dependency to this crate. Make sure the dependency already exists in the
     /// database or publish will fail.
-    pub fn dependency(mut self, dep: &str) -> Self {
-        let dep = DependencyBuilder::new(dep).build();
-        self.deps.push(dep);
-        self
-    }
-
-    /// Add a renamed dependency to this crate. Make sure the dependency already exists in the
-    /// database or publish will fail.
-    pub fn renamed_dependency(mut self, dep: &str, new_name: &str) -> Self {
-        let dep = DependencyBuilder::new(dep).rename(new_name).build();
-        self.deps.push(dep);
+    pub fn dependency(mut self, dep: DependencyBuilder) -> Self {
+        self.deps.push(dep.build());
         self
     }
 
@@ -388,14 +379,14 @@ impl PublishBuilder {
 }
 
 /// A builder for constructing a dependency of another crate.
-struct DependencyBuilder {
+pub struct DependencyBuilder {
     name: String,
     explicit_name_in_toml: Option<u::CrateName>,
 }
 
 impl DependencyBuilder {
     /// Create a dependency on the crate with the given name.
-    fn new(name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         DependencyBuilder {
             name: name.to_string(),
             explicit_name_in_toml: None,
@@ -403,7 +394,7 @@ impl DependencyBuilder {
     }
 
     /// Rename this dependency.
-    fn rename(mut self, new_name: &str) -> Self {
+    pub fn rename(mut self, new_name: &str) -> Self {
         self.explicit_name_in_toml = Some(u::CrateName(new_name.to_string()));
         self
     }

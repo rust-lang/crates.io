@@ -22,7 +22,7 @@ use tar;
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
-use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
+use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
 use models::{Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
@@ -607,9 +607,11 @@ fn new_krate_with_dependency() {
         CrateBuilder::new("foo_dep", user.as_model().id).expect_build(&conn);
     });
 
+    let dependency = DependencyBuilder::new("foo_dep");
+
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
-        .dependency("foo_dep");
+        .dependency(dependency);
     token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
@@ -636,9 +638,11 @@ fn new_with_renamed_dependency() {
         CrateBuilder::new("package-name", user.as_model().id).expect_build(&conn);
     });
 
+    let dependency = DependencyBuilder::new("package-name").rename("my-name");
+
     let crate_to_publish = PublishBuilder::new("new-krate")
         .version("1.0.0")
-        .renamed_dependency("package-name", "my-name");
+        .dependency(dependency);
     token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
@@ -666,9 +670,11 @@ fn new_krate_non_canon_crate_name_dependencies() {
         CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
     });
 
+    let dependency = DependencyBuilder::new("foo-dep");
+
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
-        .dependency("foo-dep");
+        .dependency(dependency);
     token.publish(crate_to_publish).good();
 }
 
