@@ -680,25 +680,20 @@ fn new_krate_non_canon_crate_name_dependencies() {
 
 #[test]
 fn new_krate_with_wildcard_dependency() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("foo_wild".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse("*").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    };
-    let mut req = new_req_full(krate("new_wild"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_wild", user.id).expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_wild can depend on it
+        CrateBuilder::new("foo_wild", user.as_model().id).expect_build(&conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo_wild").version_req("*");
+
+    let crate_to_publish = PublishBuilder::new("new_wild")
+        .version("1.0.0")
+        .dependency(dependency);
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("dependency constraints"),
         "{:?}",
