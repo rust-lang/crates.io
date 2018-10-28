@@ -95,7 +95,18 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         );
     }
 
-    if let Some(kw) = params.get("keyword") {
+    if let Some(kws) = params.get("all_keywords") {
+        let names: Vec<_> = kws.split_whitespace().map(|name| name.to_lowercase()).collect();
+
+        query = query.filter(
+            crates::id.eq_any(
+                crates_keywords::table
+                    .select(crates_keywords::crate_id)
+                    .inner_join(keywords::table)
+                    .filter(crate::lower(keywords::keyword).eq(any(names))),
+            ),
+        );
+    } else if let Some(kw) = params.get("keyword") {
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table

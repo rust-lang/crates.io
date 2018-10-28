@@ -139,6 +139,7 @@ fn index_queries() {
     assert_eq!(anon.search("keyword=kw1").crates.len(), 2);
     assert_eq!(anon.search("keyword=KW1").crates.len(), 2);
     assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
+    assert_eq!(anon.search("keyword=kw1&keyword=kw3").crates.len(), 3);
 
     assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
     assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);
