@@ -356,17 +356,7 @@ impl PublishBuilder {
     /// Add a renamed dependency to this crate. Make sure the dependency already exists in the
     /// database or publish will fail.
     pub fn renamed_dependency(mut self, dep: &str, new_name: &str) -> Self {
-        let dep = u::CrateDependency {
-            name: u::CrateName(dep.to_string()),
-            optional: false,
-            default_features: true,
-            features: Vec::new(),
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-            target: None,
-            kind: None,
-            explicit_name_in_toml: Some(u::CrateName(new_name.to_string())),
-        };
-
+        let dep = DependencyBuilder::new(dep).rename(new_name).build();
         self.deps.push(dep);
         self
     }
@@ -400,6 +390,7 @@ impl PublishBuilder {
 /// A builder for constructing a dependency of another crate.
 struct DependencyBuilder {
     name: String,
+    explicit_name_in_toml: Option<u::CrateName>,
 }
 
 impl DependencyBuilder {
@@ -407,7 +398,14 @@ impl DependencyBuilder {
     fn new(name: &str) -> Self {
         DependencyBuilder {
             name: name.to_string(),
+            explicit_name_in_toml: None,
         }
+    }
+
+    /// Rename this dependency.
+    fn rename(mut self, new_name: &str) -> Self {
+        self.explicit_name_in_toml = Some(u::CrateName(new_name.to_string()));
+        self
     }
 
     /// Consume this builder to create a `u::CrateDependency`. If the dependent crate doesn't
@@ -421,7 +419,7 @@ impl DependencyBuilder {
             version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
             target: None,
             kind: None,
-            explicit_name_in_toml: None,
+            explicit_name_in_toml: self.explicit_name_in_toml,
         }
     }
 }
