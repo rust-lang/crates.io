@@ -703,20 +703,20 @@ fn new_krate_with_wildcard_dependency() {
 
 #[test]
 fn new_krate_twice() {
-    let (_b, app, middle) = app();
-    let mut krate = krate("foo_twice");
-    krate.description = Some("description".to_string());
-    let mut req = new_req_full(krate.clone(), "2.0.0", Vec::new());
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_twice", user.id).expect_build(&conn);
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name, krate.name);
-    assert_eq!(json.krate.description, krate.description);
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database and then we'll try to publish another version
+        CrateBuilder::new("foo_twice", user.as_model().id).expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_twice")
+        .version("2.0.0")
+        .description("2.0.0 description");
+    let json = token.publish(crate_to_publish).good();
+
+    assert_eq!(json.krate.name, "foo_twice");
+    assert_eq!(json.krate.description.unwrap(), "2.0.0 description");
 }
 
 #[test]

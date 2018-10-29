@@ -297,6 +297,7 @@ pub struct PublishBuilder {
     version: semver::Version,
     tarball: Vec<u8>,
     deps: Vec<u::CrateDependency>,
+    desc: Option<String>,
 }
 
 impl PublishBuilder {
@@ -308,6 +309,7 @@ impl PublishBuilder {
             version: semver::Version::parse("1.0.0").unwrap(),
             tarball: EMPTY_TARBALL_BYTES.to_vec(),
             deps: vec![],
+            desc: Some("description".to_string()),
         }
     }
 
@@ -352,6 +354,12 @@ impl PublishBuilder {
         self
     }
 
+    /// Set the description of this crate
+    pub fn description(mut self, description: &str) -> Self {
+        self.desc = Some(description.to_string());
+        self
+    }
+
     /// Consume this builder to make the Put request body
     pub fn body(self) -> Vec<u8> {
         let new_crate = u::NewCrate {
@@ -360,7 +368,7 @@ impl PublishBuilder {
             features: HashMap::new(),
             deps: self.deps,
             authors: vec!["foo".to_string()],
-            description: Some("description".to_string()),
+            description: self.desc,
             homepage: None,
             documentation: None,
             readme: None,
