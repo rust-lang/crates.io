@@ -721,26 +721,22 @@ fn new_krate_twice() {
 
 #[test]
 fn new_krate_wrong_user() {
-    let (_b, app, middle) = app();
+    let (app, _, user) = TestApp::init().with_user();
 
-    let mut req = new_req("foo_wrong", "2.0.0");
+    app.db(|conn| {
+        // Create the foo_wrong crate with one user
+        CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&conn);
+    });
 
-    {
-        // Create the 'foo' crate with one user
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_wrong", user.id).expect_build(&conn);
+    // Then try to publish with a different user
+    let another_user = app.db_new_user("another").db_new_token("bar");
+    let crate_to_publish = PublishBuilder::new("foo_wrong").version("2.0.0");
 
-        // But log in another
-        let user = new_user("bar").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-    }
-
-    let json = bad_resp!(middle.call(&mut req));
+    let json = another_user.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
-            .contains("this crate exists but you don't seem to be an owner.",),
+            .contains("this crate exists but you don't seem to be an owner."),
         "{:?}",
         json.errors
     );
@@ -767,37 +763,43 @@ fn new_krate_too_big() {
     assert!(
         json.errors[0]
             .detail
-            .contains("uploaded tarball is malformed or too large when decompressed")
+            .contains("uploaded tarball is malformed or too large when decompressed"),
+        "{:?}",
+        json.errors
     );
 }
 
 #[test]
 fn new_krate_too_big_but_whitelisted() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_whitelist", "1.1.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_whitelist", user.id)
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_whitelist", user.as_model().id)
             .max_upload_size(2_000_000)
             .expect_build(&conn);
-    }
+    });
+
     let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
-    let body = new_crate_to_body(&new_crate("foo_whitelist", "1.1.0"), &files);
-    let mut response = ok_resp!(middle.call(req.with_body(&body)));
-    ::json::<GoodCrate>(&mut response);
+    let crate_to_publish = PublishBuilder::new("foo_whitelist")
+        .version("1.1.0")
+        .files(&files);
+
+    token.publish(crate_to_publish).good();
 }
 
 #[test]
 fn new_krate_wrong_files() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo", "1.1.0");
-    sign_in(&mut req, &app);
+    let (_, _, user) = TestApp::init().with_user();
     let data: &[u8] = &[1];
-    let files = [("foo-1.1.0/a", data), ("bar-1.1.0/a", data)];
-    let body = new_crate_to_body(&new_crate("foo", "1.1.0"), &files);
-    bad_resp!(middle.call(req.with_body(&body)));
+    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
+    let builder = PublishBuilder::new("foo").files(&files);
+
+    let json = user.publish(builder).bad_with_status(200);
+    assert!(
+        json.errors[0].detail.contains("invalid tarball uploaded"),
+        "{:?}",
+        json.errors
+    );
 }
 
 #[test]
@@ -823,18 +825,18 @@ fn new_krate_gzip_bomb() {
 
 #[test]
 fn new_krate_duplicate_version() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_dupe", "1.0.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-        CrateBuilder::new("foo_dupe", user.id)
-            .version(VersionBuilder::new("1.0.0"))
+    app.db(|conn| {
+        // Insert a crate directly into the database and then we'll try to publish the same version
+        CrateBuilder::new("foo_dupe", user.as_model().id)
+            .version("1.0.0")
             .expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0].detail.contains("already uploaded"),
         "{:?}",
