@@ -22,7 +22,8 @@ use tar;
 use cargo_registry::git;
 use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
-use models::{ApiToken, Category, Crate};
+use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
+use models::{Category, Crate};
 use schema::{crates, metadata, versions};
 use views::krate_publish as u;
 use views::{
@@ -30,12 +31,11 @@ use views::{
     EncodableVersionDownload,
 };
 use {
-    app, krate, logout, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
+    app, krate, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateBuilder,
-    CrateMeta, CrateResponse, GoodCrate, OkBool, PublishBuilder, RequestHelper, TestApp,
-    VersionBuilder,
+    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateMeta,
+    CrateResponse, GoodCrate, OkBool, RequestHelper, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -503,31 +503,24 @@ fn versions() {
 fn uploading_new_version_touches_crate() {
     use diesel::dsl::*;
 
-    let (_b, app, middle) = app();
+    let (app, _, user) = TestApp::with_proxy().with_user();
+    let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("1.0.0");
+    user.publish(crate_to_publish).good();
 
-    let mut upload_req = new_req("foo_versions_updated_at", "1.0.0");
-    let u = sign_in(&mut upload_req, &app);
-    ok_resp!(middle.call(&mut upload_req));
-
-    {
-        let conn = app.diesel_database.get().unwrap();
+    app.db(|conn| {
         diesel::update(crates::table)
             .set(crates::updated_at.eq(crates::updated_at - 1.hour()))
             .execute(&*conn)
             .unwrap();
-    }
+    });
 
-    let mut show_req = req(Method::Get, "/api/v1/crates/foo_versions_updated_at");
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
+    let json: CrateResponse = user.show_crate("foo_versions_updated_at");
     let updated_at_before = json.krate.updated_at;
 
-    let mut upload_req = new_req("foo_versions_updated_at", "2.0.0");
-    sign_in_as(&mut upload_req, &u);
-    ok_resp!(middle.call(&mut upload_req));
+    let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("2.0.0");
+    user.publish(crate_to_publish).good();
 
-    let mut response = ok_resp!(middle.call(&mut show_req));
-    let json: CrateResponse = ::json(&mut response);
+    let json: CrateResponse = user.show_crate("foo_versions_updated_at");
     let updated_at_after = json.krate.updated_at;
 
     assert_ne!(updated_at_before, updated_at_after);
@@ -535,166 +528,91 @@ fn uploading_new_version_touches_crate() {
 
 #[test]
 fn new_wrong_token() {
-    let (_b, app, middle) = app();
+    let (_b, _app, middle) = app();
     let mut req = new_req("foo", "1.0.0");
     bad_resp!(middle.call(&mut req));
 
     let mut req = new_req("foo", "1.0.0");
-    req.header("Authorization", "bad");
-    bad_resp!(middle.call(&mut req));
-
-    let mut req = new_req("foo", "1.0.0");
-    sign_in(&mut req, &app);
-    logout(&mut req);
     req.header("Authorization", "bad");
     bad_resp!(middle.call(&mut req));
 }
 
 #[test]
-fn new_bd_names() {
-    fn bad_name(name: &str) {
-        println!("testing: `{}`", name);
-        let (_b, app, middle) = app();
-        let mut req = new_req(name, "1.0.0");
-        sign_in(&mut req, &app);
-        let json = bad_resp!(middle.call(&mut req));
+fn invalid_names() {
+    fn bad_name(name: &str, error_message: &str) {
+        let (_, _, _, token) = TestApp::init().with_token();
+        let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
+        let json = token.publish(crate_to_publish).bad_with_status(200);
+
         assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
+            json.errors[0].detail.contains(error_message,),
             "{:?}",
             json.errors
         );
     }
 
-    bad_name("");
-    bad_name("foo bar");
-    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1));
+    let error_message = "expected a valid crate name";
+    bad_name("", error_message);
+    bad_name("foo bar", error_message);
+    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1), error_message);
+    bad_name("snow☃", error_message);
+    bad_name("áccênts", error_message);
+
+    let error_message = "cannot upload a crate with a reserved name";
+    bad_name("std", error_message);
+    bad_name("STD", error_message);
+    bad_name("compiler-rt", error_message);
+    bad_name("compiler_rt", error_message);
+    bad_name("coMpiLer_Rt", error_message);
 }
 
 #[test]
 fn new_krate() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_new", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, user) = TestApp::with_proxy().with_user();
+    let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
+    let json: GoodCrate = user.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
 #[test]
 fn new_krate_with_token() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_new", "1.0.0");
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
 
-    {
-        let conn = t!(app.diesel_database.get());
-        let user = t!(new_user("foo").create_or_update(&conn));
-        let token = t!(ApiToken::insert(&conn, user.id, "bar"));
-        req.header("Authorization", &token.token);
-    }
+    let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
+    let json: GoodCrate = token.publish(crate_to_publish).good();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
 #[test]
-fn new_krate_with_reserved_name() {
-    fn test_bad_name(name: &str) {
-        let (_b, app, middle) = app();
-        let mut req = new_req(name, "1.0.0");
-        sign_in(&mut req, &app);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("cannot upload a crate with a reserved name",)
-        );
-    }
-
-    test_bad_name("std");
-    test_bad_name("STD");
-    test_bad_name("compiler-rt");
-    test_bad_name("compiler_rt");
-    test_bad_name("coMpiLer_Rt");
-}
-
-#[test]
 fn new_krate_weird_version() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_weird", "0.0.0-pre");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo_weird").version("0.0.0-pre");
+    let json: GoodCrate = token.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_weird");
     assert_eq!(json.krate.max_version, "0.0.0-pre");
 }
 
 #[test]
-fn new_krate_with_dependency() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("foo_dep".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    };
-    let mut req = new_req_full(krate("new_dep"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_dep", user.id).expect_build(&conn);
-    }
+fn new_with_renamed_dependency() {
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new-krate can depend on it
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(&conn);
+    });
 
-    let remote_contents = clone_remote_repo();
-    let path = remote_contents.path().join("ne/w_/new_dep");
-    assert!(path.exists());
-    let mut contents = String::new();
-    File::open(&path)
-        .unwrap()
-        .read_to_string(&mut contents)
-        .unwrap();
-    let p: git::Crate = serde_json::from_str(&contents).unwrap();
-    assert_eq!(p.name, "new_dep");
-    assert_eq!(p.vers, "1.0.0");
-    assert_eq!(p.deps.len(), 1);
-    assert_eq!(p.deps[0].name, "foo_dep");
-}
+    let dependency = DependencyBuilder::new("package-name").rename("my-name");
 
-#[test]
-fn new_renamed_crate() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("package-name".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: Some(u::CrateName("my-name".to_string())),
-    };
-    let mut req = new_req_full(krate("new-krate"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("user").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("package-name", user.id).expect_build(&conn);
-    }
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    let crate_to_publish = PublishBuilder::new("new-krate")
+        .version("1.0.0")
+        .dependency(dependency);
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("ne/w-/new-krate");
@@ -713,51 +631,41 @@ fn new_renamed_crate() {
 }
 
 #[test]
-fn new_krate_non_canon_crate_name_dependencies() {
-    let (_b, app, middle) = app();
-    let deps = vec![u::CrateDependency {
-        name: u::CrateName("foo-dep".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    }];
-    let mut req = new_req_full(krate("new_dep"), "1.0.0", deps);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo-dep", user.id).expect_build(&conn);
-    }
+fn new_krate_with_dependency() {
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_dep can depend on it
+        // The name choice of `foo-dep` is important! It has the property of
+        // name != canon_crate_name(name) and is a regression test for
+        // https://github.com/rust-lang/crates.io/issues/651
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo-dep");
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency(dependency);
+    token.publish(crate_to_publish).good();
 }
 
 #[test]
 fn new_krate_with_wildcard_dependency() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        name: u::CrateName("foo_wild".to_string()),
-        optional: false,
-        default_features: true,
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse("*").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    };
-    let mut req = new_req_full(krate("new_wild"), "1.0.0", vec![dep]);
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_wild", user.id).expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database so that new_wild can depend on it
+        CrateBuilder::new("foo_wild", user.as_model().id).expect_build(&conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo_wild").version_req("*");
+
+    let crate_to_publish = PublishBuilder::new("new_wild")
+        .version("1.0.0")
+        .dependency(dependency);
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("dependency constraints"),
         "{:?}",
@@ -767,78 +675,43 @@ fn new_krate_with_wildcard_dependency() {
 
 #[test]
 fn new_krate_twice() {
-    let (_b, app, middle) = app();
-    let mut krate = krate("foo_twice");
-    krate.description = Some("description".to_string());
-    let mut req = new_req_full(krate.clone(), "2.0.0", Vec::new());
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_twice", user.id).expect_build(&conn);
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
-    assert_eq!(json.krate.name, krate.name);
-    assert_eq!(json.krate.description, krate.description);
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        // Insert a crate directly into the database and then we'll try to publish another version
+        CrateBuilder::new("foo_twice", user.as_model().id).expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_twice")
+        .version("2.0.0")
+        .description("2.0.0 description");
+    let json = token.publish(crate_to_publish).good();
+
+    assert_eq!(json.krate.name, "foo_twice");
+    assert_eq!(json.krate.description.unwrap(), "2.0.0 description");
 }
 
 #[test]
 fn new_krate_wrong_user() {
-    let (_b, app, middle) = app();
+    let (app, _, user) = TestApp::init().with_user();
 
-    let mut req = new_req("foo_wrong", "2.0.0");
+    app.db(|conn| {
+        // Create the foo_wrong crate with one user
+        CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&conn);
+    });
 
-    {
-        // Create the 'foo' crate with one user
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("foo_wrong", user.id).expect_build(&conn);
+    // Then try to publish with a different user
+    let another_user = app.db_new_user("another").db_new_token("bar");
+    let crate_to_publish = PublishBuilder::new("foo_wrong").version("2.0.0");
 
-        // But log in another
-        let user = new_user("bar").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-    }
-
-    let json = bad_resp!(middle.call(&mut req));
+    let json = another_user.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
-            .contains("this crate exists but you don't seem to be an owner.",),
+            .contains("this crate exists but you don't seem to be an owner."),
         "{:?}",
         json.errors
     );
-}
-
-#[test]
-fn new_krate_bad_name() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foobar", "2.0.0");
-    let user = sign_in(&mut req, &app);
-    {
-        let mut req = new_req("snow☃", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
-    {
-        let mut req = new_req("áccênts", "2.0.0");
-        sign_in_as(&mut req, &user);
-        let json = bad_resp!(middle.call(&mut req));
-        assert!(
-            json.errors[0]
-                .detail
-                .contains("expected a valid crate name",),
-            "{:?}",
-            json.errors
-        );
-    }
 }
 
 // TODO: Move this test to the main crate
@@ -862,37 +735,43 @@ fn new_krate_too_big() {
     assert!(
         json.errors[0]
             .detail
-            .contains("uploaded tarball is malformed or too large when decompressed")
+            .contains("uploaded tarball is malformed or too large when decompressed"),
+        "{:?}",
+        json.errors
     );
 }
 
 #[test]
 fn new_krate_too_big_but_whitelisted() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_whitelist", "1.1.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("foo_whitelist", user.id)
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_whitelist", user.as_model().id)
             .max_upload_size(2_000_000)
             .expect_build(&conn);
-    }
+    });
+
     let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
-    let body = new_crate_to_body(&new_crate("foo_whitelist", "1.1.0"), &files);
-    let mut response = ok_resp!(middle.call(req.with_body(&body)));
-    ::json::<GoodCrate>(&mut response);
+    let crate_to_publish = PublishBuilder::new("foo_whitelist")
+        .version("1.1.0")
+        .files(&files);
+
+    token.publish(crate_to_publish).good();
 }
 
 #[test]
 fn new_krate_wrong_files() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo", "1.1.0");
-    sign_in(&mut req, &app);
+    let (_, _, user) = TestApp::init().with_user();
     let data: &[u8] = &[1];
-    let files = [("foo-1.1.0/a", data), ("bar-1.1.0/a", data)];
-    let body = new_crate_to_body(&new_crate("foo", "1.1.0"), &files);
-    bad_resp!(middle.call(req.with_body(&body)));
+    let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
+    let builder = PublishBuilder::new("foo").files(&files);
+
+    let json = user.publish(builder).bad_with_status(200);
+    assert!(
+        json.errors[0].detail.contains("invalid tarball uploaded"),
+        "{:?}",
+        json.errors
+    );
 }
 
 #[test]
@@ -918,18 +797,18 @@ fn new_krate_gzip_bomb() {
 
 #[test]
 fn new_krate_duplicate_version() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_dupe", "1.0.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
+    let (app, _, user, token) = TestApp::init().with_token();
 
-        CrateBuilder::new("foo_dupe", user.id)
-            .version(VersionBuilder::new("1.0.0"))
+    app.db(|conn| {
+        // Insert a crate directly into the database and then we'll try to publish the same version
+        CrateBuilder::new("foo_dupe", user.as_model().id)
+            .version("1.0.0")
             .expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0].detail.contains("already uploaded"),
         "{:?}",

@@ -7,12 +7,10 @@ use serde_json::Value;
 use self::diesel::prelude::*;
 use conduit::{Handler, Method};
 
+use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use schema::versions;
 use views::EncodableVersion;
-use {
-    app, new_user, new_version, req, CrateBuilder, PublishBuilder, RequestHelper, TestApp,
-    VersionBuilder,
-};
+use {app, new_user, new_version, req, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct VersionList {

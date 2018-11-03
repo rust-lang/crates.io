@@ -13,24 +13,24 @@
           "AWS AKIAICL5IWUZYWWKA7JA:lH91IZJxBDr21vB3eSZXwXTQelk="
         ],
         [
-          "user-agent",
-          "reqwest/0.9.1"
-        ],
-        [
-          "accept-encoding",
-          "gzip"
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
         ],
         [
           "content-type",
           "application/x-tar"
         ],
         [
-          "date",
-          "Fri, 15 Sep 2017 07:53:06 -0700"
+          "accept-encoding",
+          "gzip"
         ],
         [
           "content-length",
           "35"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
         ],
         [
           "accept",
@@ -43,28 +43,28 @@
       "status": 200,
       "headers": [
         [
-          "x-amz-request-id",
-          "AD365A79DBB12C77"
-        ],
-        [
-          "ETag",
-          "\"f9016ad360cebb4fe2e6e96e5949f022\""
-        ],
-        [
           "Server",
           "AmazonS3"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-request-id",
+          "8190F375F5651D47"
+        ],
+        [
+          "x-amz-id-2",
+          "PQEXq2S9IgVfG/u0l2cjHuWU8EDPlRSwxqai2oNPCz8TyX/CEwn2ydL+A1qnNK3Ng+FpC9ukVl8="
         ],
         [
           "date",
           "Fri, 15 Sep 2017 14:53:07 GMT"
         ],
         [
-          "x-amz-id-2",
-          "PY+ZuguMcTdHQflO2OWDBeoWq2rf6W03Q0T57YjcWnGBgNHVV7rX876JMWriAXajzbxbHkph7ms="
-        ],
-        [
-          "content-length",
-          "0"
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
         ]
       ],
       "body": ""

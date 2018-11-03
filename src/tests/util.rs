@@ -26,11 +26,12 @@ use {cargo_registry, conduit, conduit_middleware, diesel, dotenv, serde};
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
 
+use builders::PublishBuilder;
 use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use models::{ApiToken, User};
 
-use super::{app, record, CrateList, CrateResponse, GoodCrate, PublishBuilder};
+use super::{app, record, CrateList, CrateResponse, GoodCrate};
 
 struct TestAppInner {
     app: Arc<App>,
