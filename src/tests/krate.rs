@@ -599,37 +599,6 @@ fn new_krate_weird_version() {
 }
 
 #[test]
-fn new_krate_with_dependency() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
-
-    app.db(|conn| {
-        // Insert a crate directly into the database so that new_dep can depend on it
-        CrateBuilder::new("foo_dep", user.as_model().id).expect_build(&conn);
-    });
-
-    let dependency = DependencyBuilder::new("foo_dep");
-
-    let crate_to_publish = PublishBuilder::new("new_dep")
-        .version("1.0.0")
-        .dependency(dependency);
-    token.publish(crate_to_publish).good();
-
-    let remote_contents = clone_remote_repo();
-    let path = remote_contents.path().join("ne/w_/new_dep");
-    assert!(path.exists());
-    let mut contents = String::new();
-    File::open(&path)
-        .unwrap()
-        .read_to_string(&mut contents)
-        .unwrap();
-    let p: git::Crate = serde_json::from_str(&contents).unwrap();
-    assert_eq!(p.name, "new_dep");
-    assert_eq!(p.vers, "1.0.0");
-    assert_eq!(p.deps.len(), 1);
-    assert_eq!(p.deps[0].name, "foo_dep");
-}
-
-#[test]
 fn new_with_renamed_dependency() {
     let (app, _, user, token) = TestApp::with_proxy().with_token();
 
