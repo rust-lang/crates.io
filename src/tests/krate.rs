@@ -540,7 +540,7 @@ fn new_wrong_token() {
 #[test]
 fn invalid_names() {
     fn bad_name(name: &str, error_message: &str) {
-        let (_, _, _, token) = TestApp::with_proxy().with_token();
+        let (_, _, _, token) = TestApp::init().with_token();
         let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
         let json = token.publish(crate_to_publish).bad_with_status(200);
 
@@ -680,7 +680,7 @@ fn new_krate_non_canon_crate_name_dependencies() {
 
 #[test]
 fn new_krate_with_wildcard_dependency() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_wild can depend on it
@@ -825,7 +825,7 @@ fn new_krate_gzip_bomb() {
 
 #[test]
 fn new_krate_duplicate_version() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database and then we'll try to publish the same version
