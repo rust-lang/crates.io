@@ -631,11 +631,14 @@ fn new_with_renamed_dependency() {
 }
 
 #[test]
-fn new_krate_non_canon_crate_name_dependencies() {
+fn new_krate_with_dependency() {
     let (app, _, user, token) = TestApp::with_proxy().with_token();
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_dep can depend on it
+        // The name choice of `foo-dep` is important! It has the property of
+        // name != canon_crate_name(name) and is a regression test for
+        // https://github.com/rust-lang/crates.io/issues/651
         CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
     });
 
