@@ -651,6 +651,23 @@ fn new_krate_with_dependency() {
 }
 
 #[test]
+fn reject_new_krate_with_non_exact_dependency() {
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
+    });
+
+    // Use non-exact name for the dependency
+    let dependency = DependencyBuilder::new("foo_dep");
+
+    let crate_to_publish = PublishBuilder::new("new_dep")
+        .version("1.0.0")
+        .dependency(dependency);
+    token.publish(crate_to_publish).bad_with_status(200);
+}
+
+#[test]
 fn new_krate_with_wildcard_dependency() {
     let (app, _, user, token) = TestApp::init().with_token();
 
