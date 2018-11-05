@@ -434,7 +434,7 @@ fn azure_devops_required_keys() {
     let mut badges = HashMap::new();
 
     // project is a required key
-    test_badges.gitlab_attributes.remove("project");
+    test_badges.azure_devops_attributes.remove("project");
     badges.insert(
         String::from("azure-devops"),
         test_badges.azure_devops_attributes,
