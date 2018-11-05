@@ -91,6 +91,7 @@ type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
+type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[table_name = "crates"]
@@ -242,6 +243,10 @@ impl Crate {
 
     pub fn by_name(name: &str) -> ByName<'_> {
         Crate::all().filter(Self::with_name(name))
+    }
+
+    pub fn by_exact_name(name: &str) -> ByExactName<'_> {
+        Crate::all().filter(crates::name.eq(name))
     }
 
     pub fn all() -> All {

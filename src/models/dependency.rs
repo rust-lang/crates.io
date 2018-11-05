@@ -81,7 +81,8 @@ pub fn add_dependencies(
     let git_and_new_dependencies = deps
         .iter()
         .map(|dep| {
-            let krate = Crate::by_name(&dep.name)
+            // Match only identical names to ensure the index always references the original crate name
+            let krate = Crate::by_exact_name(&dep.name)
                 .first::<Crate>(&*conn)
                 .map_err(|_| human(&format_args!("no known crate named `{}`", &*dep.name)))?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
