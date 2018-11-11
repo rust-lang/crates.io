@@ -31,7 +31,7 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use models::{ApiToken, User};
 
-use super::{app, record, CrateList, CrateResponse, GoodCrate};
+use super::{app, record, CrateList, CrateResponse, GoodCrate, VersionResponse};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -187,6 +187,12 @@ pub trait RequestHelper {
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{}", krate_name);
+        self.get(&url).good()
+    }
+
+    /// Request the JSON used for a crate version's page
+    fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
+        let url = format!("/api/v1/crates/{}/{}", krate_name, version);
         self.get(&url).good()
     }
 }

@@ -126,6 +126,10 @@ pub struct CrateResponse {
     keywords: Vec<EncodableKeyword>,
 }
 #[derive(Deserialize)]
+pub struct VersionResponse {
+    version: EncodableVersion,
+}
+#[derive(Deserialize)]
 struct OkBool {
     ok: bool,
 }
@@ -292,39 +296,10 @@ fn krate(name: &str) -> Crate {
     }
 }
 
-fn new_crate(name: &str, version: &str) -> u::NewCrate {
-    u::NewCrate {
-        name: u::CrateName(name.to_string()),
-        vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
-        features: HashMap::new(),
-        deps: Vec::new(),
-        authors: vec!["foo".to_string()],
-        description: Some("desc".to_string()),
-        homepage: None,
-        documentation: None,
-        readme: None,
-        readme_file: None,
-        keywords: None,
-        categories: None,
-        license: Some("MIT".to_string()),
-        license_file: None,
-        repository: None,
-        badges: None,
-        links: None,
-    }
-}
-
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
         .insert(AuthenticationSource::SessionCookie);
-}
-
-fn sign_in(req: &mut Request, app: &App) -> User {
-    let conn = app.diesel_database.get().unwrap();
-    let user = new_user("foo").create_or_update(&conn).unwrap();
-    sign_in_as(req, &user);
-    user
 }
 
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
@@ -359,12 +334,6 @@ fn new_req(krate: &str, version: &str) -> MockRequest {
     new_req_full(::krate(krate), version, Vec::new())
 }
 
-fn new_req_with_documentation(krate: &str, version: &str, documentation: &str) -> MockRequest {
-    let mut krate = ::krate(krate);
-    krate.documentation = Some(documentation.into());
-    new_req_full(krate, version, Vec::new())
-}
-
 fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
     let mut req = req(Method::Put, "/api/v1/crates/new");
     req.with_body(&new_req_body(
@@ -374,49 +343,6 @@ fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> M
         Vec::new(),
         Vec::new(),
         HashMap::new(),
-    ));
-    req
-}
-
-fn new_req_with_keywords(krate: Crate, version: &str, kws: Vec<String>) -> MockRequest {
-    let mut req = req(Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate,
-        version,
-        Vec::new(),
-        kws,
-        Vec::new(),
-        HashMap::new(),
-    ));
-    req
-}
-
-fn new_req_with_categories(krate: Crate, version: &str, cats: Vec<String>) -> MockRequest {
-    let mut req = req(Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate,
-        version,
-        Vec::new(),
-        Vec::new(),
-        cats,
-        HashMap::new(),
-    ));
-    req
-}
-
-fn new_req_with_badges(
-    krate: Crate,
-    version: &str,
-    badges: HashMap<String, HashMap<String, String>>,
-) -> MockRequest {
-    let mut req = req(Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate,
-        version,
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
-        badges,
     ));
     req
 }

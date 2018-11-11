@@ -9,13 +9,12 @@ use std::io::prelude::*;
 use self::diesel::prelude::*;
 use self::tempdir::TempDir;
 use chrono::Utc;
-use conduit::{Handler, Method};
+use conduit::Handler;
 use diesel::dsl::*;
 use diesel::update;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use git2;
-use semver;
 use serde_json;
 use tar;
 
@@ -25,17 +24,13 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
 use models::{Category, Crate};
 use schema::{crates, metadata, versions};
-use views::krate_publish as u;
 use views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
     EncodableVersionDownload,
 };
 use {
-    app, krate, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
-    new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
-    new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateMeta,
-    CrateResponse, GoodCrate, OkBool, RequestHelper, TestApp,
+    app, new_category, new_dependency, new_req, new_user, new_version, CrateMeta, CrateResponse,
+    GoodCrate, OkBool, RequestHelper, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -69,11 +64,24 @@ struct SummaryResponse {
     popular_categories: Vec<EncodableCategory>,
 }
 
+impl ::util::MockAnonymousUser {
+    fn reverse_dependencies(&self, krate_name: &str) -> RevDeps {
+        let url = format!("/api/v1/crates/{}/reverse_dependencies", krate_name);
+        self.get(&url).good()
+    }
+}
+
 impl ::util::MockTokenUser {
     /// Yank the specified version of the specified crate.
     fn yank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
         self.delete(&url)
+    }
+
+    /// Unyank the specified version of the specified crate.
+    fn unyank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/{}/unyank", krate_name, version);
+        self.put(&url, &[])
     }
 }
 
@@ -793,16 +801,17 @@ fn new_krate_wrong_files() {
 
 #[test]
 fn new_krate_gzip_bomb() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo", "1.1.0");
-    sign_in(&mut req, &app);
+    let (_, _, _, token) = TestApp::init().with_token();
+
     let len = 512 * 1024;
     let mut body = io::repeat(0).take(len);
-    let body = new_crate_to_body_with_io(
-        &new_crate("foo", "1.1.0"),
-        &mut [("foo-1.1.0/a", &mut body, len)],
-    );
-    let json = bad_resp!(middle.call(req.with_body(&body)));
+
+    let crate_to_publish = PublishBuilder::new("foo")
+        .version("1.1.0")
+        .files_with_io(&mut [("foo-1.1.0/a", &mut body, len)]);
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0]
             .detail
@@ -835,15 +844,17 @@ fn new_krate_duplicate_version() {
 
 #[test]
 fn new_crate_similar_name() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_similar", "1.1.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &u);
-        CrateBuilder::new("Foo_similar", u.id).expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("Foo_similar", user.as_model().id)
+            .version("1.0.0")
+            .expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0].detail.contains("previously named"),
         "{:?}",
@@ -853,15 +864,17 @@ fn new_crate_similar_name() {
 
 #[test]
 fn new_crate_similar_name_hyphen() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo-bar-hyphen", "1.1.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &u);
-        CrateBuilder::new("foo_bar_hyphen", u.id).expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_bar_hyphen", user.as_model().id)
+            .version("1.0.0")
+            .expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo-bar-hyphen").version("1.1.0");
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0].detail.contains("previously named"),
         "{:?}",
@@ -871,15 +884,17 @@ fn new_crate_similar_name_hyphen() {
 
 #[test]
 fn new_crate_similar_name_underscore() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo_bar_underscore", "1.1.0");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &u);
-        CrateBuilder::new("foo-bar-underscore", u.id).expect_build(&conn);
-    }
-    let json = bad_resp!(middle.call(&mut req));
+    let (app, _, user, token) = TestApp::init().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo-bar-underscore", user.as_model().id)
+            .version("1.0.0")
+            .expect_build(&conn);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_bar_underscore").version("1.1.0");
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
     assert!(
         json.errors[0].detail.contains("previously named"),
         "{:?}",
@@ -889,11 +904,9 @@ fn new_crate_similar_name_underscore() {
 
 #[test]
 fn new_krate_git_upload() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("fgt", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+    let crate_to_publish = PublishBuilder::new("fgt");
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("3/f/fgt");
@@ -915,15 +928,12 @@ fn new_krate_git_upload() {
 
 #[test]
 fn new_krate_git_upload_appends() {
-    let (_b, app, middle) = app();
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
 
-    let mut req = new_req("FPP", "0.0.1");
-    let user = sign_in(&mut req, &app);
-    ok_resp!(middle.call(&mut req));
-    let mut req = new_req("FPP", "1.0.0");
-    sign_in_as(&mut req, &user);
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    let crate_to_publish = PublishBuilder::new("FPP").version("0.0.1");
+    token.publish(crate_to_publish).good();
+    let crate_to_publish = PublishBuilder::new("FPP").version("1.0.0");
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("3/f/fpp");
@@ -942,9 +952,8 @@ fn new_krate_git_upload_appends() {
 
 #[test]
 fn new_krate_git_upload_with_conflicts() {
-    let (_b, app, middle) = app();
-
     {
+        ::git::init();
         let repo = git2::Repository::open(&::git::bare()).unwrap();
         let target = repo.head().unwrap().target().unwrap();
         let sig = repo.signature().unwrap();
@@ -954,45 +963,37 @@ fn new_krate_git_upload_with_conflicts() {
             .unwrap();
     }
 
-    let mut req = new_req("foo_conflicts", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+    let crate_to_publish = PublishBuilder::new("foo_conflicts");
+    token.publish(crate_to_publish).good();
 }
 
 #[test]
 fn new_krate_dependency_missing() {
-    let (_b, app, middle) = app();
-    let dep = u::CrateDependency {
-        optional: false,
-        default_features: true,
-        name: u::CrateName("bar_missing".to_string()),
-        features: Vec::new(),
-        version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0.0.0").unwrap()),
-        target: None,
-        kind: None,
-        explicit_name_in_toml: None,
-    };
-    let mut req = new_req_full(krate("foo_missing"), "1.0.0", vec![dep]);
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json = ::json::<Bad>(&mut response);
+    let (_, _, _, token) = TestApp::init().with_token();
+
+    // Deliberately not inserting this crate in the database to test behavior when a dependency
+    // doesn't exist!
+    let dependency = DependencyBuilder::new("bar_missing");
+    let crate_to_publish = PublishBuilder::new("foo_missing").dependency(dependency);
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
-            .contains("no known crate named `bar_missing`",)
+            .contains("no known crate named `bar_missing`"),
+        "{:?}",
+        json.errors
     );
 }
 
 #[test]
 fn new_krate_with_readme() {
-    let (_b, app, middle) = app();
-    let mut krate = krate("foo_readme");
-    krate.readme = Some("".to_owned());
-    let mut req = new_req_full(krate, "1.0.0", vec![]);
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo_readme").readme("");
+    let json = token.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0");
 }
@@ -1123,39 +1124,37 @@ fn download() {
 }
 
 #[test]
-fn download_bad() {
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/foo_bad/0.1.0/download");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
+fn download_nonexistent_version_of_existing_crate_404s() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
         CrateBuilder::new("foo_bad", user.id).expect_build(&conn);
-    }
-    let response = t!(middle.call(&mut req));
-    assert_eq!(404, response.status.0)
+    });
+
+    anon.get("/api/v1/crates/foo_bad/0.1.0/download")
+        .assert_not_found();
 }
 
 #[test]
 fn dependencies() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/foo_deps/1.0.0/dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
+    app.db(|conn| {
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
         let v = new_version(c1.id, "1.0.0", None).save(&conn, &[]).unwrap();
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         new_dependency(&conn, &v, &c2);
-    }
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<Deps>(&mut response);
+    let deps: Deps = anon
+        .get("/api/v1/crates/foo_deps/1.0.0/dependencies")
+        .good();
     assert_eq!(deps.dependencies[0].crate_id, "bar_deps");
 
-    req.with_path("/api/v1/crates/foo_deps/1.0.2/dependencies");
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<Bad>(&mut response);
+    anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
+        .bad_with_status(200);
 }
 
 #[test]
@@ -1216,17 +1215,11 @@ fn following() {
 
 #[test]
 fn yank() {
-    #[derive(Deserialize)]
-    struct V {
-        version: EncodableVersion,
-    }
-    let (_b, app, middle) = app();
+    let (_, anon, _, token) = TestApp::with_proxy().with_token();
 
     // Upload a new crate, putting it in the git index
-    let mut req = new_req("fyk", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    ::json::<GoodCrate>(&mut response);
+    let crate_to_publish = PublishBuilder::new("fyk");
+    token.publish(crate_to_publish).good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("3/f/fyk");
@@ -1238,22 +1231,11 @@ fn yank() {
     assert!(contents.contains("\"yanked\":false"));
 
     // make sure it's not yanked
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk/1.0.0",),
-        )
-    );
-    assert!(!::json::<V>(&mut r).version.yanked);
+    let json = anon.show_version("fyk", "1.0.0");
+    assert!(!json.version.yanked);
 
     // yank it
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete,)
-                .with_path("/api/v1/crates/fyk/1.0.0/yank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
+    token.yank("fyk", "1.0.0").good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("3/f/fyk");
@@ -1263,22 +1245,12 @@ fn yank() {
         .read_to_string(&mut contents)
         .unwrap();
     assert!(contents.contains("\"yanked\":true"));
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk/1.0.0",),
-        )
-    );
-    assert!(::json::<V>(&mut r).version.yanked);
+
+    let json = anon.show_version("fyk", "1.0.0");
+    assert!(json.version.yanked);
 
     // un-yank it
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Put,)
-                .with_path("/api/v1/crates/fyk/1.0.0/unyank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
+    token.unyank("fyk", "1.0.0").good();
 
     let remote_contents = clone_remote_repo();
     let path = remote_contents.path().join("3/f/fyk");
@@ -1288,13 +1260,9 @@ fn yank() {
         .read_to_string(&mut contents)
         .unwrap();
     assert!(contents.contains("\"yanked\":false"));
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk/1.0.0",),
-        )
-    );
-    assert!(!::json::<V>(&mut r).version.yanked);
+
+    let json = anon.show_version("fyk", "1.0.0");
+    assert!(!json.version.yanked);
 }
 
 #[test]
@@ -1314,305 +1282,153 @@ fn yank_not_owner() {
 
 #[test]
 fn yank_max_version() {
-    let (_b, app, middle) = app();
+    let (_, anon, _, token) = TestApp::with_proxy().with_token();
 
     // Upload a new crate
-    let mut req = new_req("fyk_max", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("fyk_max");
+    token.publish(crate_to_publish).good();
 
     // double check the max version
-    let json: GoodCrate = ::json(&mut response);
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // add version 2.0.0
-    let body = new_req_body_version_2(krate("fyk_max"));
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    let json: GoodCrate = ::json(&mut response);
+    let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
+    let json = token.publish(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.yank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Put,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.unyank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 2.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete,)
-                .with_path("/api/v1/crates/fyk_max/2.0.0/yank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.yank("fyk_max", "2.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // yank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.yank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "0.0.0");
 
     // unyank version 2.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Put,)
-                .with_path("/api/v1/crates/fyk_max/2.0.0/unyank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.unyank("fyk_max", "2.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Put,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.unyank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 }
 
 #[test]
 fn publish_after_yank_max_version() {
-    let (_b, app, middle) = app();
+    let (_, anon, _, token) = TestApp::with_proxy().with_token();
 
     // Upload a new crate
-    let mut req = new_req("fyk_max", "1.0.0");
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("fyk_max");
+    token.publish(crate_to_publish).good();
 
     // double check the max version
-    let json: GoodCrate = ::json(&mut response);
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // yank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Delete,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/yank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.yank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "0.0.0");
 
     // add version 2.0.0
-    let body = new_req_body_version_2(krate("fyk_max"));
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_method(Method::Put)
-                .with_body(&body),
-        )
-    );
-    let json: GoodCrate = ::json(&mut response);
+    let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
+    let json = token.publish(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    let mut r = ok_resp!(
-        middle.call(
-            req.with_method(Method::Put,)
-                .with_path("/api/v1/crates/fyk_max/1.0.0/unyank",),
-        )
-    );
-    assert!(::json::<OkBool>(&mut r).ok);
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/fyk_max",),
-        )
-    );
-    let json: CrateResponse = ::json(&mut response);
+    token.unyank("fyk_max", "1.0.0").good();
+
+    let json = anon.show_crate("fyk_max");
     assert_eq!(json.krate.max_version, "2.0.0");
 }
 
 #[test]
 fn publish_after_removing_documentation() {
-    let (_b, app, middle) = app();
-
-    let user;
+    let (app, anon, user, token) = TestApp::with_proxy().with_token();
+    let user = user.as_model();
 
     // 1. Start with a crate with no documentation
-    {
-        let conn = app.diesel_database.get().unwrap();
-        user = new_user("foo").create_or_update(&conn).unwrap();
+    app.db(|conn| {
         CrateBuilder::new("docscrate", user.id)
             .version("0.2.0")
             .expect_build(&conn);
-    }
+    });
 
     // Verify that crates start without any documentation so the next assertion can *prove*
     // that it was the one that added the documentation
-    {
-        let mut req = req(Method::Get, "/api/v1/crates/docscrate");
-        let mut response = ok_resp!(middle.call(&mut req));
-        let json: CrateResponse = ::json(&mut response);
-        assert_eq!(json.krate.documentation, None);
-    }
+    let json = anon.show_crate("docscrate");
+    assert_eq!(json.krate.documentation, None);
 
     // 2. Add documentation
-    {
-        let mut req = new_req_with_documentation("docscrate", "0.2.1", "http://foo.rs");
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        let json: GoodCrate = ::json(&mut response);
-        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
-    }
+    let crate_to_publish = PublishBuilder::new("docscrate")
+        .version("0.2.1")
+        .documentation("http://foo.rs");
+    let json = token.publish(crate_to_publish).good();
+    assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
 
     // Ensure latest version also has the same documentation
-    {
-        let mut req = req(Method::Get, "/api/v1/crates/docscrate");
-        let mut response = ok_resp!(middle.call(&mut req));
-        let json: CrateResponse = ::json(&mut response);
-        assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
-    }
+    let json = anon.show_crate("docscrate");
+    assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
 
     // 3. Remove the documentation
-    {
-        let mut req = new_req("docscrate", "0.2.2");
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        let json: GoodCrate = ::json(&mut response);
-        assert_eq!(json.krate.documentation, None);
-    }
+    let crate_to_publish = PublishBuilder::new("docscrate").version("0.2.2");
+    let json = token.publish(crate_to_publish).good();
+    assert_eq!(json.krate.documentation, None);
 
     // Ensure latest version no longer has documentation
-    {
-        let mut req = req(Method::Get, "/api/v1/crates/docscrate");
-        let mut response = ok_resp!(middle.call(&mut req));
-        let json: CrateResponse = ::json(&mut response);
-        assert_eq!(json.krate.documentation, None);
-    }
+    let json = anon.show_crate("docscrate");
+    assert_eq!(json.krate.documentation, None);
 }
 
 #[test]
 fn bad_keywords() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foobar", "1.0.0");
-    let user = sign_in(&mut req, &app);
-    {
-        let krate = krate("foo_bad_key");
-        let kws = vec!["super-long-keyword-name-oh-no".into()];
-        let mut req = new_req_with_keywords(krate, "1.0.0", kws);
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<Bad>(&mut response);
-    }
-    {
-        let krate = krate("foo_bad_key2");
-        let kws = vec!["?@?%".into()];
-        let mut req = new_req_with_keywords(krate, "1.0.0", kws);
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<Bad>(&mut response);
-    }
-    {
-        let krate = krate("foo_bad_key_3");
-        let kws = vec!["?@?%".into()];
-        let mut req = new_req_with_keywords(krate, "1.0.0", kws);
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<Bad>(&mut response);
-    }
-    {
-        let krate = krate("foo_bad_key4");
-        let kws = vec!["áccênts".into()];
-        let mut req = new_req_with_keywords(krate, "1.0.0", kws);
-        sign_in_as(&mut req, &user);
-        let mut response = ok_resp!(middle.call(&mut req));
-        ::json::<Bad>(&mut response);
-    }
+    let (_, _, _, token) = TestApp::init().with_token();
+    let crate_to_publish =
+        PublishBuilder::new("foo_bad_key").keyword("super-long-keyword-name-oh-no");
+    token.publish(crate_to_publish).bad_with_status(200);
+
+    let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("?@?%");
+    token.publish(crate_to_publish).bad_with_status(200);
+
+    let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("áccênts");
+    token.publish(crate_to_publish).bad_with_status(200);
 }
 
 #[test]
 fn good_categories() {
-    let (_b, app, middle) = app();
-    let krate = krate("foo_good_cat");
-    let cats = vec!["cat1".into()];
-    let mut req = new_req_with_categories(krate, "1.0.0", cats);
-    sign_in(&mut req, &app);
-    {
-        let conn = app.diesel_database.get().unwrap();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
         new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo_good_cat").category("cat1");
+    let json = token.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_good_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_categories.len(), 0);
@@ -1620,13 +1436,11 @@ fn good_categories() {
 
 #[test]
 fn ignored_categories() {
-    let (_b, app, middle) = app();
-    let krate = krate("foo_ignored_cat");
-    let cats = vec!["bar".into()];
-    let mut req = new_req_with_categories(krate, "1.0.0", cats);
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodCrate = ::json(&mut response);
+    let (_, _, _, token) = TestApp::with_proxy().with_token();
+
+    let crate_to_publish = PublishBuilder::new("foo_ignored_cat").category("bar");
+    let json = token.publish(crate_to_publish).good();
+
     assert_eq!(json.krate.name, "foo_ignored_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_categories, vec!["bar"]);
@@ -1634,7 +1448,8 @@ fn ignored_categories() {
 
 #[test]
 fn good_badges() {
-    let krate = krate("foobadger");
+    let (_, anon, _, token) = TestApp::with_proxy().with_token();
+
     let mut badges = HashMap::new();
     let mut badge_attributes = HashMap::new();
     badge_attributes.insert(
@@ -1643,24 +1458,13 @@ fn good_badges() {
     );
     badges.insert(String::from("travis-ci"), badge_attributes);
 
-    let (_b, app, middle) = app();
-    let mut req = new_req_with_badges(krate.clone(), "1.0.0", badges);
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("foobadger").badges(badges);
 
-    let json: GoodCrate = ::json(&mut response);
+    let json = token.publish(crate_to_publish).good();
     assert_eq!(json.krate.name, "foobadger");
     assert_eq!(json.krate.max_version, "1.0.0");
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/foobadger",),
-        )
-    );
-
-    let json: CrateResponse = ::json(&mut response);
-
+    let json = anon.show_crate("foobadger");
     let badges = json.krate.badges.unwrap();
     assert_eq!(badges.len(), 1);
     assert_eq!(badges[0].badge_type, "travis-ci");
@@ -1672,7 +1476,8 @@ fn good_badges() {
 
 #[test]
 fn ignored_badges() {
-    let krate = krate("foo_ignored_badge");
+    let (_, anon, _, token) = TestApp::with_proxy().with_token();
+
     let mut badges = HashMap::new();
 
     // Known badge type, missing required repository attribute
@@ -1685,13 +1490,9 @@ fn ignored_badges() {
     unknown_badge_attributes.insert(String::from("repository"), String::from("rust-lang/rust"));
     badges.insert(String::from("not-a-badge"), unknown_badge_attributes);
 
-    let (_b, app, middle) = app();
-    let mut req = new_req_with_badges(krate.clone(), "1.0.0", badges);
+    let crate_to_publish = PublishBuilder::new("foo_ignored_badge").badges(badges);
 
-    sign_in(&mut req, &app);
-    let mut response = ok_resp!(middle.call(&mut req));
-
-    let json: GoodCrate = ::json(&mut response);
+    let json = token.publish(crate_to_publish).good();
     assert_eq!(json.krate.name, "foo_ignored_badge");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_badges.len(), 2);
@@ -1706,41 +1507,28 @@ fn ignored_badges() {
             .contains(&"not-a-badge".to_string(),)
     );
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_method(Method::Get,)
-                .with_path("/api/v1/crates/foo_ignored_badge",),
-        )
-    );
-
-    let json: CrateResponse = ::json(&mut response);
-
+    let json = anon.show_crate("foo_ignored_badge");
     let badges = json.krate.badges.unwrap();
     assert_eq!(badges.len(), 0);
 }
 
 #[test]
 fn reverse_dependencies() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = CrateBuilder::new("c1", u.id)
-            .version("1.0.0")
-            .expect_build(&conn);
-        CrateBuilder::new("c2", u.id)
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id).expect_build(conn);
+        CrateBuilder::new("c2", user.id)
             .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
             .version(
                 VersionBuilder::new("1.1.0")
                     .dependency(&c1, None)
                     .dependency(&c1, Some("foo")),
-            ).expect_build(&conn);
-    }
+            ).expect_build(conn);
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c1");
@@ -1749,32 +1537,27 @@ fn reverse_dependencies() {
     assert_eq!(deps.versions[0].num, "1.1.0");
 
     // c1 has no dependent crates.
-    req.with_path("/api/v1/crates/c2/reverse_dependencies");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c2");
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
 }
 
 #[test]
 fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = CrateBuilder::new("c1", u.id)
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
             .version("1.1.0")
-            .expect_build(&conn);
-        CrateBuilder::new("c2", u.id)
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
             .version("1.0.0")
             .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c1");
@@ -1782,49 +1565,43 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
 
 #[test]
 fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = CrateBuilder::new("c1", u.id)
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
             .version("1.0.0")
-            .expect_build(&conn);
-        CrateBuilder::new("c2", u.id)
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
             .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
             .version("2.0.0")
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
 }
 
 #[test]
 fn prerelease_versions_not_included_in_reverse_dependencies() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = CrateBuilder::new("c1", u.id)
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
             .version("1.0.0")
-            .expect_build(&conn);
-        CrateBuilder::new("c2", u.id)
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
             .version("1.1.0-pre")
-            .expect_build(&conn);
-        CrateBuilder::new("c3", u.id)
+            .expect_build(conn);
+        CrateBuilder::new("c3", user.id)
             .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
             .version("1.1.0-pre")
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c1");
@@ -1832,50 +1609,47 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
 
 #[test]
 fn yanked_versions_not_included_in_reverse_dependencies() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let mut req = req(Method::Get, "/api/v1/crates/c1/reverse_dependencies");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c1 = CrateBuilder::new("c1", u.id)
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
             .version("1.0.0")
-            .expect_build(&conn);
-        CrateBuilder::new("c2", u.id)
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
             .version("1.0.0")
             .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 1);
     assert_eq!(deps.meta.total, 1);
     assert_eq!(deps.dependencies[0].crate_id, "c1");
 
-    // TODO: have this test call `version.yank()` once the yank method is converted to diesel
-    diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
-        .set(versions::yanked.eq(true))
-        .execute(&*app.diesel_database.get().unwrap())
-        .unwrap();
+    app.db(|conn| {
+        diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
+            .set(versions::yanked.eq(true))
+            .execute(conn)
+            .unwrap();
+    });
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let deps = ::json::<RevDeps>(&mut response);
+    let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
 }
 
 #[test]
 fn author_license_and_description_required() {
-    let (_b, _, middle) = app();
+    let (_, _, _, token) = TestApp::init().with_token();
 
-    let mut req = req(Method::Put, "/api/v1/crates/new");
-    let mut new_crate = new_crate("foo_metadata", "1.1.0");
-    new_crate.license = None;
-    new_crate.description = None;
-    new_crate.authors = Vec::new();
-    req.with_body(&new_crate_to_body(&new_crate, &[]));
-    let json = bad_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("foo_metadata")
+        .version("1.1.0")
+        .unset_license()
+        .unset_description()
+        .unset_authors();
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -1884,10 +1658,13 @@ fn author_license_and_description_required() {
         json.errors
     );
 
-    new_crate.license = Some("MIT".to_string());
-    new_crate.authors.push("".to_string());
-    req.with_body(&new_crate_to_body(&new_crate, &[]));
-    let json = bad_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("foo_metadata")
+        .version("1.1.0")
+        .unset_description()
+        .unset_authors()
+        .author("");
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -1896,11 +1673,13 @@ fn author_license_and_description_required() {
         json.errors
     );
 
-    new_crate.license = None;
-    new_crate.license_file = Some("foo".to_string());
-    new_crate.authors.push("foo".to_string());
-    req.with_body(&new_crate_to_body(&new_crate, &[]));
-    let json = bad_resp!(middle.call(&mut req));
+    let crate_to_publish = PublishBuilder::new("foo_metadata")
+        .version("1.1.0")
+        .unset_license()
+        .license_file("foo")
+        .unset_description();
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
     assert!(
         !json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -2112,10 +1891,8 @@ fn test_cargo_invite_owners() {
 // }
 
 #[test]
-fn new_krate_hard_links() {
-    let (_b, app, middle) = app();
-    let mut req = new_req("foo", "1.1.0");
-    sign_in(&mut req, &app);
+fn new_krate_tarball_with_hard_links() {
+    let (_, _, _, token) = TestApp::init().with_token();
 
     let mut tarball = Vec::new();
     {
@@ -2129,8 +1906,18 @@ fn new_krate_hard_links() {
         t!(ar.append(&header, &[][..]));
         t!(ar.finish());
     }
-    let body = new_crate_to_body_with_tarball(&new_crate("foo", "1.1.0"), &tarball);
-    bad_resp!(middle.call(req.with_body(&body)));
+
+    let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
+
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("too large when decompressed"),
+        "{:?}",
+        json.errors
+    );
 }
 
 /// We want to observe the contents of our push, but we can't do that in a

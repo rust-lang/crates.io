@@ -298,6 +298,14 @@ pub struct PublishBuilder {
     tarball: Vec<u8>,
     deps: Vec<u::CrateDependency>,
     desc: Option<String>,
+    readme: Option<String>,
+    doc_url: Option<String>,
+    keywords: Vec<String>,
+    categories: Vec<String>,
+    badges: HashMap<String, HashMap<String, String>>,
+    license: Option<String>,
+    license_file: Option<String>,
+    authors: Vec<String>,
 }
 
 impl PublishBuilder {
@@ -310,6 +318,14 @@ impl PublishBuilder {
             tarball: EMPTY_TARBALL_BYTES.to_vec(),
             deps: vec![],
             desc: Some("description".to_string()),
+            readme: None,
+            doc_url: None,
+            keywords: vec![],
+            categories: vec![],
+            badges: HashMap::new(),
+            license: Some("MIT".to_string()),
+            license_file: None,
+            authors: vec!["foo".to_string()],
         }
     }
 
@@ -320,9 +336,9 @@ impl PublishBuilder {
     }
 
     /// Set the files in the crate's tarball.
-    pub fn files(mut self, files: &[(&str, &[u8])]) -> Self {
+    pub fn files(self, files: &[(&str, &[u8])]) -> Self {
         let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
-        let files = files
+        let mut files = files
             .iter()
             .zip(&mut slices)
             .map(|(&(name, _), data)| {
@@ -330,10 +346,15 @@ impl PublishBuilder {
                 (name, data as &mut Read, len)
             }).collect::<Vec<_>>();
 
+        self.files_with_io(&mut files)
+    }
+
+    /// Set the tarball from a Read trait object
+    pub fn files_with_io(mut self, files: &mut [(&str, &mut Read, u64)]) -> Self {
         let mut tarball = Vec::new();
         {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-            for (name, ref mut data, size) in files {
+            for &mut (name, ref mut data, size) in files {
                 let mut header = tar::Header::new_gnu();
                 t!(header.set_path(name));
                 header.set_size(size);
@@ -343,6 +364,12 @@ impl PublishBuilder {
             t!(ar.finish());
         }
 
+        self.tarball = tarball;
+        self
+    }
+
+    /// Set the tarball directly to the given Vec of bytes
+    pub fn tarball(mut self, tarball: Vec<u8>) -> Self {
         self.tarball = tarball;
         self
     }
@@ -360,6 +387,67 @@ impl PublishBuilder {
         self
     }
 
+    /// Unset the description of this crate. Publish will fail unless description is reset.
+    pub fn unset_description(mut self) -> Self {
+        self.desc = None;
+        self
+    }
+
+    /// Set the readme of this crate
+    pub fn readme(mut self, readme: &str) -> Self {
+        self.readme = Some(readme.to_string());
+        self
+    }
+
+    /// Set the documentation URL of this crate
+    pub fn documentation(mut self, documentation: &str) -> Self {
+        self.doc_url = Some(documentation.to_string());
+        self
+    }
+
+    /// Add a keyword to this crate.
+    pub fn keyword(mut self, keyword: &str) -> Self {
+        self.keywords.push(keyword.into());
+        self
+    }
+
+    /// Add a category to this crate. Make sure the category already exists in the
+    /// database or it will be ignored.
+    pub fn category(mut self, slug: &str) -> Self {
+        self.categories.push(slug.into());
+        self
+    }
+
+    /// Add badges to this crate.
+    pub fn badges(mut self, badges: HashMap<String, HashMap<String, String>>) -> Self {
+        self.badges = badges;
+        self
+    }
+
+    /// Remove the license from this crate. Publish will fail unless license or license file is set.
+    pub fn unset_license(mut self) -> Self {
+        self.license = None;
+        self
+    }
+
+    /// Set the license file for this crate
+    pub fn license_file(mut self, license_file: &str) -> Self {
+        self.license_file = Some(license_file.into());
+        self
+    }
+
+    /// Add an author to this crate
+    pub fn author(mut self, author: &str) -> Self {
+        self.authors.push(author.into());
+        self
+    }
+
+    /// Remove the authors from this crate. Publish will fail unless authors are reset.
+    pub fn unset_authors(mut self) -> Self {
+        self.authors = vec![];
+        self
+    }
+
     /// Consume this builder to make the Put request body
     pub fn body(self) -> Vec<u8> {
         let new_crate = u::NewCrate {
@@ -367,18 +455,22 @@ impl PublishBuilder {
             vers: u::CrateVersion(self.version),
             features: HashMap::new(),
             deps: self.deps,
-            authors: vec!["foo".to_string()],
+            authors: self.authors,
             description: self.desc,
             homepage: None,
-            documentation: None,
-            readme: None,
+            documentation: self.doc_url,
+            readme: self.readme,
             readme_file: None,
-            keywords: Some(u::KeywordList(Vec::new())),
-            categories: Some(u::CategoryList(Vec::new())),
-            license: Some("MIT".to_string()),
-            license_file: None,
+            keywords: Some(u::KeywordList(
+                self.keywords.into_iter().map(u::Keyword).collect(),
+            )),
+            categories: Some(u::CategoryList(
+                self.categories.into_iter().map(u::Category).collect(),
+            )),
+            license: self.license,
+            license_file: self.license_file,
             repository: None,
-            badges: Some(HashMap::new()),
+            badges: Some(self.badges),
             links: None,
         };
 

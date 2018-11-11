@@ -10,15 +10,11 @@ use conduit::{Handler, Method};
 use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, RequestHelper, TestApp};
+use {app, new_user, new_version, req, RequestHelper, TestApp, VersionResponse};
 
 #[derive(Deserialize)]
 struct VersionList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct VersionResponse {
-    version: EncodableVersion,
 }
 
 #[test]
