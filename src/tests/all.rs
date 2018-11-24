@@ -305,7 +305,7 @@ impl<'a> VersionBuilder<'a> {
         Self { yanked, ..self }
     }
 
-    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+    fn build(self, crate_id: i32, connection: &PgConnection, user_id: i32) -> CargoResult<Version> {
         use diesel::{insert_into, update};
 
         let license = match self.license {
@@ -320,6 +320,7 @@ impl<'a> VersionBuilder<'a> {
             license,
             self.license_file,
             None,
+            user_id,
         )?.save(connection, &[])?;
 
         if self.yanked {
@@ -425,7 +426,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
+    fn build(mut self, connection: &PgConnection, user_id: i32) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
         let mut krate = self
@@ -473,7 +474,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_builder in self.versions {
-            version_builder.build(krate.id, connection)?;
+            version_builder.build(krate.id, connection, user_id)?;
         }
 
         if !self.keywords.is_empty() {
@@ -485,15 +486,16 @@ impl<'a> CrateBuilder<'a> {
 
     fn expect_build(self, connection: &PgConnection) -> Crate {
         let name = self.krate.name;
-        self.build(connection).unwrap_or_else(|e| {
+        let owner = self.owner_id;
+        self.build(connection, owner).unwrap_or_else(|e| {
             panic!("Unable to create crate {}: {:?}", name, e);
         })
     }
 }
 
-fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
+fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>, user_id: i32) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
+    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size, user_id).unwrap()
 }
 
 fn krate(name: &str) -> Crate {
