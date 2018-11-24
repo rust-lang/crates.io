@@ -145,6 +145,7 @@ mod test {
             None,
             None,
             None,
+            user_id,
         ).unwrap();
         let version = version.save(&conn, &[]).unwrap();
         (krate, version)

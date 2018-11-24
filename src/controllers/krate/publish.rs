@@ -136,6 +136,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
             Some(file_length as i32),
+            user.id,
         )?.save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
