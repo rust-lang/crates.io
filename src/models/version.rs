@@ -27,6 +27,7 @@ pub struct Version {
     pub yanked: bool,
     pub license: Option<String>,
     pub crate_size: Option<i32>,
+    pub published_by: i32,
 }
 
 #[derive(Insertable, Debug)]
@@ -37,6 +38,7 @@ pub struct NewVersion {
     features: serde_json::Value,
     license: Option<String>,
     crate_size: Option<i32>,
+    published_by: i32,
 }
 
 impl Version {
@@ -51,6 +53,7 @@ impl Version {
             yanked,
             license,
             crate_size,
+            published_by,
             ..
         } = self;
         let num = num.to_string();
@@ -72,6 +75,7 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
+            published_by,
         }
     }
 
@@ -121,6 +125,7 @@ impl NewVersion {
         license: Option<String>,
         license_file: Option<&str>,
         crate_size: Option<i32>,
+        published_by: i32,
     ) -> CargoResult<Self> {
         let features = serde_json::to_value(features)?;
 
@@ -130,6 +135,7 @@ impl NewVersion {
             features,
             license,
             crate_size,
+            published_by,
         };
 
         new_version.validate_license(license_file)?;
