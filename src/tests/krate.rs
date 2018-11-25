@@ -1879,17 +1879,6 @@ fn test_cargo_invite_owners() {
     )
 }
 
-// #[test]
-// fn new_crate_bad_tarball() {
-//     let (_b, app, middle) = ::app();
-//     let mut req = ::new_req("foo_new", "1.0.0");
-//     ::sign_in(&mut req, &app);
-//     let mut response = ok_resp!(middle.call(&mut req));
-//     let json: GoodCrate = ::json(&mut response);
-//     assert_eq!(json.krate.name, "foo_new");
-//     assert_eq!(json.krate.max_version, "1.0.0");
-// }
-
 #[test]
 fn new_krate_tarball_with_hard_links() {
     let (_, _, _, token) = TestApp::init().with_token();
