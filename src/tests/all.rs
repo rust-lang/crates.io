@@ -50,7 +50,7 @@ use models::{Crate, CrateOwner, Dependency, Team, User, Version};
 use models::{NewCategory, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
-use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
+use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion};
 
 macro_rules! t {
     ($e:expr) => {
@@ -128,6 +128,10 @@ pub struct CrateResponse {
 #[derive(Deserialize)]
 pub struct VersionResponse {
     version: EncodableVersion,
+}
+#[derive(Deserialize)]
+pub struct OwnerTeamsResponse {
+    teams: Vec<EncodableOwner>,
 }
 #[derive(Deserialize)]
 struct OkBool {
