@@ -9,7 +9,6 @@ use std::io::prelude::*;
 use self::diesel::prelude::*;
 use self::tempdir::TempDir;
 use chrono::Utc;
-use conduit::Handler;
 use diesel::dsl::*;
 use diesel::update;
 use flate2::write::GzEncoder;
@@ -23,14 +22,14 @@ use cargo_registry::models::krate::MAX_NAME_LENGTH;
 
 use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
 use models::{Category, Crate};
-use schema::{crates, metadata, versions};
+use schema::{api_tokens, crates, metadata, versions};
 use views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
     EncodableVersionDownload,
 };
 use {
-    app, new_category, new_dependency, new_req, new_user, new_version, CrateMeta, CrateResponse,
-    GoodCrate, OkBool, RequestHelper, TestApp,
+    new_category, new_dependency, new_user, new_version, CrateMeta, CrateResponse, GoodCrate,
+    OkBool, RequestHelper, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -536,13 +535,36 @@ fn uploading_new_version_touches_crate() {
 
 #[test]
 fn new_wrong_token() {
-    let (_b, _app, middle) = app();
-    let mut req = new_req("foo", "1.0.0");
-    bad_resp!(middle.call(&mut req));
+    let (app, anon, _, token) = TestApp::init().with_token();
 
-    let mut req = new_req("foo", "1.0.0");
-    req.header("Authorization", "bad");
-    bad_resp!(middle.call(&mut req));
+    // Try to publish without a token
+    let crate_to_publish = PublishBuilder::new("foo");
+    let json = anon.publish(crate_to_publish).bad_with_status(403);
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("must be logged in to perform that action"),
+        "{:?}",
+        json.errors
+    );
+
+    // Try to publish with the wrong token (by changing the token in the database)
+    app.db(|conn| {
+        diesel::update(api_tokens::table)
+            .set(api_tokens::token.eq("bad"))
+            .execute(conn)
+            .unwrap();
+    });
+
+    let crate_to_publish = PublishBuilder::new("foo");
+    let json = token.publish(crate_to_publish).bad_with_status(403);
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("must be logged in to perform that action"),
+        "{:?}",
+        json.errors
+    );
 }
 
 #[test]
