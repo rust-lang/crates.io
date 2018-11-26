@@ -161,7 +161,7 @@ fn nonexistent_team() {
     );
 }
 
-// Test adding team names with mixed case
+// Test adding team names with mixed case, when on the team
 #[test]
 fn add_team_mixed_case() {
     let (app, anon) = TestApp::with_proxy().empty();
@@ -187,31 +187,6 @@ fn add_team_mixed_case() {
     let json = anon.crate_owner_teams("foo_mixed_case").good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:crates-test-org:core");
-}
-
-// Test adding team as owner when on it
-#[test]
-fn add_team_as_member() {
-    let (_b, app, middle) = app();
-    let mut req =
-        request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_member");
-
-    let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_team_member/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
-
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let krate = Crate::by_name("foo_team_member")
-            .first::<Crate>(&*conn)
-            .unwrap();
-        assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
-    }
 }
 
 // Test adding team as owner when not on it
