@@ -166,6 +166,16 @@ pub trait RequestHelper {
         Response::new(self.app().0.middle.call(&mut request))
     }
 
+    /// Issue a DELETE request with a body... yes we do it, for crate owner removal
+    fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        let mut builder = self.request_builder(Method::Delete, path);
+        let request = builder.with_body(body);
+        Response::new(self.app().0.middle.call(request))
+    }
+
     /// Search for crates matching a query string
     fn search(&self, query: &str) -> CrateList {
         self.get_with_query("/api/v1/crates", query).good()

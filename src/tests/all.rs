@@ -29,19 +29,15 @@ extern crate url;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env;
-use std::io::Read;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::sync::Arc;
 
 use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::Replica;
-use chrono::Utc;
-use conduit::{Method, Request};
+use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use flate2::write::GzEncoder;
-use flate2::Compression;
 
 use cargo_registry::{models, schema, views};
 use util::{Bad, RequestHelper, TestApp};
@@ -280,26 +276,6 @@ fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion 
     NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
 }
 
-fn krate(name: &str) -> Crate {
-    static NEXT_CRATE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
-
-    Crate {
-        id: NEXT_CRATE_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        name: name.to_string(),
-        updated_at: Utc::now().naive_utc(),
-        created_at: Utc::now().naive_utc(),
-        downloads: 10,
-        documentation: None,
-        homepage: None,
-        description: None,
-        readme: None,
-        readme_file: None,
-        license: None,
-        repository: None,
-        max_upload_size: None,
-    }
-}
-
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
@@ -332,100 +308,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
 
 fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
-}
-
-fn new_req(krate: &str, version: &str) -> MockRequest {
-    new_req_full(::krate(krate), version, Vec::new())
-}
-
-fn new_req_full(krate: Crate, version: &str, deps: Vec<u::CrateDependency>) -> MockRequest {
-    let mut req = req(Method::Put, "/api/v1/crates/new");
-    req.with_body(&new_req_body(
-        krate,
-        version,
-        deps,
-        Vec::new(),
-        Vec::new(),
-        HashMap::new(),
-    ));
-    req
-}
-
-fn new_req_body_version_2(krate: Crate) -> Vec<u8> {
-    new_req_body(
-        krate,
-        "2.0.0",
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
-        HashMap::new(),
-    )
-}
-
-fn new_req_body(
-    krate: Crate,
-    version: &str,
-    deps: Vec<u::CrateDependency>,
-    kws: Vec<String>,
-    cats: Vec<String>,
-    badges: HashMap<String, HashMap<String, String>>,
-) -> Vec<u8> {
-    let kws = kws.into_iter().map(u::Keyword).collect();
-    let cats = cats.into_iter().map(u::Category).collect();
-
-    new_crate_to_body(
-        &u::NewCrate {
-            name: u::CrateName(krate.name),
-            vers: u::CrateVersion(semver::Version::parse(version).unwrap()),
-            features: HashMap::new(),
-            deps,
-            authors: vec!["foo".to_string()],
-            description: Some("description".to_string()),
-            homepage: krate.homepage,
-            documentation: krate.documentation,
-            readme: krate.readme,
-            readme_file: krate.readme_file,
-            keywords: Some(u::KeywordList(kws)),
-            categories: Some(u::CategoryList(cats)),
-            license: Some("MIT".to_string()),
-            license_file: None,
-            repository: krate.repository,
-            badges: Some(badges),
-            links: None,
-        },
-        &[],
-    )
-}
-
-fn new_crate_to_body(new_crate: &u::NewCrate, files: &[(&str, &[u8])]) -> Vec<u8> {
-    let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
-    let mut files = files
-        .iter()
-        .zip(&mut slices)
-        .map(|(&(name, _), data)| {
-            let len = data.len() as u64;
-            (name, data as &mut Read, len)
-        }).collect::<Vec<_>>();
-    new_crate_to_body_with_io(new_crate, &mut files)
-}
-
-fn new_crate_to_body_with_io(
-    new_crate: &u::NewCrate,
-    files: &mut [(&str, &mut Read, u64)],
-) -> Vec<u8> {
-    let mut tarball = Vec::new();
-    {
-        let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-        for &mut (name, ref mut data, size) in files {
-            let mut header = tar::Header::new_gnu();
-            t!(header.set_path(name));
-            header.set_size(size);
-            header.set_cksum();
-            t!(ar.append(&header, data));
-        }
-        t!(ar.finish());
-    }
-    new_crate_to_body_with_tarball(new_crate, &tarball)
 }
 
 fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Vec<u8> {
