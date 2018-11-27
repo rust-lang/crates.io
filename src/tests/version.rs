@@ -83,7 +83,9 @@ fn authors() {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
         let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        new_version(c.id, "1.0.0", None, u.id).save(&conn, &[]).unwrap();
+        new_version(c.id, "1.0.0", None, u.id)
+            .save(&conn, &[])
+            .unwrap();
     }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
@@ -101,7 +103,9 @@ fn record_rerendered_readme_time() {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
         let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        new_version(c.id, "1.0.0", None, u.id).save(&conn, &[]).unwrap()
+        new_version(c.id, "1.0.0", None, u.id)
+            .save(&conn, &[])
+            .unwrap()
     };
     {
         let conn = app.diesel_database.get().unwrap();

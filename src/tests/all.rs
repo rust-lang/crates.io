@@ -496,7 +496,15 @@ impl<'a> CrateBuilder<'a> {
 
 fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>, user_id: i32) -> NewVersion {
     let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size, user_id).unwrap()
+    NewVersion::new(
+        crate_id,
+        &num,
+        &HashMap::new(),
+        None,
+        None,
+        crate_size,
+        user_id,
+    ).unwrap()
 }
 
 fn krate(name: &str) -> Crate {

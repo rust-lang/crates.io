@@ -1144,7 +1144,9 @@ fn dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = new_version(c1.id, "1.0.0", None, user.id).save(&conn, &[]).unwrap();
+        let v = new_version(c1.id, "1.0.0", None, user.id)
+            .save(&conn, &[])
+            .unwrap();
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         new_dependency(&conn, &v, &c2);
     }
