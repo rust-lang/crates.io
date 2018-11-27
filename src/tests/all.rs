@@ -47,7 +47,7 @@ use cargo_registry::{models, schema, views};
 use util::{Bad, RequestHelper, TestApp};
 
 use models::{Crate, CrateOwner, Dependency, Team, User, Version};
-use models::{NewCategory, NewTeam, NewUser, NewVersion};
+use models::{NewCategory, NewTeam, NewUser};
 use schema::*;
 use views::krate_publish as u;
 use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
@@ -266,11 +266,6 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
 }
 
 use cargo_registry::util::CargoResult;
-
-fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
-    let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
-}
 
 fn krate(name: &str) -> Crate {
     static NEXT_CRATE_ID: AtomicUsize = ATOMIC_USIZE_INIT;

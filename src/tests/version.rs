@@ -10,7 +10,7 @@ use conduit::{Handler, Method};
 use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use schema::versions;
 use views::EncodableVersion;
-use {app, new_user, new_version, req, RequestHelper, TestApp};
+use {app, new_user, req, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct VersionList {
@@ -64,9 +64,9 @@ fn show() {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
         let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(&conn);
-        new_version(krate.id, "2.0.0", Some(1234))
-            .save(&conn, &[])
-            .unwrap()
+        VersionBuilder::new("2.0.0")
+            .size(1234)
+            .expect_build(krate.id, &conn)
     };
     req.with_path(&format!("/api/v1/versions/{}", v.id));
     let mut response = ok_resp!(middle.call(&mut req));
@@ -82,8 +82,9 @@ fn authors() {
     {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
-        let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        new_version(c.id, "1.0.0", None).save(&conn, &[]).unwrap();
+        CrateBuilder::new("foo_authors", u.id)
+            .version("1.0.0")
+            .expect_build(&conn);
     }
     let mut response = ok_resp!(middle.call(&mut req));
     let mut data = Vec::new();
@@ -101,7 +102,7 @@ fn record_rerendered_readme_time() {
         let conn = app.diesel_database.get().unwrap();
         let u = new_user("foo").create_or_update(&conn).unwrap();
         let c = CrateBuilder::new("foo_authors", u.id).expect_build(&conn);
-        new_version(c.id, "1.0.0", None).save(&conn, &[]).unwrap()
+        VersionBuilder::new("1.0.0").expect_build(c.id, &conn)
     };
     {
         let conn = app.diesel_database.get().unwrap();

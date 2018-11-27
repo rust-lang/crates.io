@@ -34,7 +34,7 @@ use {
     app, krate, new_category, new_crate, new_crate_to_body, new_crate_to_body_with_io,
     new_crate_to_body_with_tarball, new_dependency, new_req, new_req_body_version_2, new_req_full,
     new_req_with_badges, new_req_with_categories, new_req_with_documentation,
-    new_req_with_keywords, new_user, new_version, req, sign_in, sign_in_as, Bad, CrateMeta,
+    new_req_with_keywords, new_user, req, sign_in, sign_in_as, Bad, CrateMeta,
     CrateResponse, GoodCrate, OkBool, RequestHelper, TestApp,
 };
 
@@ -1144,7 +1144,7 @@ fn dependencies() {
         let conn = app.diesel_database.get().unwrap();
         let user = new_user("foo").create_or_update(&conn).unwrap();
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = new_version(c1.id, "1.0.0", None).save(&conn, &[]).unwrap();
+        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, &conn);
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         new_dependency(&conn, &v, &c2);
     }
