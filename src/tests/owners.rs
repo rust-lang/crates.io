@@ -2,16 +2,14 @@ use conduit::{Handler, Method};
 use diesel;
 use diesel::prelude::*;
 
+use builders::{CrateBuilder, PublishBuilder};
 use models::{Crate, NewCrateOwnerInvitation, User};
 use schema::crate_owner_invitations;
 use util::RequestHelper;
 use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
-use {
-    add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, CrateBuilder, OkBool,
-    PublishBuilder, TestApp,
-};
+use {add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, OkBool, TestApp};
 
 #[derive(Deserialize)]
 struct TeamResponse {

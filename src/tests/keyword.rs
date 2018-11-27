@@ -1,6 +1,7 @@
+use builders::CrateBuilder;
 use models::Keyword;
 use views::EncodableKeyword;
-use {new_user, CrateBuilder, RequestHelper, TestApp};
+use {new_user, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct KeywordList {

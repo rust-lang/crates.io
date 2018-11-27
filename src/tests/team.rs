@@ -6,12 +6,12 @@ use std::sync::ONCE_INIT;
 
 use cargo_registry::app::App;
 
+use builders::CrateBuilder;
 use models::{Crate, NewUser};
 use record::GhUser;
 use views::EncodableCrate;
 use {
     add_team_to_crate, app, new_req, new_req_body_version_2, new_team, new_user, req, sign_in_as,
-    CrateBuilder,
 };
 
 // Users: `crates-tester-1` and `crates-tester-2`

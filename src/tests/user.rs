@@ -3,13 +3,11 @@ use std::sync::atomic::Ordering;
 use conduit::{Handler, Method};
 use diesel::prelude::*;
 
+use builders::{CrateBuilder, VersionBuilder};
 use models::{ApiToken, Email, NewUser, User};
 use util::RequestHelper;
 use views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
-use {
-    app, logout, new_user, req, sign_in_as, CrateBuilder, OkBool, TestApp, VersionBuilder,
-    NEXT_GH_ID,
-};
+use {app, logout, new_user, req, sign_in_as, OkBool, TestApp, NEXT_GH_ID};
 
 #[derive(Deserialize)]
 struct AuthResponse {

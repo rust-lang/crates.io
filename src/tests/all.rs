@@ -46,8 +46,8 @@ use flate2::Compression;
 use cargo_registry::{models, schema, views};
 use util::{Bad, RequestHelper, TestApp};
 
-use models::{Crate, CrateDownload, CrateOwner, Dependency, Keyword, Team, User, Version};
-use models::{NewCategory, NewCrate, NewTeam, NewUser, NewVersion};
+use models::{Crate, CrateOwner, Dependency, Team, User, Version};
+use models::{NewCategory, NewTeam, NewUser, NewVersion};
 use schema::*;
 use views::krate_publish as u;
 use views::{EncodableCrate, EncodableKeyword, EncodableVersion};
@@ -82,6 +82,7 @@ macro_rules! bad_resp {
 }
 
 mod badge;
+mod builders;
 mod categories;
 mod category;
 mod git;
@@ -746,96 +747,4 @@ fn new_crate_to_body_with_tarball(new_crate: &u::NewCrate, tarball: &[u8]) -> Ve
     ]);
     body.extend(tarball);
     body
-}
-
-lazy_static! {
-    static ref EMPTY_TARBALL_BYTES: Vec<u8> = {
-        let mut empty_tarball = vec![];
-        {
-            let mut ar =
-                tar::Builder::new(GzEncoder::new(&mut empty_tarball, Compression::default()));
-            t!(ar.finish());
-        }
-        empty_tarball
-    };
-}
-
-/// A builder for constructing a crate for the purposes of testing publishing. If you only need
-/// a crate to exist and don't need to test behavior caused by the publish request, inserting
-/// a crate into the database directly by using CrateBuilder will be faster.
-pub struct PublishBuilder {
-    pub krate_name: String,
-    version: semver::Version,
-    tarball: Vec<u8>,
-}
-
-impl PublishBuilder {
-    /// Create a request to publish a crate with the given name, version 1.0.0, and no files
-    /// in its tarball.
-    fn new(krate_name: &str) -> Self {
-        PublishBuilder {
-            krate_name: krate_name.into(),
-            version: semver::Version::parse("1.0.0").unwrap(),
-            tarball: EMPTY_TARBALL_BYTES.to_vec(),
-        }
-    }
-
-    /// Set the version of the crate being published to something other than the default of 1.0.0.
-    fn version(mut self, version: &str) -> Self {
-        self.version = semver::Version::parse(version).unwrap();
-        self
-    }
-
-    /// Set the files in the crate's tarball.
-    fn files(mut self, files: &[(&str, &[u8])]) -> Self {
-        let mut slices = files.iter().map(|p| p.1).collect::<Vec<_>>();
-        let files = files
-            .iter()
-            .zip(&mut slices)
-            .map(|(&(name, _), data)| {
-                let len = data.len() as u64;
-                (name, data as &mut Read, len)
-            }).collect::<Vec<_>>();
-
-        let mut tarball = Vec::new();
-        {
-            let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
-            for (name, ref mut data, size) in files {
-                let mut header = tar::Header::new_gnu();
-                t!(header.set_path(name));
-                header.set_size(size);
-                header.set_cksum();
-                t!(ar.append(&header, data));
-            }
-            t!(ar.finish());
-        }
-
-        self.tarball = tarball;
-        self
-    }
-
-    /// Consume this builder to make the Put request body
-    fn body(self) -> Vec<u8> {
-        let new_crate = u::NewCrate {
-            name: u::CrateName(self.krate_name.clone()),
-            vers: u::CrateVersion(self.version),
-            features: HashMap::new(),
-            deps: Vec::new(),
-            authors: vec!["foo".to_string()],
-            description: Some("description".to_string()),
-            homepage: None,
-            documentation: None,
-            readme: None,
-            readme_file: None,
-            keywords: Some(u::KeywordList(Vec::new())),
-            categories: Some(u::CategoryList(Vec::new())),
-            license: Some("MIT".to_string()),
-            license_file: None,
-            repository: None,
-            badges: Some(HashMap::new()),
-            links: None,
-        };
-
-        ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
-    }
 }
