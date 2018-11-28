@@ -27,7 +27,6 @@ extern crate tar;
 extern crate url;
 
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::sync::Arc;
@@ -43,7 +42,7 @@ use cargo_registry::{models, schema, views};
 use util::{Bad, RequestHelper, TestApp};
 
 use models::{Crate, CrateOwner, Dependency, Team, User, Version};
-use models::{NewCategory, NewTeam, NewUser, NewVersion};
+use models::{NewCategory, NewTeam, NewUser};
 use schema::*;
 use views::krate_publish as u;
 use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion};
@@ -270,11 +269,6 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
 }
 
 use cargo_registry::util::CargoResult;
-
-fn new_version(crate_id: i32, num: &str, crate_size: Option<i32>) -> NewVersion {
-    let num = semver::Version::parse(num).unwrap();
-    NewVersion::new(crate_id, &num, &HashMap::new(), None, None, crate_size).unwrap()
-}
 
 fn sign_in_as(req: &mut Request, user: &User) {
     req.mut_extensions().insert(user.clone());

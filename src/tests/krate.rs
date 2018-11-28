@@ -28,8 +28,8 @@ use views::{
     EncodableVersionDownload,
 };
 use {
-    new_category, new_dependency, new_user, new_version, CrateMeta, CrateResponse, GoodCrate,
-    OkBool, RequestHelper, TestApp,
+    new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
+    RequestHelper, TestApp,
 };
 
 #[derive(Deserialize)]
@@ -1165,7 +1165,7 @@ fn dependencies() {
 
     app.db(|conn| {
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = new_version(c1.id, "1.0.0", None).save(&conn, &[]).unwrap();
+        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, &conn);
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
         new_dependency(&conn, &v, &c2);
     });
