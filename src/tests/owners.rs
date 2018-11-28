@@ -48,7 +48,9 @@ impl ::util::MockCookieUser {
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
+}
 
+impl ::util::MockTokenUser {
     /// Add a user as an owner for a crate.
     pub fn add_owner(&self, krate_name: &str, user: &User) {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
@@ -61,7 +63,7 @@ impl ::util::MockCookieUser {
 
 #[test]
 fn new_crate_owner() {
-    let (app, _, user1, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
@@ -69,7 +71,7 @@ fn new_crate_owner() {
 
     // Add the second user as an owner
     let user2 = app.db_new_user("bar");
-    user1.add_owner("foo_owner", user2.as_model());
+    token.add_owner("foo_owner", user2.as_model());
 
     // accept invitation for user to be added as owner
     let crate_id = app.db(|conn| Crate::by_name("foo_owner").first::<Crate>(conn).unwrap().id);

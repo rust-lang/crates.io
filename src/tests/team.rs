@@ -7,7 +7,7 @@ use models::{Crate, NewUser};
 use record::GhUser;
 use {add_team_to_crate, new_team, OkBool, RequestHelper, TestApp};
 
-impl ::util::MockCookieUser {
+impl ::util::MockTokenUser {
     /// Add to the specified crate the specified owner.
     fn add_crate_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
@@ -55,13 +55,13 @@ fn mock_user_on_both_teams() -> NewUser<'static> {
 // Test adding team without `github:`
 #[test]
 fn not_github() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("foo_not_github", user.as_model().id).expect_build(conn);
     });
 
-    let json = user
+    let json = token
         .add_crate_owner("foo_not_github", "dropbox:foo:foo")
         .bad_with_status(200);
 
@@ -74,13 +74,13 @@ fn not_github() {
 
 #[test]
 fn weird_name() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("foo_weird_name", user.as_model().id).expect_build(conn);
     });
 
-    let json = user
+    let json = token
         .add_crate_owner("foo_weird_name", "github:foo/../bar:wut")
         .bad_with_status(200);
 
@@ -96,13 +96,13 @@ fn weird_name() {
 // Test adding team without second `:`
 #[test]
 fn one_colon() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("foo_one_colon", user.as_model().id).expect_build(conn);
     });
 
-    let json = user
+    let json = token
         .add_crate_owner("foo_one_colon", "github:foo")
         .bad_with_status(200);
 
@@ -115,13 +115,13 @@ fn one_colon() {
 
 #[test]
 fn nonexistent_team() {
-    let (app, _, user) = TestApp::with_proxy().with_user();
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
 
     app.db(|conn| {
         CrateBuilder::new("foo_nonexistent", user.as_model().id).expect_build(conn);
     });
 
-    let json = user
+    let json = token
         .add_crate_owner(
             "foo_nonexistent",
             "github:crates-test-org:this-does-not-exist",
@@ -141,12 +141,13 @@ fn nonexistent_team() {
 fn add_team_mixed_case() {
     let (app, anon) = TestApp::with_proxy().empty();
     let user = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token = user.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_mixed_case", user.as_model().id).expect_build(conn);
     });
 
-    user.add_crate_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
+    token.add_crate_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
         .good();
 
     app.db(|conn| {
@@ -169,12 +170,13 @@ fn add_team_mixed_case() {
 fn add_team_as_non_member() {
     let (app, _) = TestApp::with_proxy().empty();
     let user = app.db_new_user(&mock_user_on_only_one_team().gh_login);
+    let token = user.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_team_non_member", user.as_model().id).expect_build(conn);
     });
 
-    let json = user
+    let json = token
         .add_crate_owner(
             "foo_team_non_member",
             "github:crates-test-org:just-for-crates-2",
@@ -193,16 +195,17 @@ fn add_team_as_non_member() {
 fn remove_team_as_named_owner() {
     let (app, _) = TestApp::with_proxy().empty();
     let user_on_both_teams = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_remove_team", user_on_both_teams.as_model().id).expect_build(conn);
     });
 
-    user_on_both_teams
+    token_on_both_teams
         .add_crate_owner("foo_remove_team", "github:crates-test-org:core")
         .good();
 
-    user_on_both_teams
+    token_on_both_teams
         .remove_crate_owner("foo_remove_team", "github:crates-test-org:core")
         .good();
 
@@ -225,19 +228,21 @@ fn remove_team_as_named_owner() {
 fn remove_team_as_team_owner() {
     let (app, _) = TestApp::with_proxy().empty();
     let user_on_both_teams = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_remove_team_owner", user_on_both_teams.as_model().id)
             .expect_build(conn);
     });
 
-    user_on_both_teams
+    token_on_both_teams
         .add_crate_owner("foo_remove_team_owner", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
+    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
-    let json = user_on_one_team
+    let json = token_on_one_team
         .remove_crate_owner("foo_remove_team_owner", "github:crates-test-org:core")
         .bad_with_status(200);
 
@@ -255,12 +260,13 @@ fn remove_team_as_team_owner() {
 fn publish_not_owned() {
     let (app, _) = TestApp::with_proxy().empty();
     let user_on_both_teams = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id).expect_build(conn);
     });
 
-    user_on_both_teams
+    token_on_both_teams
         .add_crate_owner("foo_not_owned", "github:crates-test-org:just-for-crates-2")
         .good();
 
@@ -285,12 +291,13 @@ fn publish_not_owned() {
 fn publish_owned() {
     let (app, _) = TestApp::with_proxy().empty();
     let user_on_both_teams = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_team_owned", user_on_both_teams.as_model().id).expect_build(conn);
     });
 
-    user_on_both_teams
+    token_on_both_teams
         .add_crate_owner("foo_team_owned", "github:crates-test-org:core")
         .good();
 
@@ -305,18 +312,20 @@ fn publish_owned() {
 fn add_owners_as_team_owner() {
     let (app, _) = TestApp::with_proxy().empty();
     let user_on_both_teams = app.db_new_user(&mock_user_on_both_teams().gh_login);
+    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
         CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id).expect_build(conn);
     });
 
-    user_on_both_teams
+    token_on_both_teams
         .add_crate_owner("foo_add_owner", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
+    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
-    let json = user_on_one_team
+    let json = token_on_one_team
         .add_crate_owner("foo_add_owner", "arbitrary_username")
         .bad_with_status(200);
 
