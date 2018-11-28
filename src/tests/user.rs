@@ -56,31 +56,22 @@ fn me() {
 
 #[test]
 fn show() {
-    let (_b, app, middle) = app();
-    {
-        let conn = t!(app.diesel_database.get());
+    let (app, anon, _) = TestApp::init().with_user();
+    app.db_new_user("bar");
 
-        t!(NewUser::new(1, "foo", Some("foo@bar.com"), None, None, "bar").create_or_update(&conn));
-        t!(NewUser::new(2, "bar", Some("bar@baz.com"), None, None, "bar").create_or_update(&conn));
-    }
-
-    let mut req = req(Method::Get, "/api/v1/users/foo");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowPublicResponse = ::json(&mut response);
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").good();
     assert_eq!("foo", json.user.login);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/users/bar")));
-    let json: UserShowPublicResponse = ::json(&mut response);
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/bar").good();
     assert_eq!("bar", json.user.login);
     assert_eq!(Some("https://github.com/bar".into()), json.user.url);
 }
 
 #[test]
 fn show_latest_user_case_insensitively() {
-    let (_b, app, middle) = app();
-    {
-        let conn = t!(app.diesel_database.get());
+    let (app, anon) = TestApp::init().empty();
 
+    app.db(|conn| {
         // Please do not delete or modify the setup of this test in order to get it to pass.
         // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
         // available for anyone to take. We need to support having multiple user accounts
@@ -104,10 +95,9 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         ).create_or_update(&conn));
-    }
-    let mut req = req(Method::Get, "api/v1/users/fOObAr");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserShowPublicResponse = ::json(&mut response);
+    });
+
+    let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();
     assert_eq!(
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()
@@ -154,138 +144,87 @@ fn following() {
         more: bool,
     }
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("foo").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-
-        CrateBuilder::new("foo_fighters", user.id)
+    let (app, _, user) = TestApp::init().with_user();
+    let user_id = user.as_model().id;
+    app.db(|conn| {
+        CrateBuilder::new("foo_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
-            .expect_build(&conn);
+            .expect_build(conn);
 
-        CrateBuilder::new("bar_fighters", user.id)
+        CrateBuilder::new("bar_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
-            .expect_build(&conn);
-    }
+            .expect_build(conn);
+    });
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates",)
-                .with_method(Method::Get,),
-        )
-    );
-    let r = ::json::<R>(&mut response);
+    let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_fighters/follow")
-                .with_method(Method::Put),
-        )
-    );
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Put),
-        )
-    );
+    user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"")
+        .good();
+    user.put::<OkBool>("/api/v1/crates/bar_fighters/follow", b"")
+        .good();
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates",)
-                .with_method(Method::Get,),
-        )
-    );
-    let r = ::json::<R>(&mut response);
+    let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates")
-                .with_method(Method::Get)
-                .with_query("per_page=1"),
-        )
-    );
-    let r = ::json::<R>(&mut response);
+    let r: R = user
+        .get_with_query("/api/v1/me/updates", "per_page=1")
+        .good();
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Delete),
-        )
-    );
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates")
-                .with_method(Method::Get)
-                .with_query("page=2&per_page=1"),
-        )
-    );
-    let r = ::json::<R>(&mut response);
+    user.delete::<OkBool>("/api/v1/crates/bar_fighters/follow")
+        .good();
+    let r: R = user
+        .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
+        .good();
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    bad_resp!(middle.call(req.with_query("page=0")));
+    user.get_with_query::<()>("/api/v1/me/updates", "page=0")
+        .bad_with_status(200); // TODO: Should be 500
 }
 
 #[test]
 fn user_total_downloads() {
     use diesel::update;
 
-    let (_b, app, middle) = app();
-    let u;
-    {
-        let conn = app.diesel_database.get().unwrap();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+    let another_user = app.db_new_user("bar");
+    let another_user = another_user.as_model();
 
-        u = new_user("foo").create_or_update(&conn).unwrap();
-
-        let mut krate = CrateBuilder::new("foo_krate1", u.id).expect_build(&conn);
+    app.db(|conn| {
+        let mut krate = CrateBuilder::new("foo_krate1", user.id).expect_build(conn);
         krate.downloads = 10;
-        update(&krate).set(&krate).execute(&*conn).unwrap();
+        update(&krate).set(&krate).execute(conn).unwrap();
 
-        let mut krate2 = CrateBuilder::new("foo_krate2", u.id).expect_build(&conn);
+        let mut krate2 = CrateBuilder::new("foo_krate2", user.id).expect_build(conn);
         krate2.downloads = 20;
-        update(&krate2).set(&krate2).execute(&*conn).unwrap();
+        update(&krate2).set(&krate2).execute(conn).unwrap();
 
-        let another_user = new_user("bar").create_or_update(&conn).unwrap();
-
-        let mut another_krate =
-            CrateBuilder::new("bar_krate1", another_user.id).expect_build(&conn);
+        let mut another_krate = CrateBuilder::new("bar_krate1", another_user.id).expect_build(conn);
         another_krate.downloads = 2;
         update(&another_krate)
             .set(&another_krate)
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
-    }
+    });
 
-    let mut req = req(Method::Get, &format!("/api/v1/users/{}/stats", u.id));
-    let mut response = ok_resp!(middle.call(&mut req));
-
-    let stats: UserStats = ::json(&mut response);
-    assert_eq!(stats.total_downloads, 30);
-    assert!(stats.total_downloads != 32);
+    let url = format!("/api/v1/users/{}/stats", user.id);
+    let stats: UserStats = anon.get(&url).good();
+    assert_eq!(stats.total_downloads, 30); // instead of 32
 }
 
 #[test]
 fn user_total_downloads_no_crates() {
-    let (_b, app, middle) = app();
-    let u;
-    {
-        let conn = app.diesel_database.get().unwrap();
+    let (_, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+    let url = format!("/api/v1/users/{}/stats", user.id);
 
-        u = new_user("foo").create_or_update(&conn).unwrap();
-    }
-
-    let mut req = req(Method::Get, &format!("/api/v1/users/{}/stats", u.id));
-    let mut response = ok_resp!(middle.call(&mut req));
-
-    let stats: UserStats = ::json(&mut response);
+    let stats: UserStats = anon.get(&url).good();
     assert_eq!(stats.total_downloads, 0);
 }
 
