@@ -23,6 +23,11 @@ pub struct UserShowPrivateResponse {
     pub user: EncodablePrivateUser,
 }
 
+#[derive(Deserialize)]
+struct UserStats {
+    total_downloads: i64,
+}
+
 #[test]
 fn auth_gives_a_token() {
     let (_, anon) = TestApp::init().empty();
@@ -262,13 +267,9 @@ fn user_total_downloads() {
     let mut req = req(Method::Get, &format!("/api/v1/users/{}/stats", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[derive(Deserialize)]
-    struct Response {
-        total_downloads: i64,
-    }
-    let response: Response = ::json(&mut response);
-    assert_eq!(response.total_downloads, 30);
-    assert!(response.total_downloads != 32);
+    let stats: UserStats = ::json(&mut response);
+    assert_eq!(stats.total_downloads, 30);
+    assert!(stats.total_downloads != 32);
 }
 
 #[test]
@@ -284,12 +285,8 @@ fn user_total_downloads_no_crates() {
     let mut req = req(Method::Get, &format!("/api/v1/users/{}/stats", u.id));
     let mut response = ok_resp!(middle.call(&mut req));
 
-    #[derive(Deserialize)]
-    struct Response {
-        total_downloads: i64,
-    }
-    let response: Response = ::json(&mut response);
-    assert_eq!(response.total_downloads, 0);
+    let stats: UserStats = ::json(&mut response);
+    assert_eq!(stats.total_downloads, 0);
 }
 
 #[test]
@@ -322,11 +319,6 @@ fn updating_existing_user_doesnt_change_api_token() {
 */
 #[test]
 fn test_github_login_does_not_overwrite_email() {
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
@@ -342,7 +334,7 @@ fn test_github_login_does_not_overwrite_email() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
 
@@ -371,7 +363,7 @@ fn test_github_login_does_not_overwrite_email() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
 }
@@ -382,16 +374,6 @@ fn test_github_login_does_not_overwrite_email() {
 */
 #[test]
 fn test_email_get_and_put() {
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-
-    #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
-
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
@@ -402,7 +384,7 @@ fn test_email_get_and_put() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
 
@@ -415,10 +397,10 @@ fn test_email_get_and_put() {
                 .with_body(body.as_bytes()),
         )
     );
-    assert!(::json::<S>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
     assert!(!r.user.email_verified);
@@ -528,11 +510,6 @@ fn test_this_user_cannot_change_that_user_email() {
 */
 #[test]
 fn test_insert_into_email_table() {
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
     {
@@ -548,7 +525,7 @@ fn test_insert_into_email_table() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apple@example.com");
     assert_eq!(r.user.login, "apple");
 
@@ -568,7 +545,7 @@ fn test_insert_into_email_table() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apple@example.com");
     assert_eq!(r.user.login, "apple");
 }
@@ -580,16 +557,6 @@ fn test_insert_into_email_table() {
 */
 #[test]
 fn test_insert_into_email_table_with_email_change() {
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-
-    #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
-
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
     let user = {
@@ -606,7 +573,7 @@ fn test_insert_into_email_table_with_email_change() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "test_insert_with_change@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(!r.user.email_verified);
@@ -621,7 +588,7 @@ fn test_insert_into_email_table_with_email_change() {
                 .with_body(body.as_bytes()),
         )
     );
-    assert!(::json::<S>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     logout(&mut req);
 
@@ -639,7 +606,7 @@ fn test_insert_into_email_table_with_email_change() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert!(!r.user.email_verified);
     assert!(r.user.email_verification_sent);
@@ -655,16 +622,6 @@ fn test_insert_into_email_table_with_email_change() {
 #[test]
 fn test_confirm_user_email() {
     use cargo_registry::schema::emails;
-
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
-
-    #[derive(Deserialize)]
-    struct S {
-        ok: bool,
-    }
 
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
@@ -694,10 +651,10 @@ fn test_confirm_user_email() {
                 .with_method(Method::Put),
         )
     );
-    assert!(::json::<S>(&mut response).ok);
+    assert!(::json::<OkBool>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato2@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(r.user.email_verified);
@@ -713,11 +670,6 @@ fn test_existing_user_email() {
     use cargo_registry::schema::emails;
     use chrono::NaiveDateTime;
     use diesel::update;
-
-    #[derive(Deserialize)]
-    struct R {
-        user: EncodablePrivateUser,
-    }
 
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
@@ -738,7 +690,7 @@ fn test_existing_user_email() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<R>(&mut response);
+    let r = ::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potahto@example.com");
     assert!(!r.user.email_verified);
     assert!(!r.user.email_verification_sent);
