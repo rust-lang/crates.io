@@ -52,7 +52,7 @@ impl ::util::MockCookieUser {
 
 impl ::util::MockTokenUser {
     /// Add a user as an owner for a crate.
-    pub fn add_owner(&self, krate_name: &str, user: &User) {
+    pub fn add_user_owner(&self, krate_name: &str, user: &User) {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
 
@@ -71,7 +71,7 @@ fn new_crate_owner() {
 
     // Add the second user as an owner
     let user2 = app.db_new_user("bar");
-    token.add_owner("foo_owner", user2.as_model());
+    token.add_user_owner("foo_owner", user2.as_model());
 
     // accept invitation for user to be added as owner
     let crate_id = app.db(|conn| Crate::by_name("foo_owner").first::<Crate>(conn).unwrap().id);
