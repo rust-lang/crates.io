@@ -57,7 +57,9 @@ fn show() {
 
     let v = app.db(|conn| {
         let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(conn);
-        VersionBuilder::new("2.0.0").size(1234).expect_build(krate.id, conn)
+        VersionBuilder::new("2.0.0")
+            .size(1234)
+            .expect_build(krate.id, conn)
     });
 
     let url = format!("/api/v1/versions/{}", v.id);
