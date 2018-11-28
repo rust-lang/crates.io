@@ -9,14 +9,14 @@ use {add_team_to_crate, new_team, OkBool, RequestHelper, TestApp};
 
 impl ::util::MockTokenUser {
     /// Add to the specified crate the specified owner.
-    fn add_crate_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
+    fn add_named_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = format!("{{\"users\":[\"{}\"]}}", owner);
         self.put(&url, body.as_bytes())
     }
 
     /// Remove from the specified crate the specified owner.
-    fn remove_crate_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
+    fn remove_named_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = format!("{{\"users\":[\"{}\"]}}", owner);
         self.delete_with_body(&url, body.as_bytes())
@@ -62,7 +62,7 @@ fn not_github() {
     });
 
     let json = token
-        .add_crate_owner("foo_not_github", "dropbox:foo:foo")
+        .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .bad_with_status(200);
 
     assert!(
@@ -81,7 +81,7 @@ fn weird_name() {
     });
 
     let json = token
-        .add_crate_owner("foo_weird_name", "github:foo/../bar:wut")
+        .add_named_owner("foo_weird_name", "github:foo/../bar:wut")
         .bad_with_status(200);
 
     assert!(
@@ -103,7 +103,7 @@ fn one_colon() {
     });
 
     let json = token
-        .add_crate_owner("foo_one_colon", "github:foo")
+        .add_named_owner("foo_one_colon", "github:foo")
         .bad_with_status(200);
 
     assert!(
@@ -122,7 +122,7 @@ fn nonexistent_team() {
     });
 
     let json = token
-        .add_crate_owner(
+        .add_named_owner(
             "foo_nonexistent",
             "github:crates-test-org:this-does-not-exist",
         ).bad_with_status(200);
@@ -147,7 +147,7 @@ fn add_team_mixed_case() {
         CrateBuilder::new("foo_mixed_case", user.as_model().id).expect_build(conn);
     });
 
-    token.add_crate_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
+    token.add_named_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
         .good();
 
     app.db(|conn| {
@@ -177,7 +177,7 @@ fn add_team_as_non_member() {
     });
 
     let json = token
-        .add_crate_owner(
+        .add_named_owner(
             "foo_team_non_member",
             "github:crates-test-org:just-for-crates-2",
         ).bad_with_status(200);
@@ -202,11 +202,11 @@ fn remove_team_as_named_owner() {
     });
 
     token_on_both_teams
-        .add_crate_owner("foo_remove_team", "github:crates-test-org:core")
+        .add_named_owner("foo_remove_team", "github:crates-test-org:core")
         .good();
 
     token_on_both_teams
-        .remove_crate_owner("foo_remove_team", "github:crates-test-org:core")
+        .remove_named_owner("foo_remove_team", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
@@ -236,14 +236,14 @@ fn remove_team_as_team_owner() {
     });
 
     token_on_both_teams
-        .add_crate_owner("foo_remove_team_owner", "github:crates-test-org:core")
+        .add_named_owner("foo_remove_team_owner", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let json = token_on_one_team
-        .remove_crate_owner("foo_remove_team_owner", "github:crates-test-org:core")
+        .remove_named_owner("foo_remove_team_owner", "github:crates-test-org:core")
         .bad_with_status(200);
 
     assert!(
@@ -267,7 +267,7 @@ fn publish_not_owned() {
     });
 
     token_on_both_teams
-        .add_crate_owner("foo_not_owned", "github:crates-test-org:just-for-crates-2")
+        .add_named_owner("foo_not_owned", "github:crates-test-org:just-for-crates-2")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
@@ -298,7 +298,7 @@ fn publish_owned() {
     });
 
     token_on_both_teams
-        .add_crate_owner("foo_team_owned", "github:crates-test-org:core")
+        .add_named_owner("foo_team_owned", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
@@ -319,14 +319,14 @@ fn add_owners_as_team_owner() {
     });
 
     token_on_both_teams
-        .add_crate_owner("foo_add_owner", "github:crates-test-org:core")
+        .add_named_owner("foo_add_owner", "github:crates-test-org:core")
         .good();
 
     let user_on_one_team = app.db_new_user(&mock_user_on_only_one_team().gh_login);
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let json = token_on_one_team
-        .add_crate_owner("foo_add_owner", "arbitrary_username")
+        .add_named_owner("foo_add_owner", "arbitrary_username")
         .bad_with_status(200);
 
     assert!(
