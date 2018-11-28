@@ -1,13 +1,11 @@
-use std::sync::atomic::Ordering;
-
 use conduit::{Handler, Method};
 use diesel::prelude::*;
 
 use builders::{CrateBuilder, VersionBuilder};
-use models::{ApiToken, Email, NewUser, User};
+use models::{Email, NewUser, User};
 use util::RequestHelper;
 use views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
-use {app, logout, new_user, req, sign_in_as, OkBool, TestApp, NEXT_GH_ID};
+use {app, logout, new_user, req, sign_in_as, OkBool, TestApp};
 
 #[derive(Deserialize)]
 struct AuthResponse {
@@ -296,17 +294,17 @@ fn user_total_downloads_no_crates() {
 
 #[test]
 fn updating_existing_user_doesnt_change_api_token() {
-    let (_b, app, _middle) = app();
-    let conn = t!(app.diesel_database.get());
+    let (app, _, user, token) = TestApp::init().with_token();
+    let gh_id = user.as_model().gh_id;
+    let token = &token.as_model().token;
 
-    let gh_user_id = NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32;
+    let user = app.db(|conn| {
+        // Reuse gh_id but use new gh_login and gh_access_token
+        t!(NewUser::new(gh_id, "bar", None, None, None, "bar_token").create_or_update(conn));
 
-    let original_user =
-        t!(NewUser::new(gh_user_id, "foo", None, None, None, "foo_token").create_or_update(&conn));
-    let token = t!(ApiToken::insert(&conn, original_user.id, "foo"));
-
-    t!(NewUser::new(gh_user_id, "bar", None, None, None, "bar_token").create_or_update(&conn));
-    let user = t!(User::find_by_api_token(&conn, &token.token));
+        // Use the original API token to find the now updated user
+        t!(User::find_by_api_token(conn, token))
+    });
 
     assert_eq!("bar", user.gh_login);
     assert_eq!("bar_token", user.gh_access_token);
