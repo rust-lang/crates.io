@@ -26,6 +26,7 @@ pub struct VersionBuilder<'a> {
     features: HashMap<String, Vec<String>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
     yanked: bool,
+    size: i32,
 }
 
 impl<'a> VersionBuilder<'a> {
@@ -46,6 +47,7 @@ impl<'a> VersionBuilder<'a> {
             features: HashMap::new(),
             dependencies: Vec::new(),
             yanked: false,
+            size: 0,
         }
     }
 
@@ -66,6 +68,12 @@ impl<'a> VersionBuilder<'a> {
         Self { yanked, ..self }
     }
 
+    /// Sets the version's size.
+    pub fn size(mut self, size: i32) -> Self {
+        self.size = size;
+        self
+    }
+
     fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
         use diesel::{insert_into, update};
 
@@ -80,7 +88,7 @@ impl<'a> VersionBuilder<'a> {
             &self.features,
             license,
             self.license_file,
-            None,
+            self.size,
         )?.save(connection, &[])?;
 
         if self.yanked {
@@ -108,6 +116,17 @@ impl<'a> VersionBuilder<'a> {
             .execute(connection)?;
 
         Ok(vers)
+    }
+
+    /// Consumes the builder and creates the version record in the database.
+    ///
+    /// # Panics
+    ///
+    /// Panics (and fails the test) if any part of inserting the version record fails.
+    pub fn expect_build(self, crate_id: i32, connection: &PgConnection) -> Version {
+        self.build(crate_id, connection).unwrap_or_else(|e| {
+            panic!("Unable to create version: {:?}", e);
+        })
     }
 }
 

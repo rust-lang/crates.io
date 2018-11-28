@@ -144,7 +144,7 @@ mod test {
             &HashMap::new(),
             None,
             None,
-            None,
+            0,
         ).unwrap();
         let version = version.save(&conn, &[]).unwrap();
         (krate, version)

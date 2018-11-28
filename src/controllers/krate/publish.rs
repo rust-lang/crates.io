@@ -135,7 +135,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             license_file,
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
-            Some(file_length as i32),
+            file_length as i32,
         )?.save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
