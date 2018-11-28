@@ -5,23 +5,7 @@ use super::OwnerTeamsResponse;
 use builders::{CrateBuilder, PublishBuilder};
 use models::{Crate, NewUser};
 use record::GhUser;
-use {add_team_to_crate, new_team, OkBool, RequestHelper, TestApp};
-
-impl ::util::MockTokenUser {
-    /// Add to the specified crate the specified owner.
-    fn add_named_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", owner);
-        self.put(&url, body.as_bytes())
-    }
-
-    /// Remove from the specified crate the specified owner.
-    fn remove_named_owner(&self, krate_name: &str, owner: &str) -> ::util::Response<OkBool> {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", owner);
-        self.delete_with_body(&url, body.as_bytes())
-    }
-}
+use {add_team_to_crate, new_team, RequestHelper, TestApp};
 
 impl ::util::MockAnonymousUser {
     /// List the team owners of the specified crate.

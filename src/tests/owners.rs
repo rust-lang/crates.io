@@ -3,7 +3,7 @@ use diesel;
 use diesel::prelude::*;
 
 use builders::{CrateBuilder, PublishBuilder};
-use models::{Crate, NewCrateOwnerInvitation, User};
+use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
 use util::RequestHelper;
 use views::{
@@ -47,17 +47,6 @@ impl ::util::MockCookieUser {
             self.put(&url, body.to_string().as_bytes()).good();
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
-    }
-}
-
-impl ::util::MockTokenUser {
-    /// Add a user as an owner for a crate.
-    pub fn add_user_owner(&self, krate_name: &str, user: &User) {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
-
-        let response: OkBool = self.put(&url, body.as_bytes()).good();
-        assert!(response.ok);
     }
 }
 

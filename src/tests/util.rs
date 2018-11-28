@@ -31,7 +31,7 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use models::{ApiToken, User};
 
-use super::{app, record, CrateList, CrateResponse, GoodCrate, VersionResponse};
+use super::{app, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -288,6 +288,25 @@ impl MockTokenUser {
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
         &self.token
+    }
+
+    /// Add to the specified crate the specified owner.
+    pub fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let body = format!("{{\"users\":[\"{}\"]}}", owner);
+        self.put(&url, body.as_bytes())
+    }
+
+    /// Remove from the specified crate the specified owner.
+    pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let body = format!("{{\"users\":[\"{}\"]}}", owner);
+        self.delete_with_body(&url, body.as_bytes())
+    }
+
+    /// Add a user as an owner for a crate.
+    pub fn add_user_owner(&self, krate_name: &str, user: &User) {
+        self.add_named_owner(krate_name, &user.gh_login).good();
     }
 }
 
