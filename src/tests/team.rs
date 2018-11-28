@@ -131,7 +131,8 @@ fn add_team_mixed_case() {
         CrateBuilder::new("foo_mixed_case", user.as_model().id).expect_build(conn);
     });
 
-    token.add_named_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
+    token
+        .add_named_owner("foo_mixed_case", "github:Crates-Test-Org:Core")
         .good();
 
     app.db(|conn| {
