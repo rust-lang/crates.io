@@ -367,7 +367,7 @@ fn travis_ci_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"travis-ci"));
+    assert_eq!(invalid_badges.first().unwrap(), "travis-ci");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -384,7 +384,7 @@ fn gitlab_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"gitlab"));
+    assert_eq!(invalid_badges.first().unwrap(), "gitlab");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -406,7 +406,10 @@ fn isitmaintained_issue_resolution_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"isitmaintained_issue_resolution"));
+    assert_eq!(
+        invalid_badges.first().unwrap(),
+        "isitmaintained_issue_resolution"
+    );
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -428,7 +431,10 @@ fn isitmaintained_open_issues_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"isitmaintained_open_issues"));
+    assert_eq!(
+        invalid_badges.first().unwrap(),
+        "isitmaintained_open_issues"
+    );
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -445,7 +451,7 @@ fn codecov_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"codecov"));
+    assert_eq!(invalid_badges.first().unwrap(), "codecov");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -462,7 +468,7 @@ fn coveralls_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"coveralls"));
+    assert_eq!(invalid_badges.first().unwrap(), "coveralls");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -479,7 +485,7 @@ fn circle_ci_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"circle-ci"));
+    assert_eq!(invalid_badges.first().unwrap(), "circle-ci");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -499,7 +505,7 @@ fn maintenance_required_keys() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"maintenance"));
+    assert_eq!(invalid_badges.first().unwrap(), "maintenance");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -521,7 +527,7 @@ fn maintenance_invalid_values() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"maintenance"));
+    assert_eq!(invalid_badges.first().unwrap(), "maintenance");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }
 
@@ -542,6 +548,6 @@ fn unknown_badge() {
 
     let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"not-a-badge"));
+    assert_eq!(invalid_badges.first().unwrap(), "not-a-badge");
     assert_eq!(krate.badges(&conn).unwrap(), vec![]);
 }

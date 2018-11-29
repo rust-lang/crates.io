@@ -14,7 +14,7 @@ use util::{read_fill, read_le_u32};
 use controllers::prelude::*;
 use models::dependency;
 use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
-use views::{EncodableCrate, EncodableCrateUpload};
+use views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -196,23 +196,12 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         crate_bomb.path = None;
         readme_bomb.path = None;
 
-        #[derive(Serialize)]
-        struct Warnings<'a> {
-            invalid_categories: Vec<&'a str>,
-            invalid_badges: Vec<&'a str>,
-        }
-        let warnings = Warnings {
+        let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
             invalid_badges: ignored_invalid_badges,
         };
 
-        #[derive(Serialize)]
-        struct R<'a> {
-            #[serde(rename = "crate")]
-            krate: EncodableCrate,
-            warnings: Warnings<'a>,
-        }
-        Ok(req.json(&R {
+        Ok(req.json(&GoodCrate {
             krate: krate.minimal_encodable(&max_version, None, false, None),
             warnings,
         }))
