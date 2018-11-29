@@ -3,13 +3,13 @@ use diesel;
 use diesel::prelude::*;
 
 use builders::{CrateBuilder, PublishBuilder};
-use models::{Crate, NewCrateOwnerInvitation, User};
+use models::{Crate, NewCrateOwnerInvitation};
 use schema::crate_owner_invitations;
 use util::RequestHelper;
 use views::{
     EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
-use {add_team_to_crate, app, logout, new_team, new_user, req, sign_in_as, Bad, OkBool, TestApp};
+use {add_team_to_crate, app, new_team, new_user, req, sign_in_as, TestApp};
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -18,6 +18,10 @@ struct TeamResponse {
 #[derive(Deserialize)]
 struct UserResponse {
     users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+struct InvitationListResponse {
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
 }
 
 // Implementing locally for now, unless these are needed elsewhere
@@ -48,20 +52,11 @@ impl ::util::MockCookieUser {
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
-
-    /// Add a user as an owner for a crate.
-    pub fn add_owner(&self, krate_name: &str, user: &User) {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", user.gh_login);
-
-        let response: OkBool = self.put(&url, body.as_bytes()).good();
-        assert!(response.ok);
-    }
 }
 
 #[test]
 fn new_crate_owner() {
-    let (app, _, user1, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
@@ -69,7 +64,7 @@ fn new_crate_owner() {
 
     // Add the second user as an owner
     let user2 = app.db_new_user("bar");
-    user1.add_owner("foo_owner", user2.as_model());
+    token.add_user_owner("foo_owner", user2.as_model());
 
     // accept invitation for user to be added as owner
     let crate_id = app.db(|conn| Crate::by_name("foo_owner").first::<Crate>(conn).unwrap().id);
@@ -91,100 +86,36 @@ fn new_crate_owner() {
 // a user can still remove their own login as an owner
 #[test]
 fn owners_can_remove_self() {
-    #[derive(Deserialize)]
-    struct R {
-        users: Vec<EncodablePublicUser>,
-    }
+    let (app, _, user, token) = TestApp::init().with_token();
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/crates/owners_selfremove/owners");
-    let (first_owner, second_owner) = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("firstowner").create_or_update(&conn).unwrap();
-        let user_two = new_user("secondowner").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        CrateBuilder::new("owners_selfremove", user.id).expect_build(&conn);
-        (user, user_two)
-    };
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let r: R = ::json(&mut response);
-    assert_eq!(r.users.len(), 1);
+    let krate = app
+        .db(|conn| CrateBuilder::new("owners_selfremove", user.as_model().id).expect_build(conn));
 
     // Deleting yourself when you're the only owner isn't allowed.
-    let body = r#"{"users":["firstowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<Bad>(&mut response);
+    let json = token
+        .remove_named_owner("owners_selfremove", &user.as_model().gh_login)
+        .bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
-            .contains("cannot remove the sole owner of a crate",)
+            .contains("cannot remove the sole owner of a crate")
     );
 
-    let body = r#"{"users":["secondowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Put,).with_body(body.as_bytes(),),));
-    assert!(::json::<OkBool>(&mut response).ok);
-
-    // Need to accept owner invitation to add secondowner as owner
-    let krate_id = {
-        let conn = app.diesel_database.get().unwrap();
-        Crate::by_name("owners_selfremove")
-            .first::<Crate>(&*conn)
-            .unwrap()
-            .id
-    };
-
-    let body = json!({
-        "crate_owner_invite": {
-            "invited_by_username": "foo",
-            "crate_name": "foo_owner",
-            "crate_id": krate_id,
-            "created_at": "",
-            "accepted": true
-        }
-    });
-
-    logout(&mut req);
-    sign_in_as(&mut req, &second_owner);
-
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
-                .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes()),
-        )
-    );
-
-    #[derive(Deserialize)]
-    struct CrateOwnerInvitation {
-        crate_owner_invitation: InvitationResponse,
-    }
-
-    let crate_owner_invite = ::json::<CrateOwnerInvitation>(&mut response);
-    assert!(crate_owner_invite.crate_owner_invitation.accepted);
-    assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
-
-    logout(&mut req);
-    sign_in_as(&mut req, &first_owner);
+    let user2 = app.db_new_user("secondowner");
+    token.add_user_owner("owners_selfremove", user2.as_model());
+    user2.accept_ownership_invitation("owners_selfremove", krate.id);
 
     // Deleting yourself when there are other owners is allowed.
-    let body = r#"{"users":["firstowner"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/owners_selfremove/owners")
-                .with_method(Method::Delete)
-                .with_body(body.as_bytes())
-        )
-    );
-    assert!(::json::<OkBool>(&mut response).ok);
+    let json = token
+        .remove_named_owner("owners_selfremove", &user.as_model().gh_login)
+        .good();
+    assert!(json.ok);
 
     // After you delete yourself, you no longer have permisions to manage the crate.
-    let body = r#"{"users":["secondowner"]}"#;
-    let mut response =
-        ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
-    let json = ::json::<Bad>(&mut response);
+    let json = token
+        .remove_named_owner("owners_selfremove", &user2.as_model().gh_login)
+        .bad_with_status(200);
+
     assert!(
         json.errors[0]
             .detail
@@ -236,91 +167,50 @@ fn check_ownership_two_crates() {
 */
 #[test]
 fn check_ownership_one_crate() {
-    let (_b, app, middle) = app();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
 
-    let (team, user) = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("user_cat").create_or_update(&conn).unwrap();
+    let team = app.db(|conn| {
         let t = new_team("github:test_org:team_sloth")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
-        let krate = CrateBuilder::new("best_crate", u.id).expect_build(&conn);
-        add_team_to_crate(&t, &krate, &u, &conn).unwrap();
-        (t, u)
-    };
+        let krate = CrateBuilder::new("best_crate", user.id).expect_build(conn);
+        add_team_to_crate(&t, &krate, &user, conn).unwrap();
+        t
+    });
 
-    let mut req = req(Method::Get, "/api/v1/crates/best_crate/owner_team");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: TeamResponse = ::json(&mut response);
-
+    let json: TeamResponse = anon.get("/api/v1/crates/best_crate/owner_team").good();
     assert_eq!(json.teams[0].kind, "team");
     assert_eq!(json.teams[0].name, team.name);
 
-    let mut req = ::req(Method::Get, "/api/v1/crates/best_crate/owner_user");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: UserResponse = ::json(&mut response);
-
+    let json: UserResponse = anon.get("/api/v1/crates/best_crate/owner_user").good();
     assert_eq!(json.users[0].kind, "user");
     assert_eq!(json.users[0].name, user.name);
 }
 
 #[test]
 fn invitations_are_empty_by_default() {
-    #[derive(Deserialize)]
-    struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
-    }
+    let (_, _, user) = TestApp::init().with_user();
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
-
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        new_user("user_no_invites").create_or_update(&conn).unwrap()
-    };
-    sign_in_as(&mut req, &user);
-
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: R = ::json(&mut response);
-
+    let json: InvitationListResponse = user.get("/api/v1/me/crate_owner_invitations").good();
     assert_eq!(json.crate_owner_invitations.len(), 0);
 }
 
 #[test]
 fn invitations_list() {
-    #[derive(Deserialize)]
-    struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
-    }
+    let (app, _, owner, token) = TestApp::init().with_token();
+    let owner = owner.as_model();
 
-    let (_b, app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
-    let (krate, user) = {
-        let conn = app.diesel_database.get().unwrap();
-        let owner = new_user("inviting_user").create_or_update(&conn).unwrap();
-        let user = new_user("invited_user").create_or_update(&conn).unwrap();
-        let krate = CrateBuilder::new("invited_crate", owner.id).expect_build(&conn);
+    let krate = app.db(|conn| CrateBuilder::new("invited_crate", owner.id).expect_build(conn));
 
-        // This should be replaced by an actual call to the route that `owner --add` hits once
-        // that route creates an invitation.
-        diesel::insert_into(crate_owner_invitations::table)
-            .values(&NewCrateOwnerInvitation {
-                invited_by_user_id: owner.id,
-                invited_user_id: user.id,
-                crate_id: krate.id,
-            }).execute(&*conn)
-            .unwrap();
-        (krate, user)
-    };
-    sign_in_as(&mut req, &user);
+    let user = app.db_new_user("invited_user");
+    token.add_user_owner("invited_crate", user.as_model());
 
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: R = ::json(&mut response);
-
+    let json: InvitationListResponse = user.get("/api/v1/me/crate_owner_invitations").good();
     assert_eq!(json.crate_owner_invitations.len(), 1);
     assert_eq!(
         json.crate_owner_invitations[0].invited_by_username,
-        "inviting_user"
+        owner.gh_login
     );
     assert_eq!(json.crate_owner_invitations[0].crate_name, "invited_crate");
     assert_eq!(json.crate_owner_invitations[0].crate_id, krate.id);
@@ -334,11 +224,6 @@ fn invitations_list() {
 */
 #[test]
 fn test_accept_invitation() {
-    #[derive(Deserialize)]
-    struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
-    }
-
     #[derive(Deserialize)]
     struct Q {
         users: Vec<EncodablePublicUser>,
@@ -403,7 +288,7 @@ fn test_accept_invitation() {
                 .with_method(Method::Get)
         )
     );
-    let json: R = ::json(&mut response);
+    let json: InvitationListResponse = ::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was inserted
@@ -424,11 +309,6 @@ fn test_accept_invitation() {
 */
 #[test]
 fn test_decline_invitation() {
-    #[derive(Deserialize)]
-    struct R {
-        crate_owner_invitations: Vec<EncodableCrateOwnerInvitation>,
-    }
-
     #[derive(Deserialize)]
     struct Q {
         users: Vec<EncodablePublicUser>,
@@ -493,7 +373,7 @@ fn test_decline_invitation() {
                 .with_method(Method::Get)
         )
     );
-    let json: R = ::json(&mut response);
+    let json: InvitationListResponse = ::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was not inserted

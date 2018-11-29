@@ -5,15 +5,11 @@ use diesel::prelude::*;
 use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use schema::versions;
 use views::EncodableVersion;
-use {RequestHelper, TestApp};
+use {RequestHelper, TestApp, VersionResponse};
 
 #[derive(Deserialize)]
 struct VersionList {
     versions: Vec<EncodableVersion>,
-}
-#[derive(Deserialize)]
-struct VersionResponse {
-    version: EncodableVersion,
 }
 
 #[test]
