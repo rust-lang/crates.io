@@ -221,6 +221,7 @@ pub struct GoodCrate {
 pub struct PublishWarnings {
     pub invalid_categories: Vec<String>,
     pub invalid_badges: Vec<String>,
+    pub other: Vec<String>,
 }
 
 // TODO: Prefix many of these with `Encodable` then clean up the reexports

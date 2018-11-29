@@ -64,6 +64,16 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
 
     let conn = req.db_conn()?;
+
+    let mut other_warnings = vec![];
+    if !user.has_verified_email(&conn)? {
+        other_warnings.push(String::from(
+            "You do not currently have a verified email address associated with your crates.io \
+             account. Starting 2019-02-28, a verified email will be required to publish crates. \
+             Visit https://crates.io/me to set and verify your email address.",
+        ));
+    }
+
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
@@ -199,6 +209,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
             invalid_badges: ignored_invalid_badges,
+            other: other_warnings,
         };
 
         Ok(req.json(&GoodCrate {
