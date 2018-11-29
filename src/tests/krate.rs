@@ -488,10 +488,10 @@ fn yanked_versions_are_not_considered_for_max_version() {
 
 #[test]
 fn versions() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
     app.db(|conn| {
-        let u = new_user("foo").create_or_update(conn).unwrap();
-        CrateBuilder::new("foo_versions", u.id)
+        CrateBuilder::new("foo_versions", user.id)
             .version("0.5.1")
             .version("1.0.0")
             .version("0.5.0")
@@ -1354,8 +1354,9 @@ fn yank() {
 #[test]
 fn yank_not_owner() {
     let (app, _, _, token) = TestApp::init().with_token();
+    let another_user = app.db_new_user("bar");
+    let another_user = another_user.as_model();
     app.db(|conn| {
-        let another_user = new_user("bar").create_or_update(conn).unwrap();
         CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
     });
 
