@@ -66,7 +66,7 @@ impl<'a> VersionBuilder<'a> {
         Self { yanked, ..self }
     }
 
-    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+    fn build(self, crate_id: i32,published_by: i32, connection: &PgConnection) -> CargoResult<Version> {
         use diesel::{insert_into, update};
 
         let license = match self.license {
@@ -81,6 +81,7 @@ impl<'a> VersionBuilder<'a> {
             license,
             self.license_file,
             None,
+            published_by,
         )?.save(connection, &[])?;
 
         if self.yanked {
@@ -251,7 +252,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_builder in self.versions {
-            version_builder.build(krate.id, connection)?;
+            version_builder.build(krate.id, self.owner_id, connection)?;
         }
 
         if !self.keywords.is_empty() {
