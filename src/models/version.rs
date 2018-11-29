@@ -27,7 +27,7 @@ pub struct Version {
     pub yanked: bool,
     pub license: Option<String>,
     pub crate_size: Option<i32>,
-    pub published_by: i32,
+    pub published_by: Option<i32>,
 }
 
 #[derive(Insertable, Debug)]
