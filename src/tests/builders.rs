@@ -13,8 +13,7 @@ use tar;
 
 use cargo_registry::util::CargoResult;
 
-use models::{Crate, CrateDownload, Keyword, Version};
-use models::{NewCrate, NewVersion};
+use models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version};
 use schema::*;
 use views::krate_publish as u;
 
@@ -315,7 +314,7 @@ pub struct PublishBuilder {
     pub krate_name: String,
     version: semver::Version,
     tarball: Vec<u8>,
-    deps: Vec<u::CrateDependency>,
+    deps: Vec<u::EncodableCrateDependency>,
     desc: Option<String>,
     readme: Option<String>,
     doc_url: Option<String>,
@@ -469,9 +468,9 @@ impl PublishBuilder {
 
     /// Consume this builder to make the Put request body
     pub fn body(self) -> Vec<u8> {
-        let new_crate = u::NewCrate {
-            name: u::CrateName(self.krate_name.clone()),
-            vers: u::CrateVersion(self.version),
+        let new_crate = u::EncodableCrateUpload {
+            name: u::EncodableCrateName(self.krate_name.clone()),
+            vers: u::EncodableCrateVersion(self.version),
             features: HashMap::new(),
             deps: self.deps,
             authors: self.authors,
@@ -480,11 +479,14 @@ impl PublishBuilder {
             documentation: self.doc_url,
             readme: self.readme,
             readme_file: None,
-            keywords: Some(u::KeywordList(
-                self.keywords.into_iter().map(u::Keyword).collect(),
+            keywords: Some(u::EncodableKeywordList(
+                self.keywords.into_iter().map(u::EncodableKeyword).collect(),
             )),
-            categories: Some(u::CategoryList(
-                self.categories.into_iter().map(u::Category).collect(),
+            categories: Some(u::EncodableCategoryList(
+                self.categories
+                    .into_iter()
+                    .map(u::EncodableCategory)
+                    .collect(),
             )),
             license: self.license,
             license_file: self.license_file,
@@ -500,8 +502,8 @@ impl PublishBuilder {
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
     name: String,
-    explicit_name_in_toml: Option<u::CrateName>,
-    version_req: u::CrateVersionReq,
+    explicit_name_in_toml: Option<u::EncodableCrateName>,
+    version_req: u::EncodableCrateVersionReq,
 }
 
 impl DependencyBuilder {
@@ -510,13 +512,13 @@ impl DependencyBuilder {
         DependencyBuilder {
             name: name.to_string(),
             explicit_name_in_toml: None,
-            version_req: u::CrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
+            version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
     }
 
     /// Rename this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
-        self.explicit_name_in_toml = Some(u::CrateName(new_name.to_string()));
+        self.explicit_name_in_toml = Some(u::EncodableCrateName(new_name.to_string()));
         self
     }
 
@@ -526,7 +528,7 @@ impl DependencyBuilder {
     ///
     /// Panics if the `version_req` string specified isn't a valid `semver::VersionReq`.
     pub fn version_req(mut self, version_req: &str) -> Self {
-        self.version_req = u::CrateVersionReq(
+        self.version_req = u::EncodableCrateVersionReq(
             semver::VersionReq::parse(version_req)
                 .expect("version req isn't a valid semver::VersionReq"),
         );
@@ -535,9 +537,9 @@ impl DependencyBuilder {
 
     /// Consume this builder to create a `u::CrateDependency`. If the dependent crate doesn't
     /// already exist, publishing a crate with this dependency will fail.
-    fn build(self) -> u::CrateDependency {
-        u::CrateDependency {
-            name: u::CrateName(self.name),
+    fn build(self) -> u::EncodableCrateDependency {
+        u::EncodableCrateDependency {
+            name: u::EncodableCrateName(self.name),
             optional: false,
             default_features: true,
             features: Vec::new(),

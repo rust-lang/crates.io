@@ -224,10 +224,8 @@ pub struct PublishWarnings {
     pub other: Vec<String>,
 }
 
-// TODO: Prefix many of these with `Encodable` then clean up the reexports
 pub mod krate_publish;
-pub use self::krate_publish::CrateDependency as EncodableCrateDependency;
-pub use self::krate_publish::NewCrate as EncodableCrateUpload;
+pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 
 #[cfg(test)]
 mod tests {
