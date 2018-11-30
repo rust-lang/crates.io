@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use diesel::prelude::*;
 
 use models::ApiToken;
+use schema::api_tokens;
 use views::{EncodableApiTokenWithToken, EncodableMe};
 use {user::UserShowPrivateResponse, RequestHelper, TestApp};
 
@@ -70,6 +71,37 @@ fn list_tokens() {
 }
 
 #[test]
+fn list_tokens_exclude_revoked() {
+    let (app, _, user) = TestApp::init().with_user();
+    let id = user.as_model().id;
+    let tokens = app.db(|conn| {
+        vec![
+            t!(ApiToken::insert(conn, id, "bar")),
+            t!(ApiToken::insert(conn, id, "baz")),
+        ]
+    });
+
+    // List tokens expecting them all to be there.
+    let json: ListResponse = user.get(URL).good();
+    assert_eq!(json.api_tokens.len(), tokens.len());
+
+    // Revoke the first token.
+    let _json: RevokedResponse = user
+        .delete(&format!("/api/v1/me/tokens/{}", tokens[0].id))
+        .good();
+
+    // Check that we now have one less token being listed.
+    let json: ListResponse = user.get(URL).good();
+    assert_eq!(json.api_tokens.len(), tokens.len() - 1);
+    assert!(
+        json.api_tokens
+            .iter()
+            .find(|token| token.name == tokens[0].name)
+            .is_none()
+    );
+}
+
+#[test]
 fn create_token_logged_out() {
     let (_, anon) = TestApp::init().empty();
     anon.put(URL, NEW_BAR).assert_forbidden();
@@ -128,6 +160,7 @@ fn create_token_success() {
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, "bar");
     assert_eq!(tokens[0].token, json.api_token.token);
+    assert_eq!(tokens[0].revoked, false);
     assert_eq!(tokens[0].last_used_at, None);
 }
 
@@ -218,6 +251,7 @@ fn revoke_token_success() {
     // List tokens no longer contains the token
     app.db(|conn| {
         let count = ApiToken::belonging_to(user.as_model())
+            .filter(api_tokens::revoked.eq(false))
             .count()
             .get_result(conn);
         assert_eq!(count, Ok(0));

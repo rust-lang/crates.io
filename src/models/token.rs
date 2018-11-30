@@ -21,6 +21,8 @@ pub struct ApiToken {
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
     pub last_used_at: Option<NaiveDateTime>,
+    #[serde(skip)]
+    pub revoked: bool,
 }
 
 impl ApiToken {
@@ -40,6 +42,7 @@ impl ApiToken {
             id: self.id,
             name: self.name,
             token: self.token,
+            revoked: self.revoked,
             created_at: self.created_at,
             last_used_at: self.last_used_at,
         }
@@ -58,6 +61,7 @@ mod tests {
             id: 12345,
             user_id: 23456,
             token: "".to_string(),
+            revoked: false,
             name: "".to_string(),
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
@@ -81,6 +85,7 @@ mod tests {
             id: 12345,
             name: "".to_string(),
             token: "".to_string(),
+            revoked: false,
             created_at: NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 11),
             last_used_at: Some(NaiveDate::from_ymd(2017, 1, 6).and_hms(14, 23, 12)),
         };
