@@ -210,6 +210,20 @@ pub struct EncodableVersionLinks {
     pub authors: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GoodCrate {
+    #[serde(rename = "crate")]
+    pub krate: EncodableCrate,
+    pub warnings: PublishWarnings,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PublishWarnings {
+    pub invalid_categories: Vec<String>,
+    pub invalid_badges: Vec<String>,
+    pub other: Vec<String>,
+}
+
 pub mod krate_publish;
 pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 

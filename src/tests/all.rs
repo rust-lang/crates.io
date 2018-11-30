@@ -45,7 +45,7 @@ use models::{Crate, CrateOwner, Dependency, Team, User, Version};
 use models::{NewCategory, NewTeam, NewUser};
 use schema::*;
 use views::krate_publish as u;
-use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion};
+use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate};
 
 macro_rules! t {
     ($e:expr) => {
@@ -93,21 +93,10 @@ mod user;
 mod util;
 mod version;
 
-#[derive(Deserialize, Debug)]
-pub struct GoodCrate {
-    #[serde(rename = "crate")]
-    krate: EncodableCrate,
-    warnings: Warnings,
-}
 #[derive(Deserialize)]
 pub struct CrateList {
     crates: Vec<EncodableCrate>,
     meta: CrateMeta,
-}
-#[derive(Deserialize, Debug)]
-struct Warnings {
-    invalid_categories: Vec<String>,
-    invalid_badges: Vec<String>,
 }
 #[derive(Deserialize)]
 struct CrateMeta {

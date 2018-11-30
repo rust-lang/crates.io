@@ -154,6 +154,16 @@ impl User {
         Ok(best)
     }
 
+    pub fn has_verified_email(&self, conn: &PgConnection) -> CargoResult<bool> {
+        use diesel::dsl::exists;
+        let email_exists = diesel::select(exists(
+            emails::table
+                .filter(emails::user_id.eq(self.id))
+                .filter(emails::verified.eq(true)),
+        )).get_result(&*conn)?;
+        Ok(email_exists)
+    }
+
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
     pub fn encodable_private(
         self,

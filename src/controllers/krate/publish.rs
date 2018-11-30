@@ -14,7 +14,7 @@ use util::{read_fill, read_le_u32};
 use controllers::prelude::*;
 use models::dependency;
 use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
-use views::{EncodableCrate, EncodableCrateUpload};
+use views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
@@ -64,6 +64,16 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
 
     let conn = req.db_conn()?;
+
+    let mut other_warnings = vec![];
+    if !user.has_verified_email(&conn)? {
+        other_warnings.push(String::from(
+            "You do not currently have a verified email address associated with your crates.io \
+             account. Starting 2019-02-28, a verified email will be required to publish crates. \
+             Visit https://crates.io/me to set and verify your email address.",
+        ));
+    }
+
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
@@ -196,23 +206,13 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         crate_bomb.path = None;
         readme_bomb.path = None;
 
-        #[derive(Serialize)]
-        struct Warnings<'a> {
-            invalid_categories: Vec<&'a str>,
-            invalid_badges: Vec<&'a str>,
-        }
-        let warnings = Warnings {
+        let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
             invalid_badges: ignored_invalid_badges,
+            other: other_warnings,
         };
 
-        #[derive(Serialize)]
-        struct R<'a> {
-            #[serde(rename = "crate")]
-            krate: EncodableCrate,
-            warnings: Warnings<'a>,
-        }
-        Ok(req.json(&R {
+        Ok(req.json(&GoodCrate {
             krate: krate.minimal_encodable(&max_version, None, false, None),
             warnings,
         }))
