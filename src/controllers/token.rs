@@ -12,6 +12,7 @@ use views::EncodableApiTokenWithToken;
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
     let tokens = ApiToken::belonging_to(req.user()?)
+        .filter(api_tokens::revoked.eq(false))
         .order(api_tokens::created_at.desc())
         .load(&*req.db_conn()?)?;
     #[derive(Serialize)]
@@ -94,7 +95,9 @@ pub fn revoke(req: &mut dyn Request) -> CargoResult<Response> {
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;
 
-    diesel::delete(ApiToken::belonging_to(req.user()?).find(id)).execute(&*req.db_conn()?)?;
+    diesel::update(ApiToken::belonging_to(req.user()?).find(id))
+        .set(api_tokens::revoked.eq(true))
+        .execute(&*req.db_conn()?)?;
 
     #[derive(Serialize)]
     struct R {}

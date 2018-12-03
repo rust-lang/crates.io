@@ -144,6 +144,7 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
+    pub revoked: bool,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
