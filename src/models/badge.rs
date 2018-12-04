@@ -104,11 +104,11 @@ impl Badge {
         serde_json::from_value(serde_json::to_value(self).unwrap()).unwrap()
     }
 
-    pub fn update_crate<'a>(
+    pub fn update_crate(
         conn: &PgConnection,
         krate: &Crate,
-        badges: Option<&'a HashMap<String, HashMap<String, String>>>,
-    ) -> QueryResult<Vec<&'a str>> {
+        badges: Option<&HashMap<String, HashMap<String, String>>>,
+    ) -> QueryResult<Vec<String>> {
         use diesel::{delete, insert_into};
 
         let mut invalid_badges = vec![];
@@ -126,7 +126,7 @@ impl Badge {
                         badges::attributes.eq(attributes_json),
                     ));
                 } else {
-                    invalid_badges.push(&**k);
+                    invalid_badges.push(k.to_string());
                 }
             }
         }

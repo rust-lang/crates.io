@@ -124,7 +124,7 @@ impl NewVersion {
         features: &HashMap<String, Vec<String>>,
         license: Option<String>,
         license_file: Option<&str>,
-        crate_size: Option<i32>,
+        crate_size: i32,
         published_by: i32,
     ) -> CargoResult<Self> {
         let features = serde_json::to_value(features)?;
@@ -134,7 +134,7 @@ impl NewVersion {
             num: num.to_string(),
             features,
             license,
-            crate_size,
+            crate_size: Some(crate_size),
             published_by,
         };
 

@@ -31,7 +31,7 @@ use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use models::{ApiToken, User};
 
-use super::{app, record, CrateList, CrateResponse, GoodCrate};
+use super::{app, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -166,6 +166,16 @@ pub trait RequestHelper {
         Response::new(self.app().0.middle.call(&mut request))
     }
 
+    /// Issue a DELETE request with a body... yes we do it, for crate owner removal
+    fn delete_with_body<T>(&self, path: &str, body: &[u8]) -> Response<T>
+    where
+        for<'de> T: serde::Deserialize<'de>,
+    {
+        let mut builder = self.request_builder(Method::Delete, path);
+        let request = builder.with_body(body);
+        Response::new(self.app().0.middle.call(request))
+    }
+
     /// Search for crates matching a query string
     fn search(&self, query: &str) -> CrateList {
         self.get_with_query("/api/v1/crates", query).good()
@@ -187,6 +197,12 @@ pub trait RequestHelper {
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{}", krate_name);
+        self.get(&url).good()
+    }
+
+    /// Request the JSON used for a crate version's page
+    fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
+        let url = format!("/api/v1/crates/{}/{}", krate_name, version);
         self.get(&url).good()
     }
 }
@@ -272,6 +288,25 @@ impl MockTokenUser {
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
         &self.token
+    }
+
+    /// Add to the specified crate the specified owner.
+    pub fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let body = format!("{{\"users\":[\"{}\"]}}", owner);
+        self.put(&url, body.as_bytes())
+    }
+
+    /// Remove from the specified crate the specified owner.
+    pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        let body = format!("{{\"users\":[\"{}\"]}}", owner);
+        self.delete_with_body(&url, body.as_bytes())
+    }
+
+    /// Add a user as an owner for a crate.
+    pub fn add_user_owner(&self, krate_name: &str, user: &User) {
+        self.add_named_owner(krate_name, &user.gh_login).good();
     }
 }
 

@@ -109,9 +109,12 @@ impl User {
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
         use diesel::update;
-        use schema::api_tokens::dsl::{api_tokens, last_used_at, token, user_id};
+        use schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token, user_id};
         use schema::users::dsl::{id, users};
-        let user_id_ = update(api_tokens.filter(token.eq(token_)))
+        let tokens = api_tokens
+            .filter(token.eq(token_))
+            .filter(revoked.eq(false));
+        let user_id_ = update(tokens)
             .set(last_used_at.eq(now.nullable()))
             .returning(user_id)
             .get_result::<i32>(conn)?;
@@ -152,6 +155,16 @@ impl User {
             }
         }
         Ok(best)
+    }
+
+    pub fn has_verified_email(&self, conn: &PgConnection) -> CargoResult<bool> {
+        use diesel::dsl::exists;
+        let email_exists = diesel::select(exists(
+            emails::table
+                .filter(emails::user_id.eq(self.id))
+                .filter(emails::verified.eq(true)),
+        )).get_result(&*conn)?;
+        Ok(email_exists)
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.

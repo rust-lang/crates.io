@@ -144,6 +144,7 @@ pub struct EncodableApiTokenWithToken {
     pub id: i32,
     pub name: String,
     pub token: String,
+    pub revoked: bool,
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     #[serde(with = "rfc3339::option")]
@@ -211,10 +212,22 @@ pub struct EncodableVersionLinks {
     pub authors: String,
 }
 
-// TODO: Prefix many of these with `Encodable` then clean up the reexports
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GoodCrate {
+    #[serde(rename = "crate")]
+    pub krate: EncodableCrate,
+    pub warnings: PublishWarnings,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PublishWarnings {
+    pub invalid_categories: Vec<String>,
+    pub invalid_badges: Vec<String>,
+    pub other: Vec<String>,
+}
+
 pub mod krate_publish;
-pub use self::krate_publish::CrateDependency as EncodableCrateDependency;
-pub use self::krate_publish::NewCrate as EncodableCrateUpload;
+pub use self::krate_publish::{EncodableCrateDependency, EncodableCrateUpload};
 
 #[cfg(test)]
 mod tests {

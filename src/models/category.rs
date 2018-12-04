@@ -101,17 +101,18 @@ impl Category {
         }
     }
 
-    pub fn update_crate<'a>(
+    pub fn update_crate(
         conn: &PgConnection,
         krate: &Crate,
-        slugs: &[&'a str],
-    ) -> QueryResult<Vec<&'a str>> {
+        slugs: &[&str],
+    ) -> QueryResult<Vec<String>> {
         conn.transaction(|| {
             let categories = Category::by_slugs_case_sensitive(slugs).load::<Category>(conn)?;
             let invalid_categories = slugs
                 .iter()
                 .cloned()
                 .filter(|s| !categories.iter().any(|c| c.slug == *s))
+                .map(|s| s.to_string())
                 .collect();
             let crate_categories = categories
                 .iter()
