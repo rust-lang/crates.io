@@ -1,7 +1,7 @@
 use builders::CrateBuilder;
 use models::Keyword;
 use views::EncodableKeyword;
-use {new_user, RequestHelper, TestApp};
+use {RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct KeywordList {
@@ -63,16 +63,17 @@ fn uppercase() {
 
 #[test]
 fn update_crate() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
     let cnt = |kw: &str| {
         let json: GoodKeyword = anon.get(&format!("/api/v1/keywords/{}", kw)).good();
         json.keyword.crates_cnt as usize
     };
 
     let krate = app.db(|conn| {
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).unwrap();
-        CrateBuilder::new("fookey", u.id).expect_build(&conn)
+        Keyword::find_or_create_all(conn, &["kw1", "kw2"]).unwrap();
+        CrateBuilder::new("fookey", user.id).expect_build(&conn)
     });
 
     app.db(|conn| {
