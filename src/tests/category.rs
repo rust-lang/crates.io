@@ -118,7 +118,8 @@ fn update_crate() {
         &app.diesel_database.get().unwrap(),
         &krate,
         &["cat1", "category-2"],
-    ).unwrap();
+    )
+    .unwrap();
     assert_eq!(cnt!(&mut req, "cat1"), 1);
     assert_eq!(cnt!(&mut req, "category-2"), 1);
 
@@ -132,7 +133,8 @@ fn update_crate() {
         &app.diesel_database.get().unwrap(),
         &krate,
         &["cat1", "catnope"],
-    ).unwrap();
+    )
+    .unwrap();
     assert_eq!(invalid_categories, vec!["catnope"]);
     assert_eq!(cnt!(&mut req, "cat1"), 1);
     assert_eq!(cnt!(&mut req, "category-2"), 0);

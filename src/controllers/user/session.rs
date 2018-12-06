@@ -109,7 +109,8 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         ghuser.name.as_ref().map(|s| &s[..]),
         ghuser.avatar_url.as_ref().map(|s| &s[..]),
         &token.access_token,
-    ).create_or_update(&*req.db_conn()?)?;
+    )
+    .create_or_update(&*req.db_conn()?)?;
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);

@@ -93,12 +93,11 @@ fn list_tokens_exclude_revoked() {
     // Check that we now have one less token being listed.
     let json: ListResponse = user.get(URL).good();
     assert_eq!(json.api_tokens.len(), tokens.len() - 1);
-    assert!(
-        json.api_tokens
-            .iter()
-            .find(|token| token.name == tokens[0].name)
-            .is_none()
-    );
+    assert!(json
+        .api_tokens
+        .iter()
+        .find(|token| token.name == tokens[0].name)
+        .is_none());
 }
 
 #[test]
@@ -191,7 +190,8 @@ fn cannot_create_token_with_token() {
         .put::<()>(
             "/api/v1/me/tokens",
             br#"{ "api_token": { "name": "baz" } }"#,
-        ).bad_with_status(400);
+        )
+        .bad_with_status(400);
 
     assert_contains!(
         json.errors[0].detail,

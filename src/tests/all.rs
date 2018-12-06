@@ -273,7 +273,8 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
             optional.eq(false),
             default_features.eq(false),
             features.eq(Vec::<String>::new()),
-        )).get_result(conn)
+        ))
+        .get_result(conn)
         .unwrap()
 }
 

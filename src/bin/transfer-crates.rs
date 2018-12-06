@@ -21,7 +21,8 @@ fn main() {
     conn.transaction::<_, diesel::result::Error, _>(|| {
         transfer(&conn);
         Ok(())
-    }).unwrap()
+    })
+    .unwrap()
 }
 
 fn transfer(conn: &PgConnection) {

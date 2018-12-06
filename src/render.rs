@@ -57,9 +57,9 @@ impl<'a> MarkdownRenderer<'a> {
             "hr",
             "span",
         ]
-            .iter()
-            .cloned()
-            .collect();
+        .iter()
+        .cloned()
+        .collect();
         let tag_attributes = [
             ("a", ["href", "id", "target"].iter().cloned().collect()),
             (
@@ -74,9 +74,9 @@ impl<'a> MarkdownRenderer<'a> {
                 ["checked", "disabled", "type"].iter().cloned().collect(),
             ),
         ]
-            .iter()
-            .cloned()
-            .collect();
+        .iter()
+        .cloned()
+        .collect();
         let allowed_classes = [(
             "code",
             [
@@ -95,13 +95,13 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-sql",
                 "yaml",
             ]
-                .iter()
-                .cloned()
-                .collect(),
-        )]
             .iter()
             .cloned()
-            .collect();
+            .collect(),
+        )]
+        .iter()
+        .cloned()
+        .collect();
 
         let sanitizer_base_url = base_url.map(|s| s.to_string());
 
@@ -182,7 +182,8 @@ impl<'a> MarkdownRenderer<'a> {
                 UrlRelative::Custom(Box::new(relative_url_sanitizer))
             } else {
                 UrlRelative::Custom(Box::new(unrelative_url_sanitizer))
-            }).id_prefix(Some("user-content-"));
+            })
+            .id_prefix(Some("user-content-"));
 
         MarkdownRenderer { html_sanitizer }
     }

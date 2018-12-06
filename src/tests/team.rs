@@ -109,7 +109,8 @@ fn nonexistent_team() {
         .add_named_owner(
             "foo_nonexistent",
             "github:crates-test-org:this-does-not-exist",
-        ).bad_with_status(200);
+        )
+        .bad_with_status(200);
 
     assert!(
         json.errors[0]
@@ -165,7 +166,8 @@ fn add_team_as_non_member() {
         .add_named_owner(
             "foo_team_non_member",
             "github:crates-test-org:just-for-crates-2",
-        ).bad_with_status(200);
+        )
+        .bad_with_status(200);
 
     assert!(
         json.errors[0]

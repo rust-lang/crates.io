@@ -27,7 +27,8 @@ where
         .header(
             header::AUTHORIZATION,
             format!("token {}", auth.access_token),
-        ).send()?
+        )
+        .send()?
         .error_for_status()
         .map_err(|e| handle_error_response(&e))?
         .json()
