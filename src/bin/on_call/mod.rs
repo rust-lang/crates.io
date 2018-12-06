@@ -39,7 +39,8 @@ impl Event {
             .json(&FullEvent {
                 service_key,
                 event: self,
-            }).send()?;
+            })
+            .send()?;
 
         match response.status() {
             s if s.is_success() => Ok(()),

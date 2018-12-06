@@ -1,9 +1,6 @@
 #![deny(warnings)]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
-// Several test methods trip this clippy lint
-#![cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
-
 extern crate cargo_registry;
 extern crate chrono;
 extern crate conduit;
@@ -276,7 +273,8 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
             optional.eq(false),
             default_features.eq(false),
             features.eq(Vec::<String>::new()),
-        )).get_result(conn)
+        ))
+        .get_result(conn)
         .unwrap()
 }
 

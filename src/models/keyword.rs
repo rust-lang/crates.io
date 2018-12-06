@@ -85,7 +85,8 @@ impl Keyword {
                 .map(|kw| CrateKeyword {
                     crate_id: krate.id,
                     keyword_id: kw.id,
-                }).collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>();
             diesel::insert_into(crates_keywords::table)
                 .values(&crate_keywords)
                 .execute(conn)?;

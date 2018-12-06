@@ -54,8 +54,7 @@ matrix:
         - rustup component add clippy-preview
       script:
         - cargo fmt -- --check
-        # TODO: Once clippy:: lint syntax is stable, remove everything after the -- below
-        - cargo clippy --all-targets -- -A renamed_and_removed_lints
+        - cargo clippy --all-targets --all-features --all
         - cargo build
         - cargo test
         - npm install

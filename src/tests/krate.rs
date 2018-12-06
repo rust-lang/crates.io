@@ -104,6 +104,7 @@ fn index() {
 }
 
 #[test]
+#[allow(clippy::cyclomatic_complexity)]
 fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -324,6 +325,7 @@ fn index_sorting() {
 }
 
 #[test]
+#[allow(clippy::cyclomatic_complexity)]
 fn exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -1047,7 +1049,8 @@ fn new_krate_with_unverified_email_warns() {
             .values((
                 emails::user_id.eq(user.id),
                 emails::email.eq("something@example.com"),
-            )).execute(conn)
+            ))
+            .execute(conn)
             .unwrap();
     });
 
@@ -1074,7 +1077,8 @@ fn new_krate_with_verified_email_doesnt_warn() {
                 emails::user_id.eq(user.id),
                 emails::email.eq("something@example.com"),
                 emails::verified.eq(true),
-            )).execute(conn)
+            ))
+            .execute(conn)
             .unwrap();
     });
 
@@ -1368,6 +1372,7 @@ fn yank_not_owner() {
 }
 
 #[test]
+#[allow(clippy::cyclomatic_complexity)]
 fn yank_max_version() {
     let (_, anon, _, token) = TestApp::with_proxy().with_token();
 
@@ -1583,16 +1588,14 @@ fn ignored_badges() {
     assert_eq!(json.krate.name, "foo_ignored_badge");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_badges.len(), 2);
-    assert!(
-        json.warnings
-            .invalid_badges
-            .contains(&"travis-ci".to_string(),)
-    );
-    assert!(
-        json.warnings
-            .invalid_badges
-            .contains(&"not-a-badge".to_string(),)
-    );
+    assert!(json
+        .warnings
+        .invalid_badges
+        .contains(&"travis-ci".to_string(),));
+    assert!(json
+        .warnings
+        .invalid_badges
+        .contains(&"not-a-badge".to_string(),));
 
     let json = anon.show_crate("foo_ignored_badge");
     let badges = json.krate.badges.unwrap();
@@ -1612,7 +1615,8 @@ fn reverse_dependencies() {
                 VersionBuilder::new("1.1.0")
                     .dependency(&c1, None)
                     .dependency(&c1, Some("foo")),
-            ).expect_build(conn);
+            )
+            .expect_build(conn);
     });
 
     let deps = anon.reverse_dependencies("c1");
@@ -1818,9 +1822,9 @@ fn test_recent_download_count() {
 }
 
 /*  Given one crate with zero downloads, check that the crate
-    still shows up in index results, but that it displays 0
-    for both recent downloads and downloads.
- */
+   still shows up in index results, but that it displays 0
+   for both recent downloads and downloads.
+*/
 #[test]
 fn test_zero_downloads() {
     let (app, anon, user) = TestApp::init().with_user();

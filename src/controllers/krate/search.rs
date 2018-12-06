@@ -48,7 +48,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
             recent_crate_downloads::downloads.nullable(),
-        )).into_boxed();
+        ))
+        .into_boxed();
 
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
@@ -189,7 +190,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                     Some(recent_downloads),
                 )
             },
-        ).collect();
+        )
+        .collect();
 
     #[derive(Serialize)]
     struct R {
