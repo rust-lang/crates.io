@@ -323,13 +323,13 @@ pub struct Bad {
 
 pub type DieselConnection =
     diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
-type ResponseResult = Result<conduit::Response, Box<std::error::Error + Send>>;
+type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
 
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
     response: conduit::Response,
-    callback_on_good: Option<Box<Fn(&T)>>,
+    callback_on_good: Option<Box<dyn Fn(&T)>>,
 }
 
 impl<T> Response<T>
@@ -343,7 +343,7 @@ where
         }
     }
 
-    fn with_callback(self, callback_on_good: Box<Fn(&T)>) -> Self {
+    fn with_callback(self, callback_on_good: Box<dyn Fn(&T)>) -> Self {
         Self {
             response: self.response,
             callback_on_good: Some(callback_on_good),

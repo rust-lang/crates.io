@@ -358,7 +358,7 @@ impl PublishBuilder {
             .zip(&mut slices)
             .map(|(&(name, _), data)| {
                 let len = data.len() as u64;
-                (name, data as &mut Read, len)
+                (name, data as &mut dyn Read, len)
             })
             .collect::<Vec<_>>();
 
@@ -366,7 +366,7 @@ impl PublishBuilder {
     }
 
     /// Set the tarball from a Read trait object
-    pub fn files_with_io(mut self, files: &mut [(&str, &mut Read, u64)]) -> Self {
+    pub fn files_with_io(mut self, files: &mut [(&str, &mut dyn Read, u64)]) -> Self {
         let mut tarball = Vec::new();
         {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));

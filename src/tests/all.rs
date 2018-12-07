@@ -240,7 +240,7 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
     Ok(())
 }
 
-fn sign_in_as(req: &mut Request, user: &User) {
+fn sign_in_as(req: &mut dyn Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
         .insert(AuthenticationSource::SessionCookie);
@@ -271,6 +271,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
     }
 }
 
-fn logout(req: &mut Request) {
+fn logout(req: &mut dyn Request) {
     req.mut_extensions().pop::<User>();
 }

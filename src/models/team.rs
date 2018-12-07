@@ -118,7 +118,7 @@ impl Team {
         // "sanitization"
         fn whitelist(c: char) -> bool {
             match c {
-                'a'...'z' | 'A'...'Z' | '0'...'9' | '-' | '_' => false,
+                'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => false,
                 _ => true,
             }
         }

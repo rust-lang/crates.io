@@ -150,7 +150,8 @@ impl hyper::service::Service for Proxy {
     type ReqBody = hyper::Body;
     type ResBody = hyper::Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
+    type Future =
+        Box<dyn Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
 
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
         let record2 = self.record.clone();
@@ -175,7 +176,7 @@ impl hyper::service::NewService for Proxy {
     type ResBody = hyper::Body;
     type Error = hyper::Error;
     type Service = Proxy;
-    type Future = Box<Future<Item = Self::Service, Error = Self::InitError> + Send>;
+    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
     type InitError = hyper::Error;
 
     fn new_service(&self) -> Self::Future {
@@ -209,7 +210,7 @@ type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnect
 fn record_http(
     req: hyper::Request<hyper::Body>,
     client: &Client,
-) -> Box<Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+) -> Box<dyn Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
     let (header_parts, body) = req.into_parts();
     let method = header_parts.method;
     let uri = header_parts.uri;
@@ -266,8 +267,8 @@ fn record_http(
 fn replay_http(
     req: hyper::Request<hyper::Body>,
     mut exchange: Exchange,
-    stdout: &mut Write,
-) -> Box<Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
+    stdout: &mut dyn Write,
+) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
     static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);

@@ -61,11 +61,11 @@ pub struct CrateCategory {
 }
 
 impl Category {
-    pub fn with_slug(slug: &str) -> WithSlug {
+    pub fn with_slug(slug: &str) -> WithSlug<'_> {
         categories::slug.eq(crate::lower(slug))
     }
 
-    pub fn by_slug(slug: &str) -> BySlug {
+    pub fn by_slug(slug: &str) -> BySlug<'_> {
         Category::all().filter(Self::with_slug(slug))
     }
 
