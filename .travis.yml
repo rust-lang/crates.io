@@ -11,6 +11,7 @@ cache:
   cargo: true
   directories:
     - $HOME/.npm
+  timeout: 600
 
 env:
   global:
