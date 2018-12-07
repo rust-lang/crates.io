@@ -35,13 +35,13 @@ use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 
+use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{models, schema, views};
-use util::{Bad, RequestHelper, TestApp};
 
-use models::{Crate, CrateOwner, Dependency, Team, User, Version};
-use models::{NewCategory, NewTeam, NewUser};
-use schema::*;
-use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate};
+use crate::models::{Crate, CrateOwner, Dependency, Team, User, Version};
+use crate::models::{NewCategory, NewTeam, NewUser};
+use crate::schema::*;
+use crate::views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate};
 
 macro_rules! t {
     ($e:expr) => {
@@ -55,7 +55,7 @@ macro_rules! t {
 macro_rules! ok_resp {
     ($e:expr) => {{
         let resp = t!($e);
-        if !::ok_resp(&resp) {
+        if !crate::ok_resp(&resp) {
             panic!("bad response: {:?}", resp.status);
         }
         resp
@@ -65,7 +65,7 @@ macro_rules! ok_resp {
 macro_rules! bad_resp {
     ($e:expr) => {{
         let mut resp = t!($e);
-        match ::bad_resp(&mut resp) {
+        match crate::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }

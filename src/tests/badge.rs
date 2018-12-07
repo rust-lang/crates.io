@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use builders::CrateBuilder;
-use models::{Badge, Crate, MaintenanceStatus};
-use TestApp;
+use crate::builders::CrateBuilder;
+use crate::models::{Badge, Crate, MaintenanceStatus};
+use crate::TestApp;
 
 struct BadgeRef {
     appveyor: Badge,

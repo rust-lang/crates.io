@@ -30,9 +30,9 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use crate::version_downloads::dsl::*;
     use diesel::dsl::now;
     use diesel::select;
-    use version_downloads::dsl::*;
 
     let mut max = Some(0);
     while let Some(m) = max {
@@ -183,7 +183,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -195,7 +195,7 @@ mod test {
             .first(&conn);
         assert_eq!(Ok(1), crate_downloads);
         crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -220,7 +220,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -244,7 +244,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -294,7 +294,7 @@ mod test {
             .filter(crates::id.eq(krate.id))
             .first::<Crate>(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version2 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -308,7 +308,7 @@ mod test {
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
         crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version3 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -343,7 +343,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let versions_changed = versions::table
             .select(versions::updated_at.ne(now - 2.days()))
             .get_result(&conn);

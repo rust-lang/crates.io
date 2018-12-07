@@ -54,8 +54,8 @@ extern crate conduit_static;
 extern crate cookie;
 
 pub use self::uploaders::{Bomb, Uploader};
-pub use app::App;
-pub use config::Config;
+pub use crate::app::App;
+pub use crate::config::Config;
 
 use std::sync::Arc;
 

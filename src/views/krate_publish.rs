@@ -7,11 +7,11 @@ use std::collections::HashMap;
 use semver;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-use models::krate::MAX_NAME_LENGTH;
+use crate::models::krate::MAX_NAME_LENGTH;
 
-use models::Crate;
-use models::DependencyKind;
-use models::Keyword as CrateKeyword;
+use crate::models::Crate;
+use crate::models::DependencyKind;
+use crate::models::Keyword as CrateKeyword;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodableCrateUpload {

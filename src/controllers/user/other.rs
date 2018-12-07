@@ -1,8 +1,8 @@
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use models::{OwnerKind, User};
-use schema::{crate_owners, crates, users};
-use views::EncodablePublicUser;
+use crate::models::{OwnerKind, User};
+use crate::schema::{crate_owners, crates, users};
+use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
@@ -11,7 +11,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
     let user = users
-        .filter(::lower(gh_login).eq(name))
+        .filter(crate::lower(gh_login).eq(name))
         .order(id.desc())
         .first::<User>(&*conn)?;
 

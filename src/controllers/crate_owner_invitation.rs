@@ -2,9 +2,9 @@ use super::prelude::*;
 
 use serde_json;
 
-use models::{CrateOwner, CrateOwnerInvitation, OwnerKind};
-use schema::{crate_owner_invitations, crate_owners};
-use views::{EncodableCrateOwnerInvitation, InvitationResponse};
+use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind};
+use crate::schema::{crate_owner_invitations, crate_owners};
+use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
 pub fn list(req: &mut dyn Request) -> CargoResult<Response> {

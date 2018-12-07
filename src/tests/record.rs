@@ -24,8 +24,8 @@ use self::tokio_core::net::TcpListener;
 use self::tokio_core::reactor::Core;
 use serde_json;
 
-use models::NewUser;
-use new_user;
+use crate::models::NewUser;
+use crate::new_user;
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -350,7 +350,7 @@ impl GhUser {
             return;
         }
 
-        let password = ::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
+        let password = crate::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
         #[derive(Serialize)]
         struct Authorization {
             scopes: Vec<String>,
@@ -364,8 +364,8 @@ impl GhUser {
             .json(&Authorization {
                 scopes: vec!["read:org".to_string()],
                 note: "crates.io test".to_string(),
-                client_id: ::env("GH_CLIENT_ID"),
-                client_secret: ::env("GH_CLIENT_SECRET"),
+                client_id: crate::env("GH_CLIENT_ID"),
+                client_secret: crate::env("GH_CLIENT_SECRET"),
             })
             .basic_auth(self.login, Some(password));
 

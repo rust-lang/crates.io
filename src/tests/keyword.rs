@@ -1,7 +1,7 @@
-use builders::CrateBuilder;
-use models::Keyword;
-use views::EncodableKeyword;
-use {RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::models::Keyword;
+use crate::views::EncodableKeyword;
+use crate::{RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct KeywordList {

@@ -2,14 +2,14 @@ use diesel::*;
 use std::sync::ONCE_INIT;
 
 use super::OwnerTeamsResponse;
-use builders::{CrateBuilder, PublishBuilder};
-use models::{Crate, NewUser};
-use record::GhUser;
-use {add_team_to_crate, new_team, RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::models::{Crate, NewUser};
+use crate::record::GhUser;
+use crate::{add_team_to_crate, new_team, RequestHelper, TestApp};
 
-impl ::util::MockAnonymousUser {
+impl crate::util::MockAnonymousUser {
     /// List the team owners of the specified crate.
-    fn crate_owner_teams(&self, krate_name: &str) -> ::util::Response<OwnerTeamsResponse> {
+    fn crate_owner_teams(&self, krate_name: &str) -> crate::util::Response<OwnerTeamsResponse> {
         let url = format!("/api/v1/crates/{}/owner_team", krate_name);
         self.get(&url)
     }

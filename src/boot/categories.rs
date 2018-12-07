@@ -5,8 +5,8 @@ use diesel;
 use diesel::prelude::*;
 use toml;
 
-use db;
-use util::errors::{internal, CargoResult, ChainError};
+use crate::db;
+use crate::util::errors::{internal, CargoResult, ChainError};
 
 #[derive(Debug)]
 struct Category {
@@ -91,9 +91,9 @@ pub fn sync(toml_str: &str) -> CargoResult<()> {
 }
 
 pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<()> {
+    use crate::schema::categories::dsl::*;
     use diesel::dsl::all;
     use diesel::pg::upsert::excluded;
-    use schema::categories::dsl::*;
 
     let toml: toml::value::Table =
         toml::from_str(toml_str).expect("Could not parse categories toml");

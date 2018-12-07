@@ -4,9 +4,9 @@ use diesel::prelude::*;
 use serde_json;
 use std::collections::HashMap;
 
-use models::Crate;
-use schema::badges;
-use views::EncodableBadge;
+use crate::models::Crate;
+use crate::schema::badges;
+use crate::views::EncodableBadge;
 
 /// A combination of a `Badge` and a crate ID.
 ///

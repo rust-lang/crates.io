@@ -6,15 +6,15 @@ use std::sync::Arc;
 use hex::ToHex;
 use serde_json;
 
-use git;
-use render;
-use util::{internal, ChainError, Maximums};
-use util::{read_fill, read_le_u32};
+use crate::git;
+use crate::render;
+use crate::util::{internal, ChainError, Maximums};
+use crate::util::{read_fill, read_le_u32};
 
-use controllers::prelude::*;
-use models::dependency;
-use models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
-use views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
+use crate::controllers::prelude::*;
+use crate::models::dependency;
+use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an

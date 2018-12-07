@@ -3,7 +3,7 @@ use std::env;
 use diesel::*;
 use dotenv::dotenv;
 
-use schema::categories;
+use crate::schema::categories;
 
 const ALGORITHMS: &str = r#"
 [algorithms]

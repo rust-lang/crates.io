@@ -26,10 +26,10 @@ use {cargo_registry, conduit, conduit_middleware, diesel, dotenv, serde};
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
 
-use builders::PublishBuilder;
+use crate::builders::PublishBuilder;
+use crate::models::{ApiToken, User};
 use cargo_registry::app::App;
 use cargo_registry::middleware::current_user::AuthenticationSource;
-use models::{ApiToken, User};
 
 use super::{app, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse};
 
@@ -47,7 +47,7 @@ impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
         dotenv::dotenv().ok();
-        let (app, middle) = ::simple_app(cargo_registry::Uploader::Panic);
+        let (app, middle) = crate::simple_app(cargo_registry::Uploader::Panic);
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,
@@ -81,7 +81,7 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, user: &str) -> MockCookieUser {
-        let user = self.db(|conn| ::new_user(user).create_or_update(conn).unwrap());
+        let user = self.db(|conn| crate::new_user(user).create_or_update(conn).unwrap());
         MockCookieUser {
             app: TestApp(Rc::clone(&self.0)),
             user,
@@ -214,7 +214,7 @@ pub struct MockAnonymousUser {
 
 impl RequestHelper for MockAnonymousUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        ::req(method, path)
+        crate::req(method, path)
     }
 
     fn app(&self) -> &TestApp {
@@ -233,7 +233,7 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = ::req(method, path);
+        let mut request = crate::req(method, path);
         request.mut_extensions().insert(self.user.clone());
         request
             .mut_extensions()
@@ -274,7 +274,7 @@ pub struct MockTokenUser {
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = ::req(method, path);
+        let mut request = crate::req(method, path);
         request.header("Authorization", &self.token.token);
         request
     }
@@ -351,10 +351,10 @@ where
 
     /// Assert that the response is good and deserialize the message
     pub fn good(mut self) -> T {
-        if !::ok_resp(&self.response) {
+        if !crate::ok_resp(&self.response) {
             panic!("bad response: {:?}", self.response.status);
         }
-        let good = ::json(&mut self.response);
+        let good = crate::json(&mut self.response);
         if let Some(callback) = self.callback_on_good {
             callback(&good)
         }
@@ -366,7 +366,7 @@ where
     /// Cargo endpoints return a status 200 on error instead of 400.
     pub fn bad_with_status(&mut self, code: u32) -> Bad {
         assert_eq!(self.response.status.0, code);
-        match ::bad_resp(&mut self.response) {
+        match crate::bad_resp(&mut self.response) {
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
         }

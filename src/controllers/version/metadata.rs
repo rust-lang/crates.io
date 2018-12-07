@@ -4,10 +4,10 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use schema::*;
-use views::{EncodableDependency, EncodablePublicUser};
+use crate::schema::*;
+use crate::views::{EncodableDependency, EncodablePublicUser};
 
 use super::version_and_crate;
 

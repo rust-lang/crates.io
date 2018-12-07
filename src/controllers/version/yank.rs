@@ -1,14 +1,14 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
 use diesel;
 
-use git;
-use util::errors::CargoError;
+use crate::git;
+use crate::util::errors::CargoError;
 
-use models::Rights;
-use schema::*;
+use crate::models::Rights;
+use crate::schema::*;
 
 use super::version_and_crate;
 

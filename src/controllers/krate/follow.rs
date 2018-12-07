@@ -3,9 +3,9 @@
 use diesel;
 use diesel::associations::Identifiable;
 
-use controllers::prelude::*;
-use models::{Crate, Follow};
-use schema::*;
+use crate::controllers::prelude::*;
+use crate::models::{Crate, Follow};
+use crate::schema::*;
 
 fn follow_target(req: &mut dyn Request) -> CargoResult<Follow> {
     let user = req.user()?;

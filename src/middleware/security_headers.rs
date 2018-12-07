@@ -3,7 +3,7 @@
 use super::prelude::*;
 use std::collections::HashMap;
 
-use Uploader;
+use crate::Uploader;
 
 #[derive(Clone, Debug)]
 pub struct SecurityHeaders {

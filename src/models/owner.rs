@@ -1,12 +1,12 @@
 use diesel::prelude::*;
 
-use app::App;
-use github;
-use util::{human, CargoResult};
+use crate::app::App;
+use crate::github;
+use crate::util::{human, CargoResult};
 
-use models::{Crate, Team, User};
-use schema::{crate_owners, users};
-use views::EncodableOwner;
+use crate::models::{Crate, Team, User};
+use crate::schema::{crate_owners, users};
+use crate::views::EncodableOwner;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Crate)]

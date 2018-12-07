@@ -13,9 +13,9 @@ use tar;
 
 use cargo_registry::util::CargoResult;
 
-use models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version};
-use schema::*;
-use views::krate_publish as u;
+use crate::models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version};
+use crate::schema::*;
+use crate::views::krate_publish as u;
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder<'a> {

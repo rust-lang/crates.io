@@ -1,5 +1,5 @@
+use crate::util::{json_response, CargoResult};
 use conduit::Response;
-use util::{json_response, CargoResult};
 
 pub mod pagination;
 

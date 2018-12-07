@@ -3,11 +3,11 @@ use super::prelude::*;
 use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
-use db::RequestTransaction;
-use util::errors::{std_error, CargoResult, ChainError, Unauthorized};
+use crate::db::RequestTransaction;
+use crate::util::errors::{std_error, CargoResult, ChainError, Unauthorized};
 
-use models::User;
-use schema::users;
+use crate::models::User;
+use crate::schema::users;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CurrentUser;

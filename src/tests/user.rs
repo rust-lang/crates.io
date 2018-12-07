@@ -1,11 +1,11 @@
 use conduit::{Handler, Method};
 use diesel::prelude::*;
 
-use builders::{CrateBuilder, VersionBuilder};
-use models::{Email, NewUser, User};
-use util::RequestHelper;
-use views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
-use {app, logout, new_user, req, sign_in_as, OkBool, TestApp};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::models::{Email, NewUser, User};
+use crate::util::RequestHelper;
+use crate::views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
+use crate::{app, logout, new_user, req, sign_in_as, OkBool, TestApp};
 
 #[derive(Deserialize)]
 struct AuthResponse {
@@ -275,7 +275,7 @@ fn test_github_login_does_not_overwrite_email() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "apricot");
 
@@ -286,7 +286,7 @@ fn test_github_login_does_not_overwrite_email() {
             .with_method(Method::Put)
             .with_body(body.as_bytes()),
     ));
-    assert!(::json::<OkBool>(&mut response).ok);
+    assert!(crate::json::<OkBool>(&mut response).ok);
 
     logout(&mut req);
 
@@ -302,7 +302,7 @@ fn test_github_login_does_not_overwrite_email() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert_eq!(r.user.login, "apricot");
 }
@@ -323,7 +323,7 @@ fn test_email_get_and_put() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email, None);
     assert_eq!(r.user.login, "mango");
 
@@ -334,10 +334,10 @@ fn test_email_get_and_put() {
             .with_method(Method::Put)
             .with_body(body.as_bytes()),
     ));
-    assert!(::json::<OkBool>(&mut response).ok);
+    assert!(crate::json::<OkBool>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
     assert_eq!(r.user.login, "mango");
     assert!(!r.user.email_verified);
@@ -456,7 +456,7 @@ fn test_insert_into_email_table() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apple@example.com");
     assert_eq!(r.user.login, "apple");
 
@@ -476,7 +476,7 @@ fn test_insert_into_email_table() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apple@example.com");
     assert_eq!(r.user.login, "apple");
 }
@@ -504,7 +504,7 @@ fn test_insert_into_email_table_with_email_change() {
     };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "test_insert_with_change@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(!r.user.email_verified);
@@ -517,7 +517,7 @@ fn test_insert_into_email_table_with_email_change() {
             .with_method(Method::Put)
             .with_body(body.as_bytes()),
     ));
-    assert!(::json::<OkBool>(&mut response).ok);
+    assert!(crate::json::<OkBool>(&mut response).ok);
 
     logout(&mut req);
 
@@ -535,7 +535,7 @@ fn test_insert_into_email_table_with_email_change() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
     assert!(!r.user.email_verified);
     assert!(r.user.email_verification_sent);
@@ -578,10 +578,10 @@ fn test_confirm_user_email() {
         req.with_path(&format!("/api/v1/confirm/{}", email_token))
             .with_method(Method::Put),
     ));
-    assert!(::json::<OkBool>(&mut response).ok);
+    assert!(crate::json::<OkBool>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potato2@example.com");
     assert_eq!(r.user.login, "potato");
     assert!(r.user.email_verified);
@@ -617,7 +617,7 @@ fn test_existing_user_email() {
     }
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = ::json::<UserShowPrivateResponse>(&mut response);
+    let r = crate::json::<UserShowPrivateResponse>(&mut response);
     assert_eq!(r.user.email.unwrap(), "potahto@example.com");
     assert!(!r.user.email_verified);
     assert!(!r.user.email_verification_sent);

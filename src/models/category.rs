@@ -1,9 +1,9 @@
 use chrono::NaiveDateTime;
 use diesel::{self, *};
 
-use models::Crate;
-use schema::*;
-use views::EncodableCategory;
+use crate::models::Crate;
+use crate::schema::*;
+use crate::views::EncodableCategory;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[table_name = "categories"]
@@ -37,7 +37,7 @@ pub const ALL_COLUMNS: AllColumns = (
 );
 
 type All = diesel::dsl::Select<categories::table, AllColumns>;
-type WithSlug<'a> = diesel::dsl::Eq<categories::slug, ::lower::HelperType<&'a str>>;
+type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::lower::HelperType<&'a str>>;
 type BySlug<'a> = diesel::dsl::Filter<All, WithSlug<'a>>;
 type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
     categories::slug,
@@ -62,7 +62,7 @@ pub struct CrateCategory {
 
 impl Category {
     pub fn with_slug(slug: &str) -> WithSlug {
-        categories::slug.eq(::lower(slug))
+        categories::slug.eq(crate::lower(slug))
     }
 
     pub fn by_slug(slug: &str) -> BySlug {
@@ -194,7 +194,7 @@ pub struct NewCategory<'a> {
 impl<'a> NewCategory<'a> {
     /// Inserts the category into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Category> {
-        use schema::categories::dsl::*;
+        use crate::schema::categories::dsl::*;
 
         insert_into(categories)
             .values(self)

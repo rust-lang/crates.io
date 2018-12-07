@@ -2,10 +2,10 @@ use std::collections::HashSet;
 
 use diesel::prelude::*;
 
-use models::ApiToken;
-use schema::api_tokens;
-use views::{EncodableApiTokenWithToken, EncodableMe};
-use {user::UserShowPrivateResponse, RequestHelper, TestApp};
+use crate::models::ApiToken;
+use crate::schema::api_tokens;
+use crate::views::{EncodableApiTokenWithToken, EncodableMe};
+use crate::{user::UserShowPrivateResponse, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct DecodableApiToken {

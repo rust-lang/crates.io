@@ -5,10 +5,10 @@ use conduit::{Handler, Request, Response};
 use conduit_git_http_backend;
 use conduit_router::{RequestParams, RouteBuilder};
 
-use controllers::*;
-use util::errors::{std_error, CargoError, CargoResult, NotFound};
-use util::RequestProxy;
-use {App, Env};
+use crate::controllers::*;
+use crate::util::errors::{std_error, CargoError, CargoResult, NotFound};
+use crate::util::RequestProxy;
+use crate::{App, Env};
 
 pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();
@@ -178,8 +178,8 @@ mod tests {
 
     use self::conduit_test::MockRequest;
     use super::*;
+    use crate::util::errors::*;
     use diesel::result::Error as DieselError;
-    use util::errors::*;
 
     fn err<E: CargoError>(err: E) -> CargoResult<Response> {
         Err(Box::new(err))

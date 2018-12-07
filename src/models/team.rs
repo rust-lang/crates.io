@@ -1,12 +1,12 @@
 use diesel::prelude::*;
 
-use app::App;
-use github;
-use util::{errors::NotFound, human, CargoResult};
+use crate::app::App;
+use crate::github;
+use crate::util::{errors::NotFound, human, CargoResult};
 
-use models::{Crate, CrateOwner, Owner, OwnerKind, User};
-use schema::{crate_owners, teams};
-use views::EncodableTeam;
+use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
+use crate::schema::{crate_owners, teams};
+use crate::views::EncodableTeam;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -52,8 +52,8 @@ impl<'a> NewTeam<'a> {
     }
 
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<Team> {
+        use crate::schema::teams::dsl::*;
         use diesel::insert_into;
-        use schema::teams::dsl::*;
 
         insert_into(teams)
             .values(self)

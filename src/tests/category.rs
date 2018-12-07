@@ -1,9 +1,9 @@
 use conduit::{Handler, Method};
 
-use builders::CrateBuilder;
-use models::Category;
-use views::{EncodableCategory, EncodableCategoryWithSubcategories};
-use {app, new_category, new_user, req, RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::models::Category;
+use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
+use crate::{app, new_category, new_user, req, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct CategoryList {
@@ -81,7 +81,9 @@ fn update_crate() {
         ($req:expr, $cat:expr) => {{
             $req.with_path(&format!("/api/v1/categories/{}", $cat));
             let mut response = ok_resp!(middle.call($req));
-            ::json::<GoodCategory>(&mut response).category.crates_cnt as usize
+            crate::json::<GoodCategory>(&mut response)
+                .category
+                .crates_cnt as usize
         }};
     }
 
@@ -143,7 +145,7 @@ fn update_crate() {
     // (unlike the behavior of keywords)
     req.with_path("/api/v1/categories");
     let mut response = ok_resp!(middle.call(&mut req));
-    let json: CategoryList = ::json(&mut response);
+    let json: CategoryList = crate::json(&mut response);
     assert_eq!(json.categories.len(), 2);
     assert_eq!(json.meta.total, 2);
 

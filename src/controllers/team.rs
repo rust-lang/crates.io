@@ -1,8 +1,8 @@
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use models::Team;
-use schema::teams;
-use views::EncodableTeam;
+use crate::models::Team;
+use crate::schema::teams;
+use crate::views::EncodableTeam;
 
 /// Handles the `GET /teams/:team_id` route.
 pub fn show_team(req: &mut dyn Request) -> CargoResult<Response> {

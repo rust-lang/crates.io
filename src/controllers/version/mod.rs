@@ -6,8 +6,8 @@ pub mod yank;
 use super::prelude::*;
 use semver;
 
-use models::{Crate, CrateVersions, Version};
-use schema::versions;
+use crate::models::{Crate, CrateVersions, Version};
+use crate::schema::versions;
 
 fn version_and_crate(req: &mut dyn Request) -> CargoResult<(Version, Crate)> {
     let crate_name = &req.params()["crate_id"];

@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use std::path::Path;
 use url::Url;
 
-use util::CargoResult;
+use crate::util::CargoResult;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]

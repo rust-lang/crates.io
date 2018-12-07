@@ -1,12 +1,12 @@
 use super::prelude::*;
 
-use controllers::helpers::Paginate;
-use models::Keyword;
-use views::EncodableKeyword;
+use crate::controllers::helpers::Paginate;
+use crate::models::Keyword;
+use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
 pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
-    use schema::keywords;
+    use crate::schema::keywords;
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
