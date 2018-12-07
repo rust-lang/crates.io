@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use serde_json;
 use std::collections::HashMap;
 
 use crate::models::DependencyKind;

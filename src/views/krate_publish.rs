@@ -4,7 +4,6 @@
 //! integration tests.
 use std::collections::HashMap;
 
-use semver;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::models::krate::MAX_NAME_LENGTH;

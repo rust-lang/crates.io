@@ -1,9 +1,10 @@
-use conduit::{Handler, Method};
+use crate::{app, builders::CrateBuilder, new_category, new_user, req, RequestHelper, TestApp};
+use cargo_registry::{
+    models::Category,
+    views::{EncodableCategory, EncodableCategoryWithSubcategories},
+};
 
-use crate::builders::CrateBuilder;
-use crate::models::Category;
-use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
-use crate::{app, new_category, new_user, req, RequestHelper, TestApp};
+use conduit::{Handler, Method};
 
 #[derive(Deserialize)]
 struct CategoryList {

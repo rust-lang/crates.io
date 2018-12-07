@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-use serde_json;
-
 use crate::models::{CrateOwner, CrateOwnerInvitation, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners};
 use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};

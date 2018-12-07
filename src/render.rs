@@ -1,5 +1,4 @@
 use ammonia::{Builder, UrlRelative};
-use comrak;
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;

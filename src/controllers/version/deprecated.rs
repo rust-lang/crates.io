@@ -7,8 +7,6 @@
 
 use crate::controllers::prelude::*;
 
-use url;
-
 use crate::models::Version;
 use crate::schema::*;
 use crate::views::EncodableVersion;

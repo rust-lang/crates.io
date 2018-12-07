@@ -1,10 +1,6 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
 use openssl::hash::{Hasher, MessageDigest};
-use reqwest;
-use s3;
-use semver;
-use tar;
 
 use crate::util::LimitErrorReader;
 use crate::util::{human, internal, CargoResult, ChainError, Maximums};

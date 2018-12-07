@@ -19,19 +19,20 @@
 //! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
-use std::{self, rc::Rc, sync::Arc};
-
-use {cargo_registry, conduit, conduit_middleware, diesel, dotenv, serde};
+use crate::{
+    app, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool,
+    VersionResponse,
+};
+use cargo_registry::{
+    middleware::current_user::AuthenticationSource,
+    models::{ApiToken, User},
+    uploaders::Uploader,
+    App,
+};
+use std::{rc::Rc, sync::Arc};
 
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
-
-use crate::builders::PublishBuilder;
-use crate::models::{ApiToken, User};
-use cargo_registry::app::App;
-use cargo_registry::middleware::current_user::AuthenticationSource;
-
-use super::{app, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -47,7 +48,7 @@ impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
         dotenv::dotenv().ok();
-        let (app, middle) = crate::simple_app(cargo_registry::Uploader::Panic);
+        let (app, middle) = crate::simple_app(Uploader::Panic);
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,

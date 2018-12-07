@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::sync::{Once, ONCE_INIT};
 use std::thread;
 
-use git2;
 use url::Url;
 
 fn root() -> PathBuf {

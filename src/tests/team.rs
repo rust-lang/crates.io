@@ -1,11 +1,14 @@
-use diesel::*;
+use crate::{
+    add_team_to_crate,
+    builders::{CrateBuilder, PublishBuilder},
+    new_team,
+    record::GhUser,
+    OwnerTeamsResponse, RequestHelper, TestApp,
+};
+use cargo_registry::models::{Crate, NewUser};
 use std::sync::ONCE_INIT;
 
-use super::OwnerTeamsResponse;
-use crate::builders::{CrateBuilder, PublishBuilder};
-use crate::models::{Crate, NewUser};
-use crate::record::GhUser;
-use crate::{add_team_to_crate, new_team, RequestHelper, TestApp};
+use diesel::*;
 
 impl crate::util::MockAnonymousUser {
     /// List the team owners of the specified crate.

@@ -1,5 +1,4 @@
 use chrono::NaiveDate;
-use diesel;
 use diesel::prelude::*;
 
 use crate::models::Version;

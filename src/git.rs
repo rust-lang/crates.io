@@ -4,10 +4,6 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use git2;
-use semver;
-use serde_json;
-
 use crate::app::App;
 use crate::util::{internal, CargoResult};
 

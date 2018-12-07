@@ -1,31 +1,20 @@
-extern crate base64;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate reqwest;
-extern crate tokio_core;
-extern crate tokio_service;
-
-use std::borrow::Cow;
-use std::collections::HashSet;
-use std::env;
-use std::fs::{self, File};
-use std::io;
-use std::io::prelude::*;
-use std::net;
-use std::path::PathBuf;
-use std::str;
-use std::sync::{Arc, Mutex, Once};
-use std::thread;
-
-use self::futures::sync::oneshot;
-use self::futures::{future, Future, Stream};
-use self::tokio_core::net::TcpListener;
-use self::tokio_core::reactor::Core;
-use serde_json;
-
-use crate::models::NewUser;
 use crate::new_user;
+use cargo_registry::models::NewUser;
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    env,
+    fs::{self, File},
+    io::{self, prelude::*},
+    net,
+    path::PathBuf,
+    str,
+    sync::{Arc, Mutex, Once},
+    thread,
+};
+
+use futures::{future, sync::oneshot, Future, Stream};
+use tokio_core::{net::TcpListener, reactor::Core};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.

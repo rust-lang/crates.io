@@ -1,36 +1,27 @@
-extern crate diesel;
-extern crate tempdir;
-
-use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io;
-use std::io::prelude::*;
-
-use self::diesel::prelude::*;
-use self::tempdir::TempDir;
-use chrono::Utc;
-use diesel::dsl::*;
-use diesel::update;
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use git2;
-use serde_json;
-use tar;
-
-use cargo_registry::git;
-use cargo_registry::models::krate::MAX_NAME_LENGTH;
-
-use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
-use crate::models::{Category, Crate};
-use crate::schema::{api_tokens, crates, emails, metadata, versions};
-use crate::views::{
-    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
-    EncodableVersionDownload,
-};
 use crate::{
+    builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder},
     new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
     RequestHelper, TestApp,
 };
+use cargo_registry::{
+    git,
+    models::{krate::MAX_NAME_LENGTH, Category, Crate},
+    schema::{api_tokens, crates, emails, metadata, versions},
+    views::{
+        EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+        EncodableVersionDownload,
+    },
+};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{self, prelude::*},
+};
+
+use chrono::Utc;
+use diesel::{dsl::*, prelude::*, update};
+use flate2::{write::GzEncoder, Compression};
+use tempdir::TempDir;
 
 #[derive(Deserialize)]
 struct VersionsList {

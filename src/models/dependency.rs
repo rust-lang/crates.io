@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use semver;
 
 use crate::git;
 use crate::util::{human, CargoResult};

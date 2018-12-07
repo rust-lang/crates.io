@@ -1,7 +1,5 @@
-use crate::builders::CrateBuilder;
-use crate::models::Keyword;
-use crate::views::EncodableKeyword;
-use crate::{RequestHelper, TestApp};
+use crate::{builders::CrateBuilder, RequestHelper, TestApp};
+use cargo_registry::{models::Keyword, views::EncodableKeyword};
 
 #[derive(Deserialize)]
 struct KeywordList {

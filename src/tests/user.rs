@@ -1,11 +1,17 @@
+use crate::{
+    app,
+    builders::{CrateBuilder, VersionBuilder},
+    logout, new_user, req, sign_in_as,
+    util::RequestHelper,
+    OkBool, TestApp,
+};
+use cargo_registry::{
+    models::{Email, NewUser, User},
+    views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion},
+};
+
 use conduit::{Handler, Method};
 use diesel::prelude::*;
-
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::models::{Email, NewUser, User};
-use crate::util::RequestHelper;
-use crate::views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion};
-use crate::{app, logout, new_user, req, sign_in_as, OkBool, TestApp};
 
 #[derive(Deserialize)]
 struct AuthResponse {

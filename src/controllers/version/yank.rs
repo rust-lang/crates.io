@@ -2,8 +2,6 @@
 
 use crate::controllers::prelude::*;
 
-use diesel;
-
 use crate::git;
 use crate::util::errors::CargoError;
 

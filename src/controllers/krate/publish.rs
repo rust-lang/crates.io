@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use hex::ToHex;
-use serde_json;
 
 use crate::git;
 use crate::render;

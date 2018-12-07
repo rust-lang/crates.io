@@ -28,7 +28,6 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 
-use cookie;
 use std::env;
 use std::sync::Arc;
 

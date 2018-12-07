@@ -1,21 +1,16 @@
 //! Structs using the builder pattern that make it easier to create records in tests.
 
-use std::collections::HashMap;
-use std::io::Read;
+use cargo_registry::{
+    models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version},
+    schema::{crate_downloads, dependencies, versions},
+    util::CargoResult,
+    views::krate_publish as u,
+};
+use std::{collections::HashMap, io::Read};
 
-use chrono;
 use chrono::Utc;
 use diesel::prelude::*;
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use semver;
-use tar;
-
-use cargo_registry::util::CargoResult;
-
-use crate::models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version};
-use crate::schema::*;
-use crate::views::krate_publish as u;
+use flate2::{write::GzEncoder, Compression};
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder<'a> {

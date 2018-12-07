@@ -1,10 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel;
 use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use license_exprs;
-use semver;
 use url::Url;
 
 use crate::app::App;

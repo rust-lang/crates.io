@@ -1,15 +1,20 @@
-use conduit::{Handler, Method};
-use diesel;
-use diesel::prelude::*;
-
-use crate::builders::{CrateBuilder, PublishBuilder};
-use crate::models::{Crate, NewCrateOwnerInvitation};
-use crate::schema::crate_owner_invitations;
-use crate::util::RequestHelper;
-use crate::views::{
-    EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+use crate::{
+    add_team_to_crate, app,
+    builders::{CrateBuilder, PublishBuilder},
+    new_team, new_user, req, sign_in_as,
+    util::RequestHelper,
+    TestApp,
 };
-use crate::{add_team_to_crate, app, new_team, new_user, req, sign_in_as, TestApp};
+use cargo_registry::{
+    models::{Crate, NewCrateOwnerInvitation},
+    schema::crate_owner_invitations,
+    views::{
+        EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+    },
+};
+
+use conduit::{Handler, Method};
+use diesel::prelude::*;
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -29,7 +34,7 @@ impl crate::util::MockCookieUser {
     /// As the currently logged in user, accept an invitation to become an owner of the named
     /// crate.
     fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
-        use crate::views::InvitationResponse;
+        use cargo_registry::views::InvitationResponse;
 
         let body = json!({
             "crate_owner_invite": {

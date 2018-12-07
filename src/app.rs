@@ -1,18 +1,15 @@
 //! Application-wide components in a struct accessible from each request
 
-use std::env;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use crate::{db, util::CargoResult, Config, Env};
+use std::{
+    env,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use diesel::r2d2;
-use git2;
-use oauth2;
-use reqwest;
 use scheduled_thread_pool::ScheduledThreadPool;
-
-use crate::util::CargoResult;
-use crate::{db, Config, Env};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations

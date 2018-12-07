@@ -9,61 +9,25 @@
 #![recursion_limit = "256"]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
-extern crate ammonia;
-extern crate chrono;
-extern crate comrak;
 #[macro_use]
 extern crate derive_deref;
 #[macro_use]
 extern crate diesel;
-extern crate diesel_full_text_search;
-extern crate diesel_ltree;
-extern crate dotenv;
-extern crate flate2;
-extern crate git2;
-extern crate hex;
-extern crate htmlescape;
-extern crate lettre;
-extern crate lettre_email;
-extern crate license_exprs;
 #[macro_use]
 extern crate log;
-extern crate oauth2;
-extern crate openssl;
-extern crate rand;
-extern crate reqwest;
-extern crate s3;
-extern crate scheduled_thread_pool;
-extern crate semver;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate tar;
-extern crate toml;
-extern crate url;
 
-extern crate conduit;
-extern crate conduit_conditional_get;
-extern crate conduit_cookie;
-extern crate conduit_git_http_backend;
-extern crate conduit_middleware;
-extern crate conduit_router;
-extern crate conduit_static;
-extern crate cookie;
-
-pub use self::uploaders::{Bomb, Uploader};
-pub use crate::app::App;
-pub use crate::config::Config;
-
+pub use crate::{app::App, config::Config, uploaders::Uploader};
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;
 
-pub mod app;
+mod app;
 pub mod boot;
-pub mod config;
+mod config;
 pub mod db;
 pub mod email;
 pub mod git;

@@ -1,12 +1,12 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
-use diesel;
-use diesel::prelude::*;
-use toml;
+use crate::{
+    db,
+    util::errors::{internal, CargoResult, ChainError},
+};
 
-use crate::db;
-use crate::util::errors::{internal, CargoResult, ChainError};
+use diesel::prelude::*;
 
 #[derive(Debug)]
 struct Category {

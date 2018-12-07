@@ -4,7 +4,6 @@ pub mod metadata;
 pub mod yank;
 
 use super::prelude::*;
-use semver;
 
 use crate::models::{Crate, CrateVersions, Version};
 use crate::schema::versions;

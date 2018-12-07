@@ -1,7 +1,5 @@
 use crate::controllers::prelude::*;
 
-use serde_json;
-
 use crate::controllers::helpers::Paginate;
 use crate::email;
 use crate::util::bad_request;

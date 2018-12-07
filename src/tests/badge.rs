@@ -1,8 +1,6 @@
+use crate::{builders::CrateBuilder, TestApp};
+use cargo_registry::models::{Badge, Crate, MaintenanceStatus};
 use std::collections::HashMap;
-
-use crate::builders::CrateBuilder;
-use crate::models::{Badge, Crate, MaintenanceStatus};
-use crate::TestApp;
 
 struct BadgeRef {
     appveyor: Badge,

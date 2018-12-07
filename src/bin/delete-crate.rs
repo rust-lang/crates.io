@@ -7,19 +7,16 @@
 
 #![deny(warnings)]
 
-extern crate cargo_registry;
-extern crate diesel;
+use cargo_registry::{db, models::Crate, schema::crates};
+use std::{
+    env,
+    io::{self, prelude::*},
+};
 
 use diesel::prelude::*;
-use std::env;
-use std::io;
-use std::io::prelude::*;
-
-use cargo_registry::models::Crate;
-use cargo_registry::schema::crates;
 
 fn main() {
-    let conn = cargo_registry::db::connect_now().unwrap();
+    let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
         delete(&conn);
         Ok(())

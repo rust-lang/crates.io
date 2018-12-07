@@ -1,13 +1,9 @@
 use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
-use diesel;
 use diesel::prelude::*;
-use semver;
-use serde_json;
 
 use crate::util::{human, CargoResult};
-use license_exprs;
 
 use crate::models::{Crate, Dependency};
 use crate::schema::*;

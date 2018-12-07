@@ -1,16 +1,17 @@
 #![deny(warnings)]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
-extern crate cargo_registry;
 #[macro_use]
 extern crate diesel;
 
-use diesel::prelude::*;
-use std::env;
-use std::time::Duration;
+use cargo_registry::{
+    db,
+    models::VersionDownload,
+    schema::{crate_downloads, crates, metadata, version_downloads, versions},
+};
+use std::{env, thread, time::Duration};
 
-use cargo_registry::models::VersionDownload;
-use cargo_registry::schema::*;
+use diesel::prelude::*;
 
 static LIMIT: i64 = 1000;
 
@@ -18,11 +19,11 @@ fn main() {
     let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
-        let conn = cargo_registry::db::connect_now().unwrap();
+        let conn = db::connect_now().unwrap();
         update(&conn).unwrap();
         drop(conn);
         if daemon {
-            std::thread::sleep(Duration::new(sleep.unwrap(), 0));
+            thread::sleep(Duration::new(sleep.unwrap(), 0));
         } else {
             break;
         }
@@ -113,13 +114,12 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
 #[cfg(test)]
 mod test {
-    extern crate semver;
-
-    use std::collections::HashMap;
-
     use super::*;
-    use cargo_registry::env;
-    use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use cargo_registry::{
+        env,
+        models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
+    };
+    use std::collections::HashMap;
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();

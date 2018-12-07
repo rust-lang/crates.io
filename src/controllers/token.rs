@@ -1,13 +1,12 @@
 use super::prelude::*;
 
 use crate::middleware::current_user::AuthenticationSource;
-use crate::util::{bad_request, read_fill, ChainError};
-use diesel;
-use serde_json as json;
-
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
+use crate::util::{bad_request, read_fill, ChainError};
 use crate::views::EncodableApiTokenWithToken;
+
+use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
 pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
