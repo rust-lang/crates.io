@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use builders::CrateBuilder;
 use models::{Badge, Crate, MaintenanceStatus};
-use {app, new_user, util::DieselConnection};
+use TestApp;
 
 struct BadgeRef {
     appveyor: Badge,
@@ -25,14 +25,35 @@ struct BadgeRef {
     maintenance_attributes: HashMap<String, String>,
 }
 
-fn set_up() -> (DieselConnection, Crate, BadgeRef) {
-    let (_b, app, _middle) = app();
+struct BadgeTestCrate {
+    app: TestApp,
+    krate: Crate,
+}
 
-    let krate = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = new_user("foo").create_or_update(&conn).unwrap();
-        CrateBuilder::new("badged_crate", u.id).expect_build(&conn)
-    };
+impl BadgeTestCrate {
+    /// Update the crate with badges, returning invalid badges
+    fn update(&self, badges: &HashMap<String, HashMap<String, String>>) -> Vec<String> {
+        self.app
+            .db(|conn| Badge::update_crate(conn, &self.krate, Some(badges)).unwrap())
+    }
+
+    /// Update the crate to have no badges
+    fn update_with_none(&self) {
+        self.app
+            .db(|conn| Badge::update_crate(conn, &self.krate, None).unwrap());
+    }
+
+    /// Return the crate's badges
+    fn badges(&self) -> Vec<Badge> {
+        self.app.db(|conn| self.krate.badges(conn).unwrap())
+    }
+}
+
+fn set_up() -> (BadgeTestCrate, BadgeRef) {
+    let (app, _, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    let krate = app.db(|conn| CrateBuilder::new("badged_crate", user.id).expect_build(conn));
 
     let appveyor = Badge::Appveyor {
         service: Some(String::from("github")),
@@ -133,66 +154,65 @@ fn set_up() -> (DieselConnection, Crate, BadgeRef) {
         maintenance,
         maintenance_attributes,
     };
-    let conn = app.diesel_database.get().unwrap();
-    (conn, krate, badges)
+    (BadgeTestCrate { app, krate }, badges)
 }
 
 #[test]
 fn update_no_badges() {
     // Add no badges
-    let (conn, krate, _) = set_up();
+    let (krate, _) = set_up();
 
     // Updating with no badges has no effect
-    Badge::update_crate(&conn, &krate, None).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    krate.update_with_none();
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn update_add_appveyor() {
     // Add an appveyor badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.appveyor]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.appveyor]);
 }
 
 #[test]
 fn update_add_travis_ci() {
     // Add a travis ci badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.travis_ci]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.travis_ci]);
 }
 
 #[test]
 fn update_add_gitlab() {
     // Add a gitlab badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.gitlab]);
 }
 
 #[test]
 fn update_add_isitmaintained_issue_resolution() {
     // Add a isitmaintained_issue_resolution badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("is-it-maintained-issue-resolution"),
         test_badges.isitmaintained_issue_resolution_attributes,
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    krate.update(&badges);
     assert_eq!(
-        krate.badges(&conn).unwrap(),
+        krate.badges(),
         vec![test_badges.isitmaintained_issue_resolution]
     );
 }
@@ -200,98 +220,94 @@ fn update_add_isitmaintained_issue_resolution() {
 #[test]
 fn update_add_isitmaintained_open_issues() {
     // Add a isitmaintained_open_issues badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("is-it-maintained-open-issues"),
         test_badges.isitmaintained_open_issues_attributes,
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(
-        krate.badges(&conn).unwrap(),
-        vec![test_badges.isitmaintained_open_issues]
-    );
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.isitmaintained_open_issues]);
 }
 
 #[test]
 fn update_add_codecov() {
     // Add a codecov badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("codecov"), test_badges.codecov_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.codecov]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.codecov]);
 }
 
 #[test]
 fn update_add_coveralls() {
     // Add a coveralls badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.coveralls]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.coveralls]);
 }
 
 #[test]
 fn update_add_circle_ci() {
     // Add a CircleCI badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.circle_ci]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.circle_ci]);
 }
 
 #[test]
 fn update_add_maintenance() {
     // Add a maintenance badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("maintenance"),
         test_badges.maintenance_attributes,
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.maintenance]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.maintenance]);
 }
 
 #[test]
 fn replace_badge() {
     // Replacing one badge with another
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     // Add a badge
     let mut badges = HashMap::new();
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.gitlab]);
-
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.gitlab]);
     // Replace with another badge
     badges.clear();
     badges.insert(
         String::from("travis-ci"),
         test_badges.travis_ci_attributes.clone(),
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.travis_ci]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.travis_ci]);
 }
 
 #[test]
 fn update_attributes() {
     // Update badge attributes
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     // Add a travis-ci badge
     let mut badges = HashMap::new();
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    let current_badges = krate.badges(&conn).unwrap();
+    krate.update(&badges);
+    let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 1);
     assert!(current_badges.contains(&test_badges.travis_ci));
 
@@ -307,8 +323,8 @@ fn update_attributes() {
         String::from("travis-ci"),
         badge_attributes_travis_ci2.clone(),
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    let current_badges = krate.badges(&conn).unwrap();
+    krate.update(&badges);
+    let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 1);
     assert!(current_badges.contains(&travis_ci2));
 }
@@ -316,7 +332,7 @@ fn update_attributes() {
 #[test]
 fn clear_badges() {
     // Add 3 badges and then remove them
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -324,9 +340,8 @@ fn clear_badges() {
     badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-
-    let current_badges = krate.badges(&conn).unwrap();
+    krate.update(&badges);
+    let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 3);
     assert!(current_badges.contains(&test_badges.appveyor));
     assert!(current_badges.contains(&test_badges.travis_ci));
@@ -334,14 +349,14 @@ fn clear_badges() {
 
     // Removing all badges
     badges.clear();
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn appveyor_extra_keys() {
     // Add a badge with extra invalid keys
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -350,14 +365,14 @@ fn appveyor_extra_keys() {
     appveyor_attributes.insert(String::from("extra"), String::from("info"));
     badges.insert(String::from("appveyor"), test_badges.appveyor_attributes);
 
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.appveyor]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.appveyor]);
 }
 
 #[test]
 fn travis_ci_required_keys() {
     // Add a travis ci badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -365,16 +380,16 @@ fn travis_ci_required_keys() {
     test_badges.travis_ci_attributes.remove("repository");
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "travis-ci");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn gitlab_required_keys() {
     // Add a gitlab badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -382,16 +397,16 @@ fn gitlab_required_keys() {
     test_badges.gitlab_attributes.remove("repository");
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "gitlab");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn isitmaintained_issue_resolution_required_keys() {
     // Add a isitmaintained_issue_resolution badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -404,19 +419,19 @@ fn isitmaintained_issue_resolution_required_keys() {
         test_badges.isitmaintained_issue_resolution_attributes,
     );
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(
         invalid_badges.first().unwrap(),
         "isitmaintained_issue_resolution"
     );
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn isitmaintained_open_issues_required_keys() {
     // Add a isitmaintained_open_issues badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -429,19 +444,19 @@ fn isitmaintained_open_issues_required_keys() {
         test_badges.isitmaintained_open_issues_attributes,
     );
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(
         invalid_badges.first().unwrap(),
         "isitmaintained_open_issues"
     );
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn codecov_required_keys() {
     // Add a codecov badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -449,16 +464,16 @@ fn codecov_required_keys() {
     test_badges.codecov_attributes.remove("repository");
     badges.insert(String::from("codecov"), test_badges.codecov_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "codecov");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn coveralls_required_keys() {
     // Add a coveralls badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -466,16 +481,16 @@ fn coveralls_required_keys() {
     test_badges.coveralls_attributes.remove("repository");
     badges.insert(String::from("coveralls"), test_badges.coveralls_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "coveralls");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn circle_ci_required_keys() {
     // Add a CircleCI badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -483,16 +498,16 @@ fn circle_ci_required_keys() {
     test_badges.circle_ci_attributes.remove("repository");
     badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "circle-ci");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn maintenance_required_keys() {
     // Add a maintenance badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -503,16 +518,16 @@ fn maintenance_required_keys() {
         test_badges.maintenance_attributes,
     );
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "maintenance");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn maintenance_invalid_values() {
     // Add a maintenance badge with an invalid value
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -525,16 +540,16 @@ fn maintenance_invalid_values() {
         test_badges.maintenance_attributes,
     );
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "maintenance");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
 fn unknown_badge() {
     // Add an unknown badge
-    let (conn, krate, _) = set_up();
+    let (krate, _) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -546,8 +561,8 @@ fn unknown_badge() {
     );
     badges.insert(String::from("not-a-badge"), invalid_attributes);
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "not-a-badge");
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(krate.badges(), vec![]);
 }

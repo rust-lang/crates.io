@@ -82,7 +82,8 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
                 .credentials(Credentials::new(
                     mailgun_config.smtp_login,
                     mailgun_config.smtp_password,
-                )).smtp_utf8(true)
+                ))
+                .smtp_utf8(true)
                 .authentication_mechanism(Mechanism::Plain)
                 .build();
 

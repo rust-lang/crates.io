@@ -118,6 +118,7 @@ impl Version {
 }
 
 impl NewVersion {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         crate_id: i32,
         num: &semver::Version,

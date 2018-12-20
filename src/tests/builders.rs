@@ -94,7 +94,8 @@ impl<'a> VersionBuilder<'a> {
             self.license_file,
             self.size,
             published_by,
-        )?.save(connection, &[])?;
+        )?
+        .save(connection, &[])?;
 
         if self.yanked {
             vers = update(&vers)
@@ -115,7 +116,8 @@ impl<'a> VersionBuilder<'a> {
                     dependencies::default_features.eq(false),
                     dependencies::features.eq(Vec::<String>::new()),
                 )
-            }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
         insert_into(dependencies::table)
             .values(&new_deps)
             .execute(connection)?;
@@ -374,7 +376,8 @@ impl PublishBuilder {
             .map(|(&(name, _), data)| {
                 let len = data.len() as u64;
                 (name, data as &mut Read, len)
-            }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
 
         self.files_with_io(&mut files)
     }
@@ -507,7 +510,29 @@ impl PublishBuilder {
             links: None,
         };
 
-        ::new_crate_to_body_with_tarball(&new_crate, &self.tarball)
+        let json = serde_json::to_string(&new_crate).unwrap();
+        let mut body = Vec::new();
+        body.extend(
+            [
+                json.len() as u8,
+                (json.len() >> 8) as u8,
+                (json.len() >> 16) as u8,
+                (json.len() >> 24) as u8,
+            ]
+            .iter()
+            .cloned(),
+        );
+        body.extend(json.as_bytes().iter().cloned());
+
+        let tarball = &self.tarball;
+        body.extend(&[
+            tarball.len() as u8,
+            (tarball.len() >> 8) as u8,
+            (tarball.len() >> 16) as u8,
+            (tarball.len() >> 24) as u8,
+        ]);
+        body.extend(tarball);
+        body
     }
 }
 

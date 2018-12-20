@@ -1,9 +1,6 @@
 #![deny(warnings)]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
-// Several test methods trip this clippy lint
-#![cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
-
 extern crate cargo_registry;
 extern crate chrono;
 extern crate conduit;
@@ -44,7 +41,6 @@ use util::{Bad, RequestHelper, TestApp};
 use models::{Crate, CrateOwner, Dependency, Team, User, Version};
 use models::{NewCategory, NewTeam, NewUser};
 use schema::*;
-use views::krate_publish as u;
 use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate};
 
 macro_rules! t {
@@ -277,7 +273,8 @@ fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Depe
             optional.eq(false),
             default_features.eq(false),
             features.eq(Vec::<String>::new()),
-        )).get_result(conn)
+        ))
+        .get_result(conn)
         .unwrap()
 }
 
@@ -291,28 +288,4 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
 
 fn logout(req: &mut Request) {
     req.mut_extensions().pop::<User>();
-}
-
-fn new_crate_to_body_with_tarball(new_crate: &u::EncodableCrateUpload, tarball: &[u8]) -> Vec<u8> {
-    let json = serde_json::to_string(&new_crate).unwrap();
-    let mut body = Vec::new();
-    body.extend(
-        [
-            json.len() as u8,
-            (json.len() >> 8) as u8,
-            (json.len() >> 16) as u8,
-            (json.len() >> 24) as u8,
-        ]
-            .iter()
-            .cloned(),
-    );
-    body.extend(json.as_bytes().iter().cloned());
-    body.extend(&[
-        tarball.len() as u8,
-        (tarball.len() >> 8) as u8,
-        (tarball.len() >> 16) as u8,
-        (tarball.len() >> 24) as u8,
-    ]);
-    body.extend(tarball);
-    body
 }

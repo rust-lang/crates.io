@@ -152,7 +152,7 @@ impl<'a> NewCrate<'a> {
                         "`{}` has an invalid url \
                          scheme: `{}`",
                         field, s
-                    )))
+                    )));
                 }
             }
             if url.cannot_be_a_base() {
@@ -200,7 +200,8 @@ impl<'a> NewCrate<'a> {
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
-        )).get_result::<bool>(conn)?;
+        ))
+        .get_result::<bool>(conn)?;
         if reserved_name {
             Err(human("cannot upload a crate with a reserved name"))
         } else {
@@ -259,11 +260,12 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_name(name) && name
-            .chars()
-            .nth(0)
-            .map(char::is_alphabetic)
-            .unwrap_or(false)
+        Self::valid_feature_name(name)
+            && name
+                .chars()
+                .nth(0)
+                .map(char::is_alphabetic)
+                .unwrap_or(false)
     }
 
     pub fn valid_feature_name(name: &str) -> bool {
@@ -306,7 +308,7 @@ impl Crate {
         )
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
     pub fn encodable(
         self,
         max_version: &semver::Version,
@@ -444,7 +446,8 @@ impl Crate {
                         invited_user_id: owner.id(),
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
-                    }).on_conflict_do_nothing()
+                    })
+                    .on_conflict_do_nothing()
                     .execute(conn)?;
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
@@ -460,7 +463,8 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
-                    }).on_conflict(crate_owners::table.primary_key())
+                    })
+                    .on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;

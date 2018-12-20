@@ -53,7 +53,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
                 k[..].to_string(),
                 v.iter().map(|v| v[..].to_string()).collect(),
             )
-        }).collect::<HashMap<String, Vec<String>>>();
+        })
+        .collect::<HashMap<String, Vec<String>>>();
     let keywords = new_crate
         .keywords
         .as_ref()
@@ -147,7 +148,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             // to get here, and max upload sizes are way less than i32 max
             file_length as i32,
             user.id,
-        )?.save(&conn, &new_crate.authors)?;
+        )?
+        .save(&conn, &new_crate.authors)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;

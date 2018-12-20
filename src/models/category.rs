@@ -119,7 +119,8 @@ impl Category {
                 .map(|c| CrateCategory {
                     category_id: c.id,
                     crate_id: krate.id,
-                }).collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>();
 
             delete(CrateCategory::belonging_to(krate)).execute(conn)?;
             insert_into(crates_categories::table)
@@ -232,7 +233,8 @@ mod tests {
                 (category.eq("Cat 2"), slug.eq("cat2")),
                 (category.eq("Cat 1"), slug.eq("cat1")),
                 (category.eq("Cat 1::sub"), slug.eq("cat1::sub")),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cats = Category::toplevel(&conn, "", 10, 0)
@@ -253,7 +255,8 @@ mod tests {
                 (category.eq("Cat 1"), slug.eq("cat1"), crates_cnt.eq(0)),
                 (category.eq("Cat 2"), slug.eq("cat2"), crates_cnt.eq(2)),
                 (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(1)),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cats = Category::toplevel(&conn, "crates", 10, 0)
@@ -277,7 +280,8 @@ mod tests {
             .values(&vec![
                 (category.eq("Cat 1"), slug.eq("cat1")),
                 (category.eq("Cat 2"), slug.eq("cat2")),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cats = Category::toplevel(&conn, "", 1, 0)
@@ -321,7 +325,8 @@ mod tests {
                     crates_cnt.eq(5),
                 ),
                 (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cats = Category::toplevel(&conn, "crates", 10, 0)
@@ -361,7 +366,8 @@ mod tests {
                     crates_cnt.eq(5),
                 ),
                 (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(6)),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cats = Category::toplevel(&conn, "crates", 2, 0)
@@ -415,7 +421,8 @@ mod tests {
                     crates_cnt.eq(5),
                 ),
                 (category.eq("Cat 3"), slug.eq("cat3"), crates_cnt.eq(200)),
-            ]).execute(&conn)
+            ])
+            .execute(&conn)
             .unwrap();
 
         let cat = Category::by_slug("cat1::sub1")

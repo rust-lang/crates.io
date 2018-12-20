@@ -34,7 +34,8 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
             emails::verified.nullable(),
             emails::email.nullable(),
             emails::token_generated_at.nullable().is_not_null(),
-        )).first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
+        ))
+        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;

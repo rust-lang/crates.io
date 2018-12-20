@@ -32,7 +32,7 @@ use new_user;
 pub struct Bomb {
     iorx: Sink,
     quittx: Option<oneshot::Sender<()>>,
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
 }
 
@@ -62,9 +62,11 @@ impl Drop for Bomb {
             .to_string();
         match res {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
-            Err(e) => if !stderr.is_empty() {
-                println!("server subtask failed ({:?}): {}", e, stderr)
-            },
+            Err(e) => {
+                if !stderr.is_empty() {
+                    println!("server subtask failed ({:?}): {}", e, stderr)
+                }
+            }
             Ok(_) if thread::panicking() => {}
             Ok(None) => {}
             Ok(Some((data, file))) => {
@@ -123,7 +125,8 @@ pub fn proxy() -> (String, Bomb) {
                 sink: sink2,
                 record: Arc::clone(&record),
                 client,
-            }).map_err(|e| eprintln!("server connection error: {}", e));
+            })
+            .map_err(|e| eprintln!("server connection error: {}", e));
 
         drop(core.run(srv.select2(quitrx)));
 
@@ -363,7 +366,8 @@ impl GhUser {
                 note: "crates.io test".to_string(),
                 client_id: ::env("GH_CLIENT_ID"),
                 client_secret: ::env("GH_CLIENT_SECRET"),
-            }).basic_auth(self.login, Some(password));
+            })
+            .basic_auth(self.login, Some(password));
 
         let mut response = t!(req.send().and_then(|r| r.error_for_status()));
 

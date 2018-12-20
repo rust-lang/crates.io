@@ -23,7 +23,8 @@ fn main() {
     conn.transaction::<_, diesel::result::Error, _>(|| {
         delete(&conn);
         Ok(())
-    }).unwrap()
+    })
+    .unwrap()
 }
 
 fn delete(conn: &PgConnection) {

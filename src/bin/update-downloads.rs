@@ -92,7 +92,8 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
                     crate_downloads::crate_id.eq(crate_id),
                     crate_downloads::downloads.eq(amt),
                     crate_downloads::date.eq(download.date),
-                )).on_conflict(crate_downloads::table.primary_key())
+                ))
+                .on_conflict(crate_downloads::table.primary_key())
                 .do_update()
                 .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
                 .execute(conn)?;
@@ -136,7 +137,8 @@ mod test {
         let krate = NewCrate {
             name: "foo",
             ..Default::default()
-        }.create_or_update(&conn, None, user_id)
+        }
+        .create_or_update(&conn, None, user_id)
         .unwrap();
         let version = NewVersion::new(
             krate.id,
@@ -146,7 +148,8 @@ mod test {
             None,
             0,
             user_id,
-        ).unwrap();
+        )
+        .unwrap();
         let version = version.save(&conn, &[]).unwrap();
         (krate, version)
     }
@@ -177,7 +180,8 @@ mod test {
                 version_downloads::version_id.eq(version.id),
                 version_downloads::date.eq(date(now - 1.day())),
                 version_downloads::processed.eq(true),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
 
         ::update(&conn).unwrap();
@@ -214,7 +218,8 @@ mod test {
                 version_downloads::counted.eq(2),
                 version_downloads::date.eq(date(now - 2.days())),
                 version_downloads::processed.eq(false),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
         ::update(&conn).unwrap();
         let processed = version_downloads::table
@@ -237,7 +242,8 @@ mod test {
                 version_downloads::counted.eq(2),
                 version_downloads::date.eq(date(now)),
                 version_downloads::processed.eq(false),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
         ::update(&conn).unwrap();
         let processed = version_downloads::table
@@ -270,13 +276,15 @@ mod test {
                 version_downloads::counted.eq(1),
                 version_downloads::date.eq(date(now)),
                 version_downloads::processed.eq(false),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
         insert_into(version_downloads::table)
             .values((
                 version_downloads::version_id.eq(version.id),
                 version_downloads::date.eq(date(now - 1.day())),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
 
         let version_before = versions::table
@@ -332,7 +340,8 @@ mod test {
                 version_downloads::counted.eq(2),
                 version_downloads::date.eq(date(now - 2.days())),
                 version_downloads::processed.eq(false),
-            )).execute(&conn)
+            ))
+            .execute(&conn)
             .unwrap();
 
         ::update(&conn).unwrap();
