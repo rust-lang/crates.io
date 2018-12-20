@@ -1,11 +1,7 @@
-extern crate old_semver;
+use std::{io::Read, net::SocketAddr};
 
-use std::io::Read;
-use std::net::SocketAddr;
-
-use self::old_semver::semver;
-use conduit;
 use conduit::Request;
+use old_semver::semver;
 
 // Can't derive Debug because of Request.
 #[allow(missing_debug_implementations)]

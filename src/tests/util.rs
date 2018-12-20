@@ -19,19 +19,20 @@
 //! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
-use std::{self, rc::Rc, sync::Arc};
-
-use {cargo_registry, conduit, conduit_middleware, diesel, dotenv, serde};
+use crate::{
+    app, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool,
+    VersionResponse,
+};
+use cargo_registry::{
+    middleware::current_user::AuthenticationSource,
+    models::{ApiToken, User},
+    uploaders::Uploader,
+    App,
+};
+use std::{rc::Rc, sync::Arc};
 
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
-
-use builders::PublishBuilder;
-use cargo_registry::app::App;
-use cargo_registry::middleware::current_user::AuthenticationSource;
-use models::{ApiToken, User};
-
-use super::{app, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse};
 
 struct TestAppInner {
     app: Arc<App>,
@@ -47,7 +48,7 @@ impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
         dotenv::dotenv().ok();
-        let (app, middle) = ::simple_app(cargo_registry::Uploader::Panic);
+        let (app, middle) = crate::simple_app(Uploader::Panic);
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,
@@ -81,7 +82,7 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, user: &str) -> MockCookieUser {
-        let user = self.db(|conn| ::new_user(user).create_or_update(conn).unwrap());
+        let user = self.db(|conn| crate::new_user(user).create_or_update(conn).unwrap());
         MockCookieUser {
             app: TestApp(Rc::clone(&self.0)),
             user,
@@ -214,7 +215,7 @@ pub struct MockAnonymousUser {
 
 impl RequestHelper for MockAnonymousUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        ::req(method, path)
+        crate::req(method, path)
     }
 
     fn app(&self) -> &TestApp {
@@ -233,7 +234,7 @@ pub struct MockCookieUser {
 
 impl RequestHelper for MockCookieUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = ::req(method, path);
+        let mut request = crate::req(method, path);
         request.mut_extensions().insert(self.user.clone());
         request
             .mut_extensions()
@@ -274,7 +275,7 @@ pub struct MockTokenUser {
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
-        let mut request = ::req(method, path);
+        let mut request = crate::req(method, path);
         request.header("Authorization", &self.token.token);
         request
     }
@@ -322,13 +323,13 @@ pub struct Bad {
 
 pub type DieselConnection =
     diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
-type ResponseResult = Result<conduit::Response, Box<std::error::Error + Send>>;
+type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
 
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
     response: conduit::Response,
-    callback_on_good: Option<Box<Fn(&T)>>,
+    callback_on_good: Option<Box<dyn Fn(&T)>>,
 }
 
 impl<T> Response<T>
@@ -342,7 +343,7 @@ where
         }
     }
 
-    fn with_callback(self, callback_on_good: Box<Fn(&T)>) -> Self {
+    fn with_callback(self, callback_on_good: Box<dyn Fn(&T)>) -> Self {
         Self {
             response: self.response,
             callback_on_good: Some(callback_on_good),
@@ -351,10 +352,10 @@ where
 
     /// Assert that the response is good and deserialize the message
     pub fn good(mut self) -> T {
-        if !::ok_resp(&self.response) {
+        if !crate::ok_resp(&self.response) {
             panic!("bad response: {:?}", self.response.status);
         }
-        let good = ::json(&mut self.response);
+        let good = crate::json(&mut self.response);
         if let Some(callback) = self.callback_on_good {
             callback(&good)
         }
@@ -366,7 +367,7 @@ where
     /// Cargo endpoints return a status 200 on error instead of 400.
     pub fn bad_with_status(&mut self, code: u32) -> Bad {
         assert_eq!(self.response.status.0, code);
-        match ::bad_resp(&mut self.response) {
+        match crate::bad_resp(&mut self.response) {
             None => panic!("ok response: {:?}", self.response.status),
             Some(b) => b,
         }

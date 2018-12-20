@@ -2,10 +2,8 @@ use std::cmp;
 use std::collections::HashMap;
 use std::io::Cursor;
 
-use serde::Serialize;
-use serde_json;
-
 use conduit::Response;
+use serde::Serialize;
 
 pub use self::errors::{bad_request, human, internal, internal_error, CargoError, CargoResult};
 pub use self::errors::{std_error, ChainError};

@@ -2,15 +2,15 @@
 //!
 //! Crate level functionality is located in `krate::downloads`.
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
 use chrono::{Duration, NaiveDate, Utc};
 
-use Replica;
+use crate::Replica;
 
-use models::{Crate, VersionDownload};
-use schema::*;
-use views::EncodableVersionDownload;
+use crate::models::{Crate, VersionDownload};
+use crate::schema::*;
+use crate::views::EncodableVersionDownload;
 
 use super::version_and_crate;
 

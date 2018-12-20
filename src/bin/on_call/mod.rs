@@ -1,10 +1,7 @@
-extern crate cargo_registry;
-extern crate reqwest;
-
-use self::reqwest::{header, StatusCode as Status};
+use cargo_registry::util::{internal, CargoResult};
 use std::env;
 
-use self::cargo_registry::util::*;
+use reqwest::{header, StatusCode as Status};
 
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]

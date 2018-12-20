@@ -6,18 +6,14 @@
 
 #![deny(warnings)]
 
-extern crate cargo_registry;
-extern crate diesel;
-extern crate rand;
+use cargo_registry::{db, schema::version_downloads};
+use std::env;
 
 use diesel::prelude::*;
 use rand::{Rng, StdRng};
-use std::env;
-
-use cargo_registry::schema::version_downloads;
 
 fn main() {
-    let conn = cargo_registry::db::connect_now().unwrap();
+    let conn = db::connect_now().unwrap();
     conn.transaction(|| update(&conn)).unwrap();
 }
 

@@ -5,13 +5,11 @@
 //! period of time to ensure there are no external users of an endpoint before
 //! it is removed.
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use url;
-
-use models::Version;
-use schema::*;
-use views::EncodableVersion;
+use crate::models::Version;
+use crate::schema::*;
+use crate::views::EncodableVersion;
 
 use super::version_and_crate;
 
@@ -60,7 +58,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
             versions::table
                 .find(id)
                 .inner_join(crates::table)
-                .select((versions::all_columns, ::models::krate::ALL_COLUMNS))
+                .select((versions::all_columns, crate::models::krate::ALL_COLUMNS))
                 .first(&*conn)?
         }
     };

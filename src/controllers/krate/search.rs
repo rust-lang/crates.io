@@ -2,13 +2,13 @@
 
 use diesel_full_text_search::*;
 
-use controllers::helpers::Paginate;
-use controllers::prelude::*;
-use models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
-use schema::*;
-use views::EncodableCrate;
+use crate::controllers::helpers::Paginate;
+use crate::controllers::prelude::*;
+use crate::models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
+use crate::schema::*;
+use crate::views::EncodableCrate;
 
-use models::krate::{canon_crate_name, ALL_COLUMNS};
+use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -95,7 +95,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                 crates_keywords::table
                     .select(crates_keywords::crate_id)
                     .inner_join(keywords::table)
-                    .filter(::lower(keywords::keyword).eq(::lower(kw))),
+                    .filter(crate::lower(keywords::keyword).eq(crate::lower(kw))),
             ),
         );
     } else if let Some(letter) = params.get("letter") {

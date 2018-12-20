@@ -1,15 +1,20 @@
-use conduit::{Handler, Method};
-use diesel;
-use diesel::prelude::*;
-
-use builders::{CrateBuilder, PublishBuilder};
-use models::{Crate, NewCrateOwnerInvitation};
-use schema::crate_owner_invitations;
-use util::RequestHelper;
-use views::{
-    EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+use crate::{
+    add_team_to_crate, app,
+    builders::{CrateBuilder, PublishBuilder},
+    new_team, new_user, req, sign_in_as,
+    util::RequestHelper,
+    TestApp,
 };
-use {add_team_to_crate, app, new_team, new_user, req, sign_in_as, TestApp};
+use cargo_registry::{
+    models::{Crate, NewCrateOwnerInvitation},
+    schema::crate_owner_invitations,
+    views::{
+        EncodableCrateOwnerInvitation, EncodableOwner, EncodablePublicUser, InvitationResponse,
+    },
+};
+
+use conduit::{Handler, Method};
+use diesel::prelude::*;
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -25,11 +30,11 @@ struct InvitationListResponse {
 }
 
 // Implementing locally for now, unless these are needed elsewhere
-impl ::util::MockCookieUser {
+impl crate::util::MockCookieUser {
     /// As the currently logged in user, accept an invitation to become an owner of the named
     /// crate.
     fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
-        use views::InvitationResponse;
+        use cargo_registry::views::InvitationResponse;
 
         let body = json!({
             "crate_owner_invite": {
@@ -270,7 +275,7 @@ fn test_accept_invitation() {
             .with_body(body.to_string().as_bytes()),
     ));
 
-    let json: T = ::json(&mut response);
+    let json: T = crate::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, true);
     assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
 
@@ -281,7 +286,7 @@ fn test_accept_invitation() {
         req.with_path("api/v1/me/crate_owner_invitations")
             .with_method(Method::Get)
     ));
-    let json: InvitationListResponse = ::json(&mut response);
+    let json: InvitationListResponse = crate::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was inserted
@@ -289,7 +294,7 @@ fn test_accept_invitation() {
         req.with_path("/api/v1/crates/invited_crate/owners")
             .with_method(Method::Get)
     ));
-    let json: Q = ::json(&mut response);
+    let json: Q = crate::json(&mut response);
     assert_eq!(json.users.len(), 2);
 }
 
@@ -350,7 +355,7 @@ fn test_decline_invitation() {
             .with_body(body.to_string().as_bytes()),
     ));
 
-    let json: T = ::json(&mut response);
+    let json: T = crate::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, false);
     assert_eq!(json.crate_owner_invitation.crate_id, krate.id);
 
@@ -361,7 +366,7 @@ fn test_decline_invitation() {
         req.with_path("api/v1/me/crate_owner_invitations")
             .with_method(Method::Get)
     ));
-    let json: InvitationListResponse = ::json(&mut response);
+    let json: InvitationListResponse = crate::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was not inserted
@@ -369,6 +374,6 @@ fn test_decline_invitation() {
         req.with_path("/api/v1/crates/invited_crate/owners")
             .with_method(Method::Get)
     ));
-    let json: Q = ::json(&mut response);
+    let json: Q = crate::json(&mut response);
     assert_eq!(json.users.len(), 1);
 }

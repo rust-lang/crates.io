@@ -1,11 +1,10 @@
 use chrono::NaiveDateTime;
-use diesel;
 use diesel::prelude::*;
 
-use models::User;
-use schema::api_tokens;
-use util::rfc3339;
-use views::EncodableApiTokenWithToken;
+use crate::models::User;
+use crate::schema::api_tokens;
+use crate::util::rfc3339;
+use crate::views::EncodableApiTokenWithToken;
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable, Associations, Serialize)]

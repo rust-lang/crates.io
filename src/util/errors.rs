@@ -5,7 +5,7 @@ use std::fmt;
 use conduit::Response;
 use diesel::result::Error as DieselError;
 
-use util::json_response;
+use crate::util::json_response;
 
 #[derive(Serialize)]
 struct StringError {

@@ -1,22 +1,18 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
 use openssl::hash::{Hasher, MessageDigest};
-use reqwest;
-use s3;
-use semver;
-use tar;
 
-use util::LimitErrorReader;
-use util::{human, internal, CargoResult, ChainError, Maximums};
+use crate::util::LimitErrorReader;
+use crate::util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::sync::Arc;
 
-use app::App;
-use middleware::app::RequestApp;
-use models::Crate;
+use crate::app::App;
+use crate::middleware::app::RequestApp;
+use crate::models::Crate;
 
 fn require_test_app_with_proxy() -> ! {
     panic!("No uploader is configured.  In tests, use `TestApp::with_proxy()`.");

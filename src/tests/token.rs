@@ -1,11 +1,12 @@
+use crate::{user::UserShowPrivateResponse, RequestHelper, TestApp};
+use cargo_registry::{
+    models::ApiToken,
+    schema::api_tokens,
+    views::{EncodableApiTokenWithToken, EncodableMe},
+};
 use std::collections::HashSet;
 
 use diesel::prelude::*;
-
-use models::ApiToken;
-use schema::api_tokens;
-use views::{EncodableApiTokenWithToken, EncodableMe};
-use {user::UserShowPrivateResponse, RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct DecodableApiToken {

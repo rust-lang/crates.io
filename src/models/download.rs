@@ -1,10 +1,9 @@
 use chrono::NaiveDate;
-use diesel;
 use diesel::prelude::*;
 
-use models::Version;
-use schema::version_downloads;
-use views::EncodableVersionDownload;
+use crate::models::Version;
+use crate::schema::version_downloads;
+use crate::views::EncodableVersionDownload;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
 #[belongs_to(Version)]

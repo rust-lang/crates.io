@@ -1,14 +1,12 @@
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use serde_json;
+use crate::controllers::helpers::Paginate;
+use crate::email;
+use crate::util::bad_request;
 
-use controllers::helpers::Paginate;
-use email;
-use util::bad_request;
-
-use models::{Email, Follow, NewEmail, User, Version};
-use schema::{crates, emails, follows, users, versions};
-use views::{EncodableMe, EncodableVersion};
+use crate::models::{Email, Follow, NewEmail, User, Version};
+use crate::schema::{crates, emails, follows, users, versions};
+use crate::views::{EncodableMe, EncodableVersion};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
@@ -148,7 +146,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
             .get_result::<String>(&*conn)
             .map_err(|_| human("Error in creating token"))?;
 
-        ::email::send_user_confirm_email(user_email, &user.gh_login, &token)
+        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
             .map_err(|_| bad_request("Email could not be sent"))
     })?;
 

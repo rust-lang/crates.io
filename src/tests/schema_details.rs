@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use diesel::sql_types::Text;
 
-use TestApp;
+use crate::TestApp;
 
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {

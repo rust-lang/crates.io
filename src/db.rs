@@ -5,15 +5,15 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use url::Url;
 
-use middleware::app::RequestApp;
-use util::CargoResult;
+use crate::middleware::app::RequestApp;
+use crate::util::CargoResult;
 
 pub type DieselPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 type DieselPooledConn = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub fn connect_now() -> ConnectionResult<PgConnection> {
     use diesel::Connection;
-    let mut url = Url::parse(&::env("DATABASE_URL")).expect("Invalid database URL");
+    let mut url = Url::parse(&crate::env("DATABASE_URL")).expect("Invalid database URL");
     if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }

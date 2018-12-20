@@ -1,9 +1,8 @@
 //! Middleware that adds secuirty headers to http responses in production.
 
 use super::prelude::*;
+use crate::Uploader;
 use std::collections::HashMap;
-
-use Uploader;
 
 #[derive(Clone, Debug)]
 pub struct SecurityHeaders {

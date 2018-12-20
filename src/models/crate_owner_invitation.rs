@@ -1,8 +1,8 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use schema::{crate_owner_invitations, crates, users};
-use views::EncodableCrateOwnerInvitation;
+use crate::schema::{crate_owner_invitations, crates, users};
+use crate::views::EncodableCrateOwnerInvitation;
 
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Identifiable, Queryable)]

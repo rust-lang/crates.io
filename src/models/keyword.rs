@@ -1,10 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel;
 use diesel::prelude::*;
 
-use models::Crate;
-use schema::*;
-use views::EncodableKeyword;
+use crate::models::Crate;
+use crate::schema::*;
+use crate::views::EncodableKeyword;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -27,7 +26,7 @@ pub struct CrateKeyword {
 impl Keyword {
     pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
-            .filter(keywords::keyword.eq(::lower(name)))
+            .filter(keywords::keyword.eq(crate::lower(name)))
             .first(&*conn)
     }
 

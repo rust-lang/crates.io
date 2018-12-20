@@ -1,47 +1,36 @@
 #![deny(warnings)]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
-extern crate cargo_registry;
-extern crate chrono;
-extern crate conduit;
-extern crate conduit_middleware;
-extern crate conduit_test;
 #[macro_use]
 extern crate diesel;
-extern crate dotenv;
-extern crate flate2;
-extern crate git2;
 #[macro_use]
 extern crate lazy_static;
-extern crate s3;
-extern crate semver;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate tar;
-extern crate url;
 
-use std::borrow::Cow;
-use std::env;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-use std::sync::Arc;
+use crate::util::{Bad, RequestHelper, TestApp};
+use cargo_registry::{
+    middleware::current_user::AuthenticationSource,
+    models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
+    schema::crate_owners,
+    util::CargoResult,
+    views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate},
+    App, Config, Env, Replica, Uploader,
+};
+use std::{
+    borrow::Cow,
+    env,
+    sync::{
+        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        Arc,
+    },
+};
 
-use cargo_registry::app::App;
-use cargo_registry::middleware::current_user::AuthenticationSource;
-use cargo_registry::Replica;
 use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-
-use cargo_registry::{models, schema, views};
-use util::{Bad, RequestHelper, TestApp};
-
-use models::{Crate, CrateOwner, Dependency, Team, User, Version};
-use models::{NewCategory, NewTeam, NewUser};
-use schema::*;
-use views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate};
 
 macro_rules! t {
     ($e:expr) => {
@@ -55,7 +44,7 @@ macro_rules! t {
 macro_rules! ok_resp {
     ($e:expr) => {{
         let resp = t!($e);
-        if !::ok_resp(&resp) {
+        if !crate::ok_resp(&resp) {
             panic!("bad response: {:?}", resp.status);
         }
         resp
@@ -65,7 +54,7 @@ macro_rules! ok_resp {
 macro_rules! bad_resp {
     ($e:expr) => {{
         let mut resp = t!($e);
-        match ::bad_resp(&mut resp) {
+        match crate::bad_resp(&mut resp) {
             None => panic!("ok response: {:?}", resp.status),
             Some(b) => b,
         }
@@ -126,7 +115,7 @@ fn app() -> (
     dotenv::dotenv().ok();
 
     let (proxy, bomb) = record::proxy();
-    let uploader = cargo_registry::Uploader::S3 {
+    let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
@@ -144,18 +133,16 @@ fn app() -> (
     (bomb, app, handler)
 }
 
-fn simple_app(
-    uploader: cargo_registry::Uploader,
-) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
     git::init();
-    let config = cargo_registry::Config {
+    let config = Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
-        env: cargo_registry::Env::Test,
+        env: Env::Test,
         max_upload_size: 3000,
         max_unpack_size: 2000,
         mirror: Replica::Primary,
@@ -253,9 +240,7 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
     Ok(())
 }
 
-use cargo_registry::util::CargoResult;
-
-fn sign_in_as(req: &mut Request, user: &User) {
+fn sign_in_as(req: &mut dyn Request, user: &User) {
     req.mut_extensions().insert(user.clone());
     req.mut_extensions()
         .insert(AuthenticationSource::SessionCookie);
@@ -286,6 +271,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
     }
 }
 
-fn logout(req: &mut Request) {
+fn logout(req: &mut dyn Request) {
     req.mut_extensions().pop::<User>();
 }

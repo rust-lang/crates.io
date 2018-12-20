@@ -1,5 +1,5 @@
-use models::User;
-use schema::follows;
+use crate::models::User;
+use crate::schema::follows;
 
 #[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]
 #[belongs_to(User)]

@@ -1,8 +1,8 @@
 use std::env;
 use std::path::Path;
 
+use crate::util::{bad_request, CargoResult};
 use dotenv::dotenv;
-use util::{bad_request, CargoResult};
 
 use lettre::file::FileEmailTransport;
 use lettre::smtp::authentication::{Credentials, Mechanism};

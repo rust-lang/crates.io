@@ -1,12 +1,11 @@
 use diesel::prelude::*;
-use semver;
 
-use git;
-use util::{human, CargoResult};
+use crate::git;
+use crate::util::{human, CargoResult};
 
-use models::{Crate, Version};
-use schema::*;
-use views::{EncodableCrateDependency, EncodableDependency};
+use crate::models::{Crate, Version};
+use crate::schema::*;
+use crate::views::{EncodableCrateDependency, EncodableDependency};
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]

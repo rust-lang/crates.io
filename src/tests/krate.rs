@@ -1,36 +1,27 @@
-extern crate diesel;
-extern crate tempdir;
-
-use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io;
-use std::io::prelude::*;
-
-use self::diesel::prelude::*;
-use self::tempdir::TempDir;
-use chrono::Utc;
-use diesel::dsl::*;
-use diesel::update;
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use git2;
-use serde_json;
-use tar;
-
-use cargo_registry::git;
-use cargo_registry::models::krate::MAX_NAME_LENGTH;
-
-use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
-use models::{Category, Crate};
-use schema::{api_tokens, crates, emails, metadata, versions};
-use views::{
-    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
-    EncodableVersionDownload,
-};
-use {
+use crate::{
+    builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder},
     new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
     RequestHelper, TestApp,
 };
+use cargo_registry::{
+    git,
+    models::{krate::MAX_NAME_LENGTH, Category, Crate},
+    schema::{api_tokens, crates, emails, metadata, versions},
+    views::{
+        EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+        EncodableVersionDownload,
+    },
+};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{self, prelude::*},
+};
+
+use chrono::Utc;
+use diesel::{dsl::*, prelude::*, update};
+use flate2::{write::GzEncoder, Compression};
+use tempdir::TempDir;
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -63,22 +54,22 @@ struct SummaryResponse {
     popular_categories: Vec<EncodableCategory>,
 }
 
-impl ::util::MockAnonymousUser {
+impl crate::util::MockAnonymousUser {
     fn reverse_dependencies(&self, krate_name: &str) -> RevDeps {
         let url = format!("/api/v1/crates/{}/reverse_dependencies", krate_name);
         self.get(&url).good()
     }
 }
 
-impl ::util::MockTokenUser {
+impl crate::util::MockTokenUser {
     /// Yank the specified version of the specified crate.
-    fn yank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+    fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
         self.delete(&url)
     }
 
     /// Unyank the specified version of the specified crate.
-    fn unyank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+    fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/unyank", krate_name, version);
         self.put(&url, &[])
     }
@@ -977,8 +968,8 @@ fn new_krate_git_upload_appends() {
 #[test]
 fn new_krate_git_upload_with_conflicts() {
     {
-        ::git::init();
-        let repo = git2::Repository::open(&::git::bare()).unwrap();
+        crate::git::init();
+        let repo = git2::Repository::open(&crate::git::bare()).unwrap();
         let target = repo.head().unwrap().target().unwrap();
         let sig = repo.signature().unwrap();
         let parent = repo.find_commit(target).unwrap();
@@ -2006,7 +1997,7 @@ fn clone_remote_repo() -> TempDir {
     use url::Url;
 
     let tempdir = TempDir::new("tests").unwrap();
-    let url = Url::from_file_path(::git::bare()).unwrap();
+    let url = Url::from_file_path(crate::git::bare()).unwrap();
     git2::Repository::clone(url.as_str(), tempdir.path()).unwrap();
     tempdir
 }

@@ -28,12 +28,11 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 
-use cookie;
 use std::env;
 use std::sync::Arc;
 
-use router::R404;
-use {App, Env};
+use crate::router::R404;
+use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
