@@ -54,6 +54,7 @@ matrix:
     - rust: stable
       before_install:
         - nvm install 10
+        - npm ci
         - rustup component add rustfmt-preview
         - rustup component add clippy-preview
       script:
@@ -61,7 +62,6 @@ matrix:
         - cargo clippy --all-targets --all-features --all
         - cargo build
         - cargo test
-        - npm install
         - npm test
     - rust: beta
       script:
