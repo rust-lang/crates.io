@@ -11,8 +11,6 @@ cache:
   cargo: true
   directories:
     - $HOME/.npm
-  # Set timeout to 6 minutes (double the default of 3 minutes)
-  timeout: 360
 before_cache: script/ci/prune-cache.sh
 
 env:
