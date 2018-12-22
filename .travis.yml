@@ -11,8 +11,7 @@ cache:
   cargo: true
   directories:
     - $HOME/.npm
-  # Set timeout to 6 minutes (double the default of 3 minutes)
-  timeout: 360
+before_cache: script/ci/prune-cache.sh
 
 env:
   global:
@@ -27,7 +26,7 @@ env:
     - PERCY_PROJECT=crates-io/crates.io
 
 install:
-  - script/cargo-clean-on-new-rustc-version.sh
+  - script/ci/cargo-clean-on-new-rustc-version.sh
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
@@ -53,22 +52,19 @@ matrix:
     - rust: stable
       before_install:
         - nvm install 10
+        - npm ci
         - rustup component add rustfmt-preview
         - rustup component add clippy-preview
       script:
         - cargo fmt -- --check
         - cargo clippy --all-targets --all-features --all
-        - cargo build
         - cargo test
-        - npm install
         - npm test
     - rust: beta
       script:
-        - cargo build
         - cargo test
     - rust: nightly
       script:
-        - cargo build
         - cargo test
 
 notifications:
