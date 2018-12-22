@@ -60,16 +60,13 @@ matrix:
       script:
         - cargo fmt -- --check
         - cargo clippy --all-targets --all-features --all
-        - cargo build
         - cargo test
         - npm test
     - rust: beta
       script:
-        - cargo build
         - cargo test
     - rust: nightly
       script:
-        - cargo build
         - cargo test
 
 notifications:
