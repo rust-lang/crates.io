@@ -628,3 +628,25 @@ fn test_existing_user_email() {
     assert!(!r.user.email_verified);
     assert!(!r.user.email_verification_sent);
 }
+
+#[test]
+fn deleted_users_show_this_information() {
+    use cargo_registry::schema::users;
+
+    let (app, _anon, user) = TestApp::init().with_user();
+
+    app.db(|conn| {
+        let user = user.as_model();
+        diesel::update(user)
+            .set(users::gh_deleted.eq(true))
+            .execute(conn)
+            .unwrap();
+    });
+    let login = format!("deleted_{}", user.as_model().id);
+    let resp: UserShowPublicResponse = user.get(&format!("/api/v1/users/{}", login)).good();
+    let user = resp.user;
+
+    assert_eq!("foo (deleted)", user.display_name.unwrap());
+    assert_eq!("https://github.com/ghost", user.url.unwrap());
+    assert_eq!(login, user.login);
+}

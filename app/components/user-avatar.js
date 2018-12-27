@@ -21,7 +21,7 @@ export default Component.extend({
     height: readOnly('width'),
 
     alt: computed('user', function() {
-        return `${this.get('user.name')} (${this.get('user.login')})`;
+        return `${this.get('user.name')} (${this.get('user.display_name')})`;
     }),
 
     src: computed('size', 'user', function() {

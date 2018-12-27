@@ -161,12 +161,25 @@ pub struct EncodableMe {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodablePrivateUser {
     pub id: i32,
+
+    /// The user's login, used to identify the user in URLs.
+    /// This should not be used for display purposes
     pub login: String,
+
+    /// The user's display name. Typically the same as login,
+    /// but changes if the user's GitHub account has been deleted.
+    /// Use this instead of login for display
+    pub display_name: Option<String>,
+
     pub email: Option<String>,
     pub email_verified: bool,
     pub email_verification_sent: bool,
+
+    /// The user's full name as given to GitHub
     pub name: Option<String>,
     pub avatar: Option<String>,
+
+    /// The URL to the user's external profile
     pub url: Option<String>,
 }
 
@@ -176,6 +189,7 @@ pub struct EncodablePrivateUser {
 pub struct EncodablePublicUser {
     pub id: i32,
     pub login: String,
+    pub display_name: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
     pub url: Option<String>,

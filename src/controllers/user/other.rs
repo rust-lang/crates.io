@@ -5,15 +5,24 @@ use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
+#[allow(warnings)]
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
-    use self::users::dsl::{gh_login, id, users};
+    use self::users::dsl::{gh_deleted, gh_login, id, users};
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
-    let user = users
-        .filter(crate::lower(gh_login).eq(name))
-        .order(id.desc())
-        .first::<User>(&*conn)?;
+    let user = if name.starts_with("deleted_") {
+        let deleted_id = name["deleted_".len()..].parse::<i32>()?;
+        users
+            .find(deleted_id)
+            .filter(gh_deleted)
+            .first::<User>(&conn)?
+    } else {
+        users
+            .filter(crate::lower(gh_login).eq(name))
+            .order(id.desc())
+            .first::<User>(&*conn)?
+    };
 
     #[derive(Serialize)]
     struct R {

@@ -6,7 +6,7 @@ export default Component.extend({
     attributeBindings: ['title', 'href'],
     tagName: 'a',
 
-    title: readOnly('user.login'),
+    title: readOnly('user.display_name'),
 
     // TODO replace this with a link to a native crates.io profile
     // page when they exist.

@@ -5,6 +5,7 @@ export default DS.Model.extend({
     email_verified: DS.attr('boolean'),
     email_verification_sent: DS.attr('boolean'),
     name: DS.attr('string'),
+    display_name: DS.attr('string'),
     login: DS.attr('string'),
     avatar: DS.attr('string'),
     url: DS.attr('string'),

@@ -19,6 +19,7 @@ pub struct User {
     pub name: Option<String>,
     pub gh_avatar: Option<String>,
     pub gh_id: i32,
+    pub gh_deleted: bool,
 }
 
 #[derive(Insertable, Debug)]
@@ -78,6 +79,7 @@ impl<'a> NewUser<'a> {
                     name.eq(excluded(name)),
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
+                    gh_deleted.eq(false),
                 ))
                 .get_result::<User>(conn)?;
 
@@ -179,43 +181,77 @@ impl User {
         email_verified: bool,
         email_verification_sent: bool,
     ) -> EncodablePrivateUser {
+        let url = self.url().into_owned();
+        let display_name = self.display_name().into_owned();
+        let login = self.login().into_owned();
         let User {
             id,
             email,
             name,
-            gh_login,
             gh_avatar,
             ..
         } = self;
-        let url = format!("https://github.com/{}", gh_login);
         EncodablePrivateUser {
             id,
             email,
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
+            login,
             name,
             url: Some(url),
+            display_name: Some(display_name),
         }
     }
 
     /// Converts this`User` model into an `EncodablePublicUser` for JSON serialization.
     pub fn encodable_public(self) -> EncodablePublicUser {
+        let url = self.url().into_owned();
+        let display_name = self.display_name().into_owned();
+        let login = self.login().into_owned();
         let User {
             id,
             name,
-            gh_login,
             gh_avatar,
             ..
         } = self;
-        let url = format!("https://github.com/{}", gh_login);
         EncodablePublicUser {
             id,
             avatar: gh_avatar,
-            login: gh_login,
+            login,
             name,
             url: Some(url),
+            display_name: Some(display_name),
+        }
+    }
+
+    /// Returns a link to this user's GitHub profile, or @ghost if the user
+    /// has been deleted
+    fn url(&self) -> Cow<str> {
+        if self.gh_deleted {
+            Cow::Borrowed("https://github.com/ghost")
+        } else {
+            Cow::Owned(format!("https://github.com/{}", self.gh_login))
+        }
+    }
+
+    /// Returns the user's name for display purposes. Typically the same as
+    /// gh_login.
+    fn display_name(&self) -> Cow<str> {
+        if self.gh_deleted {
+            Cow::Owned(format!("{} (deleted)", self.gh_login))
+        } else {
+            Cow::Borrowed(&self.gh_login)
+        }
+    }
+
+    /// Returns the user's gh_login if they haven't been deleted, or a special
+    /// identifier if they have.
+    fn login(&self) -> Cow<str> {
+        if self.gh_deleted {
+            Cow::Owned(format!("deleted_{}", self.id))
+        } else {
+            Cow::Borrowed(&self.gh_login)
         }
     }
 }
