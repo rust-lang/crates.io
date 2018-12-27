@@ -5,7 +5,6 @@ use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-#[allow(warnings)]
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     use self::users::dsl::{gh_deleted, gh_login, id, users};
 
