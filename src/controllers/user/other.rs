@@ -10,18 +10,17 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
-    let user = if name.starts_with("deleted_") {
-        let deleted_id = name["deleted_".len()..].parse::<i32>()?;
-        users
-            .find(deleted_id)
-            .filter(gh_deleted)
-            .first::<User>(&conn)?
-    } else {
-        users
-            .filter(crate::lower(gh_login).eq(name))
-            .order(id.desc())
-            .first::<User>(&*conn)?
+    let mut query = users
+        .filter(crate::lower(gh_login).eq(name))
+        .order(id.desc())
+        .into_boxed();
+    if name.starts_with("deleted_") {
+        if let Ok(deleted_id) = name["deleted_".len()..].parse::<i32>() {
+            query = query.or_filter(id.eq(deleted_id).and(gh_deleted));
+        }
     };
+
+    let user = query.first::<User>(&conn)?;
 
     #[derive(Serialize)]
     struct R {

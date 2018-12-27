@@ -650,3 +650,16 @@ fn deleted_users_show_this_information() {
     assert_eq!("https://github.com/ghost", user.url.unwrap());
     assert_eq!(login, user.login);
 }
+
+#[test]
+fn users_with_names_starting_with_deleted_can_be_looked_up() {
+    let (app, _) = TestApp::init().empty();
+    let user = app.db_new_user("deleted_user");
+
+    let resp: UserShowPublicResponse = user.get("/api/v1/users/deleted_user").good();
+    let user = resp.user;
+
+    assert_eq!("deleted_user", user.display_name.unwrap());
+    assert_eq!("https://github.com/deleted_user", user.url.unwrap());
+    assert_eq!("deleted_user", user.login);
+}
