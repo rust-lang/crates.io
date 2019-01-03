@@ -10,6 +10,7 @@ pub enum Event {
         incident_key: Option<String>,
         description: String,
     },
+    #[allow(dead_code)] // Not all binaries create Acknowledge events
     Acknowledge {
         incident_key: String,
         description: Option<String>,
