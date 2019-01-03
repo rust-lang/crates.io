@@ -6,7 +6,8 @@ use super::Job;
 use crate::util::CargoResult;
 
 #[doc(hidden)]
-pub type PerformFn<Env> = Box<dyn Fn(serde_json::Value, &Env) -> CargoResult<()> + RefUnwindSafe + Send + Sync>;
+pub type PerformFn<Env> =
+    Box<dyn Fn(serde_json::Value, &Env) -> CargoResult<()> + RefUnwindSafe + Send + Sync>;
 
 #[derive(Default)]
 #[allow(missing_debug_implementations)] // Can't derive debug
@@ -32,9 +33,12 @@ impl<Env> Registry<Env> {
     /// Register a new background job. This will override any existing
     /// registries with the same `JOB_TYPE`, if one exists.
     pub fn register<T: Job<Environment = Env>>(&mut self) {
-        self.job_types.insert(T::JOB_TYPE, Box::new(|data, env| {
-            let data = serde_json::from_value(data)?;
-            T::perform(data, env)
-        }));
+        self.job_types.insert(
+            T::JOB_TYPE,
+            Box::new(|data, env| {
+                let data = serde_json::from_value(data)?;
+                T::perform(data, env)
+            }),
+        );
     }
 }

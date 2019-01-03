@@ -1,5 +1,5 @@
 use diesel::PgConnection;
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
 
 use super::storage;
 use crate::util::CargoResult;

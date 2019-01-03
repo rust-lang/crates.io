@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 use diesel::prelude::*;
 use std::any::Any;
-use std::panic::{catch_unwind, UnwindSafe, RefUnwindSafe, PanicInfo};
+use std::panic::{catch_unwind, PanicInfo, RefUnwindSafe, UnwindSafe};
 use std::sync::Arc;
 use threadpool::ThreadPool;
 
+use super::{storage, Job, Registry};
 use crate::db::{DieselPool, DieselPooledConn};
-use super::{storage, Registry, Job};
 use crate::util::errors::*;
 
 #[allow(missing_debug_implementations)]
@@ -68,7 +68,8 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
         let environment = Arc::clone(&self.environment);
         let registry = Arc::clone(&self.registry);
         self.get_single_job(move |job| {
-            let perform_fn = registry.get(&job.job_type)
+            let perform_fn = registry
+                .get(&job.job_type)
                 .ok_or_else(|| internal(&format_args!("Unknown job type {}", job.job_type)))?;
             perform_fn(job.data, &environment)
         })
@@ -100,7 +101,8 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
                     }
                 }
                 Ok(())
-            }).expect("Could not retrieve or update job")
+            })
+            .expect("Could not retrieve or update job")
         })
     }
 
@@ -144,10 +146,10 @@ mod tests {
     use diesel::prelude::*;
     use diesel::r2d2;
 
-    use crate::schema::background_jobs::dsl::*;
-    use std::sync::{Mutex, MutexGuard, Barrier, Arc};
-    use std::panic::AssertUnwindSafe;
     use super::*;
+    use crate::schema::background_jobs::dsl::*;
+    use std::panic::AssertUnwindSafe;
+    use std::sync::{Arc, Barrier, Mutex, MutexGuard};
 
     #[test]
     fn jobs_are_locked_when_fetched() {
@@ -185,12 +187,11 @@ mod tests {
         let runner = runner();
         create_dummy_job(&runner);
 
-        runner.get_single_job(|_| {
-            Ok(())
-        });
+        runner.get_single_job(|_| Ok(()));
         runner.wait_for_jobs();
 
-        let remaining_jobs = background_jobs.count()
+        let remaining_jobs = background_jobs
+            .count()
             .get_result(&runner.connection().unwrap());
         assert_eq!(Ok(0), remaining_jobs);
     }
@@ -243,9 +244,7 @@ mod tests {
         let runner = runner();
         let job_id = create_dummy_job(&runner).id;
 
-        runner.get_single_job(|_| {
-            panic!()
-        });
+        runner.get_single_job(|_| panic!());
         runner.wait_for_jobs();
 
         let tries = background_jobs
@@ -289,14 +288,9 @@ mod tests {
         let database_url =
             dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         let manager = r2d2::ConnectionManager::new(database_url);
-        let pool = r2d2::Pool::builder()
-            .max_size(2)
-            .build(manager)
-            .unwrap();
+        let pool = r2d2::Pool::builder().max_size(2).build(manager).unwrap();
 
-        Runner::builder(pool, ())
-            .thread_count(2)
-            .build()
+        Runner::builder(pool, ()).thread_count(2).build()
     }
 
     fn create_dummy_job(runner: &Runner<()>) -> storage::BackgroundJob {

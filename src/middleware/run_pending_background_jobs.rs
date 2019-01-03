@@ -1,7 +1,7 @@
-use crate::background::Runner;
-use crate::background_jobs::*;
 use super::app::RequestApp;
 use super::prelude::*;
+use crate::background::Runner;
+use crate::background_jobs::*;
 
 pub struct RunPendingBackgroundJobs;
 
@@ -22,7 +22,9 @@ impl Middleware for RunPendingBackgroundJobs {
         let runner = job_runner(config);
 
         runner.run_all_pending_jobs().expect("Could not run jobs");
-        runner.assert_no_failed_jobs().expect("Could not determine if jobs failed");
+        runner
+            .assert_no_failed_jobs()
+            .expect("Could not determine if jobs failed");
         res
     }
 }

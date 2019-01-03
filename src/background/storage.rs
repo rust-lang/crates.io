@@ -1,12 +1,12 @@
 use diesel::dsl::now;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::{delete, insert_into, update};
 use diesel::sql_types::{Bool, Integer, Interval};
+use diesel::{delete, insert_into, update};
 use serde_json;
 
-use crate::schema::background_jobs;
 use super::Job;
+use crate::schema::background_jobs;
 use crate::util::CargoResult;
 
 #[derive(Queryable, Identifiable, Debug, Clone)]
@@ -22,10 +22,7 @@ pub fn enqueue_job<T: Job>(conn: &PgConnection, job: T) -> CargoResult<()> {
 
     let job_data = serde_json::to_value(job)?;
     insert_into(background_jobs)
-        .values((
-            job_type.eq(T::JOB_TYPE),
-            data.eq(job_data),
-        ))
+        .values((job_type.eq(T::JOB_TYPE), data.eq(job_data)))
         .execute(conn)?;
     Ok(())
 }
@@ -67,10 +64,7 @@ pub fn failed_job_count(conn: &PgConnection) -> QueryResult<i64> {
 pub fn available_job_count(conn: &PgConnection) -> QueryResult<i64> {
     use crate::schema::background_jobs::dsl::*;
 
-    background_jobs
-        .count()
-        .filter(retriable())
-        .get_result(conn)
+    background_jobs.count().filter(retriable()).get_result(conn)
 }
 
 /// Deletes a job that has successfully completed running
@@ -89,9 +83,6 @@ pub fn update_failed_job(conn: &PgConnection, job_id: i64) {
     use crate::schema::background_jobs::dsl::*;
 
     let _ = update(background_jobs.find(job_id))
-        .set((
-            retries.eq(retries + 1),
-            last_retry.eq(now),
-        ))
+        .set((retries.eq(retries + 1), last_retry.eq(now)))
         .execute(conn);
 }

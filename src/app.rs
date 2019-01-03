@@ -1,12 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::{db, util::CargoResult, Config, Env};
-use std::{
-    env,
-    path::PathBuf,
-    sync::Arc,
-    time::Duration,
-};
+use std::{env, path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use scheduled_thread_pool::ScheduledThreadPool;

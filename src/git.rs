@@ -10,8 +10,8 @@ use url::Url;
 
 use crate::background::Job;
 use crate::background_jobs::Environment;
-use crate::util::{internal, CargoResult};
 use crate::models::DependencyKind;
+use crate::util::{internal, CargoResult};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -61,7 +61,8 @@ impl Repository {
     }
 
     fn index_file(&self, name: &str) -> PathBuf {
-        self.checkout_path.path()
+        self.checkout_path
+            .path()
             .join(self.relative_index_file(name))
     }
 
@@ -75,7 +76,12 @@ impl Repository {
         }
     }
 
-    fn commit_and_push(&self, msg: &str, modified_file: &Path, credentials: Option<(&str, &str)>) -> CargoResult<()> {
+    fn commit_and_push(
+        &self,
+        msg: &str,
+        modified_file: &Path,
+        credentials: Option<(&str, &str)>,
+    ) -> CargoResult<()> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -87,14 +93,19 @@ impl Repository {
         let head = self.repository.head()?;
         let parent = self.repository.find_commit(head.target().unwrap())?;
         let sig = self.repository.signature()?;
-        self.repository.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
+        self.repository
+            .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])?;
 
         // git push
         let mut ref_status = Ok(());
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.credentials(|_, _, _| credentials.ok_or_else(|| git2::Error::from_str("no authentication set")).and_then(|(u, p)| git2::Cred::userpass_plaintext(u, p)));
+            callbacks.credentials(|_, _, _| {
+                credentials
+                    .ok_or_else(|| git2::Error::from_str("no authentication set"))
+                    .and_then(|(u, p)| git2::Cred::userpass_plaintext(u, p))
+            });
             callbacks.push_update_reference(|refname, status| {
                 assert_eq!(refname, "refs/heads/master");
                 if let Some(s) = status {
@@ -138,9 +149,7 @@ impl Job for AddCrate {
 }
 
 pub fn add_crate(conn: &PgConnection, krate: Crate) -> CargoResult<()> {
-    AddCrate { krate }
-        .enqueue(conn)
-        .map_err(Into::into)
+    AddCrate { krate }.enqueue(conn).map_err(Into::into)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -169,7 +178,8 @@ impl Job for Yank {
                 }
                 git_crate.yanked = Some(self.yanked);
                 Ok(serde_json::to_string(&git_crate)?)
-            }).collect::<CargoResult<Vec<String>>>();
+            })
+            .collect::<CargoResult<Vec<String>>>();
         let new = new?.join("\n") + "\n";
         fs::write(&dst, new.as_bytes())?;
 
@@ -190,8 +200,17 @@ impl Job for Yank {
 /// file, deserlialise the crate from JSON, change the yank boolean to
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
-pub fn yank(conn: &PgConnection, krate: String, version: semver::Version, yanked: bool) -> CargoResult<()> {
-    Yank { krate, version: version.to_string(), yanked }
-        .enqueue(conn)
-        .map_err(Into::into)
+pub fn yank(
+    conn: &PgConnection,
+    krate: String,
+    version: semver::Version,
+    yanked: bool,
+) -> CargoResult<()> {
+    Yank {
+        krate,
+        version: version.to_string(),
+        yanked,
+    }
+    .enqueue(conn)
+    .map_err(Into::into)
 }
