@@ -90,7 +90,7 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
                 let job_id = job.id;
 
                 let result = catch_unwind(|| f(job))
-                    .map_err(try_to_extract_panic_info)
+                    .map_err(|e| try_to_extract_panic_info(&e))
                     .and_then(|r| r);
 
                 match result {
@@ -129,7 +129,7 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
 /// However, the `panic::set_hook` functions deal with a `PanicInfo` type, and its payload is
 /// documented as "commonly but not always `&'static str` or `String`". So we can try all of those,
 /// and give up if we didn't get one of those three types.
-fn try_to_extract_panic_info(info: Box<dyn Any + Send + 'static>) -> Box<dyn CargoError> {
+fn try_to_extract_panic_info(info: &(dyn Any + Send + 'static)) -> Box<dyn CargoError> {
     if let Some(x) = info.downcast_ref::<PanicInfo>() {
         internal(&format_args!("job panicked: {}", x))
     } else if let Some(x) = info.downcast_ref::<&'static str>() {

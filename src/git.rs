@@ -203,7 +203,7 @@ impl Job for Yank {
 pub fn yank(
     conn: &PgConnection,
     krate: String,
-    version: semver::Version,
+    version: &semver::Version,
     yanked: bool,
 ) -> CargoResult<()> {
     Yank {

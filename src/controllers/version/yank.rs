@@ -43,7 +43,7 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> CargoResult<Response> {
             diesel::update(&version)
                 .set(versions::yanked.eq(yanked))
                 .execute(&*conn)?;
-            git::yank(&conn, krate.name, version.num, yanked)?;
+            git::yank(&conn, krate.name, &version.num, yanked)?;
             Ok(())
         })?;
     }
