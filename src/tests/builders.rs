@@ -522,6 +522,7 @@ impl PublishBuilder {
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
     name: String,
+    registry: Option<String>,
     explicit_name_in_toml: Option<u::EncodableCrateName>,
     version_req: u::EncodableCrateVersionReq,
 }
@@ -531,6 +532,7 @@ impl DependencyBuilder {
     pub fn new(name: &str) -> Self {
         DependencyBuilder {
             name: name.to_string(),
+            registry: None,
             explicit_name_in_toml: None,
             version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
@@ -539,6 +541,12 @@ impl DependencyBuilder {
     /// Rename this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
         self.explicit_name_in_toml = Some(u::EncodableCrateName(new_name.to_string()));
+        self
+    }
+
+    /// Set an alternative registry for this dependency.
+    pub fn registry(mut self, registry: &str) -> Self {
+        self.registry = Some(registry.to_string());
         self
     }
 
@@ -567,6 +575,7 @@ impl DependencyBuilder {
             target: None,
             kind: None,
             explicit_name_in_toml: self.explicit_name_in_toml,
+            registry: self.registry,
         }
     }
 }
