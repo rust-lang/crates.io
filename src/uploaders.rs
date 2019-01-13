@@ -8,6 +8,7 @@ use crate::util::{human, internal, CargoResult, ChainError, Maximums};
 use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::path;
 use std::sync::Arc;
 
 use crate::app::App;
