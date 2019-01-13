@@ -252,7 +252,7 @@ fn verify_tarball(
         if entry
             .path()?
             .components()
-            .any(|c| c == path::Component::ParentDir || path::Component::RootDir || path::Component::Prefix)
+            .any(|c| c == path::Component::ParentDir || c == path::Component::RootDir || c == path::Component::Prefix)
         {
             return Err(human("invalid tarball uploaded"));
         }
