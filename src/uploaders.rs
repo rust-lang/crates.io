@@ -254,7 +254,7 @@ fn verify_tarball(
             .components()
             .any(|c| c == path::Component::ParentDir)
         {
-            return Ok(false);
+            return Ok(human("invalid tarball uploaded"));
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
