@@ -814,6 +814,22 @@ fn new_krate_wrong_files() {
     );
 }
 
+
+#[test]
+fn new_krate_references_parent_dir() {
+    let (_, _, user) = TestApp::init().with_user();
+    let data: &[u8] = &[1];
+    let files = [("foo-1.0.0/../a", data)];
+    let builder = PublishBuilder::new("foo").files(&files);
+
+    let json = user.publish(builder).bad_with_status(200);
+    assert!(
+        json.errors[0].detail.contains("invalid tarball uploaded"),
+        "{:?}",
+        json.errors
+    );
+}
+
 #[test]
 fn new_krate_gzip_bomb() {
     let (_, _, _, token) = TestApp::init().with_token();
