@@ -246,7 +246,8 @@ fn verify_tarball(
         // Otherwise you could upload a tarball that contains, say,
         // `foo-0.1.0/../../.cargo/bin/cargo` and overwrite user files when
         // extracted. The `tar` crate's `Archive::unpack()` method will refuse to
-        // files of this form, but other clients/tools may not be so discerning.
+        // unpack files of this form, but other clients/tools may not be so
+        // discerning.
         if entry
             .path()?
             .components()
