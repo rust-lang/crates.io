@@ -249,16 +249,12 @@ fn verify_tarball(
         // extracted. The `tar` crate's `Archive::unpack()` method will refuse to
         // unpack files of this form, but other clients/tools may not be so
         // discerning.
-        if entry
-            .path()?
-            .components()
-            .any(|c| match c {
-                | path::Component::ParentDir
-                | path::Component::RootDir
-                | path::Component::Prefix(_) => true,
-                _ => false,
-            })
-        {
+        if entry.path()?.components().any(|c| match c {
+            path::Component::ParentDir | path::Component::RootDir | path::Component::Prefix(_) => {
+                true
+            }
+            _ => false,
+        }) {
             return Err(human("invalid tarball uploaded"));
         }
 
