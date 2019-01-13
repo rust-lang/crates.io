@@ -255,8 +255,8 @@ fn verify_tarball(
             .any(|c| match c {
                 | path::Component::ParentDir
                 | path::Component::RootDir
-                | path::Component::Prefix(_) => true
-                _ => false
+                | path::Component::Prefix(_) => true,
+                _ => false,
             })
         {
             return Err(human("invalid tarball uploaded"));
