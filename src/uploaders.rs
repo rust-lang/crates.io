@@ -252,9 +252,9 @@ fn verify_tarball(
         if entry
             .path()?
             .components()
-            .any(|c| c == path::Component::ParentDir)
+            .any(|c| c == path::Component::ParentDir || path::Component::RootDir || path::Component::Prefix)
         {
-            return Ok(human("invalid tarball uploaded"));
+            return Err(human("invalid tarball uploaded"));
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
