@@ -258,5 +258,5 @@ fn verify_tarball(
 fn hash(data: &[u8]) -> Vec<u8> {
     let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
     hasher.update(data).unwrap();
-    hasher.finish2().unwrap().to_vec()
+    hasher.finish().unwrap().to_vec()
 }

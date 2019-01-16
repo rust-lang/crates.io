@@ -38,7 +38,7 @@ url = "1.2.1"
 tar = "0.4.13"
 base64 = "0.9"
 
-openssl = "0.9.14"
+openssl = "0.10.13"
 oauth2 = "0.3"
 log = "0.3"
 env_logger = "0.5"
@@ -63,8 +63,8 @@ derive_deref = "1.0.0"
 reqwest = "0.9.1"
 tempdir = "0.3.7"
 
-lettre = "0.8"
-lettre_email = "0.8"
+lettre = {git = "https://github.com/lettre/lettre", version = "0.9"}
+lettre_email = {git = "https://github.com/lettre/lettre", version = "0.9"}
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
@@ -79,7 +79,7 @@ civet = "0.9"
 [dev-dependencies]
 conduit-test = "0.8"
 hyper = "0.12"
-hyper-tls = "0.2"
+hyper-tls = "0.3"
 futures = "0.1"
 lazy_static = "1.0"
 tokio-core = "0.1"
