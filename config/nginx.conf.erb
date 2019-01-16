@@ -56,6 +56,9 @@ http {
 		proxy_set_header Host $http_host;
 		proxy_set_header X-Real-Ip $remote_addr;
 		proxy_redirect off;
+		if ($http_x_forwarded_proto != 'https') {
+			rewrite ^ https://$host$request_uri? permanent;
+		}
 
 		location / {
 			proxy_pass http://app_server;
