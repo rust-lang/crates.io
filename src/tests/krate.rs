@@ -691,6 +691,37 @@ fn reject_new_krate_with_non_exact_dependency() {
 }
 
 #[test]
+fn new_crate_allow_empty_alternative_registry_dependency() {
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo-dep").registry("");
+    let crate_to_publish = PublishBuilder::new("foo").dependency(dependency);
+    token.publish(crate_to_publish).good();
+}
+
+#[test]
+fn reject_new_crate_with_alternative_registry_dependency() {
+    let (_, _, _, token) = TestApp::init().with_token();
+
+    let dependency =
+        DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
+
+    let crate_to_publish = PublishBuilder::new("depends-on-alt-registry").dependency(dependency);
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("Cross-registry dependencies are not permitted on crates.io."),
+        "{:?}",
+        json.errors
+    );
+}
+
+#[test]
 fn new_krate_with_wildcard_dependency() {
     let (app, _, user, token) = TestApp::init().with_token();
 

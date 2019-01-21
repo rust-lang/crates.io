@@ -63,6 +63,7 @@ pub struct EncodableCrateDependency {
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
     pub explicit_name_in_toml: Option<EncodableCrateName>,
+    pub registry: Option<String>,
 }
 
 impl<'de> Deserialize<'de> for EncodableCrateName {
