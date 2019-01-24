@@ -28,9 +28,9 @@ env:
     - PERCY_PROJECT=crates-io/crates.io
 
 install:
+  - cargo sweep -s || true
   - cargo install --force cargo-sweep
   - cargo sweep -i
-  - cargo sweep -s
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
