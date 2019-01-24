@@ -30,11 +30,11 @@ env:
 install:
   - cargo install --force cargo-sweep
   - cargo sweep -i
+  - cargo sweep -s
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
   - diesel database setup
-  - cargo sweep -s
 
 addons:
   chrome: stable
