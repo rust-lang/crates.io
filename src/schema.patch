@@ -66,7 +66,7 @@ index df884e4..18e08cd 100644
  joinable!(version_authors -> users (user_id));
  joinable!(version_authors -> versions (version_id));
  joinable!(version_downloads -> versions (version_id));
- joinable!(versions -> crates (crate_id));
+ joinable!(version_owner_actions -> api_tokens (owner_token_id));
  
 @@ -913,12 +935,13 @@ allow_tables_to_appear_in_same_query!(
      dependencies,
