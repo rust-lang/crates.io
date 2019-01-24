@@ -11,7 +11,9 @@ cache:
   cargo: true
   directories:
     - $HOME/.npm
-before_cache: script/ci/prune-cache.sh
+before_cache:
+  - cargo sweep -f
+  - script/ci/prune-cache.sh
 
 env:
   global:
@@ -26,11 +28,13 @@ env:
     - PERCY_PROJECT=crates-io/crates.io
 
 install:
-  - script/ci/cargo-clean-on-new-rustc-version.sh
+  - cargo install --force cargo-sweep
+  - cargo sweep -i
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
   - diesel database setup
+  - cargo sweep -s
 
 addons:
   chrome: stable
