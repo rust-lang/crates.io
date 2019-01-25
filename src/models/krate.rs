@@ -91,7 +91,7 @@ type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 /// The result of a loose search
-type LikeName<'a> = diesel::dsl::Like<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
+type LikeName<'a> = diesel::pg::expression::helper_types::ILike<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
@@ -246,7 +246,7 @@ impl Crate {
     /// WHERE name like $1
     /// ```
     pub fn like_name(name: &str) -> LikeName<'_> {
-        canon_crate_name(crates::name).like(canon_crate_name(name))
+        canon_crate_name(crates::name).ilike(canon_crate_name(name))
     }
     /// SQL filter with the = binary operator
     /// ```sql
