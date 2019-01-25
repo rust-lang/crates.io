@@ -65,13 +65,11 @@ fn not_github() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_github");
 
     let body = r#"{"users":["dropbox:foo:foo"]}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_not_github/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_not_github/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0].detail.contains("unknown organization"),
         "{:?}",
@@ -85,13 +83,11 @@ fn weird_name() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_weird_name");
 
     let body = r#"{"users":["github:foo/../bar:wut"]}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_weird_name/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_weird_name/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0]
             .detail
@@ -108,13 +104,11 @@ fn one_colon() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_one_colon");
 
     let body = r#"{"users":["github:foo"]}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_one_colon/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_one_colon/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0].detail.contains("missing github team"),
         "{:?}",
@@ -129,13 +123,11 @@ fn nonexistent_team() {
         request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_nonexistent");
 
     let body = r#"{"users":["github:crates-test-org:this-does-not-exist"]}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_nonexistent/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_nonexistent/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0]
             .detail
@@ -153,13 +145,11 @@ fn add_team_mixed_case() {
 
     let body = r#"{"users":["github:Crates-Test-Org:Core"]}"#;
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_mixed_case/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_mixed_case/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -169,13 +159,11 @@ fn add_team_mixed_case() {
         assert_eq!(krate.owners(&*conn).unwrap().len(), 2);
     }
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_mixed_case/owners")
-                .with_method(Method::Get)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_mixed_case/owners")
+            .with_method(Method::Get)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -195,13 +183,11 @@ fn add_team_as_member() {
         request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_member");
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_team_member/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_team_member/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -220,13 +206,11 @@ fn add_team_as_non_member() {
         request_with_user_and_mock_crate(&app, &mock_user_on_only_x(), "foo_team_non_member");
 
     let body = body_for_team_y();
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_team_non_member/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_team_non_member/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0]
             .detail
@@ -243,13 +227,11 @@ fn remove_team_as_named_owner() {
         request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team");
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_remove_team/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_remove_team/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -260,13 +242,11 @@ fn remove_team_as_named_owner() {
     }
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_remove_team/owners")
-                .with_method(Method::Delete)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_remove_team/owners")
+            .with_method(Method::Delete)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -274,13 +254,11 @@ fn remove_team_as_named_owner() {
         sign_in_as(&mut req, &user);
     }
     let body = new_req_body_version_2(::krate("foo_remove_team"));
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_body(&body)
-                .with_method(Method::Put),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/new")
+            .with_body(&body)
+            .with_method(Method::Put),
+    ));
     assert!(
         json.errors[0]
             .detail
@@ -297,13 +275,11 @@ fn remove_team_as_team_owner() {
         request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_remove_team_owner");
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -317,13 +293,11 @@ fn remove_team_as_team_owner() {
         sign_in_as(&mut req, &user);
     }
     let body = body_for_team_x();
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
-                .with_method(Method::Delete)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_remove_team_owner/owners")
+            .with_method(Method::Delete)
+            .with_body(body.as_bytes()),
+    ));
 
     assert!(
         json.errors[0]
@@ -334,13 +308,11 @@ fn remove_team_as_team_owner() {
     );
 
     let body = new_req_body_version_2(::krate("foo_remove_team_owner"));
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_body(&body)
-                .with_method(Method::Put),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/new")
+            .with_body(&body)
+            .with_method(Method::Put),
+    ));
 }
 
 // Test trying to publish a krate we don't own
@@ -351,13 +323,11 @@ fn publish_not_owned() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_not_owned");
 
     let body = body_for_team_y();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_not_owned/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_not_owned/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -371,13 +341,11 @@ fn publish_not_owned() {
         sign_in_as(&mut req, &user);
     }
     let body = new_req_body_version_2(::krate("foo_not_owned"));
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_body(&body)
-                .with_method(Method::Put),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/new")
+            .with_body(&body)
+            .with_method(Method::Put),
+    ));
     assert!(
         json.errors[0]
             .detail
@@ -394,13 +362,11 @@ fn publish_owned() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_team_owned");
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_team_owned/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_team_owned/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -414,13 +380,11 @@ fn publish_owned() {
         sign_in_as(&mut req, &user);
     }
     let body = new_req_body_version_2(::krate("foo_team_owned"));
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/new")
-                .with_body(&body)
-                .with_method(Method::Put),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/new")
+            .with_body(&body)
+            .with_method(Method::Put),
+    ));
 }
 
 // Test trying to change owners (when only on an owning team)
@@ -430,13 +394,11 @@ fn add_owners_as_team_owner() {
     let mut req = request_with_user_and_mock_crate(&app, &mock_user_on_x_and_y(), "foo_add_owner");
 
     let body = body_for_team_x();
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_add_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_add_owner/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     {
         let conn = app.diesel_database.get().unwrap();
@@ -450,13 +412,11 @@ fn add_owners_as_team_owner() {
         sign_in_as(&mut req, &user);
     }
     let body = r#"{"users":["FlashCat"]}"#; // User doesn't matter
-    let json = bad_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_add_owner/owners")
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_add_owner/owners")
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(
         json.errors[0]
             .detail

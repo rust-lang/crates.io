@@ -81,7 +81,8 @@ impl<'a> VersionBuilder<'a> {
             license,
             self.license_file,
             None,
-        )?.save(connection, &[])?;
+        )?
+        .save(connection, &[])?;
 
         if self.yanked {
             vers = update(&vers)
@@ -102,7 +103,8 @@ impl<'a> VersionBuilder<'a> {
                     dependencies::default_features.eq(false),
                     dependencies::features.eq(Vec::<String>::new()),
                 )
-            }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
         insert_into(dependencies::table)
             .values(&new_deps)
             .execute(connection)?;
@@ -328,7 +330,8 @@ impl PublishBuilder {
             .map(|(&(name, _), data)| {
                 let len = data.len() as u64;
                 (name, data as &mut Read, len)
-            }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
 
         let mut tarball = Vec::new();
         {

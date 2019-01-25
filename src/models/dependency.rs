@@ -126,7 +126,8 @@ pub fn add_dependencies(
                     target.eq(dep.target.as_ref().map(|s| &**s)),
                 ),
             ))
-        }).collect::<Result<Vec<_>, _>>()?;
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
     let (git_deps, new_dependencies): (Vec<_>, Vec<_>) =
         git_and_new_dependencies.into_iter().unzip();

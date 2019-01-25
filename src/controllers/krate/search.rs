@@ -54,7 +54,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
             recent_crate_downloads::downloads.nullable(),
-        )).into_boxed();
+        ))
+        .into_boxed();
 
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
@@ -71,7 +72,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                 recent_crate_downloads::downloads.nullable(),
             ));
             query = query.order(Crate::with_name(q_string).desc());
-            
+
             if sort == "relevance" {
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 query = query.then_order_by(rank.desc())
@@ -195,7 +196,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                     Some(recent_downloads),
                 )
             },
-        ).collect();
+        )
+        .collect();
 
     #[derive(Serialize)]
     struct R {

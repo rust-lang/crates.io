@@ -116,11 +116,9 @@ fn owners_can_remove_self() {
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<Bad>(&mut response);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("cannot remove the sole owner of a crate",)
-    );
+    assert!(json.errors[0]
+        .detail
+        .contains("cannot remove the sole owner of a crate",));
 
     let body = r#"{"users":["secondowner"]}"#;
     let mut response =
@@ -149,13 +147,11 @@ fn owners_can_remove_self() {
     logout(&mut req);
     sign_in_as(&mut req, &second_owner);
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
-                .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("/api/v1/me/crate_owner_invitations/{}", krate_id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes()),
+    ));
 
     #[derive(Deserialize)]
     struct CrateOwnerInvitation {
@@ -171,13 +167,11 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when there are other owners is allowed.
     let body = r#"{"users":["firstowner"]}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/owners_selfremove/owners")
-                .with_method(Method::Delete)
-                .with_body(body.as_bytes())
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/owners_selfremove/owners")
+            .with_method(Method::Delete)
+            .with_body(body.as_bytes())
+    ));
     assert!(::json::<OkBool>(&mut response).ok);
 
     // After you delete yourself, you no longer have permisions to manage the crate.
@@ -185,11 +179,9 @@ fn owners_can_remove_self() {
     let mut response =
         ok_resp!(middle.call(req.with_method(Method::Delete,).with_body(body.as_bytes(),),));
     let json = ::json::<Bad>(&mut response);
-    assert!(
-        json.errors[0]
-            .detail
-            .contains("only owners have permission to modify owners",)
-    );
+    assert!(json.errors[0]
+        .detail
+        .contains("only owners have permission to modify owners",));
 }
 
 /*  Testing the crate ownership between two crates and one team.
@@ -308,7 +300,8 @@ fn invitations_list() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            }).execute(&*conn)
+            })
+            .execute(&*conn)
             .unwrap();
         (krate, user)
     };
@@ -364,7 +357,8 @@ fn test_accept_invitation() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            }).execute(&*conn)
+            })
+            .execute(&*conn)
             .unwrap();
         (krate, user)
     };
@@ -382,13 +376,11 @@ fn test_accept_invitation() {
 
     // first check that response from inserting new crate owner
     // and deleting crate_owner_invitation is okay
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
-                .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes()),
+    ));
 
     let json: T = ::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, true);
@@ -397,22 +389,18 @@ fn test_accept_invitation() {
     // then check to make sure that accept_invite did what it
     // was supposed to
     // crate_owner_invitation was deleted
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("api/v1/me/crate_owner_invitations")
-                .with_method(Method::Get)
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("api/v1/me/crate_owner_invitations")
+            .with_method(Method::Get)
+    ));
     let json: R = ::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was inserted
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/invited_crate/owners")
-                .with_method(Method::Get)
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/invited_crate/owners")
+            .with_method(Method::Get)
+    ));
     let json: Q = ::json(&mut response);
     assert_eq!(json.users.len(), 2);
 }
@@ -454,7 +442,8 @@ fn test_decline_invitation() {
                 invited_by_user_id: owner.id,
                 invited_user_id: user.id,
                 crate_id: krate.id,
-            }).execute(&*conn)
+            })
+            .execute(&*conn)
             .unwrap();
         (krate, user)
     };
@@ -472,13 +461,11 @@ fn test_decline_invitation() {
 
     // first check that response from deleting
     // crate_owner_invitation is okay
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
-                .with_method(Method::Put)
-                .with_body(body.to_string().as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("api/v1/me/crate_owner_invitations/{}", krate.id))
+            .with_method(Method::Put)
+            .with_body(body.to_string().as_bytes()),
+    ));
 
     let json: T = ::json(&mut response);
     assert_eq!(json.crate_owner_invitation.accepted, false);
@@ -487,22 +474,18 @@ fn test_decline_invitation() {
     // then check to make sure that decline_invite did what it
     // was supposed to
     // crate_owner_invitation was deleted
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("api/v1/me/crate_owner_invitations")
-                .with_method(Method::Get)
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("api/v1/me/crate_owner_invitations")
+            .with_method(Method::Get)
+    ));
     let json: R = ::json(&mut response);
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // new crate owner was not inserted
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/invited_crate/owners")
-                .with_method(Method::Get)
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/invited_crate/owners")
+            .with_method(Method::Get)
+    ));
     let json: Q = ::json(&mut response);
     assert_eq!(json.users.len(), 1);
 }

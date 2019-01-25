@@ -92,7 +92,8 @@ fn show_latest_user_case_insensitively() {
             Some("I was first then deleted my github account"),
             None,
             "bar"
-        ).create_or_update(&conn));
+        )
+        .create_or_update(&conn));
         t!(NewUser::new(
             2,
             "FOOBAR",
@@ -100,7 +101,8 @@ fn show_latest_user_case_insensitively() {
             Some("I was second, I took the foobar username on github"),
             None,
             "bar"
-        ).create_or_update(&conn));
+        )
+        .create_or_update(&conn));
     }
     let mut req = req(Method::Get, "api/v1/users/fOObAr");
     let mut response = ok_resp!(middle.call(&mut req));
@@ -167,63 +169,49 @@ fn following() {
             .expect_build(&conn);
     }
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates",)
-                .with_method(Method::Get,),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me/updates",)
+            .with_method(Method::Get,),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/foo_fighters/follow")
-                .with_method(Method::Put),
-        )
-    );
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Put),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/foo_fighters/follow")
+            .with_method(Method::Put),
+    ));
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/bar_fighters/follow")
+            .with_method(Method::Put),
+    ));
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates",)
-                .with_method(Method::Get,),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me/updates",)
+            .with_method(Method::Get,),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates")
-                .with_method(Method::Get)
-                .with_query("per_page=1"),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me/updates")
+            .with_method(Method::Get)
+            .with_query("per_page=1"),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 1);
     assert_eq!(r.meta.more, true);
 
-    ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/crates/bar_fighters/follow")
-                .with_method(Method::Delete),
-        )
-    );
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path("/api/v1/me/updates")
-                .with_method(Method::Get)
-                .with_query("page=2&per_page=1"),
-        )
-    );
+    ok_resp!(middle.call(
+        req.with_path("/api/v1/crates/bar_fighters/follow")
+            .with_method(Method::Delete),
+    ));
+    let mut response = ok_resp!(middle.call(
+        req.with_path("/api/v1/me/updates")
+            .with_method(Method::Get)
+            .with_query("page=2&per_page=1"),
+    ));
     let r = ::json::<R>(&mut response);
     assert_eq!(r.versions.len(), 0);
     assert_eq!(r.meta.more, false);
@@ -350,13 +338,11 @@ fn test_github_login_does_not_overwrite_email() {
 
     let body =
         r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(::json::<OkBool>(&mut response).ok);
 
     logout(&mut req);
@@ -410,13 +396,11 @@ fn test_email_get_and_put() {
 
     let body =
         r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(::json::<S>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
@@ -450,13 +434,11 @@ fn test_empty_email_not_added() {
 
     let body =
         r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -466,13 +448,11 @@ fn test_empty_email_not_added() {
 
     let body =
         r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
-    let json = bad_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -505,13 +485,11 @@ fn test_this_user_cannot_change_that_user_email() {
     let body =
         r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
 
-    let json = bad_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", not_signed_in_user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let json = bad_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", not_signed_in_user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
 
     assert!(
         json.errors[0]
@@ -616,13 +594,11 @@ fn test_insert_into_email_table_with_email_change() {
 
     let body =
         r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/users/{}", user.id))
-                .with_method(Method::Put)
-                .with_body(body.as_bytes()),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("/api/v1/users/{}", user.id))
+            .with_method(Method::Put)
+            .with_body(body.as_bytes()),
+    ));
     assert!(::json::<S>(&mut response).ok);
 
     logout(&mut req);
@@ -690,12 +666,10 @@ fn test_confirm_user_email() {
             .unwrap()
     };
 
-    let mut response = ok_resp!(
-        middle.call(
-            req.with_path(&format!("/api/v1/confirm/{}", email_token))
-                .with_method(Method::Put),
-        )
-    );
+    let mut response = ok_resp!(middle.call(
+        req.with_path(&format!("/api/v1/confirm/{}", email_token))
+            .with_method(Method::Put),
+    ));
     assert!(::json::<S>(&mut response).ok);
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));

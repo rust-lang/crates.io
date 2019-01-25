@@ -78,7 +78,8 @@ impl<'a> NewUser<'a> {
                     name.eq(excluded(name)),
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
-                )).get_result::<User>(conn)?;
+                ))
+                .get_result::<User>(conn)?;
 
             // To send the user an account verification email...
             if let Some(user_email) = user.email.as_ref() {
@@ -143,12 +144,16 @@ impl User {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
-                Owner::User(ref other_user) => if other_user.id == self.id {
-                    return Ok(Rights::Full);
-                },
-                Owner::Team(ref team) => if team.contains_user(app, self)? {
-                    best = Rights::Publish;
-                },
+                Owner::User(ref other_user) => {
+                    if other_user.id == self.id {
+                        return Ok(Rights::Full);
+                    }
+                }
+                Owner::Team(ref team) => {
+                    if team.contains_user(app, self)? {
+                        best = Rights::Publish;
+                    }
+                }
             }
         }
         Ok(best)

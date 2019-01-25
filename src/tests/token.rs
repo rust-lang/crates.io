@@ -158,7 +158,8 @@ fn cannot_create_token_with_token() {
         .put::<()>(
             "/api/v1/me/tokens",
             br#"{ "api_token": { "name": "baz" } }"#,
-        ).bad_with_status(400);
+        )
+        .bad_with_status(400);
 
     assert_contains!(
         json.errors[0].detail,

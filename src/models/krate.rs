@@ -91,7 +91,10 @@ type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 /// The result of a loose search
-type LikeName<'a> = diesel::pg::expression::helper_types::ILike<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
+type LikeName<'a> = diesel::pg::expression::helper_types::ILike<
+    CanonCrateName<crates::name>,
+    CanonCrateName<&'a str>,
+>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
@@ -154,7 +157,7 @@ impl<'a> NewCrate<'a> {
                         "`{}` has an invalid url \
                          scheme: `{}`",
                         field, s
-                    )))
+                    )));
                 }
             }
             if url.cannot_be_a_base() {
@@ -202,7 +205,8 @@ impl<'a> NewCrate<'a> {
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
-        )).get_result::<bool>(conn)?;
+        ))
+        .get_result::<bool>(conn)?;
         if reserved_name {
             Err(human("cannot upload a crate with a reserved name"))
         } else {
@@ -276,11 +280,12 @@ impl Crate {
     }
 
     fn valid_ident(name: &str) -> bool {
-        Self::valid_feature_name(name) && name
-            .chars()
-            .nth(0)
-            .map(char::is_alphabetic)
-            .unwrap_or(false)
+        Self::valid_feature_name(name)
+            && name
+                .chars()
+                .nth(0)
+                .map(char::is_alphabetic)
+                .unwrap_or(false)
     }
 
     pub fn valid_feature_name(name: &str) -> bool {
@@ -461,7 +466,8 @@ impl Crate {
                         invited_user_id: owner.id(),
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
-                    }).on_conflict_do_nothing()
+                    })
+                    .on_conflict_do_nothing()
                     .execute(conn)?;
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
@@ -477,7 +483,8 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
-                    }).on_conflict(crate_owners::table.primary_key())
+                    })
+                    .on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;
