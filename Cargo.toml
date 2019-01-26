@@ -89,3 +89,6 @@ tokio-service = "0.1"
 dotenv = "0.11"
 diesel = { version = "1.3.0", features = ["postgres"] }
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
+
+[patch.crates-io]
+cookie = { git = "https://github.com/sgrif/cookie-rs.git", branch = "v0.9" }
