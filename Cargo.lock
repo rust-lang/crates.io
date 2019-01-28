@@ -152,7 +152,7 @@ dependencies = [
  "comrak 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "conduit-cookie 0.8.5 (git+https://github.com/conduit-rust/conduit-cookie.git)",
+ "conduit-cookie 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-middleware 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit-router 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -296,7 +296,7 @@ dependencies = [
 [[package]]
 name = "conduit-cookie"
 version = "0.8.5"
-source = "git+https://github.com/conduit-rust/conduit-cookie.git#4879b0aaafe60fba937795759db854824a66e7e9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2482,7 +2482,7 @@ dependencies = [
 "checksum comrak 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)" = "f2c1e2cc9384b402a97e0f2b3f8bc1ef45425fe810e030a189f05ed701f4b5b1"
 "checksum conduit 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "db0caa30f78c207dc14c071b62512253ece5c4459897815682786aff1028bc82"
 "checksum conduit-conditional-get 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "614f67083e437fd0b8fb9f13067203f358f1c6f52989eb6539292fde007fc6d6"
-"checksum conduit-cookie 0.8.5 (git+https://github.com/conduit-rust/conduit-cookie.git)" = "<none>"
+"checksum conduit-cookie 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)" = "17cef818a14458d6b074a813a1934cfa4d8dc098f859307f4a3d17cc0dc91361"
 "checksum conduit-git-http-backend 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "027a1900afd70becd52b5061afc85a24de6af0d9199f39d4e1af8b7ac55fbe6e"
 "checksum conduit-middleware 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "19b4b5a3a60b976f9219490e895cf573a6d17547e009e3c0e9f01a584b5b74d0"
 "checksum conduit-mime-types 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "95ca30253581af809925ef68c2641cc140d6183f43e12e0af4992d53768bd7b8"

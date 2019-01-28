@@ -68,7 +68,7 @@ lettre_email = {git = "https://github.com/lettre/lettre", version = "0.9"}
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
-conduit-cookie = { git = "https://github.com/conduit-rust/conduit-cookie.git" }
+conduit-cookie = "0.8.5"
 cookie = "0.11"
 conduit-middleware = "0.8"
 conduit-router = "0.8"
