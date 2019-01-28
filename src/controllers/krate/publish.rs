@@ -63,7 +63,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let categories = new_crate.categories.as_ref().map(|s| &s[..]).unwrap_or(&[]);
     let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
 
-    let conn = req.db_conn()?;
+    let conn = app.diesel_database.get()?;
 
     let mut other_warnings = vec![];
     if !user.has_verified_email(&conn)? {

@@ -62,6 +62,7 @@ scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = "0.9.1"
 tempdir = "0.3.7"
+parking_lot = "0.7.1"
 
 lettre = {git = "https://github.com/lettre/lettre", version = "0.9"}
 lettre_email = {git = "https://github.com/lettre/lettre", version = "0.9"}
