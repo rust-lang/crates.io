@@ -6,7 +6,7 @@ use crate::{
     OwnerTeamsResponse, RequestHelper, TestApp,
 };
 use cargo_registry::models::{Crate, NewUser};
-use std::sync::ONCE_INIT;
+use std::sync::Once;
 
 use diesel::*;
 
@@ -25,11 +25,11 @@ impl crate::util::MockAnonymousUser {
 
 static GH_USER_1: GhUser = GhUser {
     login: "crates-tester-1",
-    init: ONCE_INIT,
+    init: Once::new(),
 };
 static GH_USER_2: GhUser = GhUser {
     login: "crates-tester-2",
-    init: ONCE_INIT,
+    init: Once::new(),
 };
 
 fn mock_user_on_only_one_team() -> NewUser<'static> {
