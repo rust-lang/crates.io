@@ -25,6 +25,13 @@ impl DieselPool {
         }
     }
 
+    pub fn state(&self) -> r2d2::State {
+        match self {
+            DieselPool::Pool(pool) => pool.state(),
+            DieselPool::Test(_) => panic!("Cannot get the state of a test pool"),
+        }
+    }
+
     fn test_conn(conn: PgConnection) -> Self {
         DieselPool::Test(ReentrantMutex::new(conn))
     }
