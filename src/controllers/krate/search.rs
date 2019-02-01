@@ -171,7 +171,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
-        .load::<CrateBadge>(&conn)?
+        .load::<CrateBadge>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());

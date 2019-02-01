@@ -73,6 +73,7 @@ impl App {
         let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
             (_, Env::Production) => 10,
+            (_, Env::Test) => 1,
             _ => 30,
         };
 
@@ -88,7 +89,7 @@ impl App {
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
 
         App {
-            diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
+            diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
             github,
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
