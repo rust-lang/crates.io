@@ -5,7 +5,7 @@ use diesel::prelude::*;
 
 use crate::util::{human, CargoResult};
 
-use crate::models::{Crate, Dependency};
+use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::views::{EncodableVersion, EncodableVersionLinks};
 
@@ -38,7 +38,7 @@ pub struct NewVersion {
 }
 
 impl Version {
-    pub fn encodable(self, crate_name: &str) -> EncodableVersion {
+    pub fn encodable(self, crate_name: &str, published_by: Option<User>) -> EncodableVersion {
         let Version {
             id,
             num,
@@ -49,7 +49,6 @@ impl Version {
             yanked,
             license,
             crate_size,
-            published_by,
             ..
         } = self;
         let num = num.to_string();
@@ -71,7 +70,7 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
-            published_by,
+            published_by: published_by.map(|pb| pb.encodable_public()),
         }
     }
 

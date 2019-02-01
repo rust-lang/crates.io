@@ -74,6 +74,6 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name),
+        version: version.encodable(&krate.name, None),
     }))
 }

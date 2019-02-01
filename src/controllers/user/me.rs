@@ -68,7 +68,7 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 
     let versions = data
         .into_iter()
-        .map(|((version, crate_name), _)| version.encodable(&crate_name))
+        .map(|((version, crate_name), _)| version.encodable(&crate_name, None))
         .collect();
 
     #[derive(Serialize)]

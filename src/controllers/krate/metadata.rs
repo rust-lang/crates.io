@@ -148,7 +148,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         ),
         versions: versions
             .into_iter()
-            .map(|v| v.encodable(&krate.name))
+            .map(|v| v.encodable(&krate.name, None))
             .collect(),
         keywords: kws.into_iter().map(|k| k.encodable()).collect(),
         categories: cats.into_iter().map(|k| k.encodable()).collect(),
@@ -189,7 +189,7 @@ pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let versions = versions
         .into_iter()
-        .map(|v| v.encodable(crate_name))
+        .map(|v| v.encodable(crate_name, None))
         .collect();
 
     #[derive(Serialize)]
@@ -221,7 +221,7 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
         .select((versions::all_columns, crates::name))
         .load::<(Version, String)>(&*conn)?
         .into_iter()
-        .map(|(version, krate_name)| version.encodable(&krate_name))
+        .map(|(version, krate_name)| version.encodable(&krate_name, None))
         .collect();
 
     #[derive(Serialize)]

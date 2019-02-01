@@ -28,7 +28,7 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
         .filter(versions::id.eq(any(ids)))
         .load::<(Version, String)>(&*conn)?
         .into_iter()
-        .map(|(version, crate_name)| version.encodable(&crate_name))
+        .map(|(version, crate_name)| version.encodable(&crate_name, None))
         .collect();
 
     #[derive(Serialize)]
@@ -56,6 +56,6 @@ pub fn show_by_id(req: &mut dyn Request) -> CargoResult<Response> {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name),
+        version: version.encodable(&krate.name, None),
     }))
 }
