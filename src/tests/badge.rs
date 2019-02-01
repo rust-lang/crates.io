@@ -319,7 +319,7 @@ fn update_attributes() {
     badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
     badges.insert(
         String::from("travis-ci"),
-        badge_attributes_travis_ci2.clone(),
+        badge_attributes_travis_ci2,
     );
     krate.update(&badges);
     let current_badges = krate.badges();

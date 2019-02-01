@@ -21,7 +21,7 @@ impl<'a> Request for RequestProxy<'a> {
     fn method(&self) -> conduit::Method {
         self.method
             .clone()
-            .unwrap_or_else(|| self.other.method().clone())
+            .unwrap_or_else(|| self.other.method())
     }
     fn scheme(&self) -> conduit::Scheme {
         self.other.scheme()
