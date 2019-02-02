@@ -68,12 +68,14 @@ pub fn authors(req: &mut dyn Request) -> CargoResult<Response> {
 /// API route to have.
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let (version, krate) = version_and_crate(req)?;
+    let conn = req.db_conn()?;
+    let published_by = version.published_by(&conn);
 
     #[derive(Serialize)]
     struct R {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, None),
+        version: version.encodable(&krate.name, published_by),
     }))
 }

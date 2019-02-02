@@ -110,6 +110,15 @@ impl Version {
             .set(rendered_at.eq(now))
             .execute(conn)
     }
+
+    /// Gets the User who ran `cargo publish` for this version, if recorded.
+    /// Not for use when you have a group of versions you need the publishers for.
+    pub fn published_by(&self, conn: &PgConnection) -> Option<User> {
+        match self.published_by {
+            Some(pb) => users::table.find(pb).first(conn).ok(),
+            None => None,
+        }
+    }
 }
 
 impl NewVersion {
