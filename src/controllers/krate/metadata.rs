@@ -107,9 +107,13 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let ids = versions.iter().map(|v| v.id).collect();
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+        .all_versions()
+        .left_outer_join(users::table)
+        .select((versions::all_columns, users::all_columns.nullable()))
+        .load(&*conn)?;
+    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+    let ids = versions_and_publishers.iter().map(|v| v.0.id).collect();
 
     let kws = CrateKeyword::belonging_to(&krate)
         .inner_join(keywords::table)
@@ -147,9 +151,9 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
             false,
             recent_downloads,
         ),
-        versions: versions
+        versions: versions_and_publishers
             .into_iter()
-            .map(|v| v.encodable(&krate.name, None))
+            .map(|(v, pb)| v.encodable(&krate.name, pb))
             .collect(),
         keywords: kws.into_iter().map(|k| k.encodable()).collect(),
         categories: cats.into_iter().map(|k| k.encodable()).collect(),
@@ -186,11 +190,15 @@ pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let versions = versions
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+        .all_versions()
+        .left_outer_join(users::table)
+        .select((versions::all_columns, users::all_columns.nullable()))
+        .load(&*conn)?;
+    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+    let versions = versions_and_publishers
         .into_iter()
-        .map(|v| v.encodable(crate_name, None))
+        .map(|(v, pb)| v.encodable(crate_name, pb))
         .collect();
 
     #[derive(Serialize)]

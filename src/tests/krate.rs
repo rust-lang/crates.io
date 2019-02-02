@@ -420,7 +420,7 @@ fn show() {
     let user = user.as_model();
 
     let krate = app.db(|conn| {
-        CrateBuilder::new("foo_show", user.id)
+        let krate = CrateBuilder::new("foo_show", user.id)
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
@@ -430,7 +430,18 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(conn)
+            .expect_build(conn);
+
+        // Make version 1.0.0 mimic a version published before we started recording who published
+        // versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .filter(versions::num.eq("1.0.0"))
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
+
+        krate
     });
 
     let json = anon.show_crate("foo_show");
@@ -448,6 +459,7 @@ fn show() {
     assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0");
+    assert!(json.versions[0].published_by.is_none());
     let suffix = "/api/v1/crates/foo_show/1.0.0/download";
     assert!(
         json.versions[0].dl_path.ends_with(suffix),
@@ -459,6 +471,10 @@ fn show() {
 
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+    assert_eq!(
+        json.versions[1].published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
 }
 
 #[test]
@@ -489,6 +505,14 @@ fn versions() {
             .version("1.0.0")
             .version("0.5.0")
             .expect_build(conn);
+        // Make version 1.0.0 mimic a version published before we started recording who published
+        // versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .filter(versions::num.eq("1.0.0"))
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
     });
 
     let json: VersionsList = anon.get("/api/v1/crates/foo_versions/versions").good();
@@ -497,6 +521,11 @@ fn versions() {
     assert_eq!(json.versions[0].num, "1.0.0");
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+    assert!(json.versions[0].published_by.is_none());
+    assert_eq!(
+        json.versions[1].published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
 }
 
 #[test]
