@@ -94,11 +94,7 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req
-        .app()
-        .github
-        .exchange(code)
-        .map_err(|s| human(&s))?;
+    let token = req.app().github.exchange(code).map_err(|s| human(&s))?;
 
     let ghuser = github::github::<GithubUser>(req.app(), "/user", &token)?;
 
