@@ -32,11 +32,11 @@ pub fn build_router(app: &App) -> R404 {
 
     // Routes that appear to be unused
     api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show));
+    api_router.get("/versions/:version_id", C(version::deprecated::show_by_id));
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
+    api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
         C(krate::metadata::readme),
