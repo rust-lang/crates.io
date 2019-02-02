@@ -1753,6 +1753,46 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
 }
 
 #[test]
+fn reverse_dependencies_includes_published_by_user_when_present() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
+            .version("1.0.0")
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
+            .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(conn);
+
+        // Make c2's version (and,incidentally, c1's, but that doesn't matter) mimic a version
+        // published before we started recording who published versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
+
+        // c3's version will have the published by info recorded
+        CrateBuilder::new("c3", user.id)
+            .version(VersionBuilder::new("3.0.0").dependency(&c1, None))
+            .expect_build(conn);
+    });
+
+    let deps = anon.reverse_dependencies("c1");
+    assert_eq!(deps.versions.len(), 2);
+
+    let c2_version = deps.versions.iter().find(|v| v.krate == "c2").unwrap();
+    assert!(c2_version.published_by.is_none());
+
+    let c3_version = deps.versions.iter().find(|v| v.krate == "c3").unwrap();
+    assert_eq!(
+        c3_version.published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
+}
+
+#[test]
 fn author_license_and_description_required() {
     let (_, _, _, token) = TestApp::init().with_token();
 

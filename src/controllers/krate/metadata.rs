@@ -6,7 +6,8 @@
 
 use crate::controllers::prelude::*;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, Version,
+    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, User,
+    Version,
 };
 use crate::schema::*;
 use crate::views::{
@@ -218,10 +219,15 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     let versions = versions::table
         .filter(versions::id.eq(any(version_ids)))
         .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
-        .load::<(Version, String)>(&*conn)?
+        .left_outer_join(users::table)
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
+        .load::<(Version, String, Option<User>)>(&*conn)?
         .into_iter()
-        .map(|(version, krate_name)| version.encodable(&krate_name, None))
+        .map(|(version, krate_name, published_by)| version.encodable(&krate_name, published_by))
         .collect();
 
     #[derive(Serialize)]
