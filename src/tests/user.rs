@@ -93,7 +93,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(&conn));
+        .create_or_update(conn));
         t!(NewUser::new(
             2,
             "FOOBAR",
@@ -102,7 +102,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(&conn));
+        .create_or_update(conn));
     });
 
     let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();

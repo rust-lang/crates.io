@@ -118,7 +118,7 @@ impl Uploader {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket
-                    .put(&client, path, body, content_type)
+                    .put(client, path, body, content_type)
                     .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
                 Ok((Some(String::from(path)), hash))
             }

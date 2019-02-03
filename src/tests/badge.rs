@@ -317,10 +317,7 @@ fn update_attributes() {
     };
     let mut badge_attributes_travis_ci2 = HashMap::new();
     badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badges.insert(
-        String::from("travis-ci"),
-        badge_attributes_travis_ci2.clone(),
-    );
+    badges.insert(String::from("travis-ci"), badge_attributes_travis_ci2);
     krate.update(&badges);
     let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 1);

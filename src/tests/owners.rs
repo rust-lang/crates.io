@@ -146,7 +146,7 @@ fn check_ownership_two_crates() {
     let user2 = app.db_new_user("user_bar");
     let user2 = user2.as_model();
     let krate_not_owned_by_team =
-        app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(&conn));
+        app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(conn));
 
     let json = anon.search_by_user_id(user2.id);
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
@@ -176,7 +176,7 @@ fn check_ownership_one_crate() {
             .create_or_update(conn)
             .unwrap();
         let krate = CrateBuilder::new("best_crate", user.id).expect_build(conn);
-        add_team_to_crate(&t, &krate, &user, conn).unwrap();
+        add_team_to_crate(&t, &krate, user, conn).unwrap();
         t
     });
 

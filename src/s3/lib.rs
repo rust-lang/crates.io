@@ -50,7 +50,7 @@ impl Bucket {
         } else {
             path
         };
-        let date = Utc::now().to_rfc2822().to_string();
+        let date = Utc::now().to_rfc2822();
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = self.url(path);
 
@@ -74,7 +74,7 @@ impl Bucket {
         } else {
             path
         };
-        let date = Utc::now().to_rfc2822().to_string();
+        let date = Utc::now().to_rfc2822();
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = self.url(path);
 

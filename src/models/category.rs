@@ -93,8 +93,8 @@ impl Category {
         } = self;
         EncodableCategory {
             id: slug.clone(),
-            slug: slug.clone(),
-            description: description.clone(),
+            slug,
+            description,
             created_at,
             crates_cnt,
             category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),

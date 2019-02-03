@@ -137,7 +137,7 @@ mod test {
             name: "foo",
             ..Default::default()
         }
-        .create_or_update(&conn, None, user_id)
+        .create_or_update(conn, None, user_id)
         .unwrap();
         let version = NewVersion::new(
             krate.id,
@@ -148,7 +148,7 @@ mod test {
             0,
         )
         .unwrap();
-        let version = version.save(&conn, &[]).unwrap();
+        let version = version.save(conn, &[]).unwrap();
         (krate, version)
     }
 
