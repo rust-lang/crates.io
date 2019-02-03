@@ -23,7 +23,7 @@ use std::{
     borrow::Cow,
     env,
     sync::{
-        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
@@ -200,7 +200,7 @@ where
     }
 }
 
-static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
