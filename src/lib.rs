@@ -23,6 +23,10 @@ pub use crate::{app::App, config::Config, uploaders::Uploader};
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;
+use jemallocator::Jemalloc;
+
+#[global_allocator]
+static ALLOC: Jemalloc = Jemalloc;
 
 mod app;
 pub mod boot;
