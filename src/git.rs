@@ -4,14 +4,10 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use git2;
-use semver;
-use serde_json;
+use crate::app::App;
+use crate::util::{internal, CargoResult};
 
-use app::App;
-use util::{internal, CargoResult};
-
-use models::DependencyKind;
+use crate::models::DependencyKind;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {

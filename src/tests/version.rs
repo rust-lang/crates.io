@@ -1,11 +1,11 @@
-use serde_json::Value;
+use crate::{
+    builders::{CrateBuilder, PublishBuilder, VersionBuilder},
+    RequestHelper, TestApp, VersionResponse,
+};
+use cargo_registry::{schema::versions, views::EncodableVersion};
 
 use diesel::prelude::*;
-
-use builders::{CrateBuilder, PublishBuilder, VersionBuilder};
-use schema::versions;
-use views::EncodableVersion;
-use {RequestHelper, TestApp, VersionResponse};
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct VersionList {

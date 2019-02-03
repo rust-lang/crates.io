@@ -8,32 +8,21 @@
 #[macro_use]
 extern crate serde_derive;
 
-extern crate cargo_registry;
-extern crate chrono;
-extern crate diesel;
-extern crate docopt;
-extern crate flate2;
-extern crate itertools;
-extern crate reqwest;
-extern crate tar;
-extern crate toml;
+use cargo_registry::{
+    db,
+    models::Version,
+    render::readme_to_html,
+    schema::{crates, readme_renderings, versions},
+    Config,
+};
+use std::{io::Read, path::Path, thread};
 
 use chrono::{TimeZone, Utc};
-use diesel::dsl::any;
-use diesel::prelude::*;
+use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
 use itertools::Itertools;
-use std::io::Read;
-use std::path::Path;
-use std::thread;
-use tar::Archive;
-
-use cargo_registry::render::readme_to_html;
-use cargo_registry::Config;
-
-use cargo_registry::models::Version;
-use cargo_registry::schema::*;
+use tar::{self, Archive};
 
 const DEFAULT_PAGE_SIZE: usize = 25;
 const USAGE: &str = "
@@ -59,7 +48,7 @@ fn main() {
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
     let config = Config::default();
-    let conn = cargo_registry::db::connect_now().unwrap();
+    let conn = db::connect_now().unwrap();
 
     let start_time = Utc::now();
 

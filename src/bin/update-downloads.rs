@@ -1,16 +1,17 @@
 #![deny(warnings)]
 #![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
-extern crate cargo_registry;
 #[macro_use]
 extern crate diesel;
 
-use diesel::prelude::*;
-use std::env;
-use std::time::Duration;
+use cargo_registry::{
+    db,
+    models::VersionDownload,
+    schema::{crate_downloads, crates, metadata, version_downloads, versions},
+};
+use std::{env, thread, time::Duration};
 
-use cargo_registry::models::VersionDownload;
-use cargo_registry::schema::*;
+use diesel::prelude::*;
 
 static LIMIT: i64 = 1000;
 
@@ -18,11 +19,11 @@ fn main() {
     let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
     let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
     loop {
-        let conn = cargo_registry::db::connect_now().unwrap();
+        let conn = db::connect_now().unwrap();
         update(&conn).unwrap();
         drop(conn);
         if daemon {
-            std::thread::sleep(Duration::new(sleep.unwrap(), 0));
+            thread::sleep(Duration::new(sleep.unwrap(), 0));
         } else {
             break;
         }
@@ -30,9 +31,9 @@ fn main() {
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
+    use crate::version_downloads::dsl::*;
     use diesel::dsl::now;
     use diesel::select;
-    use version_downloads::dsl::*;
 
     let mut max = Some(0);
     while let Some(m) = max {
@@ -113,13 +114,12 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
 #[cfg(test)]
 mod test {
-    extern crate semver;
-
-    use std::collections::HashMap;
-
     use super::*;
-    use cargo_registry::env;
-    use cargo_registry::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use cargo_registry::{
+        env,
+        models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
+    };
+    use std::collections::HashMap;
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();
@@ -184,7 +184,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -196,7 +196,7 @@ mod test {
             .first(&conn);
         assert_eq!(Ok(1), crate_downloads);
         crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -221,7 +221,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -245,7 +245,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -295,7 +295,7 @@ mod test {
             .filter(crates::id.eq(krate.id))
             .first::<Crate>(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version2 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -309,7 +309,7 @@ mod test {
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
         crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version3 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -344,7 +344,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let versions_changed = versions::table
             .select(versions::updated_at.ne(now - 2.days()))
             .get_result(&conn);

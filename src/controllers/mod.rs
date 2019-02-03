@@ -5,11 +5,11 @@ mod prelude {
     pub use conduit::{Request, Response};
     pub use conduit_router::RequestParams;
 
-    pub use db::RequestTransaction;
-    pub use util::{human, CargoResult};
+    pub use crate::db::RequestTransaction;
+    pub use crate::util::{human, CargoResult};
 
-    pub use middleware::app::RequestApp;
-    pub use middleware::current_user::RequestUser;
+    pub use crate::middleware::app::RequestApp;
+    pub use crate::middleware::current_user::RequestUser;
 
     use std::collections::HashMap;
     use std::io;
@@ -28,7 +28,7 @@ mod prelude {
 
     impl<'a> RequestUtils for dyn Request + 'a {
         fn json<T: Serialize>(&self, t: &T) -> Response {
-            ::util::json_response(t)
+            crate::util::json_response(t)
         }
 
         fn query(&self) -> HashMap<String, String> {

@@ -2,9 +2,9 @@
 
 use super::prelude::*;
 
+use crate::util::RequestProxy;
 use conduit::Method;
 use std::io;
-use util::RequestProxy;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]

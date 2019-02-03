@@ -5,15 +5,11 @@
 //! period of time to ensure there are no external users of an endpoint before
 //! it is removed.
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use url;
-
-use models::Version;
-use schema::*;
-use views::EncodableVersion;
-
-use super::version_and_crate;
+use crate::models::{Crate, Version};
+use crate::schema::*;
+use crate::views::EncodableVersion;
 
 /// Handles the `GET /versions` route.
 pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
@@ -42,28 +38,18 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     Ok(req.json(&R { versions }))
 }
 
-/// Handles the `GET /versions/:version_id` and
-/// `GET /crates/:crate_id/:version` routes.
-///
-/// The frontend doesn't appear to hit either of these endpoints. Instead the
-/// version information appears to be returned by `krate::show`.
-///
-/// FIXME: These two routes have very different semantics and should be split into
-/// a separate function for each endpoint.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
-    let (version, krate) = match req.params().find("crate_id") {
-        Some(..) => version_and_crate(req)?,
-        None => {
-            let id = &req.params()["version_id"];
-            let id = id.parse().unwrap_or(0);
-            let conn = req.db_conn()?;
-            versions::table
-                .find(id)
-                .inner_join(crates::table)
-                .select((versions::all_columns, ::models::krate::ALL_COLUMNS))
-                .first(&*conn)?
-        }
-    };
+/// Handles the `GET /versions/:version_id` route.
+/// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
+/// be returned by `krate::show`.
+pub fn show_by_id(req: &mut dyn Request) -> CargoResult<Response> {
+    let id = &req.params()["version_id"];
+    let id = id.parse().unwrap_or(0);
+    let conn = req.db_conn()?;
+    let (version, krate): (Version, Crate) = versions::table
+        .find(id)
+        .inner_join(crates::table)
+        .select((versions::all_columns, crate::models::krate::ALL_COLUMNS))
+        .first(&*conn)?;
 
     #[derive(Serialize)]
     struct R {

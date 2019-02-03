@@ -1,17 +1,13 @@
 use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
-use diesel;
 use diesel::prelude::*;
-use semver;
-use serde_json;
 
-use license_exprs;
-use util::{human, CargoResult};
+use crate::util::{human, CargoResult};
 
-use models::{Crate, Dependency};
-use schema::*;
-use views::{EncodableVersion, EncodableVersionLinks};
+use crate::models::{Crate, Dependency};
+use crate::schema::*;
+use crate::views::{EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable)]
@@ -105,8 +101,8 @@ impl Version {
     }
 
     pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
+        use crate::schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
-        use schema::readme_renderings::dsl::*;
 
         diesel::insert_into(readme_renderings)
             .values(version_id.eq(self.id))
@@ -145,10 +141,10 @@ impl NewVersion {
     }
 
     pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
+        use crate::schema::version_authors::{name, version_id};
+        use crate::schema::versions::dsl::*;
         use diesel::dsl::exists;
         use diesel::{insert_into, select};
-        use schema::version_authors::{name, version_id};
-        use schema::versions::dsl::*;
 
         conn.transaction(|| {
             let already_uploaded = versions

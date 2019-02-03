@@ -2,12 +2,12 @@ use diesel::dsl::now;
 use diesel::prelude::*;
 use std::borrow::Cow;
 
-use app::App;
-use util::CargoResult;
+use crate::app::App;
+use crate::util::CargoResult;
 
-use models::{Crate, CrateOwner, NewEmail, Owner, OwnerKind, Rights};
-use schema::{crate_owners, emails, users};
-use views::{EncodablePrivateUser, EncodablePublicUser};
+use crate::models::{Crate, CrateOwner, NewEmail, Owner, OwnerKind, Rights};
+use crate::schema::{crate_owners, emails, users};
+use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
@@ -53,12 +53,12 @@ impl<'a> NewUser<'a> {
 
     /// Inserts the user into the database, or updates an existing one.
     pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
+        use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
         use diesel::NotFound;
-        use schema::users::dsl::*;
 
         conn.transaction(|| {
             let user = insert_into(users)
@@ -96,7 +96,7 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    ::email::send_user_confirm_email(user_email, &user.gh_login, &token)
+                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
                         .map_err(|_| NotFound)?;
                 }
             }
@@ -109,9 +109,9 @@ impl<'a> NewUser<'a> {
 impl User {
     /// Queries the database for a user with a certain `api_token` value.
     pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
+        use crate::schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token, user_id};
+        use crate::schema::users::dsl::{id, users};
         use diesel::update;
-        use schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token, user_id};
-        use schema::users::dsl::{id, users};
         let tokens = api_tokens
             .filter(token.eq(token_))
             .filter(revoked.eq(false));

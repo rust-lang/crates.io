@@ -1,23 +1,20 @@
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel;
 use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use license_exprs;
-use semver;
 use url::Url;
 
-use app::App;
-use util::{human, CargoResult};
+use crate::app::App;
+use crate::util::{human, CargoResult};
 
-use models::{
+use crate::models::{
     Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
-use views::{EncodableCrate, EncodableCrateLinks};
+use crate::views::{EncodableCrate, EncodableCrateLinks};
 
-use models::helpers::with_count::*;
-use schema::*;
+use crate::models::helpers::with_count::*;
+use crate::schema::*;
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
@@ -194,9 +191,9 @@ impl<'a> NewCrate<'a> {
     }
 
     fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
+        use crate::schema::reserved_crate_names::dsl::*;
         use diesel::dsl::exists;
         use diesel::select;
-        use schema::reserved_crate_names::dsl::*;
 
         let reserved_name = select(exists(
             reserved_crate_names.filter(canon_crate_name(name).eq(canon_crate_name(self.name))),
@@ -210,7 +207,7 @@ impl<'a> NewCrate<'a> {
     }
 
     fn save_new_crate(&self, conn: &PgConnection, user_id: i32) -> QueryResult<Option<Crate>> {
-        use schema::crates::dsl::*;
+        use crate::schema::crates::dsl::*;
 
         conn.transaction(|| {
             let maybe_inserted = diesel::insert_into(crates)
@@ -396,7 +393,7 @@ impl Crate {
     }
 
     pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
-        use schema::versions::dsl::*;
+        use crate::schema::versions::dsl::*;
 
         let vs = self
             .versions()
@@ -526,7 +523,7 @@ sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use models::Crate;
+    use crate::models::Crate;
 
     #[test]
     fn documentation_blocked_no_url_provided() {

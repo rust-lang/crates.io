@@ -1,36 +1,27 @@
-extern crate diesel;
-extern crate tempdir;
-
-use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io;
-use std::io::prelude::*;
-
-use self::diesel::prelude::*;
-use self::tempdir::TempDir;
-use chrono::Utc;
-use diesel::dsl::*;
-use diesel::update;
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use git2;
-use serde_json;
-use tar;
-
-use cargo_registry::git;
-use cargo_registry::models::krate::MAX_NAME_LENGTH;
-
-use builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder};
-use models::{Category, Crate};
-use schema::{api_tokens, crates, emails, metadata, versions};
-use views::{
-    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
-    EncodableVersionDownload,
-};
-use {
+use crate::{
+    builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder},
     new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
     RequestHelper, TestApp,
 };
+use cargo_registry::{
+    git,
+    models::{krate::MAX_NAME_LENGTH, Category, Crate},
+    schema::{api_tokens, crates, emails, metadata, versions},
+    views::{
+        EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
+        EncodableVersionDownload,
+    },
+};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{self, prelude::*},
+};
+
+use chrono::Utc;
+use diesel::{dsl::*, prelude::*, update};
+use flate2::{write::GzEncoder, Compression};
+use tempdir::TempDir;
 
 #[derive(Deserialize)]
 struct VersionsList {
@@ -63,22 +54,22 @@ struct SummaryResponse {
     popular_categories: Vec<EncodableCategory>,
 }
 
-impl ::util::MockAnonymousUser {
+impl crate::util::MockAnonymousUser {
     fn reverse_dependencies(&self, krate_name: &str) -> RevDeps {
         let url = format!("/api/v1/crates/{}/reverse_dependencies", krate_name);
         self.get(&url).good()
     }
 }
 
-impl ::util::MockTokenUser {
+impl crate::util::MockTokenUser {
     /// Yank the specified version of the specified crate.
-    fn yank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+    fn yank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
         self.delete(&url)
     }
 
     /// Unyank the specified version of the specified crate.
-    fn unyank(&self, krate_name: &str, version: &str) -> ::util::Response<OkBool> {
+    fn unyank(&self, krate_name: &str, version: &str) -> crate::util::Response<OkBool> {
         let url = format!("/api/v1/crates/{}/{}/unyank", krate_name, version);
         self.put(&url, &[])
     }
@@ -700,6 +691,37 @@ fn reject_new_krate_with_non_exact_dependency() {
 }
 
 #[test]
+fn new_crate_allow_empty_alternative_registry_dependency() {
+    let (app, _, user, token) = TestApp::with_proxy().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
+    });
+
+    let dependency = DependencyBuilder::new("foo-dep").registry("");
+    let crate_to_publish = PublishBuilder::new("foo").dependency(dependency);
+    token.publish(crate_to_publish).good();
+}
+
+#[test]
+fn reject_new_crate_with_alternative_registry_dependency() {
+    let (_, _, _, token) = TestApp::init().with_token();
+
+    let dependency =
+        DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
+
+    let crate_to_publish = PublishBuilder::new("depends-on-alt-registry").dependency(dependency);
+    let json = token.publish(crate_to_publish).bad_with_status(200);
+    assert!(
+        json.errors[0]
+            .detail
+            .contains("Cross-registry dependencies are not permitted on crates.io."),
+        "{:?}",
+        json.errors
+    );
+}
+
+#[test]
 fn new_krate_with_wildcard_dependency() {
     let (app, _, user, token) = TestApp::init().with_token();
 
@@ -977,8 +999,8 @@ fn new_krate_git_upload_appends() {
 #[test]
 fn new_krate_git_upload_with_conflicts() {
     {
-        ::git::init();
-        let repo = git2::Repository::open(&::git::bare()).unwrap();
+        crate::git::init();
+        let repo = git2::Repository::open(&crate::git::bare()).unwrap();
         let target = repo.head().unwrap().target().unwrap();
         let sig = repo.signature().unwrap();
         let parent = repo.find_commit(target).unwrap();
@@ -2006,7 +2028,7 @@ fn clone_remote_repo() -> TempDir {
     use url::Url;
 
     let tempdir = TempDir::new("tests").unwrap();
-    let url = Url::from_file_path(::git::bare()).unwrap();
+    let url = Url::from_file_path(crate::git::bare()).unwrap();
     git2::Repository::clone(url.as_str(), tempdir.path()).unwrap();
     tempdir
 }

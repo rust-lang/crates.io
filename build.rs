@@ -1,7 +1,3 @@
-extern crate diesel;
-extern crate diesel_migrations;
-extern crate dotenv;
-
 use diesel::prelude::*;
 use diesel_migrations::run_pending_migrations;
 use dotenv::dotenv;

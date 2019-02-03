@@ -113,32 +113,34 @@ of the information availble through our API.
 If the index does not have the information you need, we're also happy to
 discuss solutions to your needs that don't require you to crawl the registry.
 You can email us at <a href="mailto:help@crates.io">help@crates.io</a>.
+</p>
 
+<p>
 We allow our API and website to be crawled by commercial crawlers such as
 GoogleBot. At our discretion, we may choose to allow access to experimental
 crawlers, as long as they limit their request rate to 1 request per second or
 less.
+</p>
 
+<p>
 We also require all crawlers to provide a user-agent header that allows us to
 uniquely identify your bot. This allows us to more accurately monitor any
 impact your bot may have on our service. Providing a user agent that only
-identifies your HTTP client library (such as "request/0.9.1") increases the
+identifies your HTTP client library (such as "<code>request/0.9.1</code>") increases the
 likelihood that we will block your traffic.
 
 It is recommended, but not required, to include contact information in your user
 agent. This allows us to contact you if we would like a change in your bot's
 behavior without having to block your traffic.
+</p>
 
-Bad:
-  User-Agent: reqwest/0.9.1
+<p>
+Bad: "<code>User-Agent: reqwest/0.9.1</code>"<br>
+Better: "<code>User-Agent: my_bot</code>"<br>
+Best: "<code>User-Agent: my_bot (my_bot.com/info)</code>" or "<code>User-Agent: my_bot (help@my_bot.com)</code>"
+</p>
 
-Better:
-  User-Agent: my_bot
-
-Best:
-  User-Agent: my_bot (my_bot.com/info)
-  User-Agent: my_bot (help@my_bot.com)
-
+<p>
 We reserve the right to block traffic from any bot that we determine to be in
 violation of this policy or causing an impact on the integrity of our service.
 </p>

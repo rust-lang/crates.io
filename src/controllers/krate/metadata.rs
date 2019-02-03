@@ -4,20 +4,20 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use controllers::prelude::*;
-use models::{
+use crate::controllers::prelude::*;
+use crate::models::{
     Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, Version,
 };
-use schema::*;
-use views::{
+use crate::schema::*;
+use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
 
-use models::krate::ALL_COLUMNS;
+use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
 pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
-    use schema::crates::dsl::*;
+    use crate::schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
     let num_crates = crates.count().get_result(&*conn)?;
@@ -116,7 +116,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         .load(&*conn)?;
     let cats = CrateCategory::belonging_to(&krate)
         .inner_join(categories::table)
-        .select(::models::category::ALL_COLUMNS)
+        .select(crate::models::category::ALL_COLUMNS)
         .load(&*conn)?;
     let recent_downloads = CrateDownload::belonging_to(&krate)
         .filter(crate_downloads::date.gt(date(now - 90.days())))

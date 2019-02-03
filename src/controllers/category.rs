@@ -1,8 +1,8 @@
 use super::prelude::*;
 
-use models::Category;
-use schema::categories;
-use views::{EncodableCategory, EncodableCategoryWithSubcategories};
+use crate::models::Category;
+use crate::schema::categories;
+use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
 pub fn index(req: &mut dyn Request) -> CargoResult<Response> {

@@ -1,10 +1,10 @@
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
+use crate::github;
 use conduit_cookie::RequestSession;
-use github;
 use rand::{thread_rng, Rng};
 
-use models::NewUser;
+use crate::models::NewUser;
 
 /// Handles the `GET /authorize_url` route.
 ///

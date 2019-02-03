@@ -9,6 +9,7 @@ pub use self::current_user::CurrentUser;
 pub use self::debug::*;
 pub use self::ember_index_rewrite::EmberIndexRewrite;
 pub use self::head::Head;
+use self::log_connection_pool_status::LogConnectionPoolStatus;
 pub use self::security_headers::SecurityHeaders;
 pub use self::static_or_continue::StaticOrContinue;
 
@@ -19,6 +20,7 @@ mod debug;
 mod ember_index_rewrite;
 mod ensure_well_formed_500;
 mod head;
+mod log_connection_pool_status;
 mod log_request;
 mod require_user_agent;
 mod security_headers;
@@ -28,12 +30,11 @@ use conduit_conditional_get::ConditionalGet;
 use conduit_cookie::{Middleware as Cookie, SessionMiddleware};
 use conduit_middleware::MiddlewareBuilder;
 
-use cookie;
 use std::env;
 use std::sync::Arc;
 
-use router::R404;
-use {App, Env};
+use crate::router::R404;
+use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
@@ -52,6 +53,10 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     if env::var_os("DEBUG_REQUESTS").is_some() {
         m.add(DebugRequest);
+    }
+
+    if env::var_os("LOG_CONNECTION_POOL_STATUS").is_some() {
+        m.add(LogConnectionPoolStatus::new(&app));
     }
 
     m.add(ConditionalGet);

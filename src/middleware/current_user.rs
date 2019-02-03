@@ -3,11 +3,11 @@ use super::prelude::*;
 use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
-use db::RequestTransaction;
-use util::errors::{std_error, CargoResult, ChainError, Unauthorized};
+use crate::db::RequestTransaction;
+use crate::util::errors::{std_error, CargoResult, ChainError, Unauthorized};
 
-use models::User;
-use schema::users;
+use crate::models::User;
+use crate::schema::users;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CurrentUser;
@@ -20,6 +20,8 @@ pub enum AuthenticationSource {
 
 impl Middleware for CurrentUser {
     fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
+        use std::mem::drop;
+
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {
             req.session()
@@ -32,6 +34,7 @@ impl Middleware for CurrentUser {
         if let Some(id) = id {
             // If it did, look for a user in the database with the given `user_id`
             let maybe_user = users::table.find(id).first::<User>(&*conn);
+            drop(conn);
             if let Ok(user) = maybe_user {
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
@@ -46,6 +49,7 @@ impl Middleware for CurrentUser {
             } else {
                 None
             };
+            drop(conn);
             if let Some(user) = user {
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);

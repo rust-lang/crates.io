@@ -7,8 +7,8 @@ use serde::de::DeserializeOwned;
 
 use std::str;
 
-use app::App;
-use util::{errors::NotFound, human, internal, CargoError, CargoResult};
+use crate::app::App;
+use crate::util::{errors::NotFound, human, internal, CargoError, CargoResult};
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use

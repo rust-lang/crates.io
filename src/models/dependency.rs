@@ -1,12 +1,11 @@
 use diesel::prelude::*;
-use semver;
 
-use git;
-use util::{human, CargoResult};
+use crate::git;
+use crate::util::{human, CargoResult};
 
-use models::{Crate, Version};
-use schema::*;
-use views::{EncodableCrateDependency, EncodableDependency};
+use crate::models::{Crate, Version};
+use crate::schema::*;
+use crate::views::{EncodableCrateDependency, EncodableDependency};
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
 #[belongs_to(Version)]
@@ -81,6 +80,12 @@ pub fn add_dependencies(
     let git_and_new_dependencies = deps
         .iter()
         .map(|dep| {
+            if let Some(registry) = &dep.registry {
+                if !registry.is_empty() {
+                    return Err(human(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
+                }
+            }
+
             // Match only identical names to ensure the index always references the original crate name
             let krate = Crate::by_exact_name(&dep.name)
                 .first::<Crate>(&*conn)

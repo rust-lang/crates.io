@@ -5,6 +5,7 @@ version = "0.2.2"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"
 description = "Backend of crates.io"
+edition = "2018"
 
 [workspace]
 
@@ -37,7 +38,7 @@ url = "1.2.1"
 tar = "0.4.13"
 base64 = "0.9"
 
-openssl = "0.9.14"
+openssl = "0.10.13"
 oauth2 = "0.3"
 log = "0.3"
 env_logger = "0.5"
@@ -61,14 +62,15 @@ scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
 reqwest = "0.9.1"
 tempdir = "0.3.7"
+parking_lot = "0.7.1"
 
-lettre = "0.8"
-lettre_email = "0.8"
+lettre = {git = "https://github.com/lettre/lettre", version = "0.9"}
+lettre_email = {git = "https://github.com/lettre/lettre", version = "0.9"}
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
-conduit-cookie = "0.8"
-cookie = "0.9"
+conduit-cookie = "0.8.5"
+cookie = "0.11"
 conduit-middleware = "0.8"
 conduit-router = "0.8"
 conduit-static = "0.8"
@@ -78,7 +80,7 @@ civet = "0.9"
 [dev-dependencies]
 conduit-test = "0.8"
 hyper = "0.12"
-hyper-tls = "0.2"
+hyper-tls = "0.3"
 futures = "0.1"
 lazy_static = "1.0"
 tokio-core = "0.1"
@@ -88,7 +90,3 @@ tokio-service = "0.1"
 dotenv = "0.11"
 diesel = { version = "1.3.0", features = ["postgres"] }
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
-
-# Remove once cookie depends on ring >= 0.13.0
-[patch.crates-io]
-ring = { git = "https://github.com/SergioBenitez/ring", branch = "v0.11" }

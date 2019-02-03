@@ -5,13 +5,13 @@
 
 use std::cmp;
 
-use controllers::prelude::*;
+use crate::controllers::prelude::*;
 
-use models::{Crate, CrateVersions, Version, VersionDownload};
-use schema::version_downloads;
-use views::EncodableVersionDownload;
+use crate::models::{Crate, CrateVersions, Version, VersionDownload};
+use crate::schema::version_downloads;
+use crate::views::EncodableVersionDownload;
 
-use models::krate::to_char;
+use crate::models::krate::to_char;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {

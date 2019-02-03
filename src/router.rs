@@ -2,13 +2,12 @@ use std::error::Error;
 use std::sync::Arc;
 
 use conduit::{Handler, Request, Response};
-use conduit_git_http_backend;
 use conduit_router::{RequestParams, RouteBuilder};
 
-use controllers::*;
-use util::errors::{std_error, CargoError, CargoResult, NotFound};
-use util::RequestProxy;
-use {App, Env};
+use crate::controllers::*;
+use crate::util::errors::{std_error, CargoError, CargoResult, NotFound};
+use crate::util::RequestProxy;
+use crate::{App, Env};
 
 pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();
@@ -33,11 +32,11 @@ pub fn build_router(app: &App) -> R404 {
 
     // Routes that appear to be unused
     api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show));
+    api_router.get("/versions/:version_id", C(version::deprecated::show_by_id));
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
+    api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
         C(krate::metadata::readme),
@@ -174,12 +173,11 @@ impl Handler for R404 {
 
 #[cfg(test)]
 mod tests {
-    extern crate conduit_test;
-
-    use self::conduit_test::MockRequest;
     use super::*;
+    use crate::util::errors::{bad_request, human, internal, NotFound, Unauthorized};
+
+    use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
-    use util::errors::*;
 
     fn err<E: CargoError>(err: E) -> CargoResult<Response> {
         Err(Box::new(err))

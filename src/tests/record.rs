@@ -1,31 +1,20 @@
-extern crate base64;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate reqwest;
-extern crate tokio_core;
-extern crate tokio_service;
+use crate::new_user;
+use cargo_registry::models::NewUser;
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    env,
+    fs::{self, File},
+    io::{self, prelude::*},
+    net,
+    path::PathBuf,
+    str,
+    sync::{Arc, Mutex, Once},
+    thread,
+};
 
-use std::borrow::Cow;
-use std::collections::HashSet;
-use std::env;
-use std::fs::{self, File};
-use std::io;
-use std::io::prelude::*;
-use std::net;
-use std::path::PathBuf;
-use std::str;
-use std::sync::{Arc, Mutex, Once};
-use std::thread;
-
-use self::futures::sync::oneshot;
-use self::futures::{future, Future, Stream};
-use self::tokio_core::net::TcpListener;
-use self::tokio_core::reactor::Core;
-use serde_json;
-
-use models::NewUser;
-use new_user;
+use futures::{future, sync::oneshot, Future, Stream};
+use tokio_core::{net::TcpListener, reactor::Core};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -161,7 +150,8 @@ impl hyper::service::Service for Proxy {
     type ReqBody = hyper::Body;
     type ResBody = hyper::Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
+    type Future =
+        Box<dyn Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
 
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
         let record2 = self.record.clone();
@@ -186,7 +176,7 @@ impl hyper::service::NewService for Proxy {
     type ResBody = hyper::Body;
     type Error = hyper::Error;
     type Service = Proxy;
-    type Future = Box<Future<Item = Self::Service, Error = Self::InitError> + Send>;
+    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
     type InitError = hyper::Error;
 
     fn new_service(&self) -> Self::Future {
@@ -220,7 +210,7 @@ type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnect
 fn record_http(
     req: hyper::Request<hyper::Body>,
     client: &Client,
-) -> Box<Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+) -> Box<dyn Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
     let (header_parts, body) = req.into_parts();
     let method = header_parts.method;
     let uri = header_parts.uri;
@@ -277,8 +267,8 @@ fn record_http(
 fn replay_http(
     req: hyper::Request<hyper::Body>,
     mut exchange: Exchange,
-    stdout: &mut Write,
-) -> Box<Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
+    stdout: &mut dyn Write,
+) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
     static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
@@ -350,7 +340,7 @@ impl GhUser {
             return;
         }
 
-        let password = ::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
+        let password = crate::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
         #[derive(Serialize)]
         struct Authorization {
             scopes: Vec<String>,
@@ -364,8 +354,8 @@ impl GhUser {
             .json(&Authorization {
                 scopes: vec!["read:org".to_string()],
                 note: "crates.io test".to_string(),
-                client_id: ::env("GH_CLIENT_ID"),
-                client_secret: ::env("GH_CLIENT_SECRET"),
+                client_id: crate::env("GH_CLIENT_ID"),
+                client_secret: crate::env("GH_CLIENT_SECRET"),
             })
             .basic_auth(self.login, Some(password));
 

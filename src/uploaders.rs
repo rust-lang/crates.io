@@ -1,22 +1,18 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
 use openssl::hash::{Hasher, MessageDigest};
-use reqwest;
-use s3;
-use semver;
-use tar;
 
-use util::LimitErrorReader;
-use util::{human, internal, CargoResult, ChainError, Maximums};
+use crate::util::LimitErrorReader;
+use crate::util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::sync::Arc;
 
-use app::App;
-use middleware::app::RequestApp;
-use models::Crate;
+use crate::app::App;
+use crate::middleware::app::RequestApp;
+use crate::models::Crate;
 
 fn require_test_app_with_proxy() -> ! {
     panic!("No uploader is configured.  In tests, use `TestApp::with_proxy()`.");
@@ -262,5 +258,5 @@ fn verify_tarball(
 fn hash(data: &[u8]) -> Vec<u8> {
     let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
     hasher.update(data).unwrap();
-    hasher.finish2().unwrap().to_vec()
+    hasher.finish().unwrap().to_vec()
 }

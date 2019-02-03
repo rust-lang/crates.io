@@ -2,9 +2,9 @@
 
 use serde_json;
 
-use controllers::prelude::*;
-use models::{Crate, Owner, Rights, Team, User};
-use views::EncodableOwner;
+use crate::controllers::prelude::*;
+use crate::models::{Crate, Owner, Rights, Team, User};
+use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub fn owners(req: &mut dyn Request) -> CargoResult<Response> {

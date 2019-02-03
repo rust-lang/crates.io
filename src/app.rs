@@ -1,18 +1,15 @@
 //! Application-wide components in a struct accessible from each request
 
-use std::env;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use crate::{db, util::CargoResult, Config, Env};
+use std::{
+    env,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use diesel::r2d2;
-use git2;
-use oauth2;
-use reqwest;
 use scheduled_thread_pool::ScheduledThreadPool;
-
-use util::CargoResult;
-use {db, Config, Env};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
@@ -76,6 +73,7 @@ impl App {
         let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
             (_, Env::Production) => 10,
+            (_, Env::Test) => 1,
             _ => 30,
         };
 
@@ -91,7 +89,7 @@ impl App {
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
 
         App {
-            diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
+            diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
             github,
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),

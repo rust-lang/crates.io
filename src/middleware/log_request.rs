@@ -2,10 +2,10 @@
 //! information that we care about like User-Agent and Referer
 
 use super::prelude::*;
+use crate::util::request_header;
 use conduit::Request;
 use std::fmt;
 use std::time::Instant;
-use util::request_header;
 
 #[allow(missing_debug_implementations)] // We can't
 #[derive(Default)]

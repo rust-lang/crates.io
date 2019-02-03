@@ -2,9 +2,9 @@
 
 use super::prelude::*;
 
+use crate::util::request_header;
 use std::collections::HashMap;
 use std::io::Cursor;
-use util::request_header;
 
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]

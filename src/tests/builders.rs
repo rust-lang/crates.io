@@ -1,21 +1,16 @@
 //! Structs using the builder pattern that make it easier to create records in tests.
 
-use std::collections::HashMap;
-use std::io::Read;
+use cargo_registry::{
+    models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version},
+    schema::{crate_downloads, dependencies, versions},
+    util::CargoResult,
+    views::krate_publish as u,
+};
+use std::{collections::HashMap, io::Read};
 
-use chrono;
 use chrono::Utc;
 use diesel::prelude::*;
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use semver;
-use tar;
-
-use cargo_registry::util::CargoResult;
-
-use models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version};
-use schema::*;
-use views::krate_publish as u;
+use flate2::{write::GzEncoder, Compression};
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder<'a> {
@@ -375,7 +370,7 @@ impl PublishBuilder {
             .zip(&mut slices)
             .map(|(&(name, _), data)| {
                 let len = data.len() as u64;
-                (name, data as &mut Read, len)
+                (name, data as &mut dyn Read, len)
             })
             .collect::<Vec<_>>();
 
@@ -383,7 +378,7 @@ impl PublishBuilder {
     }
 
     /// Set the tarball from a Read trait object
-    pub fn files_with_io(mut self, files: &mut [(&str, &mut Read, u64)]) -> Self {
+    pub fn files_with_io(mut self, files: &mut [(&str, &mut dyn Read, u64)]) -> Self {
         let mut tarball = Vec::new();
         {
             let mut ar = tar::Builder::new(GzEncoder::new(&mut tarball, Compression::default()));
@@ -539,6 +534,7 @@ impl PublishBuilder {
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
     name: String,
+    registry: Option<String>,
     explicit_name_in_toml: Option<u::EncodableCrateName>,
     version_req: u::EncodableCrateVersionReq,
 }
@@ -548,6 +544,7 @@ impl DependencyBuilder {
     pub fn new(name: &str) -> Self {
         DependencyBuilder {
             name: name.to_string(),
+            registry: None,
             explicit_name_in_toml: None,
             version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
@@ -556,6 +553,12 @@ impl DependencyBuilder {
     /// Rename this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
         self.explicit_name_in_toml = Some(u::EncodableCrateName(new_name.to_string()));
+        self
+    }
+
+    /// Set an alternative registry for this dependency.
+    pub fn registry(mut self, registry: &str) -> Self {
+        self.registry = Some(registry.to_string());
         self
     }
 
@@ -584,6 +587,7 @@ impl DependencyBuilder {
             target: None,
             kind: None,
             explicit_name_in_toml: self.explicit_name_in_toml,
+            registry: self.registry,
         }
     }
 }

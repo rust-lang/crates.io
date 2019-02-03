@@ -1,9 +1,8 @@
 use chrono::NaiveDateTime;
-use serde_json;
 use std::collections::HashMap;
 
-use models::DependencyKind;
-use util::rfc3339;
+use crate::models::DependencyKind;
+use crate::util::rfc3339;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct EncodableBadge {

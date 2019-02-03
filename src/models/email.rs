@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 
-use models::User;
-use schema::emails;
+use crate::models::User;
+use crate::schema::emails;
 
 #[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
 #[belongs_to(User)]
