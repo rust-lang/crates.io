@@ -57,7 +57,7 @@ fn show() {
     let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
-    anon.get(&url).assert_not_found();
+    anon.get(url).assert_not_found();
 
     // Create a category and a subcategory
     app.db(|conn| {
@@ -66,7 +66,7 @@ fn show() {
     });
 
     // The category and its subcategories should be in the json
-    let json: CategoryWithSubcategories = anon.get(&url).good();
+    let json: CategoryWithSubcategories = anon.get(url).good();
     assert_eq!(json.category.category, "Foo Bar");
     assert_eq!(json.category.slug, "foo-bar");
     assert_eq!(json.category.subcategories.len(), 1);
@@ -171,10 +171,10 @@ fn category_slugs_returns_all_slugs_in_alphabetical_order() {
     let (app, anon) = TestApp::init().empty();
     app.db(|conn| {
         new_category("Foo", "foo", "For crates that foo")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
         new_category("Bar", "bar", "For crates that bar")
-            .create_or_update(&conn)
+            .create_or_update(conn)
             .unwrap();
     });
 

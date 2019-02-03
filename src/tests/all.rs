@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
 #[macro_use]
 extern crate diesel;
@@ -23,7 +22,7 @@ use std::{
     borrow::Cow,
     env,
     sync::{
-        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
@@ -200,7 +199,7 @@ where
     }
 }
 
-static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {

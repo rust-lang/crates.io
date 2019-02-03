@@ -430,7 +430,7 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(&conn)
+            .expect_build(conn)
     });
 
     let json = anon.show_crate("foo_show");
@@ -627,7 +627,7 @@ fn new_with_renamed_dependency() {
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new-krate can depend on it
-        CrateBuilder::new("package-name", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
     });
 
     let dependency = DependencyBuilder::new("package-name").rename("my-name");
@@ -662,7 +662,7 @@ fn new_krate_with_dependency() {
         // The name choice of `foo-dep` is important! It has the property of
         // name != canon_crate_name(name) and is a regression test for
         // https://github.com/rust-lang/crates.io/issues/651
-        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
     });
 
     let dependency = DependencyBuilder::new("foo-dep");
@@ -678,7 +678,7 @@ fn reject_new_krate_with_non_exact_dependency() {
     let (app, _, user, token) = TestApp::init().with_token();
 
     app.db(|conn| {
-        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo-dep", user.as_model().id).expect_build(conn);
     });
 
     // Use non-exact name for the dependency
@@ -727,7 +727,7 @@ fn new_krate_with_wildcard_dependency() {
 
     app.db(|conn| {
         // Insert a crate directly into the database so that new_wild can depend on it
-        CrateBuilder::new("foo_wild", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo_wild", user.as_model().id).expect_build(conn);
     });
 
     let dependency = DependencyBuilder::new("foo_wild").version_req("*");
@@ -750,7 +750,7 @@ fn new_krate_twice() {
 
     app.db(|conn| {
         // Insert a crate directly into the database and then we'll try to publish another version
-        CrateBuilder::new("foo_twice", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo_twice", user.as_model().id).expect_build(conn);
     });
 
     let crate_to_publish = PublishBuilder::new("foo_twice")
@@ -768,7 +768,7 @@ fn new_krate_wrong_user() {
 
     app.db(|conn| {
         // Create the foo_wrong crate with one user
-        CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(conn);
     });
 
     // Then try to publish with a different user
@@ -819,7 +819,7 @@ fn new_krate_too_big_but_whitelisted() {
     app.db(|conn| {
         CrateBuilder::new("foo_whitelist", user.as_model().id)
             .max_upload_size(2_000_000)
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let files = [("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_])];
@@ -875,7 +875,7 @@ fn new_krate_duplicate_version() {
         // Insert a crate directly into the database and then we'll try to publish the same version
         CrateBuilder::new("foo_dupe", user.as_model().id)
             .version("1.0.0")
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
@@ -895,7 +895,7 @@ fn new_crate_similar_name() {
     app.db(|conn| {
         CrateBuilder::new("Foo_similar", user.as_model().id)
             .version("1.0.0")
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
@@ -915,7 +915,7 @@ fn new_crate_similar_name_hyphen() {
     app.db(|conn| {
         CrateBuilder::new("foo_bar_hyphen", user.as_model().id)
             .version("1.0.0")
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen").version("1.1.0");
@@ -935,7 +935,7 @@ fn new_crate_similar_name_underscore() {
     app.db(|conn| {
         CrateBuilder::new("foo-bar-underscore", user.as_model().id)
             .version("1.0.0")
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore").version("1.1.0");
@@ -1191,7 +1191,7 @@ fn download() {
     app.db(|conn| {
         CrateBuilder::new("foo_download", user.id)
             .version(VersionBuilder::new("1.0.0"))
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     let assert_dl_count = |name_and_version: &str, query: Option<&str>, count: i32| {
@@ -1241,7 +1241,7 @@ fn download_nonexistent_version_of_existing_crate_404s() {
     let user = user.as_model();
 
     app.db(|conn| {
-        CrateBuilder::new("foo_bad", user.id).expect_build(&conn);
+        CrateBuilder::new("foo_bad", user.id).expect_build(conn);
     });
 
     anon.get("/api/v1/crates/foo_bad/0.1.0/download")
@@ -1254,10 +1254,10 @@ fn dependencies() {
     let user = user.as_model();
 
     app.db(|conn| {
-        let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&conn);
-        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, user.id, &conn);
-        let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&conn);
-        new_dependency(&conn, &v, &c2);
+        let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(conn);
+        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, user.id, conn);
+        let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(conn);
+        new_dependency(conn, &v, &c2);
     });
 
     let deps: Deps = anon
@@ -1283,7 +1283,7 @@ fn following() {
     let (app, _, user) = TestApp::init().with_user();
 
     app.db(|conn| {
-        CrateBuilder::new("foo_following", user.as_model().id).expect_build(&conn);
+        CrateBuilder::new("foo_following", user.as_model().id).expect_build(conn);
     });
 
     let is_following = || -> bool {
@@ -1487,7 +1487,7 @@ fn publish_after_removing_documentation() {
     app.db(|conn| {
         CrateBuilder::new("docscrate", user.id)
             .version("0.2.0")
-            .expect_build(&conn);
+            .expect_build(conn);
     });
 
     // Verify that crates start without any documentation so the next assertion can *prove*
