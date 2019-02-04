@@ -381,7 +381,7 @@ mod tests {
         let readme_text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(readme_text, Some(&repository)).unwrap();
+        let result = markdown_to_html(readme_text, Some(repository)).unwrap();
 
         assert_eq!(
             result,

@@ -39,7 +39,7 @@ mod prelude {
 
         fn redirect(&self, url: String) -> Response {
             let mut headers = HashMap::new();
-            headers.insert("Location".to_string(), vec![url.to_string()]);
+            headers.insert("Location".to_string(), vec![url]);
             Response {
                 status: (302, "Found"),
                 headers,

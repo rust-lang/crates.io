@@ -32,10 +32,10 @@ struct OwnerInvitation {
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
 pub fn handle_invite(req: &mut dyn Request) -> CargoResult<Response> {
-    let conn = &*req.db_conn()?;
-
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
+
+    let conn = &*req.db_conn()?;
 
     let crate_invite: OwnerInvitation =
         serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
@@ -50,7 +50,7 @@ pub fn handle_invite(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 fn accept_invite(
-    req: &mut dyn Request,
+    req: &dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {
@@ -88,7 +88,7 @@ fn accept_invite(
 }
 
 fn decline_invite(
-    req: &mut dyn Request,
+    req: &dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
 ) -> CargoResult<Response> {

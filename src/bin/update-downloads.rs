@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // This can be removed after diesel-1.4
 
 #[macro_use]
 extern crate diesel;
@@ -138,7 +137,7 @@ mod test {
             name: "foo",
             ..Default::default()
         }
-        .create_or_update(&conn, None, user_id)
+        .create_or_update(conn, None, user_id)
         .unwrap();
         let version = NewVersion::new(
             krate.id,
@@ -149,7 +148,7 @@ mod test {
             0,
         )
         .unwrap();
-        let version = version.save(&conn, &[]).unwrap();
+        let version = version.save(conn, &[]).unwrap();
         (krate, version)
     }
 

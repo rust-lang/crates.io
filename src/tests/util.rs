@@ -29,6 +29,7 @@ use cargo_registry::{
     uploaders::Uploader,
     App,
 };
+use diesel::PgConnection;
 use std::{rc::Rc, sync::Arc};
 
 use conduit::{Handler, Method, Request};
@@ -73,7 +74,7 @@ impl TestApp {
     /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
-    pub fn db<T, F: FnOnce(&DieselConnection) -> T>(&self, f: F) -> T {
+    pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
         let conn = self.0.app.diesel_database.get().unwrap();
         f(&conn)
     }
@@ -321,8 +322,6 @@ pub struct Bad {
     pub errors: Vec<Error>,
 }
 
-pub type DieselConnection =
-    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
 
 /// A type providing helper methods for working with responses

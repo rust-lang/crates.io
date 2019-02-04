@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
 #[macro_use]
 extern crate diesel;
@@ -23,7 +22,7 @@ use std::{
     borrow::Cow,
     env,
     sync::{
-        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
@@ -200,7 +199,7 @@ where
     }
 }
 
-static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
@@ -273,4 +272,17 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
 
 fn logout(req: &mut dyn Request) {
     req.mut_extensions().pop::<User>();
+}
+
+#[test]
+fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
+    use std::ptr;
+
+    let (_bomb, app, _) = app();
+    let conn1 = app.diesel_database.get().unwrap();
+    let conn2 = app.diesel_database.get().unwrap();
+    let conn1_ref: &PgConnection = &conn1;
+    let conn2_ref: &PgConnection = &conn2;
+
+    assert!(ptr::eq(conn1_ref, conn2_ref));
 }
