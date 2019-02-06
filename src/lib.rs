@@ -1,13 +1,4 @@
-#![deny(warnings)]
-extern crate conduit;
-extern crate futures;
-extern crate futures_cpupool;
-extern crate http;
-extern crate hyper;
-extern crate semver;
-
-#[macro_use]
-extern crate log;
+#![deny(warnings, clippy::all, missing_debug_implementations)]
 
 #[cfg(test)]
 mod tests;
@@ -19,6 +10,7 @@ use std::sync::Arc;
 use futures::{future, Future, Stream};
 use futures_cpupool::CpuPool;
 use hyper::{Body, Chunk, Method, Request, Response, Server, StatusCode, Version};
+use log::error;
 
 #[derive(Debug)]
 struct Parts(http::request::Parts);
@@ -172,6 +164,7 @@ impl ConduitRequest {
 }
 
 /// Serve a `conduit::Handler` on a thread pool
+#[derive(Debug)]
 pub struct Service<H> {
     pool: CpuPool,
     handler: Arc<H>,

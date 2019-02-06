@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
 repository = "https://github.com/jtgeibel/conduit-hyper"
 readme = "README.md"
+edition = "2018"
 
 [dependencies]
 conduit = "0.8"
