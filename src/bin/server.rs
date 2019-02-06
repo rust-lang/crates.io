@@ -4,10 +4,10 @@ use cargo_registry::{boot, build_handler, env, git, App, Config, Env};
 use std::{
     env,
     fs::{self, File},
-    sync::{mpsc::channel, Arc},
+    sync::Arc,
 };
 
-use civet::Server;
+use conduit_hyper::Service;
 
 fn main() {
     // Initialize logging
@@ -63,9 +63,8 @@ fn main() {
     } else {
         50
     };
-    let mut cfg = civet::Config::new();
-    cfg.port(port).threads(threads).keep_alive(true);
-    let _a = Server::start(cfg, app);
+    let addr = ([127, 0, 0, 1], port).into();
+    let server = Service::new(app, threads);
 
     println!("listening on port {}", port);
 
@@ -76,6 +75,5 @@ fn main() {
     }
 
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
-    let (_tx, rx) = channel::<()>();
-    rx.recv().unwrap();
+    server.run(addr);
 }
