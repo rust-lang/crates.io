@@ -13,7 +13,7 @@ before_install:
   - rustup component add clippy
 
 script:
-  - cargo fmt --check
+  - cargo fmt -- --check
   - cargo clippy --all-targets --all-features --all
   - cargo test
 
