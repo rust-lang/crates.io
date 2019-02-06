@@ -8,6 +8,15 @@ rust:
   - beta
   - nightly
 
+before_install:
+  - rustup component add rustfmt
+  - rustup component add clippy
+
+script:
+  - cargo fmt --check
+  - cargo clippy --all-targets --all-features --all
+  - cargo test
+
 notifications:
   email:
     on_success: never
