@@ -9,6 +9,7 @@ rust:
   - nightly
 
 before_install:
+  - script/ci/cargo-clean-on-new-rustc-version.sh
   - rustup component add rustfmt
   - rustup component add clippy
 
