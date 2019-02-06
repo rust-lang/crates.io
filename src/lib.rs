@@ -21,7 +21,8 @@ impl conduit::Headers for Parts {
     /// If the value of a header is not valid UTF-8, that value
     /// is replaced with the emtpy string.
     fn find(&self, key: &str) -> Option<Vec<&str>> {
-        let values = self.headers()
+        let values = self
+            .headers()
             .get_all(key)
             .iter()
             .map(|v| v.to_str().unwrap_or(""))
@@ -46,7 +47,8 @@ impl conduit::Headers for Parts {
         let mut all = Vec::new();
         for key in self.headers().keys() {
             let key = key.as_str();
-            let values = self.find(key)
+            let values = self
+                .find(key)
                 .expect("all keys should have at least one value");
             all.push((key, values));
         }
@@ -135,7 +137,8 @@ impl conduit::Request for ConduitRequest {
     ///
     /// If the header is not present or invalid UTF-8, then the empty string is returned
     fn host(&self) -> conduit::Host<'_> {
-        let host = self.parts
+        let host = self
+            .parts
             .headers()
             .get("host")
             .map(|h| h.to_str().unwrap_or(""))
