@@ -12,6 +12,9 @@ use futures_cpupool::CpuPool;
 use hyper::{Body, Chunk, Method, Request, Response, Server, StatusCode, Version};
 use log::error;
 
+// Consumers of this library need access to this particular version of `semver`
+pub use semver;
+
 #[derive(Debug)]
 struct Parts(http::request::Parts);
 
