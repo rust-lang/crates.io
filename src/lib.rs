@@ -153,7 +153,6 @@ impl conduit::Request for ConduitRequest {
     }
 
     fn body(&mut self) -> &mut Read {
-        self.body.set_position(0);
         &mut self.body
     }
 }
