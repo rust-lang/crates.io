@@ -56,6 +56,17 @@ impl Handler for InvalidStatus {
     }
 }
 
+struct AssertPathNormalized;
+impl Handler for AssertPathNormalized {
+    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+        if req.path() == "/normalized" {
+            OkResult.call(req)
+        } else {
+            ErrorResult.call(req)
+        }
+    }
+}
+
 fn build_headers(msg: &str) -> HashMap<String, Vec<String>> {
     let mut headers = HashMap::new();
     headers.insert("ok".into(), vec![msg.into()]);
@@ -105,4 +116,25 @@ fn err_responses() {
 #[test]
 fn recover_from_panic() {
     assert_generic_err(simulate_request(Panic));
+}
+
+#[test]
+fn normalize_path() {
+    use hyper::service::{NewService, Service};
+
+    let new_service = super::Service::new(AssertPathNormalized, 1);
+    let mut service = new_service.new_service().wait().unwrap();
+    let req = hyper::Request::put("//removed/.././.././normalized")
+        .body(hyper::Body::default())
+        .unwrap();
+    let resp = service.call(req).wait().unwrap();
+    assert_eq!(resp.status(), 200);
+    assert_eq!(resp.headers().len(), 1);
+
+    let req = hyper::Request::put("//normalized")
+        .body(hyper::Body::default())
+        .unwrap();
+    let resp = service.call(req).wait().unwrap();
+    assert_eq!(resp.status(), 200);
+    assert_eq!(resp.headers().len(), 1);
 }

@@ -5,6 +5,7 @@ mod tests;
 
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
+use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use futures::{future, Future, Stream};
@@ -64,6 +65,7 @@ impl Parts {
 
 struct ConduitRequest {
     parts: Parts,
+    path: String,
     body: Cursor<Chunk>,
     extensions: conduit::Extensions,
 }
@@ -122,7 +124,7 @@ impl conduit::Request for ConduitRequest {
     }
 
     fn path(&self) -> &str {
-        &self.parts.0.uri.path()
+        &*self.path
     }
 
     fn extensions(&self) -> &conduit::Extensions {
@@ -158,8 +160,33 @@ impl conduit::Request for ConduitRequest {
 
 impl ConduitRequest {
     fn new(parts: Parts, body: Chunk) -> ConduitRequest {
+        let path = parts.0.uri.path().to_string();
+        let path = Path::new(&path);
+        let path = path
+            .components()
+            .fold(PathBuf::new(), |mut result, p| match p {
+                Component::Normal(x) => {
+                    if x != "" {
+                        result.push(x)
+                    };
+                    result
+                }
+                Component::ParentDir => {
+                    result.pop();
+                    result
+                }
+                Component::RootDir => {
+                    result.push(Component::RootDir);
+                    result
+                }
+                _ => result,
+            })
+            .to_string_lossy()
+            .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
+
         ConduitRequest {
             parts,
+            path,
             body: Cursor::new(body),
             extensions: conduit::Extensions::new(),
         }
