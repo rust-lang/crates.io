@@ -43,9 +43,6 @@ impl conduit::Headers for Parts {
     }
 
     /// Returns a representation of all headers
-    ///
-    /// There is currently a bug where keys with mutliple values will be duplicated.
-    /// See: https://github.com/hyperium/http/issues/199
     fn all(&self) -> Vec<(&str, Vec<&str>)> {
         let mut all = Vec::new();
         for key in self.headers().keys() {
@@ -138,7 +135,7 @@ impl conduit::Request for ConduitRequest {
 
     /// Returns the value of the `Host` header
     ///
-    /// If the header is not present or invalid UTF-8, then the empty string is returned
+    /// If the header is not present or is invalid UTF-8, then the empty string is returned
     fn host(&self) -> conduit::Host<'_> {
         let host = self
             .parts
