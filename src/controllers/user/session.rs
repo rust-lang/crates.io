@@ -2,8 +2,7 @@ use crate::controllers::prelude::*;
 
 use crate::github;
 use conduit_cookie::RequestSession;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
 use crate::models::{NewUser, User};
 use crate::schema::users;
@@ -25,16 +24,13 @@ use crate::util::errors::{CargoError, ReadOnlyMode};
 /// }
 /// ```
 pub fn github_authorize(req: &mut dyn Request) -> CargoResult<Response> {
-    // Generate a random 16 char ASCII string
-    let mut rng = thread_rng();
-    let state: String = std::iter::repeat(())
-        .map(|()| rng.sample(Alphanumeric))
-        .take(16)
-        .collect();
+    let (url, state) = req
+        .app()
+        .github
+        .authorize_url(oauth2::CsrfToken::new_random);
+    let state = state.secret().to_string();
     req.session()
         .insert("github_oauth_state".to_string(), state.clone());
-
-    let url = req.app().github.authorize_url(state.clone());
 
     #[derive(Serialize)]
     struct R {
@@ -92,11 +88,16 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     // Fetch the access token from github using the code we just got
-    let token = req.app().github.exchange(code).map_err(|s| human(&s))?;
 
-    let ghuser = github::github::<GithubUser>(req.app(), "/user", &token)?;
-    let user = ghuser.save_to_database(&token.access_token, &*req.db_conn()?)?;
-
+    let code = AuthorizationCode::new(code);
+    let token = req
+        .app()
+        .github
+        .exchange_code(code)
+        .map_err(|s| human(&s))?;
+    let token = token.access_token();
+    let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
+    let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);

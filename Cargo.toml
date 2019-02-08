@@ -38,7 +38,7 @@ tar = "0.4.16"
 base64 = "0.9"
 
 openssl = "0.10.13"
-oauth2 = "0.3"
+oauth2 = "2.0.0"
 log = "0.4"
 env_logger = "0.5"
 hex = "0.3"

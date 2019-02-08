@@ -4,6 +4,7 @@ use crate::{db, Config, Env};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
+use oauth2::basic::BasicClient;
 use reqwest::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
@@ -16,7 +17,7 @@ pub struct App {
     pub diesel_database: db::DieselPool,
 
     /// The GitHub OAuth2 configuration
-    pub github: oauth2::Config,
+    pub github: BasicClient,
 
     /// A unique key used with conduit_cookie to generate cookies
     pub session_key: String,
@@ -43,15 +44,21 @@ impl App {
     ///
     /// - GitHub OAuth
     /// - Database connection pools
-    /// - Holds an HTTP `Client` and associated connection pool, if provided
+    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: &Config, http_client: Option<Client>) -> App {
-        let mut github = oauth2::Config::new(
-            &config.gh_client_id,
-            &config.gh_client_secret,
-            "https://github.com/login/oauth/authorize",
-            "https://github.com/login/oauth/access_token",
-        );
-        github.scopes.push(String::from("read:org"));
+        use oauth2::prelude::*;
+        use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenUrl};
+        use url::Url;
+
+        let github = BasicClient::new(
+            ClientId::new(config.gh_client_id.clone()),
+            Some(ClientSecret::new(config.gh_client_secret.clone())),
+            AuthUrl::new(Url::parse("https://github.com/login/oauth/authorize").unwrap()),
+            Some(TokenUrl::new(
+                Url::parse("https://github.com/login/oauth/access_token").unwrap(),
+            )),
+        )
+        .add_scope(Scope::new("read:org".to_string()));
 
         let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),

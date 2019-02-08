@@ -34,7 +34,7 @@ mod prelude {
 
         fn query(&self) -> IndexMap<String, String> {
             url::form_urlencoded::parse(self.query_string().unwrap_or("").as_bytes())
-                .map(|(a, b)| (a.into_owned(), b.into_owned()))
+                .into_owned()
                 .collect()
         }
 
