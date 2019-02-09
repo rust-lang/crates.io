@@ -1079,6 +1079,10 @@ fn new_krate_with_readme() {
 fn new_krate_without_any_email_warns() {
     let (app, _, _, token) = TestApp::with_proxy().with_token();
 
+    app.db(|conn| {
+        delete(emails::table).execute(conn).unwrap();
+    });
+
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
     let json = token.publish(crate_to_publish).good();
@@ -1100,15 +1104,11 @@ fn new_krate_without_any_email_warns() {
 // See https://github.com/rust-lang/crates-io-cargo-teams/issues/8
 #[test]
 fn new_krate_with_unverified_email_warns() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
-    let user = user.as_model();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     app.db(|conn| {
-        insert_into(emails::table)
-            .values((
-                emails::user_id.eq(user.id),
-                emails::email.eq("something@example.com"),
-            ))
+        update(emails::table)
+            .set((emails::verified.eq(false),))
             .execute(conn)
             .unwrap();
     });
@@ -1132,22 +1132,7 @@ fn new_krate_with_unverified_email_warns() {
 
 #[test]
 fn new_krate_with_verified_email_doesnt_warn() {
-    let (app, _, user, token) = TestApp::with_proxy().with_token();
-    let user = user.as_model();
-
-    // TODO: Move this to TestApp setup for user so we don't have to do this for every test
-    // that publishes a crate; then edit the test for the user without a verified email to
-    // remove the verified email
-    app.db(|conn| {
-        insert_into(emails::table)
-            .values((
-                emails::user_id.eq(user.id),
-                emails::email.eq("something@example.com"),
-                emails::verified.eq(true),
-            ))
-            .execute(conn)
-            .unwrap();
-    });
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_verified_email");
 
