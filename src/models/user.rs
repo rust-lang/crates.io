@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use crate::app::App;
 use crate::util::CargoResult;
 
-use crate::models::{Crate, CrateOwner, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
@@ -162,15 +162,12 @@ impl User {
         Ok(best)
     }
 
-    pub fn has_verified_email(&self, conn: &PgConnection) -> CargoResult<bool> {
-        use diesel::dsl::exists;
-        let email_exists = diesel::select(exists(
-            emails::table
-                .filter(emails::user_id.eq(self.id))
-                .filter(emails::verified.eq(true)),
-        ))
-        .get_result(&*conn)?;
-        Ok(email_exists)
+    pub fn verified_email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+        Ok(Email::belonging_to(self)
+            .select(emails::email)
+            .filter(emails::verified.eq(true))
+            .first::<String>(&*conn)
+            .optional()?)
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.

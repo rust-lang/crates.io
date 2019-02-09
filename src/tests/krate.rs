@@ -6,7 +6,7 @@ use crate::{
 use cargo_registry::{
     git,
     models::{krate::MAX_NAME_LENGTH, Category, Crate},
-    schema::{api_tokens, crates, emails, metadata, versions},
+    schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
     views::{
         EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
         EncodableVersionDownload,
@@ -1077,7 +1077,7 @@ fn new_krate_with_readme() {
 // See https://github.com/rust-lang/crates-io-cargo-teams/issues/8
 #[test]
 fn new_krate_without_any_email_warns() {
-    let (_, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
@@ -1086,6 +1086,14 @@ fn new_krate_without_any_email_warns() {
     assert_eq!(json.warnings.other[0], "You do not currently have a verified email address \
     associated with your crates.io account. Starting 2019-02-28, a verified email will be required \
     to publish crates. Visit https://crates.io/me to set and verify your email address.");
+
+    // Don't record a verified email if there isn't one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn);
+        assert!(email.is_err());
+    });
 }
 
 // This warning will soon become a hard error.
@@ -1112,6 +1120,14 @@ fn new_krate_with_unverified_email_warns() {
     assert_eq!(json.warnings.other[0], "You do not currently have a verified email address \
     associated with your crates.io account. Starting 2019-02-28, a verified email will be required \
     to publish crates. Visit https://crates.io/me to set and verify your email address.");
+
+    // Don't record a verified email if there isn't one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn);
+        assert!(email.is_err());
+    });
 }
 
 #[test]
@@ -1137,6 +1153,15 @@ fn new_krate_with_verified_email_doesnt_warn() {
 
     let json = token.publish(crate_to_publish).good();
     assert_eq!(json.warnings.other.len(), 0);
+
+    // Record a verified email because there is one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn)
+            .unwrap();
+        assert_eq!(email, "something@example.com");
+    });
 }
 
 #[test]
