@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 /**
  * Calling this route will query the `/authorize_url` API endpoint
@@ -9,17 +9,14 @@ import { inject as service } from '@ember/service';
  * https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg
  *
  * Once the user has allowed the OAuth flow access the page will redirect him
- * to the `/github_authorize` route of this application.
+ * to the `github-authorize` route of this application.
  *
  * @see https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access
- * @see `/github_authorize` route
+ * @see `github-authorize` route
  */
 export default Route.extend({
-
-    ajax: service(),
-
     async beforeModel() {
-        let url = await this.get('ajax').request(`/authorize_url`);
+        let url = await ajax(`/authorize_url`);
         window.location = url.url;
     },
 });

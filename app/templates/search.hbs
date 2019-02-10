@@ -38,7 +38,7 @@
 
                 {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                     <li>
-                        {{#link-to (query-params page=1 sort="")}}
+                        {{#link-to (query-params page=1 sort="relevance")}}
                             Relevance
                         {{/link-to}}
                     </li>
@@ -50,6 +50,11 @@
                     <li>
                         {{#link-to (query-params page=1 sort="recent-downloads")}}
                             Recent Downloads
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="recent-updates")}}
+                            Recent Updates
                         {{/link-to}}
                     </li>
                 {{/rl-dropdown}}
@@ -87,6 +92,6 @@
     </div>
 {{else}}
     <div id="no-results">
-        <h2>0 crates found. <a href='http://doc.crates.io/index.html'>Get started</a> and create your own.</h2>
+        <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
     </div>
 {{/if}}

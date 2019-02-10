@@ -1,10 +1,9 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel;
 
-use models::Crate;
-use schema::*;
-use views::EncodableKeyword;
+use crate::models::Crate;
+use crate::schema::*;
+use crate::views::EncodableKeyword;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -27,7 +26,7 @@ pub struct CrateKeyword {
 impl Keyword {
     pub fn find_by_keyword(conn: &PgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
-            .filter(keywords::keyword.eq(::lower(name)))
+            .filter(keywords::keyword.eq(crate::lower(name)))
             .first(&*conn)
     }
 
@@ -55,7 +54,8 @@ impl Keyword {
             return false;
         }
         name.chars().next().unwrap().is_alphanumeric()
-            && name.chars()
+            && name
+                .chars()
                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
             && name.chars().all(|c| c.is_ascii())
     }
@@ -69,9 +69,9 @@ impl Keyword {
         } = self;
         EncodableKeyword {
             id: keyword.clone(),
-            created_at: created_at,
-            crates_cnt: crates_cnt,
-            keyword: keyword,
+            created_at,
+            crates_cnt,
+            keyword,
         }
     }
 

@@ -1,0 +1,399 @@
+[
+  {
+    "request": {
+      "uri": "http://api.github.com/orgs/Crates-Test-Org/teams?per_page=100",
+      "method": "GET",
+      "headers": [
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "authorization",
+          "token 7534f8b996e3a3f800f0a324f619adba12a74532"
+        ],
+        [
+          "host",
+          "api.github.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "accept",
+          "application/vnd.github.v3+json"
+        ]
+      ],
+      "body": ""
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "Cache-Control",
+          "private, max-age=60, s-maxage=60"
+        ],
+        [
+          "Access-Control-Expose-Headers",
+          "ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-accepted-OAuth-Scopes, X-Poll-Interval"
+        ],
+        [
+          "X-content-type-Options",
+          "nosniff"
+        ],
+        [
+          "X-OAuth-Scopes",
+          "read:org"
+        ],
+        [
+          "content-type",
+          "application/json; charset=utf-8"
+        ],
+        [
+          "Access-Control-Allow-Origin",
+          "*"
+        ],
+        [
+          "date",
+          "Wed, 04 Oct 2017 14:52:58 GMT"
+        ],
+        [
+          "X-RateLimit-Limit",
+          "5000"
+        ],
+        [
+          "X-Runtime-rack",
+          "0.035631"
+        ],
+        [
+          "X-OAuth-Client-Id",
+          "89b6afdeaa6c6c7506ec"
+        ],
+        [
+          "X-RateLimit-Reset",
+          "1507132377"
+        ],
+        [
+          "Strict-Transport-Security",
+          "max-age=31536000; includeSubdomains; preload"
+        ],
+        [
+          "X-accepted-OAuth-Scopes",
+          "admin:org, read:org, repo, user, write:org"
+        ],
+        [
+          "ETag",
+          "\"168464471f229c2bec917d1c95ad86ff\""
+        ],
+        [
+          "Server",
+          "GitHub.com"
+        ],
+        [
+          "content-length",
+          "905"
+        ],
+        [
+          "Status",
+          "200 OK"
+        ],
+        [
+          "X-Frame-Options",
+          "deny"
+        ],
+        [
+          "Vary",
+          "accept, authorization, Cookie, X-GitHub-OTP"
+        ],
+        [
+          "X-GitHub-Media-Type",
+          "github.v3; format=json"
+        ],
+        [
+          "X-GitHub-Request-Id",
+          "CA9C:6F2F:8060D6:FB015A:59D4F5CA"
+        ],
+        [
+          "Content-Security-Policy",
+          "default-src 'none'"
+        ],
+        [
+          "X-XSS-Protection",
+          "1; mode=block"
+        ],
+        [
+          "X-RateLimit-Remaining",
+          "4995"
+        ]
+      ],
+      "body": "W3sibmFtZSI6ImNvcmUiLCJpZCI6MTY5OTM3Nywic2x1ZyI6ImNvcmUiLCJkZXNjcmlwdGlvbiI6bnVsbCwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3NyIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L3JlcG9zIiwicGVybWlzc2lvbiI6ImFkbWluIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzLTIiLCJpZCI6MTY5OTM3OSwic2x1ZyI6Imp1c3QtZm9yLWNyYXRlcy0yIiwiZGVzY3JpcHRpb24iOiJKdXN0IGZvciBDcmF0ZXMgMiIsInByaXZhY3kiOiJzZWNyZXQiLCJ1cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL3RlYW1zLzE2OTkzNzkiLCJtZW1iZXJzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9tZW1iZXJzey9tZW1iZXJ9IiwicmVwb3NpdG9yaWVzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9yZXBvcyIsInBlcm1pc3Npb24iOiJwdWxsIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzMSIsImlkIjoxNjk5Mzc4LCJzbHVnIjoianVzdC1mb3ItY3JhdGVzMSIsImRlc2NyaXB0aW9uIjoiIiwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OCIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L3JlcG9zIiwicGVybWlzc2lvbiI6InB1bGwifV0="
+    }
+  },
+  {
+    "request": {
+      "uri": "http://api.github.com/teams/1699377/memberships/crates-tester-2",
+      "method": "GET",
+      "headers": [
+        [
+          "authorization",
+          "token 7534f8b996e3a3f800f0a324f619adba12a74532"
+        ],
+        [
+          "accept",
+          "application/vnd.github.v3+json"
+        ],
+        [
+          "host",
+          "api.github.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ]
+      ],
+      "body": ""
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "X-Frame-Options",
+          "deny"
+        ],
+        [
+          "Access-Control-Expose-Headers",
+          "ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-accepted-OAuth-Scopes, X-Poll-Interval"
+        ],
+        [
+          "X-Runtime-rack",
+          "0.030002"
+        ],
+        [
+          "X-GitHub-Media-Type",
+          "github.v3; format=json"
+        ],
+        [
+          "ETag",
+          "\"a004da562b1c421613f0ca38f7a9bf2f\""
+        ],
+        [
+          "X-GitHub-Request-Id",
+          "CA9C:6F2F:8060E2:FB016C:59D4F5CA"
+        ],
+        [
+          "Vary",
+          "accept, authorization, Cookie, X-GitHub-OTP"
+        ],
+        [
+          "content-length",
+          "111"
+        ],
+        [
+          "X-OAuth-Client-Id",
+          "89b6afdeaa6c6c7506ec"
+        ],
+        [
+          "content-type",
+          "application/json; charset=utf-8"
+        ],
+        [
+          "Content-Security-Policy",
+          "default-src 'none'"
+        ],
+        [
+          "Access-Control-Allow-Origin",
+          "*"
+        ],
+        [
+          "X-XSS-Protection",
+          "1; mode=block"
+        ],
+        [
+          "X-content-type-Options",
+          "nosniff"
+        ],
+        [
+          "X-RateLimit-Limit",
+          "5000"
+        ],
+        [
+          "Server",
+          "GitHub.com"
+        ],
+        [
+          "Cache-Control",
+          "private, max-age=60, s-maxage=60"
+        ],
+        [
+          "Strict-Transport-Security",
+          "max-age=31536000; includeSubdomains; preload"
+        ],
+        [
+          "X-RateLimit-Reset",
+          "1507132377"
+        ],
+        [
+          "Status",
+          "200 OK"
+        ],
+        [
+          "date",
+          "Wed, 04 Oct 2017 14:52:58 GMT"
+        ],
+        [
+          "X-RateLimit-Remaining",
+          "4994"
+        ],
+        [
+          "X-OAuth-Scopes",
+          "read:org"
+        ],
+        [
+          "X-accepted-OAuth-Scopes",
+          "admin:org, read:org, repo, write:org"
+        ]
+      ],
+      "body": "eyJzdGF0ZSI6ImFjdGl2ZSIsInJvbGUiOiJtYWludGFpbmVyIiwidXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnNoaXBzL2NyYXRlcy10ZXN0ZXItMiJ9"
+    }
+  },
+  {
+    "request": {
+      "uri": "http://api.github.com/orgs/Crates-Test-Org",
+      "method": "GET",
+      "headers": [
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "accept",
+          "application/vnd.github.v3+json"
+        ],
+        [
+          "host",
+          "api.github.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "authorization",
+          "token 7534f8b996e3a3f800f0a324f619adba12a74532"
+        ]
+      ],
+      "body": ""
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "content-type",
+          "application/json; charset=utf-8"
+        ],
+        [
+          "Cache-Control",
+          "private, max-age=60, s-maxage=60"
+        ],
+        [
+          "Vary",
+          "accept, authorization, Cookie, X-GitHub-OTP"
+        ],
+        [
+          "X-content-type-Options",
+          "nosniff"
+        ],
+        [
+          "Content-Security-Policy",
+          "default-src 'none'"
+        ],
+        [
+          "X-GitHub-Request-Id",
+          "CA9C:6F2F:8060E5:FB0178:59D4F5CA"
+        ],
+        [
+          "Server",
+          "GitHub.com"
+        ],
+        [
+          "date",
+          "Wed, 04 Oct 2017 14:52:58 GMT"
+        ],
+        [
+          "Access-Control-Allow-Origin",
+          "*"
+        ],
+        [
+          "X-RateLimit-Remaining",
+          "4993"
+        ],
+        [
+          "Status",
+          "200 OK"
+        ],
+        [
+          "X-RateLimit-Limit",
+          "5000"
+        ],
+        [
+          "X-accepted-OAuth-Scopes",
+          "admin:org, read:org, repo, user, write:org"
+        ],
+        [
+          "X-OAuth-Client-Id",
+          "89b6afdeaa6c6c7506ec"
+        ],
+        [
+          "X-OAuth-Scopes",
+          "read:org"
+        ],
+        [
+          "Last-Modified",
+          "Tue, 18 Aug 2015 17:37:08 GMT"
+        ],
+        [
+          "X-XSS-Protection",
+          "1; mode=block"
+        ],
+        [
+          "X-Runtime-rack",
+          "0.052093"
+        ],
+        [
+          "X-Frame-Options",
+          "deny"
+        ],
+        [
+          "content-length",
+          "1168"
+        ],
+        [
+          "X-GitHub-Media-Type",
+          "github.v3; format=json"
+        ],
+        [
+          "X-RateLimit-Reset",
+          "1507132377"
+        ],
+        [
+          "Strict-Transport-Security",
+          "max-age=31536000; includeSubdomains; preload"
+        ],
+        [
+          "ETag",
+          "\"164b3fa13f1e681dc06cab6811749c2f\""
+        ],
+        [
+          "Access-Control-Expose-Headers",
+          "ETag, Link, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-accepted-OAuth-Scopes, X-Poll-Interval"
+        ]
+      ],
+      "body": "eyJsb2dpbiI6ImNyYXRlcy10ZXN0LW9yZyIsImlkIjoxMzgwNDIyMiwidXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9vcmdzL2NyYXRlcy10ZXN0LW9yZyIsInJlcG9zX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vb3Jncy9jcmF0ZXMtdGVzdC1vcmcvcmVwb3MiLCJldmVudHNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9vcmdzL2NyYXRlcy10ZXN0LW9yZy9ldmVudHMiLCJob29rc191cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL29yZ3MvY3JhdGVzLXRlc3Qtb3JnL2hvb2tzIiwiaXNzdWVzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vb3Jncy9jcmF0ZXMtdGVzdC1vcmcvaXNzdWVzIiwibWVtYmVyc191cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL29yZ3MvY3JhdGVzLXRlc3Qtb3JnL21lbWJlcnN7L21lbWJlcn0iLCJwdWJsaWNfbWVtYmVyc191cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL29yZ3MvY3JhdGVzLXRlc3Qtb3JnL3B1YmxpY19tZW1iZXJzey9tZW1iZXJ9IiwiYXZhdGFyX3VybCI6Imh0dHBzOi8vYXZhdGFyczIuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3UvMTM4MDQyMjI/dj00IiwiZGVzY3JpcHRpb24iOm51bGwsImhhc19vcmdhbml6YXRpb25fcHJvamVjdHMiOnRydWUsImhhc19yZXBvc2l0b3J5X3Byb2plY3RzIjp0cnVlLCJwdWJsaWNfcmVwb3MiOjAsInB1YmxpY19naXN0cyI6MCwiZm9sbG93ZXJzIjowLCJmb2xsb3dpbmciOjAsImh0bWxfdXJsIjoiaHR0cHM6Ly9naXRodWIuY29tL2NyYXRlcy10ZXN0LW9yZyIsImNyZWF0ZWRfYXQiOiIyMDE1LTA4LTE1VDAwOjA3OjMwWiIsInVwZGF0ZWRfYXQiOiIyMDE1LTA4LTE4VDE3OjM3OjA4WiIsInR5cGUiOiJPcmdhbml6YXRpb24iLCJ0b3RhbF9wcml2YXRlX3JlcG9zIjowLCJvd25lZF9wcml2YXRlX3JlcG9zIjowLCJwcml2YXRlX2dpc3RzIjpudWxsLCJkaXNrX3VzYWdlIjpudWxsLCJjb2xsYWJvcmF0b3JzIjpudWxsLCJiaWxsaW5nX2VtYWlsIjpudWxsLCJwbGFuIjp7Im5hbWUiOiJmcmVlIiwic3BhY2UiOjk3NjU2MjQ5OSwicHJpdmF0ZV9yZXBvcyI6MCwiZmlsbGVkX3NlYXRzIjoyLCJzZWF0cyI6MH0sImRlZmF1bHRfcmVwb3NpdG9yeV9wZXJtaXNzaW9uIjpudWxsLCJtZW1iZXJzX2Nhbl9jcmVhdGVfcmVwb3NpdG9yaWVzIjpudWxsfQ=="
+    }
+  }
+]

@@ -1,40 +1,27 @@
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
-extern crate tokio_core;
-extern crate tokio_service;
+use crate::new_user;
+use cargo_registry::models::NewUser;
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    env,
+    fs::{self, File},
+    io::{self, prelude::*},
+    net,
+    path::PathBuf,
+    str,
+    sync::{Arc, Mutex, Once},
+    thread,
+};
 
-use std::borrow::Cow;
-use std::cell::RefCell;
-use std::collections::HashSet;
-use std::env;
-use std::fs::{self, File};
-use std::io::prelude::*;
-use std::io;
-use std::net;
-use std::path::PathBuf;
-use std::rc::Rc;
-use std::str;
-use std::sync::{Arc, Mutex, Once};
-use std::thread;
-
-use curl::easy::{Easy, List};
-use self::futures::{Future, Stream};
-use self::futures::sync::oneshot;
-use self::hyper::server::Http;
-use self::tokio_core::net::TcpListener;
-use self::tokio_core::reactor::Core;
-use self::tokio_service::Service;
-use serde_json;
-
-use models::NewUser;
+use futures::{future, sync::oneshot, Future, Stream};
+use tokio_core::{net::TcpListener, reactor::Core};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
 pub struct Bomb {
     iorx: Sink,
     quittx: Option<oneshot::Sender<()>>,
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     thread: Option<thread::JoinHandle<Option<(Vec<u8>, PathBuf)>>>,
 }
 
@@ -64,9 +51,11 @@ impl Drop for Bomb {
             .to_string();
         match res {
             Err(..) if !thread::panicking() => panic!("server subtask failed: {}", stderr),
-            Err(e) => if !stderr.is_empty() {
-                println!("server subtask failed ({:?}): {}", e, stderr)
-            },
+            Err(e) => {
+                if !stderr.is_empty() {
+                    println!("server subtask failed ({:?}): {}", e, stderr)
+                }
+            }
             Ok(_) if thread::panicking() => {}
             Ok(None) => {}
             Ok(Some((data, file))) => {
@@ -117,30 +106,23 @@ pub fn proxy() -> (String, Bomb) {
         let handle = core.handle();
         let addr = t!(a.local_addr());
         let listener = t!(TcpListener::from_listener(a, &addr, &handle));
-        let client = hyper::Client::configure()
-            .connector(hyper_tls::HttpsConnector::new(4, &handle).unwrap())
-            .build(&handle);
+        let client = hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap());
 
-        let record = Rc::new(RefCell::new(record));
-        let srv = listener.incoming().for_each(|(socket, addr)| {
-            Http::new().bind_connection(
-                &handle,
-                socket,
-                addr,
-                Proxy {
-                    sink: sink2.clone(),
-                    record: Rc::clone(&record),
-                    client: client.clone(),
-                },
-            );
-            Ok(())
-        });
+        let record = Arc::new(Mutex::new(record));
+        let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
+            .serve(Proxy {
+                sink: sink2,
+                record: Arc::clone(&record),
+                client,
+            })
+            .map_err(|e| eprintln!("server connection error: {}", e));
+
         drop(core.run(srv.select2(quitrx)));
 
-        let record = record.borrow();
+        let record = record.lock().unwrap();
         match *record {
             Record::Capture(ref data, ref path) => {
-                let data = t!(serde_json::to_string(data));
+                let data = t!(serde_json::to_string_pretty(data));
                 Some((data.into_bytes(), path.clone()))
             }
             Record::Replay(..) => None,
@@ -157,35 +139,48 @@ pub fn proxy() -> (String, Bomb) {
     )
 }
 
+#[derive(Clone)]
 struct Proxy {
     sink: Sink,
-    record: Rc<RefCell<Record>>,
+    record: Arc<Mutex<Record>>,
     client: Client,
 }
 
-impl Service for Proxy {
-    type Request = hyper::Request;
-    type Response = hyper::Response;
+impl hyper::service::Service for Proxy {
+    type ReqBody = hyper::Body;
+    type ResBody = hyper::Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
+    type Future =
+        Box<dyn Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
 
-    fn call(&self, req: hyper::Request) -> Self::Future {
-        match *self.record.borrow_mut() {
-            Record::Capture(_, _) => {
-                let record = Rc::clone(&self.record);
-                Box::new(
-                    record_http(req, &self.client).map(move |(response, exchange)| {
-                        if let Record::Capture(ref mut d, _) = *record.borrow_mut() {
-                            d.push(exchange);
-                        }
-                        response
-                    }),
-                )
-            }
+    fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
+        let record2 = self.record.clone();
+        match *self.record.lock().unwrap() {
+            Record::Capture(_, _) => Box::new(record_http(req, &self.client).map(
+                move |(response, exchange)| {
+                    if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
+                        d.push(exchange);
+                    }
+                    response
+                },
+            )),
             Record::Replay(ref mut exchanges) => {
                 replay_http(req, exchanges.remove(0), &mut &self.sink)
             }
         }
+    }
+}
+
+impl hyper::service::NewService for Proxy {
+    type ReqBody = hyper::Body;
+    type ResBody = hyper::Body;
+    type Error = hyper::Error;
+    type Service = Proxy;
+    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
+    type InitError = hyper::Error;
+
+    fn new_service(&self) -> Self::Future {
+        Box::new(future::ok(self.clone()))
     }
 }
 
@@ -200,42 +195,49 @@ struct Request {
     uri: String,
     method: String,
     headers: HashSet<(String, String)>,
-    body: Vec<u8>,
+    body: String,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Response {
     status: u16,
     headers: HashSet<(String, String)>,
-    body: Vec<u8>,
+    body: String,
 }
 
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
 fn record_http(
-    req: hyper::Request,
+    req: hyper::Request<hyper::Body>,
     client: &Client,
-) -> Box<Future<Item = (hyper::Response, Exchange), Error = hyper::Error>> {
-    let (method, uri, _version, headers, body) = req.deconstruct();
+) -> Box<dyn Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+    let (header_parts, body) = req.into_parts();
+    let method = header_parts.method;
+    let uri = header_parts.uri;
+    let headers = header_parts.headers;
 
     let mut request = Request {
         uri: uri.to_string(),
         method: method.to_string(),
         headers: headers
             .iter()
-            .map(|h| (h.name().to_string(), h.value_string()))
+            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: Vec::new(),
+        body: String::new(),
     };
     let body = body.concat2();
 
     let client = client.clone();
     let response = body.and_then(move |body| {
-        request.body = body.to_vec();
+        request.body = base64::encode(&body.to_vec());
         let uri = uri.to_string().replace("http://", "https://");
-        let mut req = hyper::Request::new(method, uri.parse().unwrap());
-        *req.headers_mut() = headers;
-        req.set_body(body);
+        let uri = uri.parse::<hyper::Uri>().unwrap();
+        let mut req = hyper::Request::builder()
+            .method(method.clone())
+            .uri(uri)
+            .body(body.into())
+            .unwrap();
+        *req.headers_mut() = headers.clone();
         client.request(req).map(|r| (r, request))
     });
 
@@ -246,33 +248,29 @@ fn record_http(
             status: status.as_u16(),
             headers: headers
                 .iter()
-                .map(|h| (h.name().to_string(), h.value_string()))
+                .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
                 .collect(),
-            body: Vec::new(),
+            body: String::new(),
         };
 
-        hyper_response.body().concat2().map(move |body| {
-            response.body = body.to_vec();
-            let mut hyper_response = hyper::Response::new();
-            hyper_response.set_body(body);
-            hyper_response.set_status(status);
+        hyper_response.into_body().concat2().map(move |body| {
+            response.body = base64::encode(&body.to_vec());
+            let mut hyper_response = hyper::Response::builder();
+            hyper_response.status(status);
+            let mut hyper_response = hyper_response.body(body.into()).unwrap();
             *hyper_response.headers_mut() = headers;
-            (
-                hyper_response,
-                Exchange {
-                    response: response,
-                    request: request,
-                },
-            )
+            (hyper_response, Exchange { response, request })
         })
     }))
 }
 
 fn replay_http(
-    req: hyper::Request,
+    req: hyper::Request<hyper::Body>,
     mut exchange: Exchange,
-    stdout: &mut Write,
-) -> Box<Future<Item = hyper::Response, Error = hyper::Error>> {
+    stdout: &mut dyn Write,
+) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent"];
+
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);
     t!(writeln!(
@@ -280,13 +278,13 @@ fn replay_http(
         "expecting: {:?}",
         exchange.request.headers
     ));
-    for header in req.headers().iter() {
-        let pair = (header.name().to_string(), header.value_string());
+    for (name, value) in req.headers().iter() {
+        let pair = (
+            name.as_str().to_string(),
+            value.to_str().unwrap().to_string(),
+        );
         t!(writeln!(stdout, "received: {:?}", pair));
-        if header.name().starts_with("Date") {
-            continue;
-        }
-        if header.name().starts_with("Authorization") {
+        if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }
         if !exchange.request.headers.remove(&pair) {
@@ -294,33 +292,32 @@ fn replay_http(
         }
     }
     for (name, value) in exchange.request.headers.drain() {
-        if name.starts_with("Date") {
-            continue;
-        }
-        if name.starts_with("Authorization") {
+        if IGNORED_HEADERS.contains(&name.as_str()) {
             continue;
         }
         panic!("didn't find header {:?}", (name, value));
     }
     let req_body = exchange.request.body;
-    let verify_body = req.body().concat2().map(move |body| {
-        assert_eq!(&body[..], &req_body[..]);
+    let verify_body = req.into_body().concat2().map(move |body| {
+        let req_body = base64::decode(&req_body).unwrap();
+        assert_eq!(body.into_bytes(), req_body);
     });
 
-    let mut response = hyper::Response::new();
-    response.set_status(hyper::StatusCode::try_from(exchange.response.status).unwrap());
+    let mut response = hyper::Response::builder();
+    response.status(hyper::StatusCode::from_u16(exchange.response.status).unwrap());
     for (key, value) in exchange.response.headers {
-        response.headers_mut().append_raw(key, value);
+        response.header(key.as_str(), value.as_str());
     }
-    response.set_body(exchange.response.body);
+    let req_body2 = base64::decode(exchange.response.body.as_bytes()).unwrap();
+    let response = response.body(req_body2.into()).unwrap();
 
     Box::new(verify_body.map(|()| response))
 }
 
 impl GhUser {
-    pub fn user(&'static self) -> NewUser {
+    pub fn user(&'static self) -> NewUser<'_> {
         self.init.call_once(|| self.init());
-        let mut u = ::new_user(self.login);
+        let mut u = new_user(self.login);
         u.gh_access_token = Cow::Owned(self.token());
         u
     }
@@ -343,7 +340,7 @@ impl GhUser {
             return;
         }
 
-        let password = ::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
+        let password = crate::env(&format!("GH_PASS_{}", self.login.replace("-", "_")));
         #[derive(Serialize)]
         struct Authorization {
             scopes: Vec<String>,
@@ -351,43 +348,24 @@ impl GhUser {
             client_id: String,
             client_secret: String,
         }
-        let mut handle = Easy::new();
-        let body = serde_json::to_string(&Authorization {
-            scopes: vec!["read:org".to_string()],
-            note: "crates.io test".to_string(),
-            client_id: ::env("GH_CLIENT_ID"),
-            client_secret: ::env("GH_CLIENT_SECRET"),
-        }).unwrap();
+        let client = reqwest::Client::new();
+        let req = client
+            .post("https://api.github.com/authorizations")
+            .json(&Authorization {
+                scopes: vec!["read:org".to_string()],
+                note: "crates.io test".to_string(),
+                client_id: crate::env("GH_CLIENT_ID"),
+                client_secret: crate::env("GH_CLIENT_SECRET"),
+            })
+            .basic_auth(self.login, Some(password));
 
-        t!(handle.url("https://api.github.com/authorizations"));
-        t!(handle.username(self.login));
-        t!(handle.password(&password));
-        t!(handle.post(true));
-        t!(handle.post_fields_copy(body.as_bytes()));
-
-        let mut headers = List::new();
-        headers.append("User-Agent: hello!").unwrap();
-        t!(handle.http_headers(headers));
-
-        let mut response = Vec::new();
-        {
-            let mut transfer = handle.transfer();
-            t!(transfer.write_function(|data| {
-                response.extend(data);
-                Ok(data.len())
-            }));
-            t!(transfer.perform())
-        }
-
-        if t!(handle.response_code()) < 200 || t!(handle.response_code()) >= 300 {
-            panic!("failed to get a 200 {}", String::from_utf8_lossy(&response));
-        }
+        let mut response = t!(req.send().and_then(|r| r.error_for_status()));
 
         #[derive(Deserialize)]
         struct Response {
             token: String,
         }
-        let resp: Response = serde_json::from_str(str::from_utf8(&response).unwrap()).unwrap();
+        let resp: Response = t!(response.json());
         File::create(&self.filename())
             .unwrap()
             .write_all(resp.token.as_bytes())

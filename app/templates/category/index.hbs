@@ -1,8 +1,11 @@
 {{ title category.category ' - Categories' }}
 
 <div id='crates-heading'>
-    {{svg-jar "crate"}}
-    <h1>{{ category.category }}</h1>
+    {{#link-to "categories" (html-attributes aria-label="Categories")}}{{svg-jar "crate"}}{{/link-to}}
+    <h1>
+        {{#each category.parent_categories as |parent|}}{{link-to parent.category "category" parent.slug}}::{{/each}}
+        {{~ category.category }}
+    </h1>
 </div>
 
 <div>
@@ -67,6 +70,11 @@
                 <li>
                     {{#link-to (query-params sort="recent-downloads")}}
                         Recent Downloads
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to (query-params sort="recent-updates")}}
+                        Recent Updates
                     {{/link-to}}
                 </li>
             {{/rl-dropdown}}

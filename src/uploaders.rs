@@ -1,24 +1,27 @@
 use conduit::Request;
-use curl::easy::Easy;
 use flate2::read::GzDecoder;
-use s3;
-use semver;
-use tar;
-use util::{human, internal, CargoResult, ChainError};
-use util::{hash, LimitErrorReader, read_le_u32};
+use openssl::hash::{Hasher, MessageDigest};
 
-use app::{App, RequestApp};
-use std::sync::Arc;
-use std::fs::{self, File};
+use crate::util::LimitErrorReader;
+use crate::util::{human, internal, CargoResult, ChainError, Maximums};
+
 use std::env;
+use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::sync::Arc;
 
-use models::Crate;
+use crate::app::App;
+use crate::middleware::app::RequestApp;
+use crate::models::Crate;
+
+fn require_test_app_with_proxy() -> ! {
+    panic!("No uploader is configured.  In tests, use `TestApp::with_proxy()`.");
+}
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
-    /// For test usage with a proxy.
+    /// For test usage with `TestApp::with_proxy()`, the recording proxy is used.
     S3 {
         bucket: s3::Bucket,
         cdn: Option<String>,
@@ -29,22 +32,24 @@ pub enum Uploader {
     /// from there as well to enable local publishing and download
     Local,
 
-    /// For one-off scripts where creating a Config is needed, but uploading is not.
-    NoOp,
+    /// For tests using `TestApp::init()`
+    /// Attempts to get an outgoing HTTP handle will panic.
+    Panic,
 }
 
 impl Uploader {
     pub fn proxy(&self) -> Option<&str> {
         match *self {
             Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
-            Uploader::Local | Uploader::NoOp => None,
+            Uploader::Local => None,
+            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 
     /// Returns the URL of an uploaded crate's version archive.
     ///
     /// The function doesn't check for the existence of the file.
-    /// It returns `None` if the current `Uploader` is `NoOp`.
+    /// It returns `None` if the current `Uploader` is `Panic`.
     pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 {
@@ -60,14 +65,14 @@ impl Uploader {
                 Some(format!("https://{}/{}", host, path))
             }
             Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
-            Uploader::NoOp => None,
+            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
-    /// It returns `None` if the current `Uploader` is `NoOp`.
+    /// It returns `None` if the current `Uploader` is `Panic`.
     pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
         match *self {
             Uploader::S3 {
@@ -83,7 +88,7 @@ impl Uploader {
                 Some(format!("https://{}/{}", host, path))
             }
             Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
-            Uploader::NoOp => None,
+            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 
@@ -98,56 +103,34 @@ impl Uploader {
         format!("readmes/{}/{}-{}.html", name, name, version)
     }
 
-    /// Uploads a file using the configured uploader (either `S3`, `Local` or `NoOp`).
+    /// Uploads a file using the configured uploader (either `S3`, `Local` or `Panic`).
     ///
     /// It returns a a tuple containing the path of the uploaded file
     /// and its checksum.
     pub fn upload(
         &self,
-        mut handle: Easy,
+        client: &reqwest::Client,
         path: &str,
-        body: &[u8],
+        body: Vec<u8>,
         content_type: &str,
-        content_length: u64,
     ) -> CargoResult<(Option<String>, Vec<u8>)> {
-        let hash = hash(body);
+        let hash = hash(&body);
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let (response, cksum) = {
-                    let mut response = Vec::new();
-                    {
-                        let mut s3req =
-                            bucket.put(&mut handle, path, body, content_type, content_length);
-                        s3req
-                            .write_function(|data| {
-                                response.extend(data);
-                                Ok(data.len())
-                            })
-                            .unwrap();
-                        s3req.perform().chain_error(|| {
-                            internal(&format_args!("failed to upload to S3: `{}`", path))
-                        })?;
-                    }
-                    (response, hash)
-                };
-                if handle.response_code().unwrap() != 200 {
-                    let response = String::from_utf8_lossy(&response);
-                    return Err(internal(&format_args!(
-                        "failed to get a 200 response from S3: {}",
-                        response
-                    )));
-                }
-                Ok((Some(String::from(path)), cksum))
+                bucket
+                    .put(client, path, body, content_type)
+                    .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
+                Ok((Some(String::from(path)), hash))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                file.write_all(body)?;
+                file.write_all(&body)?;
                 Ok((filename.to_str().map(String::from), hash))
             }
-            Uploader::NoOp => Ok((None, vec![])),
+            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 
@@ -155,27 +138,19 @@ impl Uploader {
     /// file, and bombs for the uploaded crate and the uploaded readme.
     pub fn upload_crate(
         &self,
-        req: &mut Request,
+        req: &mut dyn Request,
         krate: &Crate,
         readme: Option<String>,
-        max: u64,
-        max_unpack: u64,
+        maximums: Maximums,
         vers: &semver::Version,
     ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
         let app = Arc::clone(req.app());
         let (crate_path, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
-            let length = read_le_u32(req.body())?;
             let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), max).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body, max_unpack)?;
-            self.upload(
-                app.handle(),
-                &path,
-                &body,
-                "application/x-tar",
-                u64::from(length),
-            )?
+            LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
+            verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
+            self.upload(&app.http_client()?, &path, body, "application/x-tar")?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
@@ -185,13 +160,11 @@ impl Uploader {
         };
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
-            let length = rendered.len();
             self.upload(
-                app.handle(),
+                &app.http_client()?,
                 &path,
-                rendered.as_bytes(),
+                rendered.into_bytes(),
                 "text/html",
-                length as u64,
             )?
         } else {
             (None, vec![])
@@ -210,15 +183,14 @@ impl Uploader {
     fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                let mut handle = app.handle();
-                bucket.delete(&mut handle, path).perform()?;
+                bucket.delete(&app.http_client()?, path)?;
                 Ok(())
             }
             Uploader::Local => {
                 fs::remove_file(path)?;
                 Ok(())
             }
-            Uploader::NoOp => Ok(()),
+            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 }
@@ -247,7 +219,7 @@ fn verify_tarball(
     max_unpack: u64,
 ) -> CargoResult<()> {
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball)?;
+    let decoder = GzDecoder::new(tarball);
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
@@ -257,8 +229,9 @@ fn verify_tarball(
     let mut archive = tar::Archive::new(decoder);
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
-        let entry = entry
-            .chain_error(|| human("uploaded tarball is malformed or too large when decompressed"))?;
+        let entry = entry.chain_error(|| {
+            human("uploaded tarball is malformed or too large when decompressed")
+        })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
         // Historically Cargo didn't verify this on extraction so you could
@@ -268,6 +241,22 @@ fn verify_tarball(
         if !entry.path()?.starts_with(&prefix) {
             return Err(human("invalid tarball uploaded"));
         }
+
+        // Historical versions of the `tar` crate which Cargo uses internally
+        // don't properly prevent hard links and symlinks from overwriting
+        // arbitrary files on the filesystem. As a bit of a hammer we reject any
+        // tarball with these sorts of links. Cargo doesn't currently ever
+        // generate a tarball with these file types so this should work for now.
+        let entry_type = entry.header().entry_type();
+        if entry_type.is_hard_link() || entry_type.is_symlink() {
+            return Err(human("invalid tarball uploaded"));
+        }
     }
     Ok(())
+}
+
+fn hash(data: &[u8]) -> Vec<u8> {
+    let mut hasher = Hasher::new(MessageDigest::sha256()).unwrap();
+    hasher.update(data).unwrap();
+    hasher.finish().unwrap().to_vec()
 }

@@ -9,7 +9,7 @@ export default ApplicationAdapter.extend({
         return this.ajax(this.urlForOwnerAction(id), 'PUT', {
             data: {
                 owners: [username],
-            }
+            },
         });
     },
 
@@ -17,7 +17,7 @@ export default ApplicationAdapter.extend({
         return this.ajax(this.urlForOwnerAction(id), 'DELETE', {
             data: {
                 owners: [username],
-            }
+            },
         });
     },
 
@@ -31,5 +31,5 @@ export default ApplicationAdapter.extend({
 
     urlForOwnerAction(id) {
         return `${this.buildURL('crate', id)}/owners`;
-    }
+    },
 });

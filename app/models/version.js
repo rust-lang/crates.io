@@ -12,7 +12,7 @@ export default DS.Model.extend({
     license: DS.attr('string'),
 
     crate: DS.belongsTo('crate', {
-        async: false
+        async: false,
     }),
     authors: DS.hasMany('users', { async: true }),
     dependencies: DS.hasMany('dependency', { async: true }),
@@ -21,4 +21,5 @@ export default DS.Model.extend({
     crateName: computed('crate', function() {
         return this.belongsTo('crate').id();
     }),
+    crate_size: DS.attr('number'),
 });

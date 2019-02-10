@@ -1,11 +1,11 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
 use conduit::Response;
 use diesel::result::Error as DieselError;
 
-use util::json_response;
+use crate::util::json_response;
 
 #[derive(Serialize)]
 struct StringError {
@@ -19,20 +19,18 @@ struct Bad {
 // =============================================================================
 // CargoError trait
 
-pub trait CargoError: Send + fmt::Display + 'static {
+pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
     fn description(&self) -> &str;
-    fn cause(&self) -> Option<&(CargoError)> {
+    fn cause(&self) -> Option<&(dyn CargoError)> {
         None
     }
 
     fn response(&self) -> Option<Response> {
         if self.human() {
             Some(json_response(&Bad {
-                errors: vec![
-                    StringError {
-                        detail: self.description().to_string(),
-                    },
-                ],
+                errors: vec![StringError {
+                    detail: self.description().to_string(),
+                }],
             }))
         } else {
             self.cause().and_then(|cause| cause.response())
@@ -41,33 +39,23 @@ pub trait CargoError: Send + fmt::Display + 'static {
     fn human(&self) -> bool {
         false
     }
-}
 
-impl fmt::Debug for Box<CargoError> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
+    fn get_type_id(&self) -> TypeId {
+        TypeId::of::<Self>()
     }
 }
 
-impl CargoError for Box<CargoError> {
-    fn description(&self) -> &str {
-        (**self).description()
-    }
-    fn cause(&self) -> Option<&CargoError> {
-        (**self).cause()
-    }
-    fn human(&self) -> bool {
-        (**self).human()
-    }
-    fn response(&self) -> Option<Response> {
-        (**self).response()
+impl dyn CargoError {
+    pub fn is<T: Any>(&self) -> bool {
+        self.get_type_id() == TypeId::of::<T>()
     }
 }
-impl<T: CargoError> CargoError for Box<T> {
+
+impl CargoError for Box<dyn CargoError> {
     fn description(&self) -> &str {
         (**self).description()
     }
-    fn cause(&self) -> Option<&CargoError> {
+    fn cause(&self) -> Option<&dyn CargoError> {
         (**self).cause()
     }
     fn human(&self) -> bool {
@@ -78,7 +66,7 @@ impl<T: CargoError> CargoError for Box<T> {
     }
 }
 
-pub type CargoResult<T> = Result<T, Box<CargoError>>;
+pub type CargoResult<T> = Result<T, Box<dyn CargoError>>;
 
 // =============================================================================
 // Chaining errors
@@ -90,9 +78,10 @@ pub trait ChainError<T> {
         F: FnOnce() -> E;
 }
 
+#[derive(Debug)]
 struct ChainedError<E> {
     error: E,
-    cause: Box<CargoError>,
+    cause: Box<dyn CargoError>,
 }
 
 impl<T, F> ChainError<T> for F
@@ -118,7 +107,7 @@ impl<T, E: CargoError> ChainError<T> for Result<T, E> {
             Box::new(ChainedError {
                 error: callback(),
                 cause: Box::new(err),
-            }) as Box<CargoError>
+            }) as Box<dyn CargoError>
         })
     }
 }
@@ -140,7 +129,7 @@ impl<E: CargoError> CargoError for ChainedError<E> {
     fn description(&self) -> &str {
         self.error.description()
     }
-    fn cause(&self) -> Option<&CargoError> {
+    fn cause(&self) -> Option<&dyn CargoError> {
         Some(&*self.cause)
     }
     fn response(&self) -> Option<Response> {
@@ -152,7 +141,7 @@ impl<E: CargoError> CargoError for ChainedError<E> {
 }
 
 impl<E: CargoError> fmt::Display for ChainedError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} caused by {}", self.error, self.cause)
     }
 }
@@ -160,59 +149,34 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Any + Error + Send + 'static> From<E> for Box<CargoError> {
-    fn from(err: E) -> Box<CargoError> {
-        if let Some(err) = Any::downcast_ref::<DieselError>(&err) {
-            if let DieselError::NotFound = *err {
-                return Box::new(NotFound);
-            }
-        }
-
-        struct Shim<E>(E);
-        impl<E: Error + Send + 'static> CargoError for Shim<E> {
-            fn description(&self) -> &str {
-                Error::description(&self.0)
-            }
-        }
-        impl<E: fmt::Display> fmt::Display for Shim<E> {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                self.0.fmt(f)
-            }
-        }
-        Box::new(Shim(err))
-    }
-}
-
-impl CargoError for ::curl::Error {
+impl<E: Error + Send + 'static> CargoError for E {
     fn description(&self) -> &str {
         Error::description(self)
     }
 }
 
-impl CargoError for ::serde_json::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
+impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
+    fn from(err: E) -> Box<dyn CargoError> {
+        if let Some(DieselError::NotFound) = Any::downcast_ref::<DieselError>(&err) {
+            Box::new(NotFound)
+        } else {
+            Box::new(err)
+        }
     }
 }
-
-impl CargoError for ::std::io::Error {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
-}
-
 // =============================================================================
 // Concrete errors
 
+#[derive(Debug)]
 struct ConcreteCargoError {
     description: String,
     detail: Option<String>,
-    cause: Option<Box<CargoError>>,
+    cause: Option<Box<dyn CargoError>>,
     human: bool,
 }
 
 impl fmt::Display for ConcreteCargoError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
         if let Some(ref s) = self.detail {
             write!(f, " ({})", s)?;
@@ -225,7 +189,7 @@ impl CargoError for ConcreteCargoError {
     fn description(&self) -> &str {
         &self.description
     }
-    fn cause(&self) -> Option<&CargoError> {
+    fn cause(&self) -> Option<&dyn CargoError> {
         self.cause.as_ref().map(|c| &**c)
     }
     fn human(&self) -> bool {
@@ -243,11 +207,9 @@ impl CargoError for NotFound {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: "Not Found".to_string(),
-                },
-            ],
+            errors: vec![StringError {
+                detail: "Not Found".to_string(),
+            }],
         });
         response.status = (404, "Not Found");
         Some(response)
@@ -255,7 +217,7 @@ impl CargoError for NotFound {
 }
 
 impl fmt::Display for NotFound {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Not Found".fmt(f)
     }
 }
@@ -270,11 +232,9 @@ impl CargoError for Unauthorized {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: "must be logged in to perform that action".to_string(),
-                },
-            ],
+            errors: vec![StringError {
+                detail: "must be logged in to perform that action".to_string(),
+            }],
         });
         response.status = (403, "Forbidden");
         Some(response)
@@ -282,11 +242,12 @@ impl CargoError for Unauthorized {
 }
 
 impl fmt::Display for Unauthorized {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "must be logged in to perform that action".fmt(f)
     }
 }
 
+#[derive(Debug)]
 struct BadRequest(String);
 
 impl CargoError for BadRequest {
@@ -296,11 +257,9 @@ impl CargoError for BadRequest {
 
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
-            errors: vec![
-                StringError {
-                    detail: self.0.clone(),
-                },
-            ],
+            errors: vec![StringError {
+                detail: self.0.clone(),
+            }],
         });
         response.status = (400, "Bad Request");
         Some(response)
@@ -308,12 +267,12 @@ impl CargoError for BadRequest {
 }
 
 impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
+pub fn internal_error(error: &str, detail: &str) -> Box<dyn CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
         detail: Some(detail.to_string()),
@@ -322,7 +281,7 @@ pub fn internal_error(error: &str, detail: &str) -> Box<CargoError> {
     })
 }
 
-pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
+pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
         detail: None,
@@ -331,7 +290,7 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
     })
 }
 
-pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
+pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     Box::new(ConcreteCargoError {
         description: error.to_string(),
         detail: None,
@@ -347,20 +306,20 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
 ///
 /// Since this is going back to the UI these errors are treated the same as
 /// `human` errors, other than the HTTP status code.
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<CargoError> {
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     Box::new(BadRequest(error.to_string()))
 }
 
-pub fn std_error(e: Box<CargoError>) -> Box<Error + Send> {
+pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
     #[derive(Debug)]
-    struct E(Box<CargoError>);
+    struct E(Box<dyn CargoError>);
     impl Error for E {
         fn description(&self) -> &str {
             self.0.description()
         }
     }
     impl fmt::Display for E {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.0)?;
 
             let mut err = &*self.0;

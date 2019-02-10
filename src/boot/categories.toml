@@ -233,6 +233,13 @@ category. Libraries to help create video games are in the \
 Game engines category.\
 """
 
+[graphics]
+name = "Graphics"
+description = """
+Crates for graphics libraries and applications, including raster and vector \
+graphics primitives such as geometry, curves, and color.\
+"""
+
 [gui]
 name = "GUI"
 description = """
@@ -389,6 +396,12 @@ Crates related to solving problems involving math, physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 
+[science.categories.robotics]
+name = "Robotics"
+description = """
+Crates related to robotics.\
+"""
+
 [simulation]
 name = "Simulation"
 description = """
@@ -427,6 +440,12 @@ potentially adapting the display to various languages and regions.\
 name = "Visualization"
 description = """
 Ways to view data, such as plotting or graphing.\
+"""
+
+[wasm]
+name = "WebAssembly"
+description = """
+Crates for use when targeting WebAssembly, or for manipulating WebAssembly.\
 """
 
 [web-programming]

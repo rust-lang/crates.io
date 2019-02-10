@@ -8,6 +8,7 @@ export default DS.Model.extend({
     crates_cnt: DS.attr('number'),
 
     subcategories: DS.attr(),
+    parent_categories: DS.attr(),
 
-    crates: DS.hasMany('crate', { async: true })
+    crates: DS.hasMany('crate', { async: true }),
 });

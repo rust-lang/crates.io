@@ -1,9 +1,9 @@
+use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::sql_types::BigInt;
-use diesel::pg::Pg;
 
-#[derive(Debug)]
+#[derive(Debug, QueryId)]
 pub struct Paginated<T> {
     query: T,
     limit: i64,
@@ -32,7 +32,7 @@ impl<T> QueryFragment<Pg> for Paginated<T>
 where
     T: QueryFragment<Pg>,
 {
-    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+    fn walk_ast(&self, mut out: AstPass<'_, Pg>) -> QueryResult<()> {
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
@@ -42,5 +42,3 @@ where
         Ok(())
     }
 }
-
-impl_query_id!(Paginated<T>);

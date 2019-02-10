@@ -1,0 +1,36 @@
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo/foo-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [],
+      "body": ""
+    }
+  }
+]

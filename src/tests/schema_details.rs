@@ -1,6 +1,8 @@
 use diesel::prelude::*;
 use diesel::sql_types::Text;
 
+use crate::TestApp;
+
 #[test]
 fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
     for row in get_fk_constraint_definitions("crate_id") {
@@ -46,7 +48,8 @@ struct FkConstraint {
     #[sql_type = "Text"]
     #[column_name = "conname"]
     name: String,
-    #[sql_type = "Text"] definition: String,
+    #[sql_type = "Text"]
+    definition: String,
 }
 
 #[derive(QueryableByName)]
@@ -54,17 +57,19 @@ struct TableNameAndConstraint {
     #[sql_type = "Text"]
     #[column_name = "relname"]
     table_name: String,
-    #[diesel(embed)] constraint: Option<FkConstraint>,
+    #[diesel(embed)]
+    constraint: Option<FkConstraint>,
 }
 
 fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
     use diesel::sql_query;
 
-    let (_r, app, _) = ::app();
-    let conn = app.diesel_database.get().unwrap();
+    let (app, _) = TestApp::init().empty();
 
-    sql_query(include_str!("load_foreign_key_constraints.sql"))
-        .bind::<Text, _>(column_name)
-        .load(&*conn)
-        .unwrap()
+    app.db(|conn| {
+        sql_query(include_str!("load_foreign_key_constraints.sql"))
+            .bind::<Text, _>(column_name)
+            .load(conn)
+            .unwrap()
+    })
 }

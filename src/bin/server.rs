@@ -1,22 +1,18 @@
 #![deny(warnings)]
 
-extern crate cargo_registry;
-extern crate civet;
-extern crate env_logger;
-extern crate git2;
+use cargo_registry::{boot, build_handler, env, git, App, Config, Env};
+use std::{
+    env,
+    fs::{self, File},
+    sync::{mpsc::channel, Arc},
+};
 
-use cargo_registry::{env, Env};
 use civet::Server;
-use std::env;
-use std::fs::{self, File};
-use std::sync::Arc;
-use std::sync::mpsc::channel;
 
-#[allow(dead_code)]
 fn main() {
     // Initialize logging
-    env_logger::init().unwrap();
-    let config: cargo_registry::Config = Default::default();
+    env_logger::init();
+    let config = Config::default();
 
     // If there isn't a git checkout containing the crate index repo at the path specified
     // by `GIT_REPO_CHECKOUT`, delete that directory and clone the repo specified by `GIT_REPO_URL`
@@ -29,7 +25,7 @@ fn main() {
             let _ = fs::remove_dir_all(&config.git_repo_checkout);
             fs::create_dir_all(&config.git_repo_checkout).unwrap();
             let mut cb = git2::RemoteCallbacks::new();
-            cb.credentials(cargo_registry::git::credentials);
+            cb.credentials(git::credentials);
             let mut opts = git2::FetchOptions::new();
             opts.remote_callbacks(cb);
             git2::build::RepoBuilder::new()
@@ -45,13 +41,13 @@ fn main() {
     cfg.set_str("user.name", "bors").unwrap();
     cfg.set_str("user.email", "bors@rust-lang.org").unwrap();
 
-    let app = cargo_registry::App::new(&config);
-    let app = cargo_registry::middleware(Arc::new(app));
+    let app = App::new(&config);
+    let app = build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match
     // the information in *src/categories.toml*.
     let categories_toml = include_str!("../boot/categories.toml");
-    cargo_registry::boot::categories::sync(categories_toml).unwrap();
+    boot::categories::sync(categories_toml).unwrap();
 
     let heroku = env::var("HEROKU").is_ok();
     let port = if heroku {

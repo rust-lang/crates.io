@@ -96,7 +96,10 @@ button.small {
 
     @media only screen and (max-width: 530px) {
         @include flex-direction(column);
-        #stats { border: none; }
+        #stats {
+            border: none;
+            margin: auto;
+        }
         .crates, .downloads {
             @include justify-content(center);
         }

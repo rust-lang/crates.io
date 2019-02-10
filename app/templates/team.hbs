@@ -11,7 +11,7 @@
                 </h2>
             </div>
             {{#user-link user=model.team data-test-github-link=true}}
-                <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg"/>
+                <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
             {{/user-link}}
         </div>
     </div>
@@ -53,6 +53,11 @@
                         <li>
                             {{#link-to (query-params sort="recent-downloads")}}
                                 Recent Downloads
+                            {{/link-to}}
+                        </li>
+                        <li>
+                            {{#link-to (query-params sort="recent-updates")}}
+                                Recent Updates
                             {{/link-to}}
                         </li>
                     {{/rl-dropdown}}

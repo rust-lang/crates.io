@@ -1,9 +1,5 @@
-use s3;
-
-use std::env;
-use std::path::PathBuf;
-
-use {env, Env, Replica, Uploader};
+use crate::{env, uploaders::Uploader, Env, Replica};
+use std::{env, path::PathBuf};
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -13,7 +9,7 @@ pub struct Config {
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
-    pub env: ::Env,
+    pub env: Env,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
     pub mirror: Replica,
@@ -125,7 +121,7 @@ impl Default for Config {
             }
         };
         Config {
-            uploader: uploader,
+            uploader,
             session_key: env("SESSION_KEY"),
             git_repo_checkout: checkout,
             gh_client_id: env("GH_CLIENT_ID"),
@@ -134,8 +130,8 @@ impl Default for Config {
             env: cargo_env,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
-            mirror: mirror,
-            api_protocol: api_protocol,
+            mirror,
+            api_protocol,
         }
     }
 }

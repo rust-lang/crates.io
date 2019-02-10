@@ -4,14 +4,10 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use semver;
-use git2;
-use serde_json;
+use crate::app::App;
+use crate::util::{internal, CargoResult};
 
-use app::App;
-use util::{internal, CargoResult};
-
-use models::Kind;
+use crate::models::DependencyKind;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -21,6 +17,8 @@ pub struct Crate {
     pub cksum: String,
     pub features: HashMap<String, Vec<String>>,
     pub yanked: Option<bool>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,11 +29,14 @@ pub struct Dependency {
     pub optional: bool,
     pub default_features: bool,
     pub target: Option<String>,
-    pub kind: Option<Kind>,
+    pub kind: Option<DependencyKind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package: Option<String>,
 }
 
 fn index_file(base: &Path, name: &str) -> PathBuf {
-    let name = name.chars()
+    let name = name
+        .chars()
         .flat_map(|c| c.to_lowercase())
         .collect::<String>();
     match name.len() {
@@ -84,7 +85,8 @@ pub fn yank(app: &App, krate: &str, version: &semver::Version, yanked: bool) -> 
     commit_and_push(&repo, || {
         let mut prev = String::new();
         File::open(&dst).and_then(|mut f| f.read_to_string(&mut prev))?;
-        let new = prev.lines()
+        let new = prev
+            .lines()
             .map(|line| {
                 let mut git_crate = serde_json::from_str::<Crate>(line)
                     .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
@@ -144,7 +146,8 @@ where
         // git add $file
         let mut index = repo.index()?;
         let mut repo_path = repo_path.iter();
-        let dst = dst.iter()
+        let dst = dst
+            .iter()
             .skip_while(|s| Some(*s) == repo_path.next())
             .collect::<PathBuf>();
         index.add_path(&dst)?;

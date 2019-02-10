@@ -86,7 +86,7 @@ as well.
 
 In order to run the frontend on Windows and macOS, you will need to have installed:
 
-- [node](https://nodejs.org/en/) >= 6.10.0
+- [node](https://nodejs.org/en/) >= 6.10.0 (see .travis.yml for what we currently use)
 - [npm](https://www.npmjs.com/get-npm) >= 4.0.0
 
 Follow the links for each of these tools for their recommended installation
@@ -147,7 +147,7 @@ In order to run the backend, you will need to have installed:
 - [Postgres](https://www.postgresql.org/) >= 9.5
 - [CMake](https://cmake.org/download/) >= 3.6.1
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
-- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.11.0
+- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0
 
 ##### Rust
 
@@ -206,10 +206,16 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > sudo -u postgres createuser --superuser [yourusername]
 > ```
 >
-> Then creating a template database for yourself:
+> Next, if you try to run `psql` and get this error:
 >
 > ```
-> sudo -u postgres createdb [yourusername]
+> psql: FATAL:  database "yourusername" does not exist
+> ```
+>
+> Fix that by creating a template database for yourself:
+>
+> ```
+> createdb [yourusername]
 > ```
 >
 > Try running `psql` again as yourself. If you're still getting errors, here are

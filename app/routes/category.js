@@ -7,9 +7,9 @@ export default Route.extend({
     model(params) {
         return this.store.find('category', params.category_id).catch(e => {
             if (e.errors.some(e => e.detail === 'Not Found')) {
-                this.get('flashMessages').queue(`Category '${params.category_id}' does not exist`);
+                this.flashMessages.queue(`Category '${params.category_id}' does not exist`);
                 return this.replaceWith('index');
             }
         });
-    }
+    },
 });

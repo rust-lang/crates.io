@@ -5,64 +5,69 @@
 use std::collections::HashMap;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use semver;
 
-use krate::MAX_NAME_LENGTH;
+use crate::models::krate::MAX_NAME_LENGTH;
 
-use models::Keyword as CrateKeyword;
-use models::Kind as DependencyKind;
-use models::Crate;
+use crate::models::Crate;
+use crate::models::DependencyKind;
+use crate::models::Keyword as CrateKeyword;
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct NewCrate {
-    pub name: CrateName,
-    pub vers: CrateVersion,
-    pub deps: Vec<CrateDependency>,
-    pub features: HashMap<CrateName, Vec<Feature>>,
+pub struct EncodableCrateUpload {
+    pub name: EncodableCrateName,
+    pub vers: EncodableCrateVersion,
+    pub deps: Vec<EncodableCrateDependency>,
+    pub features: HashMap<EncodableFeatureName, Vec<EncodableFeature>>,
     pub authors: Vec<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
-    pub keywords: Option<KeywordList>,
-    pub categories: Option<CategoryList>,
+    pub keywords: Option<EncodableKeywordList>,
+    pub categories: Option<EncodableCategoryList>,
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
     pub badges: Option<HashMap<String, HashMap<String, String>>>,
+    #[serde(default)]
+    pub links: Option<String>,
 }
 
 #[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
-pub struct CrateName(pub String);
+pub struct EncodableCrateName(pub String);
 #[derive(Debug, Deref)]
-pub struct CrateVersion(pub semver::Version);
+pub struct EncodableCrateVersion(pub semver::Version);
 #[derive(Debug, Deref)]
-pub struct CrateVersionReq(pub semver::VersionReq);
+pub struct EncodableCrateVersionReq(pub semver::VersionReq);
 #[derive(Serialize, Debug, Deref)]
-pub struct KeywordList(pub Vec<Keyword>);
+pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
 #[derive(Serialize, Debug, Deref)]
-pub struct Keyword(pub String);
+pub struct EncodableKeyword(pub String);
 #[derive(Serialize, Debug, Deref)]
-pub struct CategoryList(pub Vec<Category>);
+pub struct EncodableCategoryList(pub Vec<EncodableCategory>);
 #[derive(Serialize, Deserialize, Debug, Deref)]
-pub struct Category(pub String);
+pub struct EncodableCategory(pub String);
 #[derive(Serialize, Debug, Deref)]
-pub struct Feature(pub String);
+pub struct EncodableFeature(pub String);
+#[derive(PartialEq, Eq, Hash, Serialize, Debug, Deref)]
+pub struct EncodableFeatureName(pub String);
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CrateDependency {
+pub struct EncodableCrateDependency {
     pub optional: bool,
     pub default_features: bool,
-    pub name: CrateName,
-    pub features: Vec<Feature>,
-    pub version_req: CrateVersionReq,
+    pub name: EncodableCrateName,
+    pub features: Vec<EncodableFeature>,
+    pub version_req: EncodableCrateVersionReq,
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
+    pub explicit_name_in_toml: Option<EncodableCrateName>,
+    pub registry: Option<String>,
 }
 
-impl<'de> Deserialize<'de> for CrateName {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateName, D::Error> {
+impl<'de> Deserialize<'de> for EncodableCrateName {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateName, D::Error> {
         let s = String::deserialize(d)?;
         if !Crate::valid_name(&s) {
             let value = de::Unexpected::Str(&s);
@@ -73,12 +78,12 @@ impl<'de> Deserialize<'de> for CrateName {
             );
             Err(de::Error::invalid_value(value, &expected.as_ref()))
         } else {
-            Ok(CrateName(s))
+            Ok(EncodableCrateName(s))
         }
     }
 }
 
-impl<T: ?Sized> PartialEq<T> for CrateName
+impl<T: ?Sized> PartialEq<T> for EncodableCrateName
 where
     String: PartialEq<T>,
 {
@@ -87,37 +92,51 @@ where
     }
 }
 
-impl<'de> Deserialize<'de> for Keyword {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Keyword, D::Error> {
+impl<'de> Deserialize<'de> for EncodableKeyword {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeyword, D::Error> {
         let s = String::deserialize(d)?;
         if !CrateKeyword::valid_name(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid keyword specifier";
             Err(de::Error::invalid_value(value, &expected))
         } else {
-            Ok(Keyword(s))
+            Ok(EncodableKeyword(s))
         }
     }
 }
 
-impl<'de> Deserialize<'de> for Feature {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Feature, D::Error> {
+impl<'de> Deserialize<'de> for EncodableFeatureName {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;
         if !Crate::valid_feature_name(&s) {
+            let value = de::Unexpected::Str(&s);
+            let expected = "a valid feature name containing only letters, \
+                            numbers, hyphens, or underscores";
+            Err(de::Error::invalid_value(value, &expected))
+        } else {
+            Ok(EncodableFeatureName(s))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for EncodableFeature {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableFeature, D::Error> {
+        let s = String::deserialize(d)?;
+        if !Crate::valid_feature(&s) {
             let value = de::Unexpected::Str(&s);
             let expected = "a valid feature name";
             Err(de::Error::invalid_value(value, &expected))
         } else {
-            Ok(Feature(s))
+            Ok(EncodableFeature(s))
         }
     }
 }
 
-impl<'de> Deserialize<'de> for CrateVersion {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateVersion, D::Error> {
+impl<'de> Deserialize<'de> for EncodableCrateVersion {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersion, D::Error> {
         let s = String::deserialize(d)?;
         match semver::Version::parse(&s) {
-            Ok(v) => Ok(CrateVersion(v)),
+            Ok(v) => Ok(EncodableCrateVersion(v)),
             Err(..) => {
                 let value = de::Unexpected::Str(&s);
                 let expected = "a valid semver";
@@ -127,11 +146,11 @@ impl<'de> Deserialize<'de> for CrateVersion {
     }
 }
 
-impl<'de> Deserialize<'de> for CrateVersionReq {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CrateVersionReq, D::Error> {
+impl<'de> Deserialize<'de> for EncodableCrateVersionReq {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCrateVersionReq, D::Error> {
         let s = String::deserialize(d)?;
         match semver::VersionReq::parse(&s) {
-            Ok(v) => Ok(CrateVersionReq(v)),
+            Ok(v) => Ok(EncodableCrateVersionReq(v)),
             Err(..) => {
                 let value = de::Unexpected::Str(&s);
                 let expected = "a valid version req";
@@ -141,7 +160,7 @@ impl<'de> Deserialize<'de> for CrateVersionReq {
     }
 }
 
-impl<T: ?Sized> PartialEq<T> for CrateVersionReq
+impl<T: ?Sized> PartialEq<T> for EncodableCrateVersionReq
 where
     semver::VersionReq: PartialEq<T>,
 {
@@ -150,9 +169,9 @@ where
     }
 }
 
-impl<'de> Deserialize<'de> for KeywordList {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<KeywordList, D::Error> {
-        let inner = <Vec<Keyword> as Deserialize<'de>>::deserialize(d)?;
+impl<'de> Deserialize<'de> for EncodableKeywordList {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableKeywordList, D::Error> {
+        let inner = <Vec<EncodableKeyword> as Deserialize<'de>>::deserialize(d)?;
         if inner.len() > 5 {
             let expected = "at most 5 keywords per crate";
             return Err(de::Error::invalid_length(inner.len(), &expected));
@@ -163,23 +182,23 @@ impl<'de> Deserialize<'de> for KeywordList {
                 return Err(de::Error::invalid_length(val.len(), &expected));
             }
         }
-        Ok(KeywordList(inner))
+        Ok(EncodableKeywordList(inner))
     }
 }
 
-impl<'de> Deserialize<'de> for CategoryList {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<CategoryList, D::Error> {
-        let inner = <Vec<Category> as Deserialize<'de>>::deserialize(d)?;
+impl<'de> Deserialize<'de> for EncodableCategoryList {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<EncodableCategoryList, D::Error> {
+        let inner = <Vec<EncodableCategory> as Deserialize<'de>>::deserialize(d)?;
         if inner.len() > 5 {
             let expected = "at most 5 categories per crate";
             Err(de::Error::invalid_length(inner.len(), &expected))
         } else {
-            Ok(CategoryList(inner))
+            Ok(EncodableCategoryList(inner))
         }
     }
 }
 
-impl Serialize for CrateVersion {
+impl Serialize for EncodableCrateVersion {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -188,7 +207,7 @@ impl Serialize for CrateVersion {
     }
 }
 
-impl Serialize for CrateVersionReq {
+impl Serialize for EncodableCrateVersionReq {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -202,8 +221,20 @@ use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Text;
 use std::io::Write;
 
-impl ToSql<Text, Pg> for Feature {
-    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+impl ToSql<Text, Pg> for EncodableFeature {
+    fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
         ToSql::<Text, Pg>::to_sql(&**self, out)
     }
+}
+
+#[test]
+fn feature_deserializes_for_valid_features() {
+    use serde_json as json;
+
+    assert!(json::from_str::<EncodableFeature>("\"foo\"").is_ok());
+    assert!(json::from_str::<EncodableFeature>("\"\"").is_err());
+    assert!(json::from_str::<EncodableFeature>("\"/\"").is_err());
+    assert!(json::from_str::<EncodableFeature>("\"%/%\"").is_err());
+    assert!(json::from_str::<EncodableFeature>("\"a/a\"").is_ok());
+    assert!(json::from_str::<EncodableFeature>("\"32-column-tables\"").is_ok());
 }

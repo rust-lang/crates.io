@@ -13,7 +13,7 @@ export default Service.extend({
     },
 
     step() {
-        this.set('message', this.get('_nextMessage'));
+        this.set('message', this._nextMessage);
         this.set('_nextMessage', null);
-    }
+    },
 });

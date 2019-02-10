@@ -1,10 +1,9 @@
-use std::fs;
 use std::env;
-use std::thread;
+use std::fs;
 use std::path::PathBuf;
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
+use std::thread;
 
-use git2;
 use url::Url;
 
 fn root() -> PathBuf {
@@ -22,7 +21,7 @@ pub fn bare() -> PathBuf {
 }
 
 pub fn init() {
-    static INIT: Once = ONCE_INIT;
+    static INIT: Once = Once::new();
     let _ = fs::remove_dir_all(&checkout());
     let _ = fs::remove_dir_all(&bare());
 

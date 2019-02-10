@@ -3,7 +3,7 @@
 <div id='crates-heading' data-test-heading>
     <div class="wide">
         <div class='info'>
-            {{svg-jar "crate"}}
+            {{svg-jar "crate" class='crate-icon'}}
             <h1 data-test-crate-name>{{ crate.name }}</h1>
             <h2 data-test-crate-version>{{ currentVersion.num }}</h2>
         </div>
@@ -12,7 +12,7 @@
             {{#if session.currentUser}}
                 <button class='tan-button' {{action 'toggleFollow' this}}>
                     {{#if fetchingFollowing}}
-                        <img src="/assets/ajax-loader.gif"/>
+                        <img src="/assets/ajax-loader.gif">
                     {{else}}
                         {{#if following}}
                             Unfollow
@@ -42,15 +42,11 @@
         {{#if crate.repository}}
             <li><a href="{{crate.repository}}">Repository</a></li>
         {{/if}}
-        {{#if crate.reverse_dependencies}}
-            <li>
-              {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
-                Dependent crates
-              {{/link-to}}
-            </li>
-        {{else}}
-            <li>No dependent crates</li>
-        {{/if}}
+        <li>
+          {{#link-to 'crate.reverse-dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
+            Dependent crates
+          {{/link-to}}
+        </li>
     </ul>
     </div>
 </div>
@@ -108,20 +104,20 @@
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{moment-from-now crate.updated_at}}</div>
-                <p>
-                    <img
-                        src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                        alt="{{ crate.name }}’s current version badge"
-                        title="{{ crate.name }}’s current version badge" />
-                </p>
-
+                <div class='{{if currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now crate.updated_at}}</div>
                 {{#each crate.annotated_badges as |badge|}}
                     <p>
                         {{component badge.component_name badge=badge}}
                     </p>
                 {{/each}}
             </div>
+
+            {{#if currentVersion.crate_size}}
+                <div>
+                    <div class='crate-size'><span class='small'>Crate Size</span></div>
+                    <div class='size'>{{format-crate-size currentVersion.crate_size}}</div>
+                </div>
+            {{/if}}
 
             <div class="authors">
                 <h3>Authors</h3>
@@ -298,4 +294,3 @@
     </div>
 </div>
 {{/if}}
-

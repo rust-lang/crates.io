@@ -15,10 +15,12 @@ export default Controller.extend(PaginationMixin, {
     category: null,
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort') === 'downloads') {
+        if (this.sort === 'downloads') {
             return 'All-Time Downloads';
-        } else if (this.get('sort') === 'alpha') {
+        } else if (this.sort === 'alpha') {
             return 'Alphabetical';
+        } else if (this.get('sort') === 'recent-updates') {
+            return 'Recent Updates';
         } else {
             return 'Recent Downloads';
         }

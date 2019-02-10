@@ -5,23 +5,26 @@
 
 #![deny(warnings)]
 
-extern crate cargo_registry;
-extern crate diesel;
+use cargo_registry::{
+    db,
+    models::{Crate, OwnerKind, User},
+    schema::{crate_owners, crates, users},
+};
+use std::{
+    env,
+    io::{self, prelude::*},
+    process::exit,
+};
 
 use diesel::prelude::*;
-use std::env;
-use std::io;
-use std::io::prelude::*;
-
-use cargo_registry::models::{Crate, OwnerKind, User};
-use cargo_registry::schema::*;
 
 fn main() {
-    let conn = cargo_registry::db::connect_now().unwrap();
+    let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
         transfer(&conn);
         Ok(())
-    }).unwrap()
+    })
+    .unwrap()
 }
 
 fn transfer(conn: &PgConnection) {
@@ -96,6 +99,6 @@ fn get_confirm(msg: &str) {
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
     if !line.starts_with('y') {
-        std::process::exit(0);
+        exit(0);
     }
 }

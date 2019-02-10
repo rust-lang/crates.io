@@ -8,5 +8,5 @@ export default Component.extend({
     repository: alias('badge.attributes.repository'),
     text: computed('badge', function() {
         return `Is It Maintained average time to resolve an issue`;
-    })
+    }),
 });

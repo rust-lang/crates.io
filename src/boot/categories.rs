@@ -1,12 +1,12 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
-use diesel;
-use diesel::prelude::*;
-use toml;
+use crate::{
+    db,
+    util::errors::{internal, CargoResult, ChainError},
+};
 
-use db;
-use util::errors::{internal, CargoResult, ChainError};
+use diesel::prelude::*;
 
 #[derive(Debug)]
 struct Category {
@@ -91,9 +91,9 @@ pub fn sync(toml_str: &str) -> CargoResult<()> {
 }
 
 pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<()> {
-    use diesel::pg::upsert::excluded;
+    use crate::schema::categories::dsl::*;
     use diesel::dsl::all;
-    use schema::categories::dsl::*;
+    use diesel::pg::upsert::excluded;
 
     let toml: toml::value::Table =
         toml::from_str(toml_str).expect("Could not parse categories toml");

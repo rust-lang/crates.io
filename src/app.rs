@@ -1,19 +1,15 @@
 //! Application-wide components in a struct accessible from each request
 
-use std::env;
-use std::error::Error;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use crate::{db, util::CargoResult, Config, Env};
+use std::{
+    env,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
-use conduit::{Request, Response};
-use conduit_middleware::Middleware;
 use diesel::r2d2;
-use git2;
-use oauth2;
-use curl::easy::Easy;
 use scheduled_thread_pool::ScheduledThreadPool;
-
-use {db, Config};
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
@@ -39,13 +35,6 @@ pub struct App {
     pub config: Config,
 }
 
-/// The `AppMiddleware` injects an `App` instance into the `Request` extensions
-// Can't derive Debug because `App` can't.
-#[allow(missing_debug_implementations)]
-pub struct AppMiddleware {
-    app: Arc<App>,
-}
-
 impl App {
     /// Creates a new `App` with a given `Config`
     ///
@@ -65,20 +54,27 @@ impl App {
 
         let db_pool_size = match (env::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
-            (_, ::Env::Production) => 10,
+            (_, Env::Production) => 10,
             _ => 1,
         };
 
         let db_min_idle = match (env::var("DB_MIN_IDLE"), config.env) {
             (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
-            (_, ::Env::Production) => Some(5),
+            (_, Env::Production) => Some(5),
             _ => None,
         };
 
         let db_helper_threads = match (env::var("DB_HELPER_THREADS"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
-            (_, ::Env::Production) => 3,
+            (_, Env::Production) => 3,
             _ => 1,
+        };
+
+        let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
+            (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
+            (_, Env::Production) => 10,
+            (_, Env::Test) => 1,
+            _ => 30,
         };
 
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
@@ -86,13 +82,15 @@ impl App {
         let diesel_db_config = r2d2::Pool::builder()
             .max_size(db_pool_size)
             .min_idle(db_min_idle)
+            .connection_timeout(Duration::from_secs(db_connection_timeout))
+            .connection_customizer(Box::new(db::SetStatementTimeout(db_connection_timeout)))
             .thread_pool(thread_pool);
 
         let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
 
         App {
-            diesel_database: db::diesel_pool(&config.db_url, diesel_db_config),
-            github: github,
+            diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
+            github,
             session_key: config.session_key.clone(),
             git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
@@ -100,49 +98,16 @@ impl App {
         }
     }
 
-    /// Returns a handle for making HTTP requests to upload crate files.
+    /// Returns a client for making HTTP requests to upload crate files.
     ///
     /// The handle will go through a proxy if the uploader being used has specified one, which
-    /// is only done in test mode in order to be able to record and inspect the HTTP requests
-    /// that tests make.
-    pub fn handle(&self) -> Easy {
-        let mut handle = Easy::new();
+    /// is only done in tests with `TestApp::with_proxy()` in order to be able to record and
+    /// inspect the HTTP requests that tests make.
+    pub fn http_client(&self) -> CargoResult<reqwest::Client> {
+        let mut builder = reqwest::Client::builder();
         if let Some(proxy) = self.config.uploader.proxy() {
-            handle.proxy(proxy).unwrap();
+            builder = builder.proxy(reqwest::Proxy::all(proxy)?);
         }
-        handle
-    }
-}
-
-impl AppMiddleware {
-    pub fn new(app: Arc<App>) -> AppMiddleware {
-        AppMiddleware { app: app }
-    }
-}
-
-impl Middleware for AppMiddleware {
-    fn before(&self, req: &mut Request) -> Result<(), Box<Error + Send>> {
-        req.mut_extensions().insert(Arc::clone(&self.app));
-        Ok(())
-    }
-
-    fn after(
-        &self,
-        req: &mut Request,
-        res: Result<Response, Box<Error + Send>>,
-    ) -> Result<Response, Box<Error + Send>> {
-        req.mut_extensions().pop::<Arc<App>>().unwrap();
-        res
-    }
-}
-
-/// Adds an `app()` method to the `Request` type returning the global `App` instance
-pub trait RequestApp {
-    fn app(&self) -> &Arc<App>;
-}
-
-impl<T: Request + ?Sized> RequestApp for T {
-    fn app(&self) -> &Arc<App> {
-        self.extensions().find::<Arc<App>>().expect("Missing app")
+        Ok(builder.build()?)
     }
 }
