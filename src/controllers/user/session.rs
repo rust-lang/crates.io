@@ -4,7 +4,7 @@ use crate::github;
 use conduit_cookie::RequestSession;
 use rand::{thread_rng, Rng};
 
-use crate::models::NewUser;
+use crate::models::{NewUser, User};
 
 /// Handles the `GET /authorize_url` route.
 ///
@@ -84,33 +84,39 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         }
     }
 
-    #[derive(Deserialize)]
-    struct GithubUser {
-        email: Option<String>,
-        name: Option<String>,
-        login: String,
-        id: i32,
-        avatar_url: Option<String>,
-    }
-
     // Fetch the access token from github using the code we just got
     let token = req.app().github.exchange(code).map_err(|s| human(&s))?;
 
     let ghuser = github::github::<GithubUser>(req.app(), "/user", &token)?;
+    let user = ghuser.save_to_database(&token.access_token, &*req.db_conn()?)?;
 
-    let user = NewUser::new(
-        ghuser.id,
-        &ghuser.login,
-        ghuser.email.as_ref().map(|s| &s[..]),
-        ghuser.name.as_ref().map(|s| &s[..]),
-        ghuser.avatar_url.as_ref().map(|s| &s[..]),
-        &token.access_token,
-    )
-    .create_or_update(&*req.db_conn()?)?;
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     super::me::me(req)
+}
+
+#[derive(Deserialize)]
+struct GithubUser {
+    email: Option<String>,
+    name: Option<String>,
+    login: String,
+    id: i32,
+    avatar_url: Option<String>,
+}
+
+impl GithubUser {
+    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> QueryResult<User> {
+        Ok(NewUser::new(
+            self.id,
+            &self.login,
+            self.email.as_ref().map(|s| &s[..]),
+            self.name.as_ref().map(|s| &s[..]),
+            self.avatar_url.as_ref().map(|s| &s[..]),
+            access_token,
+        )
+        .create_or_update(conn)?)
+    }
 }
 
 /// Handles the `GET /logout` route.
