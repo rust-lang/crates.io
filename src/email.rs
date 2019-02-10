@@ -100,3 +100,24 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sending_to_invalid_email_fails() {
+        let result = send_email(
+            "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)",
+            "test",
+            "test",
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn sending_to_valid_email_succeeds() {
+        let result = send_email("someone@example.com", "test", "test");
+        assert!(result.is_ok());
+    }
+}
