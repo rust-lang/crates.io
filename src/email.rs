@@ -57,7 +57,22 @@ fn build_email(
     Ok(email.into())
 }
 
-pub fn send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
+/// Attempts to send a confirmation email. Swallows all errors.
+///
+/// This function swallows any errors that occur while attempting to send the email. Some users
+/// have an invalid email set in their GitHub profile, and we should let them sign in even though
+/// we're trying to silently use their invalid address during signup and can't send them an email.
+/// Use `try_send_user_confirm_email` when the user is directly trying to set their email.
+pub fn send_user_confirm_email(email: &str, user_name: &str, token: &str) {
+    let _ = try_send_user_confirm_email(email, user_name, token);
+}
+
+/// Attempts to send a confirmation email and returns errors.
+///
+/// For use in cases where we want to fail if an email is bad because the user is directly trying
+/// to set their email correctly, as opposed to us silently trying to use the email from their
+/// GitHub profile during signup.
+pub fn try_send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match

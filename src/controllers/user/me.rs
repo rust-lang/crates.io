@@ -3,6 +3,7 @@ use crate::controllers::prelude::*;
 use crate::controllers::helpers::Paginate;
 use crate::email;
 use crate::util::bad_request;
+use crate::util::errors::CargoError;
 
 use crate::models::{Email, Follow, NewEmail, User, Version};
 use crate::schema::{crates, emails, follows, users, versions};
@@ -127,7 +128,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
         return Err(human("empty email rejected"));
     }
 
-    conn.transaction(|| {
+    conn.transaction::<_, Box<dyn CargoError>, _>(|| {
         update(users.filter(gh_login.eq(&user.gh_login)))
             .set(email.eq(user_email))
             .execute(&*conn)?;
@@ -146,8 +147,9 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
             .get_result::<String>(&*conn)
             .map_err(|_| human("Error in creating token"))?;
 
-        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
-            .map_err(|_| bad_request("Email could not be sent"))
+        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
+
+        Ok(())
     })?;
 
     #[derive(Serialize)]
@@ -199,7 +201,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
             .get_result::<Email>(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        email::send_user_confirm_email(&email.email, &user.gh_login, &email.token)
+        email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
 
