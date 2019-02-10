@@ -124,3 +124,36 @@ pub fn logout(req: &mut dyn Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotenv::dotenv;
+    use std::env;
+
+    fn pg_connection() -> PgConnection {
+        let _ = dotenv();
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        PgConnection::establish(&database_url).unwrap()
+    }
+
+    #[test]
+    fn gh_user_with_invalid_email_doesnt_fail() {
+        let conn = pg_connection();
+        let gh_user = GithubUser {
+            email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
+            name: Some("My Name".into()),
+            login: "github_user".into(),
+            id: -1,
+            avatar_url: None,
+        };
+        let result = gh_user.save_to_database("arbitrary_token", &conn);
+
+        assert!(
+            result.is_ok(),
+            "Creating a User from a GitHub user failed when it shouldn't have, {:?}",
+            result
+        );
+    }
+}
