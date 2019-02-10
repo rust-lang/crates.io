@@ -270,10 +270,7 @@ fn test_github_login_does_not_overwrite_email() {
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            gh_id: 1,
-            ..new_user("apricot")
-        };
+        let user = new_user("apricot");
 
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
@@ -299,7 +296,7 @@ fn test_github_login_does_not_overwrite_email() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             ..new_user("apricot")
         };
 
@@ -449,17 +446,17 @@ fn test_this_user_cannot_change_that_user_email() {
 fn test_insert_into_email_table() {
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
-    {
+    let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
             email: Some("apple@example.com"),
             ..new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
-    }
+        user
+    };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = crate::json::<UserShowPrivateResponse>(&mut response);
@@ -472,7 +469,7 @@ fn test_insert_into_email_table() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             email: Some("banana@example.com"),
             ..new_user("apple")
         };
@@ -499,7 +496,6 @@ fn test_insert_into_email_table_with_email_change() {
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
             email: Some("test_insert_with_change@example.com"),
             ..new_user("potato")
         };
@@ -531,7 +527,7 @@ fn test_insert_into_email_table_with_email_change() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             email: Some("banana2@example.com"),
             ..new_user("potato")
         };
