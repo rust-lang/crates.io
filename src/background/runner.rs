@@ -79,8 +79,10 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
     where
         F: FnOnce(storage::BackgroundJob) -> CargoResult<()> + Send + UnwindSafe + 'static,
     {
-        let conn = self.connection().expect("Could not acquire connection");
+        // The connection may not be `Send` so we need to clone the pool instead
+        let pool = self.connection_pool.clone();
         self.thread_pool.execute(move || {
+            let conn = pool.get().expect("Could not acquire connection");
             conn.transaction::<_, Box<dyn CargoError>, _>(|| {
                 let job = storage::find_next_unlocked_job(&conn).optional()?;
                 let job = match job {
@@ -192,7 +194,7 @@ mod tests {
 
         let remaining_jobs = background_jobs
             .count()
-            .get_result(&runner.connection().unwrap());
+            .get_result(&*runner.connection().unwrap());
         assert_eq!(Ok(0), remaining_jobs);
     }
 
@@ -223,7 +225,7 @@ mod tests {
             .select(id)
             .filter(retries.eq(0))
             .for_update()
-            .load::<i64>(&conn)
+            .load::<i64>(&*conn)
             .unwrap();
         assert_eq!(0, available_jobs.len());
 
@@ -231,7 +233,7 @@ mod tests {
         let total_jobs_including_failed = background_jobs
             .select(id)
             .for_update()
-            .load::<i64>(&conn)
+            .load::<i64>(&*conn)
             .unwrap();
         assert_eq!(1, total_jobs_including_failed.len());
 
@@ -251,7 +253,7 @@ mod tests {
             .find(job_id)
             .select(retries)
             .for_update()
-            .first::<i32>(&runner.connection().unwrap())
+            .first::<i32>(&*runner.connection().unwrap())
             .unwrap();
         assert_eq!(1, tries);
     }
@@ -277,7 +279,7 @@ mod tests {
     impl<'a> Drop for TestGuard<'a> {
         fn drop(&mut self) {
             ::diesel::sql_query("TRUNCATE TABLE background_jobs")
-                .execute(&runner().connection().unwrap())
+                .execute(&*runner().connection().unwrap())
                 .unwrap();
         }
     }
@@ -290,14 +292,14 @@ mod tests {
         let manager = r2d2::ConnectionManager::new(database_url);
         let pool = r2d2::Pool::builder().max_size(2).build(manager).unwrap();
 
-        Runner::builder(pool, ()).thread_count(2).build()
+        Runner::builder(DieselPool::Pool(pool), ()).thread_count(2).build()
     }
 
     fn create_dummy_job(runner: &Runner<()>) -> storage::BackgroundJob {
         ::diesel::insert_into(background_jobs)
             .values((job_type.eq("Foo"), data.eq(json!(null))))
             .returning((id, job_type, data))
-            .get_result(&runner.connection().unwrap())
+            .get_result(&*runner.connection().unwrap())
             .unwrap()
     }
 }

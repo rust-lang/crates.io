@@ -31,7 +31,7 @@ fn main() {
 
     // We're only using 1 thread, so we only need 1 connection
     let db_config = r2d2::Pool::builder().max_size(1);
-    let db_pool = db::diesel_pool(&config.db_url, db_config);
+    let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
 
     let builder = background::Runner::builder(db_pool, environment).thread_count(1);
     let runner = job_runner(builder);
