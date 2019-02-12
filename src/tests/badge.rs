@@ -215,15 +215,15 @@ fn update_add_gitlab() {
 #[test]
 fn update_add_azure_devops() {
     // Add a azure devops badge
-    let (conn, krate, test_badges) = set_up();
+    let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
     badges.insert(
         String::from("azure-devops"),
         test_badges.azure_devops_attributes,
     );
-    Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
-    assert_eq!(krate.badges(&conn).unwrap(), vec![test_badges.azure_devops]);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.azure_devops]);
 }
 
 #[test]
@@ -429,7 +429,7 @@ fn gitlab_required_keys() {
 #[test]
 fn azure_devops_required_keys() {
     // Add a azure devops badge missing a required field
-    let (conn, krate, mut test_badges) = set_up();
+    let (krate, mut test_badges) = set_up();
 
     let mut badges = HashMap::new();
 
@@ -440,10 +440,10 @@ fn azure_devops_required_keys() {
         test_badges.azure_devops_attributes,
     );
 
-    let invalid_badges = Badge::update_crate(&conn, &krate, Some(&badges)).unwrap();
+    let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
-    assert!(invalid_badges.contains(&"azure-devops"));
-    assert_eq!(krate.badges(&conn).unwrap(), vec![]);
+    assert_eq!(invalid_badges.first().unwrap(), "azure-devops");
+    assert_eq!(krate.badges(), vec![]);
 }
 
 #[test]
