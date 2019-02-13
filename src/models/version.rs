@@ -10,7 +10,7 @@ use crate::schema::*;
 use crate::views::{EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug, Queryable)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
 #[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,

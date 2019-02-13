@@ -3,10 +3,8 @@
 use crate::controllers::prelude::*;
 
 use crate::git;
-use crate::util::errors::CargoError;
 
 use crate::models::Rights;
-use crate::schema::*;
 
 use super::version_and_crate;
 
@@ -39,13 +37,7 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> CargoResult<Response> {
     }
 
     if version.yanked != yanked {
-        conn.transaction::<_, Box<dyn CargoError>, _>(|| {
-            diesel::update(&version)
-                .set(versions::yanked.eq(yanked))
-                .execute(&*conn)?;
-            git::yank(&conn, krate.name, &version.num, yanked)?;
-            Ok(())
-        })?;
+        git::yank(&conn, krate.name, version, yanked)?;
     }
 
     #[derive(Serialize)]

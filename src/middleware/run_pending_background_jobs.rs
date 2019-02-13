@@ -13,10 +13,11 @@ impl Middleware for RunPendingBackgroundJobs {
     ) -> Result<Response, Box<dyn Error + Send>> {
         let app = req.app();
         let connection_pool = app.diesel_database.clone();
-        let environment = Environment {
-            index_location: app.config.index_location.clone(),
-            credentials: None,
-        };
+        let environment = Environment::new(
+            app.config.index_location.clone(),
+            None,
+            app.diesel_database.clone(),
+        );
 
         let config = Runner::builder(connection_pool, environment);
         let runner = job_runner(config);

@@ -18,20 +18,21 @@ use std::time::Duration;
 fn main() {
     let config = cargo_registry::Config::default();
 
+    // We're only using 1 thread, so we only need 2 connections
+    let db_config = r2d2::Pool::builder().max_size(1);
+    let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
+
     let username = env::var("GIT_HTTP_USER");
     let password = env::var("GIT_HTTP_PWD");
     let credentials = match (username, password) {
         (Ok(u), Ok(p)) => Some((u, p)),
         _ => None,
     };
-    let environment = Environment {
-        index_location: config.index_location,
+    let environment = Environment::new(
+        config.index_location,
         credentials,
-    };
-
-    // We're only using 1 thread, so we only need 1 connection
-    let db_config = r2d2::Pool::builder().max_size(1);
-    let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
+        db_pool.clone(),
+    );
 
     let builder = background::Runner::builder(db_pool, environment).thread_count(1);
     let runner = job_runner(builder);

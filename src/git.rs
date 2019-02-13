@@ -10,7 +10,8 @@ use url::Url;
 
 use crate::background::Job;
 use crate::background_jobs::Environment;
-use crate::models::DependencyKind;
+use crate::models::{DependencyKind, Version};
+use crate::schema::versions;
 use crate::util::{internal, CargoResult};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -155,7 +156,7 @@ pub fn add_crate(conn: &PgConnection, krate: Crate) -> CargoResult<()> {
 #[derive(Serialize, Deserialize)]
 pub struct Yank {
     krate: String,
-    version: String,
+    version: Version,
     yanked: bool,
 }
 
@@ -168,12 +169,13 @@ impl Job for Yank {
         let dst = repo.index_file(&self.krate);
 
         let prev = fs::read_to_string(&dst)?;
+        let version = self.version.num.to_string();
         let new = prev
             .lines()
             .map(|line| {
                 let mut git_crate = serde_json::from_str::<Crate>(line)
                     .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
-                if git_crate.name != self.krate || git_crate.vers != self.version {
+                if git_crate.name != self.krate || git_crate.vers != version {
                     return Ok(line.to_string());
                 }
                 git_crate.yanked = Some(self.yanked);
@@ -188,11 +190,17 @@ impl Job for Yank {
                 "{} crate `{}#{}`",
                 if self.yanked { "Yanking" } else { "Unyanking" },
                 self.krate,
-                self.version
+                self.version.num
             ),
             &repo.relative_index_file(&self.krate),
             env.credentials(),
-        )
+        )?;
+
+        diesel::update(&self.version)
+            .set(versions::yanked.eq(self.yanked))
+            .execute(&*env.connection()?)?;
+
+        Ok(())
     }
 }
 
@@ -203,12 +211,12 @@ impl Job for Yank {
 pub fn yank(
     conn: &PgConnection,
     krate: String,
-    version: &semver::Version,
+    version: Version,
     yanked: bool,
 ) -> CargoResult<()> {
     Yank {
         krate,
-        version: version.to_string(),
+        version,
         yanked,
     }
     .enqueue(conn)
