@@ -50,7 +50,7 @@ pub fn find_next_unlocked_job(conn: &PgConnection) -> QueryResult<BackgroundJob>
         .first::<BackgroundJob>(conn)
 }
 
-/// The number of jobs available to be run
+/// The number of jobs that have failed at least once
 pub fn failed_job_count(conn: &PgConnection) -> QueryResult<i64> {
     use crate::schema::background_jobs::dsl::*;
 
@@ -60,7 +60,7 @@ pub fn failed_job_count(conn: &PgConnection) -> QueryResult<i64> {
         .get_result(conn)
 }
 
-/// The number of jobs that have failed at least once
+/// The number of jobs available to be run
 pub fn available_job_count(conn: &PgConnection) -> QueryResult<i64> {
     use crate::schema::background_jobs::dsl::*;
 
