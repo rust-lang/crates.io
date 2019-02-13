@@ -208,12 +208,7 @@ impl Job for Yank {
 /// file, deserlialise the crate from JSON, change the yank boolean to
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
-pub fn yank(
-    conn: &PgConnection,
-    krate: String,
-    version: Version,
-    yanked: bool,
-) -> CargoResult<()> {
+pub fn yank(conn: &PgConnection, krate: String, version: Version, yanked: bool) -> CargoResult<()> {
     Yank {
         krate,
         version,

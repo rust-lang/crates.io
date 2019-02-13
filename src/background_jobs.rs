@@ -1,5 +1,5 @@
-use url::Url;
 use std::panic::AssertUnwindSafe;
+use url::Url;
 
 use crate::background::{Builder, Runner};
 use crate::db::{DieselPool, DieselPooledConn};

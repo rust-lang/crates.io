@@ -28,11 +28,7 @@ fn main() {
         (Ok(u), Ok(p)) => Some((u, p)),
         _ => None,
     };
-    let environment = Environment::new(
-        config.index_location,
-        credentials,
-        db_pool.clone(),
-    );
+    let environment = Environment::new(config.index_location, credentials, db_pool.clone());
 
     let builder = background::Runner::builder(db_pool, environment).thread_count(1);
     let runner = job_runner(builder);

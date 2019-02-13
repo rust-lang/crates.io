@@ -4,8 +4,8 @@ use conduit::Request;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
-use std::sync::Arc;
 use std::ops::Deref;
+use std::sync::Arc;
 use url::Url;
 
 use crate::middleware::app::RequestApp;

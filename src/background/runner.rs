@@ -292,7 +292,9 @@ mod tests {
         let manager = r2d2::ConnectionManager::new(database_url);
         let pool = r2d2::Pool::builder().max_size(2).build(manager).unwrap();
 
-        Runner::builder(DieselPool::Pool(pool), ()).thread_count(2).build()
+        Runner::builder(DieselPool::Pool(pool), ())
+            .thread_count(2)
+            .build()
     }
 
     fn create_dummy_job(runner: &Runner<()>) -> storage::BackgroundJob {
