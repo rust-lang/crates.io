@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
 use cargo_registry::{boot, build_handler, env, git, App, Config, Env};
+use jemalloc_ctl;
 use std::{
     env,
     fs::{self, File},
@@ -10,6 +11,8 @@ use std::{
 use civet::Server;
 
 fn main() {
+    let _ = jemalloc_ctl::set_background_thread(true);
+
     // Initialize logging
     env_logger::init();
     let config = Config::default();
