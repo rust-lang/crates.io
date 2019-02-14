@@ -58,7 +58,6 @@ impl<'a> NewUser<'a> {
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
-        use diesel::NotFound;
 
         conn.transaction(|| {
             let user = insert_into(users)
@@ -96,8 +95,7 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
-                        .map_err(|_| NotFound)?;
+                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
                 }
             }
 

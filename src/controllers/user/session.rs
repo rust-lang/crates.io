@@ -4,7 +4,7 @@ use crate::github;
 use conduit_cookie::RequestSession;
 use rand::{thread_rng, Rng};
 
-use crate::models::NewUser;
+use crate::models::{NewUser, User};
 
 /// Handles the `GET /authorize_url` route.
 ///
@@ -84,37 +84,76 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         }
     }
 
-    #[derive(Deserialize)]
-    struct GithubUser {
-        email: Option<String>,
-        name: Option<String>,
-        login: String,
-        id: i32,
-        avatar_url: Option<String>,
-    }
-
     // Fetch the access token from github using the code we just got
     let token = req.app().github.exchange(code).map_err(|s| human(&s))?;
 
     let ghuser = github::github::<GithubUser>(req.app(), "/user", &token)?;
+    let user = ghuser.save_to_database(&token.access_token, &*req.db_conn()?)?;
 
-    let user = NewUser::new(
-        ghuser.id,
-        &ghuser.login,
-        ghuser.email.as_ref().map(|s| &s[..]),
-        ghuser.name.as_ref().map(|s| &s[..]),
-        ghuser.avatar_url.as_ref().map(|s| &s[..]),
-        &token.access_token,
-    )
-    .create_or_update(&*req.db_conn()?)?;
     req.session()
         .insert("user_id".to_string(), user.id.to_string());
     req.mut_extensions().insert(user);
     super::me::me(req)
 }
 
+#[derive(Deserialize)]
+struct GithubUser {
+    email: Option<String>,
+    name: Option<String>,
+    login: String,
+    id: i32,
+    avatar_url: Option<String>,
+}
+
+impl GithubUser {
+    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> QueryResult<User> {
+        Ok(NewUser::new(
+            self.id,
+            &self.login,
+            self.email.as_ref().map(|s| &s[..]),
+            self.name.as_ref().map(|s| &s[..]),
+            self.avatar_url.as_ref().map(|s| &s[..]),
+            access_token,
+        )
+        .create_or_update(conn)?)
+    }
+}
+
 /// Handles the `GET /logout` route.
 pub fn logout(req: &mut dyn Request) -> CargoResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotenv::dotenv;
+    use std::env;
+
+    fn pg_connection() -> PgConnection {
+        let _ = dotenv();
+        let database_url =
+            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        PgConnection::establish(&database_url).unwrap()
+    }
+
+    #[test]
+    fn gh_user_with_invalid_email_doesnt_fail() {
+        let conn = pg_connection();
+        let gh_user = GithubUser {
+            email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
+            name: Some("My Name".into()),
+            login: "github_user".into(),
+            id: -1,
+            avatar_url: None,
+        };
+        let result = gh_user.save_to_database("arbitrary_token", &conn);
+
+        assert!(
+            result.is_ok(),
+            "Creating a User from a GitHub user failed when it shouldn't have, {:?}",
+            result
+        );
+    }
 }
