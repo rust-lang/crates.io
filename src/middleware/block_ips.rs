@@ -29,10 +29,10 @@ impl Handler for BlockIps {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let has_blocked_ip = req
             .headers()
-            .find("X-Forwarded-For")
+            .find("X-Real-Ip")
             .unwrap()
             .iter()
-            .any(|v| v.split(", ").any(|ip| self.ips.iter().any(|x| x == ip)));
+            .any(|ip| self.ips.iter().any(|v| v == ip));
         if has_blocked_ip {
             let body = format!(
                 "We are unable to process your request at this time. \
