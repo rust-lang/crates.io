@@ -149,9 +149,7 @@ mod test {
             user_id,
         )
         .unwrap();
-        let version = version
-            .save(conn, &[], Some("someone@example.com".into()))
-            .unwrap();
+        let version = version.save(conn, &[], "someone@example.com").unwrap();
         (krate, version)
     }
 
