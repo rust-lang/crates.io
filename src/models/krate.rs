@@ -88,10 +88,7 @@ type CanonCrateName<T> = self::canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, AllColumns>;
 type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 /// The result of a loose search
-type LikeName<'a> = diesel::dsl::Like<
-    CanonCrateName<crates::name>,
-    CanonCrateName<&'a str>,
->;
+type LikeName<'a> = diesel::dsl::Like<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 

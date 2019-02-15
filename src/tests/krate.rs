@@ -434,9 +434,7 @@ fn loose_search_order() {
             .expect_build(conn);
         // evalrs should match 3rd because of readme
         let three = CrateBuilder::new("evalrs", user.id)
-            .readme(
-                "evalrs_temp evalrs_temp evalrs_temp",
-            )
+            .readme("evalrs_temp evalrs_temp evalrs_temp")
             .description("description")
             .keyword("kw1")
             .expect_build(conn);
