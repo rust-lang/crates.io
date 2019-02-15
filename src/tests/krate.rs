@@ -426,13 +426,7 @@ fn loose_search_order() {
             .description("description")
             .keyword("kw1")
             .expect_build(conn);
-        // file shouldn't match at all
-        CrateBuilder::new("file", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        // temp_udp should match second
+        // temp_udp should match second because of _
         let two = CrateBuilder::new("temp_utp", user.id)
             .readme("readme")
             .description("description")
@@ -441,11 +435,7 @@ fn loose_search_order() {
         // evalrs should match 3rd because of readme
         let three = CrateBuilder::new("evalrs", user.id)
             .readme(
-                r#"$ echo 'println!("Hello World!")' | evalrs
-   Compiling evalrs_temp v0.0.0 (file:///tmp/evalrs_temp.daiPxHtjV2VR)
-    Finished debug [unoptimized + debuginfo] target(s) in 0.51 secs
-     Running `target\debug\evalrs_temp.exe`
-Hello World!"#,
+                "evalrs_temp evalrs_temp evalrs_temp",
             )
             .description("description")
             .keyword("kw1")
@@ -456,25 +446,14 @@ Hello World!"#,
             .description("description")
             .keyword("kw1")
             .expect_build(conn);
-        // mkstemp should appear 5th
-        let five = CrateBuilder::new("mkstemp", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        vec![one, two, three, four, five]
+        vec![one, two, three, four]
     });
     let search_temp = anon.search("q=temp");
-    assert_eq!(search_temp.meta.total, 5);
-    assert_eq!(search_temp.crates.len(), 5);
+    assert_eq!(search_temp.meta.total, 4);
+    assert_eq!(search_temp.crates.len(), 4);
     for (lhs, rhs) in search_temp.crates.iter().zip(ordered) {
         assert_eq!(lhs.name, rhs.name);
     }
-    let search_file = anon.search("q=file");
-    assert_eq!(search_file.meta.total, 2);
-    assert_eq!(search_file.crates.len(), 2);
-    assert_eq!(&search_file.crates[0].name, "file");
-    assert_eq!(&search_file.crates[1].name, "tempfile");
 }
 
 #[test]
