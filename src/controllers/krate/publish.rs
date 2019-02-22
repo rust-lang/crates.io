@@ -66,7 +66,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = app.diesel_database.get()?;
 
     let mut other_warnings = vec![];
-    if !user.has_verified_email(&conn)? {
+    let verified_email_address = user.verified_email(&conn)?;
+    if verified_email_address.is_none() {
         other_warnings.push(String::from(
             "You do not currently have a verified email address associated with your crates.io \
              account. Starting 2019-02-28, a verified email will be required to publish crates. \
@@ -146,8 +147,9 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
             file_length as i32,
+            user.id,
         )?
-        .save(&conn, &new_crate.authors)?;
+        .save(&conn, &new_crate.authors, verified_email_address)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;

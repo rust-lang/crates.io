@@ -56,11 +56,16 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
     let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
     let data = versions::table
         .inner_join(crates::table)
+        .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
-        .select((versions::all_columns, crates::name))
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
         .paginate(limit, offset)
-        .load::<((Version, String), i64)>(&*conn)?;
+        .load::<((Version, String, Option<User>), i64)>(&*conn)?;
 
     let more = data
         .get(0)
@@ -69,7 +74,9 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 
     let versions = data
         .into_iter()
-        .map(|((version, crate_name), _)| version.encodable(&crate_name))
+        .map(|((version, crate_name, published_by), _)| {
+            version.encodable(&crate_name, published_by)
+        })
         .collect();
 
     #[derive(Serialize)]

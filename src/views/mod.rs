@@ -201,6 +201,7 @@ pub struct EncodableVersion {
     pub license: Option<String>,
     pub links: EncodableVersionLinks,
     pub crate_size: Option<i32>,
+    pub published_by: Option<EncodablePublicUser>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -304,6 +305,7 @@ mod tests {
                 authors: "".to_string(),
             },
             crate_size: Some(1234),
+            published_by: None,
         };
         let json = serde_json::to_string(&ver).unwrap();
         assert!(json

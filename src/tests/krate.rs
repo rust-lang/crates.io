@@ -6,7 +6,7 @@ use crate::{
 use cargo_registry::{
     git,
     models::{krate::MAX_NAME_LENGTH, Category, Crate},
-    schema::{api_tokens, crates, emails, metadata, versions},
+    schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
     views::{
         EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
         EncodableVersionDownload,
@@ -420,7 +420,7 @@ fn show() {
     let user = user.as_model();
 
     let krate = app.db(|conn| {
-        CrateBuilder::new("foo_show", user.id)
+        let krate = CrateBuilder::new("foo_show", user.id)
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
@@ -430,7 +430,18 @@ fn show() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(conn)
+            .expect_build(conn);
+
+        // Make version 1.0.0 mimic a version published before we started recording who published
+        // versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .filter(versions::num.eq("1.0.0"))
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
+
+        krate
     });
 
     let json = anon.show_crate("foo_show");
@@ -448,6 +459,7 @@ fn show() {
     assert_eq!(json.versions[0].id, versions[0]);
     assert_eq!(json.versions[0].krate, json.krate.id);
     assert_eq!(json.versions[0].num, "1.0.0");
+    assert!(json.versions[0].published_by.is_none());
     let suffix = "/api/v1/crates/foo_show/1.0.0/download";
     assert!(
         json.versions[0].dl_path.ends_with(suffix),
@@ -459,6 +471,10 @@ fn show() {
 
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+    assert_eq!(
+        json.versions[1].published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
 }
 
 #[test]
@@ -489,6 +505,14 @@ fn versions() {
             .version("1.0.0")
             .version("0.5.0")
             .expect_build(conn);
+        // Make version 1.0.0 mimic a version published before we started recording who published
+        // versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .filter(versions::num.eq("1.0.0"))
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
     });
 
     let json: VersionsList = anon.get("/api/v1/crates/foo_versions/versions").good();
@@ -497,6 +521,11 @@ fn versions() {
     assert_eq!(json.versions[0].num, "1.0.0");
     assert_eq!(json.versions[1].num, "0.5.1");
     assert_eq!(json.versions[2].num, "0.5.0");
+    assert!(json.versions[0].published_by.is_none());
+    assert_eq!(
+        json.versions[1].published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
 }
 
 #[test]
@@ -1048,7 +1077,7 @@ fn new_krate_with_readme() {
 // See https://github.com/rust-lang/crates-io-cargo-teams/issues/8
 #[test]
 fn new_krate_without_any_email_warns() {
-    let (_, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::with_proxy().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
@@ -1057,6 +1086,14 @@ fn new_krate_without_any_email_warns() {
     assert_eq!(json.warnings.other[0], "You do not currently have a verified email address \
     associated with your crates.io account. Starting 2019-02-28, a verified email will be required \
     to publish crates. Visit https://crates.io/me to set and verify your email address.");
+
+    // Don't record a verified email if there isn't one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn);
+        assert!(email.is_err());
+    });
 }
 
 // This warning will soon become a hard error.
@@ -1083,6 +1120,14 @@ fn new_krate_with_unverified_email_warns() {
     assert_eq!(json.warnings.other[0], "You do not currently have a verified email address \
     associated with your crates.io account. Starting 2019-02-28, a verified email will be required \
     to publish crates. Visit https://crates.io/me to set and verify your email address.");
+
+    // Don't record a verified email if there isn't one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn);
+        assert!(email.is_err());
+    });
 }
 
 #[test]
@@ -1108,6 +1153,15 @@ fn new_krate_with_verified_email_doesnt_warn() {
 
     let json = token.publish(crate_to_publish).good();
     assert_eq!(json.warnings.other.len(), 0);
+
+    // Record a verified email because there is one
+    app.db(|conn| {
+        let email = versions_published_by::table
+            .select(versions_published_by::email)
+            .first::<String>(conn)
+            .unwrap();
+        assert_eq!(email, "something@example.com");
+    });
 }
 
 #[test]
@@ -1255,7 +1309,7 @@ fn dependencies() {
 
     app.db(|conn| {
         let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(conn);
-        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, conn);
+        let v = VersionBuilder::new("1.0.0").expect_build(c1.id, user.id, conn);
         let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(conn);
         new_dependency(conn, &v, &c2);
     });
@@ -1750,6 +1804,46 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     let deps = anon.reverse_dependencies("c1");
     assert_eq!(deps.dependencies.len(), 0);
     assert_eq!(deps.meta.total, 0);
+}
+
+#[test]
+fn reverse_dependencies_includes_published_by_user_when_present() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id)
+            .version("1.0.0")
+            .expect_build(conn);
+        CrateBuilder::new("c2", user.id)
+            .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
+            .expect_build(conn);
+
+        // Make c2's version (and,incidentally, c1's, but that doesn't matter) mimic a version
+        // published before we started recording who published versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
+
+        // c3's version will have the published by info recorded
+        CrateBuilder::new("c3", user.id)
+            .version(VersionBuilder::new("3.0.0").dependency(&c1, None))
+            .expect_build(conn);
+    });
+
+    let deps = anon.reverse_dependencies("c1");
+    assert_eq!(deps.versions.len(), 2);
+
+    let c2_version = deps.versions.iter().find(|v| v.krate == "c2").unwrap();
+    assert!(c2_version.published_by.is_none());
+
+    let c3_version = deps.versions.iter().find(|v| v.krate == "c3").unwrap();
+    assert_eq!(
+        c3_version.published_by.as_ref().unwrap().login,
+        user.gh_login
+    );
 }
 
 #[test]

@@ -142,6 +142,9 @@ fn crates_by_user_id_not_including_deleted_owners() {
 
 #[test]
 fn following() {
+    use cargo_registry::schema::versions;
+    use diesel::update;
+
     #[derive(Deserialize)]
     struct R {
         versions: Vec<EncodableVersion>,
@@ -153,11 +156,20 @@ fn following() {
     }
 
     let (app, _, user) = TestApp::init().with_user();
-    let user_id = user.as_model().id;
+    let user_model = user.as_model();
+    let user_id = user_model.id;
     app.db(|conn| {
         CrateBuilder::new("foo_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
             .expect_build(conn);
+
+        // Make foo_fighters's version mimic a version published before we started recording who
+        // published versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
 
         CrateBuilder::new("bar_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
@@ -176,6 +188,21 @@ fn following() {
     let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
+    let foo_version = r
+        .versions
+        .iter()
+        .find(|v| v.krate == "foo_fighters")
+        .unwrap();
+    assert!(foo_version.published_by.is_none());
+    let bar_version = r
+        .versions
+        .iter()
+        .find(|v| v.krate == "bar_fighters")
+        .unwrap();
+    assert_eq!(
+        bar_version.published_by.as_ref().unwrap().login,
+        user_model.gh_login
+    );
 
     let r: R = user
         .get_with_query("/api/v1/me/updates", "per_page=1")

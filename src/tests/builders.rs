@@ -68,7 +68,12 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
-    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+    fn build(
+        self,
+        crate_id: i32,
+        published_by: i32,
+        connection: &PgConnection,
+    ) -> CargoResult<Version> {
         use diesel::{insert_into, update};
 
         let license = match self.license {
@@ -83,8 +88,9 @@ impl<'a> VersionBuilder<'a> {
             license,
             self.license_file,
             self.size,
+            published_by,
         )?
-        .save(connection, &[])?;
+        .save(connection, &[], Some("someone@example.com".into()))?;
 
         if self.yanked {
             vers = update(&vers)
@@ -119,10 +125,16 @@ impl<'a> VersionBuilder<'a> {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the version record fails.
-    pub fn expect_build(self, crate_id: i32, connection: &PgConnection) -> Version {
-        self.build(crate_id, connection).unwrap_or_else(|e| {
-            panic!("Unable to create version: {:?}", e);
-        })
+    pub fn expect_build(
+        self,
+        crate_id: i32,
+        published_by: i32,
+        connection: &PgConnection,
+    ) -> Version {
+        self.build(crate_id, published_by, connection)
+            .unwrap_or_else(|e| {
+                panic!("Unable to create version: {:?}", e);
+            })
     }
 }
 
@@ -266,7 +278,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         for version_builder in self.versions {
-            version_builder.build(krate.id, connection)?;
+            version_builder.build(krate.id, self.owner_id, connection)?;
         }
 
         if !self.keywords.is_empty() {
