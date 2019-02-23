@@ -121,7 +121,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         .load(&*conn)?;
     let cats = CrateCategory::belonging_to(&krate)
         .inner_join(categories::table)
-        .select(crate::models::category::ALL_COLUMNS)
+        .select(categories::all_columns)
         .load(&*conn)?;
     let recent_downloads = CrateDownload::belonging_to(&krate)
         .filter(crate_downloads::date.gt(date(now - 90.days())))
