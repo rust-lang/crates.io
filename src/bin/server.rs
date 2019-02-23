@@ -5,10 +5,10 @@ use jemalloc_ctl;
 use std::{
     env,
     fs::{self, File},
-    sync::Arc,
+    sync::{mpsc::channel, Arc},
 };
 
-use conduit_hyper::Service;
+use civet::Server;
 
 fn main() {
     let _ = jemalloc_ctl::set_background_thread(true);
@@ -66,8 +66,9 @@ fn main() {
     } else {
         50
     };
-    let addr = ([127, 0, 0, 1], port).into();
-    let server = Service::new(app, threads);
+    let mut cfg = civet::Config::new();
+    cfg.port(port).threads(threads).keep_alive(true);
+    let _a = Server::start(cfg, app);
 
     println!("listening on port {}", port);
 
@@ -78,5 +79,6 @@ fn main() {
     }
 
     // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
-    server.run(addr);
+    let (_tx, rx) = channel::<()>();
+    rx.recv().unwrap();
 }
