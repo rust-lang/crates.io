@@ -2,6 +2,7 @@ use crate::controllers::prelude::*;
 
 use crate::github;
 use conduit_cookie::RequestSession;
+use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
 use crate::models::{NewUser, User};
@@ -23,7 +24,11 @@ use crate::models::{NewUser, User};
 /// ```
 pub fn github_authorize(req: &mut dyn Request) -> CargoResult<Response> {
     // Generate a random 16 char ASCII string
-    let state: String = thread_rng().gen_ascii_chars().take(16).collect();
+    let mut rng = thread_rng();
+    let state: String = std::iter::repeat(())
+        .map(|()| rng.sample(Alphanumeric))
+        .take(16)
+        .collect();
     req.session()
         .insert("github_oauth_state".to_string(), state.clone());
 
