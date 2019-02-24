@@ -37,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    entrypoint: npm run start --proxy http://backend:8888
+    entrypoint: npm run start -- --proxy http://backend:8888
     links:
       - backend
     ports:
