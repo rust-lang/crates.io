@@ -1073,7 +1073,7 @@ fn new_krate_with_readme() {
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
-// This warning will soon become a hard error.
+// This test will start failing on 2019-02-28 and should be updated at that time.
 // See https://github.com/rust-lang/crates-io-cargo-teams/issues/8
 #[test]
 fn new_krate_without_any_email_warns() {
@@ -1096,7 +1096,7 @@ fn new_krate_without_any_email_warns() {
     });
 }
 
-// This warning will soon become a hard error.
+// This test will start failing on 2019-02-28 and should be updated at that time.
 // See https://github.com/rust-lang/crates-io-cargo-teams/issues/8
 #[test]
 fn new_krate_with_unverified_email_warns() {
