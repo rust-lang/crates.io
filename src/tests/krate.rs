@@ -462,6 +462,49 @@ fn loose_search_order() {
 }
 
 #[test]
+fn index_include_yanked() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("unyanked", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .version(VersionBuilder::new("2.0.0"))
+            .expect_build(conn);
+
+        CrateBuilder::new("newest_yanked", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .version(VersionBuilder::new("2.0.0").yanked(true))
+            .expect_build(conn);
+
+        CrateBuilder::new("oldest_yanked", user.id)
+            .version(VersionBuilder::new("1.0.0").yanked(true))
+            .version(VersionBuilder::new("2.0.0"))
+            .expect_build(conn);
+
+        CrateBuilder::new("all_yanked", user.id)
+            .version(VersionBuilder::new("1.0.0").yanked(true))
+            .version(VersionBuilder::new("2.0.0").yanked(true))
+            .expect_build(conn);
+    });
+
+    // Include fully yanked (all versions were yanked) crates
+    let json = anon.search("include_yanked=yes&sort=alphabetical");
+    assert_eq!(json.meta.total, 4);
+    assert_eq!(json.crates[0].name, "all_yanked");
+    assert_eq!(json.crates[1].name, "newest_yanked");
+    assert_eq!(json.crates[2].name, "oldest_yanked");
+    assert_eq!(json.crates[3].name, "unyanked");
+
+    // Do not include fully yanked (all versions were yanked) crates
+    let json = anon.search("include_yanked=no&sort=alphabetical");
+    assert_eq!(json.meta.total, 3);
+    assert_eq!(json.crates[0].name, "newest_yanked");
+    assert_eq!(json.crates[1].name, "oldest_yanked");
+    assert_eq!(json.crates[2].name, "unyanked");
+}
+
+#[test]
 fn show() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();

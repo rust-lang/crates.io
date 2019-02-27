@@ -1,5 +1,6 @@
 //! Endpoint for searching and discovery functionality
 
+use diesel::dsl::*;
 use diesel::sql_types::{NotNull, Nullable};
 use diesel_full_text_search::*;
 
@@ -33,7 +34,6 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::dsl::sql;
     use diesel::sql_types::{Bool, Text};
 
     let conn = req.db_conn()?;
@@ -44,6 +44,10 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         .map(|s| &**s)
         .unwrap_or("recent-downloads");
     let mut has_filter = false;
+    let include_yanked = params
+        .get("include_yanked")
+        .map(|s| s == "yes")
+        .unwrap_or(true);
 
     let selection = (
         ALL_COLUMNS,
@@ -152,6 +156,15 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                     .filter(follows::user_id.eq(req.user()?.id)),
             ),
         );
+    }
+
+    if !include_yanked {
+        has_filter = true;
+        query = query.filter(exists(
+            versions::table
+                .filter(versions::crate_id.eq(crates::id))
+                .filter(versions::yanked.eq(false)),
+        ));
     }
 
     if sort == "downloads" {
