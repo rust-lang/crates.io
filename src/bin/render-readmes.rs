@@ -21,7 +21,6 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
-use itertools::Itertools;
 use tar::{self, Archive};
 
 const DEFAULT_PAGE_SIZE: usize = 25;
@@ -95,23 +94,16 @@ fn main() {
         total_pages + 1
     };
 
-    for (page_num, version_ids_chunk) in version_ids
-        .into_iter()
-        .chunks(page_size)
-        .into_iter()
-        .enumerate()
-    {
+    for (page_num, version_ids_chunk) in version_ids.chunks(page_size).enumerate() {
         println!(
             "= Page {} of {} ==================================",
             page_num + 1,
             total_pages
         );
 
-        let ids: Vec<_> = version_ids_chunk.collect();
-
         let versions = versions::table
             .inner_join(crates::table)
-            .filter(versions::id.eq(any(ids)))
+            .filter(versions::id.eq(any(version_ids_chunk)))
             .select((versions::all_columns, crates::name))
             .load::<(Version, String)>(&conn)
             .expect("error loading versions");
