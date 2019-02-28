@@ -85,7 +85,6 @@ hyper-tls = "0.3"
 futures = "0.1"
 lazy_static = "1.0"
 tokio-core = "0.1"
-tokio-service = "0.1"
 
 [build-dependencies]
 dotenv = "0.11"
