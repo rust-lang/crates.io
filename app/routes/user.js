@@ -15,6 +15,7 @@ export default Route.extend({
         return this.store.queryRecord('user', { user_id }).then(
             user => {
                 params.user_id = user.get('id');
+                params.include_yanked = 'n';
                 return RSVP.hash({
                     crates: this.store.query('crate', params),
                     user,
