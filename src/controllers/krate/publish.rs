@@ -3,8 +3,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::offset::TimeZone;
-use chrono::{DateTime, Utc};
 use hex::ToHex;
 
 use crate::git;
@@ -67,14 +65,13 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
     let conn = app.diesel_database.get()?;
 
-    let mut other_warnings = vec![];
     let verified_email_address = user.verified_email(&conn)?;
-
-    // This function can be inlined (with only the error-returning functionality) and its unit
-    // tests deleted after 2019-02-28; it was created to make injecting the date for tests easier.
-    // The integration tests in src/tests/krate.rs cover the current production behavior (and will
-    // need to be updated at that time)
-    verified_email_check(&mut other_warnings, &verified_email_address, Utc::now())?;
+    let verified_email_address = verified_email_address.ok_or_else(|| {
+        human(
+            "A verified email address is required to publish crates to crates.io. \
+             Visit https://crates.io/me to set and verify your email address.",
+        )
+    })?;
 
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
@@ -150,7 +147,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             file_length as i32,
             user.id,
         )?
-        .save(&conn, &new_crate.authors, verified_email_address)?;
+        .save(&conn, &new_crate.authors, &verified_email_address)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -210,10 +207,13 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         crate_bomb.path = None;
         readme_bomb.path = None;
 
+        // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
+        // that is no longer needed. As such, crates.io currently does not return any `other`
+        // warnings at this time, but if we need to, the field is available.
         let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
             invalid_badges: ignored_invalid_badges,
-            other: other_warnings,
+            other: vec![],
         };
 
         Ok(req.json(&GoodCrate {
@@ -267,98 +267,4 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
 
     let user = req.user()?;
     Ok((new, user.clone()))
-}
-
-fn verified_email_check(
-    other_warnings: &mut Vec<String>,
-    verified_email_address: &Option<String>,
-    now: DateTime<Utc>,
-) -> CargoResult<()> {
-    match verified_email_address {
-        Some(_) => Ok(()),
-        None => {
-            if now < Utc.ymd(2019, 3, 1).and_hms(0, 0, 0) {
-                other_warnings.push(String::from(
-                    "You do not currently have a verified email address associated with your \
-                     crates.io account. Starting 2019-02-28, a verified email will be required to \
-                     publish crates. Visit https://crates.io/me to set and verify your email \
-                     address.",
-                ));
-                Ok(())
-            } else {
-                Err(human(
-                    "A verified email address is required to publish crates to crates.io. \
-                     Visit https://crates.io/me to set and verify your email address.",
-                ))
-            }
-        }
-    }
-}
-
-// These tests should be deleted after 2018-02-28; this functionality will then be covered by
-// integration tests in src/tests/krate.rs.
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::offset::TimeZone;
-
-    #[test]
-    fn allow_publish_with_verified_email_without_warning_before_2018_02_28() {
-        let mut warnings = vec![];
-
-        let fake_current_date = Utc.ymd(2019, 2, 27).and_hms(0, 0, 0);
-        let result = verified_email_check(
-            &mut warnings,
-            &Some("someone@example.com".into()),
-            fake_current_date,
-        );
-
-        assert!(result.is_ok());
-        assert_eq!(warnings.len(), 0);
-    }
-
-    #[test]
-    fn allow_publish_with_verified_email_without_error_after_2018_02_28() {
-        let mut warnings = vec![];
-
-        let fake_current_date = Utc.ymd(2019, 3, 1).and_hms(0, 0, 0);
-        let result = verified_email_check(
-            &mut warnings,
-            &Some("someone@example.com".into()),
-            fake_current_date,
-        );
-
-        assert!(result.is_ok());
-        assert_eq!(warnings.len(), 0);
-    }
-
-    #[test]
-    fn warn_without_verified_email_before_2018_02_28() {
-        let mut warnings = vec![];
-
-        let fake_current_date = Utc.ymd(2019, 2, 27).and_hms(0, 0, 0);
-        let result = verified_email_check(&mut warnings, &None, fake_current_date);
-
-        assert!(result.is_ok());
-        assert_eq!(warnings.len(), 1);
-        assert_eq!(warnings[0], "You do not currently have a verified email address associated \
-            with your crates.io account. Starting 2019-02-28, a verified email will be required to \
-            publish crates. Visit https://crates.io/me to set and verify your email address.");
-    }
-
-    #[test]
-    fn error_without_verified_email_after_2018_02_28() {
-        let mut warnings = vec![];
-
-        let fake_current_date = Utc.ymd(2019, 3, 1).and_hms(0, 0, 0);
-        let result = verified_email_check(&mut warnings, &None, fake_current_date);
-
-        assert!(result.is_err());
-        assert_eq!(
-            result.err().unwrap().description(),
-            "A verified email address is required to \
-             publish crates to crates.io. Visit https://crates.io/me to set and verify your email \
-             address."
-        );
-    }
 }

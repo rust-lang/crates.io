@@ -79,11 +79,28 @@ impl TestApp {
         f(&conn)
     }
 
-    /// Create a new user in the database and return a mock user session
+    /// Create a new user with a verified email address in the database and return a mock user
+    /// session
     ///
     /// This method updates the database directly
-    pub fn db_new_user(&self, user: &str) -> MockCookieUser {
-        let user = self.db(|conn| crate::new_user(user).create_or_update(conn).unwrap());
+    pub fn db_new_user(&self, username: &str) -> MockCookieUser {
+        use cargo_registry::schema::emails;
+        use diesel::prelude::*;
+
+        let user = self.db(|conn| {
+            let mut user = crate::new_user(username).create_or_update(conn).unwrap();
+            let email = "something@example.com";
+            user.email = Some(email.to_string());
+            diesel::insert_into(emails::table)
+                .values((
+                    emails::user_id.eq(user.id),
+                    emails::email.eq(email),
+                    emails::verified.eq(true),
+                ))
+                .execute(conn)
+                .unwrap();
+            user
+        });
         MockCookieUser {
             app: TestApp(Rc::clone(&self.0)),
             user,

@@ -148,12 +148,11 @@ impl NewVersion {
         Ok(new_version)
     }
 
-    // TODO: change `published_by_email` to be `String` after 2019-02-28
     pub fn save(
         &self,
         conn: &PgConnection,
         authors: &[String],
-        published_by_email: Option<String>,
+        published_by_email: &str,
     ) -> CargoResult<Version> {
         use crate::schema::version_authors::{name, version_id};
         use crate::schema::versions::dsl::*;
@@ -176,15 +175,12 @@ impl NewVersion {
                 .values(self)
                 .get_result::<Version>(conn)?;
 
-            // TODO: Remove the `if` around this insert after 2019-02-28
-            if let Some(published_by_email) = published_by_email {
-                insert_into(versions_published_by::table)
-                    .values((
-                        versions_published_by::version_id.eq(version.id),
-                        versions_published_by::email.eq(published_by_email),
-                    ))
-                    .execute(conn)?;
-            }
+            insert_into(versions_published_by::table)
+                .values((
+                    versions_published_by::version_id.eq(version.id),
+                    versions_published_by::email.eq(published_by_email),
+                ))
+                .execute(conn)?;
 
             let new_authors = authors
                 .iter()
