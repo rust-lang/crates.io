@@ -67,7 +67,7 @@ http {
 		location ~ ^/api/v./crates/new$ {
 			proxy_pass http://app_server;
 
-			limit_req zone=publish burst=10 nodelay;
+			limit_req zone=publish burst=30 nodelay;
 			limit_req_status 429;
 		}
 	}
