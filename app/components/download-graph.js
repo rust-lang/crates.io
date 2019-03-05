@@ -78,10 +78,20 @@ export default Component.extend({
 
         let myData = window.google.visualization.arrayToDataTable(data);
 
-        let fmt = new window.google.visualization.DateFormat({
+        let dateFmt = new window.google.visualization.DateFormat({
             pattern: 'LLL d, yyyy',
         });
-        fmt.format(myData, 0);
+        dateFmt.format(myData, 0);
+
+        // Create a formatter to use for daily download numbers
+        let numberFormatWhole = new window.google.visualization.NumberFormat({
+            pattern: '#,##0',
+        });
+
+        // Create a formatter to use for 7-day average numbers
+        let numberFormatDecimal = new window.google.visualization.NumberFormat({
+            pattern: '#,##0.0',
+        });
 
         // use a DataView to calculate an x-day moving average
         let days = 7;
@@ -101,7 +111,7 @@ export default Component.extend({
                 let avg = total / days;
                 return {
                     v: avg,
-                    f: avg.toFixed(2),
+                    f: numberFormatDecimal.formatValue(avg),
                 };
             };
         };
@@ -113,6 +123,8 @@ export default Component.extend({
         // is at the end, but in the UI we want it at the top of the chart legend.
 
         range(headers.length - 1, 0, -1).forEach((dataCol, i) => {
+            // Set the number format for the colum in the data table.
+            numberFormatWhole.format(myData, dataCol);
             columns.push(dataCol); // add the column itself
             columns.push({
                 // add a 'calculated' column, the moving average
