@@ -29,7 +29,6 @@ rustdoc-args = [
 
 [dependencies]
 cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
-old_semver = { path = "src/old_semver", version = "0.1.0" }
 rand = "0.6"
 git2 = "0.6.4"
 flate2 = "1.0"
@@ -76,6 +75,7 @@ conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
+conduit-hyper = "0.1.3"
 
 [dev-dependencies]
 conduit-test = "0.8"

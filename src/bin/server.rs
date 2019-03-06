@@ -8,7 +8,15 @@ use std::{
     sync::{mpsc::channel, Arc},
 };
 
-use civet::Server;
+use civet::Server as CivetServer;
+use conduit_hyper::Service as HyperService;
+
+enum Server {
+    Civet(CivetServer),
+    Hyper(HyperService<conduit_middleware::MiddlewareBuilder>),
+}
+
+use Server::*;
 
 fn main() {
     let _ = jemalloc_ctl::set_background_thread(true);
@@ -66,9 +74,16 @@ fn main() {
     } else {
         50
     };
-    let mut cfg = civet::Config::new();
-    cfg.port(port).threads(threads).keep_alive(true);
-    let _a = Server::start(cfg, app);
+
+    let server = if env::var("USE_HYPER").is_ok() {
+        println!("Booting with a hyper based server");
+        Hyper(HyperService::new(app, threads as usize))
+    } else {
+        println!("Booting with a civet based server");
+        let mut cfg = civet::Config::new();
+        cfg.port(port).threads(threads).keep_alive(true);
+        Civet(CivetServer::start(cfg, app).unwrap())
+    };
 
     println!("listening on port {}", port);
 
@@ -78,7 +93,13 @@ fn main() {
         File::create("/tmp/app-initialized").unwrap();
     }
 
-    // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
-    let (_tx, rx) = channel::<()>();
-    rx.recv().unwrap();
+    if let Hyper(server) = server {
+        let addr = ([127, 0, 0, 1], port).into();
+        server.run(addr);
+    } else {
+        // Civet server is already running, but we need to block the main thread forever
+        // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
+        let (_tx, rx) = channel::<()>();
+        rx.recv().unwrap();
+    }
 }
