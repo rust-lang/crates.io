@@ -12,12 +12,12 @@ The server does the following things:
 3. Reads values from environment variables to configure a new instance of `cargo_registry::App`
 4. Adds middleware to the app by calling `cargo_registry::middleware`
 5. Syncs the categories defined in *src/categories.toml* with the categories in the database
-6. Starts a [civet][] `Server` that uses the `cargo_registry::App` instance
+6. Starts either a [conduit] or a [hyper] server that uses the `cargo_registry::App` instance
 7. Tells Nginx on Heroku that the application is ready to receive requests, if running on Heroku
-8. Blocks forever (or until the process is killed) waiting to receive messages on a channel that no
-   messages are ever sent to, in order to outive the civet `Server` threads
+8. Blocks forever (or until the process is killed)
 
 [civet]: https://crates.io/crates/civet
+[hyper]: https://crates.io/crates/hyper
 
 ## Routes
 
