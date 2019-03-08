@@ -39,13 +39,13 @@ pub struct Dependency {
     pub package: Option<String>,
 }
 
-struct Repository {
+pub struct Repository {
     checkout_path: TempDir,
     repository: git2::Repository,
 }
 
 impl Repository {
-    fn open(url: &Url) -> CargoResult<Self> {
+    pub fn open(url: &Url) -> CargoResult<Self> {
         let checkout_path = TempDir::new("git")?;
         let repository = git2::Repository::clone(url.as_str(), checkout_path.path())?;
 
@@ -120,6 +120,15 @@ impl Repository {
         }
         ref_status
     }
+
+    pub fn reset_head(&self) -> CargoResult<()> {
+        let mut origin = self.repository.find_remote("origin")?;
+        origin.fetch(&["refs/heads/*:refs/heads/*"], None, None)?;
+        let head = self.repository.head()?.target().unwrap();
+        let obj = self.repository.find_object(head, None)?;
+        self.repository.reset(&obj, git2::ResetType::Hard, None)?;
+        Ok(())
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -132,7 +141,7 @@ impl Job for AddCrate {
     const JOB_TYPE: &'static str = "add_crate";
 
     fn perform(self, env: &Self::Environment) -> CargoResult<()> {
-        let repo = Repository::open(&env.index_location)?;
+        let repo = env.lock_index()?;
         let dst = repo.index_file(&self.krate.name);
 
         // Add the crate to its relevant file
@@ -165,7 +174,7 @@ impl Job for Yank {
     const JOB_TYPE: &'static str = "yank";
 
     fn perform(self, env: &Self::Environment) -> CargoResult<()> {
-        let repo = Repository::open(&env.index_location)?;
+        let repo = env.lock_index()?;
         let dst = repo.index_file(&self.krate);
 
         let conn = env.connection()?;

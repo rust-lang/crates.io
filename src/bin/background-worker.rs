@@ -10,12 +10,15 @@
 #![deny(warnings)]
 
 use cargo_registry::{background, background_jobs::*, db};
+use cargo_registry::git::Repository;
 use diesel::r2d2;
 use std::env;
 use std::thread::sleep;
 use std::time::Duration;
 
 fn main() {
+    println!("Booting runner");
+
     let config = cargo_registry::Config::default();
 
     // We're only using 1 thread, so we only need 2 connections
@@ -28,7 +31,13 @@ fn main() {
         (Ok(u), Ok(p)) => Some((u, p)),
         _ => None,
     };
-    let environment = Environment::new(config.index_location, credentials, db_pool.clone());
+
+    println!("Cloning index");
+
+    let repository = Repository::open(&config.index_location)
+        .expect("Failed to clone index");
+
+    let environment = Environment::new(repository, credentials, db_pool.clone());
 
     let builder = background::Runner::builder(db_pool, environment).thread_count(1);
     let runner = job_runner(builder);

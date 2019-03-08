@@ -2,6 +2,7 @@ use super::app::RequestApp;
 use super::prelude::*;
 use crate::background::Runner;
 use crate::background_jobs::*;
+use crate::git::Repository;
 
 pub struct RunPendingBackgroundJobs;
 
@@ -13,8 +14,10 @@ impl Middleware for RunPendingBackgroundJobs {
     ) -> Result<Response, Box<dyn Error + Send>> {
         let app = req.app();
         let connection_pool = app.diesel_database.clone();
+        let repo = Repository::open(&app.config.index_location)
+            .expect("Could not clone index");
         let environment = Environment::new(
-            app.config.index_location.clone(),
+            repo,
             None,
             app.diesel_database.clone(),
         );
