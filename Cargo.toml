@@ -35,7 +35,7 @@ git2 = "0.6.4"
 flate2 = "1.0"
 semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
 url = "1.2.1"
-tar = "0.4.13"
+tar = "0.4.16"
 base64 = "0.9"
 
 openssl = "0.10.13"
