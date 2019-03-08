@@ -168,39 +168,54 @@ impl Job for Yank {
         let repo = Repository::open(&env.index_location)?;
         let dst = repo.index_file(&self.krate);
 
-        let prev = fs::read_to_string(&dst)?;
-        let version = self.version.num.to_string();
-        let new = prev
-            .lines()
-            .map(|line| {
-                let mut git_crate = serde_json::from_str::<Crate>(line)
-                    .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
-                if git_crate.name != self.krate || git_crate.vers != version {
-                    return Ok(line.to_string());
-                }
-                git_crate.yanked = Some(self.yanked);
-                Ok(serde_json::to_string(&git_crate)?)
-            })
-            .collect::<CargoResult<Vec<String>>>();
-        let new = new?.join("\n") + "\n";
-        fs::write(&dst, new.as_bytes())?;
+        let conn = env.connection()?;
 
-        repo.commit_and_push(
-            &format!(
-                "{} crate `{}#{}`",
-                if self.yanked { "Yanking" } else { "Unyanking" },
-                self.krate,
-                self.version.num
-            ),
-            &repo.relative_index_file(&self.krate),
-            env.credentials(),
-        )?;
+        conn.transaction(|| {
+            let yanked_in_db = versions::table
+                .find(self.version.id)
+                .select(versions::yanked)
+                .for_update()
+                .first::<bool>(&*conn)?;
 
-        diesel::update(&self.version)
-            .set(versions::yanked.eq(self.yanked))
-            .execute(&*env.connection()?)?;
+            if yanked_in_db == self.yanked {
+                // The crate is alread in the state requested, nothing to do
+                return Ok(());
+            }
 
-        Ok(())
+            let prev = fs::read_to_string(&dst)?;
+            let version = self.version.num.to_string();
+            let new = prev
+                .lines()
+                .map(|line| {
+                    let mut git_crate = serde_json::from_str::<Crate>(line)
+                        .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
+                    if git_crate.name != self.krate || git_crate.vers != version {
+                        return Ok(line.to_string());
+                    }
+                    git_crate.yanked = Some(self.yanked);
+                    Ok(serde_json::to_string(&git_crate)?)
+                })
+                .collect::<CargoResult<Vec<String>>>();
+            let new = new?.join("\n") + "\n";
+            fs::write(&dst, new.as_bytes())?;
+
+            repo.commit_and_push(
+                &format!(
+                    "{} crate `{}#{}`",
+                    if self.yanked { "Yanking" } else { "Unyanking" },
+                    self.krate,
+                    self.version.num
+                ),
+                &repo.relative_index_file(&self.krate),
+                env.credentials(),
+            )?;
+
+            diesel::update(&self.version)
+                .set(versions::yanked.eq(self.yanked))
+                .execute(&*conn)?;
+
+            Ok(())
+        })
     }
 }
 

@@ -36,9 +36,7 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> CargoResult<Response> {
         return Err(human("must already be an owner to yank or unyank"));
     }
 
-    if version.yanked != yanked {
-        git::yank(&conn, krate.name, version, yanked)?;
-    }
+    git::yank(&conn, krate.name, version, yanked)?;
 
     #[derive(Serialize)]
     struct R {
