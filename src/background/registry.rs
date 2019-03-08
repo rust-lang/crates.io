@@ -1,4 +1,4 @@
-#![allow(clippy::new_without_default_derive)] // https://github.com/rust-lang/rust-clippy/issues/3632
+#![allow(clippy::new_without_default)] // https://github.com/rust-lang/rust-clippy/issues/3632
 
 use serde_json;
 use std::collections::HashMap;
