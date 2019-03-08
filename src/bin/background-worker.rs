@@ -19,7 +19,7 @@ fn main() {
     let config = cargo_registry::Config::default();
 
     // We're only using 1 thread, so we only need 2 connections
-    let db_config = r2d2::Pool::builder().max_size(1);
+    let db_config = r2d2::Pool::builder().max_size(2);
     let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
 
     let username = env::var("GIT_HTTP_USER");

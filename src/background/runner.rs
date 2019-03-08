@@ -57,9 +57,11 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
     }
 
     pub fn run_all_pending_jobs(&self) -> CargoResult<()> {
-        let available_job_count = storage::available_job_count(&*self.connection()?)?;
-        for _ in 0..available_job_count {
-            self.run_single_job()
+        if let Some(conn) = self.try_connection() {
+            let available_job_count = storage::available_job_count(&conn)?;
+            for _ in 0..available_job_count {
+                self.run_single_job()
+            }
         }
         Ok(())
     }
@@ -110,6 +112,10 @@ impl<Env: RefUnwindSafe + Send + Sync + 'static> Runner<Env> {
 
     fn connection(&self) -> CargoResult<DieselPooledConn> {
         self.connection_pool.get().map_err(Into::into)
+    }
+
+    fn try_connection(&self) -> Option<DieselPooledConn> {
+        self.connection_pool.try_get()
     }
 
     pub fn assert_no_failed_jobs(&self) -> CargoResult<()> {

@@ -27,6 +27,13 @@ impl DieselPool {
         }
     }
 
+    pub fn try_get(&self) -> Option<DieselPooledConn> {
+        match self {
+            DieselPool::Pool(pool) => pool.try_get().map(DieselPooledConn::Pool),
+            DieselPool::Test(conn) => conn.try_lock().map(DieselPooledConn::Test),
+        }
+    }
+
     pub fn state(&self) -> r2d2::State {
         match self {
             DieselPool::Pool(pool) => pool.state(),
