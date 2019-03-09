@@ -19,6 +19,10 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
+#[cfg(test)]
+#[macro_use]
+extern crate lazy_static;
+
 pub use crate::{app::App, config::Config, uploaders::Uploader};
 use std::sync::Arc;
 
@@ -29,6 +33,8 @@ use jemallocator::Jemalloc;
 static ALLOC: Jemalloc = Jemalloc;
 
 mod app;
+pub mod background;
+pub mod background_jobs;
 pub mod boot;
 mod config;
 pub mod db;

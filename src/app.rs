@@ -1,12 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::{db, util::CargoResult, Config, Env};
-use std::{
-    env,
-    path::PathBuf,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{env, path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use scheduled_thread_pool::ScheduledThreadPool;
@@ -25,10 +20,8 @@ pub struct App {
     /// A unique key used with conduit_cookie to generate cookies
     pub session_key: String,
 
-    /// The crate index git repository
-    pub git_repo: Mutex<git2::Repository>,
-
     /// The location on disk of the checkout of the crate index git repository
+    /// Only used in the development environment.
     pub git_repo_checkout: PathBuf,
 
     /// The server configuration
@@ -86,13 +79,10 @@ impl App {
             .connection_customizer(Box::new(db::SetStatementTimeout(db_connection_timeout)))
             .thread_pool(thread_pool);
 
-        let repo = git2::Repository::open(&config.git_repo_checkout).unwrap();
-
         App {
             diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
             github,
             session_key: config.session_key.clone(),
-            git_repo: Mutex::new(repo),
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
         }

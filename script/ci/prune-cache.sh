@@ -7,7 +7,7 @@ du -hs target/debug
 
 crate_name="cargo-registry"
 test_name="all"
-bin_names="delete-crate delete-version populate render-readmes server test-pagerduty transfer-crates update-downloads"
+bin_names="delete-crate delete-version populate render-readmes server test-pagerduty transfer-crates update-downloads background-worker monitor"
 
 normalized_crate_name=${crate_name//-/_}
 rm -v target/debug/$normalized_crate_name-*

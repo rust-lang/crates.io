@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use std::ops::Deref;
+use std::sync::Arc;
 use url::Url;
 
 use crate::middleware::app::RequestApp;
@@ -12,9 +13,10 @@ use crate::util::CargoResult;
 use crate::Env;
 
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 pub enum DieselPool {
     Pool(r2d2::Pool<ConnectionManager<PgConnection>>),
-    Test(ReentrantMutex<PgConnection>),
+    Test(Arc<ReentrantMutex<PgConnection>>),
 }
 
 impl DieselPool {
@@ -22,6 +24,13 @@ impl DieselPool {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
+        }
+    }
+
+    pub fn try_get(&self) -> Option<DieselPooledConn> {
+        match self {
+            DieselPool::Pool(pool) => pool.try_get().map(DieselPooledConn::Pool),
+            DieselPool::Test(conn) => conn.try_lock().map(DieselPooledConn::Test),
         }
     }
 
@@ -33,7 +42,7 @@ impl DieselPool {
     }
 
     fn test_conn(conn: PgConnection) -> Self {
-        DieselPool::Test(ReentrantMutex::new(conn))
+        DieselPool::Test(Arc::new(ReentrantMutex::new(conn)))
     }
 }
 
@@ -42,6 +51,8 @@ pub enum DieselPooledConn<'a> {
     Pool(r2d2::PooledConnection<ConnectionManager<PgConnection>>),
     Test(ReentrantMutexGuard<'a, PgConnection>),
 }
+
+unsafe impl<'a> Send for DieselPooledConn<'a> {}
 
 impl Deref for DieselPooledConn<'_> {
     type Target = PgConnection;

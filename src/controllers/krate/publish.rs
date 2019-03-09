@@ -196,7 +196,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(&**req.app(), &git_crate).chain_error(|| {
+        git::add_crate(&conn, git_crate).chain_error(|| {
             internal(&format_args!(
                 "could not add crate `{}` to the git repo",
                 name
