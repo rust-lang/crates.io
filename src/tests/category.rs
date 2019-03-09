@@ -74,7 +74,7 @@ fn show() {
 }
 
 #[test]
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 fn update_crate() {
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/categories/foo");
