@@ -42,8 +42,7 @@ impl Environment {
     }
 
     pub fn lock_index(&self) -> CargoResult<MutexGuard<'_, Repository>> {
-        let repo = self.index.lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let repo = self.index.lock().unwrap_or_else(|e| e.into_inner());
         repo.reset_head()?;
         Ok(repo)
     }

@@ -9,8 +9,8 @@
 
 #![deny(warnings)]
 
-use cargo_registry::{background, background_jobs::*, db};
 use cargo_registry::git::Repository;
+use cargo_registry::{background, background_jobs::*, db};
 use diesel::r2d2;
 use std::env;
 use std::thread::sleep;
@@ -34,8 +34,7 @@ fn main() {
 
     println!("Cloning index");
 
-    let repository = Repository::open(&config.index_location)
-        .expect("Failed to clone index");
+    let repository = Repository::open(&config.index_location).expect("Failed to clone index");
 
     let environment = Environment::new(repository, credentials, db_pool.clone());
 
