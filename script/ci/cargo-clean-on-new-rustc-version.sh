@@ -11,9 +11,14 @@ if [ -f $manual_stamp_file ]; then
     else
         echo "A clean build has been requested, running cargo clean"
         cargo clean
-        # The target/ directory is now gone, and the messages below will not be printed
     fi
+else
+    echo "Existing stamp not found, running cargo clean"
+    cargo clean
 fi
+
+# If `cargo clean` was run above, then the target/ directory is now
+# gone and the messages below will not be printed
 
 stamp_file=target/rustc_version_stamp
 current_version=$(rustc --version)
