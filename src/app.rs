@@ -1,6 +1,6 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::{db, util::CargoResult, Config, Env};
+use crate::{db, util::CargoResult, util::rate_limit, Config, Env};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
@@ -23,6 +23,9 @@ pub struct App {
     /// The location on disk of the checkout of the crate index git repository
     /// Only used in the development environment.
     pub git_repo_checkout: PathBuf,
+
+    /// The type of rate limiting to do.
+    pub rate_limiter: Box<dyn rate_limit::RateLimiter + Send + Sync>,
 
     /// The server configuration
     pub config: Config,
@@ -84,11 +87,19 @@ impl App {
             .connection_customizer(Box::new(connection_config))
             .thread_pool(thread_pool);
 
+        let diesel_database = db::diesel_pool(&config.db_url, config.env, diesel_db_config);
+
+        // TODO: Use environment variable to select rate limiter style until we're confident that
+        // rate limiting doesn't add extra load.
+        let rate_limiter = Box::new(rate_limit::RateLimiterMemory::new());
+        // let rate_limiter = Box::new(rate_limit::RateLimiterPostgres::new(diesel_database.clone()));
+
         App {
-            diesel_database: db::diesel_pool(&config.db_url, config.env, diesel_db_config),
+            diesel_database,
             github,
             session_key: config.session_key.clone(),
             git_repo_checkout: config.git_repo_checkout.clone(),
+            rate_limiter,
             config: config.clone(),
         }
     }

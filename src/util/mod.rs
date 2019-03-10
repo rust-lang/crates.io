@@ -16,6 +16,7 @@ mod io_util;
 mod request_helpers;
 mod request_proxy;
 pub mod rfc3339;
+pub mod rate_limit;
 
 pub fn json_response<T: Serialize>(t: &T) -> Response {
     let json = serde_json::to_string(t).unwrap();

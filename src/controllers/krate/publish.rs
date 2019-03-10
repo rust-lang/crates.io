@@ -9,6 +9,7 @@ use crate::git;
 use crate::render;
 use crate::util::{internal, ChainError, Maximums};
 use crate::util::{read_fill, read_le_u32};
+use crate::util::rate_limit::*;
 
 use crate::controllers::prelude::*;
 use crate::models::dependency;
@@ -72,6 +73,9 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
              Visit https://crates.io/me to set and verify your email address.",
         )
     })?;
+
+    // TODO: Do something different if this is a new crate or an existing crate
+    req.check_rate_limit(&user, RateLimitCategory::PublishCrate)?;
 
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.

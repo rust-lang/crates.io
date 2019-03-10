@@ -259,6 +259,31 @@ impl fmt::Display for Unauthorized {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct TooManyRequests;
+
+impl CargoError for TooManyRequests {
+    fn description(&self) -> &str {
+        "too many requests"
+    }
+
+    fn response(&self) -> Option<Response> {
+        let mut response = json_response(&Bad {
+            errors: vec![StringError {
+                detail: "too many requests have been seen recently".to_string(),
+            }],
+        });
+        response.status = (429, "Too Many Requests");
+        Some(response)
+    }
+}
+
+impl fmt::Display for TooManyRequests {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "too many requests have been sent recently".fmt(f)
+    }
+}
+
 #[derive(Debug)]
 struct BadRequest(String);
 
