@@ -7,26 +7,17 @@ use cargo_registry::{
     db,
     models::VersionDownload,
     schema::{crate_downloads, crates, metadata, version_downloads, versions},
+    util::CargoResult,
 };
-use std::{env, thread, time::Duration};
 
 use diesel::prelude::*;
 
 static LIMIT: i64 = 1000;
 
-fn main() {
-    let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
-    let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
-    loop {
-        let conn = db::connect_now().unwrap();
-        update(&conn).unwrap();
-        drop(conn);
-        if daemon {
-            thread::sleep(Duration::new(sleep.unwrap(), 0));
-        } else {
-            break;
-        }
-    }
+fn main() -> CargoResult<()> {
+    let conn = db::connect_now()?;
+    update(&conn)?;
+    Ok(())
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
