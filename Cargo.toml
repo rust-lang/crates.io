@@ -11,7 +11,6 @@ edition = "2018"
 
 [profile.release]
 opt-level = 2
-debug = true
 
 [lib]
 name = "cargo_registry"
