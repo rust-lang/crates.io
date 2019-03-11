@@ -5,14 +5,14 @@ use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+use swirl::{Job, errors::PerformError};
 use tempdir::TempDir;
 use url::Url;
 
-use crate::background::Job;
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::{internal, CargoResult};
+use crate::util::errors::{internal, CargoResult, std_error_no_send};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -82,7 +82,7 @@ impl Repository {
         msg: &str,
         modified_file: &Path,
         credentials: Option<(&str, &str)>,
-    ) -> CargoResult<()> {
+    ) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -110,7 +110,7 @@ impl Repository {
             callbacks.push_update_reference(|refname, status| {
                 assert_eq!(refname, "refs/heads/master");
                 if let Some(s) = status {
-                    ref_status = Err(internal(&format_args!("failed to push a ref: {}", s)))
+                    ref_status = Err(format!("failed to push a ref: {}", s).into())
                 }
                 Ok(())
             });
@@ -140,8 +140,8 @@ impl Job for AddCrate {
     type Environment = Environment;
     const JOB_TYPE: &'static str = "add_crate";
 
-    fn perform(self, env: &Self::Environment) -> CargoResult<()> {
-        let repo = env.lock_index()?;
+    fn perform(self, env: &Self::Environment) -> Result<(), PerformError> {
+        let repo = env.lock_index().map_err(std_error_no_send)?;
         let dst = repo.index_file(&self.krate.name);
 
         // Add the crate to its relevant file
@@ -159,7 +159,7 @@ impl Job for AddCrate {
 }
 
 pub fn add_crate(conn: &PgConnection, krate: Crate) -> CargoResult<()> {
-    AddCrate { krate }.enqueue(conn).map_err(Into::into)
+    AddCrate { krate }.enqueue(conn).map_err(|e| internal(&e))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -173,11 +173,11 @@ impl Job for Yank {
     type Environment = Environment;
     const JOB_TYPE: &'static str = "yank";
 
-    fn perform(self, env: &Self::Environment) -> CargoResult<()> {
-        let repo = env.lock_index()?;
+    fn perform(self, env: &Self::Environment) -> Result<(), PerformError> {
+        let repo = env.lock_index().map_err(std_error_no_send)?;
         let dst = repo.index_file(&self.krate);
 
-        let conn = env.connection()?;
+        let conn = env.connection().map_err(std_error_no_send)?;
 
         conn.transaction(|| {
             let yanked_in_db = versions::table
@@ -197,14 +197,14 @@ impl Job for Yank {
                 .lines()
                 .map(|line| {
                     let mut git_crate = serde_json::from_str::<Crate>(line)
-                        .map_err(|_| internal(&format_args!("couldn't decode: `{}`", line)))?;
+                        .map_err(|_| format!("couldn't decode: `{}`", line))?;
                     if git_crate.name != self.krate || git_crate.vers != version {
                         return Ok(line.to_string());
                     }
                     git_crate.yanked = Some(self.yanked);
                     Ok(serde_json::to_string(&git_crate)?)
                 })
-                .collect::<CargoResult<Vec<String>>>();
+                .collect::<Result<Vec<_>, PerformError>>();
             let new = new?.join("\n") + "\n";
             fs::write(&dst, new.as_bytes())?;
 
@@ -239,5 +239,5 @@ pub fn yank(conn: &PgConnection, krate: String, version: Version, yanked: bool) 
         yanked,
     }
     .enqueue(conn)
-    .map_err(Into::into)
+    .map_err(|e| internal(&e))
 }
