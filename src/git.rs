@@ -5,14 +5,14 @@ use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
-use swirl::{Job, errors::PerformError};
+use swirl::{errors::PerformError, Job};
 use tempdir::TempDir;
 use url::Url;
 
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::errors::{internal, CargoResult, std_error_no_send};
+use crate::util::errors::{internal, std_error_no_send, CargoResult};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {

@@ -1,10 +1,10 @@
-use swirl::{Builder, Runner};
 use std::panic::AssertUnwindSafe;
 use std::sync::{Mutex, MutexGuard};
+use swirl::{Builder, Runner};
 
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::{AddCrate, Repository, Yank};
-use crate::util::errors::{CargoResult, CargoErrToStdErr};
+use crate::util::errors::{CargoErrToStdErr, CargoResult};
 
 impl<'a> swirl::DieselPool<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
