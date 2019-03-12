@@ -35,14 +35,6 @@ before_script:
 addons:
   chrome: stable
   postgresql: "9.5"
-  apt:
-    sources:
-      - kalakris-cmake
-    packages:
-      - cmake
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
 
 matrix:
   fast_finish: true

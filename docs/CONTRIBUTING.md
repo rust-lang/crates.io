@@ -145,7 +145,6 @@ In order to run the backend, you will need to have installed:
 
 - [Rust](https://www.rust-lang.org/en-US/) stable >= 1.16.0 and cargo, which comes with Rust
 - [Postgres](https://www.postgresql.org/) >= 9.5
-- [CMake](https://cmake.org/download/) >= 3.6.1
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
 - [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0
 
@@ -229,15 +228,6 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > suggestions from Stack Overflow. Open an issue on this repo if you get stuck,
 > we'll help fix the problem and and will add the solution to these
 > instructions!
-
-##### CMake
-
-- All platforms: CMake [has binary distributions
-  available](https://cmake.org/download/)
-- macOS: you can also install with homebrew by using `brew install cmake`
-- Linux: you should be able to use the distribution repositories by doing `sudo
-  apt-get install cmake` (Ubuntu) or `sudo dnf install cmake` (Fedora) or
-  whatever is appropriate for your distribution.
 
 ##### OpenSSL
 
