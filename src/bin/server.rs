@@ -42,11 +42,15 @@ fn main() {
             .and_then(|s| s.parse().ok())
             .unwrap_or(8888)
     };
-    let threads = if config.env == Env::Development {
-        1
-    } else {
-        50
-    };
+    let threads = env::var("SERVER_THREADS")
+        .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
+        .unwrap_or_else(|_| {
+            if config.env == Env::Development {
+                1
+            } else {
+                50
+            }
+        });
 
     let server = if env::var("USE_HYPER").is_ok() {
         println!("Booting with a hyper based server");
