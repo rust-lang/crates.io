@@ -190,6 +190,7 @@ impl<'a> MarkdownRenderer<'a> {
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> CargoResult<String> {
         let options = comrak::ComrakOptions {
+            unsafe_: true, // The output will be sanitized with `ammonia`
             ext_autolink: true,
             ext_strikethrough: true,
             ext_table: true,
