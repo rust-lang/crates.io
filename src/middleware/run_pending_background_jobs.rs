@@ -1,6 +1,7 @@
+use swirl::Runner;
+
 use super::app::RequestApp;
 use super::prelude::*;
-use crate::background::Runner;
 use crate::background_jobs::*;
 use crate::git::Repository;
 

@@ -310,26 +310,33 @@ pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     Box::new(BadRequest(error.to_string()))
 }
 
+#[derive(Debug)]
+pub struct CargoErrToStdErr(pub Box<dyn CargoError>);
+
+impl Error for CargoErrToStdErr {
+    fn description(&self) -> &str {
+        self.0.description()
+    }
+}
+
+impl fmt::Display for CargoErrToStdErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)?;
+
+        let mut err = &*self.0;
+        while let Some(cause) = err.cause() {
+            err = cause;
+            write!(f, "\nCaused by: {}", err)?;
+        }
+
+        Ok(())
+    }
+}
+
 pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
-    #[derive(Debug)]
-    struct E(Box<dyn CargoError>);
-    impl Error for E {
-        fn description(&self) -> &str {
-            self.0.description()
-        }
-    }
-    impl fmt::Display for E {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{}", self.0)?;
+    Box::new(CargoErrToStdErr(e))
+}
 
-            let mut err = &*self.0;
-            while let Some(cause) = err.cause() {
-                err = cause;
-                write!(f, "\nCaused by: {}", err)?;
-            }
-
-            Ok(())
-        }
-    }
-    Box::new(E(e))
+pub fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
+    Box::new(CargoErrToStdErr(e))
 }

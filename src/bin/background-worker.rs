@@ -10,7 +10,7 @@
 #![deny(warnings)]
 
 use cargo_registry::git::Repository;
-use cargo_registry::{background, background_jobs::*, db};
+use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
 use std::env;
 use std::thread::sleep;
@@ -38,7 +38,7 @@ fn main() {
 
     let environment = Environment::new(repository, credentials, db_pool.clone());
 
-    let builder = background::Runner::builder(db_pool, environment).thread_count(1);
+    let builder = swirl::Runner::builder(db_pool, environment).thread_count(1);
     let runner = job_runner(builder);
 
     println!("Runner booted, running jobs");
