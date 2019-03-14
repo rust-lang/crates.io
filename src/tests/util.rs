@@ -48,7 +48,6 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        dotenv::dotenv().ok();
         let (app, middle) = crate::simple_app(Uploader::Panic);
         let inner = Rc::new(TestAppInner {
             app,

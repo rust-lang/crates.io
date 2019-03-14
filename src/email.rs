@@ -1,8 +1,6 @@
-use std::env;
 use std::path::Path;
 
 use crate::util::{bad_request, CargoResult};
-use dotenv::dotenv;
 
 use lettre::file::FileTransport;
 use lettre::smtp::authentication::{Credentials, Mechanism};
@@ -19,12 +17,10 @@ pub struct MailgunConfigVars {
 }
 
 pub fn init_config_vars() -> Option<MailgunConfigVars> {
-    dotenv().ok();
-
     match (
-        env::var("MAILGUN_SMTP_LOGIN"),
-        env::var("MAILGUN_SMTP_PASSWORD"),
-        env::var("MAILGUN_SMTP_SERVER"),
+        dotenv::var("MAILGUN_SMTP_LOGIN"),
+        dotenv::var("MAILGUN_SMTP_PASSWORD"),
+        dotenv::var("MAILGUN_SMTP_SERVER"),
     ) {
         (Ok(login), Ok(password), Ok(server)) => Some(MailgunConfigVars {
             smtp_login: login,

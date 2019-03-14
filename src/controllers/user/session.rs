@@ -133,13 +133,10 @@ pub fn logout(req: &mut dyn Request) -> CargoResult<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotenv::dotenv;
-    use std::env;
 
     fn pg_connection() -> PgConnection {
-        let _ = dotenv();
         let database_url =
-            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+            dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         PgConnection::establish(&database_url).unwrap()
     }
 

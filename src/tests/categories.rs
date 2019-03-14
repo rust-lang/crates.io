@@ -1,8 +1,6 @@
 use cargo_registry::schema::categories;
-use std::env;
 
 use diesel::*;
-use dotenv::dotenv;
 
 const ALGORITHMS: &str = r#"
 [algorithms]
@@ -40,9 +38,8 @@ description = "Another category ho hum"
 "#;
 
 fn pg_connection() -> PgConnection {
-    let _ = dotenv();
     let database_url =
-        env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+        dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
     let conn = PgConnection::establish(&database_url).unwrap();
     conn.begin_test_transaction().unwrap();
     conn

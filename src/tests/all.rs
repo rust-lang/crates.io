@@ -20,7 +20,6 @@ use cargo_registry::{
 };
 use std::{
     borrow::Cow,
-    env,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -112,15 +111,13 @@ fn app() -> (
     Arc<App>,
     conduit_middleware::MiddlewareBuilder,
 ) {
-    dotenv::dotenv().ok();
-
     let (proxy, bomb) = record::proxy();
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
-            std::env::var("S3_SECRET_KEY").unwrap_or_default(),
+            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
             // When testing we route all API traffic over HTTP so we can
             // sniff/record it, but everywhere else we use https
             "http",
@@ -140,8 +137,8 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
         index_location: Url::from_file_path(&git::bare()).unwrap(),
-        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
-        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
+        gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: Env::Test,
         max_upload_size: 3000,
@@ -160,7 +157,7 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
 
 // Return the environment variable only if it has been defined
 fn env(var: &str) -> String {
-    match env::var(var) {
+    match dotenv::var(var) {
         Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
         Ok(s) => s,
         _ => panic!(
