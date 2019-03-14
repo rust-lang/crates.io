@@ -95,8 +95,7 @@ pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
 /// Panics if the environment variable with the name passed in as an argument is not defined
 /// in the current environment.
 pub fn env(s: &str) -> String {
-    dotenv::dotenv().ok();
-    ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
+    dotenv::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
 
 sql_function!(fn lower(x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

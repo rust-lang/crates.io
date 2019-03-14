@@ -13,7 +13,6 @@ mod on_call;
 
 use cargo_registry::{db, util::CargoResult};
 use diesel::prelude::*;
-use std::env;
 
 fn main() -> CargoResult<()> {
     let conn = db::connect_now()?;
@@ -30,7 +29,7 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> CargoResult<()> {
 
     println!("Checking for stalled background jobs");
 
-    let max_job_time = env::var("MAX_JOB_TIME")
+    let max_job_time = dotenv::var("MAX_JOB_TIME")
         .map(|s| s.parse::<i32>().unwrap())
         .unwrap_or(15);
 

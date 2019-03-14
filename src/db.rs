@@ -1,5 +1,3 @@
-use std::env;
-
 use conduit::Request;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection};
@@ -61,7 +59,7 @@ impl Deref for DieselPooledConn<'_> {
 pub fn connect_now() -> ConnectionResult<PgConnection> {
     use diesel::Connection;
     let mut url = Url::parse(&crate::env("DATABASE_URL")).expect("Invalid database URL");
-    if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
     PgConnection::establish(&url.to_string())
@@ -73,7 +71,7 @@ pub fn diesel_pool(
     config: r2d2::Builder<ConnectionManager<PgConnection>>,
 ) -> DieselPool {
     let mut url = Url::parse(url).expect("Invalid database URL");
-    if env::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
+    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
 

@@ -12,7 +12,6 @@
 use cargo_registry::git::Repository;
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
-use std::env;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -25,8 +24,8 @@ fn main() {
     let db_config = r2d2::Pool::builder().max_size(2);
     let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
 
-    let username = env::var("GIT_HTTP_USER");
-    let password = env::var("GIT_HTTP_PWD");
+    let username = dotenv::var("GIT_HTTP_USER");
+    let password = dotenv::var("GIT_HTTP_PWD");
     let credentials = match (username, password) {
         (Ok(u), Ok(p)) => Some((u, p)),
         _ => None,
