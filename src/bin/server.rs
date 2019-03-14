@@ -3,7 +3,6 @@
 use cargo_registry::{boot, App, Env};
 use jemalloc_ctl;
 use std::{
-    env,
     fs::File,
     sync::{mpsc::channel, Arc},
 };
@@ -33,16 +32,16 @@ fn main() {
     let categories_toml = include_str!("../boot/categories.toml");
     boot::categories::sync(categories_toml).unwrap();
 
-    let heroku = env::var("HEROKU").is_ok();
+    let heroku = dotenv::var("HEROKU").is_ok();
     let port = if heroku {
         8888
     } else {
-        env::var("PORT")
+        dotenv::var("PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(8888)
     };
-    let threads = env::var("SERVER_THREADS")
+    let threads = dotenv::var("SERVER_THREADS")
         .map(|s| s.parse().expect("SERVER_THREADS was not a valid number"))
         .unwrap_or_else(|_| {
             if config.env == Env::Development {
@@ -52,7 +51,7 @@ fn main() {
             }
         });
 
-    let server = if env::var("USE_HYPER").is_ok() {
+    let server = if dotenv::var("USE_HYPER").is_ok() {
         println!("Booting with a hyper based server");
         Hyper(HyperService::new(app, threads as usize))
     } else {

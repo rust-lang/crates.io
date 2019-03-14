@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::{db, util::CargoResult, Config, Env};
-use std::{env, path::PathBuf, sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
 use scheduled_thread_pool::ScheduledThreadPool;
@@ -45,25 +45,25 @@ impl App {
         );
         github.scopes.push(String::from("read:org"));
 
-        let db_pool_size = match (env::var("DB_POOL_SIZE"), config.env) {
+        let db_pool_size = match (dotenv::var("DB_POOL_SIZE"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_POOL_SIZE"),
             (_, Env::Production) => 10,
             _ => 1,
         };
 
-        let db_min_idle = match (env::var("DB_MIN_IDLE"), config.env) {
+        let db_min_idle = match (dotenv::var("DB_MIN_IDLE"), config.env) {
             (Ok(num), _) => Some(num.parse().expect("couldn't parse DB_MIN_IDLE")),
             (_, Env::Production) => Some(5),
             _ => None,
         };
 
-        let db_helper_threads = match (env::var("DB_HELPER_THREADS"), config.env) {
+        let db_helper_threads = match (dotenv::var("DB_HELPER_THREADS"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_HELPER_THREADS"),
             (_, Env::Production) => 3,
             _ => 1,
         };
 
-        let db_connection_timeout = match (env::var("DB_TIMEOUT"), config.env) {
+        let db_connection_timeout = match (dotenv::var("DB_TIMEOUT"), config.env) {
             (Ok(num), _) => num.parse().expect("couldn't parse DB_TIMEOUT"),
             (_, Env::Production) => 10,
             (_, Env::Test) => 1,

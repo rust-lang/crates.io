@@ -1,5 +1,4 @@
 use cargo_registry::util::{internal, CargoResult};
-use std::env;
 
 use reqwest::{header, StatusCode as Status};
 
@@ -27,8 +26,8 @@ impl Event {
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
     pub fn send(self) -> CargoResult<()> {
-        let api_token = env::var("PAGERDUTY_API_TOKEN")?;
-        let service_key = env::var("PAGERDUTY_INTEGRATION_KEY")?;
+        let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
+        let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 
         let mut response = reqwest::Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")

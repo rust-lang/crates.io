@@ -3,7 +3,6 @@ use cargo_registry::models::NewUser;
 use std::{
     borrow::Cow,
     collections::HashSet,
-    env,
     fs::{self, File},
     io::{self, prelude::*},
     net,
@@ -80,7 +79,7 @@ enum Record {
 
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
-    let record = env::var("RECORD").is_ok();
+    let record = dotenv::var("RECORD").is_ok();
 
     let a = t!(net::TcpListener::bind("127.0.0.1:0"));
     let ret = format!("http://{}", t!(a.local_addr()));
