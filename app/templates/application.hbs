@@ -20,7 +20,10 @@
                 placeholder="Click or press 'S' to search..."
                 value={{searchQuery}}
                 oninput={{action (mut searchQuery) value="target.value"}}
+                autocorrect="off"
+                autocapitalize="off"
                 autofocus="autofocus"
+                spellcheck="false"
                 required
                 data-test-search-input>
         <label for="cargo-desktop-search">Search</label>
