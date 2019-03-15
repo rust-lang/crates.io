@@ -12,7 +12,7 @@ use url::Url;
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::errors::{internal, std_error_no_send, CargoResult};
+use crate::util::errors::{std_error_no_send, CargoError, CargoResult};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -159,7 +159,9 @@ impl Job for AddCrate {
 }
 
 pub fn add_crate(conn: &PgConnection, krate: Crate) -> CargoResult<()> {
-    AddCrate { krate }.enqueue(conn).map_err(|e| internal(&e))
+    AddCrate { krate }
+        .enqueue(conn)
+        .map_err(|e| CargoError::from_std_error(e))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -239,5 +241,5 @@ pub fn yank(conn: &PgConnection, krate: String, version: Version, yanked: bool) 
         yanked,
     }
     .enqueue(conn)
-    .map_err(|e| internal(&e))
+    .map_err(|e| CargoError::from_std_error(e))
 }

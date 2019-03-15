@@ -49,6 +49,22 @@ impl dyn CargoError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
     }
+
+    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn CargoError> {
+        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
+    }
+
+    fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
+        match err.downcast_ref() {
+            Some(DieselError::NotFound) => Some(Box::new(NotFound)),
+            Some(DieselError::DatabaseError(_, info))
+                if info.message().ends_with("read-only transaction") =>
+            {
+                Some(Box::new(ReadOnlyMode))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl CargoError for Box<dyn CargoError> {
@@ -155,17 +171,9 @@ impl<E: Error + Send + 'static> CargoError for E {
     }
 }
 
-impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
+impl<E: Error + Send + 'static> From<E> for Box<dyn CargoError> {
     fn from(err: E) -> Box<dyn CargoError> {
-        match Any::downcast_ref::<DieselError>(&err) {
-            Some(DieselError::NotFound) => Box::new(NotFound),
-            Some(DieselError::DatabaseError(_, info))
-                if info.message().ends_with("read-only transaction") =>
-            {
-                Box::new(ReadOnlyMode)
-            }
-            _ => Box::new(err),
-        }
+        CargoError::try_convert(&err).unwrap_or_else(|| Box::new(err))
     }
 }
 // =============================================================================
