@@ -68,6 +68,7 @@ mod git;
 mod keyword;
 mod krate;
 mod owners;
+mod read_only_mode;
 mod record;
 mod schema_details;
 mod server;

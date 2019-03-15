@@ -45,7 +45,9 @@ impl Middleware for CurrentUser {
             // Otherwise, look for an `Authorization` header on the request
             // and try to find a user in the database with a matching API token
             let user = if let Some(headers) = req.headers().find("Authorization") {
-                User::find_by_api_token(&conn, headers[0]).ok()
+                User::find_by_api_token(&conn, headers[0])
+                    .optional()
+                    .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?
             } else {
                 None
             };
