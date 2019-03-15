@@ -119,8 +119,6 @@ fn app() -> (
 }
 
 fn simple_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    git::init();
-
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),

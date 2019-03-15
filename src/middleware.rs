@@ -10,7 +10,6 @@ pub use self::debug::*;
 pub use self::ember_index_rewrite::EmberIndexRewrite;
 pub use self::head::Head;
 use self::log_connection_pool_status::LogConnectionPoolStatus;
-use self::run_pending_background_jobs::RunPendingBackgroundJobs;
 pub use self::security_headers::SecurityHeaders;
 pub use self::static_or_continue::StaticOrContinue;
 
@@ -24,7 +23,6 @@ mod head;
 mod log_connection_pool_status;
 mod log_request;
 mod require_user_agent;
-mod run_pending_background_jobs;
 mod security_headers;
 mod static_or_continue;
 
@@ -100,10 +98,6 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     if env != Env::Test {
         m.around(log_request::LogRequests::default());
-    }
-
-    if env == Env::Test {
-        m.add(RunPendingBackgroundJobs);
     }
 
     m

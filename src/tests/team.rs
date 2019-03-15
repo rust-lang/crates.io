@@ -279,7 +279,7 @@ fn publish_not_owned() {
 // Test trying to publish a krate we do own (but only because of teams)
 #[test]
 fn publish_owned() {
-    let (app, _) = TestApp::with_proxy().empty();
+    let (app, _) = TestApp::full().empty();
     let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 

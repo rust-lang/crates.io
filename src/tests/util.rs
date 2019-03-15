@@ -1,6 +1,6 @@
 //! This module provides utility types and traits for managing a test session
 //!
-//! Tests start by using one of the `TestApp` constructors, `init` or `with_proxy`.  This returns a
+//! Tests start by using one of the `TestApp` constructors: `init`, `with_proxy`, or `full`.  This returns a
 //! `TestAppBuilder` which provides convience methods for creating up to one user, optionally with
 //! a token.  The builder methods all return at least an initialized `TestApp` and a
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
@@ -24,21 +24,67 @@ use crate::{
     VersionResponse,
 };
 use cargo_registry::{
+    background_jobs::Environment,
+    db::DieselPool,
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
     App,
 };
 use diesel::PgConnection;
-use std::{rc::Rc, sync::Arc};
+use std::{rc::Rc, sync::Arc, time::Duration};
+use swirl::Runner;
 
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
+
+use cargo_registry::git::Repository as WorkerRepository;
+use git2::Repository as UpstreamRepository;
 
 struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
     _bomb: Option<record::Bomb>,
     middle: conduit_middleware::MiddlewareBuilder,
+    index: Option<UpstreamRepository>,
+    runner: Option<Runner<Environment, DieselPool>>,
+}
+
+use swirl::schema::background_jobs;
+// FIXME: This is copied from swirl::storage, because it is private
+#[derive(Queryable, Identifiable, Debug, Clone)]
+struct BackgroundJob {
+    pub id: i64,
+    pub job_type: String,
+    pub data: serde_json::Value,
+}
+
+impl Drop for TestAppInner {
+    fn drop(&mut self) {
+        use diesel::prelude::*;
+        use swirl::schema::background_jobs::dsl::*;
+
+        // Avoid a double-panic if the test is already failing
+        if std::thread::panicking() {
+            return;
+        }
+
+        // Lazily run any remaining jobs
+        if let Some(runner) = &self.runner {
+            runner.run_all_pending_jobs().expect("Could not run jobs");
+            runner.assert_no_failed_jobs().expect("Failed jobs remain");
+        }
+
+        // Manually verify that all jobs have completed successfully
+        // This will catch any tests that enqueued a job but forgot to initialize the runner
+        let conn = self.app.diesel_database.get().unwrap();
+        let job_count: i64 = background_jobs.count().get_result(&*conn).unwrap();
+        assert_eq!(
+            0, job_count,
+            "Unprocessed or failed jobs remain in the queue"
+        );
+
+        // TODO: If a runner was started, obtain the clone from it and ensure its HEAD matches the upstream index HEAD
+    }
 }
 
 /// A representation of the app and its database transaction
@@ -52,17 +98,53 @@ impl TestApp {
             app,
             _bomb: None,
             middle,
+            index: None,
+            runner: None,
         });
         TestAppBuilder(TestApp(inner))
     }
 
-    /// Initialize a full application that can record and playback outgoing HTTP requests
+    /// Initialize the app and a proxy that can record and playback outgoing HTTP requests
     pub fn with_proxy() -> TestAppBuilder {
         let (bomb, app, middle) = app();
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: Some(bomb),
             middle,
+            index: None,
+            runner: None,
+        });
+        TestAppBuilder(TestApp(inner))
+    }
+
+    /// Initialize a full application, with a proxy, index, and background worker
+    pub fn full() -> TestAppBuilder {
+        use crate::git;
+
+        let (bomb, app, middle) = app();
+        git::init();
+
+        let thread_local_path = git::bare();
+        let index = UpstreamRepository::open_bare(thread_local_path).unwrap();
+
+        let index_clone =
+            WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
+        let connection_pool = app.diesel_database.clone();
+        let environment = Environment::new(index_clone, None, connection_pool.clone());
+
+        let runner = Runner::builder(connection_pool, environment)
+            // We only have 1 connection in tests, so trying to run more than
+            // 1 job concurrently will just block
+            .thread_count(1)
+            .job_start_timeout(Duration::from_secs(1))
+            .build();
+
+        let inner = Rc::new(TestAppInner {
+            app,
+            _bomb: Some(bomb),
+            middle,
+            index: Some(index),
+            runner: Some(runner),
         });
         TestAppBuilder(TestApp(inner))
     }
@@ -103,6 +185,43 @@ impl TestApp {
             app: TestApp(Rc::clone(&self.0)),
             user,
         }
+    }
+
+    /// Obtain a reference to the upstream repository ("the index")
+    pub fn upstream_repository(&self) -> &UpstreamRepository {
+        self.0.index.as_ref().unwrap()
+    }
+
+    /// Obtain a list of crates from the index HEAD
+    pub fn crates_from_index_head(&self, path: &str) -> Vec<cargo_registry::git::Crate> {
+        let path = std::path::Path::new(path);
+        let index = self.upstream_repository();
+        let tree = index.head().unwrap().peel_to_tree().unwrap();
+        let blob = tree
+            .get_path(path)
+            .unwrap()
+            .to_object(&index)
+            .unwrap()
+            .peel_to_blob()
+            .unwrap();
+        let content = blob.content();
+
+        // The index format consists of one JSON object per line
+        // It is not a JSON array
+        let lines = std::str::from_utf8(content).unwrap().lines();
+        lines
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect()
+    }
+
+    pub fn run_pending_background_jobs(&self) {
+        let runner = &self.0.runner;
+        let runner = runner.as_ref().expect("Index has not been initialized");
+
+        runner.run_all_pending_jobs().expect("Could not run jobs");
+        runner
+            .assert_no_failed_jobs()
+            .expect("Could not determine if jobs failed");
     }
 
     /// Obtain a reference to the inner `App` value
@@ -203,7 +322,13 @@ pub trait RequestHelper {
         self.search(&format!("user_id={}", id))
     }
 
-    /// Publish a crate
+    /// Enqueue a crate for publishing
+    ///
+    /// The publish endpoint will enqueue a background job to update the index.  A test must run
+    /// any pending background jobs if it intends to observe changes to the index.
+    ///
+    /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
+    /// all background tasks complete successfully.
     fn publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
         let krate_name = publish_builder.krate_name.clone();
         let response = self.put("/api/v1/crates/new", &publish_builder.body());

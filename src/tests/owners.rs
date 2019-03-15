@@ -59,7 +59,7 @@ impl crate::util::MockCookieUser {
 
 #[test]
 fn new_crate_owner() {
-    let (app, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
