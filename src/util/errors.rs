@@ -49,6 +49,22 @@ impl dyn CargoError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
     }
+
+    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn CargoError> {
+        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
+    }
+
+    fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
+        match err.downcast_ref() {
+            Some(DieselError::NotFound) => Some(Box::new(NotFound)),
+            Some(DieselError::DatabaseError(_, info))
+                if info.message().ends_with("read-only transaction") =>
+            {
+                Some(Box::new(ReadOnlyMode))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl CargoError for Box<dyn CargoError> {
@@ -155,13 +171,9 @@ impl<E: Error + Send + 'static> CargoError for E {
     }
 }
 
-impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
+impl<E: Error + Send + 'static> From<E> for Box<dyn CargoError> {
     fn from(err: E) -> Box<dyn CargoError> {
-        if let Some(DieselError::NotFound) = Any::downcast_ref::<DieselError>(&err) {
-            Box::new(NotFound)
-        } else {
-            Box::new(err)
-        }
+        CargoError::try_convert(&err).unwrap_or_else(|| Box::new(err))
     }
 }
 // =============================================================================
@@ -339,4 +351,35 @@ pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
 
 pub fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
     Box::new(CargoErrToStdErr(e))
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ReadOnlyMode;
+
+impl CargoError for ReadOnlyMode {
+    fn description(&self) -> &str {
+        "tried to write in read only mode"
+    }
+
+    fn response(&self) -> Option<Response> {
+        let mut response = json_response(&Bad {
+            errors: vec![StringError {
+                detail: "Crates.io is currently in read-only mode for maintenance. \
+                         Please try again later."
+                    .to_string(),
+            }],
+        });
+        response.status = (503, "Service Unavailable");
+        Some(response)
+    }
+
+    fn human(&self) -> bool {
+        true
+    }
+}
+
+impl fmt::Display for ReadOnlyMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "Tried to write in read only mode".fmt(f)
+    }
 }

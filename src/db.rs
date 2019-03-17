@@ -100,15 +100,26 @@ impl<T: Request + ?Sized> RequestTransaction for T {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct SetStatementTimeout(pub u64);
+pub struct ConnectionConfig {
+    pub statement_timeout: u64,
+    pub read_only: bool,
+}
 
-impl CustomizeConnection<PgConnection, r2d2::Error> for SetStatementTimeout {
+impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
     fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), r2d2::Error> {
         use diesel::sql_query;
 
-        sql_query(format!("SET statement_timeout = {}", self.0 * 1000))
-            .execute(conn)
-            .map_err(r2d2::Error::QueryError)?;
+        sql_query(format!(
+            "SET statement_timeout = {}",
+            self.statement_timeout * 1000
+        ))
+        .execute(conn)
+        .map_err(r2d2::Error::QueryError)?;
+        if self.read_only {
+            sql_query("SET default_transaction_read_only = 't'")
+                .execute(conn)
+                .map_err(r2d2::Error::QueryError)?;
+        }
         Ok(())
     }
 }

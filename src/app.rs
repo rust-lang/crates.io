@@ -69,6 +69,11 @@ impl App {
             (_, Env::Test) => 1,
             _ => 30,
         };
+        let read_only_mode = dotenv::var("READ_ONLY_MODE").is_ok();
+        let connection_config = db::ConnectionConfig {
+            statement_timeout: db_connection_timeout,
+            read_only: read_only_mode,
+        };
 
         let thread_pool = Arc::new(ScheduledThreadPool::new(db_helper_threads));
 
@@ -76,7 +81,7 @@ impl App {
             .max_size(db_pool_size)
             .min_idle(db_min_idle)
             .connection_timeout(Duration::from_secs(db_connection_timeout))
-            .connection_customizer(Box::new(db::SetStatementTimeout(db_connection_timeout)))
+            .connection_customizer(Box::new(connection_config))
             .thread_pool(thread_pool);
 
         App {
