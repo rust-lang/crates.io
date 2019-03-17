@@ -98,6 +98,12 @@ description = """
 Algorithms intended for securing data.\
 """
 
+[cryptography.categories.cryptocurrencies]
+name = "Cryptocurrencies"
+description = """
+Crates for digital currencies, wallets, and distributed ledgers.\
+"""
+
 [database]
 name = "Database interfaces"
 description = """
