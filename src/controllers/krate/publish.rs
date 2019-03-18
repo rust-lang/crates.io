@@ -1,18 +1,17 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use hex::ToHex;
 use std::collections::HashMap;
 use std::sync::Arc;
-
-use hex::ToHex;
-
-use crate::git;
-use crate::render;
-use crate::util::{internal, ChainError, Maximums};
-use crate::util::{read_fill, read_le_u32};
+use swirl::Job;
 
 use crate::controllers::prelude::*;
+use crate::git;
 use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use crate::render;
+use crate::util::{internal, CargoError, ChainError, Maximums};
+use crate::util::{read_fill, read_le_u32};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -196,12 +195,15 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(&conn, git_crate).chain_error(|| {
-            internal(&format_args!(
-                "could not add crate `{}` to the git repo",
-                name
-            ))
-        })?;
+        git::add_crate(git_crate)
+            .enqueue(&conn)
+            .map_err(|e| CargoError::from_std_error(e))
+            .chain_error(|| {
+                internal(&format_args!(
+                    "could not add crate `{}` to the git repo",
+                    name
+                ))
+            })?;
 
         // Now that we've come this far, we're committed!
         crate_bomb.path = None;

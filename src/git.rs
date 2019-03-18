@@ -1,18 +1,16 @@
 #![allow(missing_debug_implementations)]
 
-use diesel::prelude::*;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::io::prelude::*;
 use std::path::{Path, PathBuf};
-use swirl::{errors::PerformError, Job};
+use swirl::errors::PerformError;
 use tempdir::TempDir;
 use url::Url;
 
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::errors::{std_error_no_send, CargoError, CargoResult};
+use crate::util::errors::{std_error_no_send, CargoResult};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -131,115 +129,88 @@ impl Repository {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct AddCrate {
-    krate: Crate,
-}
+#[swirl::background_job]
+pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
+    use std::io::prelude::*;
 
-impl Job for AddCrate {
-    type Environment = Environment;
-    const JOB_TYPE: &'static str = "add_crate";
+    let repo = env.lock_index().map_err(std_error_no_send)?;
+    let dst = repo.index_file(&krate.name);
 
-    fn perform(self, env: &Self::Environment) -> Result<(), PerformError> {
-        let repo = env.lock_index().map_err(std_error_no_send)?;
-        let dst = repo.index_file(&self.krate.name);
+    // Add the crate to its relevant file
+    fs::create_dir_all(dst.parent().unwrap())?;
+    let mut file = OpenOptions::new().append(true).create(true).open(&dst)?;
+    serde_json::to_writer(&mut file, &krate)?;
+    file.write_all(b"\n")?;
 
-        // Add the crate to its relevant file
-        fs::create_dir_all(dst.parent().unwrap())?;
-        let mut file = OpenOptions::new().append(true).create(true).open(&dst)?;
-        serde_json::to_writer(&mut file, &self.krate)?;
-        file.write_all(b"\n")?;
-
-        repo.commit_and_push(
-            &format!("Updating crate `{}#{}`", self.krate.name, self.krate.vers),
-            &repo.relative_index_file(&self.krate.name),
-            env.credentials(),
-        )
-    }
-}
-
-pub fn add_crate(conn: &PgConnection, krate: Crate) -> CargoResult<()> {
-    AddCrate { krate }
-        .enqueue(conn)
-        .map_err(|e| CargoError::from_std_error(e))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Yank {
-    krate: String,
-    version: Version,
-    yanked: bool,
-}
-
-impl Job for Yank {
-    type Environment = Environment;
-    const JOB_TYPE: &'static str = "yank";
-
-    fn perform(self, env: &Self::Environment) -> Result<(), PerformError> {
-        let repo = env.lock_index().map_err(std_error_no_send)?;
-        let dst = repo.index_file(&self.krate);
-
-        let conn = env.connection().map_err(std_error_no_send)?;
-
-        conn.transaction(|| {
-            let yanked_in_db = versions::table
-                .find(self.version.id)
-                .select(versions::yanked)
-                .for_update()
-                .first::<bool>(&*conn)?;
-
-            if yanked_in_db == self.yanked {
-                // The crate is alread in the state requested, nothing to do
-                return Ok(());
-            }
-
-            let prev = fs::read_to_string(&dst)?;
-            let version = self.version.num.to_string();
-            let new = prev
-                .lines()
-                .map(|line| {
-                    let mut git_crate = serde_json::from_str::<Crate>(line)
-                        .map_err(|_| format!("couldn't decode: `{}`", line))?;
-                    if git_crate.name != self.krate || git_crate.vers != version {
-                        return Ok(line.to_string());
-                    }
-                    git_crate.yanked = Some(self.yanked);
-                    Ok(serde_json::to_string(&git_crate)?)
-                })
-                .collect::<Result<Vec<_>, PerformError>>();
-            let new = new?.join("\n") + "\n";
-            fs::write(&dst, new.as_bytes())?;
-
-            repo.commit_and_push(
-                &format!(
-                    "{} crate `{}#{}`",
-                    if self.yanked { "Yanking" } else { "Unyanking" },
-                    self.krate,
-                    self.version.num
-                ),
-                &repo.relative_index_file(&self.krate),
-                env.credentials(),
-            )?;
-
-            diesel::update(&self.version)
-                .set(versions::yanked.eq(self.yanked))
-                .execute(&*conn)?;
-
-            Ok(())
-        })
-    }
+    repo.commit_and_push(
+        &format!("Updating crate `{}#{}`", krate.name, krate.vers),
+        &repo.relative_index_file(&krate.name),
+        env.credentials(),
+    )
 }
 
 /// Yanks or unyanks a crate version. This requires finding the index
 /// file, deserlialise the crate from JSON, change the yank boolean to
 /// `true` or `false`, write all the lines back out, and commit and
 /// push the changes.
-pub fn yank(conn: &PgConnection, krate: String, version: Version, yanked: bool) -> CargoResult<()> {
-    Yank {
-        krate,
-        version,
-        yanked,
-    }
-    .enqueue(conn)
-    .map_err(|e| CargoError::from_std_error(e))
+#[swirl::background_job]
+pub fn yank(
+    env: &Environment,
+    krate: String,
+    version: Version,
+    yanked: bool,
+) -> Result<(), PerformError> {
+    use diesel::prelude::*;
+
+    let repo = env.lock_index().map_err(std_error_no_send)?;
+    let dst = repo.index_file(&krate);
+
+    let conn = env.connection().map_err(std_error_no_send)?;
+
+    conn.transaction(|| {
+        let yanked_in_db = versions::table
+            .find(version.id)
+            .select(versions::yanked)
+            .for_update()
+            .first::<bool>(&*conn)?;
+
+        if yanked_in_db == yanked {
+            // The crate is alread in the state requested, nothing to do
+            return Ok(());
+        }
+
+        let prev = fs::read_to_string(&dst)?;
+        let version_num = version.num.to_string();
+        let new = prev
+            .lines()
+            .map(|line| {
+                let mut git_crate = serde_json::from_str::<Crate>(line)
+                    .map_err(|_| format!("couldn't decode: `{}`", line))?;
+                if git_crate.name != krate || git_crate.vers != version_num {
+                    return Ok(line.to_string());
+                }
+                git_crate.yanked = Some(yanked);
+                Ok(serde_json::to_string(&git_crate)?)
+            })
+            .collect::<Result<Vec<_>, PerformError>>();
+        let new = new?.join("\n") + "\n";
+        fs::write(&dst, new.as_bytes())?;
+
+        repo.commit_and_push(
+            &format!(
+                "{} crate `{}#{}`",
+                if yanked { "Yanking" } else { "Unyanking" },
+                krate,
+                version.num
+            ),
+            &repo.relative_index_file(&krate),
+            env.credentials(),
+        )?;
+
+        diesel::update(&version)
+            .set(versions::yanked.eq(yanked))
+            .execute(&*conn)?;
+
+        Ok(())
+    })
 }

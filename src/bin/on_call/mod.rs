@@ -2,7 +2,7 @@ use cargo_registry::util::{internal, CargoResult};
 
 use reqwest::{header, StatusCode as Status};
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]
 pub enum Event {
     Trigger {
@@ -54,14 +54,14 @@ impl Event {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 struct FullEvent {
     service_key: String,
     #[serde(flatten)]
     event: Event,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 struct InvalidEvent {
     message: String,
     errors: Vec<String>,
