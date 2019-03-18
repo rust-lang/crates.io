@@ -24,7 +24,6 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
 }
 
 #[test]
-#[ignore] // Will be implicitly fixed by #1387, no need to special case here
 fn can_download_crate_in_read_only_mode() {
     let (app, anon, user) = TestApp::with_proxy().with_user();
 
