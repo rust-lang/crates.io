@@ -62,9 +62,7 @@ fn increment_download_counts(
 
     // Wrap in a transaction so we don't poison the outer transaction if this
     // fails
-    let _ = conn.transaction(|| {
-        VersionDownload::create_or_increment(version_id, &conn)
-    });
+    let _ = conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn));
     Ok(())
 }
 
