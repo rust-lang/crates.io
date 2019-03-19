@@ -87,9 +87,7 @@ fn check_spam_attack(conn: &PgConnection) -> CargoResult<()> {
         .optional()?;
 
     if let Some(bad_crate) = bad_crate {
-        event_description = Some(
-            format!("Crate named {} published", bad_crate)
-        );
+        event_description = Some(format!("Crate named {} published", bad_crate));
     }
 
     let mut query = version_authors::table
@@ -102,18 +100,13 @@ fn check_spam_attack(conn: &PgConnection) -> CargoResult<()> {
     let bad_author = query.first::<String>(conn).optional()?;
 
     if let Some(bad_author) = bad_author {
-        event_description = Some(
-            format!("Crate with author {} published", bad_author)
-        );
+        event_description = Some(format!("Crate with author {} published", bad_author));
     }
 
     let event = if let Some(event_description) = event_description {
         on_call::Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
-            description: format!(
-                "{}, possible spam attack underway",
-                event_description,
-            ),
+            description: format!("{}, possible spam attack underway", event_description,),
         }
     } else {
         on_call::Event::Resolve {
