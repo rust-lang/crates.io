@@ -1262,7 +1262,7 @@ fn download() {
 
 #[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::with_proxy().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
