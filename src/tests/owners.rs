@@ -233,7 +233,7 @@ fn test_accept_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
@@ -313,7 +313,7 @@ fn test_decline_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();

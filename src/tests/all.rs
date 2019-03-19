@@ -108,17 +108,22 @@ pub struct OkBool {
     ok: bool,
 }
 
-fn app() -> (
+/// Initialize the app and a proxy that can record and playback outgoing HTTP requests
+fn app_with_proxy() -> (
     record::Bomb,
     Arc<App>,
     conduit_middleware::MiddlewareBuilder,
 ) {
     let (proxy, bomb) = record::proxy();
-    let (app, handler) = simple_app(Some(proxy));
+    let (app, handler) = init_app(Some(proxy));
     (bomb, app, handler)
 }
 
-fn simple_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn app() -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    init_app(None)
+}
+
+fn init_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
@@ -287,7 +292,7 @@ fn logout(req: &mut dyn Request) {
 fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
     use std::ptr;
 
-    let (_bomb, app, _) = app();
+    let (app, _) = app();
     let conn1 = app.diesel_database.get().unwrap();
     let conn2 = app.diesel_database.get().unwrap();
     let conn1_ref: &PgConnection = &conn1;

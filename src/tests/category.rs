@@ -76,7 +76,7 @@ fn show() {
 #[test]
 #[allow(clippy::cyclomatic_complexity)]
 fn update_crate() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/categories/foo");
     macro_rules! cnt {
         ($req:expr, $cat:expr) => {{

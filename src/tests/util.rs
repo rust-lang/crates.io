@@ -20,8 +20,8 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    app, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool,
-    VersionResponse,
+    app, app_with_proxy, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate,
+    OkBool, VersionResponse,
 };
 use cargo_registry::{
     background_jobs::Environment,
@@ -93,7 +93,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        let (app, middle) = crate::simple_app(None);
+        let (app, middle) = app();
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,
@@ -106,7 +106,7 @@ impl TestApp {
 
     /// Initialize the app and a proxy that can record and playback outgoing HTTP requests
     pub fn with_proxy() -> TestAppBuilder {
-        let (bomb, app, middle) = app();
+        let (bomb, app, middle) = app_with_proxy();
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: Some(bomb),
@@ -121,7 +121,7 @@ impl TestApp {
     pub fn full() -> TestAppBuilder {
         use crate::git;
 
-        let (bomb, app, middle) = app();
+        let (bomb, app, middle) = app_with_proxy();
         git::init();
 
         let thread_local_path = git::bare();
