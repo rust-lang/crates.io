@@ -2,6 +2,7 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt;
 
+use chrono::NaiveDateTime;
 use conduit::Response;
 use diesel::result::Error as DieselError;
 
@@ -381,5 +382,47 @@ impl CargoError for ReadOnlyMode {
 impl fmt::Display for ReadOnlyMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Tried to write in read only mode".fmt(f)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct TooManyRequests {
+    pub retry_after: NaiveDateTime,
+}
+
+impl CargoError for TooManyRequests {
+    fn description(&self) -> &str {
+        "too many requests"
+    }
+
+    fn response(&self) -> Option<Response> {
+        const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
+        let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
+
+        let mut response = json_response(&Bad {
+            errors: vec![StringError {
+                detail: format!(
+                    "You have published too many crates in a \
+                     short period of time. Please try again after {} or email \
+                     help@crates.io to have your limit increased.",
+                    retry_after
+                ),
+            }],
+        });
+        response.status = (429, "TOO MANY REQUESTS");
+        response
+            .headers
+            .insert("Retry-After".into(), vec![retry_after.to_string()]);
+        Some(response)
+    }
+
+    fn human(&self) -> bool {
+        true
+    }
+}
+
+impl fmt::Display for TooManyRequests {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "Too many requests".fmt(f)
     }
 }

@@ -55,7 +55,7 @@ index df884e4..18e08cd 100644
  
      /// Representation of the `reserved_crate_names` table.
      ///
-@@ -881,21 +901,23 @@ table! {
+@@ -881,23 +901,25 @@ table! {
  }
  
  joinable!(api_tokens -> users (user_id));
@@ -73,6 +73,8 @@ index df884e4..18e08cd 100644
  joinable!(emails -> users (user_id));
  joinable!(follows -> crates (crate_id));
  joinable!(follows -> users (user_id));
+ joinable!(publish_limit_buckets -> users (user_id));
+ joinable!(publish_rate_overrides -> users (user_id));
  joinable!(readme_renderings -> versions (version_id));
 +joinable!(recent_crate_downloads -> crates (crate_id));
  joinable!(version_authors -> users (user_id));
@@ -80,12 +82,13 @@ index df884e4..18e08cd 100644
  joinable!(version_downloads -> versions (version_id));
  joinable!(versions -> crates (crate_id));
  
-@@ -913,12 +935,13 @@ allow_tables_to_appear_in_same_query!(
-     dependencies,
+@@ -913,13 +935,14 @@ allow_tables_to_appear_in_same_query!(
      emails,
      follows,
      keywords,
      metadata,
+     publish_limit_buckets,
+     publish_rate_overrides,
      readme_renderings,
 +    recent_crate_downloads,
      reserved_crate_names,

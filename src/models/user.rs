@@ -21,7 +21,7 @@ pub struct User {
     pub gh_id: i32,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Default)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
