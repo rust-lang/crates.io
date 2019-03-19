@@ -24,8 +24,7 @@ pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
         .app()
         .config
         .uploader
-        .crate_location(crate_name, version)
-        .ok_or_else(|| human("crate files not found"))?;
+        .crate_location(crate_name, version);
 
     if req.wants_json() {
         #[derive(Serialize)]
