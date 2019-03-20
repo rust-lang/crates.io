@@ -68,7 +68,6 @@ impl Default for Config {
                         &api_protocol,
                     ),
                     cdn: dotenv::var("S3_CDN").ok(),
-                    proxy: None,
                 }
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
@@ -89,7 +88,6 @@ impl Default for Config {
                         &api_protocol,
                     ),
                     cdn: dotenv::var("S3_CDN").ok(),
-                    proxy: None,
                 }
             }
             // In Development mode, either running as a primary instance or a read-only mirror
@@ -109,7 +107,6 @@ impl Default for Config {
                             &api_protocol,
                         ),
                         cdn: dotenv::var("S3_CDN").ok(),
-                        proxy: None,
                     }
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only

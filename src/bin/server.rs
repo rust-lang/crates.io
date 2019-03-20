@@ -9,6 +9,7 @@ use std::{
 
 use civet::Server as CivetServer;
 use conduit_hyper::Service as HyperService;
+use reqwest::Client;
 
 enum Server {
     Civet(CivetServer),
@@ -24,7 +25,9 @@ fn main() {
     env_logger::init();
 
     let config = cargo_registry::Config::default();
-    let app = App::new(&config);
+    let client = Client::new();
+
+    let app = App::new(&config, Some(client));
     let app = cargo_registry::build_handler(Arc::new(app));
 
     // On every server restart, ensure the categories available in the database match

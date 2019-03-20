@@ -169,8 +169,7 @@ pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
         .app()
         .config
         .uploader
-        .readme_location(crate_name, version)
-        .ok_or_else(|| human("crate readme not found"))?;
+        .readme_location(crate_name, version);
 
     if req.wants_json() {
         #[derive(Serialize)]
