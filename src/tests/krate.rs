@@ -1106,7 +1106,7 @@ fn new_krate_with_readme() {
 
 #[test]
 fn new_krate_without_any_email_fails() {
-    let (app, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         delete(emails::table).execute(conn).unwrap();
@@ -1127,7 +1127,7 @@ fn new_krate_without_any_email_fails() {
 
 #[test]
 fn new_krate_with_unverified_email_fails() {
-    let (app, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::init().with_token();
 
     app.db(|conn| {
         update(emails::table)
@@ -1241,7 +1241,7 @@ fn summary_new_crates() {
 #[test]
 fn download() {
     use chrono::{Duration, Utc};
-    let (app, anon, user) = TestApp::with_proxy().with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -1293,7 +1293,7 @@ fn download() {
 
 #[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
-    let (app, anon, user) = TestApp::with_proxy().with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {

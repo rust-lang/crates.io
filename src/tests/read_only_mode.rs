@@ -32,7 +32,7 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
 
 #[test]
 fn can_download_crate_in_read_only_mode() {
-    let (app, anon, user) = TestApp::with_proxy().with_user();
+    let (app, anon, user) = TestApp::init().with_user();
 
     app.db(|conn| {
         CrateBuilder::new("foo_download_read_only", user.as_model().id)
