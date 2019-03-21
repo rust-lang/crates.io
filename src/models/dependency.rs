@@ -119,6 +119,7 @@ pub fn add_dependencies(
                     target: dep.target.clone(),
                     kind: dep.kind.or(Some(DependencyKind::Normal)),
                     package,
+                    public: dep.public.unwrap_or(false)
                 },
                 (
                     version_id.eq(target_version_id),
