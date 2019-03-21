@@ -576,7 +576,7 @@ fn uploading_new_version_touches_crate() {
     let (app, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("1.0.0");
-    user.publish(crate_to_publish).good();
+    user.enqueue_publish(crate_to_publish).good();
 
     app.db(|conn| {
         diesel::update(crates::table)
@@ -589,7 +589,7 @@ fn uploading_new_version_touches_crate() {
     let updated_at_before = json.krate.updated_at;
 
     let crate_to_publish = PublishBuilder::new("foo_versions_updated_at").version("2.0.0");
-    user.publish(crate_to_publish).good();
+    user.enqueue_publish(crate_to_publish).good();
 
     let json: CrateResponse = user.show_crate("foo_versions_updated_at");
     let updated_at_after = json.krate.updated_at;
@@ -603,7 +603,7 @@ fn new_wrong_token() {
 
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo");
-    let json = anon.publish(crate_to_publish).bad_with_status(403);
+    let json = anon.enqueue_publish(crate_to_publish).bad_with_status(403);
     assert!(
         json.errors[0]
             .detail
@@ -621,7 +621,7 @@ fn new_wrong_token() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo");
-    let json = token.publish(crate_to_publish).bad_with_status(403);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(403);
     assert!(
         json.errors[0]
             .detail
@@ -637,7 +637,7 @@ fn invalid_names() {
 
     let bad_name = |name: &str, error_message: &str| {
         let crate_to_publish = PublishBuilder::new(name).version("1.0.0");
-        let json = token.publish(crate_to_publish).bad_with_status(200);
+        let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
         assert!(
             json.errors[0].detail.contains(error_message,),
@@ -666,7 +666,7 @@ fn new_krate() {
     let (_, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
-    let json: GoodCrate = user.publish(crate_to_publish).good();
+    let json: GoodCrate = user.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
@@ -677,7 +677,7 @@ fn new_krate_with_token() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_new").version("1.0.0");
-    let json: GoodCrate = token.publish(crate_to_publish).good();
+    let json: GoodCrate = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_new");
     assert_eq!(json.krate.max_version, "1.0.0");
@@ -688,7 +688,7 @@ fn new_krate_weird_version() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_weird").version("0.0.0-pre");
-    let json: GoodCrate = token.publish(crate_to_publish).good();
+    let json: GoodCrate = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_weird");
     assert_eq!(json.krate.max_version, "0.0.0-pre");
@@ -708,7 +708,7 @@ fn new_with_renamed_dependency() {
     let crate_to_publish = PublishBuilder::new("new-krate")
         .version("1.0.0")
         .dependency(dependency);
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("ne/w-/new-krate");
@@ -737,7 +737,7 @@ fn new_krate_with_dependency() {
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
         .dependency(dependency);
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 }
 
 #[test]
@@ -754,7 +754,7 @@ fn reject_new_krate_with_non_exact_dependency() {
     let crate_to_publish = PublishBuilder::new("new_dep")
         .version("1.0.0")
         .dependency(dependency);
-    token.publish(crate_to_publish).bad_with_status(200);
+    token.enqueue_publish(crate_to_publish).bad_with_status(200);
 }
 
 #[test]
@@ -767,7 +767,7 @@ fn new_crate_allow_empty_alternative_registry_dependency() {
 
     let dependency = DependencyBuilder::new("foo-dep").registry("");
     let crate_to_publish = PublishBuilder::new("foo").dependency(dependency);
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 }
 
 #[test]
@@ -778,7 +778,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
         DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
 
     let crate_to_publish = PublishBuilder::new("depends-on-alt-registry").dependency(dependency);
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -803,7 +803,7 @@ fn new_krate_with_wildcard_dependency() {
         .version("1.0.0")
         .dependency(dependency);
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("dependency constraints"),
         "{:?}",
@@ -823,7 +823,7 @@ fn new_krate_twice() {
     let crate_to_publish = PublishBuilder::new("foo_twice")
         .version("2.0.0")
         .description("2.0.0 description");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_twice");
     assert_eq!(json.krate.description.unwrap(), "2.0.0 description");
@@ -842,7 +842,9 @@ fn new_krate_wrong_user() {
     let another_user = app.db_new_user("another").db_new_token("bar");
     let crate_to_publish = PublishBuilder::new("foo_wrong").version("2.0.0");
 
-    let json = another_user.publish(crate_to_publish).bad_with_status(200);
+    let json = another_user
+        .enqueue_publish(crate_to_publish)
+        .bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -870,7 +872,7 @@ fn new_krate_too_big() {
     let files = [("foo_big-1.0.0/big", &[b'a'; 2000] as &[_])];
     let builder = PublishBuilder::new("foo_big").files(&files);
 
-    let json = user.publish(builder).bad_with_status(200);
+    let json = user.enqueue_publish(builder).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -895,7 +897,7 @@ fn new_krate_too_big_but_whitelisted() {
         .version("1.1.0")
         .files(&files);
 
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 }
 
 #[test]
@@ -905,7 +907,7 @@ fn new_krate_wrong_files() {
     let files = [("foo-1.0.0/a", data), ("bar-1.0.0/a", data)];
     let builder = PublishBuilder::new("foo").files(&files);
 
-    let json = user.publish(builder).bad_with_status(200);
+    let json = user.enqueue_publish(builder).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("invalid tarball uploaded"),
         "{:?}",
@@ -924,7 +926,7 @@ fn new_krate_gzip_bomb() {
         .version("1.1.0")
         .files_with_io(&mut [("foo-1.1.0/a", &mut body, len)]);
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0]
@@ -947,7 +949,7 @@ fn new_krate_duplicate_version() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_dupe").version("1.0.0");
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0].detail.contains("already uploaded"),
@@ -967,7 +969,7 @@ fn new_crate_similar_name() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_similar").version("1.1.0");
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0].detail.contains("previously named"),
@@ -987,7 +989,7 @@ fn new_crate_similar_name_hyphen() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen").version("1.1.0");
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0].detail.contains("previously named"),
@@ -1007,7 +1009,7 @@ fn new_crate_similar_name_underscore() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore").version("1.1.0");
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0].detail.contains("previously named"),
@@ -1021,7 +1023,7 @@ fn new_krate_git_upload() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("fgt");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("3/f/fgt");
@@ -1040,9 +1042,9 @@ fn new_krate_git_upload_appends() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("FPP").version("0.0.1");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
     let crate_to_publish = PublishBuilder::new("FPP").version("1.0.0");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("3/f/fpp");
@@ -1069,7 +1071,7 @@ fn new_krate_git_upload_with_conflicts() {
         .unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo_conflicts");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 }
 
 #[test]
@@ -1081,7 +1083,7 @@ fn new_krate_dependency_missing() {
     let dependency = DependencyBuilder::new("bar_missing");
     let crate_to_publish = PublishBuilder::new("foo_missing").dependency(dependency);
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -1096,7 +1098,7 @@ fn new_krate_with_readme() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme").readme("");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_readme");
     assert_eq!(json.krate.max_version, "1.0.0");
@@ -1112,7 +1114,7 @@ fn new_krate_without_any_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_no_email");
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0]
@@ -1136,7 +1138,7 @@ fn new_krate_with_unverified_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_unverified_email");
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0]
@@ -1153,7 +1155,7 @@ fn new_krate_records_verified_email() {
 
     let crate_to_publish = PublishBuilder::new("foo_verified_email");
 
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 
     app.db(|conn| {
         let email = versions_published_by::table
@@ -1385,7 +1387,7 @@ fn yank() {
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
     app.run_pending_background_jobs();
 
     let crates = app.crates_from_index_head("3/f/fyk");
@@ -1441,7 +1443,7 @@ fn yank_max_version() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 
     // double check the max version
     let json = anon.show_crate("fyk_max");
@@ -1449,7 +1451,7 @@ fn yank_max_version() {
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 1.0.0
@@ -1495,7 +1497,7 @@ fn publish_after_yank_max_version() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 
     // double check the max version
     let json = anon.show_crate("fyk_max");
@@ -1509,7 +1511,7 @@ fn publish_after_yank_max_version() {
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max").version("2.0.0");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
@@ -1540,7 +1542,7 @@ fn publish_after_removing_documentation() {
     let crate_to_publish = PublishBuilder::new("docscrate")
         .version("0.2.1")
         .documentation("http://foo.rs");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
 
     // Ensure latest version also has the same documentation
@@ -1549,7 +1551,7 @@ fn publish_after_removing_documentation() {
 
     // 3. Remove the documentation
     let crate_to_publish = PublishBuilder::new("docscrate").version("0.2.2");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.documentation, None);
 
     // Ensure latest version no longer has documentation
@@ -1562,13 +1564,13 @@ fn bad_keywords() {
     let (_, _, _, token) = TestApp::init().with_token();
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key").keyword("super-long-keyword-name-oh-no");
-    token.publish(crate_to_publish).bad_with_status(200);
+    token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("?@?%");
-    token.publish(crate_to_publish).bad_with_status(200);
+    token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key").keyword("áccênts");
-    token.publish(crate_to_publish).bad_with_status(200);
+    token.enqueue_publish(crate_to_publish).bad_with_status(200);
 }
 
 #[test]
@@ -1582,7 +1584,7 @@ fn good_categories() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_good_cat").category("cat1");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_good_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
@@ -1594,7 +1596,7 @@ fn ignored_categories() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_ignored_cat").category("bar");
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
 
     assert_eq!(json.krate.name, "foo_ignored_cat");
     assert_eq!(json.krate.max_version, "1.0.0");
@@ -1615,7 +1617,7 @@ fn good_badges() {
 
     let crate_to_publish = PublishBuilder::new("foobadger").badges(badges);
 
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.name, "foobadger");
     assert_eq!(json.krate.max_version, "1.0.0");
 
@@ -1647,7 +1649,7 @@ fn ignored_badges() {
 
     let crate_to_publish = PublishBuilder::new("foo_ignored_badge").badges(badges);
 
-    let json = token.publish(crate_to_publish).good();
+    let json = token.enqueue_publish(crate_to_publish).good();
     assert_eq!(json.krate.name, "foo_ignored_badge");
     assert_eq!(json.krate.max_version, "1.0.0");
     assert_eq!(json.warnings.invalid_badges.len(), 2);
@@ -1843,7 +1845,7 @@ fn author_license_and_description_required() {
         .unset_description()
         .unset_authors();
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -1858,7 +1860,7 @@ fn author_license_and_description_required() {
         .unset_authors()
         .author("");
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -1873,7 +1875,7 @@ fn author_license_and_description_required() {
         .license_file("foo")
         .unset_description();
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
     assert!(
         !json.errors[0].detail.contains("author")
             && json.errors[0].detail.contains("description")
@@ -2092,7 +2094,7 @@ fn new_krate_tarball_with_hard_links() {
 
     let crate_to_publish = PublishBuilder::new("foo").version("1.1.0").tarball(tarball);
 
-    let json = token.publish(crate_to_publish).bad_with_status(200);
+    let json = token.enqueue_publish(crate_to_publish).bad_with_status(200);
 
     assert!(
         json.errors[0]

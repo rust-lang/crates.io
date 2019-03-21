@@ -202,7 +202,7 @@ fn remove_team_as_named_owner() {
     let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
     let crate_to_publish = PublishBuilder::new("foo_remove_team").version("2.0.0");
     let json = user_on_one_team
-        .publish(crate_to_publish)
+        .enqueue_publish(crate_to_publish)
         .bad_with_status(200);
 
     assert!(
@@ -264,7 +264,7 @@ fn publish_not_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned").version("2.0.0");
     let json = user_on_one_team
-        .publish(crate_to_publish)
+        .enqueue_publish(crate_to_publish)
         .bad_with_status(200);
 
     assert!(
@@ -294,7 +294,7 @@ fn publish_owned() {
     let user_on_one_team = app.db_new_user(mock_user_on_only_one_team().gh_login);
 
     let crate_to_publish = PublishBuilder::new("foo_team_owned").version("2.0.0");
-    user_on_one_team.publish(crate_to_publish).good();
+    user_on_one_team.enqueue_publish(crate_to_publish).good();
 }
 
 // Test trying to change owners (when only on an owning team)
