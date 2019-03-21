@@ -588,7 +588,7 @@ impl DependencyBuilder {
             kind: None,
             explicit_name_in_toml: self.explicit_name_in_toml,
             registry: self.registry,
-            public: Some(false)
+            public: Some(false),
         }
     }
 }

@@ -37,7 +37,7 @@ pub struct Dependency {
     pub kind: Option<DependencyKind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<String>,
-    pub public: bool
+    pub public: bool,
 }
 
 pub struct Repository {
