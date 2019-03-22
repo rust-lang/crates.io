@@ -66,7 +66,6 @@ pub struct EncodableDependency {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableVersionDownload {
-    pub id: i32,
     pub version: i32,
     pub downloads: i32,
     pub date: String,
