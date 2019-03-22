@@ -62,7 +62,7 @@ export default Route.extend({
                     .get('versions')
                     .then(versions => {
                         const latestStableVersion = versions.find(version => {
-                            if (!isUnstableVersion(version.get('num'))) {
+                            if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
                                 return version;
                             }
                         });

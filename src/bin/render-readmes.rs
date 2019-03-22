@@ -21,6 +21,7 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
+use reqwest::Client;
 use tar::{self, Archive};
 
 const DEFAULT_PAGE_SIZE: usize = 25;
@@ -94,6 +95,8 @@ fn main() {
         total_pages + 1
     };
 
+    let client = Client::new();
+
     for (page_num, version_ids_chunk) in version_ids.chunks(page_size).enumerate() {
         println!(
             "= Page {} of {} ==================================",
@@ -117,9 +120,10 @@ fn main() {
                     krate_name, version.num
                 )
             });
+            let client = client.clone();
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(&config, &version, &krate_name);
+                let readme = get_readme(&config, &client, &version, &krate_name);
                 if readme.is_none() {
                     return;
                 }
@@ -127,12 +131,7 @@ fn main() {
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 config
                     .uploader
-                    .upload(
-                        &reqwest::Client::new(),
-                        &readme_path,
-                        readme.into_bytes(),
-                        "text/html",
-                    )
+                    .upload(&client, &readme_path, readme.into_bytes(), "text/html")
                     .unwrap_or_else(|_| {
                         panic!(
                             "[{}-{}] Couldn't upload file to S3",
@@ -151,12 +150,17 @@ fn main() {
 }
 
 /// Renders the readme of an uploaded crate version.
-fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
+fn get_readme(
+    config: &Config,
+    client: &Client,
+    version: &Version,
+    krate_name: &str,
+) -> Option<String> {
     let location = config
         .uploader
-        .crate_location(krate_name, &version.num.to_string())?;
+        .crate_location(krate_name, &version.num.to_string());
 
-    let mut response = match reqwest::get(&location) {
+    let mut response = match client.get(&location).send() {
         Ok(r) => r,
         Err(err) => {
             println!(

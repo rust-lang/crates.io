@@ -14,10 +14,6 @@ use crate::app::App;
 use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
-fn require_test_app_with_proxy() -> ! {
-    panic!("No uploader is configured.  In tests, use `TestApp::with_proxy()`.");
-}
-
 #[derive(Clone, Debug)]
 pub enum Uploader {
     /// For production usage, uploads and redirects to s3.
@@ -25,32 +21,18 @@ pub enum Uploader {
     S3 {
         bucket: s3::Bucket,
         cdn: Option<String>,
-        proxy: Option<String>,
     },
 
     /// For development usage only: "uploads" crate files to `dist` and serves them
     /// from there as well to enable local publishing and download
     Local,
-
-    /// For tests using `TestApp::init()`
-    /// Attempts to get an outgoing HTTP handle will panic.
-    Panic,
 }
 
 impl Uploader {
-    pub fn proxy(&self) -> Option<&str> {
-        match *self {
-            Uploader::S3 { ref proxy, .. } => proxy.as_ref().map(String::as_str),
-            Uploader::Local => None,
-            Uploader::Panic => require_test_app_with_proxy(),
-        }
-    }
-
     /// Returns the URL of an uploaded crate's version archive.
     ///
     /// The function doesn't check for the existence of the file.
-    /// It returns `None` if the current `Uploader` is `Panic`.
-    pub fn crate_location(&self, crate_name: &str, version: &str) -> Option<String> {
+    pub fn crate_location(&self, crate_name: &str, version: &str) -> String {
         match *self {
             Uploader::S3 {
                 ref bucket,
@@ -62,18 +44,16 @@ impl Uploader {
                     None => bucket.host(),
                 };
                 let path = Uploader::crate_path(crate_name, version);
-                Some(format!("https://{}/{}", host, path))
+                format!("https://{}/{}", host, path)
             }
-            Uploader::Local => Some(format!("/{}", Uploader::crate_path(crate_name, version))),
-            Uploader::Panic => require_test_app_with_proxy(),
+            Uploader::Local => format!("/{}", Uploader::crate_path(crate_name, version)),
         }
     }
 
     /// Returns the URL of an uploaded crate's version readme.
     ///
     /// The function doesn't check for the existence of the file.
-    /// It returns `None` if the current `Uploader` is `Panic`.
-    pub fn readme_location(&self, crate_name: &str, version: &str) -> Option<String> {
+    pub fn readme_location(&self, crate_name: &str, version: &str) -> String {
         match *self {
             Uploader::S3 {
                 ref bucket,
@@ -85,10 +65,9 @@ impl Uploader {
                     None => bucket.host(),
                 };
                 let path = Uploader::readme_path(crate_name, version);
-                Some(format!("https://{}/{}", host, path))
+                format!("https://{}/{}", host, path)
             }
-            Uploader::Local => Some(format!("/{}", Uploader::readme_path(crate_name, version))),
-            Uploader::Panic => require_test_app_with_proxy(),
+            Uploader::Local => format!("/{}", Uploader::readme_path(crate_name, version)),
         }
     }
 
@@ -103,7 +82,7 @@ impl Uploader {
         format!("readmes/{}/{}-{}.html", name, name, version)
     }
 
-    /// Uploads a file using the configured uploader (either `S3`, `Local` or `Panic`).
+    /// Uploads a file using the configured uploader (either `S3`, `Local`).
     ///
     /// It returns a a tuple containing the path of the uploaded file
     /// and its checksum.
@@ -130,7 +109,6 @@ impl Uploader {
                 file.write_all(&body)?;
                 Ok((filename.to_str().map(String::from), hash))
             }
-            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 
@@ -150,7 +128,7 @@ impl Uploader {
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-            self.upload(&app.http_client()?, &path, body, "application/x-tar")?
+            self.upload(app.http_client(), &path, body, "application/x-tar")?
         };
         // We create the bomb for the crate file before uploading the readme so that if the
         // readme upload fails, the uploaded crate file is automatically deleted.
@@ -160,12 +138,7 @@ impl Uploader {
         };
         let (readme_path, _) = if let Some(rendered) = readme {
             let path = Uploader::readme_path(&krate.name, &vers.to_string());
-            self.upload(
-                &app.http_client()?,
-                &path,
-                rendered.into_bytes(),
-                "text/html",
-            )?
+            self.upload(app.http_client(), &path, rendered.into_bytes(), "text/html")?
         } else {
             (None, vec![])
         };
@@ -183,14 +156,13 @@ impl Uploader {
     fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                bucket.delete(&app.http_client()?, path)?;
+                bucket.delete(app.http_client(), path)?;
                 Ok(())
             }
             Uploader::Local => {
                 fs::remove_file(path)?;
                 Ok(())
             }
-            Uploader::Panic => require_test_app_with_proxy(),
         }
     }
 }

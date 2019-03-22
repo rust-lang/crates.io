@@ -29,6 +29,7 @@ use std::{
 use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
+use reqwest::{Client, Proxy};
 use url::Url;
 
 macro_rules! t {
@@ -113,6 +114,13 @@ fn app() -> (
     conduit_middleware::MiddlewareBuilder,
 ) {
     let (proxy, bomb) = record::proxy();
+    let (app, handler) = simple_app(Some(proxy));
+    (bomb, app, handler)
+}
+
+fn simple_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    git::init();
+
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
@@ -123,16 +131,9 @@ fn app() -> (
             // sniff/record it, but everywhere else we use https
             "http",
         ),
-        proxy: Some(proxy),
         cdn: None,
     };
 
-    let (app, handler) = simple_app(uploader);
-    (bomb, app, handler)
-}
-
-fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    git::init();
     let config = Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
@@ -149,7 +150,17 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),
     };
-    let app = App::new(&config);
+
+    let client = if let Some(proxy) = proxy {
+        let mut builder = Client::builder();
+        builder = builder
+            .proxy(Proxy::all(&proxy).expect("Unable to configure proxy with the provided URL"));
+        Some(builder.build().expect("TLS backend cannot be initialized"))
+    } else {
+        None
+    };
+
+    let app = App::new(&config, client);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));

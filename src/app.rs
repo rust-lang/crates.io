@@ -1,9 +1,10 @@
 //! Application-wide components in a struct accessible from each request
 
-use crate::{db, util::CargoResult, Config, Env};
+use crate::{db, Config, Env};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use diesel::r2d2;
+use reqwest::Client;
 use scheduled_thread_pool::ScheduledThreadPool;
 
 /// The `App` struct holds the main components of the application like
@@ -26,17 +27,24 @@ pub struct App {
 
     /// The server configuration
     pub config: Config,
+
+    /// A configured client for outgoing HTTP requests
+    ///
+    /// In production this shares a single connection pool across requests.  In tests
+    /// this is either None (in which case any attempt to create an outgoing connection
+    /// will panic) or a `Client` configured with a per-test replay proxy.
+    http_client: Option<Client>,
 }
 
 impl App {
-    /// Creates a new `App` with a given `Config`
+    /// Creates a new `App` with a given `Config` and an optional HTTP `Client`
     ///
     /// Configures and sets up:
     ///
     /// - GitHub OAuth
     /// - Database connection pools
-    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: &Config) -> App {
+    /// - Holds an HTTP `Client` and associated connection pool, if provided
+    pub fn new(config: &Config, http_client: Option<Client>) -> App {
         let mut github = oauth2::Config::new(
             &config.gh_client_id,
             &config.gh_client_secret,
@@ -90,19 +98,22 @@ impl App {
             session_key: config.session_key.clone(),
             git_repo_checkout: config.git_repo_checkout.clone(),
             config: config.clone(),
+            http_client,
         }
     }
 
     /// Returns a client for making HTTP requests to upload crate files.
     ///
-    /// The handle will go through a proxy if the uploader being used has specified one, which
-    /// is only done in tests with `TestApp::with_proxy()` in order to be able to record and
-    /// inspect the HTTP requests that tests make.
-    pub fn http_client(&self) -> CargoResult<reqwest::Client> {
-        let mut builder = reqwest::Client::builder();
-        if let Some(proxy) = self.config.uploader.proxy() {
-            builder = builder.proxy(reqwest::Proxy::all(proxy)?);
-        }
-        Ok(builder.build()?)
+    /// The client will go through a proxy if the application was configured via
+    /// `TestApp::with_proxy()`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the application was not initialized with a client.  This should only occur in
+    /// tests that were not properly initialized.
+    pub fn http_client(&self) -> &Client {
+        self.http_client
+            .as_ref()
+            .expect("No HTTP client is configured.  In tests, use `TestApp::with_proxy()`.")
     }
 }

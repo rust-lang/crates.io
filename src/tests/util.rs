@@ -26,7 +26,6 @@ use crate::{
 use cargo_registry::{
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
-    uploaders::Uploader,
     App,
 };
 use diesel::PgConnection;
@@ -48,7 +47,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        let (app, middle) = crate::simple_app(Uploader::Panic);
+        let (app, middle) = crate::simple_app(None);
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,

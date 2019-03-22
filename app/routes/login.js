@@ -53,14 +53,14 @@ export default Route.extend({
             if (!response) {
                 return;
             }
-            if (!response.ok) {
-                this.flashMessages.show('Failed to log in');
-                return;
-            }
+
             let { data } = response;
-            if (data.errors) {
+            if (data && data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
                 this.flashMessages.show(error);
+                return;
+            } else if (!response.ok) {
+                this.flashMessages.show('Failed to log in');
                 return;
             }
 

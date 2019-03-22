@@ -6,6 +6,8 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
 use crate::models::{NewUser, User};
+use crate::schema::users;
+use crate::util::errors::{CargoError, ReadOnlyMode};
 
 /// Handles the `GET /authorize_url` route.
 ///
@@ -111,8 +113,8 @@ struct GithubUser {
 }
 
 impl GithubUser {
-    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> QueryResult<User> {
-        Ok(NewUser::new(
+    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> CargoResult<User> {
+        NewUser::new(
             self.id,
             &self.login,
             self.email.as_ref().map(|s| &s[..]),
@@ -120,7 +122,21 @@ impl GithubUser {
             self.avatar_url.as_ref().map(|s| &s[..]),
             access_token,
         )
-        .create_or_update(conn)?)
+        .create_or_update(conn)
+        .map_err(Into::into)
+        .or_else(|e: Box<dyn CargoError>| {
+            // If we're in read only mode, we can't update their details
+            // just look for an existing user
+            if e.is::<ReadOnlyMode>() {
+                users::table
+                    .filter(users::gh_id.eq(self.id))
+                    .first(conn)
+                    .optional()?
+                    .ok_or(e)
+            } else {
+                Err(e)
+            }
+        })
     }
 }
 
