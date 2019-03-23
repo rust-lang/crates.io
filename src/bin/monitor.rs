@@ -68,15 +68,15 @@ fn check_spam_attack(conn: &PgConnection) -> CargoResult<()> {
     println!("Checking for crates indicating someone is spamming us");
 
     let bad_crate_names = dotenv::var("SPAM_CRATE_NAMES");
-    let bad_crate_names = bad_crate_names
+    let bad_crate_names: Vec<_> = bad_crate_names
         .as_ref()
-        .map(|s| s.split(",").collect())
-        .unwrap_or(Vec::new());
+        .map(|s| s.split(',').collect())
+        .unwrap_or_default();
     let bad_author_patterns = dotenv::var("SPAM_AUTHOR_PATTERNS");
-    let bad_author_patterns = bad_author_patterns
+    let bad_author_patterns: Vec<_> = bad_author_patterns
         .as_ref()
-        .map(|s| s.split(",").collect())
-        .unwrap_or(Vec::new());
+        .map(|s| s.split(',').collect())
+        .unwrap_or_default();
 
     let mut event_description = None;
 
