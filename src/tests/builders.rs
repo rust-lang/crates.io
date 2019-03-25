@@ -229,7 +229,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
+    pub fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
         use diesel::{insert_into, select, update};
 
         let mut krate = self

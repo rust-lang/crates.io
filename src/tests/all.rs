@@ -61,6 +61,9 @@ macro_rules! bad_resp {
     }};
 }
 
+mod helpers;
+mod prelude;
+
 mod badge;
 mod builders;
 mod categories;
