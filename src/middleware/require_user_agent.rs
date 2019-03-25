@@ -22,7 +22,8 @@ impl AroundMiddleware for RequireUserAgent {
 impl Handler for RequireUserAgent {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let has_user_agent = request_header(req, "User-Agent") != "";
-        if !has_user_agent {
+        let is_download = req.path().ends_with("download");
+        if !has_user_agent && !is_download {
             let body = format!(
                 include_str!("no_user_agent_message.txt"),
                 request_header(req, "X-Request-Id"),
