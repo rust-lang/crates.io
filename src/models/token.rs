@@ -46,6 +46,24 @@ impl ApiToken {
             last_used_at: self.last_used_at,
         }
     }
+
+    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> QueryResult<ApiToken> {
+        use crate::schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token};
+        use diesel::{dsl::now, update};
+
+        let tokens = api_tokens
+            .filter(token.eq(token_))
+            .filter(revoked.eq(false));
+
+        // If the database is in read only mode, we can't update last_used_at.
+        // Try updating in a new transaction, if that fails, fall back to reading
+        conn.transaction(|| {
+            update(tokens)
+                .set(last_used_at.eq(now.nullable()))
+                .get_result::<ApiToken>(conn)
+        })
+        .or_else(|_| tokens.first(conn))
+    }
 }
 
 #[cfg(test)]
