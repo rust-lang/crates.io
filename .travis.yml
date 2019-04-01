@@ -58,6 +58,7 @@ matrix:
         - cargo fmt -- --check
         - cargo clippy --all-targets --all-features --all
         - cargo test
+        - npm run lint:js
         - npm test
     - rust: beta
       script:
