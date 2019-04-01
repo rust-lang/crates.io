@@ -1,5 +1,5 @@
 use super::request::RequestBuilder;
-use cargo_registry::models::{ApiToken, NewUser, User};
+use cargo_registry::models::{ApiToken, Email, NewUser, User};
 use cargo_registry::util::CargoResult;
 use conduit::Method;
 use conduit_middleware::MiddlewareBuilder;
@@ -9,12 +9,17 @@ use std::sync::Arc;
 pub struct App {
     app: Arc<cargo_registry::App>,
     middleware: MiddlewareBuilder,
+    _bomb: crate::record::Bomb,
 }
 
 impl App {
     pub fn new() -> Self {
-        let (app, middleware) = crate::simple_app(None);
-        Self { app, middleware }
+        let (bomb, app, middleware) = crate::app();
+        Self {
+            app,
+            middleware,
+            _bomb: bomb,
+        }
     }
 
     /// Obtain the database connection and pass it to the closure
@@ -33,12 +38,18 @@ impl App {
 
     /// Create a new user in the database with the given id
     pub fn create_user(&self, username: &str) -> CargoResult<User> {
+        use cargo_registry::schema::emails;
+
         self.db(|conn| {
             let new_user = NewUser {
                 email: Some("something@example.com"),
                 ..crate::new_user(username)
             };
-            Ok(new_user.create_or_update(conn)?)
+            let user = new_user.create_or_update(conn)?;
+            diesel::update(Email::belonging_to(&user))
+                .set(emails::verified.eq(true))
+                .execute(conn)?;
+            Ok(user)
         })
     }
 
@@ -56,6 +67,11 @@ impl App {
     /// Create an HTTP `GET` request
     pub fn get(&self, path: &str) -> RequestBuilder<'_> {
         RequestBuilder::new(&self.middleware, Method::Get, path)
+    }
+
+    /// Create an HTTP `PUT` request
+    pub fn put(&self, path: &str) -> RequestBuilder<'_> {
+        RequestBuilder::new(&self.middleware, Method::Put, path)
     }
 
     /// Create an HTTP `DELETE` request

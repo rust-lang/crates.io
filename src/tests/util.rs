@@ -332,7 +332,7 @@ pub struct Error {
     pub detail: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Bad {
     pub errors: Vec<Error>,
 }

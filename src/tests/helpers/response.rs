@@ -33,6 +33,13 @@ impl Response {
     pub fn text(&self) -> &str {
         &self.body
     }
+
+    pub fn json<'a, T>(&'a self) -> CargoResult<T>
+    where
+        T: serde::Deserialize<'a>,
+    {
+        serde_json::from_str(self.text()).map_err(Into::into)
+    }
 }
 
 pub enum ResponseError {
@@ -52,8 +59,8 @@ impl fmt::Debug for ResponseError {
         use ResponseError::*;
         match self {
             MiddlewareError(e) => write!(f, "MiddlewareError({:?})", e),
-            BadRequest(_) => write!(f, "BadRequest(_)"),
-            ServerError(_) => write!(f, "ServerError(_)"),
+            BadRequest(e) => write!(f, "BadRequest({:?})", e.text()),
+            ServerError(e) => write!(f, "ServerError({:?})", e.text()),
         }
     }
 }

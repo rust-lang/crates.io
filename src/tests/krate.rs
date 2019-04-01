@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::{
     builders::{CrateBuilder, DependencyBuilder, PublishBuilder, VersionBuilder},
     new_category, new_dependency, new_user, CrateMeta, CrateResponse, GoodCrate, OkBool,
@@ -73,6 +74,16 @@ impl crate::util::MockTokenUser {
         let url = format!("/api/v1/crates/{}/{}/unyank", krate_name, version);
         self.put(&url, &[])
     }
+}
+
+fn yank_request<'a>(app: &'a App, krate_name: &str, version: &str) -> RequestBuilder<'a> {
+    let url = format!("/api/v1/crates/{}/{}/yank", krate_name, version);
+    app.delete(&url)
+}
+
+fn publish_request<'a>(app: &'a App, publish_builder: PublishBuilder) -> RequestBuilder<'a> {
+    app.put("/api/v1/crates/new")
+        .with_body(publish_builder.body())
 }
 
 #[test]
@@ -1403,19 +1414,31 @@ fn yank() {
 }
 
 #[test]
-fn yank_not_owner() {
-    let (app, _, _, token) = TestApp::init().with_token();
-    let another_user = app.db_new_user("bar");
-    let another_user = another_user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_not", another_user.id).expect_build(conn);
-    });
+fn only_owners_can_yank() -> CargoResult<()> {
+    let app = App::new();
+    let owner = app.create_user("owner")?;
 
-    let json = token.yank("foo_not", "1.0.0").bad_with_status(200);
+    let crate_to_publish = PublishBuilder::new("foo_not");
+    publish_request(&app, crate_to_publish)
+        .as_user(&owner)
+        .send()?;
+
+    let user_yank_result = yank_request(&app, "foo_not", "1.0.0")
+        .as_user(&app.create_user("new_user")?)
+        .send()? // FIXME: We should return 403 here not 200
+        .json::<ErrorDetails>()?;
     assert_eq!(
-        json.errors[0].detail,
-        "crate `foo_not` does not have a version `1.0.0`"
+        user_yank_result.errors[0].detail,
+        "must already be an owner to yank or unyank",
     );
+
+    let owner_yank_result = yank_request(&app, "foo_not", "1.0.0")
+        .as_user(&owner)
+        .send()?
+        .json::<OkBool>()?;
+    assert!(owner_yank_result.ok);
+
+    Ok(())
 }
 
 #[test]
