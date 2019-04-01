@@ -37,8 +37,10 @@ fn main() {
 
     let environment = Environment::new(repository, credentials, db_pool.clone());
 
-    let builder = swirl::Runner::builder(db_pool, environment).thread_count(1);
-    let runner = job_runner(builder);
+    let runner = swirl::Runner::builder(db_pool, environment)
+        .thread_count(1)
+        .job_start_timeout(Duration::from_secs(10))
+        .build();
 
     println!("Runner booted, running jobs");
 

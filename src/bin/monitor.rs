@@ -6,9 +6,6 @@
 
 #![deny(warnings)]
 
-#[macro_use]
-extern crate serde_derive;
-
 mod on_call;
 
 use cargo_registry::{db, util::CargoResult};

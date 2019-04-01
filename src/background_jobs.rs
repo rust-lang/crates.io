@@ -1,22 +1,20 @@
 use std::panic::AssertUnwindSafe;
 use std::sync::{Mutex, MutexGuard};
-use swirl::{Builder, Runner};
 
 use crate::db::{DieselPool, DieselPooledConn};
-use crate::git::{AddCrate, Repository, Yank};
+use crate::git::Repository;
 use crate::util::errors::{CargoErrToStdErr, CargoResult};
 
-impl<'a> swirl::DieselPool<'a> for DieselPool {
+impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
-    type Error = CargoErrToStdErr;
-
-    fn get(&'a self) -> Result<Self::Connection, Self::Error> {
-        self.get().map_err(CargoErrToStdErr)
-    }
 }
 
-pub fn job_runner(config: Builder<Environment, DieselPool>) -> Runner<Environment, DieselPool> {
-    config.register::<AddCrate>().register::<Yank>().build()
+impl swirl::db::DieselPool for DieselPool {
+    type Error = CargoErrToStdErr;
+
+    fn get(&self) -> Result<swirl::db::DieselPooledConn<'_, Self>, Self::Error> {
+        self.get().map_err(CargoErrToStdErr)
+    }
 }
 
 #[allow(missing_debug_implementations)]
