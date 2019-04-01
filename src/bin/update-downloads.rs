@@ -6,7 +6,7 @@ extern crate diesel;
 use cargo_registry::{
     db,
     models::VersionDownload,
-    schema::{crate_downloads, crates, metadata, version_downloads, versions},
+    schema::{crates, metadata, version_downloads, versions},
     util::CargoResult,
 };
 
@@ -53,7 +53,7 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
 }
 
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
-    use diesel::{insert_into, update};
+    use diesel::update;
 
     println!("updating {} versions", rows.len());
 
@@ -75,18 +75,6 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
             // Update the total number of crate downloads
             update(crates::table.find(crate_id))
                 .set(crates::downloads.eq(crates::downloads + amt))
-                .execute(conn)?;
-
-            // Update the total number of crate downloads for today
-            insert_into(crate_downloads::table)
-                .values((
-                    crate_downloads::crate_id.eq(crate_id),
-                    crate_downloads::downloads.eq(amt),
-                    crate_downloads::date.eq(download.date),
-                ))
-                .on_conflict(crate_downloads::table.primary_key())
-                .do_update()
-                .set(crate_downloads::downloads.eq(crate_downloads::downloads + amt))
                 .execute(conn)?;
 
             // Now that everything else for this crate is done, update the global counter of total
@@ -144,16 +132,6 @@ mod test {
         (krate, version)
     }
 
-    macro_rules! crate_downloads {
-        ($conn:expr, $id:expr, $expected:expr) => {
-            let dl = crate_downloads::table
-                .filter(crate_downloads::crate_id.eq($id))
-                .select(crate_downloads::downloads)
-                .first($conn);
-            assert_eq!(Ok($expected as i32), dl);
-        };
-    }
-
     #[test]
     fn increment() {
         use diesel::dsl::*;
@@ -185,7 +163,6 @@ mod test {
             .select(crates::downloads)
             .first(&conn);
         assert_eq!(Ok(1), crate_downloads);
-        crate_downloads!(&conn, krate.id, 1);
         crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
@@ -298,7 +275,6 @@ mod test {
             .unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
-        crate_downloads!(&conn, krate.id, 1);
         crate::update(&conn).unwrap();
         let version3 = versions::table
             .find(version.id)

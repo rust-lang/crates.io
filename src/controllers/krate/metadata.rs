@@ -6,8 +6,8 @@
 
 use crate::controllers::prelude::*;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, User,
-    Version,
+    Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
+    User, Version,
 };
 use crate::schema::*;
 use crate::views::{
@@ -101,8 +101,6 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::dsl::*;
-
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
@@ -123,10 +121,10 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         .inner_join(categories::table)
         .select(categories::all_columns)
         .load(&*conn)?;
-    let recent_downloads = CrateDownload::belonging_to(&krate)
-        .filter(crate_downloads::date.gt(date(now - 90.days())))
-        .select(sum(crate_downloads::downloads))
-        .get_result(&*conn)?;
+    let recent_downloads = RecentCrateDownloads::belonging_to(&krate)
+        .select(recent_crate_downloads::downloads)
+        .get_result(&*conn)
+        .optional()?;
 
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))

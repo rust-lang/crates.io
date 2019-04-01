@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
@@ -20,14 +20,13 @@ use crate::schema::*;
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLOCKLIST: [&str; 1] = ["rust-ci.org"];
 
-#[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
+#[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]
-#[primary_key(crate_id, date)]
-#[table_name = "crate_downloads"]
-pub struct CrateDownload {
+#[primary_key(crate_id)]
+#[table_name = "recent_crate_downloads"]
+pub struct RecentCrateDownloads {
     pub crate_id: i32,
     pub downloads: i32,
-    pub date: NaiveDate,
 }
 
 #[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset, QueryableByName)]

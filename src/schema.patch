@@ -55,11 +55,10 @@ index df884e4..18e08cd 100644
  
      /// Representation of the `reserved_crate_names` table.
      ///
-@@ -881,22 +901,24 @@ table! {
+@@ -881,21 +901,23 @@ table! {
  }
  
  joinable!(api_tokens -> users (user_id));
- joinable!(crate_downloads -> crates (crate_id));
  joinable!(crate_owner_invitations -> crates (crate_id));
  joinable!(crate_owners -> crates (crate_id));
 -joinable!(crate_owners -> users (created_by));
