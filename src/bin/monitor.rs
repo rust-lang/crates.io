@@ -8,13 +8,14 @@
 
 mod on_call;
 
-use cargo_registry::{db, util::CargoResult};
+use cargo_registry::{db, schema::*, util::CargoResult};
 use diesel::prelude::*;
 
 fn main() -> CargoResult<()> {
     let conn = db::connect_now()?;
 
     check_stalled_background_jobs(&conn)?;
+    check_spam_attack(&conn)?;
     Ok(())
 }
 
@@ -22,7 +23,7 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> CargoResult<()> {
     use cargo_registry::schema::background_jobs::dsl::*;
     use diesel::dsl::*;
 
-    const BACKGROUND_JOB_KEY: &str = "background_jobs";
+    const EVENT_KEY: &str = "background_jobs";
 
     println!("Checking for stalled background jobs");
 
@@ -37,7 +38,7 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> CargoResult<()> {
 
     let event = if stalled_job_count > 0 {
         on_call::Event::Trigger {
-            incident_key: Some(BACKGROUND_JOB_KEY.into()),
+            incident_key: Some(EVENT_KEY.into()),
             description: format!(
                 "{} jobs have been in the queue for more than {} minutes",
                 stalled_job_count, max_job_time
@@ -45,8 +46,69 @@ fn check_stalled_background_jobs(conn: &PgConnection) -> CargoResult<()> {
         }
     } else {
         on_call::Event::Resolve {
-            incident_key: BACKGROUND_JOB_KEY.into(),
+            incident_key: EVENT_KEY.into(),
             description: Some("No stalled background jobs".into()),
+        }
+    };
+
+    log_and_trigger_event(event)?;
+    Ok(())
+}
+
+fn check_spam_attack(conn: &PgConnection) -> CargoResult<()> {
+    use cargo_registry::models::krate::canon_crate_name;
+    use diesel::dsl::*;
+    use diesel::sql_types::Bool;
+
+    const EVENT_KEY: &str = "spam_attack";
+
+    println!("Checking for crates indicating someone is spamming us");
+
+    let bad_crate_names = dotenv::var("SPAM_CRATE_NAMES");
+    let bad_crate_names: Vec<_> = bad_crate_names
+        .as_ref()
+        .map(|s| s.split(',').collect())
+        .unwrap_or_default();
+    let bad_author_patterns = dotenv::var("SPAM_AUTHOR_PATTERNS");
+    let bad_author_patterns: Vec<_> = bad_author_patterns
+        .as_ref()
+        .map(|s| s.split(',').collect())
+        .unwrap_or_default();
+
+    let mut event_description = None;
+
+    let bad_crate = crates::table
+        .filter(canon_crate_name(crates::name).eq(any(bad_crate_names)))
+        .select(crates::name)
+        .first::<String>(conn)
+        .optional()?;
+
+    if let Some(bad_crate) = bad_crate {
+        event_description = Some(format!("Crate named {} published", bad_crate));
+    }
+
+    let mut query = version_authors::table
+        .select(version_authors::name)
+        .filter(false.into_sql::<Bool>()) // Never return anything if we have no patterns
+        .into_boxed();
+    for author_pattern in bad_author_patterns {
+        query = query.or_filter(version_authors::name.like(author_pattern));
+    }
+    let bad_author = query.first::<String>(conn).optional()?;
+
+    if let Some(bad_author) = bad_author {
+        event_description = Some(format!("Crate with author {} published", bad_author));
+    }
+
+    let event = if let Some(event_description) = event_description {
+        on_call::Event::Trigger {
+            incident_key: Some(EVENT_KEY.into()),
+            description: format!("{}, possible spam attack underway", event_description,),
+        }
+    } else {
+        on_call::Event::Resolve {
+            incident_key: EVENT_KEY.into(),
+            description: Some("No spam crates detected".into()),
         }
     };
 
