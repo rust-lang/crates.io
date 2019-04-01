@@ -12,8 +12,6 @@ use cargo_registry::{
 
 use diesel::prelude::*;
 
-static LIMIT: i64 = 1000;
-
 fn main() -> CargoResult<()> {
     let conn = db::connect_now()?;
     update(&conn)?;
@@ -25,18 +23,11 @@ fn update(conn: &PgConnection) -> QueryResult<()> {
     use diesel::dsl::now;
     use diesel::select;
 
-    let mut max = Some(0);
-    while let Some(m) = max {
-        let rows = version_downloads
-            .filter(processed.eq(false))
-            .filter(id.gt(m))
-            .filter(downloads.ne(counted))
-            .order(id)
-            .limit(LIMIT)
-            .load(conn)?;
-        collect(conn, &rows)?;
-        max = rows.last().map(|d| d.id);
-    }
+    let rows = version_downloads
+        .filter(processed.eq(false))
+        .filter(downloads.ne(counted))
+        .load(conn)?;
+    collect(conn, &rows)?;
 
     // Anything older than 24 hours ago will be frozen and will not be queried
     // against again.
@@ -62,7 +53,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 
         conn.transaction::<_, diesel::result::Error, _>(|| {
             // increment the number of counted downloads
-            update(version_downloads::table.find(download.id))
+            update(version_downloads::table.find(download.id()))
                 .set(version_downloads::counted.eq(version_downloads::counted + amt))
                 .execute(conn)?;
 
