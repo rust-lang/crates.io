@@ -34,8 +34,6 @@ impl crate::util::MockCookieUser {
     /// As the currently logged in user, accept an invitation to become an owner of the named
     /// crate.
     fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
-        use cargo_registry::views::InvitationResponse;
-
         let body = json!({
             "crate_owner_invite": {
                 "invited_by_username": "",
