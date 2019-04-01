@@ -17,7 +17,7 @@ module.exports = function(defaults) {
         'rust',
         'scss',
         'sql',
-        'yaml'
+        'yaml',
     ];
 
     let app = new EmberApp(defaults, {
@@ -29,9 +29,7 @@ module.exports = function(defaults) {
             components: highlightedLanguages,
         },
         sassOptions: {
-            includePaths: [
-                'node_modules/normalize.css',
-            ],
+            includePaths: ['node_modules/normalize.css'],
         },
     });
 
@@ -48,9 +46,7 @@ module.exports = function(defaults) {
     // please specify an object with the list of modules as keys
     // along with the exports of each module as its value.
     app.import('node_modules/timekeeper/lib/timekeeper.js', {
-        using: [
-            { transformation: 'cjs', as: 'timekeeper' },
-        ],
+        using: [{ transformation: 'cjs', as: 'timekeeper' }],
     });
 
     return app.toTree();
