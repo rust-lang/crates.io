@@ -7,7 +7,7 @@
 
 use crate::controllers::prelude::*;
 
-use crate::models::{Crate, User, Version};
+use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::*;
 use crate::views::EncodableVersion;
 
@@ -22,7 +22,7 @@ pub fn index(req: &mut dyn Request) -> AppResult<Response> {
         .filter_map(|(ref a, ref b)| if *a == "ids[]" { b.parse().ok() } else { None })
         .collect::<Vec<i32>>();
 
-    let versions = versions::table
+    let versions_and_publishers = versions::table
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .select((
@@ -31,9 +31,18 @@ pub fn index(req: &mut dyn Request) -> AppResult<Response> {
             users::all_columns.nullable(),
         ))
         .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String, Option<User>)>(&*conn)?
+        .load::<(Version, String, Option<User>)>(&*conn)?;
+    let versions = versions_and_publishers
+        .iter()
+        .map(|(v, _, _)| v)
+        .cloned()
+        .collect::<Vec<_>>();
+    let versions = versions_and_publishers
         .into_iter()
-        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((version, crate_name, published_by), actions)| {
+            version.encodable(&crate_name, published_by, actions)
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -60,12 +69,13 @@ pub fn show_by_id(req: &mut dyn Request) -> AppResult<Response> {
             users::all_columns.nullable(),
         ))
         .first(&*conn)?;
+    let audit_actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     #[derive(Serialize)]
     struct R {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, published_by),
+        version: version.encodable(&krate.name, published_by, audit_actions),
     }))
 }

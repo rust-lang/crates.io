@@ -7,7 +7,9 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::AppError;
 
-use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
+use crate::models::{
+    CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
+};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
@@ -80,12 +82,19 @@ pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
         ))
         .paginate(&req.query())?
         .load::<(Version, String, Option<User>)>(&*conn)?;
-
     let more = data.next_page_params().is_some();
+    let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
+    let data = data
+        .into_iter()
+        .zip(VersionOwnerAction::for_versions(&conn, &versions)?.into_iter())
+        .map(|((v, cn, pb), voas)| (v, cn, pb, voas))
+        .collect::<Vec<_>>();
 
     let versions = data
         .into_iter()
-        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
+        .map(|(version, crate_name, published_by, actions)| {
+            version.encodable(&crate_name, published_by, actions)
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -234,7 +243,7 @@ pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> 
     let user = req.user()?;
     let conn = req.db_conn()?;
 
-    // Build inserts from existing crates beloning to the current user
+    // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
         .filter(owner_id.eq(user.id))
         .select((crate_id, owner_id, owner_kind, email_notifications))

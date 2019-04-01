@@ -6,6 +6,7 @@
 
 use crate::controllers::prelude::*;
 
+use crate::models::VersionOwnerAction;
 use crate::schema::*;
 use crate::views::{EncodableDependency, EncodablePublicUser, EncodableVersion};
 
@@ -70,12 +71,13 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let (version, krate) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let published_by = version.published_by(&conn);
+    let actions = VersionOwnerAction::by_version(&conn, &version)?;
 
     #[derive(Serialize)]
     struct R {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, published_by),
+        version: version.encodable(&krate.name, published_by, actions),
     }))
 }
