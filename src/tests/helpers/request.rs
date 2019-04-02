@@ -1,8 +1,9 @@
-use super::response::{Response, ResponseError};
+use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::models::{ApiToken, User};
 use conduit::{Handler, Method, Request};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_test::MockRequest;
+use super::response::{Response, ResponseError};
 
 pub struct RequestBuilder<'a> {
     middleware: &'a MiddlewareBuilder,
@@ -20,7 +21,7 @@ impl<'a> RequestBuilder<'a> {
 
     /// Sends the request signed in as the given user
     pub fn signed_in_as(mut self, user: &User) -> Self {
-        use cargo_registry::middleware::current_user::AuthenticationSource;
+        self.clear_auth();
         self.request.mut_extensions().insert(user.clone());
         self.request
             .mut_extensions()
@@ -29,7 +30,8 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Uses the given token for authentication
-    pub fn with_token(self, token: &ApiToken) -> Self {
+    pub fn with_token(mut self, token: &ApiToken) -> Self {
+        self.clear_auth();
         self.with_header("Authorization", &token.token)
     }
 
@@ -49,5 +51,11 @@ impl<'a> RequestBuilder<'a> {
     /// the response status was >= 400.
     pub fn send(mut self) -> Result<Response, ResponseError> {
         Response::new(self.middleware.call(&mut self.request)?)
+    }
+
+    fn clear_auth(&mut self) {
+        self.request.mut_extensions().remove::<User>();
+        self.request.mut_extensions().remove::<AuthenticationSource>();
+        self.request.header("Authorization", "");
     }
 }
