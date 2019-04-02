@@ -1,9 +1,9 @@
+use super::response::{Response, ResponseError};
 use cargo_registry::middleware::current_user::AuthenticationSource;
 use cargo_registry::models::{ApiToken, User};
 use conduit::{Handler, Method, Request};
 use conduit_middleware::MiddlewareBuilder;
 use conduit_test::MockRequest;
-use super::response::{Response, ResponseError};
 
 pub struct RequestBuilder<'a> {
     middleware: &'a MiddlewareBuilder,
@@ -55,7 +55,9 @@ impl<'a> RequestBuilder<'a> {
 
     fn clear_auth(&mut self) {
         self.request.mut_extensions().remove::<User>();
-        self.request.mut_extensions().remove::<AuthenticationSource>();
+        self.request
+            .mut_extensions()
+            .remove::<AuthenticationSource>();
         self.request.header("Authorization", "");
     }
 }
