@@ -81,7 +81,7 @@ fn yank_request<'a>(app: &'a App, krate_name: &str, version: &str) -> RequestBui
     app.delete(&url)
 }
 
-fn publish_request<'a>(app: &'a App, publish_builder: PublishBuilder) -> RequestBuilder<'a> {
+fn publish_request(app: &App, publish_builder: PublishBuilder) -> RequestBuilder<'_> {
     app.put("/api/v1/crates/new")
         .with_body(publish_builder.body())
 }
@@ -1420,11 +1420,11 @@ fn only_owners_can_yank() -> CargoResult<()> {
 
     let crate_to_publish = PublishBuilder::new("foo_not");
     publish_request(&app, crate_to_publish)
-        .as_user(&owner)
+        .signed_in_as(&owner)
         .send()?;
 
     let user_yank_result = yank_request(&app, "foo_not", "1.0.0")
-        .as_user(&app.create_user("new_user")?)
+        .signed_in_as(&app.create_user("new_user")?)
         .send()? // FIXME: We should return 403 here not 200
         .json::<ErrorDetails>()?;
     assert_eq!(
@@ -1433,7 +1433,7 @@ fn only_owners_can_yank() -> CargoResult<()> {
     );
 
     let owner_yank_result = yank_request(&app, "foo_not", "1.0.0")
-        .as_user(&owner)
+        .signed_in_as(&owner)
         .send()?
         .json::<OkBool>()?;
     assert!(owner_yank_result.ok);

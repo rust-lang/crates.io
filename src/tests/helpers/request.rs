@@ -19,7 +19,7 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Sends the request signed in as the given user
-    pub fn as_user(mut self, user: &User) -> Self {
+    pub fn signed_in_as(mut self, user: &User) -> Self {
         use cargo_registry::middleware::current_user::AuthenticationSource;
         self.request.mut_extensions().insert(user.clone());
         self.request
