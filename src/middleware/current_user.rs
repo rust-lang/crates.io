@@ -20,8 +20,6 @@ pub enum AuthenticationSource {
 
 impl Middleware for CurrentUser {
     fn before(&self, req: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
-        use std::mem::drop;
-
         // Check if the request has a session cookie with a `user_id` property inside
         let id = {
             req.session()

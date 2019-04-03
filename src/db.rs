@@ -57,7 +57,6 @@ impl Deref for DieselPooledConn<'_> {
 }
 
 pub fn connect_now() -> ConnectionResult<PgConnection> {
-    use diesel::Connection;
     let mut url = Url::parse(&crate::env("DATABASE_URL")).expect("Invalid database URL");
     if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
