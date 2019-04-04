@@ -6,7 +6,7 @@ use crate::app::App;
 use conduit::Request;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
-    Arc, Mutex,
+    Arc, Mutex, PoisonError,
 };
 use std::time::{Duration, Instant};
 
@@ -29,7 +29,10 @@ impl LogConnectionPoolStatus {
 
 impl Middleware for LogConnectionPoolStatus {
     fn before(&self, _: &mut dyn Request) -> Result<(), Box<dyn Error + Send>> {
-        let mut last_log_time = self.last_log_time.lock().unwrap_or_else(|e| e.into_inner());
+        let mut last_log_time = self
+            .last_log_time
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
         let in_flight_requests = self.in_flight_requests.fetch_add(1, Ordering::SeqCst);
         if last_log_time.elapsed() >= Duration::from_secs(60) {
             *last_log_time = Instant::now();

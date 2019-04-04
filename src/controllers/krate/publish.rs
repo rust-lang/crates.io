@@ -245,7 +245,7 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
-        s.map_or(true, |s| s.is_empty())
+        s.map_or(true, String::is_empty)
     }
     let mut missing = Vec::new();
 
@@ -255,7 +255,7 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
     if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
         missing.push("license");
     }
-    if new.authors.iter().all(|s| s.is_empty()) {
+    if new.authors.iter().all(String::is_empty) {
         missing.push("authors");
     }
     if !missing.is_empty() {

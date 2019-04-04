@@ -87,7 +87,7 @@ impl Category {
                 .iter()
                 .cloned()
                 .filter(|s| !categories.iter().any(|c| c.slug == *s))
-                .map(|s| s.to_string())
+                .map(ToString::to_string)
                 .collect();
             let crate_categories = categories
                 .iter()

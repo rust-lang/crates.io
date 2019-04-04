@@ -33,7 +33,7 @@ pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
                 }],
             }))
         } else {
-            self.cause().and_then(|cause| cause.response())
+            self.cause().and_then(CargoError::response)
         }
     }
     fn human(&self) -> bool {

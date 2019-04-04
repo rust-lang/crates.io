@@ -358,7 +358,7 @@ impl GhUser {
             })
             .basic_auth(self.login, Some(password));
 
-        let mut response = t!(req.send().and_then(|r| r.error_for_status()));
+        let mut response = t!(req.send().and_then(reqwest::Response::error_for_status));
 
         #[derive(Deserialize)]
         struct Response {

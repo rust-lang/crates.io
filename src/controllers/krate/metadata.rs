@@ -153,8 +153,8 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
             .into_iter()
             .map(|(v, pb)| v.encodable(&krate.name, pb))
             .collect(),
-        keywords: kws.into_iter().map(|k| k.encodable()).collect(),
-        categories: cats.into_iter().map(|k| k.encodable()).collect(),
+        keywords: kws.into_iter().map(Keyword::encodable).collect(),
+        categories: cats.into_iter().map(Category::encodable).collect(),
     }))
 }
 

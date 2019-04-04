@@ -70,7 +70,7 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
-            published_by: published_by.map(|pb| pb.encodable_public()),
+            published_by: published_by.map(User::encodable_public),
         }
     }
 
