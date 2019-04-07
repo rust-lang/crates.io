@@ -13,11 +13,11 @@ module.exports = function(/* environment, appConfig */) {
             {
                 src: 'cargo.png',
                 sizes: '227x227',
-                type: 'image/png'
-            }
+                type: 'image/png',
+            },
         ],
         ms: {
-            tileColor: '#3b6837'
-        }
+            tileColor: '#3b6837',
+        },
     };
 };
