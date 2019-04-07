@@ -1,5 +1,5 @@
 use std::panic::AssertUnwindSafe;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::Repository;
@@ -49,7 +49,7 @@ impl Environment {
     }
 
     pub fn lock_index(&self) -> CargoResult<MutexGuard<'_, Repository>> {
-        let repo = self.index.lock().unwrap_or_else(|e| e.into_inner());
+        let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
         repo.reset_head()?;
         Ok(repo)
     }

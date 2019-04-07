@@ -102,7 +102,7 @@ impl<'a> MarkdownRenderer<'a> {
         .cloned()
         .collect();
 
-        let sanitizer_base_url = base_url.map(|s| s.to_string());
+        let sanitizer_base_url = base_url.map(ToString::to_string);
 
         // Constrain the type of the closures given to the HTML sanitizer.
         fn constrain_closure<F>(f: F) -> F
@@ -124,7 +124,7 @@ impl<'a> MarkdownRenderer<'a> {
         fn is_media_url(url: &str) -> bool {
             Path::new(url)
                 .extension()
-                .and_then(|e| e.to_str())
+                .and_then(std::ffi::OsStr::to_str)
                 .map_or(false, |e| match e {
                     "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
                     _ => false,
