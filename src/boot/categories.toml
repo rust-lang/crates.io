@@ -354,7 +354,7 @@ Parsers implemented for particular formats or languages.\
 """
 
 [parsing]
-name = "Parsing"
+name = "Parsing tools"
 description = """
 Crates to help create parsers of binary and text \
 formats. Format-specific parsers belong in other, more specific \
