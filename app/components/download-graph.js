@@ -1,22 +1,23 @@
 import Component from '@ember/component';
-import $ from 'jquery';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 
 export default Component.extend({
     classNames: 'graph-data',
+    resizeHandler: undefined,
 
     didInsertElement() {
         this._super(...arguments);
 
-        $(window).on('resize.chart', () => this.rerender());
-        $(document).on('googleChartsLoaded', () => this.rerender());
+        this.resizeHandler = () => this.rerender();
+        window.addEventListener('resize', this.resizeHandler, false);
+        document.addEventListener('googleChartsLoaded', this.resizeHandler, false);
     },
 
     willDestroyElement() {
-        $(window).off('resize.chart');
-        $(document).off('googleChartsLoaded');
+        window.removeEventListener('resize', this.resizeHandler);
+        document.removeEventListener('googleChartsLoaded', this.resizeHandler);
     },
 
     didRender() {
@@ -69,12 +70,8 @@ export default Component.extend({
             }
         }
 
-        if (!data || !window.google || !window.googleChartsLoaded) {
-            this.$().hide();
-            return;
-        } else {
-            this.$().show();
-        }
+        let show = data && window.google && window.googleChartsLoaded;
+        this.element.style.display = show ? '' : 'none';
 
         let myData = window.google.visualization.arrayToDataTable(data);
 
