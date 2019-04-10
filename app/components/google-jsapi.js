@@ -1,4 +1,3 @@
-/*global google*/
 import Component from '@ember/component';
 
 function createEvent(name) {
@@ -13,13 +12,15 @@ export default Component.extend({
     didInsertElement() {
         let script = document.createElement('script');
         script.onload = () => {
-            google.charts.load('current', { packages: ['corechart'] });
-            google.charts.setOnLoadCallback(() => {
-                window.googleChartsLoaded = true;
-                document.dispatchEvent(createEvent('googleChartsLoaded'));
+            window.google.load('visualization', '1.0', {
+                packages: ['corechart'],
+                callback() {
+                    window.googleChartsLoaded = true;
+                    document.dispatchEvent(createEvent('googleChartsLoaded'));
+                },
             });
         };
         document.body.appendChild(script);
-        script.src = 'https://www.gstatic.com/charts/loader.js';
+        script.src = 'https://www.google.com/jsapi';
     },
 });
