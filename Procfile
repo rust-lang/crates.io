@@ -1,3 +1,3 @@
 release: bin/diesel migration run
-web: bin/start-nginx ./target/release/server
+web: node fastboot.js & bin/start-nginx target/release/server & wait -n
 background_worker: ./target/release/background-worker
