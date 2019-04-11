@@ -64,6 +64,11 @@ http {
 			proxy_pass http://app_server;
 		}
 
+		# Just in case, only forward "/" to Ember for a moment
+		location = / {
+			proxy_pass http://localhost:9000;
+		}
+
 		location ~ ^/api/v./crates/new$ {
 			proxy_pass http://app_server;
 
