@@ -4,6 +4,7 @@ import { currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
+import { title } from '../helpers/dom';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | front page', function(hooks) {
@@ -25,7 +26,7 @@ module('Acceptance | front page', function(hooks) {
         await visit('/');
 
         assert.equal(currentURL(), '/');
-        assert.equal(document.title, 'crates.io: Rust Package Registry');
+        assert.equal(title(), 'crates.io: Rust Package Registry');
 
         assert.dom('[data-test-install-cargo-link]').exists();
         assert.dom('[data-test-all-crates-link]').exists();
