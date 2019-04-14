@@ -22,9 +22,9 @@ export default Component.extend({
     didRender() {
         this._super(...arguments);
 
-        let data = this.data;
+        const data = this.data;
 
-        let subarray_length = (data[1] || []).length;
+        const subarray_length = (data[1] || []).length;
 
         // Start at 1 to skip the date element in the 0th
         // location in the array.
@@ -38,7 +38,7 @@ export default Component.extend({
             // want to change the last element.
             for (let i = 1; i < data.length - 1; i++) {
                 // k + 1 because the first entry in the array is the date
-                let value = data[i][k];
+                const value = data[i][k];
 
                 // If we are "off" and are looking at a zero
                 // replace the data at this point with `null`.
@@ -76,27 +76,27 @@ export default Component.extend({
             this.$().show();
         }
 
-        let myData = window.google.visualization.arrayToDataTable(data);
+        const myData = window.google.visualization.arrayToDataTable(data);
 
-        let dateFmt = new window.google.visualization.DateFormat({
+        const dateFmt = new window.google.visualization.DateFormat({
             pattern: 'LLL d, yyyy',
         });
         dateFmt.format(myData, 0);
 
         // Create a formatter to use for daily download numbers
-        let numberFormatWhole = new window.google.visualization.NumberFormat({
+        const numberFormatWhole = new window.google.visualization.NumberFormat({
             pattern: '#,##0',
         });
 
         // Create a formatter to use for 7-day average numbers
-        let numberFormatDecimal = new window.google.visualization.NumberFormat({
+        const numberFormatDecimal = new window.google.visualization.NumberFormat({
             pattern: '#,##0.0',
         });
 
         // use a DataView to calculate an x-day moving average
-        let days = 7;
-        let view = new window.google.visualization.DataView(myData);
-        let moving_avg_func_for_col = function(col) {
+        const days = 7;
+        const view = new window.google.visualization.DataView(myData);
+        const moving_avg_func_for_col = function(col) {
             return function(dt, row) {
                 // For the last rows (the *first* days, remember, the dataset is
                 // backwards), we cannot calculate the avg. of previous days.
@@ -108,7 +108,7 @@ export default Component.extend({
                 for (let i = days; i > 0; i--) {
                     total += dt.getValue(row + i, col);
                 }
-                let avg = total / days;
+                const avg = total / days;
                 return {
                     v: avg,
                     f: numberFormatDecimal.formatValue(avg),
@@ -116,9 +116,9 @@ export default Component.extend({
             };
         };
 
-        let columns = [0]; // 0 = datetime
-        let seriesOption = {};
-        let [headers] = data;
+        const columns = [0]; // 0 = datetime
+        const seriesOption = {};
+        const [headers] = data;
         // Walk over the headers/colums in reverse order, as the newest version
         // is at the end, but in the UI we want it at the top of the chart legend.
 
@@ -150,7 +150,7 @@ export default Component.extend({
         });
         view.setColumns(columns);
 
-        let chart = new window.google.visualization.ComboChart(this.element);
+        const chart = new window.google.visualization.ComboChart(this.element);
         chart.draw(view, {
             chartArea: { left: 85, width: '77%', height: '80%' },
             hAxis: {
@@ -169,7 +169,7 @@ export default Component.extend({
 });
 
 function range(start, end, step) {
-    let array = [];
+    const array = [];
     for (let i = start; i !== end; i += step) {
         array.push(i);
     }

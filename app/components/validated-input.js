@@ -25,7 +25,7 @@ export default Component.extend({
 
     init() {
         this._super(...arguments);
-        let valuePath = this.valuePath;
+        const valuePath = this.valuePath;
 
         defineProperty(this, 'validation', readOnly(`model.validations.attrs.${valuePath}`));
         defineProperty(this, 'value', alias(`model.${valuePath}`));

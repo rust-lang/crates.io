@@ -10,13 +10,13 @@ export default Component.extend({
     repository: alias('badge.attributes.repository'),
 
     imageUrl: computed('badge.attributes.id', function() {
-        let id = this.get('badge.attributes.id');
-        let branch = this.branch;
+        const id = this.get('badge.attributes.id');
+        const branch = this.branch;
         if (id !== undefined && id !== null) {
             return `https://ci.appveyor.com/api/projects/status/${id}/branch/${branch}?svg=true`;
         } else {
-            let service = this.service;
-            let repository = this.repository;
+            const service = this.service;
+            const repository = this.repository;
 
             return `https://ci.appveyor.com/api/projects/status/${service}/${repository}?svg=true&branch=${branch}`;
         }

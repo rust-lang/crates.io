@@ -20,10 +20,10 @@ export default Component.extend({
     propagateClicks: true,
 
     click(event) {
-        let closeOnChildClick = this.closeOnChildClick;
-        let propagateClicks = this.propagateClicks;
-        let $target = $(event.target);
-        let $c = this.$();
+        const closeOnChildClick = this.closeOnChildClick;
+        const propagateClicks = this.propagateClicks;
+        const $target = $(event.target);
+        const $c = this.$();
 
         if ($target !== $c) {
             if ((closeOnChildClick === true || closeOnChildClick === 'true') && $target.closest($c).length) {

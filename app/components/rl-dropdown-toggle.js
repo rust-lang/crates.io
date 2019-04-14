@@ -30,7 +30,7 @@ export default Component.extend({
 
     click(event) {
         if (!this.disabled) {
-            let propagateClicks = this.propagateClicks;
+            const propagateClicks = this.propagateClicks;
 
             this.dropdownContainer.send(this.action);
 

@@ -15,12 +15,12 @@ export default Component.extend({
     notValidEmail: false,
     prevEmail: '',
     emailIsNull: computed('user.email', function() {
-        let email = this.get('user.email');
+        const email = this.get('user.email');
         return email == null;
     }),
     emailNotVerified: computed('user.{email,email_verified}', function() {
-        let email = this.get('user.email');
-        let verified = this.get('user.email_verified');
+        const email = this.get('user.email');
+        const verified = this.get('user.email_verified');
 
         return email != null && !verified;
     }),
@@ -39,8 +39,8 @@ export default Component.extend({
 
     actions: {
         editEmail() {
-            let email = this.value;
-            let isEmailNull = function(email) {
+            const email = this.value;
+            const isEmailNull = function(email) {
                 return email == null;
             };
 
@@ -50,11 +50,11 @@ export default Component.extend({
         },
 
         saveEmail() {
-            let userEmail = this.value;
-            let user = this.user;
+            const userEmail = this.value;
+            const user = this.user;
 
-            let emailIsProperFormat = function(userEmail) {
-                let regExp = /^\S+@\S+\.\S+$/;
+            const emailIsProperFormat = function(userEmail) {
+                const regExp = /^\S+@\S+\.\S+$/;
                 return regExp.test(userEmail);
             };
 
@@ -93,7 +93,7 @@ export default Component.extend({
         },
 
         async resendEmail() {
-            let user = this.user;
+            const user = this.user;
 
             try {
                 await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
