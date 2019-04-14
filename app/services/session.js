@@ -52,7 +52,7 @@ export default Service.extend({
                 .catch(() => this.logoutUser())
                 .finally(() => {
                     this.set('currentUserDetected', true);
-                    let transition = this.abortedTransition;
+                    const transition = this.abortedTransition;
                     if (transition) {
                         transition.retry();
                         this.set('abortedTransition', null);
