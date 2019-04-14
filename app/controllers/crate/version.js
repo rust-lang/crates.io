@@ -45,8 +45,8 @@ export default Controller.extend({
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return PromiseArray.create({
             promise: this.get('currentVersion.authors').then(authors => {
-                let ret = authors.slice();
-                let others = authors.get('meta');
+                const ret = authors.slice();
+                const others = authors.get('meta');
                 for (let i = 0; i < others.names.length; i++) {
                     ret.push({ name: others.names[i] });
                 }
@@ -59,7 +59,7 @@ export default Controller.extend({
     anyCategories: gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
-        let deps = this.get('currentVersion.dependencies');
+        const deps = this.get('currentVersion.dependencies');
 
         if (deps === null) {
             return [];
@@ -73,7 +73,7 @@ export default Controller.extend({
     }),
 
     currentDevDependencies: computed('currentVersion.dependencies', function() {
-        let deps = this.get('currentVersion.dependencies');
+        const deps = this.get('currentVersion.dependencies');
         if (deps === null) {
             return [];
         }
@@ -85,37 +85,37 @@ export default Controller.extend({
     }),
 
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
-        let downloads = this.downloads;
+        const downloads = this.downloads;
         if (!downloads) {
             return;
         }
 
-        let extra = this.extraDownloads || [];
+        const extra = this.extraDownloads || [];
 
-        let dates = {};
-        let versions = [];
+        const dates = {};
+        const versions = [];
         for (let i = 0; i < 90; i++) {
-            let now = moment().subtract(i, 'days');
+            const now = moment().subtract(i, 'days');
             dates[now.format('MMM D')] = { date: now, cnt: {} };
         }
 
         downloads.forEach(d => {
-            let version_id = d.get('version.id');
-            let key = moment(d.get('date'))
+            const version_id = d.get('version.id');
+            const key = moment(d.get('date'))
                 .utc()
                 .format('MMM D');
             if (dates[key]) {
-                let prev = dates[key].cnt[version_id] || 0;
+                const prev = dates[key].cnt[version_id] || 0;
                 dates[key].cnt[version_id] = prev + d.get('downloads');
             }
         });
 
         extra.forEach(d => {
-            let key = moment(d.date)
+            const key = moment(d.date)
                 .utc()
                 .format('MMM D');
             if (dates[key]) {
-                let prev = dates[key].cnt[null] || 0;
+                const prev = dates[key].cnt[null] || 0;
                 dates[key].cnt[null] = prev + d.downloads;
             }
         });
@@ -133,14 +133,14 @@ export default Controller.extend({
             });
         }
 
-        let headers = ['Date'];
+        const headers = ['Date'];
         versions.sort(b => b.num).reverse();
         for (let i = 0; i < versions.length; i++) {
             headers.push(versions[i].num);
         }
-        let data = [headers];
-        for (let date in dates) {
-            let row = [dates[date].date.toDate()];
+        const data = [headers];
+        for (const date in dates) {
+            const row = [dates[date].date.toDate()];
             for (let i = 0; i < versions.length; i++) {
                 row.push(dates[date].cnt[versions[i].id] || 0);
             }
@@ -177,8 +177,8 @@ export default Controller.extend({
         toggleFollow() {
             this.set('fetchingFollowing', true);
 
-            let crate = this.crate;
-            let op = this.toggleProperty('following') ? crate.follow() : crate.unfollow();
+            const crate = this.crate;
+            const op = this.toggleProperty('following') ? crate.follow() : crate.unfollow();
 
             return op.finally(() => this.set('fetchingFollowing', false));
         },

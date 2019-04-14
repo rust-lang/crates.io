@@ -13,7 +13,7 @@ export default Controller.extend({
     }),
 
     dataTask: task(function*() {
-        let data = yield ajax('/api/v1/summary');
+        const data = yield ajax('/api/v1/summary');
 
         addCrates(this.store, data.new_crates);
         addCrates(this.store, data.most_downloaded);
