@@ -13,7 +13,7 @@ export default Route.extend({
 
     setupController(controller) {
         this._super(...arguments);
-        let category = this.modelFor('category');
+        const category = this.modelFor('category');
         controller.set('category', category);
     },
 });

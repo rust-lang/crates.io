@@ -44,8 +44,8 @@ export default Route.extend({
 
         const fetchCrateDocumentation = () => {
             if (!crate.get('documentation') || crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
-                let crateName = crate.get('name');
-                let crateVersion = params.version_num;
+                const crateName = crate.get('name');
+                const crateVersion = params.version_num;
                 ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' }).then(r => {
                     if (r.length > 0 && r[0].build_status === true) {
                         crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
@@ -94,7 +94,7 @@ export default Route.extend({
         }
 
         // Find version model
-        let versions = await crate.get('versions');
+        const versions = await crate.get('versions');
 
         const version = versions.find(version => version.get('num') === params.version_num);
         if (params.version_num && !version) {
@@ -121,7 +121,7 @@ export default Route.extend({
     },
 
     serialize(model) {
-        let version_num = model.get('num');
+        const version_num = model.get('num');
         return { version_num };
     },
 });

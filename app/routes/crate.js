@@ -20,7 +20,7 @@ export default Route.extend({
     },
 
     setHeadTags(model) {
-        let headTags = [
+        const headTags = [
             {
                 type: 'meta',
                 tagId: 'meta-description-tag',

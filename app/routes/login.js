@@ -20,7 +20,7 @@ export default Route.extend({
         }
 
         window.github_response = undefined;
-        let windowDimensions = [
+        const windowDimensions = [
             'width=1000',
             'height=450',
             'toolbar=0',
@@ -31,32 +31,32 @@ export default Route.extend({
             'menuBar=0',
         ].join(',');
 
-        let win = window.open('/github_login', 'Authorization', windowDimensions);
+        const win = window.open('/github_login', 'Authorization', windowDimensions);
         if (!win) {
             return;
         }
 
         // For the life of me I cannot figure out how to do this other than
         // polling
-        let oauthInterval = window.setInterval(() => {
+        const oauthInterval = window.setInterval(() => {
             if (!win.closed) {
                 return;
             }
             window.clearInterval(oauthInterval);
-            let json = window.github_response;
+            const json = window.github_response;
             window.github_response = undefined;
             if (!json) {
                 return;
             }
 
-            let response = JSON.parse(json);
+            const response = JSON.parse(json);
             if (!response) {
                 return;
             }
 
-            let { data } = response;
+            const { data } = response;
             if (data && data.errors) {
-                let error = `Failed to log in: ${data.errors[0].detail}`;
+                const error = `Failed to log in: ${data.errors[0].detail}`;
                 this.flashMessages.show(error);
                 return;
             } else if (!response.ok) {
@@ -64,8 +64,8 @@ export default Route.extend({
                 return;
             }
 
-            let user = this.store.push(this.store.normalize('user', data.user));
-            let transition = this.get('session.savedTransition');
+            const user = this.store.push(this.store.normalize('user', data.user));
+            const transition = this.get('session.savedTransition');
             this.session.loginUser(user);
             if (transition) {
                 transition.retry();
