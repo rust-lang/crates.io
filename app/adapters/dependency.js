@@ -6,7 +6,7 @@ export default ApplicationAdapter.extend({
             return this._super(...arguments);
         }
         delete query.reverse;
-        let { crate } = query;
+        const { crate } = query;
         delete query.crate;
         return this.ajax(`/${this.urlPrefix()}/crates/${crate.get('id')}/reverse_dependencies`, 'GET', { data: query });
     },

@@ -6,9 +6,9 @@ export default DS.RESTAdapter.extend({
         return 'tokens';
     },
     createRecord(store, type, snapshot) {
-        let data = {};
-        let serializer = store.serializerFor(type.modelName);
-        let url = this.buildURL(type.modelName, null, snapshot, 'createRecord');
+        const data = {};
+        const serializer = store.serializerFor(type.modelName);
+        const url = this.buildURL(type.modelName, null, snapshot, 'createRecord');
 
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
