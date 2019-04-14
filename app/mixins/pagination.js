@@ -7,9 +7,9 @@ const VIEWABLE_PAGES = 9;
 export default Mixin.create({
     // Gives page numbers to the surrounding 9 pages.
     pages: computed('currentPage', 'availablePages', function() {
-        let pages = [];
-        let currentPage = this.currentPage;
-        let availablePages = this.availablePages;
+        const pages = [];
+        const currentPage = this.currentPage;
+        const availablePages = this.availablePages;
         let lowerBound = 0;
         let upperBound = 0;
 
@@ -47,8 +47,8 @@ export default Mixin.create({
     }),
 
     nextPage: computed('currentPage', 'availablePages', function() {
-        let nextPage = this.currentPage + 1;
-        let availablePages = this.availablePages;
+        const nextPage = this.currentPage + 1;
+        const availablePages = this.availablePages;
         if (nextPage <= availablePages) {
             return nextPage;
         } else {
@@ -57,7 +57,7 @@ export default Mixin.create({
     }),
 
     prevPage: computed('currentPage', function() {
-        let prevPage = this.currentPage - 1;
+        const prevPage = this.currentPage - 1;
         if (prevPage > 0) {
             return prevPage;
         } else {
