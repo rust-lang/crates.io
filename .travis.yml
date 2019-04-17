@@ -2,10 +2,11 @@ language: rust
 sudo: required
 dist: xenial
 
-# Ignore this branch per bors-ng documentation
+# Ignore this branch per homu
+# https://github.com/barosl/homu
 branches:
   except:
-    - staging.tmp
+    - auto
 
 cache:
   cargo: true
