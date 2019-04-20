@@ -1,4 +1,4 @@
-#![deny(warnings, clippy::all)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{boot, App, Env};
 use jemalloc_ctl;

@@ -18,7 +18,7 @@ pub enum DieselPool {
 }
 
 impl DieselPool {
-    pub fn get(&self) -> CargoResult<DieselPooledConn> {
+    pub fn get(&self) -> CargoResult<DieselPooledConn<'_>> {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
@@ -89,11 +89,11 @@ pub trait RequestTransaction {
     ///
     /// The connection will live for the lifetime of the request.
     // FIXME: This description does not match the implementation below.
-    fn db_conn(&self) -> CargoResult<DieselPooledConn>;
+    fn db_conn(&self) -> CargoResult<DieselPooledConn<'_>>;
 }
 
 impl<T: Request + ?Sized> RequestTransaction for T {
-    fn db_conn(&self) -> CargoResult<DieselPooledConn> {
+    fn db_conn(&self) -> CargoResult<DieselPooledConn<'_>> {
         self.app().diesel_database.get().map_err(Into::into)
     }
 }
