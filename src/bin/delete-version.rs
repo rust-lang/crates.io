@@ -5,7 +5,7 @@
 // Usage:
 //      cargo run --bin delete-version crate-name version-number
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 use cargo_registry::{
     db,

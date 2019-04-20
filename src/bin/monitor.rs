@@ -4,7 +4,7 @@
 //! Usage:
 //!     cargo run --bin monitor
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 mod on_call;
 

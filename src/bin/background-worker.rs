@@ -7,7 +7,7 @@
 // Usage:
 //      cargo run --bin background-worker
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 use cargo_registry::git::Repository;
 use cargo_registry::{background_jobs::*, db};

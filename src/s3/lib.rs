@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 extern crate base64;
 extern crate chrono;

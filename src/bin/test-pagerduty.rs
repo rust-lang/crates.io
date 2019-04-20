@@ -5,7 +5,7 @@
 //!
 //! Event type can be trigger, acknowledge, or resolve
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 mod on_call;
 

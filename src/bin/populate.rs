@@ -4,7 +4,7 @@
 // Usage:
 //      cargo run --bin populate version_id1 version_id2 ...
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 use cargo_registry::{db, schema::version_downloads};
 use std::env;

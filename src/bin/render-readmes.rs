@@ -3,7 +3,7 @@
 //
 // Warning: this can take a lot of time.
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 #[macro_use]
 extern crate serde;

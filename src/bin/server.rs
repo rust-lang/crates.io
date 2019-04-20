@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 
 use cargo_registry::{boot, App, Env};
 use jemalloc_ctl;

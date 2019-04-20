@@ -3,7 +3,7 @@
 //! All implemented routes are defined in the [middleware](fn.middleware.html) function and
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
-#![deny(warnings)]
+#![deny(warnings, clippy::all)]
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![deny(bare_trait_objects)]
 #![recursion_limit = "256"]
