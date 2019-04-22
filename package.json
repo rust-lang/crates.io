@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "ember build",
-    "lint:js": "eslint ./*.js app config lib mirage server tests",
+    "lint:js": "eslint .",
     "prettier": "prettier --write '{app,tests,mirage}/**/*.js'",
     "start": "ember serve",
     "start:live": "ember serve --proxy https://crates.io",
