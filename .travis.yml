@@ -65,6 +65,7 @@ matrix:
       before_script: skip
       script:
         - npm run lint:js
+        - npm run lint:deps
         - npm test
     - rust: beta
       script:
