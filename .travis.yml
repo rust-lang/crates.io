@@ -59,14 +59,11 @@ matrix:
         - cargo test
     - name: Frontend
       rust: stable
-      before_install:
+      install:
         - nvm install 10
         - npm ci
-      # skip diesel
-      install:
-        - echo
       before_script:
-        - echo
+        - echo skip diesel
       script:
         - npm run lint:js
         - npm test
