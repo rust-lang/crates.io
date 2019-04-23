@@ -102,7 +102,7 @@ impl<'a> MarkdownRenderer<'a> {
         .cloned()
         .collect();
 
-        let sanitizer_base_url = base_url.map(|s| s.to_string());
+        let sanitizer_base_url = base_url.map(ToString::to_string);
 
         // Constrain the type of the closures given to the HTML sanitizer.
         fn constrain_closure<F>(f: F) -> F
@@ -124,7 +124,7 @@ impl<'a> MarkdownRenderer<'a> {
         fn is_media_url(url: &str) -> bool {
             Path::new(url)
                 .extension()
-                .and_then(|e| e.to_str())
+                .and_then(std::ffi::OsStr::to_str)
                 .map_or(false, |e| match e {
                     "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
                     _ => false,
@@ -190,6 +190,7 @@ impl<'a> MarkdownRenderer<'a> {
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> CargoResult<String> {
         let options = comrak::ComrakOptions {
+            unsafe_: true, // The output will be sanitized with `ammonia`
             ext_autolink: true,
             ext_strikethrough: true,
             ext_table: true,
@@ -381,7 +382,7 @@ mod tests {
         let readme_text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(readme_text, Some(&repository)).unwrap();
+        let result = markdown_to_html(readme_text, Some(repository)).unwrap();
 
         assert_eq!(
             result,

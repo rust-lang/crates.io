@@ -9,6 +9,11 @@ events {
 }
 
 http {
+	set_real_ip_from 10.0.0.0/8;
+	set_real_ip_from 127.0.0.0/24;
+	real_ip_header X-Forwarded-For;
+	real_ip_recursive on;
+
 	gzip on;
 	gzip_comp_level 2;
 	gzip_proxied any;
@@ -28,6 +33,8 @@ http {
 	client_body_timeout 30;
 	client_max_body_size 50m;
 
+	limit_req_zone $remote_addr zone=publish:10m rate=1r/m;
+
 	upstream app_server {
 		server localhost:8888 fail_timeout=0;
  	}
@@ -38,22 +45,30 @@ http {
 		keepalive_timeout 5;
 
 		location ~ ^/assets/ {
-			add_header Strict-Transport-Security "max-age=31536000" always;
 			add_header X-Content-Type-Options nosniff;
 			add_header Cache-Control public;
 			root dist;
 			expires max;
 		}
 
+		add_header Strict-Transport-Security "max-age=31536000" always;
+		add_header Vary 'Accept, Accept-Encoding, Cookie';
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Real-Ip $remote_addr;
+		proxy_redirect off;
+		if ($http_x_forwarded_proto != 'https') {
+			rewrite ^ https://$host$request_uri? permanent;
+		}
+
 		location / {
-			add_header Strict-Transport-Security "max-age=31536000" always;
-            add_header Vary 'Accept, Accept-Encoding, Cookie';
-			proxy_set_header Host $http_host;
-			proxy_redirect off;
-			if ($http_x_forwarded_proto != 'https') {
-				rewrite ^ https://$host$request_uri? permanent;
-			}
 			proxy_pass http://app_server;
+		}
+
+		location ~ ^/api/v./crates/new$ {
+			proxy_pass http://app_server;
+
+			limit_req zone=publish burst=30 nodelay;
+			limit_req_status 429;
 		}
 	}
 }

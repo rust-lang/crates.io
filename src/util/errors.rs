@@ -33,7 +33,7 @@ pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
                 }],
             }))
         } else {
-            self.cause().and_then(|cause| cause.response())
+            self.cause().and_then(CargoError::response)
         }
     }
     fn human(&self) -> bool {
@@ -48,6 +48,22 @@ pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
 impl dyn CargoError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
+    }
+
+    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn CargoError> {
+        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
+    }
+
+    fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
+        match err.downcast_ref() {
+            Some(DieselError::NotFound) => Some(Box::new(NotFound)),
+            Some(DieselError::DatabaseError(_, info))
+                if info.message().ends_with("read-only transaction") =>
+            {
+                Some(Box::new(ReadOnlyMode))
+            }
+            _ => None,
+        }
     }
 }
 
@@ -155,13 +171,9 @@ impl<E: Error + Send + 'static> CargoError for E {
     }
 }
 
-impl<E: Any + Error + Send + 'static> From<E> for Box<dyn CargoError> {
+impl<E: Error + Send + 'static> From<E> for Box<dyn CargoError> {
     fn from(err: E) -> Box<dyn CargoError> {
-        if let Some(DieselError::NotFound) = Any::downcast_ref::<DieselError>(&err) {
-            Box::new(NotFound)
-        } else {
-            Box::new(err)
-        }
+        CargoError::try_convert(&err).unwrap_or_else(|| Box::new(err))
     }
 }
 // =============================================================================
@@ -310,26 +322,64 @@ pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     Box::new(BadRequest(error.to_string()))
 }
 
+#[derive(Debug)]
+pub struct CargoErrToStdErr(pub Box<dyn CargoError>);
+
+impl Error for CargoErrToStdErr {
+    fn description(&self) -> &str {
+        self.0.description()
+    }
+}
+
+impl fmt::Display for CargoErrToStdErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)?;
+
+        let mut err = &*self.0;
+        while let Some(cause) = err.cause() {
+            err = cause;
+            write!(f, "\nCaused by: {}", err)?;
+        }
+
+        Ok(())
+    }
+}
+
 pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
-    #[derive(Debug)]
-    struct E(Box<dyn CargoError>);
-    impl Error for E {
-        fn description(&self) -> &str {
-            self.0.description()
-        }
-    }
-    impl fmt::Display for E {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{}", self.0)?;
+    Box::new(CargoErrToStdErr(e))
+}
 
-            let mut err = &*self.0;
-            while let Some(cause) = err.cause() {
-                err = cause;
-                write!(f, "\nCaused by: {}", err)?;
-            }
+pub fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
+    Box::new(CargoErrToStdErr(e))
+}
 
-            Ok(())
-        }
+#[derive(Debug, Clone, Copy)]
+pub struct ReadOnlyMode;
+
+impl CargoError for ReadOnlyMode {
+    fn description(&self) -> &str {
+        "tried to write in read only mode"
     }
-    Box::new(E(e))
+
+    fn response(&self) -> Option<Response> {
+        let mut response = json_response(&Bad {
+            errors: vec![StringError {
+                detail: "Crates.io is currently in read-only mode for maintenance. \
+                         Please try again later."
+                    .to_string(),
+            }],
+        });
+        response.status = (503, "Service Unavailable");
+        Some(response)
+    }
+
+    fn human(&self) -> bool {
+        true
+    }
+}
+
+impl fmt::Display for ReadOnlyMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "Tried to write in read only mode".fmt(f)
+    }
 }

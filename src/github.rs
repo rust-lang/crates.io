@@ -20,8 +20,7 @@ where
     let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
     info!("GITHUB HTTP: {}", url);
 
-    let client = app.http_client()?;
-    client
+    app.http_client()
         .get(&url)
         .header(header::ACCEPT, "application/vnd.github.v3+json")
         .header(

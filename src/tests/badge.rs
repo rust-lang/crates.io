@@ -9,6 +9,8 @@ struct BadgeRef {
     travis_ci_attributes: HashMap<String, String>,
     gitlab: Badge,
     gitlab_attributes: HashMap<String, String>,
+    azure_devops: Badge,
+    azure_devops_attributes: HashMap<String, String>,
     isitmaintained_issue_resolution: Badge,
     isitmaintained_issue_resolution_attributes: HashMap<String, String>,
     isitmaintained_open_issues: Badge,
@@ -80,6 +82,16 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_gitlab.insert(String::from("branch"), String::from("beta"));
     badge_attributes_gitlab.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let azure_devops = Badge::AzureDevops {
+        project: String::from("rust-lang"),
+        pipeline: String::from("rust"),
+        build: Some(String::from("2")),
+    };
+    let mut badge_attributes_azure_devops = HashMap::new();
+    badge_attributes_azure_devops.insert(String::from("project"), String::from("rust-lang"));
+    badge_attributes_azure_devops.insert(String::from("pipeline"), String::from("rust"));
+    badge_attributes_azure_devops.insert(String::from("build"), String::from("2"));
+
     let isitmaintained_issue_resolution = Badge::IsItMaintainedIssueResolution {
         repository: String::from("rust-lang/rust"),
     };
@@ -138,6 +150,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         travis_ci_attributes: badge_attributes_travis_ci,
         gitlab,
         gitlab_attributes: badge_attributes_gitlab,
+        azure_devops,
+        azure_devops_attributes: badge_attributes_azure_devops,
         isitmaintained_issue_resolution,
         isitmaintained_issue_resolution_attributes:
             badge_attributes_isitmaintained_issue_resolution,
@@ -196,6 +210,20 @@ fn update_add_gitlab() {
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.gitlab]);
+}
+
+#[test]
+fn update_add_azure_devops() {
+    // Add a azure devops badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("azure-devops"),
+        test_badges.azure_devops_attributes,
+    );
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.azure_devops]);
 }
 
 #[test]
@@ -317,10 +345,7 @@ fn update_attributes() {
     };
     let mut badge_attributes_travis_ci2 = HashMap::new();
     badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badges.insert(
-        String::from("travis-ci"),
-        badge_attributes_travis_ci2.clone(),
-    );
+    badges.insert(String::from("travis-ci"), badge_attributes_travis_ci2);
     krate.update(&badges);
     let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 1);
@@ -398,6 +423,26 @@ fn gitlab_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "gitlab");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn azure_devops_required_keys() {
+    // Add a azure devops badge missing a required field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // project is a required key
+    test_badges.azure_devops_attributes.remove("project");
+    badges.insert(
+        String::from("azure-devops"),
+        test_badges.azure_devops_attributes,
+    );
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "azure-devops");
     assert_eq!(krate.badges(), vec![]);
 }
 

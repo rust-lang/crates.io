@@ -113,7 +113,7 @@ pub fn add_dependencies(
                 git::Dependency {
                     name,
                     req: dep.version_req.to_string(),
-                    features: dep.features.iter().map(|s| s.to_string()).collect(),
+                    features: dep.features.iter().map(|s| s.0.to_string()).collect(),
                     optional: dep.optional,
                     default_features: dep.default_features,
                     target: dep.target.clone(),

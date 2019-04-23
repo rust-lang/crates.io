@@ -14,8 +14,8 @@ module.exports = function(environment) {
             },
             EXTEND_PROTOTYPES: {
                 // Prevent Ember Data from overriding Date.parse.
-                Date: false
-            }
+                Date: false,
+            },
         },
 
         APP: {
@@ -33,7 +33,7 @@ module.exports = function(environment) {
         ENV['ember-a11y-testing'] = {
             componentOptions: {
                 turnAuditOff: true,
-            }
+            },
         };
     }
 

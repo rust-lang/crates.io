@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import ajax from 'ember-fetch/ajax';
+import fetch from 'fetch';
 import { serializeQueryParams } from 'ember-fetch/mixins/adapter-fetch';
 
 /**
@@ -19,8 +19,9 @@ export default Route.extend({
     async beforeModel(transition) {
         try {
             let queryParams = serializeQueryParams(transition.queryParams);
-            let d = await ajax(`/authorize?${queryParams}`);
-            let item = JSON.stringify({ ok: true, data: d });
+            let resp = await fetch(`/authorize?${queryParams}`);
+            let json = await resp.json();
+            let item = JSON.stringify({ ok: resp.ok, data: json });
             if (window.opener) {
                 window.opener.github_response = item;
             }

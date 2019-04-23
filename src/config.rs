@@ -1,11 +1,13 @@
 use crate::{env, uploaders::Uploader, Env, Replica};
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
+use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,
     pub git_repo_checkout: PathBuf,
+    pub index_location: Url,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
@@ -41,12 +43,12 @@ impl Default for Config {
     fn default() -> Config {
         let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
         let api_protocol = String::from("https");
-        let mirror = if env::var("MIRROR").is_ok() {
+        let mirror = if dotenv::var("MIRROR").is_ok() {
             Replica::ReadOnlyMirror
         } else {
             Replica::Primary
         };
-        let heroku = env::var("HEROKU").is_ok();
+        let heroku = dotenv::var("HEROKU").is_ok();
         let cargo_env = if heroku {
             Env::Production
         } else {
@@ -60,13 +62,12 @@ impl Default for Config {
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
+                        dotenv::var("S3_REGION").ok(),
                         env("S3_ACCESS_KEY"),
                         env("S3_SECRET_KEY"),
                         &api_protocol,
                     ),
-                    cdn: env::var("S3_CDN").ok(),
-                    proxy: None,
+                    cdn: dotenv::var("S3_CDN").ok(),
                 }
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
@@ -81,18 +82,17 @@ impl Default for Config {
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
-                        env::var("S3_ACCESS_KEY").unwrap_or_default(),
-                        env::var("S3_SECRET_KEY").unwrap_or_default(),
+                        dotenv::var("S3_REGION").ok(),
+                        dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+                        dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
                         &api_protocol,
                     ),
-                    cdn: env::var("S3_CDN").ok(),
-                    proxy: None,
+                    cdn: dotenv::var("S3_CDN").ok(),
                 }
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
-                if env::var("S3_BUCKET").is_ok() {
+                if dotenv::var("S3_BUCKET").is_ok() {
                     // If we've set the `S3_BUCKET` variable to any value, use all of the values
                     // for the related S3 environment variables and configure the app to upload to
                     // and read from S3 like production does. All values except for bucket are
@@ -101,13 +101,12 @@ impl Default for Config {
                     Uploader::S3 {
                         bucket: s3::Bucket::new(
                             env("S3_BUCKET"),
-                            env::var("S3_REGION").ok(),
-                            env::var("S3_ACCESS_KEY").unwrap_or_default(),
-                            env::var("S3_SECRET_KEY").unwrap_or_default(),
+                            dotenv::var("S3_REGION").ok(),
+                            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+                            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
                             &api_protocol,
                         ),
-                        cdn: env::var("S3_CDN").ok(),
-                        proxy: None,
+                        cdn: dotenv::var("S3_CDN").ok(),
                     }
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
@@ -124,6 +123,7 @@ impl Default for Config {
             uploader,
             session_key: env("SESSION_KEY"),
             git_repo_checkout: checkout,
+            index_location: Url::parse(&env("GIT_REPO_URL")).unwrap(),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),

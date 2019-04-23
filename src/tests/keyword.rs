@@ -71,41 +71,41 @@ fn update_crate() {
 
     let krate = app.db(|conn| {
         Keyword::find_or_create_all(conn, &["kw1", "kw2"]).unwrap();
-        CrateBuilder::new("fookey", user.id).expect_build(&conn)
+        CrateBuilder::new("fookey", user.id).expect_build(conn)
     });
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
     });
     assert_eq!(cnt("kw1"), 0);
     assert_eq!(cnt("kw2"), 0);
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &["kw1"]).unwrap();
+        Keyword::update_crate(conn, &krate, &["kw1"]).unwrap();
     });
     assert_eq!(cnt("kw1"), 1);
     assert_eq!(cnt("kw2"), 0);
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &["kw2"]).unwrap();
+        Keyword::update_crate(conn, &krate, &["kw2"]).unwrap();
     });
     assert_eq!(cnt("kw1"), 0);
     assert_eq!(cnt("kw2"), 1);
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
     });
     assert_eq!(cnt("kw1"), 0);
     assert_eq!(cnt("kw2"), 0);
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &["kw1", "kw2"]).unwrap();
+        Keyword::update_crate(conn, &krate, &["kw1", "kw2"]).unwrap();
     });
     assert_eq!(cnt("kw1"), 1);
     assert_eq!(cnt("kw2"), 1);
 
     app.db(|conn| {
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
     });
     assert_eq!(cnt("kw1"), 0);
     assert_eq!(cnt("kw2"), 0);

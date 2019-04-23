@@ -1,12 +1,11 @@
 #![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
@@ -21,9 +20,8 @@ use cargo_registry::{
 };
 use std::{
     borrow::Cow,
-    env,
     sync::{
-        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
@@ -31,6 +29,8 @@ use std::{
 use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
+use reqwest::{Client, Proxy};
+use url::Url;
 
 macro_rules! t {
     ($e:expr) => {
@@ -69,6 +69,7 @@ mod git;
 mod keyword;
 mod krate;
 mod owners;
+mod read_only_mode;
 mod record;
 mod schema_details;
 mod server;
@@ -112,35 +113,34 @@ fn app() -> (
     Arc<App>,
     conduit_middleware::MiddlewareBuilder,
 ) {
-    dotenv::dotenv().ok();
-
     let (proxy, bomb) = record::proxy();
+    let (app, handler) = simple_app(Some(proxy));
+    (bomb, app, handler)
+}
+
+fn simple_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    git::init();
+
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
-            std::env::var("S3_SECRET_KEY").unwrap_or_default(),
+            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
             // When testing we route all API traffic over HTTP so we can
             // sniff/record it, but everywhere else we use https
             "http",
         ),
-        proxy: Some(proxy),
         cdn: None,
     };
 
-    let (app, handler) = simple_app(uploader);
-    (bomb, app, handler)
-}
-
-fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    git::init();
     let config = Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
-        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
-        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        index_location: Url::from_file_path(&git::bare()).unwrap(),
+        gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
+        gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: Env::Test,
         max_upload_size: 3000,
@@ -150,7 +150,17 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),
     };
-    let app = App::new(&config);
+
+    let client = if let Some(proxy) = proxy {
+        let mut builder = Client::builder();
+        builder = builder
+            .proxy(Proxy::all(&proxy).expect("Unable to configure proxy with the provided URL"));
+        Some(builder.build().expect("TLS backend cannot be initialized"))
+    } else {
+        None
+    };
+
+    let app = App::new(&config, client);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
@@ -159,7 +169,7 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
 
 // Return the environment variable only if it has been defined
 fn env(var: &str) -> String {
-    match env::var(var) {
+    match dotenv::var(var) {
         Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
         Ok(s) => s,
         _ => panic!(
@@ -200,7 +210,7 @@ where
     }
 }
 
-static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
@@ -273,4 +283,17 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
 
 fn logout(req: &mut dyn Request) {
     req.mut_extensions().pop::<User>();
+}
+
+#[test]
+fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
+    use std::ptr;
+
+    let (_bomb, app, _) = app();
+    let conn1 = app.diesel_database.get().unwrap();
+    let conn2 = app.diesel_database.get().unwrap();
+    let conn1_ref: &PgConnection = &conn1;
+    let conn2_ref: &PgConnection = &conn2;
+
+    assert!(ptr::eq(conn1_ref, conn2_ref));
 }

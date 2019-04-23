@@ -6,7 +6,8 @@
 
 use crate::controllers::prelude::*;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateDownload, CrateKeyword, CrateVersions, Keyword, Version,
+    Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
+    User, Version,
 };
 use crate::schema::*;
 use crate::views::{
@@ -100,15 +101,17 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::dsl::*;
-
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let ids = versions.iter().map(|v| v.id).collect();
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+        .all_versions()
+        .left_outer_join(users::table)
+        .select((versions::all_columns, users::all_columns.nullable()))
+        .load(&*conn)?;
+    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+    let ids = versions_and_publishers.iter().map(|v| v.0.id).collect();
 
     let kws = CrateKeyword::belonging_to(&krate)
         .inner_join(keywords::table)
@@ -116,12 +119,12 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         .load(&*conn)?;
     let cats = CrateCategory::belonging_to(&krate)
         .inner_join(categories::table)
-        .select(crate::models::category::ALL_COLUMNS)
+        .select(categories::all_columns)
         .load(&*conn)?;
-    let recent_downloads = CrateDownload::belonging_to(&krate)
-        .filter(crate_downloads::date.gt(date(now - 90.days())))
-        .select(sum(crate_downloads::downloads))
-        .get_result(&*conn)?;
+    let recent_downloads = RecentCrateDownloads::belonging_to(&krate)
+        .select(recent_crate_downloads::downloads)
+        .get_result(&*conn)
+        .optional()?;
 
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))
@@ -146,12 +149,12 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
             false,
             recent_downloads,
         ),
-        versions: versions
+        versions: versions_and_publishers
             .into_iter()
-            .map(|v| v.encodable(&krate.name))
+            .map(|(v, pb)| v.encodable(&krate.name, pb))
             .collect(),
-        keywords: kws.into_iter().map(|k| k.encodable()).collect(),
-        categories: cats.into_iter().map(|k| k.encodable()).collect(),
+        keywords: kws.into_iter().map(Keyword::encodable).collect(),
+        categories: cats.into_iter().map(Category::encodable).collect(),
     }))
 }
 
@@ -164,8 +167,7 @@ pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
         .app()
         .config
         .uploader
-        .readme_location(crate_name, version)
-        .ok_or_else(|| human("crate readme not found"))?;
+        .readme_location(crate_name, version);
 
     if req.wants_json() {
         #[derive(Serialize)]
@@ -185,11 +187,15 @@ pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions = krate.all_versions().load::<Version>(&*conn)?;
-    versions.sort_by(|a, b| b.num.cmp(&a.num));
-    let versions = versions
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+        .all_versions()
+        .left_outer_join(users::table)
+        .select((versions::all_columns, users::all_columns.nullable()))
+        .load(&*conn)?;
+    versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
+    let versions = versions_and_publishers
         .into_iter()
-        .map(|v| v.encodable(crate_name))
+        .map(|(v, pb)| v.encodable(crate_name, pb))
         .collect();
 
     #[derive(Serialize)]
@@ -218,10 +224,15 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     let versions = versions::table
         .filter(versions::id.eq(any(version_ids)))
         .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
-        .load::<(Version, String)>(&*conn)?
+        .left_outer_join(users::table)
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
+        .load::<(Version, String, Option<User>)>(&*conn)?
         .into_iter()
-        .map(|(version, krate_name)| version.encodable(&krate_name))
+        .map(|(version, krate_name, published_by)| version.encodable(&krate_name, published_by))
         .collect();
 
     #[derive(Serialize)]

@@ -99,13 +99,10 @@ mod tests {
     use super::*;
     use diesel;
     use diesel::connection::SimpleConnection;
-    use dotenv::dotenv;
-    use std::env;
 
     fn pg_connection() -> PgConnection {
-        let _ = dotenv();
         let database_url =
-            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
+            dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
         let conn = PgConnection::establish(&database_url).unwrap();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN;").unwrap();

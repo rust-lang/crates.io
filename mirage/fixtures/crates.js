@@ -54,6 +54,14 @@ export default [
         badges: [
             {
                 attributes: {
+                    project: 'robertohuertasm/github-oss',
+                    pipeline: 'microserver',
+                    build: '2',
+                },
+                badge_type: 'azure-devops',
+            },
+            {
+                attributes: {
                     repository: 'huonw/external_mixin',
                 },
                 badge_type: 'appveyor',

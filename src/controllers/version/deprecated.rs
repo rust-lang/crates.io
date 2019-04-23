@@ -7,11 +7,9 @@
 
 use crate::controllers::prelude::*;
 
-use crate::models::Version;
+use crate::models::{Crate, User, Version};
 use crate::schema::*;
 use crate::views::EncodableVersion;
-
-use super::version_and_crate;
 
 /// Handles the `GET /versions` route.
 pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
@@ -26,11 +24,16 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
 
     let versions = versions::table
         .inner_join(crates::table)
-        .select((versions::all_columns, crates::name))
+        .left_outer_join(users::table)
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
         .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String)>(&*conn)?
+        .load::<(Version, String, Option<User>)>(&*conn)?
         .into_iter()
-        .map(|(version, crate_name)| version.encodable(&crate_name))
+        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
         .collect();
 
     #[derive(Serialize)]
@@ -40,34 +43,29 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     Ok(req.json(&R { versions }))
 }
 
-/// Handles the `GET /versions/:version_id` and
-/// `GET /crates/:crate_id/:version` routes.
-///
-/// The frontend doesn't appear to hit either of these endpoints. Instead the
-/// version information appears to be returned by `krate::show`.
-///
-/// FIXME: These two routes have very different semantics and should be split into
-/// a separate function for each endpoint.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
-    let (version, krate) = match req.params().find("crate_id") {
-        Some(..) => version_and_crate(req)?,
-        None => {
-            let id = &req.params()["version_id"];
-            let id = id.parse().unwrap_or(0);
-            let conn = req.db_conn()?;
-            versions::table
-                .find(id)
-                .inner_join(crates::table)
-                .select((versions::all_columns, crate::models::krate::ALL_COLUMNS))
-                .first(&*conn)?
-        }
-    };
+/// Handles the `GET /versions/:version_id` route.
+/// The frontend doesn't appear to hit this endpoint. Instead, the version information appears to
+/// be returned by `krate::show`.
+pub fn show_by_id(req: &mut dyn Request) -> CargoResult<Response> {
+    let id = &req.params()["version_id"];
+    let id = id.parse().unwrap_or(0);
+    let conn = req.db_conn()?;
+    let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
+        .find(id)
+        .inner_join(crates::table)
+        .left_outer_join(users::table)
+        .select((
+            versions::all_columns,
+            crate::models::krate::ALL_COLUMNS,
+            users::all_columns.nullable(),
+        ))
+        .first(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name),
+        version: version.encodable(&krate.name, published_by),
     }))
 }

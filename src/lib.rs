@@ -7,7 +7,6 @@
 #![deny(missing_debug_implementations, missing_copy_implementations)]
 #![deny(bare_trait_objects)]
 #![recursion_limit = "256"]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
 
 #[macro_use]
 extern crate derive_deref;
@@ -16,7 +15,7 @@ extern crate diesel;
 #[macro_use]
 extern crate log;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
@@ -24,8 +23,13 @@ pub use crate::{app::App, config::Config, uploaders::Uploader};
 use std::sync::Arc;
 
 use conduit_middleware::MiddlewareBuilder;
+use jemallocator::Jemalloc;
+
+#[global_allocator]
+static ALLOC: Jemalloc = Jemalloc;
 
 mod app;
+pub mod background_jobs;
 pub mod boot;
 mod config;
 pub mod db;
@@ -91,8 +95,7 @@ pub fn build_handler(app: Arc<App>) -> MiddlewareBuilder {
 /// Panics if the environment variable with the name passed in as an argument is not defined
 /// in the current environment.
 pub fn env(s: &str) -> String {
-    dotenv::dotenv().ok();
-    ::std::env::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
+    dotenv::var(s).unwrap_or_else(|_| panic!("must have `{}` defined", s))
 }
 
 sql_function!(fn lower(x: ::diesel::sql_types::Text) -> ::diesel::sql_types::Text);

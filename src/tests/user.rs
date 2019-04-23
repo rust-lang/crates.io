@@ -93,7 +93,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(&conn));
+        .create_or_update(conn));
         t!(NewUser::new(
             2,
             "FOOBAR",
@@ -102,7 +102,7 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(&conn));
+        .create_or_update(conn));
     });
 
     let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();
@@ -142,6 +142,9 @@ fn crates_by_user_id_not_including_deleted_owners() {
 
 #[test]
 fn following() {
+    use cargo_registry::schema::versions;
+    use diesel::update;
+
     #[derive(Deserialize)]
     struct R {
         versions: Vec<EncodableVersion>,
@@ -153,11 +156,20 @@ fn following() {
     }
 
     let (app, _, user) = TestApp::init().with_user();
-    let user_id = user.as_model().id;
+    let user_model = user.as_model();
+    let user_id = user_model.id;
     app.db(|conn| {
         CrateBuilder::new("foo_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
             .expect_build(conn);
+
+        // Make foo_fighters's version mimic a version published before we started recording who
+        // published versions
+        let none: Option<i32> = None;
+        update(versions::table)
+            .set(versions::published_by.eq(none))
+            .execute(conn)
+            .unwrap();
 
         CrateBuilder::new("bar_fighters", user_id)
             .version(VersionBuilder::new("1.0.0"))
@@ -176,6 +188,21 @@ fn following() {
     let r: R = user.get("/api/v1/me/updates").good();
     assert_eq!(r.versions.len(), 2);
     assert_eq!(r.meta.more, false);
+    let foo_version = r
+        .versions
+        .iter()
+        .find(|v| v.krate == "foo_fighters")
+        .unwrap();
+    assert!(foo_version.published_by.is_none());
+    let bar_version = r
+        .versions
+        .iter()
+        .find(|v| v.krate == "bar_fighters")
+        .unwrap();
+    assert_eq!(
+        bar_version.published_by.as_ref().unwrap().login,
+        user_model.gh_login
+    );
 
     let r: R = user
         .get_with_query("/api/v1/me/updates", "per_page=1")
@@ -270,10 +297,7 @@ fn test_github_login_does_not_overwrite_email() {
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            gh_id: 1,
-            ..new_user("apricot")
-        };
+        let user = new_user("apricot");
 
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
@@ -299,7 +323,7 @@ fn test_github_login_does_not_overwrite_email() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             ..new_user("apricot")
         };
 
@@ -449,17 +473,17 @@ fn test_this_user_cannot_change_that_user_email() {
 fn test_insert_into_email_table() {
     let (_b, app, middle) = app();
     let mut req = req(Method::Get, "/me");
-    {
+    let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
             email: Some("apple@example.com"),
             ..new_user("apple")
         };
 
         let user = user.create_or_update(&conn).unwrap();
         sign_in_as(&mut req, &user);
-    }
+        user
+    };
 
     let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
     let r = crate::json::<UserShowPrivateResponse>(&mut response);
@@ -472,7 +496,7 @@ fn test_insert_into_email_table() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             email: Some("banana@example.com"),
             ..new_user("apple")
         };
@@ -499,7 +523,6 @@ fn test_insert_into_email_table_with_email_change() {
     let user = {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
             email: Some("test_insert_with_change@example.com"),
             ..new_user("potato")
         };
@@ -531,7 +554,7 @@ fn test_insert_into_email_table_with_email_change() {
     {
         let conn = app.diesel_database.get().unwrap();
         let user = NewUser {
-            gh_id: 1,
+            gh_id: user.gh_id,
             email: Some("banana2@example.com"),
             ..new_user("potato")
         };

@@ -1,14 +1,12 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
-use crate::controllers::prelude::*;
-
-use crate::git;
-use crate::util::errors::CargoError;
-
-use crate::models::Rights;
-use crate::schema::*;
+use swirl::Job;
 
 use super::version_and_crate;
+use crate::controllers::prelude::*;
+use crate::git;
+use crate::models::Rights;
+use crate::util::CargoError;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -38,15 +36,9 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> CargoResult<Response> {
         return Err(human("must already be an owner to yank or unyank"));
     }
 
-    if version.yanked != yanked {
-        conn.transaction::<_, Box<dyn CargoError>, _>(|| {
-            diesel::update(&version)
-                .set(versions::yanked.eq(yanked))
-                .execute(&*conn)?;
-            git::yank(&**req.app(), &krate.name, &version.num, yanked)?;
-            Ok(())
-        })?;
-    }
+    git::yank(krate.name, version, yanked)
+        .enqueue(&conn)
+        .map_err(|e| CargoError::from_std_error(e))?;
 
     #[derive(Serialize)]
     struct R {

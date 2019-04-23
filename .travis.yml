@@ -1,6 +1,6 @@
 language: rust
 sudo: required
-dist: trusty
+dist: xenial
 
 # Ignore this branch per bors-ng documentation
 branches:
@@ -24,41 +24,48 @@ env:
     # on community-submitted PRs
     - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
     - PERCY_PROJECT=crates-io/crates.io
+    - PGPORT=5433
 
 install:
+  - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
+  - sudo systemctl restart postgresql@11-main
   - script/ci/cargo-clean-on-new-rustc-version.sh
   - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
-  - diesel database setup
+  - diesel database setup --locked-schema
 
 addons:
   chrome: stable
-  postgresql: "9.5"
+  postgresql: "11"
   apt:
-    sources:
-      - kalakris-cmake
     packages:
-      - cmake
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
+      - postgresql-11
+      - postgresql-client-11
 
 matrix:
   fast_finish: true
   allow_failures:
     - rust: nightly
   include:
-    - rust: stable
+    - name: Backend
+      rust: stable
       before_install:
-        - nvm install 10
-        - npm ci
         - rustup component add rustfmt-preview
         - rustup component add clippy-preview
       script:
         - cargo fmt -- --check
         - cargo clippy --all-targets --all-features --all
         - cargo test
+    - name: Frontend
+      language: node_js
+      node_js: 10
+      install:
+        - npm ci
+      before_script: skip
+      script:
+        - npm run lint:js
+        - npm run lint:deps
         - npm test
     - rust: beta
       script:

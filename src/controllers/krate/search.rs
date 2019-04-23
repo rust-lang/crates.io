@@ -1,5 +1,6 @@
 //! Endpoint for searching and discovery functionality
 
+use diesel::sql_types::{NotNull, Nullable};
 use diesel_full_text_search::*;
 
 use crate::controllers::helpers::Paginate;
@@ -47,17 +48,20 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         .get("sort")
         .map(|s| &**s)
         .unwrap_or("recent-downloads");
+    let mut has_filter = false;
 
+    let selection = (
+        ALL_COLUMNS,
+        false.into_sql::<Bool>(),
+        recent_crate_downloads::downloads.nullable(),
+    );
     let mut query = crates::table
         .left_join(recent_crate_downloads::table)
-        .select((
-            ALL_COLUMNS,
-            false.into_sql::<Bool>(),
-            recent_crate_downloads::downloads.nullable(),
-        ))
+        .select(selection)
         .into_boxed();
 
     if let Some(q_string) = params.get("q") {
+        has_filter = true;
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
             let q = plainto_tsquery(q_string);
@@ -81,6 +85,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     if let Some(cat) = params.get("category") {
+        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crates_categories::table
@@ -96,6 +101,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     if let Some(kw) = params.get("keyword") {
+        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -105,6 +111,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if let Some(letter) = params.get("letter") {
+        has_filter = true;
         let pattern = format!(
             "{}%",
             letter
@@ -116,6 +123,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         );
         query = query.filter(canon_crate_name(crates::name).like(pattern));
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
+        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crate_owners::table
@@ -126,6 +134,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
+        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crate_owners::table
@@ -136,6 +145,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
+        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 follows::table
@@ -157,9 +167,23 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     // The database query returns a tuple within a tuple, with the root
     // tuple containing 3 items.
-    let data = query
-        .paginate(limit, offset)
-        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
+    let data = if has_filter {
+        query
+            .paginate(limit, offset)
+            .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?
+    } else {
+        sql_function!(fn coalesce<T: NotNull>(value: Nullable<T>, default: T) -> T);
+        query
+            .select((
+                // FIXME: Use `query.selection()` if that feature ends up in
+                // Diesel 2.0
+                selection,
+                coalesce(crates::table.count().single_value(), 0),
+            ))
+            .limit(limit)
+            .offset(offset)
+            .load(&*conn)?
+    };
     let total = data.first().map(|&(_, t)| t).unwrap_or(0);
     let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
     let recent_downloads = data
@@ -177,7 +201,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
-        .load::<CrateBadge>(&conn)?
+        .load::<CrateBadge>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());

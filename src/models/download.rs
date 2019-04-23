@@ -7,8 +7,8 @@ use crate::views::EncodableVersionDownload;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
 #[belongs_to(Version)]
+#[primary_key(version_id, date)]
 pub struct VersionDownload {
-    pub id: i32,
     pub version_id: i32,
     pub downloads: i32,
     pub counted: i32,
@@ -34,7 +34,6 @@ impl VersionDownload {
 
     pub fn encodable(self) -> EncodableVersionDownload {
         EncodableVersionDownload {
-            id: self.id,
             version: self.version_id,
             downloads: self.downloads,
             date: self.date.to_string(),

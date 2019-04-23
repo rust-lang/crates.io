@@ -26,9 +26,9 @@ use crate::{
 use cargo_registry::{
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
-    uploaders::Uploader,
     App,
 };
+use diesel::PgConnection;
 use std::{rc::Rc, sync::Arc};
 
 use conduit::{Handler, Method, Request};
@@ -47,8 +47,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        dotenv::dotenv().ok();
-        let (app, middle) = crate::simple_app(Uploader::Panic);
+        let (app, middle) = crate::simple_app(None);
         let inner = Rc::new(TestAppInner {
             app,
             _bomb: None,
@@ -73,16 +72,33 @@ impl TestApp {
     /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
-    pub fn db<T, F: FnOnce(&DieselConnection) -> T>(&self, f: F) -> T {
+    pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
         let conn = self.0.app.diesel_database.get().unwrap();
         f(&conn)
     }
 
-    /// Create a new user in the database and return a mock user session
+    /// Create a new user with a verified email address in the database and return a mock user
+    /// session
     ///
     /// This method updates the database directly
-    pub fn db_new_user(&self, user: &str) -> MockCookieUser {
-        let user = self.db(|conn| crate::new_user(user).create_or_update(conn).unwrap());
+    pub fn db_new_user(&self, username: &str) -> MockCookieUser {
+        use cargo_registry::schema::emails;
+        use diesel::prelude::*;
+
+        let user = self.db(|conn| {
+            let mut user = crate::new_user(username).create_or_update(conn).unwrap();
+            let email = "something@example.com";
+            user.email = Some(email.to_string());
+            diesel::insert_into(emails::table)
+                .values((
+                    emails::user_id.eq(user.id),
+                    emails::email.eq(email),
+                    emails::verified.eq(true),
+                ))
+                .execute(conn)
+                .unwrap();
+            user
+        });
         MockCookieUser {
             app: TestApp(Rc::clone(&self.0)),
             user,
@@ -321,8 +337,6 @@ pub struct Bad {
     pub errors: Vec<Error>,
 }
 
-pub type DieselConnection =
-    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
 
 /// A type providing helper methods for working with responses

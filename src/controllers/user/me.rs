@@ -3,6 +3,7 @@ use crate::controllers::prelude::*;
 use crate::controllers::helpers::Paginate;
 use crate::email;
 use crate::util::bad_request;
+use crate::util::errors::CargoError;
 
 use crate::models::{Email, Follow, NewEmail, User, Version};
 use crate::schema::{crates, emails, follows, users, versions};
@@ -55,11 +56,16 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
     let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
     let data = versions::table
         .inner_join(crates::table)
+        .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
-        .select((versions::all_columns, crates::name))
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
         .paginate(limit, offset)
-        .load::<((Version, String), i64)>(&*conn)?;
+        .load::<((Version, String, Option<User>), i64)>(&*conn)?;
 
     let more = data
         .get(0)
@@ -68,7 +74,9 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 
     let versions = data
         .into_iter()
-        .map(|((version, crate_name), _)| version.encodable(&crate_name))
+        .map(|((version, crate_name, published_by), _)| {
+            version.encodable(&crate_name, published_by)
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -127,7 +135,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
         return Err(human("empty email rejected"));
     }
 
-    conn.transaction(|| {
+    conn.transaction::<_, Box<dyn CargoError>, _>(|| {
         update(users.filter(gh_login.eq(&user.gh_login)))
             .set(email.eq(user_email))
             .execute(&*conn)?;
@@ -146,8 +154,9 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
             .get_result::<String>(&*conn)
             .map_err(|_| human("Error in creating token"))?;
 
-        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
-            .map_err(|_| bad_request("Email could not be sent"))
+        crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
+
+        Ok(())
     })?;
 
     #[derive(Serialize)]
@@ -199,7 +208,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
             .get_result::<Email>(&*conn)
             .map_err(|_| bad_request("Email could not be found"))?;
 
-        email::send_user_confirm_email(&email.email, &user.gh_login, &email.token)
+        email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
 
