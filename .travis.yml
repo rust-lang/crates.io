@@ -58,9 +58,9 @@ matrix:
         - cargo clippy --all-targets --all-features --all
         - cargo test
     - name: Frontend
-      rust: stable
+      language: node_js
+      node_js: 10
       install:
-        - nvm install 10
         - npm ci
       before_script: skip
       script:
