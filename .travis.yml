@@ -62,8 +62,7 @@ matrix:
       install:
         - nvm install 10
         - npm ci
-      before_script:
-        - echo skip diesel
+      before_script: skip
       script:
         - npm run lint:js
         - npm test
