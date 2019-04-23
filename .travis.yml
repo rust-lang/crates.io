@@ -48,16 +48,22 @@ matrix:
   allow_failures:
     - rust: nightly
   include:
-    - rust: stable
+    - name: Backend
+      rust: stable
       before_install:
-        - nvm install 10
-        - npm ci
         - rustup component add rustfmt-preview
         - rustup component add clippy-preview
       script:
         - cargo fmt -- --check
         - cargo clippy --all-targets --all-features --all
         - cargo test
+    - name: Frontend
+      language: node_js
+      node_js: 10
+      install:
+        - npm ci
+      before_script: skip
+      script:
         - npm run lint:js
         - npm test
     - rust: beta
