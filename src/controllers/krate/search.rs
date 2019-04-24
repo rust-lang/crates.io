@@ -58,10 +58,11 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         has_filter = true;
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
+
             let q = plainto_tsquery(q_string);
             query = query.filter(
                 q.matches(crates::textsearchable_index_col)
-                    .or(Crate::with_name(q_string)),
+                    .or(Crate::like_name(&q_string)),
             );
 
             query = query.select((
