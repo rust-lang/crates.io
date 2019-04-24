@@ -38,12 +38,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    //extract the search param for loose searching
-    let search_q = if let Some(q) = params.get("q") {
-        format!("%{}%", q)
-    } else {
-        String::new()
-    };
     let sort = params
         .get("sort")
         .map(|s| &**s)
@@ -64,10 +58,11 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         has_filter = true;
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
+
             let q = plainto_tsquery(q_string);
             query = query.filter(
                 q.matches(crates::textsearchable_index_col)
-                    .or(Crate::like_name(&search_q)),
+                    .or(Crate::like_name(&q_string)),
             );
 
             query = query.select((
