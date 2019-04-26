@@ -2,11 +2,6 @@ language: rust
 sudo: required
 dist: xenial
 
-# Ignore this branch per bors-ng documentation
-branches:
-  except:
-    - staging.tmp
-
 cache:
   cargo: true
   directories:
