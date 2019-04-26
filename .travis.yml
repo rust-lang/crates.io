@@ -2,12 +2,6 @@ language: rust
 sudo: required
 dist: xenial
 
-# Ignore this branch per homu
-# https://github.com/barosl/homu
-branches:
-  except:
-    - auto
-
 cache:
   cargo: true
   directories:
