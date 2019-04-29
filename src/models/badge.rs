@@ -26,6 +26,7 @@ pub enum Badge {
     TravisCi {
         repository: String,
         branch: Option<String>,
+        tld: Option<String>,
     },
     Appveyor {
         repository: String,

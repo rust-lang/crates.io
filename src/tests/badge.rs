@@ -69,10 +69,12 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     let travis_ci = Badge::TravisCi {
         branch: Some(String::from("beta")),
         repository: String::from("rust-lang/rust"),
+        tld: Some(String::from("org")),
     };
     let mut badge_attributes_travis_ci = HashMap::new();
     badge_attributes_travis_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_travis_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_travis_ci.insert(String::from("tld"), String::from("org"));
 
     let gitlab = Badge::GitLab {
         branch: Some(String::from("beta")),
@@ -342,6 +344,7 @@ fn update_attributes() {
     let travis_ci2 = Badge::TravisCi {
         branch: None,
         repository: String::from("rust-lang/rust"),
+        tld: None,
     };
     let mut badge_attributes_travis_ci2 = HashMap::new();
     badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
