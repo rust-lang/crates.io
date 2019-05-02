@@ -44,7 +44,7 @@ impl Environment {
             .map(|(u, p)| (u.as_str(), p.as_str()))
     }
 
-    pub fn connection(&self) -> CargoResult<DieselPooledConn> {
+    pub fn connection(&self) -> CargoResult<DieselPooledConn<'_>> {
         self.connection_pool.0.get().map_err(Into::into)
     }
 

@@ -95,7 +95,7 @@ fn index() {
 }
 
 #[test]
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -316,7 +316,7 @@ fn index_sorting() {
 }
 
 #[test]
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 fn exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -1459,7 +1459,7 @@ fn yank_not_owner() {
 }
 
 #[test]
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 fn yank_max_version() {
     let (_, anon, _, token) = TestApp::with_proxy().with_token();
 
