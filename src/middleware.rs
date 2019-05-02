@@ -93,10 +93,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
         let ips = ip_list.split(',').map(String::from).collect();
         m.around(block_ips::BlockIps::new(ips));
     }
-    // Note: Temporarily disabled because cargo-vendor doesn't include a
-    // User-Agent header and Rust's CI broke. If this is still commented out
-    // by Nov 7, 2018 ping the crates.io team.
-    // m.around(require_user_agent::RequireUserAgent::default());
+
+    m.around(require_user_agent::RequireUserAgent::default());
 
     if env != Env::Test {
         m.around(log_request::LogRequests::default());

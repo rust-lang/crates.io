@@ -145,13 +145,21 @@ pub trait RequestHelper {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest;
     fn app(&self) -> &TestApp;
 
+    /// Run a request
+    fn run<T>(&self, mut request: MockRequest) -> Response<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        Response::new(self.app().0.middle.call(&mut request))
+    }
+
     /// Issue a GET request
     fn get<T>(&self, path: &str) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Get, path);
-        Response::new(self.app().0.middle.call(&mut request))
+        let request = self.request_builder(Method::Get, path);
+        self.run(request)
     }
 
     /// Issue a GET request that includes query parameters
@@ -161,7 +169,7 @@ pub trait RequestHelper {
     {
         let mut request = self.request_builder(Method::Get, path);
         request.with_query(query);
-        Response::new(self.app().0.middle.call(&mut request))
+        self.run(request)
     }
 
     /// Issue a PUT request
@@ -169,9 +177,9 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut builder = self.request_builder(Method::Put, path);
-        let request = builder.with_body(body);
-        Response::new(self.app().0.middle.call(request))
+        let mut request = self.request_builder(Method::Put, path);
+        request.with_body(body);
+        self.run(request)
     }
 
     /// Issue a DELETE request
@@ -179,8 +187,8 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Delete, path);
-        Response::new(self.app().0.middle.call(&mut request))
+        let request = self.request_builder(Method::Delete, path);
+        self.run(request)
     }
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
@@ -188,9 +196,9 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut builder = self.request_builder(Method::Delete, path);
-        let request = builder.with_body(body);
-        Response::new(self.app().0.middle.call(request))
+        let mut request = self.request_builder(Method::Delete, path);
+        request.with_body(body);
+        self.run(request)
     }
 
     /// Search for crates matching a query string
