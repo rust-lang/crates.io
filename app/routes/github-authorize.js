@@ -1,6 +1,6 @@
 import Route from '@ember/routing/route';
 import fetch from 'fetch';
-import { serializeQueryParams } from 'ember-fetch/mixins/adapter-fetch';
+import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
 
 /**
  * This route will be called from the GitHub OAuth flow once the user has
