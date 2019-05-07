@@ -72,6 +72,9 @@ export default Component.extend({
 
         let show = data && window.google && window.googleChartsLoaded;
         this.element.style.display = show ? '' : 'none';
+        if (!show) {
+            return;
+        }
 
         let myData = window.google.visualization.arrayToDataTable(data);
 
