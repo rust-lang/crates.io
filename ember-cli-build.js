@@ -31,6 +31,9 @@ module.exports = function(defaults) {
         sassOptions: {
             includePaths: ['node_modules/normalize.css'],
         },
+        fingerprint: {
+            extensions: ['js', 'css', 'png', 'jpg', 'gif', 'map', 'svg', 'ttf', 'woff', 'woff2'],
+        },
     });
 
     // Use `app.import` to add additional libraries to the generated
