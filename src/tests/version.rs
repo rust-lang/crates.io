@@ -2,7 +2,7 @@ use crate::{
     builders::{CrateBuilder, PublishBuilder, VersionBuilder},
     RequestHelper, TestApp, VersionResponse,
 };
-use cargo_registry::{schema::versions, views::EncodableVersion};
+use cargo_registry::{models::Version, schema::versions, views::EncodableVersion};
 
 use diesel::prelude::*;
 use serde_json::Value;
@@ -130,8 +130,8 @@ fn record_rerendered_readme_time() {
         let c = CrateBuilder::new("foo_authors", user.id).expect_build(conn);
         let version = VersionBuilder::new("1.0.0").expect_build(c.id, user.id, conn);
 
-        version.record_readme_rendering(conn).unwrap();
-        version.record_readme_rendering(conn).unwrap();
+        Version::record_readme_rendering(version.id, conn).unwrap();
+        Version::record_readme_rendering(version.id, conn).unwrap();
     });
 }
 

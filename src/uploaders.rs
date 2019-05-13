@@ -10,7 +10,6 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::sync::Arc;
 
-use crate::app::App;
 use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
@@ -112,75 +111,35 @@ impl Uploader {
         }
     }
 
-    /// Uploads a crate and its readme. Returns the checksum of the uploaded crate
-    /// file, and bombs for the uploaded crate and the uploaded readme.
+    /// Uploads a crate and returns the checksum of the uploaded crate file.
     pub fn upload_crate(
         &self,
         req: &mut dyn Request,
         krate: &Crate,
-        readme: Option<String>,
         maximums: Maximums,
         vers: &semver::Version,
-    ) -> CargoResult<(Vec<u8>, Bomb, Bomb)> {
+    ) -> CargoResult<Vec<u8>> {
         let app = Arc::clone(req.app());
-        let (crate_path, checksum) = {
+        let (_, checksum) = {
             let path = Uploader::crate_path(&krate.name, &vers.to_string());
             let mut body = Vec::new();
             LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
             verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
             self.upload(app.http_client(), &path, body, "application/x-tar")?
         };
-        // We create the bomb for the crate file before uploading the readme so that if the
-        // readme upload fails, the uploaded crate file is automatically deleted.
-        let crate_bomb = Bomb {
-            app: Arc::clone(&app),
-            path: crate_path,
-        };
-        let (readme_path, _) = if let Some(rendered) = readme {
-            let path = Uploader::readme_path(&krate.name, &vers.to_string());
-            self.upload(app.http_client(), &path, rendered.into_bytes(), "text/html")?
-        } else {
-            (None, vec![])
-        };
-        Ok((
-            checksum,
-            crate_bomb,
-            Bomb {
-                app: Arc::clone(&app),
-                path: readme_path,
-            },
-        ))
+        Ok(checksum)
     }
 
-    /// Deletes an uploaded file.
-    fn delete(&self, app: &Arc<App>, path: &str) -> CargoResult<()> {
-        match *self {
-            Uploader::S3 { ref bucket, .. } => {
-                bucket.delete(app.http_client(), path)?;
-                Ok(())
-            }
-            Uploader::Local => {
-                fs::remove_file(path)?;
-                Ok(())
-            }
-        }
-    }
-}
-
-// Can't derive Debug because of App.
-#[allow(missing_debug_implementations)]
-pub struct Bomb {
-    app: Arc<App>,
-    pub path: Option<String>,
-}
-
-impl Drop for Bomb {
-    fn drop(&mut self) {
-        if let Some(ref path) = self.path {
-            if let Err(e) = self.app.config.uploader.delete(&self.app, path) {
-                println!("unable to delete {}, {:?}", path, e);
-            }
-        }
+    pub(crate) fn upload_readme(
+        &self,
+        http_client: &reqwest::Client,
+        crate_name: &str,
+        vers: &str,
+        readme: String,
+    ) -> CargoResult<()> {
+        let path = Uploader::readme_path(crate_name, vers);
+        self.upload(http_client, &path, readme.into_bytes(), "text/html")?;
+        Ok(())
     }
 }
 

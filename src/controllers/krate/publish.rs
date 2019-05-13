@@ -1,7 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use hex::ToHex;
-use std::collections::HashMap;
 use std::sync::Arc;
 use swirl::Job;
 
@@ -10,8 +9,8 @@ use crate::git;
 use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use crate::render;
-use crate::util::{internal, CargoError, ChainError, Maximums};
 use crate::util::{read_fill, read_le_u32};
+use crate::util::{CargoError, ChainError, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -39,29 +38,6 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
     let (new_crate, user) = parse_new_headers(req)?;
 
-    let name = &*new_crate.name;
-    let vers = &*new_crate.vers;
-    let links = new_crate.links.clone();
-    let repo = new_crate.repository.as_ref().map(|s| &**s);
-    let features = new_crate
-        .features
-        .iter()
-        .map(|(k, v)| {
-            (
-                k[..].to_string(),
-                v.iter().map(|v| v[..].to_string()).collect(),
-            )
-        })
-        .collect::<HashMap<String, Vec<String>>>();
-    let keywords = new_crate
-        .keywords
-        .as_ref()
-        .map(|kws| kws.iter().map(|kw| &***kw).collect())
-        .unwrap_or_else(Vec::new);
-
-    let categories = new_crate.categories.as_ref().map(|s| &s[..]).unwrap_or(&[]);
-    let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
-
     let conn = app.diesel_database.get()?;
 
     let verified_email_address = user.verified_email(&conn)?;
@@ -75,15 +51,34 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
+        let name = new_crate.name;
+        let vers = &*new_crate.vers;
+        let links = new_crate.links;
+        let repo = new_crate.repository;
+        let features = new_crate
+            .features
+            .into_iter()
+            .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
+            .collect();
+        let keywords = new_crate
+            .keywords
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>();
+        let categories = new_crate
+            .categories
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>();
+
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
-            name,
+            name: &name,
             description: new_crate.description.as_ref().map(|s| &**s),
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
-            readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
-            repository: repo,
+            repository: repo.as_ref().map(String::as_str),
             license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
@@ -101,7 +96,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             ));
         }
 
-        if &krate.name != name {
+        if krate.name != *name {
             return Err(human(&format_args!(
                 "crate was previously named `{}`",
                 krate.name
@@ -163,31 +158,30 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let max_version = krate.max_version(&conn)?;
 
-        // Render the README for this crate
-        let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::readme_to_html(
-                &**readme,
-                new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+        if let Some(readme) = new_crate.readme {
+            render::render_and_upload_readme(
+                version.id,
+                readme,
+                new_crate
+                    .readme_file
+                    .unwrap_or_else(|| String::from("README.md")),
                 repo,
-            )?),
-            None => None,
-        };
+            )
+            .enqueue(&conn)
+            .map_err(|e| CargoError::from_std_error(e))?;
+        }
 
-        // Upload the crate, return way to delete the crate from the server
-        // If the git commands fail below, we shouldn't keep the crate on the
-        // server.
-        let (cksum, mut crate_bomb, mut readme_bomb) = app
+        let cksum = app
             .config
             .uploader
-            .upload_crate(req, &krate, readme, maximums, vers)?;
-        version.record_readme_rendering(&conn)?;
+            .upload_crate(req, &krate, maximums, vers)?;
 
         let mut hex_cksum = String::new();
         cksum.write_hex(&mut hex_cksum)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
-            name: name.to_string(),
+            name: name.0,
             vers: vers.to_string(),
             cksum: hex_cksum,
             features,
@@ -197,17 +191,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         };
         git::add_crate(git_crate)
             .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))
-            .chain_error(|| {
-                internal(&format_args!(
-                    "could not add crate `{}` to the git repo",
-                    name
-                ))
-            })?;
-
-        // Now that we've come this far, we're committed!
-        crate_bomb.path = None;
-        readme_bomb.path = None;
+            .map_err(|e| CargoError::from_std_error(e))?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

@@ -33,7 +33,7 @@ pub struct App {
     /// In production this shares a single connection pool across requests.  In tests
     /// this is either None (in which case any attempt to create an outgoing connection
     /// will panic) or a `Client` configured with a per-test replay proxy.
-    http_client: Option<Client>,
+    pub(crate) http_client: Option<Client>,
 }
 
 impl App {

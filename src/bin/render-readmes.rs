@@ -114,7 +114,7 @@ fn main() {
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
             let config = config.clone();
-            version.record_readme_rendering(&conn).unwrap_or_else(|_| {
+            Version::record_readme_rendering(version.id, &conn).unwrap_or_else(|_| {
                 panic!(
                     "[{}-{}] Couldn't record rendering time",
                     krate_name, version.num
@@ -215,7 +215,6 @@ fn get_readme(
                 .map_or("README.md", |e| &**e),
             manifest.package.repository.as_ref().map(|e| &**e),
         )
-        .unwrap_or_else(|_| panic!("[{}-{}] Couldn't render README", krate_name, version.num))
     };
     return Some(rendered);
 

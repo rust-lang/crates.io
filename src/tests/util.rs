@@ -130,7 +130,13 @@ impl TestApp {
         let index_clone =
             WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
         let connection_pool = app.diesel_database.clone();
-        let environment = Environment::new(index_clone, None, connection_pool.clone());
+        let environment = Environment::new(
+            index_clone,
+            None,
+            connection_pool.clone(),
+            app.config.uploader.clone(),
+            app.http_client().clone(),
+        );
 
         let runner = Runner::builder(connection_pool, environment)
             // We only have 1 connection in tests, so trying to run more than

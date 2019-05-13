@@ -99,12 +99,12 @@ impl Version {
             })
     }
 
-    pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
+    pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
         use crate::schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
 
         diesel::insert_into(readme_renderings)
-            .values(version_id.eq(self.id))
+            .values(version_id.eq(version_id_))
             .on_conflict(version_id)
             .do_update()
             .set(rendered_at.eq(now))

@@ -2,9 +2,11 @@ use ammonia::{Builder, UrlRelative};
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
+use swirl::errors::PerformError;
 use url::Url;
 
-use crate::util::CargoResult;
+use crate::background_jobs::Environment;
+use crate::models::Version;
 
 /// Context for markdown to HTML rendering.
 #[allow(missing_debug_implementations)]
@@ -191,7 +193,7 @@ impl<'a> MarkdownRenderer<'a> {
     }
 
     /// Renders the given markdown to HTML using the current settings.
-    fn to_html(&self, text: &str) -> CargoResult<String> {
+    fn to_html(&self, text: &str) -> String {
         let options = comrak::ComrakOptions {
             unsafe_: true, // The output will be sanitized with `ammonia`
             ext_autolink: true,
@@ -203,13 +205,13 @@ impl<'a> MarkdownRenderer<'a> {
             ..comrak::ComrakOptions::default()
         };
         let rendered = comrak::markdown_to_html(text, &options);
-        Ok(self.html_sanitizer.clean(&rendered).to_string())
+        self.html_sanitizer.clean(&rendered).to_string()
     }
 }
 
 /// Renders Markdown text to sanitized HTML with a given `base_url`.
 /// See `readme_to_html` for the interpretation of `base_url`.
-fn markdown_to_html(text: &str, base_url: Option<&str>) -> CargoResult<String> {
+fn markdown_to_html(text: &str, base_url: Option<&str>) -> String {
     let renderer = MarkdownRenderer::new(base_url);
     renderer.to_html(text)
 }
@@ -245,14 +247,43 @@ static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
 /// let text = "[Rust](https://rust-lang.org/) is an awesome *systems programming* language!";
 /// let rendered = readme_to_html(text, "README.md", None)?;
 /// ```
-pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> CargoResult<String> {
+pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> String {
     let filename = filename.to_lowercase();
 
     if !filename.contains('.') || MARKDOWN_EXTENSIONS.iter().any(|e| filename.ends_with(e)) {
         return markdown_to_html(text, base_url);
     }
 
-    Ok(encode_minimal(text).replace("\n", "<br>\n"))
+    encode_minimal(text).replace("\n", "<br>\n")
+}
+
+#[swirl::background_job]
+pub fn render_and_upload_readme(
+    env: &Environment,
+    version_id: i32,
+    text: String,
+    file_name: String,
+    base_url: Option<String>,
+) -> Result<(), PerformError> {
+    use crate::schema::*;
+    use crate::util::errors::std_error_no_send;
+    use diesel::prelude::*;
+
+    let rendered = readme_to_html(&text, &file_name, base_url.as_ref().map(String::as_str));
+    let conn = env.connection()?;
+
+    conn.transaction(|| {
+        Version::record_readme_rendering(version_id, &conn)?;
+        let (crate_name, vers) = versions::table
+            .find(version_id)
+            .inner_join(crates::table)
+            .select((crates::name, versions::num))
+            .first::<(String, String)>(&*conn)?;
+        env.uploader
+            .upload_readme(env.http_client(), &crate_name, &vers, rendered)
+            .map_err(std_error_no_send)?;
+        Ok(())
+    })
 }
 
 #[cfg(test)]
@@ -262,14 +293,14 @@ mod tests {
     #[test]
     fn empty_text() {
         let text = "";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(result, "");
     }
 
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;script&gt;alert(\'Hello World\')&lt;/script&gt;\n"
@@ -279,7 +310,7 @@ mod tests {
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(
             result,
             "<p>foo_readme</p>\n&lt;iframe&gt;alert(\'Hello World\')&lt;/iframe&gt;\n"
@@ -289,7 +320,7 @@ mod tests {
     #[test]
     fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(result, "<p>foo_readme</p>\n<p>alert(\'Hello World\')</p>\n");
     }
 
@@ -297,7 +328,7 @@ mod tests {
     fn text_with_inline_javascript() {
         let text =
             r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(
             result,
             "<p>foo_readme\\n\\n<a href=\"https://crates.io/crates/cargo-registry\" rel=\"nofollow noopener noreferrer\">Crate page</a></p>\n"
@@ -309,7 +340,7 @@ mod tests {
     #[test]
     fn text_with_fancy_single_quotes() {
         let text = r#"wb’"#;
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(result, "<p>wb’</p>\n");
     }
 
@@ -318,14 +349,14 @@ mod tests {
         let code_block = r#"```rust \
                             println!("Hello World"); \
                            ```"#;
-        let result = markdown_to_html(code_block, None).unwrap();
+        let result = markdown_to_html(code_block, None);
         assert!(result.contains("<code class=\"language-rust\">"));
     }
 
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(result, "<p>Hello World!</p>\n");
     }
 
@@ -344,7 +375,7 @@ mod tests {
                     if extra_slash { "/" } else { "" },
                 );
 
-                let result = markdown_to_html(absolute, Some(&url)).unwrap();
+                let result = markdown_to_html(absolute, Some(&url));
                 assert_eq!(
                     result,
                     format!(
@@ -353,7 +384,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(relative, Some(&url)).unwrap();
+                let result = markdown_to_html(relative, Some(&url));
                 assert_eq!(
                     result,
                     format!(
@@ -362,7 +393,7 @@ mod tests {
                     )
                 );
 
-                let result = markdown_to_html(image, Some(&url)).unwrap();
+                let result = markdown_to_html(image, Some(&url));
                 assert_eq!(
                     result,
                     format!(
@@ -373,7 +404,7 @@ mod tests {
             }
         }
 
-        let result = markdown_to_html(absolute, Some("https://google.com/")).unwrap();
+        let result = markdown_to_html(absolute, Some("https://google.com/"));
         assert_eq!(
             result,
             "<p><a rel=\"nofollow noopener noreferrer\">hi</a></p>\n"
@@ -385,7 +416,7 @@ mod tests {
         let readme_text =
             "[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        let result = markdown_to_html(readme_text, Some(repository)).unwrap();
+        let result = markdown_to_html(readme_text, Some(repository));
 
         assert_eq!(
             result,
@@ -397,7 +428,7 @@ mod tests {
     fn readme_to_html_renders_markdown() {
         for f in &["README", "readme.md", "README.MARKDOWN", "whatever.mkd"] {
             assert_eq!(
-                readme_to_html("*lobster*", f, None).unwrap(),
+                readme_to_html("*lobster*", f, None),
                 "<p><em>lobster</em></p>\n"
             );
         }
@@ -407,7 +438,7 @@ mod tests {
     fn readme_to_html_renders_other_things() {
         for f in &["readme.exe", "readem.org", "blah.adoc"] {
             assert_eq!(
-                readme_to_html("<script>lobster</script>\n\nis my friend\n", f, None).unwrap(),
+                readme_to_html("<script>lobster</script>\n\nis my friend\n", f, None),
                 "&lt;script&gt;lobster&lt;/script&gt;<br>\n<br>\nis my friend<br>\n"
             );
         }
@@ -416,7 +447,7 @@ mod tests {
     #[test]
     fn header_has_tags() {
         let text = "# My crate\n\nHello, world!\n";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(
             result,
             "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
@@ -427,7 +458,7 @@ mod tests {
     fn manual_anchor_is_sanitized() {
         let text =
             "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
-        let result = markdown_to_html(text, None).unwrap();
+        let result = markdown_to_html(text, None);
         assert_eq!(
             result,
             "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
