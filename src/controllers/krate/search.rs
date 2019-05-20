@@ -33,8 +33,8 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::sql_types::{Bool, Text};
     use diesel::dsl::sql;
+    use diesel::sql_types::{Bool, Text};
 
     sql_function!(fn plainto_tsquery(lang: Text, query: Text) -> TsQuery);
 
@@ -66,7 +66,8 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                 .bind::<Text, _>(q_string)
                 .sql(")");
             query = query.filter(
-                q.clone().matches(crates::textsearchable_index_col)
+                q.clone()
+                    .matches(crates::textsearchable_index_col)
                     .or(Crate::like_name(&q_string)),
             );
 
