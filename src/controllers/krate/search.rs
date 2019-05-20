@@ -33,7 +33,10 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::sql_types::Bool;
+    use diesel::sql_types::{Bool, Text};
+    use diesel::dsl::sql;
+
+    sql_function!(fn plainto_tsquery(lang: Text, query: Text) -> TsQuery);
 
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
@@ -59,9 +62,11 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
 
-            let q = plainto_tsquery(q_string);
+            let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                .bind::<Text, _>(q_string)
+                .sql(")");
             query = query.filter(
-                q.matches(crates::textsearchable_index_col)
+                q.clone().matches(crates::textsearchable_index_col)
                     .or(Crate::like_name(&q_string)),
             );
 
