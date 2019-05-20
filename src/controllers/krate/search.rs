@@ -36,8 +36,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::sql;
     use diesel::sql_types::{Bool, Text};
 
-    sql_function!(fn plainto_tsquery(lang: Text, query: Text) -> TsQuery);
-
     let conn = req.db_conn()?;
     let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
