@@ -18,7 +18,7 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
-        let tags = [
+        let tags = hashset(&[
             "a",
             "b",
             "blockquote",
@@ -58,30 +58,15 @@ impl<'a> MarkdownRenderer<'a> {
             "ul",
             "hr",
             "span",
-        ]
-        .iter()
-        .cloned()
-        .collect();
-        let tag_attributes = [
-            ("a", ["href", "id", "target"].iter().cloned().collect()),
-            (
-                "img",
-                ["width", "height", "src", "alt", "align"]
-                    .iter()
-                    .cloned()
-                    .collect(),
-            ),
-            (
-                "input",
-                ["checked", "disabled", "type"].iter().cloned().collect(),
-            ),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-        let allowed_classes = [(
+        ]);
+        let tag_attributes = hashmap(&[
+            ("a", hashset(&["href", "id", "target"])),
+            ("img", hashset(&["width", "height", "src", "alt", "align"])),
+            ("input", hashset(&["checked", "disabled", "type"])),
+        ]);
+        let allowed_classes = hashmap(&[(
             "code",
-            [
+            hashset(&[
                 "language-bash",
                 "language-clike",
                 "language-glsl",
@@ -96,14 +81,8 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-scss",
                 "language-sql",
                 "yaml",
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-        )]
-        .iter()
-        .cloned()
-        .collect();
+            ]),
+        )]);
 
         let sanitizer_base_url = base_url.map(ToString::to_string);
 
@@ -253,6 +232,23 @@ pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> Car
     }
 
     Ok(encode_minimal(text).replace("\n", "<br>\n"))
+}
+
+/// Helper function to build a new `HashSet` from the items slice.
+fn hashset<T>(items: &[T]) -> std::collections::HashSet<T>
+where
+    T: Clone + Eq + std::hash::Hash,
+{
+    items.iter().cloned().collect()
+}
+
+/// Helper function to build a new `HashMap` from a slice of key-value pairs.
+fn hashmap<K, V>(items: &[(K, V)]) -> std::collections::HashMap<K, V>
+where
+    K: Clone + Eq + std::hash::Hash,
+    V: Clone,
+{
+    items.iter().cloned().collect()
 }
 
 #[cfg(test)]
