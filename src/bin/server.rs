@@ -1,19 +1,22 @@
 #![deny(warnings, clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{boot, App, Env};
-use jemalloc_ctl;
 use std::{
     fs::File,
-    sync::{mpsc::channel, Arc},
+    sync::{mpsc::channel, Arc, Mutex},
+    thread,
+    time::Duration,
 };
 
 use civet::Server as CivetServer;
 use conduit_hyper::Service as HyperService;
+use futures::Future;
+use jemalloc_ctl;
 use reqwest::Client;
 
 enum Server {
     Civet(CivetServer),
-    Hyper(HyperService<conduit_middleware::MiddlewareBuilder>),
+    Hyper(tokio::runtime::Runtime),
 }
 
 use Server::*;
@@ -56,7 +59,34 @@ fn main() {
 
     let server = if dotenv::var("USE_HYPER").is_ok() {
         println!("Booting with a hyper based server");
-        Hyper(HyperService::new(app, threads as usize))
+        let addr = ([127, 0, 0, 1], port).into();
+        let service = HyperService::new(app, threads as usize);
+        let server = hyper::Server::bind(&addr).serve(service);
+
+        let (tx, rx) = futures::sync::oneshot::channel::<()>();
+        let server = server
+            .with_graceful_shutdown(rx)
+            .map_err(|e| log::error!("Server error: {}", e));
+
+        ctrlc_handler(move || tx.send(()).unwrap_or(()));
+
+        let mut rt = tokio::runtime::Builder::new()
+            .core_threads(4)
+            .name_prefix("hyper-server-worker-")
+            .after_start(|| {
+                log::debug!("Stared thread {}", thread::current().name().unwrap_or("?"))
+            })
+            .before_stop(|| {
+                log::debug!(
+                    "Stopping thread {}",
+                    thread::current().name().unwrap_or("?")
+                )
+            })
+            .build()
+            .unwrap();
+        rt.spawn(server);
+
+        Hyper(rt)
     } else {
         println!("Booting with a civet based server");
         let mut cfg = civet::Config::new();
@@ -66,19 +96,43 @@ fn main() {
 
     println!("listening on port {}", port);
 
+    // Give tokio a chance to spawn the first worker thread
+    thread::sleep(Duration::from_millis(10));
+
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if heroku {
+        println!("Writing to /tmp/app-initialized");
         File::create("/tmp/app-initialized").unwrap();
     }
 
-    if let Hyper(server) = server {
-        let addr = ([127, 0, 0, 1], port).into();
-        server.run(addr);
-    } else {
-        // Civet server is already running, but we need to block the main thread forever
-        // TODO: handle a graceful shutdown by just waiting for a SIG{INT,TERM}
-        let (_tx, rx) = channel::<()>();
-        rx.recv().unwrap();
+    // Block the main thread until the server has shutdown
+    match server {
+        Hyper(rt) => rt.shutdown_on_idle().wait().unwrap(),
+        Civet(server) => {
+            let (tx, rx) = channel::<()>();
+            ctrlc_handler(move || tx.send(()).unwrap_or(()));
+            rx.recv().unwrap();
+            drop(server);
+        }
     }
+
+    println!("Server has gracefully shutdown!");
+}
+
+fn ctrlc_handler<F>(f: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    let call_once = Mutex::new(Some(f));
+
+    ctrlc::set_handler(move || {
+        if let Some(f) = call_once.lock().unwrap().take() {
+            println!("Starting graceful shutdown");
+            f();
+        } else {
+            println!("Already sent signal to start graceful shutdown");
+        }
+    })
+    .unwrap();
 }
