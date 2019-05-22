@@ -452,6 +452,10 @@ fn loose_search_order() {
     for (lhs, rhs) in search_temp.crates.iter().zip(ordered) {
         assert_eq!(lhs.name, rhs.name);
     }
+
+    let search_temp = anon.search("q=te");
+    assert_eq!(search_temp.meta.total, 3);
+    assert_eq!(search_temp.crates.len(), 3);
 }
 
 #[test]

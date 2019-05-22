@@ -66,7 +66,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             query = query.filter(
                 q.clone()
                     .matches(crates::textsearchable_index_col)
-                    .or(Crate::like_name(&q_string)),
+                    .or(Crate::loosly_matches_name(&q_string)),
             );
 
             query = query.select((
