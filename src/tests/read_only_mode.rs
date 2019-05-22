@@ -21,11 +21,18 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     token
         .delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
         .assert_status(503);
+
+    // Restore the transaction so `TestApp::drop` can still access the transaction
+    app.db(|conn| {
+        diesel::sql_query("ROLLBACK TO test_post_readonly")
+            .execute(conn)
+            .unwrap();
+    });
 }
 
 #[test]
 fn can_download_crate_in_read_only_mode() {
-    let (app, anon, user) = TestApp::with_proxy().with_user();
+    let (app, anon, user) = TestApp::init().with_user();
 
     app.db(|conn| {
         CrateBuilder::new("foo_download_read_only", user.as_model().id)
@@ -51,5 +58,6 @@ fn can_download_crate_in_read_only_mode() {
 
 fn set_read_only(conn: &PgConnection) -> QueryResult<()> {
     diesel::sql_query("SET TRANSACTION READ ONLY").execute(conn)?;
+    diesel::sql_query("SAVEPOINT test_post_readonly").execute(conn)?;
     Ok(())
 }

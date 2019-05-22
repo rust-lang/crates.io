@@ -105,7 +105,11 @@ pub fn proxy() -> (String, Bomb) {
         let handle = core.handle();
         let addr = t!(a.local_addr());
         let listener = t!(TcpListener::from_listener(a, &addr, &handle));
-        let client = hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap());
+        let client = if let Record::Capture(_, _) = record {
+            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
+        } else {
+            None
+        };
 
         let record = Arc::new(Mutex::new(record));
         let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
@@ -142,7 +146,7 @@ pub fn proxy() -> (String, Bomb) {
 struct Proxy {
     sink: Sink,
     record: Arc<Mutex<Record>>,
-    client: Client,
+    client: Option<Client>,
 }
 
 impl hyper::service::Service for Proxy {
@@ -155,7 +159,7 @@ impl hyper::service::Service for Proxy {
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
         let record2 = self.record.clone();
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => Box::new(record_http(req, &self.client).map(
+            Record::Capture(_, _) => Box::new(record_http(req, self.client.as_ref().unwrap()).map(
                 move |(response, exchange)| {
                     if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
                         d.push(exchange);

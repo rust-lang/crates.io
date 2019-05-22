@@ -59,11 +59,11 @@ impl crate::util::MockCookieUser {
 
 #[test]
 fn new_crate_owner() {
-    let (app, _, _, token) = TestApp::with_proxy().with_token();
+    let (app, _, _, token) = TestApp::full().with_token();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner").version("1.0.0");
-    token.publish(crate_to_publish).good();
+    token.enqueue_publish(crate_to_publish).good();
 
     // Add the second user as an owner
     let user2 = app.db_new_user("bar");
@@ -81,7 +81,7 @@ fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner").version("2.0.0");
     user2
         .db_new_token("bar_token")
-        .publish(crate_to_publish)
+        .enqueue_publish(crate_to_publish)
         .good();
 }
 
@@ -233,7 +233,7 @@ fn test_accept_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();
@@ -313,7 +313,7 @@ fn test_decline_invitation() {
         crate_owner_invitation: InvitationResponse,
     }
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me/crate_owner_invitations");
     let (krate, user) = {
         let conn = app.diesel_database.get().unwrap();

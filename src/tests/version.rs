@@ -137,16 +137,17 @@ fn record_rerendered_readme_time() {
 
 #[test]
 fn version_size() {
-    let (_, _, user) = TestApp::with_proxy().with_user();
+    let (_, _, user) = TestApp::full().with_user();
+
     let crate_to_publish = PublishBuilder::new("foo_version_size").version("1.0.0");
-    user.publish(crate_to_publish).good();
+    user.enqueue_publish(crate_to_publish).good();
 
     // Add a file to version 2 so that it's a different size than version 1
     let files = [("foo_version_size-2.0.0/big", &[b'a'; 1] as &[_])];
     let crate_to_publish = PublishBuilder::new("foo_version_size")
         .version("2.0.0")
         .files(&files);
-    user.publish(crate_to_publish).good();
+    user.enqueue_publish(crate_to_publish).good();
 
     let crate_json = user.show_crate("foo_version_size");
 

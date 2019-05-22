@@ -293,7 +293,7 @@ fn updating_existing_user_doesnt_change_api_token() {
 */
 #[test]
 fn test_github_login_does_not_overwrite_email() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -343,7 +343,7 @@ fn test_github_login_does_not_overwrite_email() {
 */
 #[test]
 fn test_email_get_and_put() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -386,7 +386,7 @@ fn test_email_get_and_put() {
 */
 #[test]
 fn test_empty_email_not_added() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -434,7 +434,7 @@ fn test_empty_email_not_added() {
 */
 #[test]
 fn test_this_user_cannot_change_that_user_email() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/api/v1/me");
 
     let not_signed_in_user = {
@@ -471,7 +471,7 @@ fn test_this_user_cannot_change_that_user_email() {
 */
 #[test]
 fn test_insert_into_email_table() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -518,7 +518,7 @@ fn test_insert_into_email_table() {
 */
 #[test]
 fn test_insert_into_email_table_with_email_change() {
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -581,7 +581,7 @@ fn test_insert_into_email_table_with_email_change() {
 fn test_confirm_user_email() {
     use cargo_registry::schema::emails;
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/me");
     let user = {
         let conn = app.diesel_database.get().unwrap();
@@ -627,7 +627,7 @@ fn test_existing_user_email() {
     use chrono::NaiveDateTime;
     use diesel::update;
 
-    let (_b, app, middle) = app();
+    let (app, middle) = app();
     let mut req = req(Method::Get, "/me");
     {
         let conn = app.diesel_database.get().unwrap();
