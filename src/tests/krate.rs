@@ -1386,7 +1386,7 @@ fn following() {
 }
 
 #[test]
-fn yank() {
+fn yank_works_as_intended() {
     let (app, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate, putting it in the git index
@@ -1424,7 +1424,7 @@ fn yank() {
 }
 
 #[test]
-fn yank_not_owner() {
+fn yank_by_a_non_owner_fails() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let another_user = app.db_new_user("bar");
