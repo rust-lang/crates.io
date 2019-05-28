@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::util::{bad_request, CargoResult};
 
+use failure::Fail;
 use lettre::file::FileTransport;
 use lettre::smtp::authentication::{Credentials, Mechanism};
 use lettre::smtp::SmtpClient;
