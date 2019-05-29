@@ -55,6 +55,11 @@ impl crate::util::MockCookieUser {
         assert!(crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
+
+    /// As the currently logged in user, list my pending invitations.
+    fn list_invitations(&self) -> InvitationListResponse {
+        self.get("/api/v1/me/crate_owner_invitations").good()
+    }
 }
 
 #[test]
@@ -191,7 +196,7 @@ fn check_ownership_one_crate() {
 fn invitations_are_empty_by_default() {
     let (_, _, user) = TestApp::init().with_user();
 
-    let json: InvitationListResponse = user.get("/api/v1/me/crate_owner_invitations").good();
+    let json = user.list_invitations();
     assert_eq!(json.crate_owner_invitations.len(), 0);
 }
 
@@ -205,7 +210,7 @@ fn invitations_list() {
     let user = app.db_new_user("invited_user");
     token.add_user_owner("invited_crate", user.as_model());
 
-    let json: InvitationListResponse = user.get("/api/v1/me/crate_owner_invitations").good();
+    let json = user.list_invitations();
     assert_eq!(json.crate_owner_invitations.len(), 1);
     assert_eq!(
         json.crate_owner_invitations[0].invited_by_username,
