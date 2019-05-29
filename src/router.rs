@@ -13,7 +13,7 @@ pub fn build_router(app: &App) -> R404 {
     let mut api_router = RouteBuilder::new();
 
     // Route used by both `cargo search` and the frontend
-    api_router.get("/crates", C(krate::search::search));
+    api_router.get("/crates", C(needs_recent_downloads(krate::search::search)));
 
     // Routes used by `cargo`
     api_router.put("/crates/new", C(krate::publish::publish));
@@ -35,7 +35,10 @@ pub fn build_router(app: &App) -> R404 {
     api_router.get("/versions/:version_id", C(version::deprecated::show_by_id));
 
     // Routes used by the frontend
-    api_router.get("/crates/:crate_id", C(krate::metadata::show));
+    api_router.get(
+        "/crates/:crate_id",
+        C(needs_recent_downloads(krate::metadata::show)),
+    );
     api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
@@ -89,7 +92,10 @@ pub fn build_router(app: &App) -> R404 {
         "/me/crate_owner_invitations/:crate_id",
         C(crate_owner_invitation::handle_invite),
     );
-    api_router.get("/summary", C(krate::metadata::summary));
+    api_router.get(
+        "/summary",
+        C(needs_recent_downloads(krate::metadata::summary)),
+    );
     api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
     api_router.put(
         "/users/:user_id/resend",
@@ -125,12 +131,14 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-struct C(pub fn(&mut dyn Request) -> CargoResult<Response>);
+struct C<F: Fn(&mut dyn Request) -> CargoResult<Response> + Send + Sync + 'static>(F);
 
-impl Handler for C {
+impl<F> Handler for C<F>
+where
+    F: Fn(&mut dyn Request) -> CargoResult<Response> + Send + Sync + 'static,
+{
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        let C(f) = *self;
-        match f(req) {
+        match self.0(req) {
             Ok(resp) => Ok(resp),
             Err(e) => match e.response() {
                 Some(response) => Ok(response),
@@ -151,6 +159,26 @@ impl<H: Handler> Handler for R<H> {
             path: Some(&path),
             method: None,
         })
+    }
+}
+
+fn needs_recent_downloads(
+    f: fn(&mut dyn Request) -> CargoResult<Response>,
+) -> impl Fn(&mut dyn Request) -> CargoResult<Response> {
+    use crate::db::RequestTransaction;
+    use crate::middleware::app::RequestApp;
+    use diesel::prelude::*;
+
+    move |req| {
+        let app = req.app();
+        if app.config.env == Env::Test {
+            let conn = req.db_conn()?;
+            let _ = conn.transaction(|| {
+                no_arg_sql_function!(refresh_recent_crate_downloads, ());
+                diesel::select(refresh_recent_crate_downloads).execute(&*conn)
+            });
+        }
+        f(req)
     }
 }
 

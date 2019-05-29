@@ -230,7 +230,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
-        use diesel::{insert_into, select, update};
+        use diesel::{insert_into, update};
 
         let mut krate = self
             .krate
@@ -264,9 +264,6 @@ impl<'a> CrateBuilder<'a> {
                     version_downloads::downloads.eq(downloads),
                 ))
                 .execute(connection)?;
-
-            no_arg_sql_function!(refresh_recent_crate_downloads, ());
-            select(refresh_recent_crate_downloads).execute(connection)?;
         }
 
         if !self.keywords.is_empty() {

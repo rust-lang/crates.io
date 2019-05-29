@@ -51,7 +51,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         recent_crate_downloads::downloads.nullable(),
     );
     let mut query = crates::table
-        .left_join(recent_crate_downloads::table)
+        .inner_join(recent_crate_downloads::table)
         .select(selection)
         .into_boxed();
 
@@ -157,7 +157,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     if sort == "downloads" {
         query = query.then_order_by(crates::downloads.desc())
     } else if sort == "recent-downloads" {
-        query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
+        query = query.then_order_by(recent_crate_downloads::downloads.desc())
     } else if sort == "recent-updates" {
         query = query.order(crates::updated_at.desc());
     } else {
@@ -177,7 +177,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
                 // FIXME: Use `query.selection()` if that feature ends up in
                 // Diesel 2.0
                 selection,
-                coalesce(crates::table.count().single_value(), 0),
+                coalesce(recent_crate_downloads::table.count().single_value(), 0),
             ))
             .limit(limit)
             .offset(offset)

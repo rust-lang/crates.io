@@ -248,7 +248,7 @@ fn index_sorting() {
         let krate2 = CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
-            .recent_downloads(0)
+            .recent_downloads(1)
             .expect_build(conn);
 
         let krate3 = CrateBuilder::new("baz_sort", user.id)
@@ -331,7 +331,7 @@ fn exact_match_on_queries_with_sort() {
         let krate2 = CrateBuilder::new("bar_sort", user.id)
             .description("foo_sort baz_sort foo_sort baz_sort const")
             .downloads(3333)
-            .recent_downloads(0)
+            .recent_downloads(1)
             .expect_build(conn);
 
         let krate3 = CrateBuilder::new("baz_sort", user.id)
