@@ -110,6 +110,10 @@ pub struct OwnerTeamsResponse {
     teams: Vec<EncodableOwner>,
 }
 #[derive(Deserialize)]
+pub struct OwnersResponse {
+    users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
 pub struct OkBool {
     ok: bool,
 }

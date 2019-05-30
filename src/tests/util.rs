@@ -20,7 +20,8 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse,
+    builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate,
+    OkBool, OwnersResponse, VersionResponse,
 };
 use cargo_registry::{
     background_jobs::Environment,
@@ -379,6 +380,12 @@ pub trait RequestHelper {
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{}", krate_name);
+        self.get(&url).good()
+    }
+
+    /// Request the JSON used to list a crate's owners
+    fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
         self.get(&url).good()
     }
 
