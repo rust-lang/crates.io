@@ -165,7 +165,7 @@ pub fn yank(
     let repo = env.lock_index().map_err(std_error_no_send)?;
     let dst = repo.index_file(&krate);
 
-    let conn = env.connection().map_err(std_error_no_send)?;
+    let conn = env.connection()?;
 
     conn.transaction(|| {
         let yanked_in_db = versions::table

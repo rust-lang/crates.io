@@ -345,11 +345,11 @@ impl fmt::Display for CargoErrToStdErr {
     }
 }
 
-pub fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
+pub(crate) fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
     Box::new(CargoErrToStdErr(e))
 }
 
-pub fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
+pub(crate) fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
     Box::new(CargoErrToStdErr(e))
 }
 

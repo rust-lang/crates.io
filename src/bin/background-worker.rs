@@ -35,7 +35,13 @@ fn main() {
 
     let repository = Repository::open(&config.index_location).expect("Failed to clone index");
 
-    let environment = Environment::new(repository, credentials, db_pool.clone());
+    let environment = Environment::new(
+        repository,
+        credentials,
+        db_pool.clone(),
+        config.uploader,
+        reqwest::Client::new(),
+    );
 
     let runner = swirl::Runner::builder(db_pool, environment)
         .thread_count(1)

@@ -477,15 +477,15 @@ impl PublishBuilder {
             documentation: self.doc_url,
             readme: self.readme,
             readme_file: None,
-            keywords: Some(u::EncodableKeywordList(
+            keywords: u::EncodableKeywordList(
                 self.keywords.into_iter().map(u::EncodableKeyword).collect(),
-            )),
-            categories: Some(u::EncodableCategoryList(
+            ),
+            categories: u::EncodableCategoryList(
                 self.categories
                     .into_iter()
                     .map(u::EncodableCategory)
                     .collect(),
-            )),
+            ),
             license: self.license,
             license_file: self.license_file,
             repository: None,
