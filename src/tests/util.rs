@@ -20,15 +20,14 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    app, app_with_proxy, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate,
-    OkBool, VersionResponse,
+    builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse,
 };
 use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
-    App,
+    App, Config,
 };
 use diesel::PgConnection;
 use std::{rc::Rc, sync::Arc, time::Duration};
@@ -88,71 +87,29 @@ impl Drop for TestAppInner {
 }
 
 /// A representation of the app and its database transaction
+#[derive(Clone)]
 pub struct TestApp(Rc<TestAppInner>);
 
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        let (app, middle) = app();
-        let inner = Rc::new(TestAppInner {
-            app,
-            _bomb: None,
-            middle,
+        TestAppBuilder {
+            config: crate::simple_config(),
+            proxy: None,
+            bomb: None,
             index: None,
-            runner: None,
-        });
-        TestAppBuilder(TestApp(inner))
+            build_job_runner: false,
+        }
     }
 
     /// Initialize the app and a proxy that can record and playback outgoing HTTP requests
     pub fn with_proxy() -> TestAppBuilder {
-        let (bomb, app, middle) = app_with_proxy();
-        let inner = Rc::new(TestAppInner {
-            app,
-            _bomb: Some(bomb),
-            middle,
-            index: None,
-            runner: None,
-        });
-        TestAppBuilder(TestApp(inner))
+        Self::init().with_proxy()
     }
 
     /// Initialize a full application, with a proxy, index, and background worker
     pub fn full() -> TestAppBuilder {
-        use crate::git;
-
-        let (bomb, app, middle) = app_with_proxy();
-        git::init();
-
-        let thread_local_path = git::bare();
-        let index = UpstreamRepository::open_bare(thread_local_path).unwrap();
-
-        let index_clone =
-            WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
-        let connection_pool = app.diesel_database.clone();
-        let environment = Environment::new(
-            index_clone,
-            None,
-            connection_pool.clone(),
-            app.config.uploader.clone(),
-            app.http_client().clone(),
-        );
-
-        let runner = Runner::builder(connection_pool, environment)
-            // We only have 1 connection in tests, so trying to run more than
-            // 1 job concurrently will just block
-            .thread_count(1)
-            .job_start_timeout(Duration::from_secs(1))
-            .build();
-
-        let inner = Rc::new(TestAppInner {
-            app,
-            _bomb: Some(bomb),
-            middle,
-            index: Some(index),
-            runner: Some(runner),
-        });
-        TestAppBuilder(TestApp(inner))
+        Self::with_proxy().with_git_index().with_job_runner()
     }
 
     /// Obtain the database connection and pass it to the closure
@@ -236,15 +193,63 @@ impl TestApp {
     }
 }
 
-pub struct TestAppBuilder(TestApp);
+pub struct TestAppBuilder {
+    config: Config,
+    proxy: Option<String>,
+    bomb: Option<record::Bomb>,
+    index: Option<UpstreamRepository>,
+    build_job_runner: bool,
+}
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(self) -> (TestApp, MockAnonymousUser) {
-        let anon = MockAnonymousUser {
-            app: TestApp(Rc::clone(&(self.0).0)),
+        let (app, middle) = crate::build_app(self.config, self.proxy);
+
+        let runner = if self.build_job_runner {
+            let connection_pool = app.diesel_database.clone();
+            let index =
+                WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
+            let environment = Environment::new(
+                index,
+                None,
+                connection_pool.clone(),
+                app.config.uploader.clone(),
+                app.http_client().clone(),
+            );
+
+            Some(
+                Runner::builder(connection_pool, environment)
+                    // We only have 1 connection in tests, so trying to run more than
+                    // 1 job concurrently will just block
+                    .thread_count(1)
+                    .job_start_timeout(Duration::from_secs(1))
+                    .build(),
+            )
+        } else {
+            None
         };
-        (self.0, anon)
+
+        let test_app_inner = TestAppInner {
+            app,
+            _bomb: self.bomb,
+            middle,
+            index: self.index,
+            runner,
+        };
+        let test_app = TestApp(Rc::new(test_app_inner));
+        let anon = MockAnonymousUser {
+            app: test_app.clone(),
+        };
+        (test_app, anon)
+    }
+
+    /// Create a proxy for use with this app
+    pub fn with_proxy(mut self) -> Self {
+        let (proxy, bomb) = record::proxy();
+        self.proxy = Some(proxy);
+        self.bomb = Some(bomb);
+        self
     }
 
     // Create a `TestApp` with a database including a default user
@@ -260,6 +265,27 @@ impl TestAppBuilder {
         let user = app.db_new_user("foo");
         let token = user.db_new_token("bar");
         (app, anon, user, token)
+    }
+
+    pub fn with_publish_rate_limit(mut self, rate: Duration, burst: i32) -> Self {
+        self.config.publish_rate_limit.rate = rate;
+        self.config.publish_rate_limit.burst = burst;
+        self
+    }
+
+    pub fn with_git_index(mut self) -> Self {
+        use crate::git;
+
+        git::init();
+
+        let thread_local_path = git::bare();
+        self.index = Some(UpstreamRepository::open_bare(thread_local_path).unwrap());
+        self
+    }
+
+    pub fn with_job_runner(mut self) -> Self {
+        self.build_job_runner = true;
+        self
     }
 }
 

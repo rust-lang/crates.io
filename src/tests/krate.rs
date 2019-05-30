@@ -14,6 +14,8 @@ use cargo_registry::{
 use std::{
     collections::HashMap,
     io::{self, prelude::*},
+    thread,
+    time::Duration,
 };
 
 use chrono::Utc;
@@ -2109,4 +2111,47 @@ fn new_krate_tarball_with_hard_links() {
         "{:?}",
         json.errors
     );
+}
+
+#[test]
+fn publish_new_crate_rate_limited() {
+    let (app, anon, _, token) = TestApp::full()
+        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_token();
+
+    // Upload a new crate
+    let crate_to_publish = PublishBuilder::new("rate_limited1");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // Uploading a second crate is limited
+    let crate_to_publish = PublishBuilder::new("rate_limited2");
+    token.enqueue_publish(crate_to_publish).assert_status(429);
+    app.run_pending_background_jobs();
+
+    anon.get::<()>("/api/v1/crates/rate_limited2")
+        .assert_status(404);
+
+    // Wait for the limit to be up
+    thread::sleep(Duration::from_millis(500));
+
+    let crate_to_publish = PublishBuilder::new("rate_limited2");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let json = anon.show_crate("rate_limited2");
+    assert_eq!(json.krate.max_version, "1.0.0");
+}
+
+#[test]
+fn publish_rate_limit_doesnt_affect_existing_crates() {
+    let (app, _, _, token) = TestApp::full()
+        .with_publish_rate_limit(Duration::from_millis(500), 1)
+        .with_token();
+
+    // Upload a new crate
+    let crate_to_publish = PublishBuilder::new("rate_limited1");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let new_version = PublishBuilder::new("rate_limited1").version("1.0.1");
+    token.enqueue_publish(new_version).good();
+    app.run_pending_background_jobs();
 }

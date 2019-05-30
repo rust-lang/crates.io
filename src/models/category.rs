@@ -183,12 +183,11 @@ impl<'a> NewCategory<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_util::pg_connection_no_transaction;
     use diesel::connection::SimpleConnection;
 
     fn pg_connection() -> PgConnection {
-        let database_url =
-            dotenv::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        let conn = PgConnection::establish(&database_url).unwrap();
+        let conn = pg_connection_no_transaction();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE")
             .unwrap();

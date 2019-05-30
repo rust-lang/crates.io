@@ -114,22 +114,11 @@ pub struct OkBool {
     ok: bool,
 }
 
-/// Initialize the app and a proxy that can record and playback outgoing HTTP requests
-fn app_with_proxy() -> (
-    record::Bomb,
-    Arc<App>,
-    conduit_middleware::MiddlewareBuilder,
-) {
-    let (proxy, bomb) = record::proxy();
-    let (app, handler) = init_app(Some(proxy));
-    (bomb, app, handler)
-}
-
 fn app() -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    init_app(None)
+    build_app(simple_config(), None)
 }
 
-fn init_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+fn simple_config() -> Config {
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
@@ -143,7 +132,7 @@ fn init_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareB
         cdn: None,
     };
 
-    let config = Config {
+    Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
@@ -158,8 +147,14 @@ fn init_app(proxy: Option<String>) -> (Arc<App>, conduit_middleware::MiddlewareB
         // When testing we route all API traffic over HTTP so we can
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),
-    };
+        publish_rate_limit: Default::default(),
+    }
+}
 
+fn build_app(
+    config: Config,
+    proxy: Option<String>,
+) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
     let client = if let Some(proxy) = proxy {
         let mut builder = Client::builder();
         builder = builder

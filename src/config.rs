@@ -1,3 +1,4 @@
+use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, uploaders::Uploader, Env, Replica};
 use std::path::PathBuf;
 use url::Url;
@@ -16,6 +17,7 @@ pub struct Config {
     pub max_unpack_size: u64,
     pub mirror: Replica,
     pub api_protocol: String,
+    pub publish_rate_limit: PublishRateLimit,
 }
 
 impl Default for Config {
@@ -132,6 +134,7 @@ impl Default for Config {
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             mirror,
             api_protocol,
+            publish_rate_limit: Default::default(),
         }
     }
 }
