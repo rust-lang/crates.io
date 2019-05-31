@@ -3,16 +3,16 @@
 use diesel::associations::Identifiable;
 
 use crate::controllers::prelude::*;
+use crate::db::DieselPooledConn;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 
-fn follow_target(req: &mut dyn Request) -> CargoResult<Follow> {
+fn follow_target(req: &dyn Request, conn: &DieselPooledConn<'_>) -> CargoResult<Follow> {
     let user = req.user()?;
-    let conn = req.db_conn()?;
     let crate_name = &req.params()["crate_id"];
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
-        .first(&*conn)?;
+        .first(&**conn)?;
     Ok(Follow {
         user_id: user.id,
         crate_id,
@@ -21,8 +21,8 @@ fn follow_target(req: &mut dyn Request) -> CargoResult<Follow> {
 
 /// Handles the `PUT /crates/:crate_id/follow` route.
 pub fn follow(req: &mut dyn Request) -> CargoResult<Response> {
-    let follow = follow_target(req)?;
     let conn = req.db_conn()?;
+    let follow = follow_target(req, &conn)?;
     diesel::insert_into(follows::table)
         .values(&follow)
         .on_conflict_do_nothing()
@@ -33,8 +33,8 @@ pub fn follow(req: &mut dyn Request) -> CargoResult<Response> {
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
 pub fn unfollow(req: &mut dyn Request) -> CargoResult<Response> {
-    let follow = follow_target(req)?;
     let conn = req.db_conn()?;
+    let follow = follow_target(req, &conn)?;
     diesel::delete(&follow).execute(&*conn)?;
 
     ok_true()
@@ -44,8 +44,8 @@ pub fn unfollow(req: &mut dyn Request) -> CargoResult<Response> {
 pub fn following(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::exists;
 
-    let follow = follow_target(req)?;
     let conn = req.db_conn()?;
+    let follow = follow_target(req, &conn)?;
     let following = diesel::select(exists(follows::table.find(follow.id()))).get_result(&*conn)?;
 
     #[derive(Serialize)]
