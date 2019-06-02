@@ -22,8 +22,8 @@ use cargo_registry::{
     schema::crate_owners,
     util::CargoResult,
     views::{
-        EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
-        GoodCrate,
+        EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
+        EncodableOwner, EncodableVersion, GoodCrate,
     },
     App, Config, Env, Replica, Uploader,
 };
@@ -115,6 +115,10 @@ pub struct OwnerTeamsResponse {
 #[derive(Deserialize)]
 pub struct OwnersResponse {
     users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+pub struct CategoryResponse {
+    category: EncodableCategoryWithSubcategories,
 }
 #[derive(Deserialize)]
 pub struct CategoryListResponse {
