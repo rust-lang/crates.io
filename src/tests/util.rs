@@ -20,7 +20,7 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate,
+    builders::PublishBuilder, record, CategoryListResponse, CrateList, CrateResponse, GoodCrate,
     OkBool, OwnersResponse, VersionResponse,
 };
 use cargo_registry::{
@@ -393,6 +393,11 @@ pub trait RequestHelper {
     fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{}/{}", krate_name, version);
         self.get(&url).good()
+    }
+
+    fn show_category_list(&self) -> CategoryListResponse {
+        let url = "/api/v1/categories";
+        self.get(url).good()
     }
 }
 

@@ -21,7 +21,10 @@ use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
     util::CargoResult,
-    views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate},
+    views::{
+        EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
+        GoodCrate,
+    },
     App, Config, Env, Replica, Uploader,
 };
 use std::{
@@ -112,6 +115,15 @@ pub struct OwnerTeamsResponse {
 #[derive(Deserialize)]
 pub struct OwnersResponse {
     users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+pub struct CategoryListResponse {
+    categories: Vec<EncodableCategory>,
+    meta: CategoryMeta,
+}
+#[derive(Deserialize)]
+pub struct CategoryMeta {
+    total: i32,
 }
 #[derive(Deserialize)]
 pub struct OkBool {
