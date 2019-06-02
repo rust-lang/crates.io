@@ -34,6 +34,13 @@ struct UserStats {
     total_downloads: i64,
 }
 
+impl crate::util::MockCookieUser {
+    fn show_me(&self) -> UserShowPrivateResponse {
+        let url = "/api/v1/me";
+        self.get(url).good()
+    }
+}
+
 #[test]
 fn auth_gives_a_token() {
     let (_, anon) = TestApp::init().empty();
@@ -55,7 +62,7 @@ fn me() {
     anon.get(url).assert_forbidden();
 
     let user = app.db_new_user("foo");
-    let json: UserShowPrivateResponse = user.get(url).good();
+    let json = user.show_me();
 
     assert_eq!(json.user.email, user.as_model().email);
 }
