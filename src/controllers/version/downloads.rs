@@ -18,13 +18,13 @@ pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
-    increment_download_counts(req, crate_name, version)?;
+    let crate_name = increment_download_counts(req, crate_name, version)?;
 
     let redirect_url = req
         .app()
         .config
         .uploader
-        .crate_location(crate_name, version);
+        .crate_location(&crate_name, version);
 
     if req.wants_json() {
         #[derive(Serialize)]
@@ -39,7 +39,8 @@ pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
 
 /// Increment the download counts for a given crate version.
 ///
-/// Returns an error if we could not load the version ID from the database.
+/// Returns the crate name as stored in the database, or an error if we could
+/// not load the version ID from the database.
 ///
 /// This ignores any errors that occur updating the download count. Failure is
 /// expected if the application is in read only mode, or for API-only mirrors.
@@ -49,20 +50,21 @@ fn increment_download_counts(
     req: &dyn Request,
     crate_name: &str,
     version: &str,
-) -> CargoResult<()> {
+) -> CargoResult<String> {
     use self::versions::dsl::*;
 
     let conn = req.db_conn()?;
-    let version_id = versions
-        .select(id)
-        .filter(crate_id.eq_any(Crate::by_name(crate_name).select(crates::id)))
+    let (version_id, crate_name) = versions
+        .inner_join(crates::table)
+        .select((id, crates::name))
+        .filter(Crate::with_name(crate_name))
         .filter(num.eq(version))
         .first(&*conn)?;
 
     // Wrap in a transaction so we don't poison the outer transaction if this
     // fails
     let _ = conn.transaction(|| VersionDownload::create_or_increment(version_id, &conn));
-    Ok(())
+    Ok(crate_name)
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
