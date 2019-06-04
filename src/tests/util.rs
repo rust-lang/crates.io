@@ -446,6 +446,14 @@ impl RequestHelper for MockCookieUser {
 }
 
 impl MockCookieUser {
+    /// Creates an instance from a database `User` instance
+    pub fn new(app: &TestApp, user: User) -> Self {
+        Self {
+            app: TestApp(Rc::clone(&app.0)),
+            user,
+        }
+    }
+
     /// Returns a reference to the database `User` model
     pub fn as_model(&self) -> &User {
         &self.user

@@ -1,8 +1,7 @@
 use crate::{
-    app,
     builders::{CrateBuilder, VersionBuilder},
-    logout, new_user, req, sign_in_as,
-    util::RequestHelper,
+    new_user,
+    util::{MockCookieUser, RequestHelper, Response},
     OkBool, TestApp,
 };
 use cargo_registry::{
@@ -10,7 +9,6 @@ use cargo_registry::{
     views::{EncodablePrivateUser, EncodablePublicUser, EncodableVersion},
 };
 
-use conduit::{Handler, Method};
 use diesel::prelude::*;
 
 #[derive(Deserialize)]
@@ -38,6 +36,52 @@ impl crate::util::MockCookieUser {
     fn show_me(&self) -> UserShowPrivateResponse {
         let url = "/api/v1/me";
         self.get(url).good()
+    }
+
+    fn update_email(&self, email: &str) -> OkBool {
+        let model = self.as_model();
+        self.update_email_more_control(model.id, Some(email)).good()
+    }
+
+    // TODO: I don't like the name of this method or the one above; this is starting to look like
+    // a builder might help? I want to explore alternative abstractions in any case
+    fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<OkBool> {
+        let email_json = match email {
+            Some(val) => format!("\"{}\"", val),
+            None => String::from("null"),
+        };
+
+        // When updating your email in crates.io, the request goes to the user route with PUT.
+        // Ember sends all the user attributes. We check to make sure the ID in the URL matches
+        // the ID of the currently logged in user, then we ignore everything but the email address.
+        let body = format!("{{\"user\":{{\"email\":{},\"name\":\"Arbitrary Name\",\"login\":\"arbitrary_login\",\"avatar\":\"https://arbitrary.com/img.jpg\",\"url\":\"https://arbitrary.com\",\"kind\":null}}}}", email_json);
+        let url = format!("/api/v1/users/{}", user_id);
+
+        self.put(&url, body.as_bytes())
+    }
+
+    fn confirm_email(&self, email_token: &str) -> OkBool {
+        let url = format!("/api/v1/confirm/{}", email_token);
+        self.put(&url, &[]).good()
+    }
+}
+
+impl crate::util::MockAnonymousUser {
+    // TODO: Refactor to get rid of this duplication with the same method implemented on
+    // MockCookieUser
+    fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<OkBool> {
+        let email_json = match email {
+            Some(val) => format!("\"{}\"", val),
+            None => String::from("null"),
+        };
+
+        // When updating your email in crates.io, the request goes to the user route with PUT.
+        // Ember sends all the user attributes. We check to make sure the ID in the URL matches
+        // the ID of the currently logged in user, then we ignore everything but the email address.
+        let body = format!("{{\"user\":{{\"email\":{},\"name\":\"Arbitrary Name\",\"login\":\"arbitrary_login\",\"avatar\":\"https://arbitrary.com/img.jpg\",\"url\":\"https://arbitrary.com\",\"kind\":null}}}}", email_json);
+        let url = format!("/api/v1/users/{}", user_id);
+
+        self.put(&url, body.as_bytes())
     }
 }
 
@@ -299,49 +343,68 @@ fn updating_existing_user_doesnt_change_api_token() {
     deleting their email when they sign back in.
 */
 #[test]
-fn test_github_login_does_not_overwrite_email() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("apricot");
+fn github_without_email_does_not_overwrite_email() {
+    let (app, _) = TestApp::init().empty();
 
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
+    // Simulate logging in via GitHub with an account that has no email.
+    // Because faking GitHub is terrible, call what GithubUser::save_to_database does directly.
+    // Don't use app.db_new_user because it adds a verified email.
+    let user_without_github_email = app.db(|conn| {
+        let u = new_user("arbitrary_username");
+        let u = u.create_or_update(conn).unwrap();
+        MockCookieUser::new(&app, u)
+    });
+    let user_without_github_email_model = user_without_github_email.as_model();
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email, None);
-    assert_eq!(r.user.login, "apricot");
+    let json = user_without_github_email.show_me();
+    // Check that the setup is correct and the user indeed has no email
+    assert_eq!(json.user.email, None);
 
-    let body =
-        r#"{"user":{"email":"apricot@apricots.apricot","name":"Apricot Apricoto","login":"apricot","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/apricot","kind":null}}"#;
-    let mut response = ok_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
-    assert!(crate::json::<OkBool>(&mut response).ok);
+    // Add an email address in crates.io
+    user_without_github_email.update_email("apricot@apricots.apricot");
 
-    logout(&mut req);
-
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            gh_id: user.gh_id,
-            ..new_user("apricot")
+    // Simulate the same user logging in via GitHub again, still with no email in GitHub.
+    let again_user_without_github_email = app.db(|conn| {
+        let u = NewUser {
+            // Use the same github ID to link to the existing account
+            gh_id: user_without_github_email_model.gh_id,
+            // new_user uses a None email; the rest of the fields are arbitrary
+            ..new_user("arbitrary_username")
         };
+        let u = u.create_or_update(conn).unwrap();
+        MockCookieUser::new(&app, u)
+    });
 
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-    }
+    let json = again_user_without_github_email.show_me();
+    assert_eq!(json.user.email.unwrap(), "apricot@apricots.apricot");
+}
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
-    assert_eq!(r.user.login, "apricot");
+/* Given a new user, test that if they sign in with one email, change their email on GitHub, then
+   sign in again, that the email in crates.io will remain set to the original email used on GitHub.
+*/
+#[test]
+fn github_with_email_does_not_overwrite_email() {
+    let (app, _, user) = TestApp::init().with_user();
+    let model = user.as_model();
+    let original_email = &model.email;
+
+    let new_github_email = "new-email-in-github@example.com";
+
+    // Simulate logging in to crates.io after changing your email in GitHub
+    let user_with_different_email_in_github = app.db(|conn| {
+        let u = NewUser {
+            // Use the same github ID to link to the existing account
+            gh_id: model.gh_id,
+            email: Some(new_github_email),
+            // the rest of the fields are arbitrary
+            ..new_user("arbitrary_username")
+        };
+        let u = u.create_or_update(conn).unwrap();
+        MockCookieUser::new(&app, u)
+    });
+
+    let json = user_with_different_email_in_github.show_me();
+    assert_eq!(json.user.email, *original_email);
 }
 
 /*  Given a crates.io user, check that the user's email can be
@@ -350,35 +413,17 @@ fn test_github_login_does_not_overwrite_email() {
 */
 #[test]
 fn test_email_get_and_put() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("mango").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
+    let (_app, _anon, user) = TestApp::init().with_user();
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email, None);
-    assert_eq!(r.user.login, "mango");
+    let json = user.show_me();
+    assert_eq!(json.user.email.unwrap(), "something@example.com");
 
-    let body =
-        r#"{"user":{"email":"mango@mangos.mango","name":"Mango McMangoface","login":"mango","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/mango","kind":null}}"#;
-    let mut response = ok_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
-    assert!(crate::json::<OkBool>(&mut response).ok);
+    user.update_email("mango@mangos.mango");
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "mango@mangos.mango");
-    assert_eq!(r.user.login, "mango");
-    assert!(!r.user.email_verified);
-    assert!(r.user.email_verification_sent);
+    let json = user.show_me();
+    assert_eq!(json.user.email.unwrap(), "mango@mangos.mango");
+    assert!(!json.user.email_verified);
+    assert!(json.user.email_verification_sent);
 }
 
 /*  Given a crates.io user, check to make sure that the user
@@ -393,36 +438,21 @@ fn test_email_get_and_put() {
 */
 #[test]
 fn test_empty_email_not_added() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = new_user("papaya").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
+    let (_app, _anon, user) = TestApp::init().with_user();
+    let model = user.as_model();
 
-    let body =
-        r#"{"user":{"email":"","name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
-    let json = bad_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
-
+    let json = user
+        .update_email_more_control(model.id, Some(""))
+        .bad_with_status(200);
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
         "{:?}",
         json.errors
     );
 
-    let body =
-        r#"{"user":{"email":null,"name":"Papayo Papaya","login":"papaya","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/papaya","kind":null}}"#;
-    let json = bad_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
+    let json = user
+        .update_email_more_control(model.id, None)
+        .bad_with_status(200);
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -431,36 +461,24 @@ fn test_empty_email_not_added() {
     );
 }
 
-/*  Given two users, one signed in and the other not signed in,
-    check to make sure that the not signed in user cannot edit
-    the email of the signed in user, or vice-versa.
+/*  Check to make sure that neither other signed in users nor anonymous users can edit another
+    user's email address.
 
-    If an attempt is made, update_user.rs will return an error
-    indicating that the current user does not match the
-    requested user.
+    If an attempt is made, update_user.rs will return an error indicating that the current user
+    does not match the requested user.
 */
 #[test]
-fn test_this_user_cannot_change_that_user_email() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/api/v1/me");
+fn test_other_users_cannot_change_my_email() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let another_user = app.db_new_user("not_me");
+    let another_user_model = another_user.as_model();
 
-    let not_signed_in_user = {
-        let conn = app.diesel_database.get().unwrap();
-        let signed_user = new_user("pineapple").create_or_update(&conn).unwrap();
-        let unsigned_user = new_user("coconut").create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &signed_user);
-        unsigned_user
-    };
-
-    let body =
-        r#"{"user":{"email":"pineapple@pineapples.pineapple","name":"Pine Apple","login":"pineapple","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/pineapple","kind":null}}"#;
-
-    let json = bad_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", not_signed_in_user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
-
+    let json = user
+        .update_email_more_control(
+            another_user_model.id,
+            Some("pineapple@pineapples.pineapple"),
+        )
+        .bad_with_status(200);
     assert!(
         json.errors[0]
             .detail
@@ -468,114 +486,12 @@ fn test_this_user_cannot_change_that_user_email() {
         "{:?}",
         json.errors
     );
-}
 
-/* Given a new user, test that if they sign in with
-   one email, change their email on GitHub, then
-   sign in again, that the email will remain
-   consistent with the original email used on
-   GitHub.
-*/
-#[test]
-fn test_insert_into_email_table() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            email: Some("apple@example.com"),
-            ..new_user("apple")
-        };
-
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
-
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "apple@example.com");
-    assert_eq!(r.user.login, "apple");
-
-    logout(&mut req);
-
-    // What if user changes their github user email
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            gh_id: user.gh_id,
-            email: Some("banana@example.com"),
-            ..new_user("apple")
-        };
-
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-    }
-
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "apple@example.com");
-    assert_eq!(r.user.login, "apple");
-}
-
-/* Given a new user, check that when an email is added,
-   changed by user on GitHub, changed on crates.io,
-   that the email remains consistent with that which
-   the user has changed
-*/
-#[test]
-fn test_insert_into_email_table_with_email_change() {
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            email: Some("test_insert_with_change@example.com"),
-            ..new_user("potato")
-        };
-
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
-
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "test_insert_with_change@example.com");
-    assert_eq!(r.user.login, "potato");
-    assert!(!r.user.email_verified);
-    assert!(r.user.email_verification_sent);
-
-    let body =
-        r#"{"user":{"email":"apricot@apricots.apricot","name":"potato","login":"potato","avatar":"https://avatars0.githubusercontent.com","url":"https://github.com/potato","kind":null}}"#;
-    let mut response = ok_resp!(middle.call(
-        req.with_path(&format!("/api/v1/users/{}", user.id))
-            .with_method(Method::Put)
-            .with_body(body.as_bytes()),
-    ));
-    assert!(crate::json::<OkBool>(&mut response).ok);
-
-    logout(&mut req);
-
-    // What if user changes their github user email
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
-            gh_id: user.gh_id,
-            email: Some("banana2@example.com"),
-            ..new_user("potato")
-        };
-
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-    }
-
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "apricot@apricots.apricot");
-    assert!(!r.user.email_verified);
-    assert!(r.user.email_verification_sent);
-    assert_eq!(r.user.login, "potato");
+    anon.update_email_more_control(
+        another_user_model.id,
+        Some("pineapple@pineapples.pineapple"),
+    )
+    .bad_with_status(403);
 }
 
 /* Given a new user, test that their email can be added
@@ -588,40 +504,33 @@ fn test_insert_into_email_table_with_email_change() {
 fn test_confirm_user_email() {
     use cargo_registry::schema::emails;
 
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/me");
-    let user = {
-        let conn = app.diesel_database.get().unwrap();
-        let user = NewUser {
+    let (app, _) = TestApp::init().empty();
+
+    // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
+    // email directly into the database and we want to test the verification flow here.
+    let user = app.db(|conn| {
+        let u = NewUser {
             email: Some("potato2@example.com"),
-            ..new_user("potato")
+            ..new_user("arbitrary_username")
         };
+        let u = u.create_or_update(conn).unwrap();
+        MockCookieUser::new(&app, u)
+    });
+    let user_model = user.as_model();
 
-        let user = user.create_or_update(&conn).unwrap();
-        sign_in_as(&mut req, &user);
-        user
-    };
-
-    let email_token = {
-        let conn = app.diesel_database.get().unwrap();
-        Email::belonging_to(&user)
+    let email_token = app.db(|conn| {
+        Email::belonging_to(user_model)
             .select(emails::token)
             .first::<String>(&*conn)
             .unwrap()
-    };
+    });
 
-    let mut response = ok_resp!(middle.call(
-        req.with_path(&format!("/api/v1/confirm/{}", email_token))
-            .with_method(Method::Put),
-    ));
-    assert!(crate::json::<OkBool>(&mut response).ok);
+    user.confirm_email(&email_token);
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potato2@example.com");
-    assert_eq!(r.user.login, "potato");
-    assert!(r.user.email_verified);
-    assert!(r.user.email_verification_sent);
+    let json = user.show_me();
+    assert_eq!(json.user.email.unwrap(), "potato2@example.com");
+    assert!(json.user.email_verified);
+    assert!(json.user.email_verification_sent);
 }
 
 /* Given a user who existed before we added email confirmation,
@@ -634,27 +543,27 @@ fn test_existing_user_email() {
     use chrono::NaiveDateTime;
     use diesel::update;
 
-    let (app, middle) = app();
-    let mut req = req(Method::Get, "/me");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        let new_user = NewUser {
+    let (app, _) = TestApp::init().empty();
+
+    // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
+    // email directly into the database and we want to test the verification flow here.
+    let user = app.db(|conn| {
+        let u = NewUser {
             email: Some("potahto@example.com"),
-            ..new_user("potahto")
+            ..new_user("arbitrary_username")
         };
-        let user = new_user.create_or_update(&conn).unwrap();
-        update(Email::belonging_to(&user))
+        let u = u.create_or_update(conn).unwrap();
+        update(Email::belonging_to(&u))
             // Users created before we added verification will have
             // `NULL` in the `token_generated_at` column.
             .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
-            .execute(&*conn)
+            .execute(conn)
             .unwrap();
-        sign_in_as(&mut req, &user);
-    }
+        MockCookieUser::new(&app, u)
+    });
 
-    let mut response = ok_resp!(middle.call(req.with_path("/api/v1/me").with_method(Method::Get),));
-    let r = crate::json::<UserShowPrivateResponse>(&mut response);
-    assert_eq!(r.user.email.unwrap(), "potahto@example.com");
-    assert!(!r.user.email_verified);
-    assert!(!r.user.email_verification_sent);
+    let json = user.show_me();
+    assert_eq!(json.user.email.unwrap(), "potahto@example.com");
+    assert!(!json.user.email_verified);
+    assert!(!json.user.email_verification_sent);
 }
