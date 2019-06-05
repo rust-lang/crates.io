@@ -51,20 +51,18 @@
     </div>
 </div>
 
-{{#if currentVersion.yanked}}
-    <div class='crate-info'>
-        <div>
-        <p>This crate has been yanked, but it is still available for download for
-        other crates that may be depending on it.</p>
-        <p>You may wish to
-          {{#link-to 'crate.versions' crate}}view all versions{{/link-to}} to find one that
-          has not been yanked.
-        </p>
-        </div>
-    </div>
-{{else}}
 <div class='crate-info'>
     <div class='docs'>
+        {{#if currentVersion.yanked}}
+        <p>
+            This crate has been yanked, but it is still available for download for other crates that
+            may be depending on it.
+        </p>
+        <p>
+            You may wish to {{#link-to 'crate.versions' crate}}view all versions{{/link-to}} to find
+            one that has not been yanked.
+        </p>
+        {{else}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
@@ -99,7 +97,9 @@
                 </div>
             {{/if}}
         {{/if}}
+        {{/if}}
     </div>
+    {{#if notYankedOrIsOwner}}
     <section class='authorship' aria-label="Crate metadata">
         <div class='top'>
             <div>
@@ -240,8 +240,10 @@
             {{/if}}
         </div>
     </section>
+    {{/if}}
 </div>
 
+{{#unless currentVersion.yanked}}
 <div id='crate-downloads'>
     <div class='stats'>
         <h3>Stats Overview</h3>
@@ -293,4 +295,4 @@
         {{download-graph data=downloadData}}
     </div>
 </div>
-{{/if}}
+{{/unless}}
