@@ -95,7 +95,7 @@ export default Controller.extend({
             }),
         });
     }),
-    
+
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let downloads = this.downloads;
         if (!downloads) {
