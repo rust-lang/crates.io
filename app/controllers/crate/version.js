@@ -84,6 +84,18 @@ export default Controller.extend({
         });
     }),
 
+    currentBuildDependencies: computed('currentVersion.dependencies', function() {
+        let deps = this.get('currentVersion.dependencies');
+        if (deps === null) {
+            return [];
+        }
+        return PromiseArray.create({
+            promise: deps.then(deps => {
+                return deps.filterBy('kind', 'build');
+            }),
+        });
+    }),
+    
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
         let downloads = this.downloads;
         if (!downloads) {
