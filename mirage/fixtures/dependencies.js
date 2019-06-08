@@ -42,6 +42,6 @@ export default [
         optional: false,
         req: '0.1.0',
         target: null,
-        version_id: 11111,
-    }
+        version_id: 40905,
+    },
 ];
