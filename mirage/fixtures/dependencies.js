@@ -33,4 +33,15 @@ export default [
         target: null,
         version_id: 28674,
     },
+    {
+        crate_id: 'mock-build-dependency',
+        default_features: true,
+        features: '',
+        id: 111111,
+        kind: 'build',
+        optional: false,
+        req: '0.1.0',
+        target: null,
+        version_id: 111111,
+    },
 ];
