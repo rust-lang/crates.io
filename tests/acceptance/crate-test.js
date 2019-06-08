@@ -153,6 +153,14 @@ module('Acceptance | crate page', function(hooks) {
         assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
     });
 
+    test('crates having build-dependencies', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('crates/nanomsg');
+
+        assert.dom('#crate-build-dependencies').exists();
+    });
+
     test('crates having user-owners', async function(assert) {
         this.server.loadFixtures();
 
