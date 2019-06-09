@@ -34,39 +34,74 @@
         </span>
     </div>
 
-    <div class='sort' data-test-crates-sort>
-        <span class='small'>Sort by</span>
+    <div class='dropdown-section'>
+        <div class='sort' data-test-crates-sort>
+            <span class='small'>Sort by</span>
 
-        {{#rl-dropdown-container class="dropdown-container"}}
-            {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
-                {{svg-jar "sort"}}
-                {{ currentSortBy }}
-                <span class='arrow'></span>
-            {{/rl-dropdown-toggle}}
+            {{#rl-dropdown-container class="dropdown-container"}}
+                {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+                    {{svg-jar "sort"}}
+                    {{ currentSortBy }}
+                    <span class='arrow'></span>
+                {{/rl-dropdown-toggle}}
 
-            {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
-                <li>
-                    {{#link-to (query-params page=1 sort="alpha")}}
-                        Alphabetical
-                    {{/link-to}}
-                </li>
-                <li>
-                    {{#link-to (query-params page=1 sort="downloads")}}
-                        All-Time Downloads
-                    {{/link-to}}
-                </li>
-                <li>
-                    {{#link-to (query-params page=1 sort="recent-downloads")}}
-                        Recent Downloads
-                    {{/link-to}}
-                </li>
-                <li>
-                    {{#link-to (query-params page=1 sort="recent-updates")}}
-                        Recent Updates
-                    {{/link-to}}
-                </li>
-            {{/rl-dropdown}}
-        {{/rl-dropdown-container}}
+                {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
+                    <li>
+                        {{#link-to (query-params page=1 sort="alpha")}}
+                            Alphabetical
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="downloads")}}
+                            All-Time Downloads
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="recent-downloads")}}
+                            Recent Downloads
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="recent-updates")}}
+                            Recent Updates
+                        {{/link-to}}
+                    </li>
+                {{/rl-dropdown}}
+            {{/rl-dropdown-container}}
+        </div>
+        <div class='per_page' data-test-crates-count>
+            <span class='small'>Display results</span>
+
+            {{#rl-dropdown-container class="dropdown-container"}}
+                {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-count=true}}
+                    {{ resultCount }}
+                    <span class='arrow'></span>
+                {{/rl-dropdown-toggle}}
+
+                {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
+                    <li>
+                        {{#link-to (query-params page=1 per_page=10)}}
+                            10
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 per_page=20)}}
+                            20
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 per_page=50)}}
+                            50
+                        {{/link-to}}
+                    </li>
+                    <li>
+                        {{#link-to (query-params page=1 per_page=100)}}
+                            100
+                        {{/link-to}}
+                    </li>
+                {{/rl-dropdown}}
+            {{/rl-dropdown-container}}
+        </div>
     </div>
 </div>
 

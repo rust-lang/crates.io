@@ -80,6 +80,13 @@ module('Acceptance | crates page', function(hooks) {
         assert.dom('[data-test-crates-sort] [data-test-current-order]').hasText('Alphabetical');
     });
 
+    test('crates default count is 10', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/crates');
+        assert.dom('[data-test-crates-count] [data-test-current-count]').hasText('10');
+    });
+
     test('downloads appears for each crate on crate list', async function(assert) {
         this.server.loadFixtures();
 

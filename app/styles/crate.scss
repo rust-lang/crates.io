@@ -92,16 +92,26 @@
     width: 100%;
     @include display-flex;
     @include justify-content(space-between);
+    align-items: center;
     margin-bottom: 25px;
 
     .cur, .total { color: $main-color; font-weight: bold; }
 
-    .dropdown-container { font-size: 85%; }
-    a.dropdown {
-        background-color: $main-bg-dark;
-        padding: 10px;
-        display: inline-block;
-        @include border-radius(5px);
+    .dropdown-section {
+        @include display-flex;
+        @include justify-content(space-between);
+
+        .dropdown-container { font-size: 85%; }
+        a.dropdown {
+            background-color: $main-bg-dark;
+            padding: 10px;
+            display: inline-block;
+            @include border-radius(5px);
+        }
+
+        .per_page {
+            margin-left: 10px;
+        }
     }
 }
 

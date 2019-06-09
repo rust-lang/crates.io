@@ -5,6 +5,7 @@ export default Route.extend({
         letter: { refreshModel: true },
         page: { refreshModel: true },
         sort: { refreshModel: true },
+        per_page: { refreshModel: true },
     },
 
     model(params) {

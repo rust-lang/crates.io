@@ -25,4 +25,16 @@ export default Controller.extend(PaginationMixin, {
             return 'Alphabetical';
         }
     }),
+
+    resultCount: computed('per_page', function() {
+        if (this.per_page === 10) {
+            return 10;
+        } else if (this.per_page === 20) {
+            return 20;
+        } else if (this.per_page === 50) {
+            return 50;
+        } else {
+            return 100;
+        }
+    }),
 });
