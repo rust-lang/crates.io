@@ -556,6 +556,11 @@ where
         assert_eq!(status, self.response.status.0);
         self
     }
+
+    pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
+        assert!(self.response.headers["Location"][0].ends_with(target));
+        self
+    }
 }
 
 impl Response<()> {

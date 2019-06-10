@@ -1311,6 +1311,23 @@ fn download_nonexistent_version_of_existing_crate_404s() {
 }
 
 #[test]
+fn download_noncanonical_crate_name() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_download", user.id)
+            .version(VersionBuilder::new("1.0.0"))
+            .expect_build(conn);
+    });
+
+    // Request download for "foo-download" with a dash instead of an underscore,
+    // and assert that the correct download link is returned.
+    anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download")
+        .assert_redirect_ends_with("/crates/foo_download/foo_download-1.0.0.crate");
+}
+
+#[test]
 fn dependencies() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
