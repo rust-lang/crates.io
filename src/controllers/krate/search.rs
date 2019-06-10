@@ -222,6 +222,29 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         )
         .collect();
 
+    let mut next_page = None;
+    let mut prev_page = None;
+    let page_num = params.get("page")
+        .map(|s| s.parse())
+        .unwrap_or(Ok(1))?;
+
+    let url_for_page = |num: i64| {
+        let mut params = req.query();
+        params.insert("page".into(), num.to_string());
+        let query_string = url::form_urlencoded::Serializer::new(String::new())
+            .clear()
+            .extend_pairs(params)
+            .finish();
+        Some(format!("?{}", query_string))
+    };
+
+    if offset + limit < total {
+        next_page = url_for_page(page_num + 1);
+    }
+    if page_num != 1 {
+        prev_page = url_for_page(page_num - 1);
+    };
+
     #[derive(Serialize)]
     struct R {
         crates: Vec<EncodableCrate>,
@@ -230,10 +253,12 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     #[derive(Serialize)]
     struct Meta {
         total: i64,
+        next_page: Option<String>,
+        prev_page: Option<String>,
     }
 
     Ok(req.json(&R {
         crates,
-        meta: Meta { total },
+        meta: Meta { total, next_page, prev_page },
     }))
 }
