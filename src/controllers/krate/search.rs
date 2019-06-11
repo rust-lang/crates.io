@@ -224,9 +224,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     let mut next_page = None;
     let mut prev_page = None;
-    let page_num = params.get("page")
-        .map(|s| s.parse())
-        .unwrap_or(Ok(1))?;
+    let page_num = params.get("page").map(|s| s.parse()).unwrap_or(Ok(1))?;
 
     let url_for_page = |num: i64| {
         let mut params = req.query();
@@ -259,6 +257,10 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     Ok(req.json(&R {
         crates,
-        meta: Meta { total, next_page, prev_page },
+        meta: Meta {
+            total,
+            next_page,
+            prev_page,
+        },
     }))
 }

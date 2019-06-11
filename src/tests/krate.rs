@@ -2179,12 +2179,9 @@ fn pagination_links_included_if_applicable() {
     let user = user.as_model();
 
     app.db(|conn| {
-        CrateBuilder::new("pagination_links_1", user.id)
-            .expect_build(conn);
-        CrateBuilder::new("pagination_links_2", user.id)
-            .expect_build(conn);
-        CrateBuilder::new("pagination_links_3", user.id)
-            .expect_build(conn);
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
     let page1 = anon.search("per_page=1");

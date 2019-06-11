@@ -14,8 +14,8 @@ mod prelude {
     use std::collections::HashMap;
     use std::io;
 
-    use serde::Serialize;
     use indexmap::IndexMap;
+    use serde::Serialize;
     use url;
 
     pub trait RequestUtils {
