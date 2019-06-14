@@ -1,4 +1,6 @@
-use ammonia::{Builder, UrlRelative};
+//! Render README files to HTML.
+
+use ammonia::{Builder, UrlRelative, UrlRelativeEvaluate};
 use htmlescape::encode_minimal;
 use std::borrow::Cow;
 use std::path::Path;
@@ -20,7 +22,7 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
-        let tags = [
+        let tags = hashset(&[
             "a",
             "b",
             "blockquote",
@@ -60,30 +62,15 @@ impl<'a> MarkdownRenderer<'a> {
             "ul",
             "hr",
             "span",
-        ]
-        .iter()
-        .cloned()
-        .collect();
-        let tag_attributes = [
-            ("a", ["href", "id", "target"].iter().cloned().collect()),
-            (
-                "img",
-                ["width", "height", "src", "alt", "align"]
-                    .iter()
-                    .cloned()
-                    .collect(),
-            ),
-            (
-                "input",
-                ["checked", "disabled", "type"].iter().cloned().collect(),
-            ),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-        let allowed_classes = [(
+        ]);
+        let tag_attributes = hashmap(&[
+            ("a", hashset(&["href", "id", "target"])),
+            ("img", hashset(&["width", "height", "src", "alt", "align"])),
+            ("input", hashset(&["checked", "disabled", "type"])),
+        ]);
+        let allowed_classes = hashmap(&[(
             "code",
-            [
+            hashset(&[
                 "language-bash",
                 "language-clike",
                 "language-glsl",
@@ -98,83 +85,9 @@ impl<'a> MarkdownRenderer<'a> {
                 "language-scss",
                 "language-sql",
                 "yaml",
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-        )]
-        .iter()
-        .cloned()
-        .collect();
-
-        let sanitizer_base_url = base_url.map(ToString::to_string);
-
-        // Constrain the type of the closures given to the HTML sanitizer.
-        fn constrain_closure<F>(f: F) -> F
-        where
-            F: for<'a> Fn(&'a str) -> Option<Cow<'a, str>> + Send + Sync,
-        {
-            f
-        }
-
-        let unrelative_url_sanitizer = constrain_closure(|url| {
-            // We have no base URL; allow fragment links only.
-            if url.starts_with('#') {
-                return Some(Cow::Borrowed(url));
-            }
-
-            None
-        });
-
-        fn is_media_url(url: &str) -> bool {
-            Path::new(url)
-                .extension()
-                .and_then(std::ffi::OsStr::to_str)
-                .map_or(false, |e| match e {
-                    "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
-                    _ => false,
-                })
-        }
-
-        let relative_url_sanitizer = constrain_closure(move |url| {
-            // sanitizer_base_url is Some(String); use it to fix the relative URL.
-            if url.starts_with('#') {
-                return Some(Cow::Borrowed(url));
-            }
-
-            let mut new_url = sanitizer_base_url.clone().unwrap();
-            if !new_url.ends_with('/') {
-                new_url.push('/');
-            }
-            if new_url.ends_with(".git/") {
-                let offset = new_url.len() - 5;
-                new_url.drain(offset..offset + 4);
-            }
-            // Assumes GitHub’s URL scheme. GitHub renders text and markdown
-            // better in the "blob" view, but images need to be served raw.
-            new_url += if is_media_url(url) {
-                "raw/master"
-            } else {
-                "blob/master"
-            };
-            if !url.starts_with('/') {
-                new_url.push('/');
-            }
-            new_url += url;
-            Some(Cow::Owned(new_url))
-        });
-
-        let use_relative = if let Some(base_url) = base_url {
-            if let Ok(url) = Url::parse(base_url) {
-                url.host_str() == Some("github.com")
-                    || url.host_str() == Some("gitlab.com")
-                    || url.host_str() == Some("bitbucket.org")
-            } else {
-                false
-            }
-        } else {
-            false
-        };
+            ]),
+        )]);
+        let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url)));
 
         let mut html_sanitizer = Builder::new();
         html_sanitizer
@@ -182,13 +95,8 @@ impl<'a> MarkdownRenderer<'a> {
             .tags(tags)
             .tag_attributes(tag_attributes)
             .allowed_classes(allowed_classes)
-            .url_relative(if use_relative {
-                UrlRelative::Custom(Box::new(relative_url_sanitizer))
-            } else {
-                UrlRelative::Custom(Box::new(unrelative_url_sanitizer))
-            })
+            .url_relative(sanitize_url)
             .id_prefix(Some("user-content-"));
-
         MarkdownRenderer { html_sanitizer }
     }
 
@@ -206,6 +114,72 @@ impl<'a> MarkdownRenderer<'a> {
         };
         let rendered = comrak::markdown_to_html(text, &options);
         self.html_sanitizer.clean(&rendered).to_string()
+    }
+}
+
+/// Add trailing slash and remove `.git` suffix of base URL.
+fn canon_base_url(mut base_url: String) -> String {
+    if !base_url.ends_with('/') {
+        base_url.push('/');
+    }
+    if base_url.ends_with(".git/") {
+        let offset = base_url.len() - 5;
+        base_url.drain(offset..offset + 4);
+    }
+    base_url
+}
+
+/// Sanitize relative URLs in README files.
+struct SanitizeUrl {
+    base_url: Option<String>,
+}
+
+impl SanitizeUrl {
+    fn new(base_url: Option<&str>) -> Self {
+        let base_url = base_url
+            .and_then(|base_url| Url::parse(base_url).ok())
+            .and_then(|url| match url.host_str() {
+                Some("github.com") | Some("gitlab.com") | Some("bitbucket.org") => {
+                    Some(canon_base_url(url.into_string()))
+                }
+                _ => None,
+            });
+        Self { base_url }
+    }
+}
+
+/// Determine whether the given URL has a media file externsion.
+fn is_media_url(url: &str) -> bool {
+    Path::new(url)
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .map_or(false, |e| match e {
+            "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
+            _ => false,
+        })
+}
+
+impl UrlRelativeEvaluate for SanitizeUrl {
+    fn evaluate<'a>(&self, url: &'a str) -> Option<Cow<'a, str>> {
+        if url.starts_with('#') {
+            // Always allow fragment URLs.
+            return Some(Cow::Borrowed(url));
+        }
+        self.base_url.as_ref().map(|base_url| {
+            let mut new_url = base_url.clone();
+            // Assumes GitHub’s URL scheme. GitHub renders text and markdown
+            // better in the "blob" view, but images need to be served raw.
+            new_url += if is_media_url(url) {
+                "raw/master"
+            } else {
+                "blob/master"
+            };
+            if !url.starts_with('/') {
+                new_url.push('/');
+            }
+            new_url += url;
+            Cow::Owned(new_url)
+        })
     }
 }
 
@@ -284,6 +258,23 @@ pub fn render_and_upload_readme(
             .map_err(std_error_no_send)?;
         Ok(())
     })
+}
+
+/// Helper function to build a new `HashSet` from the items slice.
+fn hashset<T>(items: &[T]) -> std::collections::HashSet<T>
+where
+    T: Clone + Eq + std::hash::Hash,
+{
+    items.iter().cloned().collect()
+}
+
+/// Helper function to build a new `HashMap` from a slice of key-value pairs.
+fn hashmap<K, V>(items: &[(K, V)]) -> std::collections::HashMap<K, V>
+where
+    K: Clone + Eq + std::hash::Hash,
+    V: Clone,
+{
+    items.iter().cloned().collect()
 }
 
 #[cfg(test)]
