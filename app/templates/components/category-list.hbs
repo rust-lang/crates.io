@@ -3,7 +3,9 @@
         <li>
             {{#link-to 'category' category.slug class='name'}}
                 <span>{{ category.category }} ({{ format-num category.crates_cnt }})</span>
-                {{svg-jar "right-arrow"}}
+                <div class='arrow-in-list'>
+                    {{svg-jar "right-arrow"}}
+                </div>
             {{/link-to}}
         </li>
     {{/each}}

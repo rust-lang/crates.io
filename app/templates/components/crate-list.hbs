@@ -1,10 +1,12 @@
-<ul>
-    {{#each crates as |crate|}}
+<ol>
+    {{#each crates as |crate index|}}
         <li>
-            {{#link-to 'crate' crate.id class='name'}}
+            {{#link-to 'crate' crate.id class='name' data-test-crate-link=index}}
                 <span>{{ crate.name }} ({{ crate.max_version }})</span>
-                {{svg-jar "right-arrow"}}
+                <div class='arrow-in-list'>
+                    {{svg-jar "right-arrow"}}
+                </div>
             {{/link-to}}
         </li>
     {{/each}}
-</ul>
+</ol>

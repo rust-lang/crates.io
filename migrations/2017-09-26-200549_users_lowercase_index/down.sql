@@ -1,0 +1,1 @@
+-- This migration intentionally left blank; see corresponding up.sql

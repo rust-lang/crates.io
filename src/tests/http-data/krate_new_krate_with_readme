@@ -1,0 +1,144 @@
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_readme/foo_readme-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:G2u3lkUwozOcUMarUxKm7kfPFRU="
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-length",
+          "35"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "x-amz-request-id",
+          "A89963967BE30C76"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-id-2",
+          "fuS0z4LTFF4qMus2P2V61JZ+XL6iydvh+fZN0tLKUZE4sL/j7UEqu5UATJkAjCbwpGYI6JN5SsQ="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ]
+      ],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/readmes/foo_readme/foo_readme-1.0.0.html",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "content-type",
+          "text/html"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:Ip89jXvQWYPf+5zqZQ1vKHnbifA="
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "content-length",
+          "0"
+        ]
+      ],
+      "body": ""
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "x-amz-id-2",
+          "cUKZKz6kCSgxURf9dTIK8nJTnaDpWQCPU2nzn3lpjKzKw2L/l9mQXrYOHYddLjP+ODY1phhr6xM="
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "6F979F8896D4A1B2"
+        ],
+        [
+          "ETag",
+          "\"d41d8cd98f00b204e9800998ecf8427e\""
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

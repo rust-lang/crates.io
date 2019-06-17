@@ -1,41 +1,144 @@
-===REQUEST 339
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/fyk_max/fyk_max-1.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=
-Content-Length: 0
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Type: application/x-tar
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-
-
-===RESPONSE 258
-HTTP/1.1 200
-x-amz-request-id: CB0E925D8E3AB3E8
-x-amz-id-2: SiaMwszM1p2TzXlLauvZ6kRKcUCg7HoyBW29vts42w9ArrLwkJWl8vuvPuGFkpM6XGH+YXN852g=
-date: Sun, 28 Jun 2015 21:07:51 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-content-length: 0
-server: AmazonS3
-
-
-===REQUEST 339
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/fyk_max/fyk_max-2.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=
-Content-Length: 0
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Type: application/x-tar
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-
-
-===RESPONSE 258
-HTTP/1.1 200
-x-amz-request-id: CB0E925D8E3AB3E8
-x-amz-id-2: SiaMwszM1p2TzXlLauvZ6kRKcUCg7HoyBW29vts42w9ArrLwkJWl8vuvPuGFkpM6XGH+YXN852g=
-date: Sun, 28 Jun 2015 21:07:51 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-content-length: 0
-server: AmazonS3
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/fyk_max/fyk_max-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:RkpxRf+NUDyzjWrEMc1ikasbtZI="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-id-2",
+          "Es2wWCc+tXkMbbp+bEcjLFQn6yGqPeAUiBI5XqXZ8mAZUIpe7vYiCfBfoU727trNpEFMymyhgZY="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "98298F12367C7A0B"
+        ]
+      ],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/fyk_max/fyk_max-2.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:umuWs3XoGqsDipgMq04QAhq9Spc="
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept",
+          "*/*"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "2E4EDB9109077234"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-id-2",
+          "gnBA5fngpIAF7AVe+goe2YZkL6gB7yRp25LNjBl7wqyMNeIXGMLTyWd/46bkoVNv/S9t9BZ5IB4="
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

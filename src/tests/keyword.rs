@@ -1,7 +1,5 @@
-use conduit::{Handler, Method};
-use conduit_test::MockRequest;
-
-use cargo_registry::keyword::{Keyword, EncodableKeyword};
+use crate::{builders::CrateBuilder, RequestHelper, TestApp};
+use cargo_registry::{models::Keyword, views::EncodableKeyword};
 
 #[derive(Deserialize)]
 struct KeywordList {
@@ -19,110 +17,96 @@ struct GoodKeyword {
 
 #[test]
 fn index() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/keywords");
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: KeywordList = ::json(&mut response);
+    let url = "/api/v1/keywords";
+    let (app, anon) = TestApp::init().empty();
+    let json: KeywordList = anon.get(url).good();
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: KeywordList = ::json(&mut response);
+    app.db(|conn| {
+        Keyword::find_or_create_all(conn, &["foo"]).unwrap();
+    });
+
+    let json: KeywordList = anon.get(url).good();
     assert_eq!(json.keywords.len(), 1);
     assert_eq!(json.meta.total, 1);
-    assert_eq!(json.keywords[0].keyword, "foo".to_string());
+    assert_eq!(json.keywords[0].keyword.as_str(), "foo");
 }
 
 #[test]
 fn show() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/keywords/foo");
-    let response = t_resp!(middle.call(&mut req));
-    assert_eq!(response.status.0, 404);
+    let url = "/api/v1/keywords/foo";
+    let (app, anon) = TestApp::init().empty();
+    anon.get(url).assert_not_found();
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::find_or_create_all(&conn, &["foo"]).unwrap();
-    }
-    let mut response = ok_resp!(middle.call(&mut req));
-    let json: GoodKeyword = ::json(&mut response);
-    assert_eq!(json.keyword.keyword, "foo".to_string());
+    app.db(|conn| {
+        Keyword::find_or_create_all(conn, &["foo"]).unwrap();
+    });
+    let json: GoodKeyword = anon.get(url).good();
+    assert_eq!(json.keyword.keyword.as_str(), "foo");
 }
 
 #[test]
 fn uppercase() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/keywords/UPPER");
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::find_or_create_all(&conn, &["UPPER"]).unwrap();
-    }
+    let url = "/api/v1/keywords/UPPER";
+    let (app, anon) = TestApp::init().empty();
+    anon.get(url).assert_not_found();
 
-    let mut res = ok_resp!(middle.call(&mut req));
-    let json: GoodKeyword = ::json(&mut res);
-    assert_eq!(json.keyword.keyword, "upper".to_string());
+    app.db(|conn| {
+        Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
+    });
+    let json: GoodKeyword = anon.get(url).good();
+    assert_eq!(json.keyword.keyword.as_str(), "upper");
 }
 
 #[test]
 fn update_crate() {
-    let (_b, app, middle) = ::app();
-    let mut req = ::req(app.clone(), Method::Get, "/api/v1/keywords/foo");
-    let cnt = |req: &mut MockRequest, kw: &str| {
-        req.with_path(&format!("/api/v1/keywords/{}", kw));
-        let mut response = ok_resp!(middle.call(req));
-        ::json::<GoodKeyword>(&mut response).keyword.crates_cnt as usize
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    let cnt = |kw: &str| {
+        let json: GoodKeyword = anon.get(&format!("/api/v1/keywords/{}", kw)).good();
+        json.keyword.crates_cnt as usize
     };
 
-    let krate = {
-        let conn = app.diesel_database.get().unwrap();
-        let u = ::new_user("foo").create_or_update(&conn).unwrap();
-        Keyword::find_or_create_all(&conn, &["kw1", "kw2"]).unwrap();
-        ::CrateBuilder::new("fookey", u.id).expect_build(&conn)
-    };
+    let krate = app.db(|conn| {
+        Keyword::find_or_create_all(conn, &["kw1", "kw2"]).unwrap();
+        CrateBuilder::new("fookey", user.id).expect_build(conn)
+    });
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 0);
-    assert_eq!(cnt(&mut req, "kw2"), 0);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 0);
+    assert_eq!(cnt("kw2"), 0);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &["kw1"]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 1);
-    assert_eq!(cnt(&mut req, "kw2"), 0);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &["kw1"]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 1);
+    assert_eq!(cnt("kw2"), 0);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &["kw2"]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 0);
-    assert_eq!(cnt(&mut req, "kw2"), 1);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &["kw2"]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 0);
+    assert_eq!(cnt("kw2"), 1);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 0);
-    assert_eq!(cnt(&mut req, "kw2"), 0);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 0);
+    assert_eq!(cnt("kw2"), 0);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &["kw1", "kw2"]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 1);
-    assert_eq!(cnt(&mut req, "kw2"), 1);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &["kw1", "kw2"]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 1);
+    assert_eq!(cnt("kw2"), 1);
 
-    {
-        let conn = app.diesel_database.get().unwrap();
-        Keyword::update_crate(&conn, &krate, &[]).unwrap();
-    }
-    assert_eq!(cnt(&mut req, "kw1"), 0);
-    assert_eq!(cnt(&mut req, "kw2"), 0);
+    app.db(|conn| {
+        Keyword::update_crate(conn, &krate, &[]).unwrap();
+    });
+    assert_eq!(cnt("kw1"), 0);
+    assert_eq!(cnt("kw2"), 0);
 }

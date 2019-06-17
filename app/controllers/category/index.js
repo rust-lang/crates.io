@@ -1,4 +1,5 @@
-import Controller, { inject as controller } from '@ember/controller';
+import { readOnly } from '@ember/object/computed';
+import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 
 import PaginationMixin from '../../mixins/pagination';
@@ -9,16 +10,17 @@ export default Controller.extend(PaginationMixin, {
     per_page: 10,
     sort: 'recent-downloads',
 
-    totalItems: computed.readOnly('model.meta.total'),
+    totalItems: readOnly('model.meta.total'),
 
-    categoryController: controller('category'),
-    category: computed.alias('categoryController.model'),
+    category: null,
 
     currentSortBy: computed('sort', function() {
-        if (this.get('sort') === 'downloads') {
+        if (this.sort === 'downloads') {
             return 'All-Time Downloads';
-        } else if (this.get('sort') === 'alpha') {
+        } else if (this.sort === 'alpha') {
             return 'Alphabetical';
+        } else if (this.get('sort') === 'recent-updates') {
+            return 'Recent Updates';
         } else {
             return 'Recent Downloads';
         }

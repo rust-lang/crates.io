@@ -20,6 +20,7 @@ If you'd like to work on something that isn't in a current issue, especially if
 it would be a big change, please open a new issue for discussion!
 
 ## Submitting a Pull Request
+
 As an initiative to improve the documentation of the crates.io codebase, we would
 like to see all new types and functions, public and private, to have documentation
 comments on them. If you change an existing type or function, and it doesn't have
@@ -39,10 +40,16 @@ installation and running instructions. The logs for recent builds in Travis
 may also be helpful to see which versions of these tools we're currently using.
 
 [jslint]: http://jslint.com/
-[clippy]: https://github.com/Manishearth/rust-clippy
+[clippy]: https://github.com/rust-lang-nursery/rust-clippy
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 We will try to review your pull requests as soon as possible!
+
+## Reviewing Pull Requests
+
+Another way to help out and to get to know the codebase is to review other people's
+pull requests! Take a look at [`docs/PR-REVIEW.md`](https://github.com/rust-lang/crates.io/blob/master/docs/PR-REVIEW.md)
+for guidelines on how to do that.
 
 ## Setting up a development environment
 
@@ -77,16 +84,20 @@ as well.
 
 #### Frontend requirements
 
-In order to run the frontend, you will need to have installed:
+In order to run the frontend on Windows and macOS, you will need to have installed:
 
-- [node](https://nodejs.org/en/) >= 6.10.0
+- [node](https://nodejs.org/en/) >= 6.10.0 (see .travis.yml for what we currently use)
 - [npm](https://www.npmjs.com/get-npm) >= 4.0.0
 
 Follow the links for each of these tools for their recommended installation
 instructions. If you already have these tools, or you have a different
 preferred method of installing packages like these, that should work fine.
 
-> Note that you may need to install these as root using `sudo` in some cases.
+If you are on Linux, use [nvm](https://github.com/creationix/nvm/blob/master/README.md)
+to ensure that the use of `npm` does not require the use of `sudo`.
+
+The front end should run fine after these steps. Please file an issue if you run
+into any trouble.
 
 #### Building and serving the frontend
 
@@ -134,9 +145,8 @@ In order to run the backend, you will need to have installed:
 
 - [Rust](https://www.rust-lang.org/en-US/) stable >= 1.16.0 and cargo, which comes with Rust
 - [Postgres](https://www.postgresql.org/) >= 9.5
-- [CMake](https://cmake.org/download/) >= 3.6.1
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
-- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.11.0
+- [diesel_cli](http://diesel.rs/guides/getting-started/) >= 1.2.0
 
 ##### Rust
 
@@ -159,8 +169,8 @@ methods we'd recommend for each operating system:
   are some examples of installation commands that have been tested for the
   following distributions:
 
-  - Ubuntu: `sudo apt-get install postgresql postgresql-contrib libpq-dev`
-  - Fedora: `sudo dnf install postgresql-server postgresql-contrib postgresql-devel`
+  - Ubuntu: `sudo apt-get install postgresql postgresql-contrib libpq-dev pkg-config`
+  - Fedora: `sudo dnf install postgresql-server postgresql-contrib postgresql-devel pkgconfig`
 
   > If you're missing a package, when you try to `cargo install` or `cargo
   > build` later, you'll get an error that looks like this:
@@ -195,10 +205,16 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > sudo -u postgres createuser --superuser [yourusername]
 > ```
 >
-> Then creating a template database for yourself:
+> Next, if you try to run `psql` and get this error:
 >
 > ```
-> sudo -u postgres createdb [yourusername]
+> psql: FATAL:  database "yourusername" does not exist
+> ```
+>
+> Fix that by creating a template database for yourself:
+>
+> ```
+> createdb [yourusername]
 > ```
 >
 > Try running `psql` again as yourself. If you're still getting errors, here are
@@ -212,15 +228,6 @@ by typing `\q`) without any errors to connect to your running Postgres server.
 > suggestions from Stack Overflow. Open an issue on this repo if you get stuck,
 > we'll help fix the problem and and will add the solution to these
 > instructions!
-
-##### CMake
-
-- All platforms: CMake [has binary distributions
-  available](https://cmake.org/download/)
-- macOS: you can also install with homebrew by using `brew install cmake`
-- Linux: you should be able to use the distribution repositories by doing `sudo
-  apt-get install cmake` (Ubuntu) or `sudo dnf install cmake` (Fedora) or
-  whatever is appropriate for your distribution.
 
 ##### OpenSSL
 
@@ -316,37 +323,45 @@ with `CTRL-C` and rerun this command every time you change the backend code):
 cargo run --bin server
 ```
 
-> If you get an error that looks like:
->
-> ```
-> thread 'main' panicked at 'must have `GIT_REPO_URL` defined', src/lib.rs:227
-> ```
->
-> Edit your `.env` and remove the comment after the `S3_REGION` variable. That
-> is, change this:
->
-> ```
-> export S3_REGION=      # not needed if the S3 bucket is in US standard
-> ```
->
-> to this:
->
-> ```
-> export S3_REGION=
-> ```
->
-> and then try running `cargo run --bin server` again.
-
 Then start a frontend that uses this backend by running this command in another
 terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
 restart the server):
 
 ```
-yarn run start:local
+npm run start:local
 ```
 
 And then you should be able to visit http://localhost:4200!
+
+##### Using Mailgun to Send Emails
+
+We currently have email functionality enabled for confirming a user's email
+address. In development, the sending of emails is simulated by a file
+representing the email being created in your local `/tmp/` directory. If
+you want to test sending real emails, you will have to either set the
+Mailgun environment variables in `.env` manually or run your app instance
+on Heroku and add the Mailgun app.
+
+To set the environment variables manually, create an account and configure
+Mailgun. [These quick start instructions]
+(http://mailgun-documentation.readthedocs.io/en/latest/quickstart.html)
+might be helpful. Once you get the environment variables for the app, you
+will have to add them to the bottom of the `.env` file. You will need to
+fill in the `MAILGUN_SMTP_LOGIN`, `MAILGUN_SMTP_PASSWORD`, and
+`MAILGUN_SMTP_SERVER` fields.
+
+If using Heroku, you should be able to add the app to your instance on your
+dashboard. When your code is pushed and run on Heroku, the environment
+variables should be detected and you should not have to set anything
+manually.
+
+In either case, you should be able to check in your Mailgun account to see
+if emails are being detected and sent. Relevant information should be under
+the 'logs' tab on your Mailgun dashboard. To access, if the variables were
+set up manually, log in to your account. If the variables were set through
+Heroku, you should be able to click on the Mailgun icon in your Heroku
+dashboard, which should take you to your Mailgun dashboard.
 
 #### Running the backend tests
 
@@ -409,20 +424,21 @@ live crates.io, you won't be able to publish that crate locally.
 In your crate directory, run:
 
 ```
-cargo publish --host file:///path/to/your/crates.io/checkout/tmp/index-co
+cargo publish --index file:///path/to/your/crates.io/checkout/tmp/index-co
 ```
+
+> If you're using an older version of cargo you should use `--host` instead of `--index`.
 
 where `file:///path/to/your/crates.io/checkout` is the directory that you have
 crates.io's code in, and `tmp/index-co` is the directory with the git index
-that `./script/init-local-index.sh` set up. [Yes, `host` dosen't really make
-sense as a name for this flag](https://github.com/rust-lang/cargo/issues/3797).
+that `./script/init-local-index.sh` set up.
 
 Note that when you're running crates.io in development mode without the S3
 variables set (which is what we've done in these setup steps), the crate files
-will be stored in `dist/local_uploads/crates` and served from there when a
-crate is downloaded. This directory gets cleared out if you stop and restart
-the frontend. If you try to install a crate from your local crates.io and
-`cargo` can't find the crate files, that's probably why.
+will be stored in `local_uploads/crates` and served from there when a
+crate is downloaded.  If you try to install a crate from your local crates.io and
+`cargo` can't find the crate files, it is probably because this directory does not
+exist.
 
 ##### Downloading a crate from your local crates.io
 
@@ -452,3 +468,90 @@ this crate's `Cargo.toml`, and `cargo build` should display output like this:
    Compiling thiscrate v0.1.0 (file:///path/to/thiscrate)
     Finished dev [unoptimized + debuginfo] target(s) in 0.56 secs
 ```
+
+### Running crates.io with Docker
+
+There are Dockerfiles to build both the backend and the frontend,
+(`backend.Dockerfile` and `frontend.Dockerfile`) respectively, but it is most
+useful to just use docker-compose to bring up everything that's needed all in
+one go:
+
+```
+docker-compose up -d
+```
+
+The Compose file is filled out with a sane set of defaults that should Just
+Work™ out of the box without any modification. Individual settings can be
+overridden by creating a `docker-compose.override.yml` with the updated config.
+For example, in order to specify a set of Github OAuth Client credentials, a
+`docker-compose.override.yml` file might look like this:
+
+```yaml
+version: "3"
+services:
+  backend:
+    environment:
+      GH_CLIENT_ID: blahblah_ID
+      GH_CLIENT_SECRET: blahblah_secret
+```
+
+#### Accessing services
+
+By default, the services will be exposed on their normal ports:
+
+* `5432` for Postgres
+* `8888` for the crates.io backend
+* `4200` for the crates.io frontend
+
+These can be changed with the `docker-compose.override.yml` file.
+
+#### Publishing crates
+
+Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
+order to publish to the Dockerized crates.io, run
+
+```
+cargo publish --index http://localhost:4200/git/index
+```
+
+#### Changing code
+
+The `app/` directory is mounted directly into the frontend Docker container,
+which means that the Ember live-reload server will still just work. If
+anything outside of `app/` is changed, the base Docker image will have to be
+rebuilt:
+
+```sh
+# Rebuild frontend Docker image
+docker-compose build frontend
+
+# Restart running frontend container (if it's already running)
+docker-compose stop frontend
+docker-compose rm frontend
+docker-compose up -d
+```
+
+Similarly, the `src/` directory is mounted into the backend Docker container,
+so in order to recompile the backend, run:
+
+```
+docker-compose restart backend
+```
+
+If anything outside of `src/` is changed, the base Docker image will have to be
+rebuilt:
+
+```sh
+# Rebuild backend Docker image
+docker-compose build backend
+
+# Restart running backend container (if it's already running)
+docker-compose stop backend
+docker-compose rm backend
+docker-compose up -d
+```
+
+#### Volumes
+
+A number of names volumes are created, as can be seen in the `volumes` section
+of the `docker-compose.yml` file.

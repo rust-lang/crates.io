@@ -1,3 +1,4 @@
+import { readOnly } from '@ember/object/computed';
 import Controller from '@ember/controller';
 import { computed } from '@ember/object';
 
@@ -9,9 +10,9 @@ export default Controller.extend(PaginationMixin, {
     per_page: 10,
     sort: 'crates',
 
-    totalItems: computed.readOnly('model.meta.total'),
+    totalItems: readOnly('model.meta.total'),
 
     currentSortBy: computed('sort', function() {
-        return (this.get('sort') === 'crates') ? '# Crates' : 'Alphabetical';
+        return this.sort === 'crates' ? '# Crates' : 'Alphabetical';
     }),
 });

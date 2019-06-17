@@ -1,72 +1,73 @@
 language: rust
-sudo: false
-dist: trusty
-
-branches:
-  except:
-  - staging.tmp
+sudo: required
+dist: xenial
 
 cache:
   cargo: true
+  directories:
+    - $HOME/.npm
+before_cache: script/ci/prune-cache.sh
+
+env:
+  global:
+    - JOBS=1 # See https://git.io/vdao3 for details.
+    - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - CARGO_TARGET_DIR=target
+    - PERCY_PARALLEL_TOTAL=2
+    # Percy secrets are included here to enable Percy's GitHub integration
+    # on community-submitted PRs
+    - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+    - PERCY_PROJECT=crates-io/crates.io
+    - PGPORT=5433
+
+install:
+  - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
+  - sudo systemctl restart postgresql@11-main
+  - script/ci/cargo-clean-on-new-rustc-version.sh
+  - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+
+before_script:
+  - diesel database setup --locked-schema
 
 addons:
   chrome: stable
-
-before_install:
-  - nvm install 8.1.3
-
-install:
-  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - npm install
-  - cargo install --force diesel_cli --vers 0.14.0 --debug --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
-
-before_script:
-  - diesel database setup
-
-addons:
-  postgresql: "9.5"
+  postgresql: "11"
   apt:
-    sources:
-      - kalakris-cmake
     packages:
-      - cmake
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
+      - postgresql-11
+      - postgresql-client-11
 
 matrix:
   fast_finish: true
   allow_failures:
     - rust: nightly
   include:
-  - rust: stable
-    env: RUSTFMT=YESPLEASE
-    script:
-    - cargo install --force rustfmt
-    - rustfmt --version
-    - cargo fmt -- --write-mode=diff
-  - rust: stable
-    script:
-    - cargo build
-    - cargo test
-    - npm test
-  - rust: nightly-2017-07-04
-    env: CLIPPY=YESPLEASE
-    script:
-    - cargo rustc --lib --features "lint" -- -Zno-trans
-  - rust: beta
-    script:
-    - cargo build
-    - cargo test
-  - rust: nightly
-    script:
-    - cargo build
-    - cargo test
-
-env:
-  global:
-    - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
-    - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
+    - name: Backend
+      rust: stable
+      before_install:
+        - rustup component add rustfmt-preview
+        - rustup component add clippy-preview
+      script:
+        - cargo fmt -- --check
+        - cargo clippy --all-targets --all-features --all
+        - cargo test
+    - name: Frontend
+      language: node_js
+      node_js: 10
+      install:
+        - npm ci
+      before_script: skip
+      script:
+        - npm run lint:js
+        - npm run lint:deps
+        - npm test
+    - rust: beta
+      script:
+        - cargo test
+    - rust: nightly
+      script:
+        - cargo test
 
 notifications:
   email:

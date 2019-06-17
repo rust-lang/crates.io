@@ -1,26 +1,68 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { visit } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | categories');
+module('Acceptance | categories', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('listing categories', async function(assert) {
-    server.create('category', { category: 'API bindings', crates_cnt: 0 });
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
-    server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/categories');
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
 
-    hasText(assert, '.row:eq(0) .desc .info span', '0 crates');
-    hasText(assert, '.row:eq(1) .desc .info span', '1 crate');
-    hasText(assert, '.row:eq(2) .desc .info span', '3,910 crates');
-});
+        await visit('/categories');
+        percySnapshot(assert);
 
-test('category/:category_id index default sort is recent-downloads', async function(assert) {
-    server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        await a11yAudit(axeConfig);
+    });
 
-    await visit('/categories/algorithms');
+    test('category/:category_id is accessible', async function(assert) {
+        assert.expect(0);
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Recent Downloads');
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+
+        await visit('/categories/algorithms');
+        percySnapshot(assert);
+
+        await a11yAudit(axeConfig);
+    });
+
+    test('listing categories', async function(assert) {
+        this.server.create('category', { category: 'API bindings', crates_cnt: 0 });
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+        this.server.create('category', { category: 'Asynchronous', crates_cnt: 3910 });
+
+        await visit('/categories');
+
+        assert.dom('[data-test-category="api-bindings"] [data-test-crate-count]').hasText('0 crates');
+        assert.dom('[data-test-category="algorithms"] [data-test-crate-count]').hasText('1 crate');
+        assert.dom('[data-test-category="asynchronous"] [data-test-crate-count]').hasText('3,910 crates');
+    });
+
+    test('category/:category_id index default sort is recent-downloads', async function(assert) {
+        this.server.create('category', { category: 'Algorithms', crates_cnt: 1 });
+
+        await visit('/categories/algorithms');
+
+        assert.dom('[data-test-category-sort] [data-test-current-order]').hasText('Recent Downloads');
+    });
+
+    test('listing category slugs', async function(assert) {
+        this.server.create('category', { category: 'Algorithms', description: 'Crates for algorithms' });
+        this.server.create('category', { category: 'Asynchronous', description: 'Async crates' });
+
+        await visit('/category_slugs');
+
+        assert.dom('[data-test-category-slug="algorithms"]').hasText('algorithms');
+        assert.dom('[data-test-category-description="algorithms"]').hasText('Crates for algorithms');
+        assert.dom('[data-test-category-slug="asynchronous"]').hasText('asynchronous');
+        assert.dom('[data-test-category-description="asynchronous"]').hasText('Async crates');
+    });
 });

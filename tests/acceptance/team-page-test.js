@@ -1,41 +1,58 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { visit } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | team page');
+module('Acceptance | team page', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('has team organization display', async function(assert) {
-    server.loadFixtures();
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/teams/github:org:thehydroimpulse');
+        this.server.loadFixtures();
 
-    hasText(assert, '.team-info h1', 'org');
-    hasText(assert, '.team-info h2', 'thehydroimpulseteam');
-});
+        await visit('/teams/github:org:thehydroimpulse');
+        percySnapshot(assert);
 
-test('has link to github in team header', async function(assert) {
-    server.loadFixtures();
+        await a11yAudit(axeConfig);
+    });
 
-    await visit('/teams/github:org:thehydroimpulse');
+    test('has team organization display', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubLink = findWithAssert('.info a');
-    assert.equal($githubLink.attr('href').trim(), 'https://github.com/org_test');
-});
+        await visit('/teams/github:org:thehydroimpulse');
 
-test('github link has image in team header', async function(assert) {
-    server.loadFixtures();
+        assert.dom('[data-test-heading] [data-test-org-name]').hasText('org');
+        assert.dom('[data-test-heading] [data-test-team-name]').hasText('thehydroimpulseteam');
+    });
 
-    await visit('/teams/github:org:thehydroimpulse');
+    test('has link to github in team header', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubImg = findWithAssert('.info a img');
-    assert.equal($githubImg.attr('src').trim(), '/assets/GitHub-Mark-32px.png');
-});
+        await visit('/teams/github:org:thehydroimpulse');
 
-test('team organization details has github profile icon', async function(assert) {
-    server.loadFixtures();
+        assert.dom('[data-test-heading] [data-test-github-link]').hasAttribute('href', 'https://github.com/org_test');
+    });
 
-    await visit('/teams/github:org:thehydroimpulse');
+    test('github link has image in team header', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubProfileImg = findWithAssert('.info img');
-    assert.equal($githubProfileImg.attr('src').trim(), 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+        await visit('/teams/github:org:thehydroimpulse');
+
+        assert.dom('[data-test-heading] [data-test-github-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
+    });
+
+    test('team organization details has github profile icon', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/teams/github:org:thehydroimpulse');
+
+        assert
+            .dom('[data-test-heading] [data-test-avatar]')
+            .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+    });
 });

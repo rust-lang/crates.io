@@ -10,5 +10,11 @@ export default Route.extend({
         params.crate = this.modelFor('crate');
 
         return this.store.query('dependency', params);
-    }
+    },
+
+    setupController(controller) {
+        this._super(...arguments);
+        let crate = this.modelFor('crate');
+        controller.set('crate', crate);
+    },
 });

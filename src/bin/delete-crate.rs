@@ -5,28 +5,23 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
-extern crate cargo_registry;
-extern crate diesel;
-extern crate time;
+use cargo_registry::{db, models::Crate, schema::crates};
+use std::{
+    env,
+    io::{self, prelude::*},
+};
 
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
-use std::env;
-use std::io;
-use std::io::prelude::*;
 
-use cargo_registry::Crate;
-use cargo_registry::schema::crates;
-
-#[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now().unwrap();
+    let conn = db::connect_now().unwrap();
     conn.transaction::<_, diesel::result::Error, _>(|| {
         delete(&conn);
         Ok(())
-    }).unwrap()
+    })
+    .unwrap()
 }
 
 fn delete(conn: &PgConnection) {
@@ -41,13 +36,12 @@ fn delete(conn: &PgConnection) {
     let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
     print!(
         "Are you sure you want to delete {} ({}) [y/N]: ",
-        name,
-        krate.id
+        name, krate.id
     );
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         return;
     }
 
@@ -61,7 +55,7 @@ fn delete(conn: &PgConnection) {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         panic!("aborting transaction");
     }
 }

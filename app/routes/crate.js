@@ -6,8 +6,8 @@ export default Route.extend({
 
     model(params) {
         return this.store.find('crate', params.crate_id).catch(e => {
-            if (e.errors.any(e => e.detail === 'Not Found')) {
-                this.get('flashMessages').show(`Crate '${params.crate_id}' does not exist`);
+            if (e.errors.some(e => e.detail === 'Not Found')) {
+                this.flashMessages.show(`Crate '${params.crate_id}' does not exist`);
                 return;
             }
         });
@@ -20,15 +20,17 @@ export default Route.extend({
     },
 
     setHeadTags(model) {
-        let headTags = [{
-            type: 'meta',
-            tagId: 'meta-description-tag',
-            attrs: {
-                name: 'description',
-                content: model.get('description') || 'A package for Rust.'
-            }
-        }];
+        let headTags = [
+            {
+                type: 'meta',
+                tagId: 'meta-description-tag',
+                attrs: {
+                    name: 'description',
+                    content: model.get('description') || 'A package for Rust.',
+                },
+            },
+        ];
 
         this.set('headTags', headTags);
-    }
+    },
 });

@@ -1,21 +1,73 @@
-===REQUEST 2354
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_whitelist/foo_whitelist-1.1.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Content-Type: application/x-tar
-Date: Wed, 18 Nov 2015 14:29:12 -0800
-Authorization: AWS AKIAI3HZFJJPEQRCEPYQ:WQPwbR4xY3GNBJC7TQ+sys8zVKw=
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Length: 2000
-
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-===RESPONSE 258
-HTTP/1.1 200
-server: AmazonS3
-etag: "7c1c566ab4cdb11ac8971191694e8bec"
-content-length: 0
-date: Wed, 18 Nov 2015 22:29:13 GMT
-x-amz-request-id: 0F61951F1BCD0727
-x-amz-id-2: JLgACuYs2DRQQf3vqYu6a3Bv0+PBuor+HcEGwKsnQjYtupRNAn/X/7KSytGWnTJS7VH+BPLFVJU=
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_whitelist/foo_whitelist-1.1.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:qt4nSgvxT4p0mzUU9mA+lDtnKdE="
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "content-length",
+          "96"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3GTQqAIBAG0DmKF8jUoDlOGPQzEAg50fVDon0rIfre6s0pDecqOm2StfHWW9eOslAN7tZxcM+Lcu4DUxVH1rgbQz8VAQAA4PMIAOClC25Yv/oADgAA"
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "A154F439BE2F1178"
+        ],
+        [
+          "Content-Length",
+          "0"
+        ],
+        [
+          "ETag",
+          "\"9facb520b24bd39bb1ee070422257b83\""
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "x-amz-id-2",
+          "sJQf1gwHhtO9UupUzVzcH5l1yvS64tKrNFy59yuhFRCrLpSEGAAm/S4LNhUDFCqS2HOsyw0FXBo="
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

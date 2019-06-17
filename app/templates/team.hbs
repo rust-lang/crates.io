@@ -1,17 +1,17 @@
-<div id='crates-heading'>
+<div id='crates-heading' data-test-heading>
     <div class="wide">
         <div class='info'>
-            {{user-avatar user=model.team size='medium'}}
+            {{user-avatar user=model.team size='medium' data-test-avatar=true}}
             <div class='team-info'>
-                <h1>
+                <h1 data-test-org-name>
                     {{ model.team.org_name }}
                 </h1>
-                <h2>
+                <h2 data-test-team-name>
                     {{ model.team.name }}
                 </h2>
             </div>
-            {{#user-link user=model.team}}
-                <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
+            {{#user-link user=model.team data-test-github-link=true}}
+                <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
             {{/user-link}}
         </div>
     </div>
@@ -53,6 +53,11 @@
                         <li>
                             {{#link-to (query-params sort="recent-downloads")}}
                                 Recent Downloads
+                            {{/link-to}}
+                        </li>
+                        <li>
+                            {{#link-to (query-params sort="recent-updates")}}
+                                Recent Updates
                             {{/link-to}}
                         </li>
                     {{/rl-dropdown}}

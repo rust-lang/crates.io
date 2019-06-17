@@ -26,19 +26,19 @@
 </div>
 
 <div id='results'>
-    <div class='nav'>
+    <div class='nav' data-test-crates-nav>
         <span class='amt small'>
             Displaying
-            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-            of <span class='total'>{{ totalItems }}</span> total results
+            <span class='cur' data-test-current-rows>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+            of <span class='total' data-test-total-rows>{{ totalItems }}</span> total results
         </span>
     </div>
 
-    <div class='sort'>
+    <div class='sort' data-test-crates-sort>
         <span class='small'>Sort by</span>
 
         {{#rl-dropdown-container class="dropdown-container"}}
-            {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+            {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
                 {{svg-jar "sort"}}
                 {{ currentSortBy }}
                 <span class='arrow'></span>
@@ -60,27 +60,36 @@
                         Recent Downloads
                     {{/link-to}}
                 </li>
+                <li>
+                    {{#link-to (query-params page=1 sort="recent-updates")}}
+                        Recent Updates
+                    {{/link-to}}
+                </li>
             {{/rl-dropdown}}
         {{/rl-dropdown-container}}
     </div>
 </div>
 
 <div id='crates' class='white-rows'>
-    {{#each model as |crate|}}
-        {{crate-row crate=crate}}
+    {{#each model as |crate index|}}
+        {{crate-row crate=crate data-test-crate-row=index}}
     {{/each}}
 </div>
 
-<div class='pagination'>
-    {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
+<nav class='pagination' aria-label="Pagination navigation">
+    {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page" data-test-pagination-prev=true}}
         {{svg-jar "left-pag"}}
     {{/link-to}}
-    {{#each pages as |page|}}
-        {{#link-to (query-params page=page)}}
-            {{ page }}
-        {{/link-to}}
-    {{/each}}
-    {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
+    <ol>
+        {{#each pages as |page|}}
+            <li>
+                {{#link-to (query-params page=page) title=(concat "Go to page " page)}}
+                    {{ page }}
+                {{/link-to}}
+            </li>
+        {{/each}}
+    </ol>
+    {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page" data-test-pagination-next=true}}
         {{svg-jar "right-pag"}}
     {{/link-to}}
-</div>
+</nav>

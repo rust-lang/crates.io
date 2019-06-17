@@ -10,6 +10,6 @@ export default Component.extend({
         return this.get('badge.attributes.branch') || 'master';
     }),
     text: computed('badge', function() {
-        return `GitLab build status for the ${ this.get('branch') } branch`;
-    })
+        return `GitLab build status for the ${this.branch} branch`;
+    }),
 });

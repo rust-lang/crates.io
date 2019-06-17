@@ -1,0 +1,16 @@
+{{ title 'Pending Invites' }}
+
+<div id='crates-heading'>
+    {{svg-jar "gear"}}
+    <h1>Pending Owner Invites</h1>
+</div>
+
+<div id='my-invites'>
+    <div class='white-rows'>
+        {{#each model as |invite|}}
+            {{pending-owner-invite-row invite=invite}}
+        {{else}}
+            <p>You don't seem to have any pending invitations.</p>
+        {{/each}}
+    </div>
+</div>

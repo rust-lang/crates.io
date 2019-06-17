@@ -11,8 +11,8 @@ export default Route.extend({
         return this.store.query('crate', params);
     },
 
-    setupController(controller, model) {
+    setupController(controller) {
         controller.set('keyword', this.modelFor('keyword'));
-        this._super(controller, model);
+        this._super(...arguments);
     },
 });

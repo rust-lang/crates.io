@@ -1,10 +1,11 @@
-[project]
+[package]
 name = "cargo-registry"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
-version = "0.1.0"
-license = "MIT/Apache-2.0"
+version = "0.2.2"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/crates.io"
 description = "Backend of crates.io"
+edition = "2018"
 
 [workspace]
 
@@ -19,59 +20,76 @@ doctest = false
 name = "all"
 path = "src/tests/all.rs"
 
-[dependencies]
-cargo-registry-s3 = { path = "src/s3", version = "0.1.0" }
-rand = "0.3"
-time = "0.1"
-git2 = "0.6.4"
-flate2 = "0.2"
-semver = "0.5"
-url = "1.2.1"
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--no-defaults",
+    "--passes", "collapse-docs",
+    "--passes", "unindent-comments"
+]
 
-postgres = { version = "0.14.0", features = ["with-time", "with-openssl", "with-serde_json", "with-chrono"] }
-r2d2 = "0.7.0"
-r2d2_postgres = "0.12.0"
-openssl = "0.9.9"
-curl = "0.4"
+[dependencies]
+cargo-registry-s3 = { path = "src/s3", version = "0.2.0" }
+rand = "0.6"
+git2 = "0.8.0"
+flate2 = "1.0"
+semver = { version = "0.9", git = "https://github.com/steveklabnik/semver.git", features = ["diesel", "serde"] }
+url = "1.2.1"
+tar = "0.4.16"
+base64 = "0.9"
+
+openssl = "0.10.13"
 oauth2 = "0.3"
-log = "0.3"
-env_logger = "0.4"
-hex = "0.2"
-license-exprs = "^1.3"
-dotenv = "0.10.0"
+log = "0.4"
+env_logger = "0.5"
+hex = "0.3"
+htmlescape = "0.3.1"
+license-exprs = "^1.4"
+dotenv = "0.11.0"
 toml = "0.4"
-diesel = { version = "0.15.0", features = ["postgres", "serde_json", "deprecated-time", "chrono"] }
-diesel_codegen = "0.15.0"
-r2d2-diesel = "0.15.0"
-diesel_full_text_search = "0.15.0"
+diesel = { version = "1.4.0", features = ["postgres", "serde_json", "chrono", "r2d2"] }
+diesel_full_text_search = "1.0.0"
+swirl = { git = "https://github.com/sgrif/swirl.git", rev = "de5d8bb" }
 serde_json = "1.0.0"
-serde_derive = "1.0.0"
-serde = "1.0.0"
-clippy = { version = "=0.0.142", optional = true }
-chrono = "0.4.0"
+serde = { version = "1.0.0", features = ["derive"] }
+chrono = { version = "0.4.0", features = ["serde"] }
+comrak = { version = "0.4.0", default-features = false }
+ammonia = "2.0.0"
+docopt = "0.8.1"
+scheduled-thread-pool = "0.2.0"
+derive_deref = "1.0.0"
+reqwest = "0.9.1"
+tempdir = "0.3.7"
+parking_lot = "0.7.1"
+jemallocator = { version = "0.1.8", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
+jemalloc-ctl = "0.2.0"
+
+lettre = { version = "0.9", git = "https://github.com/lettre/lettre" }
+lettre_email = { version = "0.9", git = "https://github.com/lettre/lettre" }
+failure = "0.1.1"
 
 conduit = "0.8"
 conduit-conditional-get = "0.8"
-conduit-cookie = "0.8"
-conduit-json-parser = "0.8"
-conduit-log-requests = "0.8"
+conduit-cookie = "0.8.5"
+cookie = "0.11"
 conduit-middleware = "0.8"
 conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
+conduit-hyper = "0.1.3"
+
+futures = "0.1"
+tokio = "0.1"
+hyper = "0.12"
+ctrlc = { version = "3.0", features = ["termination"] }
 
 [dev-dependencies]
 conduit-test = "0.8"
-bufstream = "0.1"
+hyper-tls = "0.3"
+lazy_static = "1.0"
+tokio-core = "0.1"
 
 [build-dependencies]
-dotenv = "0.10"
-diesel = { version = "0.15.0", features = ["postgres"] }
-
-[features]
-unstable = []
-lint = ["clippy"]
-
-[replace]
-"postgres:0.14.2" = { git = "https://github.com/sfackler/rust-postgres.git" }
+dotenv = "0.11"
+diesel = { version = "1.3.0", features = ["postgres"] }
+diesel_migrations = { version = "1.3.0", features = ["postgres"] }

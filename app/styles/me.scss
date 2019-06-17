@@ -16,10 +16,103 @@
             clear: both;
         }
         dd { float: left; margin-left: 10px; }
+        .align-center {
+            @include align-items(center);
+        }
+        .row {
+            width: 100%;
+            border: 1px solid #d5d3cb;
+            border-bottom-width: 0px;
+            &:last-child { border-bottom-width: 1px; }
+            padding: 10px 20px 10px 0;
+            @include display-flex;
+            background-color: $main-bg-dark;
+            .small-text {
+                font-size: 90%;
+            }
+            .error {
+                color: rgb(216, 0, 41);
+            }
+            .label {
+                @include flex(1);
+                margin-right: 0.4em;
+                font-weight: bold;
+            }
+            .actions {
+                @include display-flex;
+                @include align-items(center);
+            }
+            .space-left {
+                margin-left: 10px;
+            }
+            .space-right {
+                margin-right: 10px;
+            }
+            .no-space-left {
+                margin-left: 0px;
+            }
+            p {
+                width: 80%;
+            }
+            .space-bottom {
+                margin-bottom: 10px;
+            }
+        }
     }
 
     @media only screen and (max-width: 550px) {
         .info img { display: none; }
+    }
+}
+
+#me-email {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    @include display-flex;
+    @include flex-direction(column);
+    .row {
+        width: 100%;
+        border: 1px solid #d5d3cb;
+        border-bottom-width: 0px;
+        &:last-child { border-bottom-width: 1px; }
+        padding: 10px 20px;
+        @include display-flex;
+        @include align-items(center);
+        .label {
+            @include flex(1);
+            margin-right: 0.4em;
+            font-weight: bold;
+        }
+        .email {
+            @include flex(20);
+            .verified {
+                color: green;
+                font-weight: bold;
+            }
+        }
+        .actions {
+            @include display-flex;
+            @include align-items(center);
+            img { margin-left: 10px }
+        }
+        .email-form {
+            @include flex(10);
+            display: inline-flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            input.ember-text-field {
+                width: 400px;
+            }
+        }
+        .space-right {
+            margin-right: 10px;
+        }
+    }
+    .friendly-message {
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
@@ -55,6 +148,7 @@
         #my-crates, #my-following, #my-favorite-users { margin: 0; }
     }
 }
+
 #my-feed {
     @include flex-grow(5);
     h2 { font-size: 105%; }
@@ -83,7 +177,32 @@
         margin-bottom: 20px;
         background-color: $bg;
         color: white;
-        &:hover { background-color: darken($bg, 10%); }
+        &:hover, &:focus { background-color: darken($bg, 10%); }
+    }
+}
+
+#my-invites {
+    @include flex-grow(5);
+
+    .row {
+        @include display-flex;
+        @include flex-direction(column);
+    }
+
+    .info {
+        @include display-flex;
+        @include align-items(baseline);
+        @include justify-content(space-between);
+
+        .date { @include flex-grow(2); text-align: right; }
+        .label {
+            .small-text {
+                font-size: 90%;
+            }
+        }
+        .name {
+            width: 200px;
+        }
     }
 }
 

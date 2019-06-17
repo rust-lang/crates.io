@@ -1,36 +1,33 @@
 import Controller from '@ember/controller';
+import { A } from '@ember/array';
 import { computed } from '@ember/object';
-import { inject as service } from '@ember/service';
+import ajax from 'ember-fetch/ajax';
 
 const TO_SHOW = 5;
 
 export default Controller.extend({
-
-    ajax: service(),
-
     init() {
         this._super(...arguments);
 
-        this.fetchingFeed = true;
         this.loadingMore = false;
         this.hasMore = false;
-        this.myCrates = [];
-        this.myFollowing = [];
-        this.myFeed = [];
+        this.myCrates = A();
+        this.myFollowing = A();
+        this.myFeed = A();
         this.myStats = 0;
         this.favoriteUsers = [];
     },
 
     visibleCrates: computed('myCrates.[]', function() {
-        return this.get('myCrates').slice(0, TO_SHOW);
+        return this.myCrates.slice(0, TO_SHOW);
     }),
 
     visibleFollowing: computed('myFollowing.[]', function() {
-        return this.get('myFollowing').slice(0, TO_SHOW);
+        return this.myFollowing.slice(0, TO_SHOW);
     }),
 
     visibleStats: computed('myStats', function() {
-        return this.get('myStats');
+        return this.myStats;
     }),
 
     hasMoreCrates: computed('myCrates.[]', function() {
@@ -50,19 +47,19 @@ export default Controller.extend({
     }),
 
     actions: {
-        loadMore: function() {
+        async loadMore() {
             this.set('loadingMore', true);
-            let page = (this.get('myFeed').length / 10) + 1;
+            let page = this.myFeed.length / 10 + 1;
 
-            this.get('ajax').request(`/me/updates?page=${page}`).then((data) => {
-                let versions = data.versions.map(version =>
-                    this.store.push(this.store.normalize('version', version)));
+            try {
+                let data = await ajax(`/api/v1/me/updates?page=${page}`);
+                let versions = data.versions.map(version => this.store.push(this.store.normalize('version', version)));
 
-                this.get('myFeed').pushObjects(versions);
+                this.myFeed.pushObjects(versions);
                 this.set('hasMore', data.meta.more);
-            }).finally(() => {
+            } finally {
                 this.set('loadingMore', false);
-            });
+            }
         },
 
         unfavoriteUser: function(user) {

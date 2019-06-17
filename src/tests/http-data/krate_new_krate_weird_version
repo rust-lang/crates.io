@@ -1,21 +1,73 @@
-===REQUEST 347
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_weird/foo_weird-0.0.0-pre.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Host: alexcrichton-test.s3.amazonaws.com
-Authorization: AWS AKIAJF3GEK7N44BACDZA:CQGw3h47wdyfk7AHxTtqTZkmZlM=
-Content-Length: 0
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-Content-Type: application/x-tar
-
-
-===RESPONSE 258
-HTTP/1.1 200
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-x-amz-id-2: cAKS+nR9/SdM6DWXyDb+AuYk/z7cDoEi9CZeZDVBjBGesgmFXeiNkDP6sH+pkPy36iayt49YUus=
-content-length: 0
-server: AmazonS3
-date: Sun, 28 Jun 2015 21:07:51 GMT
-x-amz-request-id: BBC3C26FD8586CB9
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_weird/foo_weird-0.0.0-pre.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:eW1SP7V3WdqHXWZLcbN1BI2Zo0g="
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept",
+          "*/*"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "x-amz-request-id",
+          "11703800587FA328"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-id-2",
+          "fIN5XfJH1PExUU+fEoYZiLAlq/GVmVohMf24Gi5CEHocX1oLc56Mhq9ILtXEsC5xgXEtboWFrEI="
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

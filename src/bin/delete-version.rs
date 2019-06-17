@@ -5,31 +5,30 @@
 // Usage:
 //      cargo run --bin delete-version crate-name version-number
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
-extern crate cargo_registry;
-extern crate postgres;
-extern crate time;
-extern crate semver;
+use cargo_registry::{
+    db,
+    models::{Crate, Version},
+    schema::versions,
+};
+use std::{
+    env,
+    io::{self, prelude::*},
+};
 
-use std::env;
-use std::io;
-use std::io::prelude::*;
+use diesel::prelude::*;
 
-use cargo_registry::{Crate, Version};
-
-#[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        delete(&tx);
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = db::connect_now().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|| {
+        delete(&conn);
+        Ok(())
+    })
+    .unwrap()
 }
 
-fn delete(tx: &postgres::transaction::Transaction) {
+fn delete(conn: &PgConnection) {
     let name = match env::args().nth(1) {
         None => {
             println!("needs a crate-name argument");
@@ -44,47 +43,33 @@ fn delete(tx: &postgres::transaction::Transaction) {
         }
         Some(s) => s,
     };
-    let version = semver::Version::parse(&version).unwrap();
 
-    let krate = Crate::find_by_name(tx, &name).unwrap();
-    let v = Version::find_by_num(tx, krate.id, &version)
-        .unwrap()
+    let krate = Crate::by_name(&name).first::<Crate>(conn).unwrap();
+    let v = Version::belonging_to(&krate)
+        .filter(versions::num.eq(&version))
+        .first::<Version>(conn)
         .unwrap();
     print!(
         "Are you sure you want to delete {}#{} ({}) [y/N]: ",
-        name,
-        version,
-        v.id
+        name, version, v.id
     );
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         return;
     }
 
     println!("deleting version {} ({})", v.num, v.id);
-    let n = tx.execute(
-        "DELETE FROM version_downloads WHERE version_id = $1",
-        &[&v.id],
-    ).unwrap();
-    println!("  {} download records deleted", n);
-    let n = tx.execute(
-        "DELETE FROM version_authors WHERE version_id = $1",
-        &[&v.id],
-    ).unwrap();
-    println!("  {} author records deleted", n);
-    let n = tx.execute("DELETE FROM dependencies WHERE version_id = $1", &[&v.id])
-        .unwrap();
-    println!("  {} dependencies deleted", n);
-    tx.execute("DELETE FROM versions WHERE id = $1", &[&v.id])
+    diesel::delete(versions::table.find(&v.id))
+        .execute(conn)
         .unwrap();
 
     print!("commit? [y/N]: ");
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
+    if !line.starts_with('y') {
         panic!("aborting transaction");
     }
 }

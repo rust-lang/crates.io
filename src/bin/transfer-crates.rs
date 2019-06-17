@@ -3,33 +3,31 @@
 // Usage:
 //      cargo run --bin transfer-crates from-user to-user
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
-extern crate cargo_registry;
-extern crate postgres;
-extern crate time;
-extern crate semver;
+use cargo_registry::{
+    db,
+    models::{Crate, OwnerKind, User},
+    schema::{crate_owners, crates, users},
+};
+use std::{
+    env,
+    io::{self, prelude::*},
+    process::exit,
+};
 
-use std::env;
-use std::io;
-use std::io::prelude::*;
+use diesel::prelude::*;
 
-use cargo_registry::{Crate, User};
-use cargo_registry::owner::OwnerKind;
-use cargo_registry::Model;
-
-#[allow(dead_code)]
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        transfer(&tx);
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = db::connect_now().unwrap();
+    conn.transaction::<_, diesel::result::Error, _>(|| {
+        transfer(&conn);
+        Ok(())
+    })
+    .unwrap()
 }
 
-fn transfer(tx: &postgres::transaction::Transaction) {
+fn transfer(conn: &PgConnection) {
     let from = match env::args().nth(1) {
         None => {
             println!("needs a from-user argument");
@@ -45,15 +43,21 @@ fn transfer(tx: &postgres::transaction::Transaction) {
         Some(s) => s,
     };
 
-    let from = User::find_by_login(tx, &from).unwrap();
-    let to = User::find_by_login(tx, &to).unwrap();
+    let from = users::table
+        .filter(users::gh_login.eq(from))
+        .first::<User>(conn)
+        .unwrap();
+    let to = users::table
+        .filter(users::gh_login.eq(to))
+        .first::<User>(conn)
+        .unwrap();
 
     if from.gh_id != to.gh_id {
         println!("====================================================");
         println!("WARNING");
-        println!("");
+        println!();
         println!("this may not be the same github user, different github IDs");
-        println!("");
+        println!();
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
@@ -62,32 +66,29 @@ fn transfer(tx: &postgres::transaction::Transaction) {
 
     println!(
         "Are you sure you want to transfer crates from {} to {}",
-        from.gh_login,
-        to.gh_login
+        from.gh_login, to.gh_login
     );
     get_confirm("continue");
 
-    let stmt = tx.prepare(
-        "SELECT * FROM crate_owners
-                                   WHERE owner_id = $1
-                                     AND owner_kind = $2",
-    ).unwrap();
-    let rows = stmt.query(&[&from.id, &(OwnerKind::User as i32)]).unwrap();
+    let crate_owners = crate_owners::table
+        .filter(crate_owners::owner_id.eq(from.id))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32));
+    let crates = Crate::all()
+        .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
+        .load::<Crate>(conn)
+        .unwrap();
 
-    for row in rows.iter() {
-        let krate = Crate::find(tx, row.get("crate_id")).unwrap();
-        println!("transferring {}", krate.name);
-        let owners = krate.owners_old(tx).unwrap();
+    for krate in crates {
+        let owners = krate.owners(conn).unwrap();
         if owners.len() != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
     }
 
-    tx.execute(
-        "UPDATE crate_owners SET owner_id = $1
-                             WHERE owner_id = $2",
-        &[&to.id, &from.id],
-    ).unwrap();
+    diesel::update(crate_owners)
+        .set(crate_owners::owner_id.eq(to.id))
+        .execute(conn)
+        .unwrap();
 
     get_confirm("commit?");
 }
@@ -97,7 +98,7 @@ fn get_confirm(msg: &str) {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).unwrap();
-    if !line.starts_with("y") {
-        std::process::exit(0);
+    if !line.starts_with('y') {
+        exit(0);
     }
 }

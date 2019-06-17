@@ -8,10 +8,12 @@ export default Route.extend({
     },
 
     model(params) {
-        if (params.q !== null) {
-            params.q = params.q.trim();
-        }
+        // we need a model() implementation that changes, otherwise the setupController() hook
+        // is not called and we won't reload the results if a new query string is used
+        return params;
+    },
 
-        return this.store.query('crate', params);
+    setupController(controller, params) {
+        controller.dataTask.perform(params);
     },
 });

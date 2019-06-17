@@ -1,8 +1,11 @@
+import { alias, readOnly, gt } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
-import { computed } from '@ember/object';
+import { computed, observer } from '@ember/object';
 import { later } from '@ember/runloop';
+import $ from 'jquery';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -10,47 +13,50 @@ const NUM_VERSIONS = 5;
 const PromiseArray = ArrayProxy.extend(PromiseProxyMixin);
 
 export default Controller.extend({
+    session: service(),
+
     isDownloading: false,
 
     downloadsContext: computed('requestedVersion', 'model', 'crate', function() {
-        return this.get('requestedVersion') ? this.get('model') : this.get('crate');
+        return this.requestedVersion ? this.model : this.crate;
     }),
-    downloads: computed.alias('downloadsContext.version_downloads'),
-    extraDownloads: computed.alias('downloads.content.meta.extra_downloads'),
+    downloads: alias('downloadsContext.version_downloads'),
+    extraDownloads: alias('downloads.content.meta.extra_downloads'),
 
     fetchingFollowing: true,
     following: false,
-    currentVersion: computed.alias('model'),
+    currentVersion: alias('model'),
     requestedVersion: null,
-    keywords: computed.alias('crate.keywords'),
-    categories: computed.alias('crate.categories'),
-    badges: computed.alias('crate.badges'),
-
-    sortedVersions: computed.readOnly('crate.versions'),
-
-    smallSortedVersions: computed('sortedVersions', function() {
-        return this.get('sortedVersions').slice(0, NUM_VERSIONS);
+    keywords: alias('crate.keywords'),
+    categories: alias('crate.categories'),
+    badges: alias('crate.badges'),
+    isOwner: computed('crate.owner_user', 'session.currentUser.id', function() {
+        return this.get('crate.owner_user').findBy('id', this.get('session.currentUser.id'));
     }),
 
-    hasMoreVersions: computed.gt('sortedVersions.length', NUM_VERSIONS),
+    sortedVersions: readOnly('crate.versions'),
 
-    anyLinks: computed.or('crate.{homepage,wiki,mailing_list,documentation,repository,reverse_dependencies}'),
+    smallSortedVersions: computed('sortedVersions', function() {
+        return this.sortedVersions.slice(0, NUM_VERSIONS);
+    }),
+
+    hasMoreVersions: gt('sortedVersions.length', NUM_VERSIONS),
 
     displayedAuthors: computed('currentVersion.authors.[]', function() {
         return PromiseArray.create({
-            promise: this.get('currentVersion.authors').then((authors) => {
+            promise: this.get('currentVersion.authors').then(authors => {
                 let ret = authors.slice();
                 let others = authors.get('meta');
                 for (let i = 0; i < others.names.length; i++) {
                     ret.push({ name: others.names[i] });
                 }
                 return ret;
-            })
+            }),
         });
     }),
 
-    anyKeywords: computed.gt('keywords.length', 0),
-    anyCategories: computed.gt('categories.length', 0),
+    anyKeywords: gt('keywords.length', 0),
+    anyCategories: gt('categories.length', 0),
 
     currentDependencies: computed('currentVersion.dependencies', function() {
         let deps = this.get('currentVersion.dependencies');
@@ -60,11 +66,9 @@ export default Controller.extend({
         }
 
         return PromiseArray.create({
-            promise: deps.then((deps) => {
-                return deps
-                    .filter((dep) => dep.get('kind') !== 'dev')
-                    .uniqBy('crate_id');
-            })
+            promise: deps.then(deps => {
+                return deps.filter(dep => dep.get('kind') !== 'dev').uniqBy('crate_id');
+            }),
         });
     }),
 
@@ -74,19 +78,19 @@ export default Controller.extend({
             return [];
         }
         return PromiseArray.create({
-            promise: deps.then((deps) => {
+            promise: deps.then(deps => {
                 return deps.filterBy('kind', 'dev');
             }),
         });
     }),
 
     downloadData: computed('downloads', 'extraDownloads', 'requestedVersion', function() {
-        let downloads = this.get('downloads');
+        let downloads = this.downloads;
         if (!downloads) {
             return;
         }
 
-        let extra = this.get('extraDownloads') || [];
+        let extra = this.extraDownloads || [];
 
         let dates = {};
         let versions = [];
@@ -95,38 +99,42 @@ export default Controller.extend({
             dates[now.format('MMM D')] = { date: now, cnt: {} };
         }
 
-        downloads.forEach((d) => {
+        downloads.forEach(d => {
             let version_id = d.get('version.id');
-            let key = moment(d.get('date')).utc().format('MMM D');
+            let key = moment(d.get('date'))
+                .utc()
+                .format('MMM D');
             if (dates[key]) {
                 let prev = dates[key].cnt[version_id] || 0;
                 dates[key].cnt[version_id] = prev + d.get('downloads');
             }
         });
 
-        extra.forEach((d) => {
-            let key = moment(d.date).utc().format('MMM D');
+        extra.forEach(d => {
+            let key = moment(d.date)
+                .utc()
+                .format('MMM D');
             if (dates[key]) {
                 let prev = dates[key].cnt[null] || 0;
                 dates[key].cnt[null] = prev + d.downloads;
             }
         });
-        if (this.get('requestedVersion')) {
-            versions.push(this.get('model').getProperties('id', 'num'));
+        if (this.requestedVersion) {
+            versions.push(this.model.getProperties('id', 'num'));
         } else {
-            this.get('smallSortedVersions').forEach(version => {
+            this.smallSortedVersions.forEach(version => {
                 versions.push(version.getProperties('id', 'num'));
             });
         }
         if (extra.length > 0) {
             versions.push({
                 id: null,
-                num: 'Other'
+                num: 'Other',
             });
         }
 
         let headers = ['Date'];
-        versions.sort((b) => b.num).reverse();
+        versions.sort(b => b.num).reverse();
         for (let i = 0; i < versions.length; i++) {
             headers.push(versions[i].num);
         }
@@ -145,11 +153,15 @@ export default Controller.extend({
     toggleClipboardProps(isSuccess) {
         this.setProperties({
             showSuccess: isSuccess,
-            showNotification: true
+            showNotification: true,
         });
-        later(this, () => {
-            this.set('showNotification', false);
-        }, 2000);
+        later(
+            this,
+            () => {
+                this.set('showNotification', false);
+            },
+            2000,
+        );
     },
 
     actions: {
@@ -165,12 +177,14 @@ export default Controller.extend({
         toggleFollow() {
             this.set('fetchingFollowing', true);
 
-            let crate = this.get('crate');
-            let op = this.toggleProperty('following') ?
-                crate.follow() : crate.unfollow();
+            let crate = this.crate;
+            let op = this.toggleProperty('following') ? crate.follow() : crate.unfollow();
 
             return op.finally(() => this.set('fetchingFollowing', false));
         },
     },
 
+    report: observer('crate.readme', function() {
+        setTimeout(() => $(window).trigger('hashchange'));
+    }),
 });

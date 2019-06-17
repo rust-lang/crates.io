@@ -1,12 +1,1 @@
-fn_args_layout = "Block"
-array_layout = "Block"
-control_style = "Rfc"
-where_style = "Rfc"
-generics_indent = "Block"
-fn_call_style = "Block"
-combine_control_expr = true
-fn_args_paren_newline = false
 max_width = 100
-error_on_line_overflow = false
-write_mode = "Overwrite"
-

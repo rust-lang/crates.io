@@ -13,6 +13,6 @@ export default Component.extend({
         return this.get('badge.attributes.service') || 'github';
     }),
     text: computed('branch', function() {
-        return `Coveralls coverage status for the ${ this.get('branch') } branch`;
-    })
+        return `Coveralls coverage status for the ${this.branch} branch`;
+    }),
 });

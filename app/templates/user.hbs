@@ -1,12 +1,12 @@
 <div id='crates-heading'>
     <div class="wide">
         <div class='info'>
-            {{user-avatar user=model.user size='medium'}}
+            {{user-avatar user=model.user size='medium' data-test-avatar=true}}
             <h1>
                 {{ model.user.login }}
             </h1>
             {{#user-link user=model.user}}
-              <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark-32px.png"/>
+            <img alt="GitHub profile" title="GitHub profile" src="/assets/GitHub-Mark.svg">
             {{/user-link}}
         </div>
         <div class='right'>
@@ -63,6 +63,11 @@
                         <li>
                             {{#link-to (query-params sort="recent-downloads")}}
                                 Recent Downloads
+                            {{/link-to}}
+                        </li>
+                        <li>
+                            {{#link-to (query-params sort="recent-updates")}}
+                                Recent Updates
                             {{/link-to}}
                         </li>
                     {{/rl-dropdown}}

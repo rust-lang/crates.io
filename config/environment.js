@@ -1,7 +1,5 @@
 'use strict';
 
-/* eslint-env node */
-
 module.exports = function(environment) {
     let ENV = {
         modulePrefix: 'cargo',
@@ -16,21 +14,14 @@ module.exports = function(environment) {
             },
             EXTEND_PROTOTYPES: {
                 // Prevent Ember Data from overriding Date.parse.
-                Date: false
-            }
+                Date: false,
+            },
         },
 
         APP: {
             // Here you can pass flags/options to your application instance
             // when it is created
         },
-        metricsAdapters: [{
-            name: 'GoogleAnalytics',
-            environments: ['production'],
-            config: {
-                id: 'UA-58390457-3'
-            }
-        }]
     };
 
     if (environment === 'development') {
@@ -39,6 +30,11 @@ module.exports = function(environment) {
         // ENV.APP.LOG_TRANSITIONS = true;
         // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
         // ENV.APP.LOG_VIEW_LOOKUPS = true;
+        ENV['ember-a11y-testing'] = {
+            componentOptions: {
+                turnAuditOff: true,
+            },
+        };
     }
 
     if (environment === 'test') {
@@ -50,10 +46,17 @@ module.exports = function(environment) {
         ENV.APP.LOG_VIEW_LOOKUPS = false;
 
         ENV.APP.rootElement = '#ember-testing';
+        ENV.APP.autoboot = false;
     }
 
     if (environment === 'production') {
-        // here be dragons
+        // here you can enable a production-specific feature
+
+        // Heroku Git Hash support
+        if (process.env.SOURCE_VERSION) {
+            let hash = process.env.SOURCE_VERSION.substr(0, 7);
+            ENV['ember-cli-app-version'] = { version: hash };
+        }
     }
 
     return ENV;

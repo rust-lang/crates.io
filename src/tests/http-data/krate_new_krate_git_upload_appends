@@ -1,21 +1,144 @@
-===REQUEST 331
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/FPP/FPP-1.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAJF3GEK7N44BACDZA:mLugvy/BSBS8JgZ6pK7tURu3OTU=
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Length: 0
-Content-Type: application/x-tar
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-
-
-===RESPONSE 258
-HTTP/1.1 200
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-date: Sun, 28 Jun 2015 21:07:51 GMT
-content-length: 0
-x-amz-request-id: F4E65AAB70BDF795
-x-amz-id-2: 6AzxBDEO9Di4eAFf+gLfoa4vrJGXpjlbxgSqNwNu9IiGWjyupZvnS8SVfgkVeL0kbzG+Aww8rJ4=
-server: AmazonS3
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/FPP/FPP-0.0.1.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:UgUqqHJ9cQAZDdbcsxpnC0BI2eE="
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "949E6183C81895B0"
+        ],
+        [
+          "x-amz-id-2",
+          "JWMemhtsWvAdoKxFS4Cp2RnI8fOqriCnXdHGFakRPw6k4JALJsToegxrkl9qzNoF9rhPAGKti4w="
+        ]
+      ],
+      "body": ""
+    }
+  },
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/FPP/FPP-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:UgUqqHJ9cQAZDdbcsxpnC0BI2eE="
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "x-amz-request-id",
+          "949E6183C81895B0"
+        ],
+        [
+          "x-amz-id-2",
+          "JWMemhtsWvAdoKxFS4Cp2RnI8fOqriCnXdHGFakRPw6k4JALJsToegxrkl9qzNoF9rhPAGKti4w="
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

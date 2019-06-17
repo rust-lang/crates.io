@@ -1,33 +1,48 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { currentURL, visit } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | front page');
+module('Acceptance | front page', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('visiting /', async function(assert) {
-    server.loadFixtures();
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/');
+        this.server.loadFixtures();
 
-    assert.equal(currentURL(), '/');
-    assert.equal(document.title, 'Cargo: packages for Rust');
+        await visit('/');
+        await a11yAudit(axeConfig);
+    });
 
-    findWithAssert('a[href="/install"]');
-    findWithAssert('a[href="/crates"]');
-    findWithAssert('a[href="/login"]');
+    test('visiting /', async function(assert) {
+        this.server.loadFixtures();
 
-    hasText(assert, '.downloads .num', '122,669');
-    hasText(assert, '.crates .num', '19');
+        await visit('/');
 
-    const $newCrate = findWithAssert('#new-crates ul > li:first a');
-    hasText(assert, $newCrate, 'Inflector (0.1.6)');
-    assert.equal($newCrate.attr('href').trim(), '/crates/Inflector');
+        assert.equal(currentURL(), '/');
+        assert.equal(document.title, 'Cargo: packages for Rust');
 
-    const $mostDownloaded = findWithAssert('#most-downloaded ul > li:first a');
-    hasText(assert, $mostDownloaded, 'serde (0.6.1)');
-    assert.equal($mostDownloaded.attr('href').trim(), '/crates/serde');
+        assert.dom('[data-test-install-cargo-link]').exists();
+        assert.dom('[data-test-all-crates-link]').exists();
+        assert.dom('[data-test-login-link]').exists();
 
-    const $justUpdated = findWithAssert('#just-updated ul > li:first a');
-    hasText(assert, $justUpdated, 'nanomsg (0.7.0-alpha)');
-    assert.equal($justUpdated.attr('href').trim(), '/crates/nanomsg');
+        assert.dom('[data-test-total-downloads]').hasText('122,669');
+        assert.dom('[data-test-total-crates]').hasText('19');
+
+        assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (0.1.6)');
+        assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector');
+
+        assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasText('serde (0.6.1)');
+        assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasAttribute('href', '/crates/serde');
+
+        assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.7.0-alpha)');
+        assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasAttribute('href', '/crates/nanomsg');
+
+        percySnapshot(assert);
+    });
 });

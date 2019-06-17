@@ -1,18 +1,18 @@
 {{title crate.name}}
 
-<div id='crates-heading'>
+<div id='crates-heading' data-test-heading>
     <div class="wide">
         <div class='info'>
-            {{svg-jar "crate"}}
-            <h1>{{ crate.name }}</h1>
-            <h2>{{ currentVersion.num }}</h2>
+            {{svg-jar "crate" class='crate-icon'}}
+            <h1 data-test-crate-name>{{ crate.name }}</h1>
+            <h2 data-test-crate-version>{{ currentVersion.num }}</h2>
         </div>
 
         <div class='right'>
             {{#if session.currentUser}}
                 <button class='tan-button' {{action 'toggleFollow' this}}>
                     {{#if fetchingFollowing}}
-                        <img src="/assets/ajax-loader.gif"/>
+                        <img src="/assets/ajax-loader.gif">
                     {{else}}
                         {{#if following}}
                             Unfollow
@@ -28,20 +28,28 @@
     <div class="quick-links">
     <ul>
         {{#if crate.homepage}}
-          <li><a href="{{crate.homepage}}">Homepage</a></li>
+            <li><a href="{{crate.homepage}}">Homepage</a></li>
+        {{/if}}
+        {{#if crate.wiki}}
+            <li><a href="{{crate.wiki}}">Wiki</a></li>
+        {{/if}}
+        {{#if crate.mailing_list}}
+            <li><a href="{{crate.mailing_list}}">Mailing list</a></li>
         {{/if}}
         {{#if crate.documentation}}
-          <li><a href="{{crate.documentation}}">Documentation</a></li>
+            <li><a href="{{crate.documentation}}">Documentation</a></li>
         {{/if}}
         {{#if crate.repository}}
-          <li><a href="{{crate.repository}}">Repository</a></li>
+            <li><a href="{{crate.repository}}">Repository</a></li>
         {{/if}}
+        <li>
+          {{#link-to 'crate.reverse-dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
+            Dependent crates
+          {{/link-to}}
+        </li>
     </ul>
     </div>
 </div>
-
-{{! This is used to set the url of to actually download a file }}
-<iframe id='download-frame' style='display:none'></iframe>
 
 {{#if currentVersion.yanked}}
     <div class='crate-info'>
@@ -57,18 +65,12 @@
 {{else}}
 <div class='crate-info'>
     <div class='docs'>
-        {{#if crate.description}}
-            <div class='about'>
-                <h3>About This Package</h3>
-                <p>{{ crate.description }}</p>
-            </div>
-        {{/if}}
         <div class='install'>
             <div class='action'>Cargo.toml</div>
             <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
 
             {{#if (is-clipboard-supported)}}
-              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError')}}
+              {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError') title="Copy to clipboard"}}
                     {{svg-jar "copy" alt="Copy to clipboard"}}
                 {{/copy-button}}
             {{/if}}
@@ -85,25 +87,37 @@
                 {{/if}}
             </span>
         </div>
+        {{#if crate.readme}}
+            <section class="crate-readme" aria-label="Readme">
+                {{crate-readme rendered=crate.readme}}
+            </section>
+        {{else}}
+            {{#if crate.description}}
+                <div class='about'>
+                    <h3>About This Package</h3>
+                    <p>{{ crate.description }}</p>
+                </div>
+            {{/if}}
+        {{/if}}
     </div>
-    <div class='authorship'>
+    <section class='authorship' aria-label="Crate metadata">
         <div class='top'>
             <div>
                 <div class='last-update'><span class='small'>Last Updated</span></div>
-                <div class='date'>{{moment-from-now crate.updated_at}}</div>
-                <p>
-                    <img
-                        src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                        alt="{{ crate.name }}’s current version badge"
-                        title="{{ crate.name }}’s current version badge" />
-                </p>
-
+                <div class='{{if currentVersion.crate_size 'date-with-small-margin-bot' 'date'}}'>{{moment-from-now crate.updated_at}}</div>
                 {{#each crate.annotated_badges as |badge|}}
                     <p>
                         {{component badge.component_name badge=badge}}
                     </p>
                 {{/each}}
             </div>
+
+            {{#if currentVersion.crate_size}}
+                <div>
+                    <div class='crate-size'><span class='small'>Crate Size</span></div>
+                    <div class='size'>{{format-crate-size currentVersion.crate_size}}</div>
+                </div>
+            {{/if}}
 
             <div class="authors">
                 <h3>Authors</h3>
@@ -119,7 +133,7 @@
             {{#if currentVersion.license}}
                 <div>
                     <h3>License</h3>
-                    <p class="license">{{ currentVersion.license }}</p>
+                    <p class="license" data-test-license>{{ currentVersion.license }}</p>
                 </div>
             {{/if}}
 
@@ -149,12 +163,21 @@
                 {{/if}}
             {{/unless}}
 
-            <div>
+            <div id='crate-owners'>
                 <h3>Owners</h3>
-                <ul class='owners'>
+
+                {{#if isOwner}}
+                <p>
+                    {{#link-to 'crate.owners' crate}}
+                        Manage owners
+                    {{/link-to}}
+                </p>
+                {{/if}}
+
+                <ul class='owners' data-test-owners>
                    {{#each crate.owner_team as |team|}}
                         <li>
-                            {{#link-to team.kind team.login}}
+                            {{#link-to team.kind team.login data-test-team-link=team.login}}
                                 {{user-avatar user=team size='medium-small'}}
                             {{/link-to}}
                         </li>
@@ -162,95 +185,61 @@
 
                     {{#each crate.owner_user as |user|}}
                         <li>
-                            {{#link-to user.kind user.login}}
+                            {{#link-to user.kind user.login data-test-user-link=user.login}}
                                 {{user-avatar user=user size='medium-small'}}
                             {{/link-to}}
                         </li>
                     {{/each}}
                 </ul>
             </div>
+
+            <div class='section' id='crate-versions' data-test-versions>
+                <h3>Versions</h3>
+                <ul>
+                    {{#each smallSortedVersions as |version|}}
+                        <li>
+                            {{#link-to 'crate.version' version.num data-test-version-link=version.num}}
+                                {{ version.num }}
+                            {{/link-to}}
+                            <span class='date'>{{moment-format version.created_at 'll'}}</span>
+                            {{#if version.yanked}}
+                                <span class='yanked'>yanked</span>
+                            {{/if}}
+                        </li>
+                    {{/each}}
+                </ul>
+                <span class='small'>
+                    {{#if hasMoreVersions}}
+                        {{#link-to 'crate.versions' crate data-test-all-versions-link=true}}
+                            show all {{ crate.versions.length }} versions
+                        {{/link-to}}
+                    {{/if}}
+                </span>
+            </div>
+
+            <div class='section' id='crate-dependencies'>
+                <h3>Dependencies</h3>
+                    <ul>
+                        {{#each currentDependencies as |dep|}}
+                            {{link-to-dep tagName="li" dep=dep}}
+                        {{else}}
+                            <li>None</li>
+                        {{/each}}
+                    </ul>
+            </div>
+
+            {{#if currentDevDependencies}}
+                <div class='section' id='crate-dev-dependencies'>
+                    <h3>Dev-Dependencies</h3>
+                    <ul>
+                        {{#each currentDevDependencies as |dep|}}
+                            {{link-to-dep tagName="li" dep=dep}}
+                        {{/each}}
+                    </ul>
+                </div>
+            {{/if}}
         </div>
-    </div>
-</div>
-
-<div id='crate-links'>
-    {{#if anyLinks}}
-        <div class='section'>
-          <h3>Links</h3>
-          <ul>
-            {{#if crate.homepage}}
-                <li><a href="{{crate.homepage}}">Homepage</a></li>
-            {{/if}}
-            {{#if crate.wiki}}
-                <li><a href="{{crate.wiki}}">Wiki</a></li>
-            {{/if}}
-            {{#if crate.mailing_list}}
-                <li><a href="{{crate.mailing_list}}">Mailing list</a></li>
-            {{/if}}
-            {{#if crate.documentation}}
-                <li><a href="{{crate.documentation}}">Documentation</a></li>
-            {{/if}}
-            {{#if crate.repository}}
-                <li><a href="{{crate.repository}}">Repository</a></li>
-            {{/if}}
-            {{#if crate.reverse_dependencies}}
-                <li>
-                  {{#link-to 'crate.reverse_dependencies' (query-params dependency=crate.crate_id)}}
-                    Dependent crates
-                  {{/link-to}}
-                </li>
-            {{else}}
-                <li>No dependent crates</li>
-            {{/if}}
-          </ul>
-        </div>
-    {{/if}}
-
-  <div class='section' id='crate-dependencies'>
-    <h3>Dependencies</h3>
-    <ul>
-      {{#each currentDependencies as |dep|}}
-        {{link-to-dep dep=dep}}
-      {{else}}
-          <li>None</li>
-      {{/each}}
-    </ul>
-  </div>
-
-  {{#if currentDevDependencies}}
-    <div class='section' id='crate-dev-dependencies'>
-      <h3>Dev-Dependencies</h3>
-      <ul>
-        {{#each currentDevDependencies as |dep|}}
-            {{link-to-dep dep=dep}}
-        {{/each}}
-      </ul>
-    </div>
-  {{/if}}
-
-  <div class='section' id='crate-versions'>
-    <h3>Versions</h3>
-    <ul>
-      {{#each smallSortedVersions as |version|}}
-      <li>
-        {{#link-to 'crate.version' version.num}}
-            {{ version.num }}
-        {{/link-to}}
-        <span class='date'>{{moment-format version.created_at 'll'}}</span>
-        {{#if version.yanked}}
-            <span class='yanked'>yanked</span>
-        {{/if}}
-      </li>
-      {{/each}}
-    </ul>
-    <span class='small'>
-      {{#if hasMoreVersions}}
-      {{#link-to 'crate.versions' crate}}
-          show all {{ crate.versions.length }} versions
-      {{/link-to}}
-      {{/if}}
-    </span>
-  </div>
+    </section>
 </div>
 
 <div id='crate-downloads'>
@@ -259,14 +248,14 @@
         <div class='stat'>
             <span class='num'>
                 {{svg-jar "download"}}
-                {{ format-num downloadsContext.downloads }}
+                <span class="num__align">{{ format-num downloadsContext.downloads }}</span>
             </span>
             <span class='desc small'>Downloads all time</span>
         </div>
         <div class='stat'>
             <span class="{{if crate.versions.isPending 'loading'}} num">
                 {{svg-jar "crate"}}
-                {{ crate.versions.length }}
+            <span class="num__align">{{ crate.versions.length }}</span>
             </span>
             <span class='desc small'>Versions published</span>
         </div>
@@ -305,4 +294,3 @@
     </div>
 </div>
 {{/if}}
-

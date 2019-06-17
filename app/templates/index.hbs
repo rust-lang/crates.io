@@ -1,13 +1,13 @@
 <div id='title-header'>
-    <h1>The Rust community&rsquo;s crate host</h1>
+    <h1>The Rust community&rsquo;s crate registry</h1>
 
     <div class='links'>
-        {{#link-to "install" class='yellow-button'}}
+        {{#link-to "install" class='yellow-button' data-test-install-cargo-link=true}}
             {{svg-jar "button-download"}}
             Install Cargo
         {{/link-to}}
 
-        <a href='http://doc.crates.io/guide.html' class='yellow-button'>
+        <a href='https://doc.rust-lang.org/cargo/guide/' class='yellow-button'>
             {{svg-jar "flag"}}
             Getting Started
         </a>
@@ -24,36 +24,40 @@
     <div id='stats'>
         <div class='downloads'>
             {{svg-jar "download"}}
-            <span class='num'>{{format-num model.num_downloads}}</span>
+            <span class='num' data-test-total-downloads>{{if hasData (format-num model.num_downloads) "---,---,---"}}</span>
             <span class='desc small'>Downloads</span>
         </div>
         <div class='crates'>
             {{svg-jar "crate"}}
-            <span class='num'>{{format-num model.num_crates}}</span>
+            <span class='num' data-test-total-crates>{{if hasData (format-num model.num_crates) "---,---"}}</span>
             <span class='desc small'>Crates in stock</span>
         </div>
     </div>
 </div>
 
 <div id='home-crates' class='crate-lists'>
-    <div id='new-crates'>
+    <section id='new-crates' data-test-new-crates aria-busy="{{dataTask.isRunning}}">
         <h2>New Crates</h2>
         {{crate-list crates=model.new_crates}}
-    </div>
-    <div id='most-downloaded'>
+    </section>
+    <section id='most-downloaded' data-test-most-downloaded aria-busy="{{dataTask.isRunning}}">
         <h2>Most Downloaded</h2>
         {{crate-list crates=model.most_downloaded}}
-    </div>
-    <div id='just-updated'>
+    </section>
+    <section id='just-updated' data-test-just-updated aria-busy="{{dataTask.isRunning}}">
         <h2>Just Updated</h2>
         {{crate-list crates=model.just_updated}}
-    </div>
-    <div id='keywords'>
+    </section>
+    <section id='most-recently-downloaded' data-test-most-recently-downloaded aria-busy="{{dataTask.isRunning}}">
+        <h2>Most Recent Downloads</h2>
+        {{crate-list crates=model.most_recently_downloaded}}
+    </section>
+    <section id='keywords' data-test-keywords aria-busy="{{dataTask.isRunning}}">
         <h2>Popular Keywords {{#link-to 'keywords'}}(see all){{/link-to}}</h2>
         {{keyword-list keywords=model.popular_keywords}}
-    </div>
-    <div id='categories'>
+    </section>
+    <section id='categories' data-test-categories aria-busy="{{dataTask.isRunning}}">
         <h2>Popular Categories {{#link-to 'categories'}}(see all){{/link-to}}</h2>
         {{category-list categories=model.popular_categories}}
-    </div>
+    </section>
 </div>

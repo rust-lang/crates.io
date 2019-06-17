@@ -1,0 +1,53 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:9.6
+    environment:
+      POSTGRES_DB: cargo_registry
+      POSTRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres/cargo_registry
+      SESSION_KEY: badkeyabcdefghijklmnopqrstuvwxyzabcdef
+      GIT_REPO_URL: file://./tmp/index-bare
+      GIT_REPO_CHECKOUT: ./tmp/index-co
+      GH_CLIENT_ID: ""
+      GH_CLIENT_SECRET: ""
+    links:
+      - postgres
+    ports:
+      - 8888:8888
+    volumes:
+      # Mount the src/ directory so we don't have to rebuild the Docker image
+      # when we want to change some code
+      - ./src:/app/src:ro
+
+      - index:/app/tmp
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    entrypoint: npm run start -- --proxy http://backend:8888
+    links:
+      - backend
+    ports:
+      - 4200:4200
+    volumes:
+      # Mount the app/ directory so live reload works
+      - ./app:/app/app:ro
+
+volumes:
+  postgres-data:
+  cargo-cache:
+  target-cache:
+  index:

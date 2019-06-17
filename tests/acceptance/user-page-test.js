@@ -1,40 +1,59 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { visit } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | user page');
+module('Acceptance | user page', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('has user display', async function(assert) {
-    server.loadFixtures();
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/users/thehydroimpulse');
+        this.server.loadFixtures();
 
-    hasText(assert, '#crates-heading h1', 'thehydroimpulse');
-});
+        await visit('/users/thehydroimpulse');
+        percySnapshot(assert);
 
-test('has link to github in user header', async function(assert) {
-    server.loadFixtures();
+        await a11yAudit(axeConfig);
+    });
 
-    await visit('/users/thehydroimpulse');
+    test('has user display', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubLink = findWithAssert('#crates-heading a');
-    assert.equal($githubLink.attr('href').trim(), 'https://github.com/thehydroimpulse');
-});
+        await visit('/users/thehydroimpulse');
 
-test('github link has image in user header', async function(assert) {
-    server.loadFixtures();
+        assert.dom('[data-test-heading] [data-test-username]').hasText('thehydroimpulse');
+    });
 
-    await visit('/users/thehydroimpulse');
+    test('has link to github in user header', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubImg = findWithAssert('#crates-heading a img');
-    assert.equal($githubImg.attr('src').trim(), '/assets/GitHub-Mark-32px.png');
-});
+        await visit('/users/thehydroimpulse');
 
-test('user details has github profile icon', async function(assert) {
-    server.loadFixtures();
+        assert
+            .dom('[data-test-heading] [data-test-user-link]')
+            .hasAttribute('href', 'https://github.com/thehydroimpulse');
+    });
 
-    await visit('/users/thehydroimpulse');
+    test('github link has image in user header', async function(assert) {
+        this.server.loadFixtures();
 
-    const $githubProfileImg = findWithAssert('#crates-heading img');
-    assert.equal($githubProfileImg.attr('src').trim(), 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+        await visit('/users/thehydroimpulse');
+
+        assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
+    });
+
+    test('user details has github profile icon', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/users/thehydroimpulse');
+
+        assert
+            .dom('[data-test-heading] [data-test-avatar]')
+            .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+    });
 });

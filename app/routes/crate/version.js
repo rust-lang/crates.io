@@ -2,9 +2,11 @@ import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-export default Route.extend({
+import fetch from 'fetch';
+import ajax from 'ember-fetch/ajax';
 
-    ajax: service(),
+export default Route.extend({
+    session: service(),
 
     flashMessages: service(),
 
@@ -12,7 +14,7 @@ export default Route.extend({
         this.refresh();
     }),
 
-    model(params) {
+    async model(params) {
         const requestedVersion = params.version_num === 'all' ? '' : params.version_num;
         const crate = this.modelFor('crate');
         const controller = this.controllerFor(this.routeName);
@@ -41,16 +43,14 @@ export default Route.extend({
         };
 
         const fetchCrateDocumentation = () => {
-            if (!crate.get('documentation') ||
-                crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
+            if (!crate.get('documentation') || crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
                 let crateName = crate.get('name');
                 let crateVersion = params.version_num;
-                this.get('ajax').request(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`)
-                    .then((r) => {
-                        if (r.length > 0 && r[0].build_status === true) {
-                            crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
-                        }
-                    });
+                ajax(`https://docs.rs/crate/${crateName}/${crateVersion}/builds.json`, { mode: 'cors' }).then(r => {
+                    if (r.length > 0 && r[0].build_status === true) {
+                        crate.set('documentation', `https://docs.rs/${crateName}/${crateVersion}/`);
+                    }
+                });
             }
         };
 
@@ -58,20 +58,23 @@ export default Route.extend({
         // If `max_version` is `0.0.0` then all versions have been yanked
         if (!requestedVersion && maxVersion !== '0.0.0') {
             if (isUnstableVersion(maxVersion)) {
-                crate.get('versions').then(versions => {
-                    const latestStableVersion = versions.find(version => {
-                        if (!isUnstableVersion(version.get('num'))) {
-                            return version;
-                        }
-                    });
+                crate
+                    .get('versions')
+                    .then(versions => {
+                        const latestStableVersion = versions.find(version => {
+                            if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
+                                return version;
+                            }
+                        });
 
-                    if (latestStableVersion == null) {
-                        // If no stable version exists, fallback to `maxVersion`
-                        params.version_num = maxVersion;
-                    } else {
-                        params.version_num = latestStableVersion.get('num');
-                    }
-                }).then(fetchCrateDocumentation);
+                        if (latestStableVersion == null) {
+                            // If no stable version exists, fallback to `maxVersion`
+                            params.version_num = maxVersion;
+                        } else {
+                            params.version_num = latestStableVersion.get('num');
+                        }
+                    })
+                    .then(fetchCrateDocumentation);
             } else {
                 params.version_num = maxVersion;
                 fetchCrateDocumentation();
@@ -84,25 +87,37 @@ export default Route.extend({
         controller.set('requestedVersion', requestedVersion);
         controller.set('fetchingFollowing', true);
 
-        if (this.session.get('currentUser')) {
-            this.get('ajax').request(`/api/v1/crates/${crate.get('name')}/following`)
-                .then((d) => controller.set('following', d.following))
+        if (this.get('session.currentUser')) {
+            ajax(`/api/v1/crates/${crate.get('name')}/following`)
+                .then(d => controller.set('following', d.following))
                 .finally(() => controller.set('fetchingFollowing', false));
         }
 
         // Find version model
-        return crate.get('versions')
-            .then(versions => {
-                const version = versions.find(version => version.get('num') === params.version_num);
-                if (params.version_num && !version) {
-                    this.get('flashMessages').queue(
-                        `Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
-                }
+        let versions = await crate.get('versions');
 
-                return version ||
-                    versions.find(version => version.get('num') === maxVersion) ||
-                    versions.objectAt(0);
-            });
+        const version = versions.find(version => version.get('num') === params.version_num);
+        if (params.version_num && !version) {
+            this.flashMessages.queue(`Version '${params.version_num}' of crate '${crate.get('name')}' does not exist`);
+        }
+
+        const result = version || versions.find(version => version.get('num') === maxVersion) || versions.objectAt(0);
+
+        if (result.get('readme_path')) {
+            fetch(result.get('readme_path'))
+                .then(async r => {
+                    if (r.ok) {
+                        crate.set('readme', await r.text());
+                    } else {
+                        crate.set('readme', null);
+                    }
+                })
+                .catch(() => {
+                    crate.set('readme', null);
+                });
+        }
+
+        return result;
     },
 
     serialize(model) {

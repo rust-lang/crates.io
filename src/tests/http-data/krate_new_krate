@@ -1,21 +1,73 @@
-===REQUEST 339
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_new/foo_new-1.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=
-Content-Length: 0
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Type: application/x-tar
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-
-
-===RESPONSE 258
-HTTP/1.1 200
-x-amz-request-id: CB0E925D8E3AB3E8
-x-amz-id-2: SiaMwszM1p2TzXlLauvZ6kRKcUCg7HoyBW29vts42w9ArrLwkJWl8vuvPuGFkpM6XGH+YXN852g=
-date: Sun, 28 Jun 2015 21:07:51 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-content-length: 0
-server: AmazonS3
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_new/foo_new-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:uDc39eNdF6CcwB+q+JwKsoDLQc4="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "x-amz-request-id",
+          "26589A5E52F8395C"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-id-2",
+          "JdIvnNTw53aqXjBIqBLNuN4kxf/w1XWX+xuIiGBDYy7yzOSDuAMtBSrTW4ZWetcCIdqCUHuQ51A="
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

@@ -4,46 +4,39 @@
 // Usage:
 //      cargo run --bin populate version_id1 version_id2 ...
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
-extern crate cargo_registry;
-extern crate postgres;
-extern crate time;
-extern crate rand;
-
+use cargo_registry::{db, schema::version_downloads};
 use std::env;
-use time::Duration;
-use rand::{StdRng, Rng};
 
-#[allow(dead_code)]
+use diesel::prelude::*;
+use rand::{thread_rng, Rng};
+
 fn main() {
-    let conn = cargo_registry::db::connect_now_old();
-    {
-        let tx = conn.transaction().unwrap();
-        update(&tx).unwrap();
-        tx.set_commit();
-        tx.finish().unwrap();
-    }
+    let conn = db::connect_now().unwrap();
+    conn.transaction(|| update(&conn)).unwrap();
 }
 
-fn update(tx: &postgres::transaction::Transaction) -> postgres::Result<()> {
-    let ids = env::args().skip(1).filter_map(
-        |arg| arg.parse::<i32>().ok(),
-    );
+fn update(conn: &PgConnection) -> QueryResult<()> {
+    use diesel::dsl::*;
+
+    let ids = env::args()
+        .skip(1)
+        .filter_map(|arg| arg.parse::<i32>().ok());
     for id in ids {
-        let now = time::now_utc().to_timespec();
-        let mut rng = StdRng::new().unwrap();
-        let mut dls = rng.gen_range(5000i32, 10000);
+        let mut rng = thread_rng();
+        let mut dls = rng.gen_range(5_000i32, 10_000);
 
         for day in 0..90 {
-            let moment = now + Duration::days(-day);
             dls += rng.gen_range(-100, 100);
-            tx.execute(
-                "INSERT INTO version_downloads \
-                 (version_id, downloads, date) \
-                 VALUES ($1, $2, $3)",
-                &[&id, &dls, &moment],
-            )?;
+
+            diesel::insert_into(version_downloads::table)
+                .values((
+                    version_downloads::version_id.eq(id),
+                    version_downloads::downloads.eq(dls),
+                    version_downloads::date.eq(date(now - day.days())),
+                ))
+                .execute(conn)?;
         }
     }
     Ok(())

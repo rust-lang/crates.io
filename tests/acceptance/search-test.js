@@ -1,71 +1,94 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | search');
+module('Acceptance | search', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('searching for "rust"', async function(assert) {
-    server.loadFixtures();
+    test('/search?q=rust is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/');
-    await fillIn('input.search', 'rust');
+        this.server.loadFixtures();
 
-    findWithAssert('form.search').submit();
+        await visit('/');
+        percySnapshot(assert);
 
-    await wait();
+        await a11yAudit(axeConfig);
+    });
 
-    assert.equal(currentURL(), '/search?q=rust');
-    assert.equal(document.title, 'Search Results for \'rust\' - Cargo: packages for Rust');
+    test('searching for "rust"', async function(assert) {
+        this.server.loadFixtures();
 
-    hasText(assert, '#crates-heading', 'Search Results for \'rust\'');
-    hasText(assert, '#results', 'Displaying 1-8 of 8 total results Sort by Relevance Relevance All-Time Downloads Recent Downloads');
+        await visit('/');
+        await fillIn('[data-test-search-input]', 'rust');
+        await triggerEvent('[data-test-search-form]', 'submit');
 
-    hasText(assert, '#crates .row:first .desc .info', 'kinetic-rust');
-    findWithAssert('#crates .row:first .desc .info .vers img[alt="0.0.16"]');
+        assert.equal(currentURL(), '/search?q=rust');
+        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
 
-    hasText(assert, '#crates .row:first .desc .summary', 'A Kinetic protocol library written in Rust');
-    hasText(assert, '#crates .row:first .downloads', 'All-Time: 225');
-});
+        assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
+        assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+        assert
+            .dom('[data-test-search-sort]')
+            .hasText('Sort by Relevance Relevance All-Time Downloads Recent Downloads Recent Updates');
+        assert.dom('[data-test-crate-row="0"] [data-test-crate-link]').hasText('kinetic-rust');
+        assert.dom('[data-test-crate-row="0"] [data-test-version-badge]').hasAttribute('alt', '0.0.16');
 
-test('pressing S key to focus the search bar', async function(assert) {
-    server.loadFixtures();
+        assert
+            .dom('[data-test-crate-row="0"] [data-test-description]')
+            .hasText('A Kinetic protocol library written in Rust');
+        assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
+        assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
+    });
 
-    const KEYCODE_S = 83;
-    const KEYCODE_A = 65;
+    test('searching for "rust" from query', async function(assert) {
+        this.server.loadFixtures();
 
-    function assertSearchBarIsFocused() {
-        const $searchBar = find('#cargo-desktop-search');
-        assert.equal($searchBar[0], document.activeElement);
-        $searchBar.blur();
-    }
+        await visit('/search?q=rust');
 
-    await visit('/');
+        assert.equal(currentURL(), '/search?q=rust');
+        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
 
-    findWithAssert('#cargo-desktop-search').blur();
+        assert.dom('[data-test-search-input]').hasValue('rust');
+        assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
+        assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+    });
 
-    await keyEvent(document, 'keypress', KEYCODE_A);
+    test('pressing S key to focus the search bar', async function(assert) {
+        this.server.loadFixtures();
 
-    const $searchBar = find('#cargo-desktop-search');
-    assert.notEqual($searchBar[0], document.activeElement);
-    $searchBar.blur();
+        await visit('/');
 
-    await keyEvent(document, 'keypress', KEYCODE_S);
-    assertSearchBarIsFocused();
+        await blur('[data-test-search-input]');
+        await triggerKeyPress('KeyA');
+        assert.dom('[data-test-search-input]').isNotFocused();
 
-    await keyEvent(document, 'keydown', KEYCODE_S);
-    assertSearchBarIsFocused();
-});
+        await blur('[data-test-search-input]');
+        await triggerKeyPress('KeyS');
+        assert.dom('[data-test-search-input]').isFocused();
 
-test('check search results are by default displayed by relevance', async function(assert) {
-    server.loadFixtures();
+        await blur('[data-test-search-input]');
+        await triggerKeyDown('KeyS');
+        assert.dom('[data-test-search-input]').isFocused();
 
-    await visit('/');
-    await fillIn('input.search', 'rust');
+        await blur('[data-test-search-input]');
+        await triggerKeyDown('shift+KeyS');
+        assert.dom('[data-test-search-input]').isFocused();
+    });
 
-    findWithAssert('form.search').submit();
+    test('check search results are by default displayed by relevance', async function(assert) {
+        this.server.loadFixtures();
 
-    await wait();
+        await visit('/');
+        await fillIn('[data-test-search-input]', 'rust');
+        await triggerEvent('[data-test-search-form]', 'submit');
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Relevance');
+        assert.dom('[data-test-search-sort] [data-test-current-order]').hasText('Relevance');
+    });
 });

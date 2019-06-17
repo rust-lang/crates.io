@@ -8,6 +8,6 @@ export default DS.RESTSerializer.extend({
             delete resourceHash.versions;
         }
 
-        return this._super(modelClass, resourceHash);
-    }
+        return this._super(...arguments);
+    },
 });

@@ -48,7 +48,7 @@
                 {{action "revokeToken"}}>Revoke</button>
         {{/if}}
         {{#if api_token.isSaving}}
-            <img class='overlay' src="/assets/ajax-loader.gif" />
+            <img class='overlay' src="/assets/ajax-loader.gif">
         {{/if}}
     </div>
 </div>
@@ -65,7 +65,7 @@
     <div class='row new-token'>
         <div>
             Please record this token somewhere, you cannot retrieve
-            its value again. For use on the command line you can save it to <code>~/.cargo/config</code>
+            its value again. For use on the command line you can save it to <code>~/.cargo/credentials</code>
             with:
 
             <pre>cargo login {{ api_token.token }}</pre>

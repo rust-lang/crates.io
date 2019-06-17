@@ -16,10 +16,13 @@
             <dd>{{ model.user.name }}</dd>
             <dt>GitHub Account</dt>
             <dd>{{ model.user.login }}</dd>
-            <dt>Email</dt>
-            <dd>{{ model.user.email }}</dd>
         </dl>
     </div>
+</div>
+
+<div id='me-email'>
+    <h2>User Email</h2>
+    {{email-input type='email' value=model.user.email user=model.user}}
 </div>
 
 <div id='me-api'>
@@ -31,9 +34,13 @@
     </div>
 
     <p>
-        If you want to use package commands from the command line, you'll need a
-        <code>~/.cargo/credentials</code>, the first step to creating this
-        is to generate a new token using the button above.
+        If you want to use package commands from the command line, you will need to
+        login with <code>cargo login (token)</code> using one of the tokens listed below.
+    </p>
+    <p>
+        When working in shared environments, supplying the token on the command line could
+        expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
+        token when prompted.
     </p>
 
     <div id='tokens'>

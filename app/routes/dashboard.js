@@ -1,50 +1,46 @@
 import Route from '@ember/routing/route';
+import { A } from '@ember/array';
 import RSVP from 'rsvp';
 
 import AuthenticatedRoute from '../mixins/authenticated-route';
 
 export default Route.extend(AuthenticatedRoute, {
-    data: {},
+    setupController(controller) {
+        this._super(...arguments);
 
-    setupController(controller, model) {
-        this._super(controller, model);
-
-        controller.set('fetchingFeed', true);
         controller.set('myCrates', this.get('data.myCrates'));
         controller.set('myFollowing', this.get('data.myFollowing'));
         controller.set('myStats', this.get('data.myStats'));
         controller.set('favoriteUsers', this.get('data.favoriteUsers'));
 
-        if (!controller.get('loadingMore')) {
-            controller.set('myFeed', []);
+        if (!controller.loadingMore) {
+            controller.set('myFeed', A());
             controller.send('loadMore');
         }
     },
 
     model() {
-        return this.session.get('currentUser');
+        return this.get('session.currentUser');
     },
 
-    afterModel(user) {
+    async afterModel(user) {
         let myCrates = this.store.query('crate', {
-            user_id: user.get('id')
+            user_id: user.get('id'),
         });
 
         let myFollowing = this.store.query('crate', {
-            following: 1
+            following: 1,
         });
 
         let myStats = user.stats();
 
         let favoriteUsers = user.favoriteUsers();
 
-        return RSVP.hash({
+        this.set('data', await RSVP.hash({
             myCrates,
             myFollowing,
             myStats,
-            favoriteUsers,
-        }).then((hash) => {
-            this.set('data', hash);
-        });
-    }
+            favoriteUsers
+        }));
+    },
 });

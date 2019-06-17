@@ -1,11 +1,11 @@
 import DS from 'ember-data';
-import Ember from 'ember';
+import Inflector from 'ember-inflector';
 
-Ember.Inflector.inflector.irregular('dependency', 'dependencies');
+Inflector.inflector.irregular('dependency', 'dependencies');
 
 export default DS.Model.extend({
     version: DS.belongsTo('version', {
-        async: false
+        async: false,
     }),
     crate_id: DS.attr('string'),
     req: DS.attr('string'),

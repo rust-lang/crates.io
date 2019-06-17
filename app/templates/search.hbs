@@ -1,6 +1,6 @@
 {{title (concat "Search Results for '" q "'")}}
 
-<div id='crates-heading' class='crate-search'>
+<div id='crates-heading' class='crate-search' data-test-heading>
     <div class='info'>
         {{svg-jar "magnifier" width=32 height=32}}
         <h1>Search Results</h1>
@@ -8,11 +8,17 @@
     {{#if q}}
         <h2>for '{{ q }}'</h2>
     {{/if}}
+
+    {{#if dataTask.isRunning}}<img src="/assets/ajax-loader.gif" class="loading-spinner">{{/if}}
 </div>
 
-{{#if hasItems}}
+{{#if firstResultPending}}
+    <div id="no-results">
+        <h2>Loading search results...</h2>
+    </div>
+{{else if hasItems}}
     <div id='results'>
-        <div class='nav'>
+        <div class='nav' data-test-search-nav>
             <span class='amt'>
                 Displaying
                 <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
@@ -20,11 +26,11 @@
             </span>
         </div>
 
-        <div class='sort'>
+        <div class='sort' data-test-search-sort>
             <span class='small'>Sort by </span>
 
             {{#rl-dropdown-container class="dropdown-container"}}
-                {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+                {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
                     {{svg-jar "sort"}}
                     {{ currentSortBy }}
                     <span class='arrow'></span>
@@ -32,7 +38,7 @@
 
                 {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
                     <li>
-                        {{#link-to (query-params page=1 sort="")}}
+                        {{#link-to (query-params page=1 sort="relevance")}}
                             Relevance
                         {{/link-to}}
                     </li>
@@ -46,23 +52,28 @@
                             Recent Downloads
                         {{/link-to}}
                     </li>
+                    <li>
+                        {{#link-to (query-params page=1 sort="recent-updates")}}
+                            Recent Updates
+                        {{/link-to}}
+                    </li>
                 {{/rl-dropdown}}
             {{/rl-dropdown-container}}
         </div>
     </div>
 
     <div id='crates' class='white-rows'>
-        {{#each model as |crate|}}
+        {{#each model as |crate index|}}
             {{#if crate.exact_match}}
                 <div class='exact-match'>
                     {{#link-to "crate" crate}}
                         <h1>Exact Match</h1>
                     {{/link-to}}
-                    {{crate-row crate=crate}}
+                    {{crate-row crate=crate data-test-crate-row=index}}
                 </div>
             {{else}}
                 <div>
-                    {{crate-row crate=crate}}
+                    {{crate-row crate=crate data-test-crate-row=index}}
                 </div>
             {{/if}}
         {{/each}}
@@ -81,6 +92,6 @@
     </div>
 {{else}}
     <div id="no-results">
-        <h2>0 crates found. <a href='http://doc.crates.io/index.html'>Get started</a> and create your own.</h2>
+        <h2>0 crates found. <a href='https://doc.rust-lang.org/cargo/getting-started/'>Get started</a> and create your own.</h2>
     </div>
 {{/if}}

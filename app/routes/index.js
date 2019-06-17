@@ -1,31 +1,19 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
 
 export default Route.extend({
+    headTags() {
+        return [
+            {
+                type: 'meta',
+                attrs: {
+                    name: 'description',
+                    content: 'cargo is the package manager and crate host for rust',
+                },
+            },
+        ];
+    },
 
-    ajax: service(),
-
-    headTags: [{
-        type: 'meta',
-        attrs: {
-            name: 'description',
-            content: 'cargo is the package manager and crate host for rust'
-        }
-    }],
-
-    model() {
-        function addCrates(store, crates) {
-            for (let i = 0; i < crates.length; i++) {
-                crates[i] = store.push(store.normalize('crate', crates[i]));
-            }
-        }
-
-        return this.get('ajax').request('/summary').then((data) => {
-            addCrates(this.store, data.new_crates);
-            addCrates(this.store, data.most_downloaded);
-            addCrates(this.store, data.just_updated);
-
-            return data;
-        });
-    }
+    setupController(controller) {
+        controller.dataTask.perform();
+    },
 });

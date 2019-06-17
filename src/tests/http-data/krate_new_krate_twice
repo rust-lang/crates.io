@@ -1,21 +1,73 @@
-===REQUEST 343
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_twice/foo_twice-2.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Content-Length: 0
-Date: Sun, 28 Jun 2015 14:07:18 -0700
-Authorization: AWS AKIAJF3GEK7N44BACDZA:x9ZmVgrVMKsr48IwF4BOzP1lBu8=
-Host: alexcrichton-test.s3.amazonaws.com
-Content-Type: application/x-tar
-
-
-===RESPONSE 258
-HTTP/1.1 200
-date: Sun, 28 Jun 2015 21:07:51 GMT
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-x-amz-request-id: CD6A7BAE1FEBC3DF
-content-length: 0
-x-amz-id-2: ClOg4r8eMC+Pyeigl8n4DlPxBsiy7BahOi+iq9m+1iBvO+IcSbemIrvovy2hlvRwrR8nIpIsWlk=
-server: AmazonS3
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_twice/foo_twice-2.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:3P5wvArAHvV7o8atB0gUc0RTCCc="
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "x-amz-id-2",
+          "9ZLFTsEwh2iNu+BlWzaTZ85mFA7pxZgsGhQCj3Qi67LqT/iB5eiCOJQPYww2BEkoivJbr0mWruo="
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "x-amz-request-id",
+          "FD643F2FC49A7DF3"
+        ],
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

@@ -9,5 +9,11 @@ export default Route.extend({
     model(params) {
         params.category = this.paramsFor('category').category_id;
         return this.store.query('crate', params);
-    }
+    },
+
+    setupController(controller) {
+        this._super(...arguments);
+        let category = this.modelFor('category');
+        controller.set('category', category);
+    },
 });

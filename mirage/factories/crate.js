@@ -32,6 +32,6 @@ export default Factory.extend({
     withVersion: trait({
         afterCreate(crate, server) {
             server.create('version', { crate: crate.id });
-        }
+        },
     }),
 });

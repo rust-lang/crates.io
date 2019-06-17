@@ -26,6 +26,12 @@
             @include flex-direction(column);
         }
     }
+    .crate-icon {
+        // Icon doesn't align nicely with text (which is being
+        // aligned by their baselines) so manual adjustment needed.
+        position: relative;
+        top: 4px;
+    }
     h1 {
         padding-left: 10px;
         padding-right: 10px;
@@ -38,12 +44,16 @@
         @include align-items(center);
     }
     @media only screen and (max-width: 650px) {
-        .right { display: none; }
+        .right { @include justify-content(center); }
     }
 
     &.crate-index, &.crate-search {
         @include flex-wrap(wrap);
     }
+}
+
+.crate-search .loading-spinner {
+    margin: 0 15px;
 }
 
 #selection {
@@ -164,6 +174,7 @@
     ul {
         @include display-flex;
         @include flex-direction(row);
+        @include flex-wrap(wrap);
 
         font-size: 80%;
         list-style-type: none;
@@ -186,6 +197,12 @@
     font-size: 90%;
     margin-bottom: 20px;
 
+    ol {
+        list-style: none;
+        padding: 0;
+    }
+    ol, li { display: inline; }
+
     a {
         color: $main-color-light;
         text-decoration: none;
@@ -202,12 +219,13 @@
     border-bottom: 5px solid $gray-border;
     margin-bottom: 20px;
 
-    @media only screen and (min-width: 820px) {
+    @media only screen and (min-width: 890px) {
         @include flex-direction(row);
 
         .docs {
             @include flex(7);
             padding-right: 40px;
+            max-width: 640px;
         }
         .authorship {
             @include flex(3);
@@ -302,12 +320,59 @@
             color: red;
         }
     }
+    .crate-readme {
+        line-height: 1.5;
+        overflow-wrap: break-word;
+
+        img {
+            max-width: 100%;
+        }
+
+        pre {
+            overflow-x: auto;
+        }
+
+        p {
+            code {
+                background-color: #fff;
+                padding: 0 2px;
+            }
+        }
+
+        table {
+            border-collapse: collapse;
+
+            th, td {
+                border: 1px solid #dfe2e5;
+                padding: 6px 13px;
+            }
+        }
+    }
     .last-update {
         color: $main-color-light;
         font-size: 90%;
         line-height: 25px;
     }
     .date {
+        font-weight: bold;
+        margin-bottom: 40px;
+    }
+
+    /*
+        Since crate_size is a new field, older crates won't have it.
+        Preserve behaviour for older crates. For newer ones, keep
+        `Crate Size` closer to last updated.
+    */
+    .date-with-small-margin-bot {
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .crate-size {
+        color: $main-color-light;
+        font-size: 90%;
+        line-height: 25px;
+    }
+    .size {
         font-weight: bold;
         margin-bottom: 40px;
     }
@@ -330,6 +395,10 @@
             font-size: 160%;
             font-weight: bold;
             margin-bottom: 4px;
+            &__align {
+                position: relative;
+                bottom: 0.4rem;
+            }
         }
     }
 
@@ -398,5 +467,15 @@
     a.arrow {
         display: inline-block;
         float: right;
+    }
+}
+
+#category-slugs {
+    dt {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    dd {
+        margin-bottom: 20px;
     }
 }

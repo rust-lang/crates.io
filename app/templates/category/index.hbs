@@ -1,8 +1,11 @@
 {{ title category.category ' - Categories' }}
 
 <div id='crates-heading'>
-    {{svg-jar "crate"}}
-    <h1>{{ category.category }}</h1>
+    {{#link-to "categories" (html-attributes aria-label="Categories")}}{{svg-jar "crate"}}{{/link-to}}
+    <h1>
+        {{#each category.parent_categories as |parent|}}{{link-to parent.category "category" parent.slug}}::{{/each}}
+        {{~ category.category }}
+    </h1>
 </div>
 
 <div>
@@ -36,7 +39,7 @@
 
 <h2>Crates</h2>
 <div id='results'>
-    <div class='nav'>
+    <div class='nav' data-test-category-nav>
         <span class='amt small'>
             Displaying
             <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
@@ -44,10 +47,10 @@
         </span>
     </div>
 
-    <div class='sort'>
+    <div class='sort' data-test-category-sort>
         <span class='small'>Sort by</span>
         {{#rl-dropdown-container class="dropdown-container"}}
-            {{#rl-dropdown-toggle tagName="a" class="dropdown"}}
+            {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
                 {{svg-jar "sort"}}
                 {{ currentSortBy }}
                 <span class='arrow'></span>
@@ -67,6 +70,11 @@
                 <li>
                     {{#link-to (query-params sort="recent-downloads")}}
                         Recent Downloads
+                    {{/link-to}}
+                </li>
+                <li>
+                    {{#link-to (query-params sort="recent-updates")}}
+                        Recent Updates
                     {{/link-to}}
                 </li>
             {{/rl-dropdown}}

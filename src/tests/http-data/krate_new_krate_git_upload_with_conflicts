@@ -1,21 +1,73 @@
-===REQUEST 351
-PUT http://alexcrichton-test.s3.amazonaws.com/crates/foo_conflicts/foo_conflicts-1.0.0.crate HTTP/1.1
-Accept: */*
-Proxy-Connection: Keep-Alive
-Authorization: AWS AKIAJF3GEK7N44BACDZA:GDxGb6r3SIqo9wXuzHrgMNWekwk=
-Content-Type: application/x-tar
-Host: alexcrichton-test.s3.amazonaws.com
-Date: Sun, 28 Jun 2015 14:07:17 -0700
-Content-Length: 0
-
-
-===RESPONSE 258
-HTTP/1.1 200
-etag: "d41d8cd98f00b204e9800998ecf8427e"
-content-length: 0
-x-amz-id-2: GpnILy9/CVBCpd85sBv4EUxJ6Dx+LUyuIA5Kye59FgNsWIMDYa726y1fU3NWtar6v3gboZ2eJjw=
-x-amz-request-id: 80F77AF81EB4F104
-server: AmazonS3
-date: Sun, 28 Jun 2015 21:07:51 GMT
-
-
+[
+  {
+    "request": {
+      "uri": "http://alexcrichton-test.s3.amazonaws.com/crates/foo_conflicts/foo_conflicts-1.0.0.crate",
+      "method": "PUT",
+      "headers": [
+        [
+          "date",
+          "Fri, 15 Sep 2017 07:53:06 -0700"
+        ],
+        [
+          "accept-encoding",
+          "gzip"
+        ],
+        [
+          "content-type",
+          "application/x-tar"
+        ],
+        [
+          "content-length",
+          "35"
+        ],
+        [
+          "authorization",
+          "AWS AKIAICL5IWUZYWWKA7JA:241ftMxnamoj94RBOB/al86Xwjk="
+        ],
+        [
+          "user-agent",
+          "reqwest/0.9.1"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "host",
+          "alexcrichton-test.s3.amazonaws.com"
+        ]
+      ],
+      "body": "H4sIAAAAAAAA/+3AAQEAAACCIP+vbkhQwKsBLq+17wAEAAA="
+    },
+    "response": {
+      "status": 200,
+      "headers": [
+        [
+          "Server",
+          "AmazonS3"
+        ],
+        [
+          "x-amz-id-2",
+          "BvCbtCZAAKOsaLx5dc9Vw+SIlfrPULUTLofQduPAnm3b7079gxn5NlvEjEN+www3UOYZOZa8FWk="
+        ],
+        [
+          "x-amz-request-id",
+          "97468A1C2B450E47"
+        ],
+        [
+          "date",
+          "Fri, 15 Sep 2017 14:53:07 GMT"
+        ],
+        [
+          "ETag",
+          "\"f9016ad360cebb4fe2e6e96e5949f022\""
+        ],
+        [
+          "content-length",
+          "0"
+        ]
+      ],
+      "body": ""
+    }
+  }
+]

@@ -1,0 +1,152 @@
+<div id='crates-heading'>
+    {{svg-jar 'circle-with-i'}}
+    <h1>Crates.io Package Policies</h1>
+</div>
+
+<p>
+In general, these policies are guidelines. Problems are often contextual, and
+exceptional circumstances sometimes require exceptional measures. We plan to
+continue to clarify and expand these rules over time as new circumstances
+arise. If your problem is not described below, consider <a
+href='mailto:help@crates.io'>sending us an email</a>.
+</p>
+
+<h2 id='package-ownership'><a href='#package-ownership'>Package Ownership</a></h2>
+
+<p>
+We have a first-come, first-served policy on crate names. Upon publishing a
+package, the publisher will be made owner of the package on Crates.io.
+</p>
+
+<p>
+If someone wants to take over a package, and the previous owner agrees, the
+existing maintainer can add them as an owner, and the new maintainer can remove
+them. If necessary, the team may reach out to inactive maintainers and help
+mediate the process of ownership transfer.
+</p>
+
+<p>
+Using an automated tool to claim ownership of a large number of package names
+is not permitted. We reserve the right to block traffic or revoke ownership
+of any package we determine to have been claimed by an automated tool.
+</p>
+
+<h2 id='removal'><a href='#removal'>Removal</a></h2>
+
+<p>
+Many questions are specialized instances of a more general form: “Under what
+circumstances can a package be removed from Crates.io?”
+</p>
+
+<p>
+The short version is that packages are first-come, first-served, and we won’t
+attempt to get into policing what exactly makes a legitimate package. We will
+do what the law requires us to do, and address flagrant violations of the Rust
+Code of Conduct.
+</p>
+
+<h3 id='squatting'><a href='#squatting'>Squatting</a></h3>
+
+<p>
+We do not have any policies to define 'squatting', and so will not hand over
+ownership of a package for that reason.
+</p>
+
+<h3 id='the-law'><a href='#the-law'>The Law</a></h3>
+
+<p>
+For issues such as DMCA violations, trademark and copyright infringement,
+Crates.io will respect Mozilla Legal’s decisions with regards to content that
+is hosted.
+</p>
+
+<h3 id='code-of-conduct'><a href='#code-of-conduct'>Code of Conduct</a></h3>
+
+<p>
+The Rust project has a <a href='https://www.rust-lang.org/conduct.html'>Code
+of Conduct</a> which governs appropriate conduct for the Rust community. In
+general, any content on Crates.io that violates the Code of Conduct may be
+removed. Here, content can refer to but is not limited to:
+</p>
+
+<ul>
+    <li>Package Name</li>
+    <li>Package Metadata</li>
+    <li>Documentation</li>
+    <li>Code</li>
+</ul>
+
+<p>
+There are two important, related aspects:
+</p>
+
+<ul>
+    <li>
+    We will not be pro-actively monitoring the site for these kinds of
+    violations, but relying on the community to draw them to our attention.
+    </li>
+
+    <li>
+    “Does this violate the Code of Conduct” is a contextual question that
+    cannot be directly answered in the hypothetical sense. All of the details
+    must be taken into consideration in these kinds of situations.
+    </li>
+</ul>
+
+<h2 id='security'><a href='#security'>Security</a></h2>
+
+<p>
+Cargo and crates.io are projects that are governed by the Rust Programming
+Language Team. Safety is one of the core principles of Rust, and to that end,
+we would like to ensure that cargo and crates.io have secure implementations.
+To learn more about disclosing security vulnerabilities, please reference the
+<a href='https://www.rust-lang.org/security.html'>Rust Security policy</a> for
+more details.
+</p>
+
+<p>
+Thank you for taking the time to responsibly disclose any issues you find.
+</p>
+
+<h2 id='crawlers'><a href='#crawlers'>Crawlers</a></h2>
+
+<p>
+Before resorting to crawling crates.io, you should first see if you are able to
+gather the information you need from the <a href='https://github.com/rust-lang/crates.io-index'>
+crates.io index</a>, which is a public git repository containing the majority
+of the information availble through our API.
+
+If the index does not have the information you need, we're also happy to
+discuss solutions to your needs that don't require you to crawl the registry.
+You can email us at <a href="mailto:help@crates.io">help@crates.io</a>.
+</p>
+
+<p>
+We allow our API and website to be crawled by commercial crawlers such as
+GoogleBot. At our discretion, we may choose to allow access to experimental
+crawlers, as long as they limit their request rate to 1 request per second or
+less.
+</p>
+
+<p>
+We also require all crawlers to provide a user-agent header that allows us to
+uniquely identify your bot. This allows us to more accurately monitor any
+impact your bot may have on our service. Providing a user agent that only
+identifies your HTTP client library (such as "<code>request/0.9.1</code>") increases the
+likelihood that we will block your traffic.
+
+It is recommended, but not required, to include contact information in your user
+agent. This allows us to contact you if we would like a change in your bot's
+behavior without having to block your traffic.
+</p>
+
+<p>
+Bad: "<code>User-Agent: reqwest/0.9.1</code>"<br>
+Better: "<code>User-Agent: my_bot</code>"<br>
+Best: "<code>User-Agent: my_bot (my_bot.com/info)</code>" or "<code>User-Agent: my_bot (help@my_bot.com)</code>"
+</p>
+
+<p>
+We reserve the right to block traffic from any bot that we determine to be in
+violation of this policy or causing an impact on the integrity of our service.
+</p>

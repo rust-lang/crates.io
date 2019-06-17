@@ -2,23 +2,24 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 /**
- * This route will open a popup window directed at the `/github_login` route.
+ * This route will open a popup window directed at the `github-login` route.
  * After the window has opened it will wait for the window to close and
  * then evaluate whether the OAuth flow was successful.
  *
- * @see `/github_authorize` route
+ * @see `github-authorize` route
  */
 export default Route.extend({
     flashMessages: service(),
+    session: service(),
 
     beforeModel(transition) {
         try {
             localStorage.removeItem('github_response');
-        } catch(e) {
+        } catch (e) {
             // ignore error
         }
 
-        delete window.github_response;
+        window.github_response = undefined;
         let windowDimensions = [
             'width=1000',
             'height=450',
@@ -27,14 +28,10 @@ export default Route.extend({
             'status=1',
             'resizable=1',
             'location=1',
-            'menuBar=0'
+            'menuBar=0',
         ].join(',');
 
-        let win = window.open(
-            '/github_login',
-            'Authorization',
-            windowDimensions
-        );
+        let win = window.open('/github_login', 'Authorization', windowDimensions);
         if (!win) {
             return;
         }
@@ -47,7 +44,7 @@ export default Route.extend({
             }
             window.clearInterval(oauthInterval);
             let json = window.github_response;
-            delete window.github_response;
+            window.github_response = undefined;
             if (!json) {
                 return;
             }
@@ -56,19 +53,19 @@ export default Route.extend({
             if (!response) {
                 return;
             }
-            if (!response.ok) {
-                this.get('flashMessages').show('Failed to log in');
-                return;
-            }
+
             let { data } = response;
-            if (data.errors) {
+            if (data && data.errors) {
                 let error = `Failed to log in: ${data.errors[0].detail}`;
-                this.get('flashMessages').show(error);
+                this.flashMessages.show(error);
+                return;
+            } else if (!response.ok) {
+                this.flashMessages.show('Failed to log in');
                 return;
             }
 
             let user = this.store.push(this.store.normalize('user', data.user));
-            let transition = this.session.get('savedTransition');
+            let transition = this.get('session.savedTransition');
             this.session.loginUser(user);
             if (transition) {
                 transition.retry();
@@ -76,5 +73,5 @@ export default Route.extend({
         }, 200);
 
         transition.abort();
-    }
+    },
 });

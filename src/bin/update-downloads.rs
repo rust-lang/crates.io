@@ -1,156 +1,94 @@
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
-extern crate cargo_registry;
-extern crate chrono;
 #[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_codegen;
-extern crate openssl;
-extern crate semver;
-extern crate time;
 
-use chrono::NaiveDate;
+use cargo_registry::{
+    db,
+    models::VersionDownload,
+    schema::{crates, metadata, version_downloads, versions},
+    util::CargoResult,
+};
+
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
-use diesel::pg::upsert::*;
-use std::env;
-use std::time::Duration;
 
-use cargo_registry::VersionDownload;
-use cargo_registry::schema::*;
-
-static LIMIT: i64 = 1000;
-
-#[derive(Insertable)]
-#[table_name = "crate_downloads"]
-struct CrateDownload {
-    crate_id: i32,
-    downloads: i32,
-    date: NaiveDate,
-}
-
-#[allow(dead_code)] // dead in tests
-fn main() {
-    let daemon = env::args().nth(1).as_ref().map(|s| &s[..]) == Some("daemon");
-    let sleep = env::args().nth(2).map(|s| s.parse().unwrap());
-    loop {
-        let conn = cargo_registry::db::connect_now().unwrap();
-        update(&conn).unwrap();
-        drop(conn);
-        if daemon {
-            std::thread::sleep(Duration::new(sleep.unwrap(), 0));
-        } else {
-            break;
-        }
-    }
+fn main() -> CargoResult<()> {
+    let conn = db::connect_now()?;
+    update(&conn)?;
+    Ok(())
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
-    use version_downloads::dsl::*;
-    let mut max = Some(0);
-    while let Some(m) = max {
-        conn.transaction::<_, diesel::result::Error, _>(|| {
-            let rows = version_downloads
-                .filter(processed.eq(false))
-                .filter(id.gt(m))
-                .order(id)
-                .limit(LIMIT)
-                .load(conn)?;
-            collect(conn, &rows)?;
-            max = rows.last().map(|d| d.id);
-            Ok(())
-        })?;
-    }
+    use crate::version_downloads::dsl::*;
+    use diesel::dsl::now;
+    use diesel::select;
+
+    let rows = version_downloads
+        .filter(processed.eq(false))
+        .filter(downloads.ne(counted))
+        .load(conn)?;
+    collect(conn, &rows)?;
+
+    // Anything older than 24 hours ago will be frozen and will not be queried
+    // against again.
+    diesel::update(version_downloads)
+        .set(processed.eq(true))
+        .filter(date.lt(diesel::dsl::date(now)))
+        .filter(downloads.eq(counted))
+        .filter(processed.eq(false))
+        .execute(conn)?;
+
+    no_arg_sql_function!(refresh_recent_crate_downloads, ());
+    select(refresh_recent_crate_downloads).execute(conn)?;
     Ok(())
 }
 
 fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
-    use diesel::{insert, update};
+    use diesel::update;
 
-    // Anything older than 24 hours ago will be frozen and will not be queried
-    // against again.
-    let now = chrono::Utc::now();
-    let cutoff = now.naive_utc().date() - chrono::Duration::days(1);
+    println!("updating {} versions", rows.len());
 
-    println!(
-        "updating {} versions (cutoff {})",
-        rows.len(),
-        now.to_rfc2822()
-    );
-
-    let mut total = 0;
     for download in rows {
         let amt = download.downloads - download.counted;
-        total += amt as i64;
 
-        // Flag this row as having been processed if we're passed the cutoff,
-        // and unconditionally increment the number of counted downloads.
-        update(version_downloads::table.find(download.id))
-            .set((
-                version_downloads::processed.eq(download.date < cutoff),
-                version_downloads::counted.eq(
-                    version_downloads::counted + amt,
-                ),
-            ))
-            .execute(conn)?;
+        conn.transaction::<_, diesel::result::Error, _>(|| {
+            // increment the number of counted downloads
+            update(version_downloads::table.find(download.id()))
+                .set(version_downloads::counted.eq(version_downloads::counted + amt))
+                .execute(conn)?;
 
-        // Update the total number of version downloads
-        let crate_id = update(versions::table.find(download.version_id))
-            .set(versions::downloads.eq(versions::downloads + amt))
-            .returning(versions::crate_id)
-            .get_result(conn)?;
+            // Update the total number of version downloads
+            let crate_id = update(versions::table.find(download.version_id))
+                .set(versions::downloads.eq(versions::downloads + amt))
+                .returning(versions::crate_id)
+                .get_result::<i32>(conn)?;
 
-        // Update the total number of crate downloads
-        update(crates::table.find(crate_id))
-            .set(crates::downloads.eq(crates::downloads + amt))
-            .execute(conn)?;
+            // Update the total number of crate downloads
+            update(crates::table.find(crate_id))
+                .set(crates::downloads.eq(crates::downloads + amt))
+                .execute(conn)?;
 
-        // Update the total number of crate downloads for today
-        let crate_download = CrateDownload {
-            crate_id: crate_id,
-            downloads: amt,
-            date: download.date,
-        };
-        insert(&crate_download.on_conflict(
-            (
-                crate_downloads::crate_id,
-                crate_downloads::date,
-            ),
-            do_update().set(
-                crate_downloads::downloads.eq(
-                    crate_downloads::downloads +
-                        amt,
-                ),
-            ),
-        )).into(crate_downloads::table)
-            .execute(conn)?;
+            // Now that everything else for this crate is done, update the global counter of total
+            // downloads
+            update(metadata::table)
+                .set(metadata::total_downloads.eq(metadata::total_downloads + i64::from(amt)))
+                .execute(conn)?;
+
+            Ok(())
+        })?;
     }
-
-    // After everything else is done, update the global counter of total
-    // downloads.
-    update(metadata::table)
-        .set(metadata::total_downloads.eq(
-            metadata::total_downloads + total,
-        ))
-        .execute(conn)?;
 
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
-
-    use semver;
-
-    use diesel::expression::dsl::sql;
-    use diesel::types::Integer;
     use super::*;
-    use cargo_registry::env;
-    use cargo_registry::krate::{Crate, NewCrate};
-    use cargo_registry::user::{User, NewUser};
-    use cargo_registry::version::{Version, NewVersion};
+    use cargo_registry::{
+        env,
+        models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
+    };
+    use std::collections::HashMap;
 
     fn conn() -> PgConnection {
         let conn = PgConnection::establish(&env("TEST_DATABASE_URL")).unwrap();
@@ -168,61 +106,44 @@ mod test {
         let krate = NewCrate {
             name: "foo",
             ..Default::default()
-        }.create_or_update(&conn, None, user_id)
-            .unwrap();
+        }
+        .create_or_update(conn, None, user_id, None)
+        .unwrap();
         let version = NewVersion::new(
             krate.id,
             &semver::Version::parse("1.0.0").unwrap(),
             &HashMap::new(),
             None,
             None,
-        ).unwrap();
-        let version = version.save(&conn, &[]).unwrap();
+            0,
+            user_id,
+        )
+        .unwrap();
+        let version = version.save(conn, &[], "someone@example.com").unwrap();
         (krate, version)
-    }
-
-    macro_rules! crate_downloads {
-        ($conn: expr, $id: expr, $expected: expr) => {
-            let dl = crate_downloads::table
-                .filter(crate_downloads::crate_id.eq($id))
-                .select(crate_downloads::downloads)
-                .first($conn);
-            assert_eq!(Ok($expected as i32), dl);
-        }
     }
 
     #[test]
     fn increment() {
+        use diesel::dsl::*;
+
         let conn = conn();
         let user = user(&conn);
         let (krate, version) = crate_and_version(&conn, user.id);
-        // FIXME: Diesel 1.0 can do this:
-        // insert((version_id.eq(version.id),))
-        //     .into(version_downloads)
-        //     .execute(&conn)
-        //     .unwrap();
-        // insert((
-        //     version_id.eq(version.id),
-        //     date.eq(now - 1.day()),
-        //     processed.eq(true)
-        //  )).into(version_downloads)
-        //      .execute(&conn)
-        //      .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id)
-                    VALUES ($1)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values(version_downloads::version_id.eq(version.id))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, date, processed)
-                    VALUES ($1, current_date - interval '1 day', true)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::date.eq(date(now - 1.day())),
+                version_downloads::processed.eq(true),
+            ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -233,8 +154,7 @@ mod test {
             .select(crates::downloads)
             .first(&conn);
         assert_eq!(Ok(1), crate_downloads);
-        crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -244,17 +164,22 @@ mod test {
 
     #[test]
     fn set_processed_true() {
+        use diesel::dsl::*;
+
         let conn = conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, current_date - interval '2 days', false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(2),
+                version_downloads::date.eq(date(now - 2.days())),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -264,17 +189,21 @@ mod test {
 
     #[test]
     fn dont_process_recent_row() {
+        use diesel::dsl::*;
         let conn = conn();
         let user = user(&conn);
         let (_, version) = crate_and_version(&conn, user.id);
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, DATE(NOW() - INTERVAL '2 hours'), false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(2),
+                version_downloads::date.eq(date(now)),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -284,7 +213,7 @@ mod test {
 
     #[test]
     fn increment_a_little() {
-        use diesel::expression::dsl::*;
+        use diesel::dsl::*;
         use diesel::update;
 
         let conn = conn();
@@ -298,18 +227,21 @@ mod test {
             .set(crates::updated_at.eq(now - 2.hours()))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 1, current_date, false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(1),
+                version_downloads::date.eq(date(now)),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, date)
-                    VALUES ($1, current_date - interval '1 day')",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::date.eq(date(now - 1.day())),
+            ))
             .execute(&conn)
             .unwrap();
 
@@ -321,7 +253,7 @@ mod test {
             .filter(crates::id.eq(krate.id))
             .first::<Crate>(&conn)
             .unwrap();
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version2 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -334,8 +266,7 @@ mod test {
             .unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
-        crate_downloads!(&conn, krate.id, 1);
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let version3 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -345,8 +276,8 @@ mod test {
 
     #[test]
     fn set_processed_no_set_updated_at() {
+        use diesel::dsl::*;
         use diesel::update;
-        use diesel::expression::dsl::*;
 
         let conn = conn();
         let user = user(&conn);
@@ -359,15 +290,18 @@ mod test {
             .set(crates::updated_at.eq(now - 2.days()))
             .execute(&conn)
             .unwrap();
-        sql::<Integer>(
-            "INSERT INTO version_downloads \
-                    (version_id, downloads, counted, date, processed)
-                    VALUES ($1, 2, 2, current_date - interval '2 days', false)",
-        ).bind::<Integer, _>(version.id)
+        insert_into(version_downloads::table)
+            .values((
+                version_downloads::version_id.eq(version.id),
+                version_downloads::downloads.eq(2),
+                version_downloads::counted.eq(2),
+                version_downloads::date.eq(date(now - 2.days())),
+                version_downloads::processed.eq(false),
+            ))
             .execute(&conn)
             .unwrap();
 
-        ::update(&conn).unwrap();
+        crate::update(&conn).unwrap();
         let versions_changed = versions::table
             .select(versions::updated_at.ne(now - 2.days()))
             .get_result(&conn);

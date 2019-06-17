@@ -1,30 +1,25 @@
 <div class='desc'>
     <div class='info'>
-        {{#link-to 'crate' crate.id}}{{ crate.name }}{{/link-to}}
-        <span class='vers'>
-            <img
-                src="https://img.shields.io/crates/v/{{ crate.name }}.svg"
-                alt="{{ crate.max_version }}"
-                title="{{ crate.name }}’s current version badge" />
-        </span>
+        {{#link-to 'crate' crate.id data-test-crate-link}}{{ crate.name }}{{/link-to}}
+        {{crate-badge crate=crate}}
         {{#each crate.annotated_badges as |badge|}}
-            {{component badge.component_name badge=badge}}
+            {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
         {{/each}}
     </div>
-    <div class='summary'>
+    <div class='summary' data-test-description>
         <span class='small'>
             {{ truncate-text crate.description }}
         </span>
     </div>
 </div>
 <div class='stats'>
-    <div class='downloads'>
+    <div class='downloads' data-test-downloads>
         {{svg-jar "download"}}
         <span class='num'>All-Time: {{ format-num crate.downloads }}</span>
     </div>
-    <div class="recent-downloads">
+    <div class="recent-downloads" data-test-recent-downloads>
         {{svg-jar "download"}}
-        <span class='num'>Recent: {{ format-num crate.recent_downloads }}</span>
+        <span class='num'><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num crate.recent_downloads }}</span>
     </div>
 </div>
 <div class="quick-links">

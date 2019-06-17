@@ -20,7 +20,7 @@
         margin-right: 10px;
     }
 
-    &:hover { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
+    &:hover, &:focus { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
     &.active { @include vertical-gradient($start_dark, $end_dark); outline: 0; }
     &[disabled] {
         @include vertical-gradient($start_light, $end_light);
@@ -96,7 +96,10 @@ button.small {
 
     @media only screen and (max-width: 530px) {
         @include flex-direction(column);
-        #stats { border: none; }
+        #stats {
+            border: none;
+            margin: auto;
+        }
         .crates, .downloads {
             @include justify-content(center);
         }
@@ -106,10 +109,22 @@ button.small {
 .crate-lists {
     @include display-flex;
 
-    h2 { font-size: 105%; }
-    > div { margin: 0 15px; }
+    h2 {
+        font-size: 105%;
+        line-height: 20px;
+    }
 
-    ul { list-style: none; padding: 0; }
+    > section { margin: 0 15px; }
+
+    > section[aria-busy="true"] > h2::after {
+        content: '';
+        background-image: url('/assets/ajax-loader.gif');
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+    }
+
+    ul, ol { list-style: none; padding: 0; }
     li { margin: 8px 0; }
 
     li a {
@@ -139,7 +154,7 @@ button.small {
     @include flex-wrap(wrap);
     @include justify-content(left);
 
-    > div {
+    > section {
       margin: 0;
       padding: 0 15px;
       width: 33.33%;

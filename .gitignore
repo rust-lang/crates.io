@@ -1,5 +1,6 @@
 /target
 .cargo
+.vscode/
 
 # compiled output
 /dist
@@ -10,11 +11,18 @@
 /bower_components
 
 # misc
+/.eslintcache
 /.sass-cache
 /connect.lock
 /coverage/*
+/coverage_*
+/local_uploads
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
 testem.log
 .env
+docker-compose.override.yml
+*~
+src/schema.rs.orig
+

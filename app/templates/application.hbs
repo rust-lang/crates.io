@@ -1,33 +1,36 @@
+{{head-layout}}
+
 {{title "Cargo: packages for Rust" separator=' - ' prepend=true}}
 {{google-jsapi}}
 
-<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
-  <img src='/assets/forkme.png'/>
-</a>
-
-<div id="header">
-    {{#link-to "index"}}
+<nav id="header">
+    {{#link-to "index" tabindex="-1"}}
         <img src="/assets/Cargo-Logo-Small.png" id="logo"
-             height=100 width=100 />
+             height=100 width=100 alt="Cargo Logo">
     {{/link-to}}
     {{#link-to "index"}}
       <h1>
-        CARGO
-        <span class="subtitle">packages for Rust</span>
+        crates.io
+        <span class="subtitle">Rust Package Registry</span>
       </h1>
     {{/link-to}}
 
-    <form class='search' action='/search' {{ action "search" on="submit" }} >
-        {{input type="text" class="search" name="q" id="cargo-desktop-search"
+    <form class='search' action='/search' {{ action "search" on="submit" }} data-test-search-form>
+        <input type="text" class="search" name="q" id="cargo-desktop-search"
                 placeholder="Click or press 'S' to search..."
-                value=search
+                value={{searchQuery}}
+                oninput={{action (mut searchQuery) value="target.value"}}
+                autocorrect="off"
+                autocapitalize="off"
                 autofocus="autofocus"
-                tabindex="1"
-                required=true}}
+                spellcheck="false"
+                required
+                data-test-search-input>
+        <label for="cargo-desktop-search">Search</label>
     </form>
 
     <div class='nav'>
-        {{#link-to "crates" (query-params letter="null" page=1)}}
+        {{#link-to "crates" (query-params letter=null page=1) data-test-all-crates-link}}
             Browse All Crates
         {{/link-to}}
         <span class="sep">|</span>
@@ -38,19 +41,20 @@
             {{/rl-dropdown-toggle}}
 
             {{#rl-dropdown tagName="ul" id="doc-links" class="dropdown" closeOnChildClick="a:link"}}
-                <li><a href='http://doc.crates.io/index.html'>Getting Started</a></li>
-                <li><a href='http://doc.crates.io/guide.html'>Guide</a></li>
-                <li><a href='http://doc.crates.io/specifying-dependencies.html'>Specifying Dependencies</a></li>
-                <li><a href='http://doc.crates.io/crates-io.html'>Publishing on crates.io</a></li>
-                <li><a href='http://doc.crates.io/faq.html'>FAQ</a></li>
-                <li><a href='http://doc.crates.io/manifest.html'>Cargo.toml Format</a></li>
-                <li><a href='http://doc.crates.io/build-script.html'>Build Scripts</a></li>
-                <li><a href='http://doc.crates.io/config.html'>Configuration</a></li>
-                <li><a href='http://doc.crates.io/pkgid-spec.html'>Package ID specs</a></li>
-                <li><a href='http://doc.crates.io/environment-variables.html'>Environment Variables</a></li>
-                <li><a href='http://doc.crates.io/source-replacement.html'>Source Replacement</a></li>
-                <li><a href='http://doc.crates.io/external-tools.html'>External Tools</a></li>
-                <li><a href='http://doc.crates.io/policies.html'>Policies</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/publishing.html'>Publishing on crates.io</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/faq.html'>FAQ</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/manifest.html'>Cargo.toml Format</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/build-scripts.html'>Build Scripts</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/config.html'>Configuration</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/pkgid-spec.html'>Package ID specs</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/environment-variables.html'>Environment Variables</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/source-replacement.html'>Source Replacement</a></li>
+                <li><a href='https://doc.rust-lang.org/cargo/reference/external-tools.html'>External Tools</a></li>
+                <li>{{#link-to 'policies'}}Policies{{/link-to}}</li>
+                <li>{{#link-to 'category-slugs'}}List of category slugs{{/link-to}}</li>
             {{/rl-dropdown}}
         {{/rl-dropdown-container}}
         <span class="sep">|</span>
@@ -65,11 +69,12 @@
                 {{#rl-dropdown tagName="ul" class="dropdown current-user-links" closeOnChildClick="a:link"}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
+                    <li>{{#link-to 'me.pending-invites'}}Owner Invites{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
                 {{/rl-dropdown}}
             {{/rl-dropdown-container}}
         {{else}}
-            {{#link-to "login"}}
+            {{#link-to "login" data-test-login-link}}
                     {{svg-jar "lock"}}
                     Log in with GitHub
             {{/link-to}}
@@ -97,31 +102,36 @@
 
     <div class='links'>
     </div>
-</div>
+</nav>
 
 <form id='mobile-search' class='search' action='/search' {{ action "search" on="submit" }} >
-    {{input type="text" class="search" name="q"
+    <input type="text" class="search" name="q" id="cargo-mobile-search"
             placeholder="Search"
-            value=search
+            value={{searchQuery}}
+            oninput={{action (mut searchQuery) value="target.value"}}
             autocorrect="off"
-            tabindex="1"
-            required=true}}
+            required>
+    <label for="cargo-mobile-search">Search</label>
 </form>
 
-<div id="main" class='inner-content'>
+<main id="main" class='inner-content'>
     {{flash-message}}
 
     {{outlet}}
-</div>
+</main>
 
-<div class='after-main-links'>
+<footer class='after-main-links'>
     {{#link-to 'install'}}Install{{/link-to}}
     <span class="sep">|</span>
-    <a href='http://doc.crates.io'>Getting Started</a>
+    <a href='https://doc.rust-lang.org/cargo/'>Getting Started</a>
     <span class="sep">|</span>
-    <a href='http://doc.crates.io/guide.html'>Guide</a>
+    <a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a>
     <span class="sep">|</span>
     <a href='mailto:help@crates.io'>Send us an email</a>
     <span class="sep">|</span>
-    <a href='http://doc.crates.io/policies.html'>Policies</a>
-</div>
+    {{#link-to 'policies'}}Policies{{/link-to}}
+</footer>
+
+<a href='https://github.com/rust-lang/crates.io' class='fork-me'>
+  <img src='/assets/forkme.png' alt="Fork me on GitHub">
+</a>

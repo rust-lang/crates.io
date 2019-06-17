@@ -1,70 +1,96 @@
-import { test } from 'qunit';
-import moduleForAcceptance from 'cargo/tests/helpers/module-for-acceptance';
-import hasText from 'cargo/tests/helpers/has-text';
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'ember-qunit';
+import { click, currentURL, visit } from '@ember/test-helpers';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import axeConfig from '../axe-config';
+import setupMirage from '../helpers/setup-mirage';
+import { percySnapshot } from 'ember-percy';
 
-moduleForAcceptance('Acceptance | crates page');
+module('Acceptance | crates page', function(hooks) {
+    setupApplicationTest(hooks);
+    setupMirage(hooks);
 
-test('visiting the crates page from the front page', async function(assert) {
-    server.loadFixtures();
+    test('is accessible', async function(assert) {
+        assert.expect(0);
 
-    await visit('/');
-    await click('a[href="/crates"]');
+        this.server.loadFixtures();
 
-    assert.equal(currentURL(), '/crates');
-    assert.equal(document.title, 'Crates - Cargo: packages for Rust');
-});
+        await visit('/');
+        percySnapshot(assert);
 
-test('visiting the crates page directly', async function(assert) {
-    server.loadFixtures();
+        await a11yAudit(axeConfig);
+    });
 
-    await visit('/crates');
-    await click('a[href="/crates"]');
+    test('/crates is accessible', async function(assert) {
+        assert.expect(0);
 
-    assert.equal(currentURL(), '/crates');
-    assert.equal(document.title, 'Crates - Cargo: packages for Rust');
-});
+        this.server.loadFixtures();
 
-test('listing crates', async function(assert) {
-    server.loadFixtures();
+        await visit('/crates');
+        percySnapshot(assert);
 
-    await visit('/crates');
+        await a11yAudit(axeConfig);
+    });
 
-    hasText(assert, '.amt.small .cur', '1-10');
-    hasText(assert, '.amt.small .total', '19');
-});
+    test('visiting the crates page from the front page', async function(assert) {
+        this.server.loadFixtures();
 
-test('navigating to next page of crates', async function(assert) {
-    server.loadFixtures();
+        await visit('/');
+        await click('[data-test-all-crates-link]');
 
-    await visit('/crates');
-    await click('.pagination .next');
+        assert.equal(currentURL(), '/crates');
+        assert.equal(document.title, 'Crates - Cargo: packages for Rust');
+    });
 
-    assert.equal(currentURL(), '/crates?page=2');
-    hasText(assert, '.amt.small .cur', '11-19');
-    hasText(assert, '.amt.small .total', '19');
-});
+    test('visiting the crates page directly', async function(assert) {
+        this.server.loadFixtures();
 
-test('crates default sort is alphabetical', async function(assert) {
-    server.loadFixtures();
+        await visit('/crates');
+        await click('[data-test-all-crates-link]');
 
-    await visit('/crates');
+        assert.equal(currentURL(), '/crates');
+        assert.equal(document.title, 'Crates - Cargo: packages for Rust');
+    });
 
-    const $sort = findWithAssert('div.sort div.dropdown-container a.dropdown');
-    hasText(assert, $sort, 'Alphabetical');
-});
+    test('listing crates', async function(assert) {
+        this.server.loadFixtures();
 
-test('downloads appears for each crate on crate list', async function(assert) {
-    server.loadFixtures();
+        await visit('/crates');
 
-    await visit('/crates');
-    const $recentDownloads = findWithAssert('div.downloads:first span.num');
-    hasText(assert, $recentDownloads, 'All-Time: 497');
-});
+        assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText('1-10');
+        assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText('19');
+    });
 
-test('recent downloads appears for each crate on crate list', async function(assert) {
-    server.loadFixtures();
+    test('navigating to next page of crates', async function(assert) {
+        this.server.loadFixtures();
 
-    await visit('/crates');
-    const $recentDownloads = findWithAssert('div.recent-downloads:first span.num');
-    hasText(assert, $recentDownloads, 'Recent: 497');
+        await visit('/crates');
+        await click('[data-test-pagination-next]');
+
+        assert.equal(currentURL(), '/crates?page=2');
+        assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText('11-19');
+        assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText('19');
+    });
+
+    test('crates default sort is alphabetical', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/crates');
+
+        assert.dom('[data-test-crates-sort] [data-test-current-order]').hasText('Alphabetical');
+    });
+
+    test('downloads appears for each crate on crate list', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/crates');
+        assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 497');
+    });
+
+    test('recent downloads appears for each crate on crate list', async function(assert) {
+        this.server.loadFixtures();
+
+        await visit('/crates');
+        assert.dom('[data-test-crate-row="0"] [data-test-recent-downloads]').hasText('Recent: 497');
+    });
 });

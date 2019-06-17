@@ -1,34 +1,45 @@
 import Response from 'ember-cli-mirage/response';
 
 export default function() {
+    // Used by ember-cli-code-coverage
+    this.passthrough('/write-coverage');
+
+    this.namespace = '/api/v1';
+
     this.get('/summary', function(schema) {
         let crates = schema.crates.all();
 
         let just_updated = crates.sort((a, b) => compareIsoDates(b.updated_at, a.updated_at)).slice(0, 10);
         let most_downloaded = crates.sort((a, b) => b.downloads - a.downloads).slice(0, 10);
         let new_crates = crates.sort((a, b) => compareIsoDates(b.created_at, a.created_at)).slice(0, 10);
+        let most_recently_downloaded = crates.sort((a, b) => b.recent_downloads - a.recent_downloads).slice(0, 10);
 
         let num_crates = crates.length;
         let num_downloads = crates.models.reduce((sum, crate) => sum + crate.downloads, 0);
 
-        let popular_categories = schema.categories.all().sort((a, b) => b.crates_cnt - a.crates_cnt).slice(0, 10);
-        let popular_keywords = schema.keywords.all().sort((a, b) => b.crates_cnt - a.crates_cnt).slice(0, 10);
+        let popular_categories = schema.categories
+            .all()
+            .sort((a, b) => b.crates_cnt - a.crates_cnt)
+            .slice(0, 10);
+        let popular_keywords = schema.keywords
+            .all()
+            .sort((a, b) => b.crates_cnt - a.crates_cnt)
+            .slice(0, 10);
 
         return {
-            just_updated: this.serialize(just_updated).crates
-                .map(it => ({ ...it, versions: null })),
-            most_downloaded: this.serialize(most_downloaded).crates
-                .map(it => ({ ...it, versions: null })),
-            new_crates: this.serialize(new_crates).crates
-                .map(it => ({ ...it, versions: null })),
+            just_updated: this.serialize(just_updated).crates.map(it => ({ ...it, versions: null })),
+            most_downloaded: this.serialize(most_downloaded).crates.map(it => ({ ...it, versions: null })),
+            new_crates: this.serialize(new_crates).crates.map(it => ({ ...it, versions: null })),
+            most_recently_downloaded: this.serialize(most_recently_downloaded).crates.map(it => ({
+                ...it,
+                versions: null,
+            })),
             num_crates,
             num_downloads,
             popular_categories: this.serialize(popular_categories).categories,
             popular_keywords: this.serialize(popular_keywords).keywords,
         };
     });
-
-    this.namespace = '/api/v1';
 
     this.get('/crates', function(schema, request) {
         const { start, end } = pageParams(request);
@@ -65,11 +76,12 @@ export default function() {
     this.get('/crates/:crate_id', function(schema, request) {
         let crateId = request.params.crate_id;
         let crate = schema.crates.find(crateId);
-        let categories = schema.categories.all()
+        let categories = schema.categories
+            .all()
             .filter(category => (crate.categories || []).indexOf(category.id) !== -1);
-        let keywords = schema.keywords.all()
-            .filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
-        let versions = schema.versions.all()
+        let keywords = schema.keywords.all().filter(keyword => (crate.keywords || []).indexOf(keyword.id) !== -1);
+        let versions = schema.versions
+            .all()
             .filter(version => (crate.versions || []).indexOf(parseInt(version.id, 10)) !== -1);
 
         return {
@@ -78,6 +90,10 @@ export default function() {
             ...this.serialize(keywords),
             ...this.serialize(versions),
         };
+    });
+
+    this.get('/crates/:crate_id/following', (/* schema, request */) => {
+        // TODO
     });
 
     this.get('/crates/:crate_id/versions', (schema, request) => {
@@ -154,7 +170,8 @@ export default function() {
     this.get('/crates/:crate_id/downloads', function(schema, request) {
         let crateId = request.params.crate_id;
         let crate = schema.crates.find(crateId);
-        let versionDownloads = schema.versionDownloads.all()
+        let versionDownloads = schema.versionDownloads
+            .all()
             .filter(it => crate.versions.indexOf(parseInt(it.version, 10)) !== -1);
 
         return withMeta(this.serialize(versionDownloads), { extra_downloads: crate._extra_downloads });
@@ -174,6 +191,17 @@ export default function() {
         let catId = request.params.category_id;
         let category = schema.categories.find(catId);
         return category ? category : notFound();
+    });
+
+    this.get('/category_slugs', function(schema) {
+        let allCategories = schema.categories.all().sort((a, b) => compareStrings(a.category, b.category));
+        return {
+            category_slugs: this.serialize(allCategories).categories.map(cat => ({
+                id: cat.id,
+                slug: cat.slug,
+                description: cat.description,
+            })),
+        };
     });
 
     this.get('/keywords', function(schema, request) {
@@ -203,12 +231,54 @@ export default function() {
         let user = schema.users.findBy({ login });
         return user ? user : notFound();
     });
+
+    this.put('/crates/:crate_id/owners', (schema, request) => {
+        const crateId = request.params.crate_id;
+        const crate = schema.crates.find(crateId);
+
+        if (!crate) {
+            return notFound();
+        }
+
+        const body = JSON.parse(request.requestBody);
+        const [ownerId] = body.owners;
+        const user = schema.users.findBy({ login: ownerId });
+
+        if (!user) {
+            return notFound();
+        }
+
+        return { ok: true };
+    });
+
+    this.delete('/crates/:crate_id/owners', (schema, request) => {
+        const crateId = request.params.crate_id;
+        const crate = schema.crates.find(crateId);
+
+        if (!crate) {
+            return notFound();
+        }
+
+        const body = JSON.parse(request.requestBody);
+        const [ownerId] = body.owners;
+        const user = schema.users.findBy({ login: ownerId });
+
+        if (!user) {
+            return notFound();
+        }
+
+        return {};
+    });
 }
 
 function notFound() {
-    return new Response(404, { 'Content-Type': 'application/json' }, {
-        'errors': [{ 'detail': 'Not Found' }]
-    });
+    return new Response(
+        404,
+        { 'Content-Type': 'application/json' },
+        {
+            errors: [{ detail: 'Not Found' }],
+        },
+    );
 }
 
 function pageParams(request) {
@@ -229,11 +299,11 @@ function withMeta(response, meta) {
 }
 
 function compareStrings(a, b) {
-    return (a < b) ? -1 : (a > b) ? 1 : 0;
+    return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function compareIsoDates(a, b) {
     let aDate = new Date(a);
     let bDate = new Date(b);
-    return (aDate < bDate) ? -1 : (aDate > bDate) ? 1 : 0;
+    return aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
 }
