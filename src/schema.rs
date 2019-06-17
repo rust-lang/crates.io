@@ -973,7 +973,6 @@ table! {
     }
 }
 
-// XXX TODO make `favorite_users` joinable with something?
 joinable!(api_tokens -> users (user_id));
 joinable!(crate_owner_invitations -> crates (crate_id));
 joinable!(crate_owners -> crates (crate_id));
@@ -986,6 +985,7 @@ joinable!(crates_keywords -> keywords (keyword_id));
 joinable!(dependencies -> crates (crate_id));
 joinable!(dependencies -> versions (version_id));
 joinable!(emails -> users (user_id));
+joinable!(favorite_users -> users (target_id));
 joinable!(follows -> crates (crate_id));
 joinable!(follows -> users (user_id));
 joinable!(publish_limit_buckets -> users (user_id));

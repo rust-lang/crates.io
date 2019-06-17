@@ -45,6 +45,69 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     }))
 }
 
+fn favorite_target(req: &mut Request) -> CargoResult<FavoriteUser> {
+    let user = req.user()?;
+    let target_user_id: i32 = req.params()["user_id"].parse().expect("User ID not found");
+    Ok(FavoriteUser {
+        user_id: user.id,
+        target_id: target_user_id,
+    })
+}
+
+/// Handles the `PUT /users/:user_id/favorite` route.
+pub fn favorite(req: &mut Request) -> CargoResult<Response> {
+    use diesel::pg::upsert::OnConflictExtension;
+
+    let favorite = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::insert(&favorite.on_conflict_do_nothing())
+        .into(favorite_users::table)
+        .execute(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles the `DELETE /users/:user_id/favorite` route.
+pub fn unfavorite(req: &mut Request) -> CargoResult<Response> {
+    let favorite = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    diesel::delete(&favorite).execute(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { ok: bool }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles the `GET /users/:user_id/favorited` route.
+pub fn favorited(req: &mut Request) -> CargoResult<Response> {
+    use diesel::expression::dsl::exists;
+
+    let fav = favorite_target(req)?;
+    let conn = req.db_conn()?;
+    let favorited = diesel::select(exists(favorite_users::table.find(fav.id())))
+        .get_result(&*conn)?;
+    #[derive(RustcEncodable)]
+    struct R { favorited: bool }
+    Ok(req.json(&R { favorited: favorited }))
+}
+
+/// Handles the `GET /users/:user_id/favorite_users` route.
+pub fn favorite_users(req: &mut Request) -> CargoResult<Response> {
+    let user_id: i32 = req.params()["user_id"].parse()
+        .expect("User ID not found");
+    let conn = req.db_conn()?;
+
+    let users = users::table.inner_join(favorite_users::table)
+        .filter(favorite_users::user_id.eq(user_id))
+        .select(users::all_columns)
+        .load::<User>(&*conn)?
+        .into_iter().map(|u| u.encodable()).collect();
+
+    #[derive(RustcEncodable)]
+    struct R { users: Vec<EncodableUser> }
+    Ok(req.json(&R{ users: users }))
+}
+
 /// Handles the `GET /me/updates` route.
 pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;

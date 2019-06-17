@@ -32,6 +32,14 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
+#[derive(Insertable, Queryable, Identifiable, Associations)]
+#[primary_key(user_id, target_id)]
+#[table_name="favorite_users"]
+pub struct FavoriteUser {
+    user_id: i32,
+    target_id: i32,
+}
+
 impl<'a> NewUser<'a> {
     pub fn new(
         gh_id: i32,
