@@ -6,7 +6,7 @@ use crate::app::App;
 use crate::util::CargoResult;
 
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
-use crate::schema::{crate_owners, emails, users};
+use crate::schema::{crate_owners, emails, favorite_users, users};
 use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
 /// The model representing a row in the `users` database table.
@@ -32,12 +32,12 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
-#[derive(Insertable, Queryable, Identifiable, Associations)]
+#[derive(Copy, Clone, Debug, Insertable, Queryable, Identifiable, Associations)]
 #[primary_key(user_id, target_id)]
 #[table_name="favorite_users"]
 pub struct FavoriteUser {
-    user_id: i32,
-    target_id: i32,
+    pub user_id: i32,
+    pub target_id: i32,
 }
 
 impl<'a> NewUser<'a> {

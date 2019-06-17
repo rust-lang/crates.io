@@ -11,7 +11,7 @@ pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::rights::Rights;
 pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;
-pub use self::user::{NewUser, User};
+pub use self::user::{FavoriteUser, NewUser, User};
 pub use self::version::{NewVersion, Version};
 
 pub mod helpers;

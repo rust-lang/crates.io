@@ -5,9 +5,9 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::CargoError;
 
-use crate::models::{Email, Follow, NewEmail, User, Version};
-use crate::schema::{crates, emails, follows, users, versions};
-use crate::views::{EncodableMe, EncodableVersion};
+use crate::models::{Email, FavoriteUser, Follow, NewEmail, User, Version};
+use crate::schema::{crates, emails, favorite_users, follows, users, versions};
+use crate::views::{EncodableMe, EncodablePublicUser, EncodableVersion};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
@@ -45,7 +45,7 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     }))
 }
 
-fn favorite_target(req: &mut Request) -> CargoResult<FavoriteUser> {
+fn favorite_target(req: &mut dyn Request) -> CargoResult<FavoriteUser> {
     let user = req.user()?;
     let target_user_id: i32 = req.params()["user_id"].parse().expect("User ID not found");
     Ok(FavoriteUser {
@@ -55,44 +55,43 @@ fn favorite_target(req: &mut Request) -> CargoResult<FavoriteUser> {
 }
 
 /// Handles the `PUT /users/:user_id/favorite` route.
-pub fn favorite(req: &mut Request) -> CargoResult<Response> {
-    use diesel::pg::upsert::OnConflictExtension;
-
+pub fn favorite(req: &mut dyn Request) -> CargoResult<Response> {
     let favorite = favorite_target(req)?;
     let conn = req.db_conn()?;
-    diesel::insert(&favorite.on_conflict_do_nothing())
-        .into(favorite_users::table)
+    diesel::insert_into(favorite_users::table)
+        .values(&favorite)
+        .on_conflict_do_nothing()
         .execute(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
 }
 
 /// Handles the `DELETE /users/:user_id/favorite` route.
-pub fn unfavorite(req: &mut Request) -> CargoResult<Response> {
+pub fn unfavorite(req: &mut dyn Request) -> CargoResult<Response> {
     let favorite = favorite_target(req)?;
     let conn = req.db_conn()?;
     diesel::delete(&favorite).execute(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R { ok: bool }
     Ok(req.json(&R { ok: true }))
 }
 
 /// Handles the `GET /users/:user_id/favorited` route.
-pub fn favorited(req: &mut Request) -> CargoResult<Response> {
+pub fn favorited(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::expression::dsl::exists;
 
     let fav = favorite_target(req)?;
     let conn = req.db_conn()?;
     let favorited = diesel::select(exists(favorite_users::table.find(fav.id())))
         .get_result(&*conn)?;
-    #[derive(RustcEncodable)]
+    #[derive(Serialize)]
     struct R { favorited: bool }
     Ok(req.json(&R { favorited: favorited }))
 }
 
 /// Handles the `GET /users/:user_id/favorite_users` route.
-pub fn favorite_users(req: &mut Request) -> CargoResult<Response> {
+pub fn favorite_users(req: &mut dyn Request) -> CargoResult<Response> {
     let user_id: i32 = req.params()["user_id"].parse()
         .expect("User ID not found");
     let conn = req.db_conn()?;
@@ -101,10 +100,10 @@ pub fn favorite_users(req: &mut Request) -> CargoResult<Response> {
         .filter(favorite_users::user_id.eq(user_id))
         .select(users::all_columns)
         .load::<User>(&*conn)?
-        .into_iter().map(|u| u.encodable()).collect();
+        .into_iter().map(|u| u.encodable_public()).collect();
 
-    #[derive(RustcEncodable)]
-    struct R { users: Vec<EncodableUser> }
+    #[derive(Serialize)]
+    struct R { users: Vec<EncodablePublicUser> }
     Ok(req.json(&R{ users: users }))
 }
 
