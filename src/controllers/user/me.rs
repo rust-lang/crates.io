@@ -87,7 +87,7 @@ pub fn favorited(req: &mut dyn Request) -> CargoResult<Response> {
         .get_result(&*conn)?;
     #[derive(Serialize)]
     struct R { favorited: bool }
-    Ok(req.json(&R { favorited: favorited }))
+    Ok(req.json(&R { favorited }))
 }
 
 /// Handles the `GET /users/:user_id/favorite_users` route.
@@ -100,11 +100,11 @@ pub fn favorite_users(req: &mut dyn Request) -> CargoResult<Response> {
         .filter(favorite_users::user_id.eq(user_id))
         .select(users::all_columns)
         .load::<User>(&*conn)?
-        .into_iter().map(|u| u.encodable_public()).collect();
+        .into_iter().map(User::encodable_public).collect();
 
     #[derive(Serialize)]
     struct R { users: Vec<EncodablePublicUser> }
-    Ok(req.json(&R{ users: users }))
+    Ok(req.json(&R{ users }))
 }
 
 /// Handles the `GET /me/updates` route.
