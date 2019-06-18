@@ -34,7 +34,7 @@ pub struct NewUser<'a> {
 
 #[derive(Copy, Clone, Debug, Insertable, Queryable, Identifiable, Associations)]
 #[primary_key(user_id, target_id)]
-#[table_name="favorite_users"]
+#[table_name = "favorite_users"]
 pub struct FavoriteUser {
     pub user_id: i32,
     pub target_id: i32,

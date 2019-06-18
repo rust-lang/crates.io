@@ -79,7 +79,10 @@ pub fn build_router(app: &App) -> R404 {
     api_router.get("/users/:user_id/favorited", C(user::me::favorited));
     api_router.put("/users/:user_id/favorite", C(user::me::favorite));
     api_router.delete("/users/:user_id/favorite", C(user::me::unfavorite));
-    api_router.get("/users/:user_id/favorite_users", C(user::me::favorite_users));
+    api_router.get(
+        "/users/:user_id/favorite_users",
+        C(user::me::favorite_users),
+    );
     api_router.get("/me", C(user::me::me));
     api_router.get("/me/updates", C(user::me::updates));
     api_router.get("/me/tokens", C(token::list));

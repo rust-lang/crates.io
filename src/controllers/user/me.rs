@@ -63,7 +63,9 @@ pub fn favorite(req: &mut dyn Request) -> CargoResult<Response> {
         .on_conflict_do_nothing()
         .execute(&*conn)?;
     #[derive(Serialize)]
-    struct R { ok: bool }
+    struct R {
+        ok: bool,
+    }
     Ok(req.json(&R { ok: true }))
 }
 
@@ -73,7 +75,9 @@ pub fn unfavorite(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
     diesel::delete(&favorite).execute(&*conn)?;
     #[derive(Serialize)]
-    struct R { ok: bool }
+    struct R {
+        ok: bool,
+    }
     Ok(req.json(&R { ok: true }))
 }
 
@@ -83,28 +87,34 @@ pub fn favorited(req: &mut dyn Request) -> CargoResult<Response> {
 
     let fav = favorite_target(req)?;
     let conn = req.db_conn()?;
-    let favorited = diesel::select(exists(favorite_users::table.find(fav.id())))
-        .get_result(&*conn)?;
+    let favorited =
+        diesel::select(exists(favorite_users::table.find(fav.id()))).get_result(&*conn)?;
     #[derive(Serialize)]
-    struct R { favorited: bool }
+    struct R {
+        favorited: bool,
+    }
     Ok(req.json(&R { favorited }))
 }
 
 /// Handles the `GET /users/:user_id/favorite_users` route.
 pub fn favorite_users(req: &mut dyn Request) -> CargoResult<Response> {
-    let user_id: i32 = req.params()["user_id"].parse()
-        .expect("User ID not found");
+    let user_id: i32 = req.params()["user_id"].parse().expect("User ID not found");
     let conn = req.db_conn()?;
 
-    let users = users::table.inner_join(favorite_users::table)
+    let users = users::table
+        .inner_join(favorite_users::table)
         .filter(favorite_users::user_id.eq(user_id))
         .select(users::all_columns)
         .load::<User>(&*conn)?
-        .into_iter().map(User::encodable_public).collect();
+        .into_iter()
+        .map(User::encodable_public)
+        .collect();
 
     #[derive(Serialize)]
-    struct R { users: Vec<EncodablePublicUser> }
-    Ok(req.json(&R{ users }))
+    struct R {
+        users: Vec<EncodablePublicUser>,
+    }
+    Ok(req.json(&R { users }))
 }
 
 /// Handles the `GET /me/updates` route.
