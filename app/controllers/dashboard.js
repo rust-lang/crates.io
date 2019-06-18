@@ -63,9 +63,12 @@ export default Controller.extend({
         },
 
         unfavoriteUser: function(user) {
-            this.store.adapterFor('user').unfavorite(user.id).then(() => {
-                this.get('favoriteUsers').users.removeObject(user);
-            });
-        }
-    }
+            this.store
+                .adapterFor('user')
+                .unfavorite(user.id)
+                .then(() => {
+                    this.get('favoriteUsers').users.removeObject(user);
+                });
+        },
+    },
 });

@@ -36,11 +36,14 @@ export default Route.extend(AuthenticatedRoute, {
 
         let favoriteUsers = user.favoriteUsers();
 
-        this.set('data', await RSVP.hash({
-            myCrates,
-            myFollowing,
-            myStats,
-            favoriteUsers
-        }));
+        this.set(
+            'data',
+            await RSVP.hash({
+                myCrates,
+                myFollowing,
+                myStats,
+                favoriteUsers,
+            }),
+        );
     },
 });
