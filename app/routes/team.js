@@ -16,6 +16,7 @@ export default Route.extend({
         return this.store.queryRecord('team', { team_id }).then(
             team => {
                 params.team_id = team.get('id');
+                params.include_yanked = 'n';
                 return RSVP.hash({
                     crates: this.store.query('crate', params),
                     team,
