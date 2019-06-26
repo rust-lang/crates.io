@@ -8,6 +8,6 @@ module.exports = {
     rules: {
         'block-indentation': false,
         'img-alt-attributes': false,
-        'triple-curlies': false,
+        'no-triple-curlies': false,
     },
 };
