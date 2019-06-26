@@ -17,11 +17,13 @@ extern crate serde_json;
 
 use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{
-    middleware::current_user::AuthenticationSource,
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
     util::CargoResult,
-    views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate},
+    views::{
+        EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
+        EncodableOwner, EncodableVersion, GoodCrate,
+    },
     App, Config, Env, Replica, Uploader,
 };
 use std::{
@@ -32,7 +34,6 @@ use std::{
     },
 };
 
-use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{Client, Proxy};
@@ -45,26 +46,6 @@ macro_rules! t {
             Err(m) => panic!("{} failed with: {}", stringify!($e), m),
         }
     };
-}
-
-macro_rules! ok_resp {
-    ($e:expr) => {{
-        let resp = t!($e);
-        if !crate::ok_resp(&resp) {
-            panic!("bad response: {:?}", resp.status);
-        }
-        resp
-    }};
-}
-
-macro_rules! bad_resp {
-    ($e:expr) => {{
-        let mut resp = t!($e);
-        match crate::bad_resp(&mut resp) {
-            None => panic!("ok response: {:?}", resp.status),
-            Some(b) => b,
-        }
-    }};
 }
 
 mod badge;
@@ -108,6 +89,23 @@ pub struct VersionResponse {
 #[derive(Deserialize)]
 pub struct OwnerTeamsResponse {
     teams: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+pub struct OwnersResponse {
+    users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+pub struct CategoryResponse {
+    category: EncodableCategoryWithSubcategories,
+}
+#[derive(Deserialize)]
+pub struct CategoryListResponse {
+    categories: Vec<EncodableCategory>,
+    meta: CategoryMeta,
+}
+#[derive(Deserialize)]
+pub struct CategoryMeta {
+    total: i32,
 }
 #[derive(Deserialize)]
 pub struct OkBool {
@@ -254,12 +252,6 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
     Ok(())
 }
 
-fn sign_in_as(req: &mut dyn Request, user: &User) {
-    req.mut_extensions().insert(user.clone());
-    req.mut_extensions()
-        .insert(AuthenticationSource::SessionCookie);
-}
-
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use cargo_registry::schema::dependencies::dsl::*;
     use diesel::insert_into;
@@ -283,10 +275,6 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
         slug,
         description,
     }
-}
-
-fn logout(req: &mut dyn Request) {
-    req.mut_extensions().pop::<User>();
 }
 
 #[test]

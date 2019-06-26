@@ -20,7 +20,8 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool, VersionResponse,
+    builders::PublishBuilder, record, CategoryListResponse, CategoryResponse, CrateList,
+    CrateResponse, GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
 use cargo_registry::{
     background_jobs::Environment,
@@ -382,10 +383,26 @@ pub trait RequestHelper {
         self.get(&url).good()
     }
 
+    /// Request the JSON used to list a crate's owners
+    fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        self.get(&url).good()
+    }
+
     /// Request the JSON used for a crate version's page
     fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{}/{}", krate_name, version);
         self.get(&url).good()
+    }
+
+    fn show_category(&self, category_name: &str) -> CategoryResponse {
+        let url = format!("/api/v1/categories/{}", category_name);
+        self.get(&url).good()
+    }
+
+    fn show_category_list(&self) -> CategoryListResponse {
+        let url = "/api/v1/categories";
+        self.get(url).good()
     }
 }
 
@@ -429,6 +446,14 @@ impl RequestHelper for MockCookieUser {
 }
 
 impl MockCookieUser {
+    /// Creates an instance from a database `User` instance
+    pub fn new(app: &TestApp, user: User) -> Self {
+        Self {
+            app: TestApp(Rc::clone(&app.0)),
+            user,
+        }
+    }
+
     /// Returns a reference to the database `User` model
     pub fn as_model(&self) -> &User {
         &self.user
