@@ -111,28 +111,31 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
             }
         }
 
-        let mut msgs = Vec::new();
-
-        for login in &logins {
-            if add {
+        let comma_sep_msg = if add {
+            let mut msgs = Vec::new();
+            for login in &logins {
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
                 if owners.iter().any(login_test) {
                     return Err(human(&format_args!("`{}` is already an owner", login)));
                 }
-                let msg = krate.owner_add(req.app(), &conn, user, login)?;
+                let msg = krate.owner_add(app, &conn, user, login)?;
                 msgs.push(msg);
-            } else {
-                // Removing the team that gives you rights is prevented because
-                // team members only have Rights::Publish
-                if owners.len() == 1 {
-                    return Err(human("cannot remove the sole owner of a crate"));
-                }
-                krate.owner_remove(req.app(), &conn, user, login)?;
             }
-        }
-
-        let comma_sep_msg = msgs.join(",");
+            msgs.join(",")
+        } else {
+            for login in &logins {
+                krate.owner_remove(app, &conn, user, login)?;
+            }
+            if User::owning(&krate, &conn)?.is_empty() {
+                return Err(human(
+                    "cannot remove all individual owners of a crate. \
+                     Team member don't have permission to modify owners, so \
+                     at least one individual owner is required.",
+                ));
+            }
+            "owners successfully removed".to_owned()
+        };
 
         #[derive(Serialize)]
         struct R {

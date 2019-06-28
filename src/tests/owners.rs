@@ -139,7 +139,7 @@ fn owners_can_remove_self() {
         .bad_with_status(200);
     assert!(json.errors[0]
         .detail
-        .contains("cannot remove the sole owner of a crate"));
+        .contains("cannot remove all individual owners of a crate"));
 
     create_and_add_owner(&app, &token, "secondowner", &krate);
 
@@ -169,6 +169,15 @@ fn modify_multiple_owners() {
 
     let user2 = create_and_add_owner(&app, &token, "user2", &krate);
     let user3 = create_and_add_owner(&app, &token, "user3", &krate);
+
+    // Deleting all owners is not allowed.
+    let json = token
+        .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
+        .bad_with_status(200);
+    assert!(&json.errors[0]
+        .detail
+        .contains("cannot remove all individual owners of a crate"));
+    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
 
     // Deleting two owners at once is allowed.
     let json = token
