@@ -91,51 +91,57 @@ fn parse_owners_request(req: &mut dyn Request) -> CargoResult<Vec<String>> {
 
 fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
     let logins = parse_owners_request(req)?;
+    let app = req.app();
     let user = req.user()?;
+    let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
-    let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
-    let owners = krate.owners(&conn)?;
 
-    match user.rights(req.app(), &owners)? {
-        Rights::Full => {}
-        // Yes!
-        Rights::Publish => {
-            return Err(human("team members don't have permission to modify owners"));
-        }
-        Rights::None => {
-            return Err(human("only owners have permission to modify owners"));
-        }
-    }
+    conn.transaction(|| {
+        let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+        let owners = krate.owners(&conn)?;
 
-    let mut msgs = Vec::new();
-
-    for login in &logins {
-        if add {
-            let login_test = |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
-            if owners.iter().any(login_test) {
-                return Err(human(&format_args!("`{}` is already an owner", login)));
+        match user.rights(app, &owners)? {
+            Rights::Full => {}
+            // Yes!
+            Rights::Publish => {
+                return Err(human("team members don't have permission to modify owners"));
             }
-            let msg = krate.owner_add(req.app(), &conn, user, login)?;
-            msgs.push(msg);
-        } else {
-            // Removing the team that gives you rights is prevented because
-            // team members only have Rights::Publish
-            if owners.len() == 1 {
-                return Err(human("cannot remove the sole owner of a crate"));
+            Rights::None => {
+                return Err(human("only owners have permission to modify owners"));
             }
-            krate.owner_remove(req.app(), &conn, user, login)?;
         }
-    }
 
-    let comma_sep_msg = msgs.join(",");
+        let mut msgs = Vec::new();
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-        msg: String,
-    }
-    Ok(req.json(&R {
-        ok: true,
-        msg: comma_sep_msg,
-    }))
+        for login in &logins {
+            if add {
+                let login_test =
+                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+                if owners.iter().any(login_test) {
+                    return Err(human(&format_args!("`{}` is already an owner", login)));
+                }
+                let msg = krate.owner_add(req.app(), &conn, user, login)?;
+                msgs.push(msg);
+            } else {
+                // Removing the team that gives you rights is prevented because
+                // team members only have Rights::Publish
+                if owners.len() == 1 {
+                    return Err(human("cannot remove the sole owner of a crate"));
+                }
+                krate.owner_remove(req.app(), &conn, user, login)?;
+            }
+        }
+
+        let comma_sep_msg = msgs.join(",");
+
+        #[derive(Serialize)]
+        struct R {
+            ok: bool,
+            msg: String,
+        }
+        Ok(req.json(&R {
+            ok: true,
+            msg: comma_sep_msg,
+        }))
+    })
 }
