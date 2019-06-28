@@ -68,10 +68,29 @@ pub fn remove_owners(req: &mut dyn Request) -> CargoResult<Response> {
     modify_owners(req, false)
 }
 
-fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
+/// Parse the JSON request body of requests to modify the owners of a crate.
+/// The format is
+///
+///     {"owners": ["username", "github:org:team", ...]}
+fn parse_owners_request(req: &mut dyn Request) -> CargoResult<Vec<String>> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
+    #[derive(Deserialize)]
+    struct Request {
+        // identical, for back-compat (owners preferred)
+        users: Option<Vec<String>>,
+        owners: Option<Vec<String>>,
+    }
+    let request: Request =
+        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+    request
+        .owners
+        .or(request.users)
+        .ok_or_else(|| human("invalid json request"))
+}
 
+fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
+    let logins = parse_owners_request(req)?;
     let user = req.user()?;
     let conn = req.db_conn()?;
     let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
@@ -87,21 +106,6 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
             return Err(human("only owners have permission to modify owners"));
         }
     }
-
-    #[derive(Deserialize)]
-    struct Request {
-        // identical, for back-compat (owners preferred)
-        users: Option<Vec<String>>,
-        owners: Option<Vec<String>>,
-    }
-
-    let request: Request =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
-
-    let logins = request
-        .owners
-        .or(request.users)
-        .ok_or_else(|| human("invalid json request"))?;
 
     let mut msgs = Vec::new();
 
