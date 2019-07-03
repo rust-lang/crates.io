@@ -3,7 +3,7 @@
 set -e
 
 manual_stamp_file=target/ci_manual_stamp
-manual_stamp=4 # Change this to force a clean build on CI
+manual_stamp=6 # Change this to force a clean build on CI
 
 if [ -f $manual_stamp_file ]; then
     if echo "$manual_stamp" | cmp -s $manual_stamp_file -; then
