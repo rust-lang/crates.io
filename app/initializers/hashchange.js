@@ -27,8 +27,9 @@ function hashchange() {
 }
 
 export function initialize() {
-    if (typeof window.addEventListener === 'undefined') {
-        return; // Fastboot
+    if (typeof window === 'undefined' || typeof window.addEventListener === 'undefined') {
+        // Don't run this initializer under FastBoot
+        return;
     }
     window.addEventListener('hashchange', hashchange);
 
