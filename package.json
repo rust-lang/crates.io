@@ -25,7 +25,8 @@
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
     "test": "ember exam --split=2 --parallel",
-    "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
+    "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report",
+    "nf": "nf"
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
@@ -76,6 +77,7 @@
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-ember": "^5.1.0",
     "eslint-plugin-prettier": "^2.6.0",
+    "foreman": "^3.0.1",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
     "nyc": "^11.6.0",

@@ -1,0 +1,2 @@
+ember: node fastboot.js
+api: ./target/release/server
