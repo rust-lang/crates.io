@@ -23,11 +23,7 @@ module.exports = function(environment) {
             // when it is created
         },
         fastboot: {
-          hostWhitelist: [
-            'crates.io',
-            /^localhost:\d+$/,
-            /\.herokuapp\.com$/
-          ],
+            hostWhitelist: ['crates.io', /^localhost:\d+$/, /\.herokuapp\.com$/],
         },
     };
 
