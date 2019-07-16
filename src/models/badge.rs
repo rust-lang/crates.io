@@ -48,6 +48,10 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
+    CirrusCi {
+        repository: String,
+        branch: Option<String>,
+    },
     IsItMaintainedIssueResolution {
         repository: String,
     },

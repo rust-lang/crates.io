@@ -21,6 +21,8 @@ struct BadgeRef {
     coveralls_attributes: HashMap<String, String>,
     circle_ci: Badge,
     circle_ci_attributes: HashMap<String, String>,
+    cirrus_ci: Badge,
+    cirrus_ci_attributes: HashMap<String, String>,
     maintenance: Badge,
     maintenance_attributes: HashMap<String, String>,
 }
@@ -134,6 +136,14 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let cirrus_ci = Badge::CirrusCi {
+        repository: String::from("rust-lang/rust"),
+        branch: Some(String::from("beta")),
+    };
+    let mut badge_attributes_cirrus_ci = HashMap::new();
+    badge_attributes_cirrus_ci.insert(String::from("branch"), String::from("beta"));
+    badge_attributes_cirrus_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+
     let maintenance = Badge::Maintenance {
         status: MaintenanceStatus::LookingForMaintainer,
     };
@@ -163,6 +173,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         coveralls_attributes: badge_attributes_coveralls,
         circle_ci,
         circle_ci_attributes: badge_attributes_circle_ci,
+        cirrus_ci,
+        cirrus_ci_attributes: badge_attributes_cirrus_ci,
         maintenance,
         maintenance_attributes,
     };
@@ -288,6 +300,17 @@ fn update_add_circle_ci() {
     badges.insert(String::from("circle-ci"), test_badges.circle_ci_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.circle_ci]);
+}
+
+#[test]
+fn update_add_cirrus_ci() {
+    // Add a Cirrus CI badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(String::from("cirrus-ci"), test_badges.cirrus_ci_attributes);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.cirrus_ci]);
 }
 
 #[test]
@@ -544,6 +567,23 @@ fn circle_ci_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "circle-ci");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn cirrus_ci_required_keys() {
+    // Add a Cirrus CI badge missing a required field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.cirrus_ci_attributes.remove("repository");
+    badges.insert(String::from("cirrus-ci"), test_badges.cirrus_ci_attributes);
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "cirrus-ci");
     assert_eq!(krate.badges(), vec![]);
 }
 
