@@ -184,7 +184,8 @@ fn add_team_as_non_member() {
 #[test]
 fn remove_team_as_named_owner() {
     let (app, _) = TestApp::with_proxy().empty();
-    let user_on_both_teams = app.db_new_user(mock_user_on_both_teams().gh_login);
+    let username = mock_user_on_both_teams().gh_login;
+    let user_on_both_teams = app.db_new_user(username);
     let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
 
     app.db(|conn| {
@@ -194,6 +195,15 @@ fn remove_team_as_named_owner() {
     token_on_both_teams
         .add_named_owner("foo_remove_team", "github:crates-test-org:core")
         .good();
+
+    // Removing the individual owner is not allowed, since team members don't
+    // have permission to manage ownership
+    let json = token_on_both_teams
+        .remove_named_owner("foo_remove_team", username)
+        .bad_with_status(200);
+    assert!(json.errors[0]
+        .detail
+        .contains("cannot remove all individual owners of a crate"));
 
     token_on_both_teams
         .remove_named_owner("foo_remove_team", "github:crates-test-org:core")

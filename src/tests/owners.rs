@@ -2,7 +2,7 @@ use crate::{
     add_team_to_crate,
     builders::{CrateBuilder, PublishBuilder},
     new_team,
-    util::RequestHelper,
+    util::{MockCookieUser, MockTokenUser, RequestHelper},
     TestApp,
 };
 use cargo_registry::{
@@ -26,7 +26,7 @@ struct InvitationListResponse {
 }
 
 // Implementing locally for now, unless these are needed elsewhere
-impl crate::util::MockCookieUser {
+impl MockCookieUser {
     /// As the currently logged in user, accept an invitation to become an owner of the named
     /// crate.
     fn accept_ownership_invitation(&self, krate_name: &str, krate_id: i32) {
@@ -111,41 +111,96 @@ fn new_crate_owner() {
         .good();
 }
 
+fn create_and_add_owner(
+    app: &TestApp,
+    token: &MockTokenUser,
+    username: &str,
+    krate: &Crate,
+) -> MockCookieUser {
+    let user = app.db_new_user(username);
+    token.add_user_owner(&krate.name, user.as_model());
+    user.accept_ownership_invitation(&krate.name, krate.id);
+    user
+}
+
 // Ensures that so long as at least one owner remains associated with the crate,
 // a user can still remove their own login as an owner
 #[test]
 fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token();
+    let username = &user.as_model().gh_login;
 
     let krate = app
         .db(|conn| CrateBuilder::new("owners_selfremove", user.as_model().id).expect_build(conn));
 
     // Deleting yourself when you're the only owner isn't allowed.
     let json = token
-        .remove_named_owner("owners_selfremove", &user.as_model().gh_login)
+        .remove_named_owner("owners_selfremove", username)
         .bad_with_status(200);
     assert!(json.errors[0]
         .detail
-        .contains("cannot remove the sole owner of a crate"));
+        .contains("cannot remove all individual owners of a crate"));
 
-    let user2 = app.db_new_user("secondowner");
-    token.add_user_owner("owners_selfremove", user2.as_model());
-    user2.accept_ownership_invitation("owners_selfremove", krate.id);
+    create_and_add_owner(&app, &token, "secondowner", &krate);
 
     // Deleting yourself when there are other owners is allowed.
     let json = token
-        .remove_named_owner("owners_selfremove", &user.as_model().gh_login)
+        .remove_named_owner("owners_selfremove", username)
         .good();
     assert!(json.ok);
 
     // After you delete yourself, you no longer have permisions to manage the crate.
     let json = token
-        .remove_named_owner("owners_selfremove", &user2.as_model().gh_login)
+        .remove_named_owner("owners_selfremove", username)
         .bad_with_status(200);
-
     assert!(json.errors[0]
         .detail
         .contains("only owners have permission to modify owners",));
+}
+
+// Verify consistency when adidng or removing multiple owners in a single request.
+#[test]
+fn modify_multiple_owners() {
+    let (app, _, user, token) = TestApp::init().with_token();
+    let username = &user.as_model().gh_login;
+
+    let krate =
+        app.db(|conn| CrateBuilder::new("owners_multiple", user.as_model().id).expect_build(conn));
+
+    let user2 = create_and_add_owner(&app, &token, "user2", &krate);
+    let user3 = create_and_add_owner(&app, &token, "user3", &krate);
+
+    // Deleting all owners is not allowed.
+    let json = token
+        .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
+        .bad_with_status(200);
+    assert!(&json.errors[0]
+        .detail
+        .contains("cannot remove all individual owners of a crate"));
+    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
+
+    // Deleting two owners at once is allowed.
+    let json = token
+        .remove_named_owners("owners_multiple", &["user2", "user3"])
+        .good();
+    assert!(json.ok);
+    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 1);
+
+    // Adding multiple users fails if one of them already is an owner.
+    let json = token
+        .add_named_owners("owners_multiple", &["user2", username])
+        .bad_with_status(200);
+    assert!(&json.errors[0].detail.contains("is already an owner"));
+    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 1);
+
+    // Adding multiple users at once succeeds.
+    let json = token
+        .add_named_owners("owners_multiple", &["user2", "user3"])
+        .good();
+    assert!(json.ok);
+    user2.accept_ownership_invitation(&krate.name, krate.id);
+    user3.accept_ownership_invitation(&krate.name, krate.id);
+    assert_eq!(app.db(|conn| krate.owners(&conn).unwrap()).len(), 3);
 }
 
 /*  Testing the crate ownership between two crates and one team.
