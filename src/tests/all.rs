@@ -74,6 +74,8 @@ pub struct CrateList {
 #[derive(Deserialize)]
 struct CrateMeta {
     total: i32,
+    next_page: Option<String>,
+    prev_page: Option<String>,
 }
 #[derive(Deserialize)]
 pub struct CrateResponse {

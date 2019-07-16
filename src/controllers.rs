@@ -14,6 +14,7 @@ mod prelude {
     use std::collections::HashMap;
     use std::io;
 
+    use indexmap::IndexMap;
     use serde::Serialize;
     use url;
 
@@ -21,7 +22,7 @@ mod prelude {
         fn redirect(&self, url: String) -> Response;
 
         fn json<T: Serialize>(&self, t: &T) -> Response;
-        fn query(&self) -> HashMap<String, String>;
+        fn query(&self) -> IndexMap<String, String>;
         fn wants_json(&self) -> bool;
         fn pagination(&self, default: usize, max: usize) -> CargoResult<(i64, i64)>;
     }
@@ -31,7 +32,7 @@ mod prelude {
             crate::util::json_response(t)
         }
 
-        fn query(&self) -> HashMap<String, String> {
+        fn query(&self) -> IndexMap<String, String> {
             url::form_urlencoded::parse(self.query_string().unwrap_or("").as_bytes())
                 .map(|(a, b)| (a.into_owned(), b.into_owned()))
                 .collect()
