@@ -2215,3 +2215,26 @@ fn publish_rate_limit_doesnt_affect_existing_crates() {
     token.enqueue_publish(new_version).good();
     app.run_pending_background_jobs();
 }
+
+#[test]
+fn pagination_links_included_if_applicable() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
+        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
+    });
+
+    let page1 = anon.search("per_page=1");
+    let page2 = anon.search("page=2&per_page=1");
+    let page3 = anon.search("page=3&per_page=1");
+
+    assert_eq!(Some("?per_page=1&page=2".to_string()), page1.meta.next_page);
+    assert_eq!(None, page1.meta.prev_page);
+    assert_eq!(Some("?page=3&per_page=1".to_string()), page2.meta.next_page);
+    assert_eq!(Some("?page=1&per_page=1".to_string()), page2.meta.prev_page);
+    assert_eq!(None, page3.meta.next_page);
+    assert_eq!(Some("?page=2&per_page=1".to_string()), page3.meta.prev_page);
+}

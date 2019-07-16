@@ -192,7 +192,7 @@ fn markdown_to_html(text: &str, base_url: Option<&str>) -> String {
 
 /// Any readme with a filename ending in one of these extensions will be rendered as Markdown.
 /// Note we also render a readme as Markdown if _no_ extension is on the filename.
-static MARKDOWN_EXTENSIONS: [&'static str; 7] = [
+static MARKDOWN_EXTENSIONS: [&str; 7] = [
     ".md",
     ".markdown",
     ".mdown",
