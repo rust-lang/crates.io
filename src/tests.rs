@@ -8,7 +8,7 @@ use hyper;
 
 struct OkResult;
 impl Handler for OkResult {
-    fn call(&self, _req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         Ok(Response {
             status: (200, "OK"),
             headers: build_headers("value"),
@@ -19,7 +19,7 @@ impl Handler for OkResult {
 
 struct ErrorResult;
 impl Handler for ErrorResult {
-    fn call(&self, _req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let error = ::std::io::Error::last_os_error();
         Err(Box::new(error))
     }
@@ -27,14 +27,14 @@ impl Handler for ErrorResult {
 
 struct Panic;
 impl Handler for Panic {
-    fn call(&self, _req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         panic!()
     }
 }
 
 struct InvalidHeader;
 impl Handler for InvalidHeader {
-    fn call(&self, _req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let mut headers = build_headers("discarded");
         headers.insert("invalid".into(), vec!["\r\n".into()]);
         Ok(Response {
@@ -47,7 +47,7 @@ impl Handler for InvalidHeader {
 
 struct InvalidStatus;
 impl Handler for InvalidStatus {
-    fn call(&self, _req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, _req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         Ok(Response {
             status: (1000, "invalid status code"),
             headers: build_headers("discarded"),
@@ -58,7 +58,7 @@ impl Handler for InvalidStatus {
 
 struct AssertPathNormalized;
 impl Handler for AssertPathNormalized {
-    fn call(&self, req: &mut Request) -> Result<Response, Box<Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         if req.path() == "/normalized" {
             OkResult.call(req)
         } else {

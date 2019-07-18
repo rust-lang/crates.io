@@ -104,7 +104,7 @@ impl conduit::Request for ConduitRequest {
         conduit::Scheme::Http
     }
 
-    fn headers(&self) -> &conduit::Headers {
+    fn headers(&self) -> &dyn conduit::Headers {
         &self.parts
     }
 
@@ -152,7 +152,7 @@ impl conduit::Request for ConduitRequest {
         self.parts.0.uri.query()
     }
 
-    fn body(&mut self) -> &mut Read {
+    fn body(&mut self) -> &mut dyn Read {
         &mut self.body
     }
 }
@@ -214,7 +214,7 @@ impl<H: conduit::Handler> hyper::service::NewService for Service<H> {
     type ResBody = Body;
     type Error = hyper::Error;
     type Service = Service<H>;
-    type Future = Box<Future<Item = Self::Service, Error = Self::InitError> + Send>;
+    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
     type InitError = hyper::Error;
 
     fn new_service(&self) -> Self::Future {
@@ -226,7 +226,7 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = Response<Self::ResBody>, Error = Self::Error> + Send>;
+    type Future = Box<dyn Future<Item = Response<Self::ResBody>, Error = Self::Error> + Send>;
 
     /// Returns a future which buffers the response body and then calls the conduit handler from a thread pool
     fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
