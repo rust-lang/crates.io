@@ -10,13 +10,13 @@ edition = "2018"
 
 [dependencies]
 conduit = "0.8"
-futures = "0.1"
-hyper = "0.12"
+futures-preview = "0.3.0-alpha.17"
+hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper" }
 http = "0.1"
 log = "0.4"
 semver = "0.5" # Must match version in conduit for now
-tokio-threadpool = "0.1.12"
+tokio-threadpool = { git = "https://github.com/tokio-rs/tokio" }
 
 [dev-dependencies]
 conduit-router = "0.8"
-tokio = "0.1"
+tokio = { git = "https://github.com/tokio-rs/tokio", default-features = false, features = ["rt-full"] }
