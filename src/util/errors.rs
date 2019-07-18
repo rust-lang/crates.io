@@ -226,9 +226,15 @@ impl AppError for InternalAppError {
 #[derive(Debug, Clone, Copy)]
 pub struct NotFound;
 
+impl From<NotFound> for AppResponse {
+    fn from(_: NotFound) -> AppResponse {
+        json_error("Not Found", StatusCode::NOT_FOUND)
+    }
+}
+
 impl AppError for NotFound {
     fn response(&self) -> Option<AppResponse> {
-        Some(json_error("Not Found", StatusCode::NOT_FOUND))
+        Some(NotFound.into())
     }
 }
 

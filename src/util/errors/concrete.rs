@@ -5,6 +5,7 @@ pub enum Error {
     DbConnect(diesel::result::ConnectionError),
     DbQuery(diesel::result::Error),
     DotEnv(dotenv::Error),
+    Http(http::Error),
     Internal(String),
     Io(io::Error),
     JobEnqueue(swirl::EnqueueError),
@@ -20,6 +21,7 @@ impl fmt::Display for Error {
             Error::DbConnect(inner) => inner.fmt(f),
             Error::DbQuery(inner) => inner.fmt(f),
             Error::DotEnv(inner) => inner.fmt(f),
+            Error::Http(inner) => inner.fmt(f),
             Error::Internal(inner) => inner.fmt(f),
             Error::Io(inner) => inner.fmt(f),
             Error::JobEnqueue(inner) => inner.fmt(f),
@@ -44,6 +46,12 @@ impl From<diesel::result::Error> for Error {
 impl From<dotenv::Error> for Error {
     fn from(err: dotenv::Error) -> Self {
         Error::DotEnv(err)
+    }
+}
+
+impl From<http::Error> for Error {
+    fn from(err: http::Error) -> Self {
+        Error::Http(err)
     }
 }
 
