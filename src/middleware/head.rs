@@ -22,11 +22,7 @@ impl AroundMiddleware for Head {
 impl Handler for Head {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         if req.method() == Method::Head {
-            let mut req = RequestProxy {
-                other: req,
-                path: None,
-                method: Some(Method::Get),
-            };
+            let mut req = RequestProxy::rewrite_method(req, Method::Get);
             self.handler
                 .as_ref()
                 .unwrap()
