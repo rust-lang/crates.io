@@ -25,21 +25,20 @@ impl AroundMiddleware for EmberIndexRewrite {
 
 impl Handler for EmberIndexRewrite {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        // If the client is requesting html, then we've only got one page so
-        // rewrite the request.
-        let wants_html = req
-            .headers()
-            .find("Accept")
-            .map(|accept| accept.iter().any(|s| s.contains("html")))
-            .unwrap_or(false);
-        // If the route starts with /api, just assume they want the API
-        // response and fall through.
-        let is_api_path = req.path().starts_with("/api");
         let handler = self.handler.as_ref().unwrap();
-        if wants_html && !is_api_path {
-            handler.call(&mut RequestProxy::rewrite_path(req, "/index.html"))
-        } else {
+        let is_backend_path = match req.path() {
+            // Special case routes used for authentication
+            "/authorize" | "/authorize_url" | "/logout" => true,
+            // Paths starting with `/api` are intended for the backend
+            path if path.starts_with("/api") => true,
+            _ => false,
+        };
+
+        if is_backend_path {
             handler.call(req)
+        } else {
+            // Serve static Ember page to bootstrap the frontend
+            handler.call(&mut RequestProxy::rewrite_path(req, "/index.html"))
         }
     }
 }

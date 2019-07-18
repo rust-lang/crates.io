@@ -108,6 +108,8 @@ pub fn build_router(app: &App) -> R404 {
     router.head("/api/v1/*path", R(Arc::clone(&api_router)));
     router.delete("/api/v1/*path", R(api_router));
 
+    // These routes are special cased in the EmberIndexRewrite middleware.
+    // Avoid adding new ones and keep in sync with the list there!
     router.get("/authorize_url", C(user::session::github_authorize));
     router.get("/authorize", C(user::session::github_access_token));
     router.delete("/logout", C(user::session::logout));
