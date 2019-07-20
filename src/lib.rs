@@ -19,7 +19,6 @@
 //! use tokio::runtime::Runtime;
 //!
 //! fn main() {
-//!     let a = ();
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
 //!     let server = Server::bind(&addr, app).map_err(|e| {
@@ -36,21 +35,18 @@
 //! #     Endpoint()
 //! }
 //! #
-//! # use std::collections::HashMap;
-//! # use std::error::Error;
-//! # use std::io::Cursor;
+//! # use std::{collections, error, io};
 //! #
 //! # use conduit::{Request, Response};
 //! #
 //! # struct Endpoint();
 //! #
 //! # impl Handler for Endpoint {
-//! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-//! #         let body = "";
+//! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
 //! #         Ok(Response {
 //! #             status: (200, "OK"),
-//! #             headers: HashMap::new(),
-//! #             body: Box::new(Cursor::new(body)),
+//! #             headers: collections::HashMap::new(),
+//! #             body: Box::new(io::Cursor::new("")),
 //! #         })
 //! #     }
 //! # }

@@ -18,6 +18,5 @@ semver = "0.5" # Must match version in conduit for now
 tokio-threadpool = "0.1.12"
 
 [dev-dependencies]
-conduit = "0.8"
 conduit-router = "0.8"
 tokio = "0.1"
