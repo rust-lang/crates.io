@@ -9,12 +9,26 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use futures::{future, Future, Stream};
-use futures_cpupool::CpuPool;
-use hyper::{Body, Chunk, Method, Request, Response, Server, StatusCode, Version};
+use hyper::{Body, Chunk, Method, Request, Response, StatusCode, Version};
 use log::error;
 
 // Consumers of this library need access to this particular version of `semver`
 pub use semver;
+
+/// A builder for a `hyper::Server`
+#[derive(Debug)]
+pub struct Server;
+
+impl Server {
+    /// Bind a handler to an address
+    pub fn bind<H: conduit::Handler>(
+        addr: &SocketAddr,
+        handler: H,
+    ) -> hyper::Server<hyper::server::conn::AddrIncoming, Service<H>> {
+        let service = Service::new(handler);
+        hyper::Server::bind(&addr).serve(service)
+    }
+}
 
 #[derive(Debug)]
 struct Parts(http::request::Parts);
@@ -67,7 +81,7 @@ struct ConduitRequest {
     parts: Parts,
     path: String,
     body: Cursor<Chunk>,
-    extensions: conduit::Extensions,
+    extensions: conduit::Extensions, // makes struct non-Send
 }
 
 impl conduit::Request for ConduitRequest {
@@ -157,8 +171,34 @@ impl conduit::Request for ConduitRequest {
     }
 }
 
+/// Owned data consumed by the worker thread
+///
+/// `ConduitRequest` cannot be sent between threads, so the input data is
+/// captured on a core thread and taken by the worker thread.
+struct RequestInfo(Option<(Parts, Chunk)>);
+
+impl RequestInfo {
+    /// Save the request info that can be sent between threads
+    fn new(parts: http::request::Parts, body: Chunk) -> Self {
+        let tuple = (Parts(parts), body);
+        Self(Some(tuple))
+    }
+
+    /// Take back the request info
+    ///
+    /// Call this from the worker thread to obtain ownership of the `Send` data
+    ///
+    /// # Panics
+    ///
+    /// Panics if called more than once on a value
+    fn take(&mut self) -> (Parts, Chunk) {
+        self.0.take().expect("called take multiple times")
+    }
+}
+
 impl ConduitRequest {
-    fn new(parts: Parts, body: Chunk) -> ConduitRequest {
+    fn new(info: &mut RequestInfo) -> Self {
+        let (parts, body) = info.take();
         let path = parts.0.uri.path().to_string();
         let path = Path::new(&path);
         let path = path
@@ -183,7 +223,7 @@ impl ConduitRequest {
             .to_string_lossy()
             .to_string(); // non-Unicode is replaced with U+FFFD REPLACEMENT CHARACTER
 
-        ConduitRequest {
+        Self {
             parts,
             path,
             body: Cursor::new(body),
@@ -195,7 +235,6 @@ impl ConduitRequest {
 /// Serve a `conduit::Handler` on a thread pool
 #[derive(Debug)]
 pub struct Service<H> {
-    pool: CpuPool,
     handler: Arc<H>,
 }
 
@@ -203,7 +242,6 @@ pub struct Service<H> {
 impl<H> Clone for Service<H> {
     fn clone(&self) -> Self {
         Service {
-            pool: self.pool.clone(),
             handler: self.handler.clone(),
         }
     }
@@ -230,19 +268,20 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
 
     /// Returns a future which buffers the response body and then calls the conduit handler from a thread pool
     fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
-        let pool = self.pool.clone();
         let handler = self.handler.clone();
 
         let (parts, body) = request.into_parts();
         let response = body.concat2().and_then(move |full_body| {
-            pool.spawn_fn(move || {
-                let mut request = ConduitRequest::new(Parts(parts), full_body);
-                let response = handler
-                    .call(&mut request)
-                    .map(good_response)
-                    .unwrap_or_else(|e| error_response(e.description()));
-
-                Ok(response)
+            let mut request_info = RequestInfo::new(parts, full_body);
+            future::poll_fn(move || {
+                tokio_threadpool::blocking(|| {
+                    let mut request = ConduitRequest::new(&mut request_info);
+                    handler
+                        .call(&mut request)
+                        .map(good_response)
+                        .unwrap_or_else(|e| error_response(e.description()))
+                })
+                .map_err(|_| panic!("the threadpool shut down"))
             })
         });
         Box::new(response)
@@ -250,18 +289,10 @@ impl<H: conduit::Handler> hyper::service::Service for Service<H> {
 }
 
 impl<H: conduit::Handler> Service<H> {
-    /// Create a multi-threaded `Service` from a `Handler`
-    pub fn new(handler: H, threads: usize) -> Service<H> {
+    fn new(handler: H) -> Self {
         Service {
-            pool: CpuPool::new(threads),
             handler: Arc::new(handler),
         }
-    }
-
-    /// Run the `Service` bound to a given `SocketAddr`
-    pub fn run(&self, addr: SocketAddr) {
-        let server = Server::bind(&addr).serve(self.clone());
-        hyper::rt::run(server.map_err(|e| error!("Server error: {}", e)));
     }
 }
 
