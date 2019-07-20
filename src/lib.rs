@@ -1,5 +1,61 @@
 #![deny(warnings, clippy::all, missing_debug_implementations)]
 
+//! A wrapper for integrating `hyper 0.12` with a `conduit 0.8` blocking application stack.
+//!
+//! A `conduit::Handler` is allowed to block so the `Server` must be spawned on the (default)
+//! multi-threaded `Runtime` which allows (by default) 100 concurrent blocking threads.  Any excess
+//! requests will asynchronously wait for an available blocking thread.
+//!
+//! # Examples
+//!
+//! Try out the example with `cargo run --example server`.
+//!
+//! Typical usage:
+//!
+//! ```no_run
+//! use conduit::Handler;
+//! use conduit_hyper::Server;
+//! use futures::Future;
+//! use tokio::runtime::Runtime;
+//!
+//! fn main() {
+//!     let a = ();
+//!     let app = build_conduit_handler();
+//!     let addr = ([127, 0, 0, 1], 12345).into();
+//!     let server = Server::bind(&addr, app).map_err(|e| {
+//!         eprintln!("server error: {}", e);
+//!     });
+//!
+//!     let mut rt = Runtime::new().unwrap();
+//!     rt.spawn(server);
+//!     rt.shutdown_on_idle().wait().unwrap();
+//! }
+//!
+//! fn build_conduit_handler() -> impl Handler {
+//!     // ...
+//! #     Endpoint()
+//! }
+//! #
+//! # use std::collections::HashMap;
+//! # use std::error::Error;
+//! # use std::io::Cursor;
+//! #
+//! # use conduit::{Request, Response};
+//! #
+//! # struct Endpoint();
+//! #
+//! # impl Handler for Endpoint {
+//! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+//! #         let body = "";
+//! #         Ok(Response {
+//! #             status: (200, "OK"),
+//! #             headers: HashMap::new(),
+//! #             body: Box::new(Cursor::new(body)),
+//! #         })
+//! #     }
+//! # }
+//! ```
+
 #[cfg(test)]
 mod tests;
 
