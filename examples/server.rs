@@ -22,7 +22,7 @@ fn main() {
         .build()
         .unwrap();
     rt.spawn(async {
-        server.await.unwrap();
+        server.await;
     });
     block_on(rt.shutdown_on_idle());
 }

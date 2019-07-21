@@ -87,11 +87,25 @@ where
     executor::block_on(rt.shutdown_on_idle());
 }
 
-async fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
-    use hyper::service::MakeService;
+fn make_service<H: Handler>(
+    handler: H,
+) -> impl Service<
+    ReqBody = hyper::Body,
+    ResBody = hyper::Body,
+    Future = impl Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send + 'static,
+    Error = hyper::Error,
+> {
+    use hyper::service::service_fn;
 
-    let mut new_service = super::Service::new(handler);
-    let mut service = new_service.make_service(()).await.unwrap();
+    let handler = std::sync::Arc::new(handler);
+
+    service_fn(move |request: hyper::Request<hyper::Body>| {
+        super::blocking_handler(handler.clone(), request)
+    })
+}
+
+async fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
+    let mut service = make_service(handler);
     service.call(hyper::Request::default()).await.unwrap()
 }
 
@@ -142,11 +156,8 @@ fn recover_from_panic() {
 
 #[test]
 fn normalize_path() {
-    use hyper::service::MakeService;
-
     block_on(async {
-        let mut new_service = super::Service::new(AssertPathNormalized);
-        let mut service = new_service.make_service(()).await.unwrap();
+        let mut service = make_service(AssertPathNormalized);
         let req = hyper::Request::put("//removed/.././.././normalized")
             .body(hyper::Body::default())
             .unwrap();

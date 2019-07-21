@@ -27,7 +27,7 @@
 //!     let addr = ([127, 0, 0, 1], 12345).into();
 //!     let server = Server::bind(&addr, app);
 //!
-//!     server.await.unwrap();
+//!     server.await;
 //! }
 //!
 //! fn build_conduit_handler() -> impl Handler {
@@ -59,7 +59,6 @@ use std::future::Future;
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
-use std::pin::Pin;
 use std::sync::Arc;
 
 use futures::prelude::*;
@@ -75,13 +74,50 @@ pub struct Server;
 
 impl Server {
     /// Bind a handler to an address
-    pub fn bind<H: conduit::Handler>(
-        addr: &SocketAddr,
-        handler: H,
-    ) -> hyper::Server<hyper::server::conn::AddrIncoming, Service<H>> {
-        let service = Service::new(handler);
-        hyper::Server::bind(&addr).serve(service)
+    pub fn bind<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
+        use hyper::server::conn::AddrStream;
+        use hyper::service::{make_service_fn, service_fn};
+
+        let handler = Arc::new(handler);
+
+        let make_service = make_service_fn(move |socket: &AddrStream| {
+            let handler = handler.clone();
+            let _remote_addr = socket.remote_addr(); // FIXME
+            async {
+                Ok::<_, hyper::Error>(service_fn(move |request: Request<Body>| {
+                    let handler = handler.clone();
+
+                    blocking_handler(handler, request)
+                }))
+            }
+        });
+
+        hyper::Server::bind(&addr).serve(make_service)
     }
+}
+
+async fn blocking_handler<H: conduit::Handler>(
+    handler: Arc<H>,
+    request: Request<Body>,
+) -> Result<Response<Body>, hyper::Error> {
+    let (parts, body) = request.into_parts();
+
+    body.try_concat()
+        .and_then(|full_body| {
+            let mut request_info = RequestInfo::new(parts, full_body);
+
+            future::poll_fn(move |_| {
+                tokio_threadpool::blocking(|| {
+                    let mut request = ConduitRequest::new(&mut request_info);
+                    handler
+                        .call(&mut request)
+                        .map(good_response)
+                        .unwrap_or_else(|e| error_response(e.description()))
+                })
+                .map_err(|_| panic!("the threadpool shut down"))
+            })
+        })
+        .await
 }
 
 #[derive(Debug)]
@@ -282,70 +318,6 @@ impl ConduitRequest {
             path,
             body: Cursor::new(body),
             extensions: conduit::Extensions::new(),
-        }
-    }
-}
-
-/// Serve a `conduit::Handler` on a thread pool
-#[derive(Debug)]
-pub struct Service<H> {
-    handler: Arc<H>,
-}
-
-// #[derive(Clone)] results in cloning a ref, and not the Service
-impl<H> Clone for Service<H> {
-    fn clone(&self) -> Self {
-        Service {
-            handler: self.handler.clone(),
-        }
-    }
-}
-
-impl<H: conduit::Handler, Target> hyper::service::MakeService<Target> for Service<H> {
-    type ReqBody = Body;
-    type ResBody = Body;
-    type Error = hyper::Error;
-    type Service = Service<H>;
-    type Future = Pin<Box<dyn Future<Output = Result<Service<H>, hyper::Error>> + Send + 'static>>;
-    type MakeError = hyper::Error;
-
-    fn make_service(&mut self, _: Target) -> Self::Future {
-        Box::pin(future::ok(self.clone()))
-    }
-}
-
-impl<H: conduit::Handler> hyper::service::Service for Service<H> {
-    type ReqBody = Body;
-    type ResBody = Body;
-    type Error = hyper::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Response<Body>, hyper::Error>> + Send>>;
-
-    /// Returns a future which buffers the response body and then calls the conduit handler from a thread pool
-    fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
-        let handler = self.handler.clone();
-
-        let (parts, body) = request.into_parts();
-        let response = body.try_concat().and_then(move |full_body| {
-            let mut request_info = RequestInfo::new(parts, full_body);
-            future::poll_fn(move |_| {
-                tokio_threadpool::blocking(|| {
-                    let mut request = ConduitRequest::new(&mut request_info);
-                    handler
-                        .call(&mut request)
-                        .map(good_response)
-                        .unwrap_or_else(|e| error_response(e.description()))
-                })
-                .map_err(|_| panic!("the threadpool shut down"))
-            })
-        });
-        Box::pin(response)
-    }
-}
-
-impl<H: conduit::Handler> Service<H> {
-    fn new(handler: H) -> Self {
-        Service {
-            handler: Arc::new(handler),
         }
     }
 }
