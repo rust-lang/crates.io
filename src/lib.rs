@@ -82,12 +82,12 @@ impl Server {
 
         let make_service = make_service_fn(move |socket: &AddrStream| {
             let handler = handler.clone();
-            let _remote_addr = socket.remote_addr(); // FIXME
-            async {
+            let remote_addr = socket.remote_addr();
+            async move {
                 Ok::<_, hyper::Error>(service_fn(move |request: Request<Body>| {
                     let handler = handler.clone();
 
-                    blocking_handler(handler, request)
+                    blocking_handler(handler, request, remote_addr)
                 }))
             }
         });
@@ -99,6 +99,7 @@ impl Server {
 async fn blocking_handler<H: conduit::Handler>(
     handler: Arc<H>,
     request: Request<Body>,
+    remote_addr: std::net::SocketAddr,
 ) -> Result<Response<Body>, hyper::Error> {
     let (parts, body) = request.into_parts();
 
@@ -108,7 +109,7 @@ async fn blocking_handler<H: conduit::Handler>(
 
             future::poll_fn(move |_| {
                 tokio_threadpool::blocking(|| {
-                    let mut request = ConduitRequest::new(&mut request_info);
+                    let mut request = ConduitRequest::new(&mut request_info, remote_addr);
                     handler
                         .call(&mut request)
                         .map(good_response)
@@ -170,6 +171,7 @@ impl Parts {
 struct ConduitRequest {
     parts: Parts,
     path: String,
+    remote_addr: SocketAddr,
     body: Cursor<Chunk>,
     extensions: conduit::Extensions, // makes struct non-Send
 }
@@ -219,8 +221,7 @@ impl conduit::Request for ConduitRequest {
 
     /// Always returns an address of 0.0.0.0:0
     fn remote_addr(&self) -> SocketAddr {
-        // See: https://github.com/hyperium/hyper/issues/1410#issuecomment-356115678
-        ([0, 0, 0, 0], 0).into()
+        self.remote_addr
     }
 
     fn virtual_root(&self) -> Option<&str> {
@@ -287,7 +288,7 @@ impl RequestInfo {
 }
 
 impl ConduitRequest {
-    fn new(info: &mut RequestInfo) -> Self {
+    fn new(info: &mut RequestInfo, remote_addr: SocketAddr) -> Self {
         let (parts, body) = info.take();
         let path = parts.0.uri.path().to_string();
         let path = Path::new(&path);
@@ -316,6 +317,7 @@ impl ConduitRequest {
         Self {
             parts,
             path,
+            remote_addr,
             body: Cursor::new(body),
             extensions: conduit::Extensions::new(),
         }

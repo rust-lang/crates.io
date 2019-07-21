@@ -100,7 +100,8 @@ fn make_service<H: Handler>(
     let handler = std::sync::Arc::new(handler);
 
     service_fn(move |request: hyper::Request<hyper::Body>| {
-        super::blocking_handler(handler.clone(), request)
+        let remote_addr = ([0, 0, 0, 0], 0).into();
+        super::blocking_handler(handler.clone(), request, remote_addr)
     })
 }
 

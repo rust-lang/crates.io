@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/jtgeibel/conduit-hyper.svg?branch=master)](https://travis-ci.org/jtgeibel/conduit-hyper)
 
-This crate integrates a `hyper 0.12` server with a `conduit 0.8` application
+This crate integrates a `hyper 0.13` server with a `conduit 0.8` application
 stack.
 
 ## Error and Panic Handling
@@ -30,7 +30,6 @@ The following methods on the `Request` provided to the application have
 noteworthy behavior:
 
 * `scheme` always returns Http as https is not currently directly supported
-* `remote_addr` always returns 0.0.0.0:0
 * `host` returns an empty string if the `Host` header is not valid UTF-8
 
 All other methods on `Request` should behave as expected.
