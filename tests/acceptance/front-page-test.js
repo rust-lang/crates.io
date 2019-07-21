@@ -25,7 +25,7 @@ module('Acceptance | front page', function(hooks) {
         await visit('/');
 
         assert.equal(currentURL(), '/');
-        assert.equal(document.title, 'Cargo: packages for Rust');
+        assert.equal(document.title, 'crates.io: Rust Package Registry');
 
         assert.dom('[data-test-install-cargo-link]').exists();
         assert.dom('[data-test-all-crates-link]').exists();

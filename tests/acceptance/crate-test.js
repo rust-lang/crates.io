@@ -66,7 +66,7 @@ module('Acceptance | crate page', function(hooks) {
         await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
         assert.equal(currentURL(), '/crates/nanomsg');
-        assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+        assert.equal(document.title, 'nanomsg - crates.io: Rust Package Registry');
     });
 
     test('visiting /crates/nanomsg', async function(assert) {
@@ -78,7 +78,7 @@ module('Acceptance | crate page', function(hooks) {
 
         assert.equal(currentURL(), '/crates/nanomsg');
         assert.equal(currentRouteName(), 'crate.index');
-        assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+        assert.equal(document.title, 'nanomsg - crates.io: Rust Package Registry');
 
         assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
         assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
@@ -93,7 +93,7 @@ module('Acceptance | crate page', function(hooks) {
 
         assert.equal(currentURL(), '/crates/nanomsg/');
         assert.equal(currentRouteName(), 'crate.index');
-        assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+        assert.equal(document.title, 'nanomsg - crates.io: Rust Package Registry');
 
         assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
         assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.1');
@@ -108,7 +108,7 @@ module('Acceptance | crate page', function(hooks) {
 
         assert.equal(currentURL(), '/crates/nanomsg/0.6.0');
         assert.equal(currentRouteName(), 'crate.version');
-        assert.equal(document.title, 'nanomsg - Cargo: packages for Rust');
+        assert.equal(document.title, 'nanomsg - crates.io: Rust Package Registry');
 
         assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
         assert.dom('[data-test-heading] [data-test-crate-version]').hasText('0.6.0');

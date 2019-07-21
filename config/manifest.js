@@ -2,9 +2,9 @@
 
 module.exports = function(/* environment, appConfig */) {
     return {
-        name: 'Cargo: packages for Rust',
-        short_name: 'Cargo',
-        description: 'Cargo is the package manager and crate host for Rust.',
+        name: 'crates.io: Rust Package Registry',
+        short_name: 'crates.io',
+        description: 'crates.io is the default crate host for Rust.',
         start_url: '/',
         display: 'standalone',
         background_color: '#3b6837',

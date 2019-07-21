@@ -30,7 +30,7 @@ module('Acceptance | search', function(hooks) {
         await triggerEvent('[data-test-search-form]', 'submit');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
+        assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
 
         assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
         assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
@@ -53,7 +53,7 @@ module('Acceptance | search', function(hooks) {
         await visit('/search?q=rust');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(document.title, "Search Results for 'rust' - Cargo: packages for Rust");
+        assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
 
         assert.dom('[data-test-search-input]').hasValue('rust');
         assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
