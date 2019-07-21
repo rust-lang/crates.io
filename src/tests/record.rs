@@ -7,13 +7,14 @@ use std::{
     io::{self, prelude::*},
     net,
     path::PathBuf,
+    pin::Pin,
     str,
     sync::{Arc, Mutex, Once},
     thread,
 };
 
-use futures::{future, sync::oneshot, Future, Stream};
-use tokio_core::{net::TcpListener, reactor::Core};
+use futures::{channel::oneshot, future, prelude::*};
+use tokio::{net::TcpListener, runtime::current_thread::Runtime};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -101,10 +102,8 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let mut core = t!(Core::new());
-        let handle = core.handle();
-        let addr = t!(a.local_addr());
-        let listener = t!(TcpListener::from_listener(a, &addr, &handle));
+        let mut rt = t!(Runtime::new());
+        let listener = t!(TcpListener::from_std(a, &tokio::reactor::Handle::default()));
         let client = if let Record::Capture(_, _) = record {
             Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
         } else {
@@ -112,15 +111,13 @@ pub fn proxy() -> (String, Bomb) {
         };
 
         let record = Arc::new(Mutex::new(record));
-        let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
-            .serve(Proxy {
-                sink: sink2,
-                record: Arc::clone(&record),
-                client,
-            })
-            .map_err(|e| eprintln!("server connection error: {}", e));
+        let srv = hyper::Server::builder(listener.incoming()).serve(Proxy {
+            sink: sink2,
+            record: Arc::clone(&record),
+            client,
+        });
 
-        drop(core.run(srv.select2(quitrx)));
+        drop(rt.block_on(future::select(srv, quitrx)));
 
         let record = record.lock().unwrap();
         match *record {
@@ -154,36 +151,37 @@ impl hyper::service::Service for Proxy {
     type ResBody = hyper::Body;
     type Error = hyper::Error;
     type Future =
-        Box<dyn Future<Item = hyper::Response<Self::ResBody>, Error = Self::Error> + Send>;
+        Pin<Box<dyn Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send>>;
 
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
         let record2 = self.record.clone();
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => Box::new(record_http(req, self.client.as_ref().unwrap()).map(
-                move |(response, exchange)| {
+            Record::Capture(_, _) => Box::pin(record_http(req, self.client.as_ref().unwrap()).map(
+                move |result| {
+                    let (response, exchange) = result?;
                     if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
                         d.push(exchange);
                     }
-                    response
+                    Ok(response)
                 },
             )),
             Record::Replay(ref mut exchanges) => {
-                replay_http(req, exchanges.remove(0), &mut &self.sink)
+                Box::pin(replay_http(req, exchanges.remove(0), &mut &self.sink))
             }
         }
     }
 }
 
-impl hyper::service::NewService for Proxy {
+impl<Target> hyper::service::MakeService<Target> for Proxy {
     type ReqBody = hyper::Body;
     type ResBody = hyper::Body;
     type Error = hyper::Error;
     type Service = Proxy;
-    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
-    type InitError = hyper::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Proxy, hyper::Error>> + Send + 'static>>;
+    type MakeError = hyper::Error;
 
-    fn new_service(&self) -> Self::Future {
-        Box::new(future::ok(self.clone()))
+    fn make_service(&mut self, _: Target) -> Self::Future {
+        Box::pin(future::ok(self.clone()))
     }
 }
 
@@ -209,11 +207,12 @@ struct Response {
 }
 
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
+type ResponseAndExchange = (hyper::Response<hyper::Body>, Exchange);
 
 fn record_http(
     req: hyper::Request<hyper::Body>,
     client: &Client,
-) -> Box<dyn Future<Item = (hyper::Response<hyper::Body>, Exchange), Error = hyper::Error> + Send> {
+) -> impl Future<Output = Result<ResponseAndExchange, hyper::Error>> + Send {
     let (header_parts, body) = req.into_parts();
     let method = header_parts.method;
     let uri = header_parts.uri;
@@ -228,10 +227,9 @@ fn record_http(
             .collect(),
         body: String::new(),
     };
-    let body = body.concat2();
 
     let client = client.clone();
-    let response = body.and_then(move |body| {
+    let response = body.try_concat().and_then(move |body| {
         request.body = base64::encode(&body.to_vec());
         let uri = uri.to_string().replace("http://", "https://");
         let uri = uri.parse::<hyper::Uri>().unwrap();
@@ -241,10 +239,10 @@ fn record_http(
             .body(body.into())
             .unwrap();
         *req.headers_mut() = headers.clone();
-        client.request(req).map(|r| (r, request))
+        client.request(req).map_ok(|r| (r, request))
     });
 
-    Box::new(response.and_then(|(hyper_response, request)| {
+    response.and_then(|(hyper_response, request)| {
         let status = hyper_response.status();
         let headers = hyper_response.headers().clone();
         let mut response = Response {
@@ -256,7 +254,7 @@ fn record_http(
             body: String::new(),
         };
 
-        hyper_response.into_body().concat2().map(move |body| {
+        hyper_response.into_body().try_concat().map_ok(move |body| {
             response.body = base64::encode(&body.to_vec());
             let mut hyper_response = hyper::Response::builder();
             hyper_response.status(status);
@@ -264,14 +262,14 @@ fn record_http(
             *hyper_response.headers_mut() = headers;
             (hyper_response, Exchange { response, request })
         })
-    }))
+    })
 }
 
 fn replay_http(
     req: hyper::Request<hyper::Body>,
     mut exchange: Exchange,
     stdout: &mut dyn Write,
-) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
+) -> impl Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send {
     static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent", "cache-control"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
@@ -301,9 +299,9 @@ fn replay_http(
         panic!("didn't find header {:?}", (name, value));
     }
     let req_body = exchange.request.body;
-    let verify_body = req.into_body().concat2().map(move |body| {
+    let verify_body = req.into_body().try_concat().map(move |body| {
         let req_body = base64::decode(&req_body).unwrap();
-        assert_eq!(body.into_bytes(), req_body);
+        assert_eq!(body.unwrap().into_bytes(), req_body);
     });
 
     let mut response = hyper::Response::builder();
@@ -314,7 +312,7 @@ fn replay_http(
     let req_body2 = base64::decode(exchange.response.body.as_bytes()).unwrap();
     let response = response.body(req_body2.into()).unwrap();
 
-    Box::new(verify_body.map(|()| response))
+    verify_body.map(|()| Ok(response))
 }
 
 impl GhUser {

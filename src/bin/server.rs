@@ -1,4 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
+#![feature(async_await)]
 
 use cargo_registry::{boot, App, Env};
 use std::{
@@ -9,8 +10,8 @@ use std::{
 };
 
 use civet::Server as CivetServer;
-use conduit_hyper::Service as HyperService;
-use futures::Future;
+use conduit_hyper::Service;
+use futures::executor::block_on;
 use reqwest::Client;
 
 enum Server {
@@ -58,32 +59,32 @@ fn main() {
 
     let server = if dotenv::var("USE_HYPER").is_ok() {
         println!("Booting with a hyper based server");
-        let addr = ([127, 0, 0, 1], port).into();
-        let service = HyperService::new(app, threads as usize);
-        let server = hyper::Server::bind(&addr).serve(service);
 
-        let (tx, rx) = futures::sync::oneshot::channel::<()>();
-        let server = server
-            .with_graceful_shutdown(rx)
-            .map_err(|e| log::error!("Server error: {}", e));
+        let handler = Arc::new(app);
+        let make_service =
+            hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
+                let addr = socket.remote_addr();
+                let handler = handler.clone();
+                async move { Service::from_conduit(handler, addr) }
+            });
+
+        let addr = ([127, 0, 0, 1], port).into();
+        let server = hyper::Server::bind(&addr).serve(make_service);
+
+        let (tx, rx) = futures::channel::oneshot::channel::<()>();
+        let server = server.with_graceful_shutdown(async {
+            rx.await.ok();
+        });
 
         ctrlc_handler(move || tx.send(()).unwrap_or(()));
 
-        let mut rt = tokio::runtime::Builder::new()
-            .core_threads(4)
-            .name_prefix("hyper-server-worker-")
-            .after_start(|| {
-                log::debug!("Stared thread {}", thread::current().name().unwrap_or("?"))
-            })
-            .before_stop(|| {
-                log::debug!(
-                    "Stopping thread {}",
-                    thread::current().name().unwrap_or("?")
-                )
-            })
+        let rt = tokio::runtime::Builder::new()
+            .blocking_threads(threads as usize)
             .build()
             .unwrap();
-        rt.spawn(server);
+        rt.spawn(async {
+            server.await.unwrap();
+        });
 
         Hyper(rt)
     } else {
@@ -112,7 +113,9 @@ fn main() {
 
     // Block the main thread until the server has shutdown
     match server {
-        Hyper(rt) => rt.shutdown_on_idle().wait().unwrap(),
+        Hyper(rt) => {
+            block_on(rt.shutdown_on_idle());
+        }
         Civet(server) => {
             let (tx, rx) = channel::<()>();
             ctrlc_handler(move || tx.send(()).unwrap_or(()));
