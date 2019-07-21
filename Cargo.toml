@@ -19,4 +19,5 @@ tokio-threadpool = { git = "https://github.com/tokio-rs/tokio" }
 
 [dev-dependencies]
 conduit-router = "0.8"
+env_logger = "0.6"
 tokio = { git = "https://github.com/tokio-rs/tokio", default-features = false, features = ["rt-full"] }

@@ -113,7 +113,7 @@ async fn blocking_handler<H: conduit::Handler>(
                     handler
                         .call(&mut request)
                         .map(good_response)
-                        .unwrap_or_else(|e| error_response(e.description()))
+                        .unwrap_or_else(|e| error_response(&e.to_string()))
                 })
                 .map_err(|_| panic!("the threadpool shut down"))
             })
