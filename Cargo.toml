@@ -78,7 +78,7 @@ civet = "0.9"
 conduit-hyper = { path = "../../jtgeibel/conduit-hyper" }
 
 futures-preview = { version = "0.3.0-alpha.17", features = ["compat"] }
-tokio = { git = "https://github.com/tokio-rs/tokio", default-features = false, features = ["tcp"]}
+tokio = { version = "0.2.0-alpha.1", default-features = false, features = ["tcp"]}
 hyper = { git = "https://github.com/hyperium/hyper" }
 ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"

@@ -111,13 +111,17 @@ pub fn proxy() -> (String, Bomb) {
         };
 
         let record = Arc::new(Mutex::new(record));
-        let srv = hyper::Server::builder(listener.incoming()).serve(Proxy {
-            sink: sink2,
-            record: Arc::clone(&record),
-            client,
-        });
+        let srv = hyper::Server::builder(listener.incoming())
+            .serve(Proxy {
+                sink: sink2,
+                record: Arc::clone(&record),
+                client,
+            })
+            .with_graceful_shutdown(async {
+                quitrx.await.ok();
+            });
 
-        drop(rt.block_on(future::select(srv, quitrx)));
+        rt.block_on(srv).ok();
 
         let record = record.lock().unwrap();
         match *record {

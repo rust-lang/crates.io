@@ -11,7 +11,6 @@ use std::{
 
 use civet::Server as CivetServer;
 use conduit_hyper::Service;
-use futures::executor::block_on;
 use reqwest::Client;
 
 enum Server {
@@ -114,7 +113,7 @@ fn main() {
     // Block the main thread until the server has shutdown
     match server {
         Hyper(rt) => {
-            block_on(rt.shutdown_on_idle());
+            rt.shutdown_on_idle();
         }
         Civet(server) => {
             let (tx, rx) = channel::<()>();
