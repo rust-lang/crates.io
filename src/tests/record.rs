@@ -154,17 +154,18 @@ impl hyper::service::Service for Proxy {
         Pin<Box<dyn Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send>>;
 
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
-        let record2 = self.record.clone();
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => Box::pin(record_http(req, self.client.as_ref().unwrap()).map(
-                move |result| {
-                    let (response, exchange) = result?;
+            Record::Capture(_, _) => {
+                let client = self.client.as_ref().unwrap().clone();
+                let record2 = self.record.clone();
+                Box::pin(async move {
+                    let (response, exchange) = record_http(req, client).await?;
                     if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
                         d.push(exchange);
                     }
                     Ok(response)
-                },
-            )),
+                })
+            }
             Record::Replay(ref mut exchanges) => {
                 Box::pin(replay_http(req, exchanges.remove(0), &mut &self.sink))
             }
@@ -209,60 +210,62 @@ struct Response {
 type Client = hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 type ResponseAndExchange = (hyper::Response<hyper::Body>, Exchange);
 
-fn record_http(
+async fn record_http(
     req: hyper::Request<hyper::Body>,
-    client: &Client,
-) -> impl Future<Output = Result<ResponseAndExchange, hyper::Error>> + Send {
+    client: Client,
+) -> Result<ResponseAndExchange, hyper::Error> {
+    // Deconstruct the incoming request and await for the full body
     let (header_parts, body) = req.into_parts();
     let method = header_parts.method;
     let uri = header_parts.uri;
     let headers = header_parts.headers;
+    let body = body.try_concat().await?;
 
-    let mut request = Request {
+    // Save info on the incoming request for the exchange log
+    let request = Request {
         uri: uri.to_string(),
         method: method.to_string(),
         headers: headers
             .iter()
             .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
             .collect(),
-        body: String::new(),
+        body: base64::encode(&body.to_vec()),
     };
 
-    let client = client.clone();
-    let response = body.try_concat().and_then(move |body| {
-        request.body = base64::encode(&body.to_vec());
-        let uri = uri.to_string().replace("http://", "https://");
-        let uri = uri.parse::<hyper::Uri>().unwrap();
-        let mut req = hyper::Request::builder()
-            .method(method.clone())
-            .uri(uri)
-            .body(body.into())
-            .unwrap();
-        *req.headers_mut() = headers.clone();
-        client.request(req).map_ok(|r| (r, request))
-    });
+    // Construct an outgoing request
+    let uri = uri.to_string().replace("http://", "https://");
+    let uri = uri.parse::<hyper::Uri>().unwrap();
+    let mut req = hyper::Request::builder()
+        .method(method.clone())
+        .uri(uri)
+        .body(body.into())
+        .unwrap();
+    *req.headers_mut() = headers.clone();
 
-    response.and_then(|(hyper_response, request)| {
-        let status = hyper_response.status();
-        let headers = hyper_response.headers().clone();
-        let mut response = Response {
-            status: status.as_u16(),
-            headers: headers
-                .iter()
-                .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
-                .collect(),
-            body: String::new(),
-        };
+    // Deconstruct the incoming response and await for the full body
+    let hyper_response = client.request(req).await?;
+    let status = hyper_response.status();
+    let headers = hyper_response.headers().clone();
+    let body = hyper_response.into_body().try_concat().await?;
 
-        hyper_response.into_body().try_concat().map_ok(move |body| {
-            response.body = base64::encode(&body.to_vec());
-            let mut hyper_response = hyper::Response::builder();
-            hyper_response.status(status);
-            let mut hyper_response = hyper_response.body(body.into()).unwrap();
-            *hyper_response.headers_mut() = headers;
-            (hyper_response, Exchange { response, request })
-        })
-    })
+    // Save the response for the exchange log
+    let response = Response {
+        status: status.as_u16(),
+        headers: headers
+            .iter()
+            .map(|h| (h.0.as_str().to_string(), h.1.to_str().unwrap().to_string()))
+            .collect(),
+        body: base64::encode(&body.to_vec()),
+    };
+
+    // Construct an outgoing response
+    let mut hyper_response = hyper::Response::builder()
+        .status(status)
+        .body(body.into())
+        .unwrap();
+    *hyper_response.headers_mut() = headers;
+
+    Ok((hyper_response, Exchange { response, request }))
 }
 
 fn replay_http(
@@ -298,21 +301,23 @@ fn replay_http(
         }
         panic!("didn't find header {:?}", (name, value));
     }
-    let req_body = exchange.request.body;
-    let verify_body = req.into_body().try_concat().map(move |body| {
-        let req_body = base64::decode(&req_body).unwrap();
-        assert_eq!(body.unwrap().into_bytes(), req_body);
-    });
 
-    let mut response = hyper::Response::builder();
-    response.status(hyper::StatusCode::from_u16(exchange.response.status).unwrap());
-    for (key, value) in exchange.response.headers {
-        response.header(key.as_str(), value.as_str());
+    async {
+        assert_eq!(
+            req.into_body().try_concat().await.unwrap().into_bytes(),
+            base64::decode(&exchange.request.body).unwrap()
+        );
+
+        let mut builder = hyper::Response::builder();
+        builder.status(hyper::StatusCode::from_u16(exchange.response.status).unwrap());
+        for (key, value) in exchange.response.headers {
+            builder.header(key.as_str(), value.as_str());
+        }
+        let body = base64::decode(exchange.response.body.as_bytes()).unwrap();
+        let response = builder.body(body.into()).unwrap();
+
+        Ok(response)
     }
-    let req_body2 = base64::decode(exchange.response.body.as_bytes()).unwrap();
-    let response = response.body(req_body2.into()).unwrap();
-
-    verify_body.map(|()| Ok(response))
 }
 
 impl GhUser {
