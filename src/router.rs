@@ -146,11 +146,7 @@ impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
-        sub_router.call(&mut RequestProxy {
-            other: req,
-            path: Some(&path),
-            method: None,
-        })
+        sub_router.call(&mut RequestProxy::rewrite_path(req, &path))
     }
 }
 

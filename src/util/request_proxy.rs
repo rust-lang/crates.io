@@ -1,25 +1,56 @@
+//! A helper that wraps a request and can overwrite either the path or the method.
+
 use std::{io::Read, net::SocketAddr};
 
-use conduit::Request;
+use conduit::{Method, Request};
 use conduit_hyper::semver;
+
+type RequestMutRef<'a> = &'a mut (dyn Request + 'a);
 
 // Can't derive Debug because of Request.
 #[allow(missing_debug_implementations)]
 pub struct RequestProxy<'a> {
-    pub other: &'a mut (dyn Request + 'a),
-    pub path: Option<&'a str>,
-    pub method: Option<conduit::Method>,
+    other: RequestMutRef<'a>,
+    path: Option<&'a str>,
+    method: Option<conduit::Method>,
+}
+
+impl<'a> RequestProxy<'a> {
+    /// Wrap a request and overwrite the path with the provided value.
+    pub(crate) fn rewrite_path(req: RequestMutRef<'a>, path: &'a str) -> Self {
+        RequestProxy {
+            other: req,
+            path: Some(path),
+            method: None, // Defer to original request
+        }
+    }
+
+    /// Wrap a request and overwrite the method with the provided value.
+    pub(crate) fn rewrite_method(req: RequestMutRef<'a>, method: Method) -> Self {
+        RequestProxy {
+            other: req,
+            path: None, // Defer to original request
+            method: Some(method),
+        }
+    }
 }
 
 impl<'a> Request for RequestProxy<'a> {
+    // Use local value if available, defer to the original request
+    fn method(&self) -> conduit::Method {
+        self.method.clone().unwrap_or_else(|| self.other.method())
+    }
+
+    fn path(&self) -> &str {
+        self.path.unwrap_or_else(|| self.other.path())
+    }
+
+    // Pass-through
     fn http_version(&self) -> semver::Version {
         self.other.http_version()
     }
     fn conduit_version(&self) -> semver::Version {
         self.other.conduit_version()
-    }
-    fn method(&self) -> conduit::Method {
-        self.method.clone().unwrap_or_else(|| self.other.method())
     }
     fn scheme(&self) -> conduit::Scheme {
         self.other.scheme()
@@ -29,9 +60,6 @@ impl<'a> Request for RequestProxy<'a> {
     }
     fn virtual_root(&self) -> Option<&str> {
         self.other.virtual_root()
-    }
-    fn path(&self) -> &str {
-        self.path.unwrap_or_else(|| self.other.path())
     }
     fn query_string(&self) -> Option<&str> {
         self.other.query_string()
