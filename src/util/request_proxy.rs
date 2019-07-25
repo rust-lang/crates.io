@@ -1,3 +1,5 @@
+//! A helper that wraps a request and can overwrite either the path or the method.
+
 use std::{io::Read, net::SocketAddr};
 
 use conduit::{Method, Request};
@@ -14,6 +16,7 @@ pub struct RequestProxy<'a> {
 }
 
 impl<'a> RequestProxy<'a> {
+    /// Wrap a request and overwrite the path with the provided value.
     pub(crate) fn rewrite_path(req: RequestMutRef<'a>, path: &'a str) -> Self {
         RequestProxy {
             other: req,
@@ -22,6 +25,7 @@ impl<'a> RequestProxy<'a> {
         }
     }
 
+    /// Wrap a request and overwrite the method with the provided value.
     pub(crate) fn rewrite_method(req: RequestMutRef<'a>, method: Method) -> Self {
         RequestProxy {
             other: req,
