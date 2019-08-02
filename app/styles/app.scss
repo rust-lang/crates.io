@@ -33,6 +33,8 @@ body {
   @include align-items(center);
 }
 
+/* .ember-application is added by Ember after initial rendering */
+.ember-application > div,
 body > div {
     width: 960px;
     @media only screen and (max-width: 960px) {
