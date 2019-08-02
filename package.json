@@ -95,5 +95,8 @@
     "tabWidth": 4,
     "singleQuote": true,
     "trailingComma": "all"
+  },
+  "dependencies": {
+    "fastboot-app-server": "^2.0.0"
   }
 }
