@@ -1,25 +1,21 @@
-#![deny(warnings, clippy::all, rust_2018_idioms)]
-
-#[macro_use]
-extern crate diesel;
-
-use cargo_registry::{
-    db,
+use crate::{
+    background_jobs::Environment,
     models::VersionDownload,
     schema::{crates, metadata, version_downloads, versions},
-    util::CargoResult,
 };
 
 use diesel::prelude::*;
+use swirl::PerformError;
 
-fn main() -> CargoResult<()> {
-    let conn = db::connect_now()?;
+#[swirl::background_job]
+pub fn update_downloads(env: &Environment) -> Result<(), PerformError> {
+    let conn = env.connection()?;
     update(&conn)?;
     Ok(())
 }
 
 fn update(conn: &PgConnection) -> QueryResult<()> {
-    use crate::version_downloads::dsl::*;
+    use self::version_downloads::dsl::*;
     use diesel::dsl::now;
     use diesel::select;
 
@@ -84,7 +80,7 @@ fn collect(conn: &PgConnection, rows: &[VersionDownload]) -> QueryResult<()> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use cargo_registry::{
+    use crate::{
         env,
         models::{Crate, NewCrate, NewUser, NewVersion, User, Version},
     };
@@ -143,7 +139,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -154,7 +150,7 @@ mod test {
             .select(crates::downloads)
             .first(&conn);
         assert_eq!(Ok(1), crate_downloads);
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -179,7 +175,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -203,7 +199,7 @@ mod test {
             ))
             .execute(&conn)
             .unwrap();
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let processed = version_downloads::table
             .filter(version_downloads::version_id.eq(version.id))
             .select(version_downloads::processed)
@@ -253,7 +249,7 @@ mod test {
             .filter(crates::id.eq(krate.id))
             .first::<Crate>(&conn)
             .unwrap();
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let version2 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -266,7 +262,7 @@ mod test {
             .unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let version3 = versions::table
             .find(version.id)
             .first::<Version>(&conn)
@@ -301,7 +297,7 @@ mod test {
             .execute(&conn)
             .unwrap();
 
-        crate::update(&conn).unwrap();
+        super::update(&conn).unwrap();
         let versions_changed = versions::table
             .select(versions::updated_at.ne(now - 2.days()))
             .get_result(&conn);
