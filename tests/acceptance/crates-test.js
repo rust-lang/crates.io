@@ -39,7 +39,7 @@ module('Acceptance | crates page', function(hooks) {
         await click('[data-test-all-crates-link]');
 
         assert.equal(currentURL(), '/crates');
-        assert.equal(document.title, 'Crates - Cargo: packages for Rust');
+        assert.equal(document.title, 'Crates - crates.io: Rust Package Registry');
     });
 
     test('visiting the crates page directly', async function(assert) {
@@ -49,7 +49,7 @@ module('Acceptance | crates page', function(hooks) {
         await click('[data-test-all-crates-link]');
 
         assert.equal(currentURL(), '/crates');
-        assert.equal(document.title, 'Crates - Cargo: packages for Rust');
+        assert.equal(document.title, 'Crates - crates.io: Rust Package Registry');
     });
 
     test('listing crates', async function(assert) {
