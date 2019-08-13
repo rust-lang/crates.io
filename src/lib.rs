@@ -35,17 +35,15 @@
 //! #     Endpoint()
 //! }
 //! #
-//! # use std::{collections, error, io};
-//! #
+//! # use std::{error, io};
 //! # use conduit::{Request, Response};
 //! #
 //! # struct Endpoint();
-//! #
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
 //! #         Ok(Response {
 //! #             status: (200, "OK"),
-//! #             headers: collections::HashMap::new(),
+//! #             headers: Default::default(),
 //! #             body: Box::new(io::Cursor::new("")),
 //! #         })
 //! #     }
@@ -62,37 +60,93 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use futures::prelude::*;
-use hyper::{Body, Chunk, Method, Request, Response, StatusCode, Version};
+use hyper::{service, Body, Chunk, Method, Request, Response, StatusCode, Version};
 use log::error;
 
 // Consumers of this library need access to this particular version of `semver`
 pub use semver;
 
-/// A builder for a `hyper::Server`
+/// A builder for a `hyper::Server` (behind an opaque `impl Future`).
 #[derive(Debug)]
 pub struct Server;
 
 impl Server {
-    /// Bind a handler to an address
+    /// Bind a handler to an address.
+    ///
+    /// This returns an opaque `impl Future` so while it can be directly spawned on a
+    /// `tokio::Runtime` it is not possible to furter configure the `hyper::Server`.  If more
+    /// control, such as configuring a graceful shutdown is necessary, then call
+    /// `Service::from_conduit` instead.
     pub fn bind<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
         use hyper::server::conn::AddrStream;
-        use hyper::service::{make_service_fn, service_fn};
+        use service::make_service_fn;
 
         let handler = Arc::new(handler);
 
         let make_service = make_service_fn(move |socket: &AddrStream| {
             let handler = handler.clone();
             let remote_addr = socket.remote_addr();
-            async move {
-                Ok::<_, hyper::Error>(service_fn(move |request: Request<Body>| {
-                    let handler = handler.clone();
-
-                    blocking_handler(handler, request, remote_addr)
-                }))
-            }
+            async move { Service::from_conduit(handler, remote_addr) }
         });
 
         hyper::Server::bind(&addr).serve(make_service)
+    }
+}
+
+/// A builder for a `hyper::Service`.
+#[derive(Debug)]
+pub struct Service;
+
+impl Service {
+    /// Turn a conduit handler into a `Service` which can be bound to a `hyper::Server`.
+    ///
+    /// The returned service can be built into a `hyper::Server` using `make_service_fn` and
+    /// capturing the socket `remote_addr`.
+    ///
+    /// ```no_run
+    /// # #![feature(async_await)]
+    /// # use std::sync::Arc;
+    /// # use conduit_hyper::Service;
+    /// # use std::{error, io};
+    /// # use conduit::{Handler, Request, Response};
+    /// #
+    /// # struct Endpoint();
+    /// # impl Handler for Endpoint {
+    /// #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
+    /// #         Ok(Response {
+    /// #             status: (200, "OK"),
+    /// #             headers: Default::default(),
+    /// #             body: Box::new(io::Cursor::new("")),
+    /// #         })
+    /// #     }
+    /// # }
+    /// # let app = Endpoint();
+    /// let handler = Arc::new(app);
+    /// let make_service =
+    ///     hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
+    ///         let addr = socket.remote_addr();
+    ///         let handler = handler.clone();
+    ///         async move { Service::from_conduit(handler, addr) }
+    ///     });
+    ///
+    /// # let port = 0;
+    /// let addr = ([127, 0, 0, 1], port).into();
+    /// let server = hyper::Server::bind(&addr).serve(make_service);
+    /// ```
+    pub fn from_conduit<H: conduit::Handler>(
+        handler: Arc<H>,
+        remote_addr: std::net::SocketAddr,
+    ) -> Result<
+        impl service::Service<
+            ReqBody = Body,
+            ResBody = Body,
+            Future = impl Future<Output = Result<(Response<Body>), hyper::Error>>,
+        >,
+        hyper::Error,
+    > {
+        Ok(service::service_fn(move |request: Request<Body>| {
+            blocking_handler(handler.clone(), request, remote_addr)
+        }))
     }
 }
 
