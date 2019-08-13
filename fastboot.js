@@ -21,8 +21,8 @@ class LoggerWithoutTimestamp {
     }
 
     _write(level, args) {
-        args[0] = `[${level}][${this.prefix}] ${args[0]}`
-        console.log.apply(console, args)
+        args[0] = `[${level}][${this.prefix}] ${args[0]}`;
+        console.log.apply(console, args);
     }
 }
 
@@ -46,7 +46,7 @@ var logger = new LoggerWithoutTimestamp();
 let server = new FastBootAppServer({
     distPath: 'dist',
     port: 9000,
-    ui: logger
+    ui: logger,
 });
 
 if (!cluster.isWorker) {
