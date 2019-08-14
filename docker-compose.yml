@@ -4,7 +4,7 @@ services:
     image: postgres:9.6
     environment:
       POSTGRES_DB: cargo_registry
-      POSTRES_USER: postgres
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - 5432:5432
