@@ -15,9 +15,9 @@ hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper" }
 http = "0.1"
 log = "0.4"
 semver = "0.5" # Must match version in conduit for now
-tokio-threadpool = { git = "https://github.com/tokio-rs/tokio" }
+tokio-threadpool = { version = "0.2.0-alpha.1" }
 
 [dev-dependencies]
 conduit-router = "0.8"
 env_logger = "0.6"
-tokio = { git = "https://github.com/tokio-rs/tokio", default-features = false, features = ["rt-full"] }
+tokio = { version = "0.2.0-alpha.1", default-features = false, features = ["rt-full"] }

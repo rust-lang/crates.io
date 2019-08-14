@@ -3,7 +3,6 @@ use std::error::Error;
 use std::io::Cursor;
 
 use conduit::{Handler, Request, Response};
-use futures::executor;
 use futures::prelude::*;
 use hyper::service::Service;
 
@@ -84,7 +83,7 @@ where
         .build()
         .unwrap();
     rt.spawn(future);
-    executor::block_on(rt.shutdown_on_idle());
+    rt.shutdown_on_idle();
 }
 
 fn make_service<H: Handler>(

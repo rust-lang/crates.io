@@ -4,7 +4,6 @@
 use conduit::{Handler, Request, Response};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
-use futures::executor::block_on;
 use tokio::runtime;
 
 use std::collections::HashMap;
@@ -26,7 +25,7 @@ fn main() {
     rt.spawn(async {
         server.await;
     });
-    block_on(rt.shutdown_on_idle());
+    rt.shutdown_on_idle();
 }
 
 fn build_conduit_handler() -> impl Handler {

@@ -21,7 +21,7 @@
 //! use futures::executor::block_on;
 //! use tokio::runtime::Runtime;
 //!
-//! #[hyper::rt::main]
+//! #[tokio::main]
 //! async fn main() {
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
