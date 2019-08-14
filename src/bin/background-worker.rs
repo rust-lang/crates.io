@@ -31,6 +31,11 @@ fn main() {
         _ => None,
     };
 
+    let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
+        .unwrap_or_else(|_| "10".into())
+        .parse()
+        .expect("Invalid value for `BACKGROUND_JOB_TIMEOUT`");
+
     println!("Cloning index");
 
     let repository = Repository::open(&config.index_location).expect("Failed to clone index");
@@ -45,7 +50,7 @@ fn main() {
 
     let runner = swirl::Runner::builder(db_pool, environment)
         .thread_count(1)
-        .job_start_timeout(Duration::from_secs(10))
+        .job_start_timeout(Duration::from_secs(job_start_timeout))
         .build();
 
     println!("Runner booted, running jobs");
