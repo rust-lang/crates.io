@@ -74,8 +74,7 @@ fn main() {
             if failure_count < 5 {
                 eprintln!(
                     "Error running jobs (n = {}) -- retrying: {:?}",
-                    failure_count,
-                    e,
+                    failure_count, e,
                 );
                 runner = build_runner();
             } else {
