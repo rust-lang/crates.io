@@ -11,6 +11,7 @@ use std::{
 
 use civet::Server as CivetServer;
 use conduit_hyper::Service;
+use futures::prelude::*;
 use reqwest::Client;
 
 enum Server {
@@ -20,7 +21,7 @@ enum Server {
 
 use Server::*;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     env_logger::init();
 
@@ -57,6 +58,9 @@ fn main() {
         });
 
     let server = if dotenv::var("USE_HYPER").is_ok() {
+        use tokio::io::AsyncWriteExt;
+        use tokio_signal::unix::{Signal, SIGINT, SIGTERM};
+
         println!("Booting with a hyper based server");
 
         let handler = Arc::new(app);
@@ -70,12 +74,18 @@ fn main() {
         let addr = ([127, 0, 0, 1], port).into();
         let server = hyper::Server::bind(&addr).serve(make_service);
 
-        let (tx, rx) = futures::channel::oneshot::channel::<()>();
-        let server = server.with_graceful_shutdown(async {
-            rx.await.ok();
-        });
+        let mut sig_int = Signal::new(SIGINT)?.into_future();
+        let mut sig_term = Signal::new(SIGTERM)?.into_future();
 
-        ctrlc_handler(move || tx.send(()).unwrap_or(()));
+        let server = server.with_graceful_shutdown(async move {
+            // Wait for either signal
+            futures::select! {
+                _ = sig_int => (),
+                _ = sig_term => (),
+            };
+            let mut stdout = tokio::io::stdout();
+            stdout.write_all(b"Starting graceful shutdown\n").await.ok();
+        });
 
         let rt = tokio::runtime::Builder::new()
             .blocking_threads(threads as usize)
@@ -124,6 +134,7 @@ fn main() {
     }
 
     println!("Server has gracefully shutdown!");
+    Ok(())
 }
 
 fn ctrlc_handler<F>(f: F)
