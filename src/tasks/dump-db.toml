@@ -1,4 +1,13 @@
-# Column visibility in database dumps. Only public columns are included in the dump.
+# This file configures what to include in public database dumps. For each
+# database table, we set which columns are included in the dump, and optionally
+# how to filter the rows.
+#
+# <table_name>.columns - a TOML dictionary determining what columns to include.
+#     possible values are "private" (not included) and "public" (included).
+#
+# <table_name>.filter - a string that is a valid SQL expression, which is used
+#     in a WHERE clause to filter the rows of the table.
+
 [api_tokens.columns]
 id = "private"
 user_id = "private"
