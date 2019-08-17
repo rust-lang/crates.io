@@ -3,9 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    background_jobs::Environment, env, uploaders::Uploader, util::errors::std_error_no_send,
-};
+use crate::{background_jobs::Environment, uploaders::Uploader, util::errors::std_error_no_send};
 
 use swirl::PerformError;
 
@@ -17,9 +15,16 @@ pub fn dump_db(env: &Environment) -> Result<(), PerformError> {
     const EXPORT_DIR_TEMPLATE: &str = "/tmp/dump-db/%Y-%m-%d-%H%M%S";
     let export_dir = PathBuf::from(chrono::Utc::now().format(EXPORT_DIR_TEMPLATE).to_string());
     std::fs::create_dir_all(&export_dir)?;
-    run_psql(&export_dir)?;
+    let visibility_config = toml::from_str(include_str!("dump-db.toml")).unwrap();
+    let database_url = if cfg!(test) {
+        crate::env("TEST_DATABASE_URL")
+    } else {
+        crate::env("DATABASE_URL")
+    };
+    run_psql(&visibility_config, &database_url, &export_dir)?;
     let tarball = create_tarball(&export_dir)?;
-    upload_tarball(&tarball, &env.uploader)?;
+    let target_name = format!("dumps/{}", tarball.file_name().unwrap().to_str().unwrap());
+    upload_tarball(&tarball, &target_name, &env.uploader)?;
     // TODO: more robust cleanup
     std::fs::remove_dir_all(&export_dir)?;
     std::fs::remove_file(&tarball)?;
@@ -39,13 +44,6 @@ enum ColumnVisibility {
 struct TableConfig {
     filter: Option<String>,
     columns: BTreeMap<String, ColumnVisibility>,
-}
-
-/// Maps table names to the respective configurations
-type VisibilityConfig = BTreeMap<String, TableConfig>;
-
-fn load_visibility_config() -> VisibilityConfig {
-    toml::from_str(include_str!("dump-db.toml")).unwrap()
 }
 
 impl TableConfig {
@@ -103,40 +101,52 @@ impl TableConfig {
     }
 }
 
-fn gen_psql_script() -> String {
-    let config = load_visibility_config();
-    let view_sql = config
-        .iter()
-        .map(|(table, config)| config.view_sql(table))
-        .collect::<Vec<String>>()
-        .concat();
-    let copy_sql = config
-        .iter()
-        .map(|(table, config)| config.copy_sql(table))
-        .collect::<Vec<String>>()
-        .concat();
-    format!(
-        r#"
-        BEGIN;
-        {view_sql}
-        COMMIT;
-        BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;
-        {copy_sql}
-        COMMIT;
-        "#,
-        view_sql = view_sql,
-        copy_sql = copy_sql,
-    )
+/// Maps table names to the respective configurations
+#[derive(Clone, Debug, Deserialize)]
+#[serde(transparent)]
+struct VisibilityConfig(BTreeMap<String, TableConfig>);
+
+impl VisibilityConfig {
+    fn gen_psql_script(&self) -> String {
+        let view_sql = self
+            .0
+            .iter()
+            .map(|(table, config)| config.view_sql(table))
+            .collect::<Vec<String>>()
+            .concat();
+        let copy_sql = self
+            .0
+            .iter()
+            .map(|(table, config)| config.copy_sql(table))
+            .collect::<Vec<String>>()
+            .concat();
+        format!(
+            r#"
+            BEGIN;
+            {view_sql}
+            COMMIT;
+            BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;
+            {copy_sql}
+            COMMIT;
+            "#,
+            view_sql = view_sql,
+            copy_sql = copy_sql,
+        )
+    }
 }
 
-fn run_psql(export_dir: &Path) -> Result<(), PerformError> {
+fn run_psql(
+    config: &VisibilityConfig,
+    database_url: &str,
+    export_dir: &Path,
+) -> Result<(), PerformError> {
     use std::io::prelude::*;
     use std::process::{Command, Stdio};
 
-    let psql_script = gen_psql_script();
+    let psql_script = config.gen_psql_script();
     // TODO Redirect stdout and stderr to avoid polluting the worker logs.
     let mut psql = Command::new("psql")
-        .arg(env("DATABASE_URL"))
+        .arg(database_url)
         .current_dir(export_dir)
         .stdin(Stdio::piped())
         .spawn()?;
@@ -156,17 +166,20 @@ fn create_tarball(export_dir: &Path) -> Result<PathBuf, PerformError> {
     Ok(tarball_name)
 }
 
-fn upload_tarball(tarball: &Path, uploader: &Uploader) -> Result<(), PerformError> {
+fn upload_tarball(
+    tarball: &Path,
+    target_name: &str,
+    uploader: &Uploader,
+) -> Result<(), PerformError> {
     use std::io::Read;
 
     let client = reqwest::Client::new();
-    let target_name = format!("dumps/{}", tarball.file_name().unwrap().to_str().unwrap());
     let mut buf = vec![];
     // TODO: find solution that does not require holding the whole database
     // export in memory at once.
     std::fs::File::open(tarball)?.read_to_end(&mut buf)?;
     uploader
-        .upload(&client, &target_name, buf, "application/gzip")
+        .upload(&client, target_name, buf, "application/gzip")
         .map_err(std_error_no_send)?;
     Ok(())
 }
@@ -186,7 +199,10 @@ mod tests {
             .into_iter()
             .map(|c| (c.table_name, c.column_name))
             .collect();
-        let vis_columns: HashSet<_> = load_visibility_config()
+        let visibility_config: VisibilityConfig =
+            toml::from_str(include_str!("dump-db.toml")).unwrap();
+        let vis_columns: HashSet<_> = visibility_config
+            .0
             .iter()
             .flat_map(|(table, config)| {
                 config
