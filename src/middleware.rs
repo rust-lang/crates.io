@@ -112,15 +112,17 @@ fn blocked_traffic() -> Vec<(String, Vec<String>)> {
 }
 
 fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
-    patterns.split_terminator(',')
-        .map(|pattern| {
-            if let Some(idx) = pattern.find('=') {
-                (&pattern[..idx], &pattern[(idx + 1)..])
-            } else {
-                panic!("BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
-                        got invalid pattern {}", pattern)
-            }
-        })
+    patterns.split_terminator(',').map(|pattern| {
+        if let Some(idx) = pattern.find('=') {
+            (&pattern[..idx], &pattern[(idx + 1)..])
+        } else {
+            panic!(
+                "BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
+                 got invalid pattern {}",
+                pattern
+            )
+        }
+    })
 }
 
 #[test]

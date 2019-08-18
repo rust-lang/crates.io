@@ -16,7 +16,11 @@ pub struct BlockTraffic {
 
 impl BlockTraffic {
     pub fn new(header_name: String, blocked_values: Vec<String>) -> Self {
-        Self { header_name, blocked_values, handler: None }
+        Self {
+            header_name,
+            blocked_values,
+            handler: None,
+        }
     }
 }
 
