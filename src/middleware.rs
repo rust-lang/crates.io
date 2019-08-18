@@ -14,7 +14,7 @@ pub use self::security_headers::SecurityHeaders;
 pub use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
-mod block_ips;
+mod block_traffic;
 pub mod current_user;
 mod debug;
 mod ember_index_rewrite;
@@ -87,9 +87,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     m.around(Head::default());
 
-    if let Ok(ip_list) = env::var("BLOCKED_IPS") {
-        let ips = ip_list.split(',').map(String::from).collect();
-        m.around(block_ips::BlockIps::new(ips));
+    for (header, blocked_values) in blocked_traffic() {
+        m.around(block_traffic::BlockTraffic::new(header, blocked_values));
     }
 
     m.around(require_user_agent::RequireUserAgent::default());
@@ -99,4 +98,43 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
 
     m
+}
+
+fn blocked_traffic() -> Vec<(String, Vec<String>)> {
+    let pattern_list = env::var("BLOCKED_TRAFFIC").unwrap_or_default();
+    parse_traffic_patterns(&pattern_list)
+        .map(|(header, value_env_var)| {
+            let value_list = env::var(value_env_var).unwrap_or_default();
+            let values = value_list.split(',').map(String::from).collect();
+            (header.into(), values)
+        })
+        .collect()
+}
+
+fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
+    patterns.split_terminator(',')
+        .map(|pattern| {
+            if let Some(idx) = pattern.find('=') {
+                (&pattern[..idx], &pattern[(idx + 1)..])
+            } else {
+                panic!("BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
+                        got invalid pattern {}", pattern)
+            }
+        })
+}
+
+#[test]
+fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
+    let pattern_string_1 = "Foo=BAR,Bar=BAZ";
+    let pattern_string_2 = "Baz=QUX";
+    let pattern_string_3 = "";
+
+    let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
+    assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
+
+    let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
+    assert_eq!(vec![("Baz", "QUX")], patterns_2);
+
+    let patterns_3 = parse_traffic_patterns(pattern_string_3).collect::<Vec<_>>();
+    assert!(patterns_3.is_empty());
 }

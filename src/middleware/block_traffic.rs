@@ -1,4 +1,4 @@
-//! Middleware that blocks requests from a list of given IPs
+//! Middleware that blocks requests if a header matches the given list
 
 use super::prelude::*;
 
@@ -8,32 +8,33 @@ use std::io::Cursor;
 // Can't derive debug because of Handler.
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
-pub struct BlockIps {
-    ips: Vec<String>,
+pub struct BlockTraffic {
+    header_name: String,
+    blocked_values: Vec<String>,
     handler: Option<Box<dyn Handler>>,
 }
 
-impl BlockIps {
-    pub fn new(ips: Vec<String>) -> Self {
-        Self { ips, handler: None }
+impl BlockTraffic {
+    pub fn new(header_name: String, blocked_values: Vec<String>) -> Self {
+        Self { header_name, blocked_values, handler: None }
     }
 }
 
-impl AroundMiddleware for BlockIps {
+impl AroundMiddleware for BlockTraffic {
     fn with_handler(&mut self, handler: Box<dyn Handler>) {
         self.handler = Some(handler);
     }
 }
 
-impl Handler for BlockIps {
+impl Handler for BlockTraffic {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
-        let has_blocked_ip = req
+        let has_blocked_value = req
             .headers()
-            .find("X-Real-Ip")
+            .find(&self.header_name)
             .unwrap()
             .iter()
-            .any(|ip| self.ips.iter().any(|v| v == ip));
-        if has_blocked_ip {
+            .any(|value| self.blocked_values.iter().any(|v| v == value));
+        if has_blocked_value {
             let body = format!(
                 "We are unable to process your request at this time. \
                  This usually means that you are in violation of our crawler \
