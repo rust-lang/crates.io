@@ -2,33 +2,171 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::sql_types::BigInt;
+use diesel::query_dsl::LoadQuery;
+use indexmap::IndexMap;
+use crate::util::errors::*;
+use crate::models::helpers::with_count::*;
 
-#[derive(Debug, QueryId)]
-pub struct Paginated<T> {
-    query: T,
-    limit: i64,
-    offset: i64,
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Page {
+    Numeric(u32),
+    Unspecified,
 }
 
-pub trait Paginate: AsQuery + Sized {
-    fn paginate(self, limit: i64, offset: i64) -> Paginated<Self::Query> {
-        Paginated {
-            query: self.as_query(),
-            limit,
-            offset,
+impl Page {
+    fn new(params: &IndexMap<String, String>) -> CargoResult<Self> {
+        if let Some(s) = params.get("page") {
+            let numeric_page = s.parse()?;
+            if numeric_page < 1 {
+                return Err(human(&format_args!(
+                    "page indexing starts from 1, page {} is invalid",
+                    numeric_page,
+                )));
+            }
+
+            Ok(Page::Numeric(numeric_page))
+        } else {
+            Ok(Page::Unspecified)
         }
     }
 }
 
-impl<T: AsQuery> Paginate for T {}
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct PaginationOptions {
+    page: Page,
+    pub(crate) per_page: u32,
+}
 
-impl<T: Query> Query for Paginated<T> {
+impl PaginationOptions {
+    pub(crate) fn new(params: &IndexMap<String, String>) -> CargoResult<Self> {
+        const DEFAULT_PER_PAGE: u32 = 10;
+        const MAX_PER_PAGE: u32 = 100;
+
+        let per_page = params
+            .get("per_page")
+            .map(|s| s.parse())
+            .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
+
+        if per_page > MAX_PER_PAGE {
+            return Err(human(&format_args!(
+                "cannot request more than {} items",
+                MAX_PER_PAGE,
+            )));
+        }
+
+        Ok(Self {
+            page: Page::new(params)?,
+            per_page,
+        })
+    }
+
+    pub(crate) fn offset(&self) -> Option<u32> {
+        if let Page::Numeric(p) = self.page {
+            Some((p - 1) * self.per_page)
+        } else {
+            None
+        }
+    }
+}
+
+pub(crate) trait Paginate: Sized {
+    fn paginate(self, params: &IndexMap<String, String>) -> CargoResult<PaginatedQuery<Self>> {
+        Ok(PaginatedQuery {
+            query: self,
+            options: PaginationOptions::new(params)?,
+        })
+    }
+}
+
+impl<T> Paginate for T {}
+
+pub struct Paginated<T> {
+    records_and_total: Vec<WithCount<T>>,
+    options: PaginationOptions,
+}
+
+impl<T> Paginated<T> {
+    pub(crate) fn total(&self) -> Option<i64> {
+        Some(self.records_and_total
+            .get(0)
+            .map(|row| row.total)
+            .unwrap_or_default())
+    }
+
+    pub(crate) fn next_page_params(&self) -> Option<IndexMap<String, String>> {
+        if self.records_and_total.len() < self.options.per_page as usize {
+            return None;
+        }
+
+        let mut opts = IndexMap::new();
+        match self.options.page {
+            Page::Numeric(n) => opts.insert("page".into(), (n + 1).to_string()),
+            Page::Unspecified => opts.insert("page".into(), 2.to_string()),
+        };
+        Some(opts)
+    }
+
+    pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
+        if let Page::Numeric(1) | Page::Unspecified = self.options.page {
+            return None;
+        }
+
+        let mut opts = IndexMap::new();
+        match self.options.page {
+            Page::Numeric(n) => opts.insert("page".into(), (n - 1).to_string()),
+            Page::Unspecified => unreachable!(),
+        };
+        Some(opts)
+    }
+
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
+        self.records_and_total
+            .iter()
+            .map(|row| &row.record)
+    }
+}
+
+impl<T: 'static> IntoIterator for Paginated<T> {
+    type IntoIter = Box<dyn Iterator<Item = Self::Item>>;
+    type Item = T;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Box::new(self.records_and_total.into_iter().map(|row| row.record))
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct PaginatedQuery<T> {
+    query: T,
+    options: PaginationOptions,
+}
+
+impl<T> PaginatedQuery<T> {
+    pub(crate) fn load<U>(self, conn: &PgConnection) -> QueryResult<Paginated<U>>
+    where
+        Self: LoadQuery<PgConnection, WithCount<U>>,
+    {
+        let options = self.options.clone();
+        let records_and_total = self.internal_load(conn)?;
+        Ok(Paginated {
+            records_and_total,
+            options,
+        })
+    }
+}
+
+impl<T> QueryId for PaginatedQuery<T> {
+    const HAS_STATIC_QUERY_ID: bool = false;
+    type QueryId = ();
+}
+
+impl<T: Query> Query for PaginatedQuery<T> {
     type SqlType = (T::SqlType, BigInt);
 }
 
-impl<T, DB> RunQueryDsl<DB> for Paginated<T> {}
+impl<T, DB> RunQueryDsl<DB> for PaginatedQuery<T> {}
 
-impl<T> QueryFragment<Pg> for Paginated<T>
+impl<T> QueryFragment<Pg> for PaginatedQuery<T>
 where
     T: QueryFragment<Pg>,
 {
@@ -36,9 +174,11 @@ where
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
-        out.push_bind_param::<BigInt, _>(&self.limit)?;
-        out.push_sql(" OFFSET ");
-        out.push_bind_param::<BigInt, _>(&self.offset)?;
+        out.push_bind_param::<BigInt, _>(&(self.options.per_page as i64))?;
+        if let Some(offset) = self.options.offset() {
+            out.push_sql(" OFFSET ");
+            out.push_bind_param::<BigInt, _>(&(offset as i64))?;
+        }
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use super::helpers::pagination::*;
 use super::prelude::*;
 
 use crate::models::Category;
@@ -7,11 +8,15 @@ use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 /// Handles the `GET /categories` route.
 pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
+    // FIXME: There are 69 categories, 47 top level. This isn't going to
+    // grow by an OoM. We need a limit for /summary, but we don't need
+    // to paginate this.
+    let options = PaginationOptions::new(&query)?;
+    let offset = options.offset().unwrap_or_default();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let categories = Category::toplevel(&conn, sort, limit, offset)?;
+    let categories = Category::toplevel(&conn, sort, options.per_page as i64, offset as i64)?;
     let categories = categories.into_iter().map(Category::encodable).collect();
 
     // Query for the total count of categories

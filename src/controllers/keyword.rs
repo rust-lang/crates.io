@@ -9,7 +9,6 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     use crate::schema::keywords;
 
     let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
     let query = req.query();
     let sort = query.get("sort").map(|s| &s[..]).unwrap_or("alpha");
 
@@ -22,12 +21,12 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     let data = query
-        .paginate(limit, offset)
-        .load::<(Keyword, i64)>(&*conn)?;
-    let total = data.get(0).map(|&(_, t)| t).unwrap_or(0);
+        .paginate(&req.query())?
+        .load::<Keyword>(&*conn)?;
+    let total = data.total();
     let kws = data
         .into_iter()
-        .map(|(k, _)| k.encodable())
+        .map(Keyword::encodable)
         .collect::<Vec<_>>();
 
     #[derive(Serialize)]
@@ -37,7 +36,7 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     }
     #[derive(Serialize)]
     struct Meta {
-        total: i64,
+        total: Option<i64>,
     }
 
     Ok(req.json(&R {
