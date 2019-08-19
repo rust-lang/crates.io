@@ -35,7 +35,7 @@ impl Handler for BlockTraffic {
         let has_blocked_value = req
             .headers()
             .find(&self.header_name)
-            .unwrap()
+            .unwrap_or_default()
             .iter()
             .any(|value| self.blocked_values.iter().any(|v| v == value));
         if has_blocked_value {
