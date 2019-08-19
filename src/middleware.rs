@@ -38,7 +38,8 @@ use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let env = app.config.env;
+    let config = app.config.clone();
+    let env = config.env;
 
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
@@ -69,7 +70,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     ));
 
     if env == Env::Production {
-        m.add(SecurityHeaders::new(&app.config.uploader));
+        m.add(SecurityHeaders::new(&config.uploader));
     }
     m.add(AppMiddleware::new(app));
 
@@ -87,7 +88,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     m.around(Head::default());
 
-    for (header, blocked_values) in blocked_traffic() {
+    for (header, blocked_values) in config.blocked_traffic {
         m.around(block_traffic::BlockTraffic::new(header, blocked_values));
     }
 
@@ -98,45 +99,4 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     }
 
     m
-}
-
-fn blocked_traffic() -> Vec<(String, Vec<String>)> {
-    let pattern_list = env::var("BLOCKED_TRAFFIC").unwrap_or_default();
-    parse_traffic_patterns(&pattern_list)
-        .map(|(header, value_env_var)| {
-            let value_list = env::var(value_env_var).unwrap_or_default();
-            let values = value_list.split(',').map(String::from).collect();
-            (header.into(), values)
-        })
-        .collect()
-}
-
-fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
-    patterns.split_terminator(',').map(|pattern| {
-        if let Some(idx) = pattern.find('=') {
-            (&pattern[..idx], &pattern[(idx + 1)..])
-        } else {
-            panic!(
-                "BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
-                 got invalid pattern {}",
-                pattern
-            )
-        }
-    })
-}
-
-#[test]
-fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
-    let pattern_string_1 = "Foo=BAR,Bar=BAZ";
-    let pattern_string_2 = "Baz=QUX";
-    let pattern_string_3 = "";
-
-    let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
-    assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
-
-    let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
-    assert_eq!(vec![("Baz", "QUX")], patterns_2);
-
-    let patterns_3 = parse_traffic_patterns(pattern_string_3).collect::<Vec<_>>();
-    assert!(patterns_3.is_empty());
 }
