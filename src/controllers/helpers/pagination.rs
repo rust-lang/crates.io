@@ -174,10 +174,10 @@ where
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
-        out.push_bind_param::<BigInt, _>(&(self.options.per_page as i64))?;
+        out.push_bind_param::<BigInt, _>(&i64::from(self.options.per_page))?;
         if let Some(offset) = self.options.offset() {
             out.push_sql(" OFFSET ");
-            out.push_bind_param::<BigInt, _>(&(offset as i64))?;
+            out.push_bind_param::<BigInt, _>(&i64::from(offset))?;
         }
         Ok(())
     }

@@ -16,7 +16,7 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
     let offset = options.offset().unwrap_or_default();
     let sort = query.get("sort").map_or("alpha", String::as_str);
 
-    let categories = Category::toplevel(&conn, sort, options.per_page as i64, offset as i64)?;
+    let categories = Category::toplevel(&conn, sort, i64::from(options.per_page), i64::from(offset))?;
     let categories = categories.into_iter().map(Category::encodable).collect();
 
     // Query for the total count of categories

@@ -537,8 +537,8 @@ impl Crate {
         let offset = options.offset().unwrap_or_default();
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
-            .bind::<BigInt, _>(offset as i64)
-            .bind::<BigInt, _>(options.per_page as i64)
+            .bind::<BigInt, _>(i64::from(offset))
+            .bind::<BigInt, _>(i64::from(options.per_page))
             .load::<WithCount<ReverseDependency>>(conn)?;
 
         Ok(rows.records_and_total())
