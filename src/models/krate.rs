@@ -3,8 +3,8 @@ use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
-use url::Url;
 use indexmap::IndexMap;
+use url::Url;
 
 use crate::app::App;
 use crate::util::{human, CargoResult};
@@ -525,9 +525,9 @@ impl Crate {
         conn: &PgConnection,
         params: &IndexMap<String, String>,
     ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+        use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
-        use crate::controllers::helpers::pagination::*;
 
         // FIXME: It'd be great to support this with `.paginate` directly,
         // and get cursor/id pagination for free. But Diesel doesn't currently

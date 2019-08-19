@@ -1,11 +1,11 @@
+use crate::models::helpers::with_count::*;
+use crate::util::errors::*;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;
-use diesel::sql_types::BigInt;
 use diesel::query_dsl::LoadQuery;
+use diesel::sql_types::BigInt;
 use indexmap::IndexMap;
-use crate::util::errors::*;
-use crate::models::helpers::with_count::*;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Page {
@@ -87,10 +87,12 @@ pub struct Paginated<T> {
 
 impl<T> Paginated<T> {
     pub(crate) fn total(&self) -> Option<i64> {
-        Some(self.records_and_total
-            .get(0)
-            .map(|row| row.total)
-            .unwrap_or_default())
+        Some(
+            self.records_and_total
+                .get(0)
+                .map(|row| row.total)
+                .unwrap_or_default(),
+        )
     }
 
     pub(crate) fn next_page_params(&self) -> Option<IndexMap<String, String>> {
@@ -120,9 +122,7 @@ impl<T> Paginated<T> {
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
-        self.records_and_total
-            .iter()
-            .map(|row| &row.record)
+        self.records_and_total.iter().map(|row| &row.record)
     }
 }
 

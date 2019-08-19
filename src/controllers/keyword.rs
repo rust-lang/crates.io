@@ -20,14 +20,9 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
         query = query.order(keywords::keyword.asc());
     }
 
-    let data = query
-        .paginate(&req.query())?
-        .load::<Keyword>(&*conn)?;
+    let data = query.paginate(&req.query())?.load::<Keyword>(&*conn)?;
     let total = data.total();
-    let kws = data
-        .into_iter()
-        .map(Keyword::encodable)
-        .collect::<Vec<_>>();
+    let kws = data.into_iter().map(Keyword::encodable).collect::<Vec<_>>();
 
     #[derive(Serialize)]
     struct R {
