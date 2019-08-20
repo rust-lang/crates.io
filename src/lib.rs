@@ -162,7 +162,7 @@ async fn blocking_handler<H: conduit::Handler>(
             let mut request_info = RequestInfo::new(parts, full_body);
 
             future::poll_fn(move |_| {
-                tokio_threadpool::blocking(|| {
+                tokio_executor::threadpool::blocking(|| {
                     let mut request = ConduitRequest::new(&mut request_info, remote_addr);
                     handler
                         .call(&mut request)
