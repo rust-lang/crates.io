@@ -1,4 +1,3 @@
-#![feature(async_await)]
 #![deny(warnings, clippy::all, missing_debug_implementations)]
 
 //! A wrapper for integrating `hyper 0.13` with a `conduit 0.8` blocking application stack.
@@ -14,8 +13,6 @@
 //! Typical usage:
 //!
 //! ```no_run
-//! #![feature(async_await)]
-//!
 //! use conduit::Handler;
 //! use conduit_hyper::Server;
 //! use futures::executor::block_on;
@@ -104,7 +101,6 @@ impl Service {
     /// capturing the socket `remote_addr`.
     ///
     /// ```no_run
-    /// # #![feature(async_await)]
     /// # use std::sync::Arc;
     /// # use conduit_hyper::Service;
     /// # use std::{error, io};

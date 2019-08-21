@@ -1,5 +1,4 @@
 #![deny(warnings, clippy::all)]
-#![feature(async_await)]
 
 use conduit::{Handler, Request, Response};
 use conduit_hyper::Server;
