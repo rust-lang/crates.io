@@ -125,8 +125,8 @@ user_id = "private"
 burst = "private"
 
 [readme_renderings.columns]
-version_id = "public"
-rendered_at = "public"
+version_id = "private"
+rendered_at = "private"
 
 [reserved_crate_names.columns]
 name = "public"

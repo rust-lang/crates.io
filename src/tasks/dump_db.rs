@@ -40,6 +40,9 @@ enum ColumnVisibility {
     Public,
 }
 
+/// Filtering information for a single table. The `filter` field is a valid SQL
+/// expression used in a `WHERE` clause to filter the rows of the table. The
+/// `columns` field maps column names to their respective visibilities.
 #[derive(Clone, Debug, Deserialize)]
 struct TableConfig {
     filter: Option<String>,
@@ -101,7 +104,7 @@ impl TableConfig {
     }
 }
 
-/// Maps table names to the respective configurations
+/// Maps table names to the respective configurations. Used to load `dump_db.toml`.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(transparent)]
 struct VisibilityConfig(BTreeMap<String, TableConfig>);
