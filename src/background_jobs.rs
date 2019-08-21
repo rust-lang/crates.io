@@ -1,5 +1,5 @@
 use std::panic::AssertUnwindSafe;
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
@@ -21,12 +21,26 @@ impl swirl::db::DieselPool for DieselPool {
 
 #[allow(missing_debug_implementations)]
 pub struct Environment {
-    index: Mutex<Repository>,
+    index: Arc<Mutex<Repository>>,
     pub credentials: Option<(String, String)>,
     // FIXME: https://github.com/sfackler/r2d2/pull/70
     pub connection_pool: AssertUnwindSafe<DieselPool>,
     pub uploader: Uploader,
     http_client: AssertUnwindSafe<reqwest::Client>,
+}
+
+// FIXME: AssertUnwindSafe should be `Clone`, this can be replaced with
+// `#[derive(Clone)]` if that is fixed in the standard lib
+impl Clone for Environment {
+    fn clone(&self) -> Self {
+        Self {
+            index: self.index.clone(),
+            credentials: self.credentials.clone(),
+            connection_pool: AssertUnwindSafe(self.connection_pool.0.clone()),
+            uploader: self.uploader.clone(),
+            http_client: AssertUnwindSafe(self.http_client.0.clone()),
+        }
+    }
 }
 
 impl Environment {
@@ -38,7 +52,7 @@ impl Environment {
         http_client: reqwest::Client,
     ) -> Self {
         Self {
-            index: Mutex::new(index),
+            index: Arc::new(Mutex::new(index)),
             credentials,
             connection_pool: AssertUnwindSafe(connection_pool),
             uploader,
