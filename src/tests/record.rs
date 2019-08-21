@@ -5,7 +5,6 @@ use std::{
     collections::HashSet,
     fs::{self, File},
     io::{self, prelude::*},
-    net,
     path::PathBuf,
     pin::Pin,
     str,
@@ -82,8 +81,9 @@ pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
     let record = dotenv::var("RECORD").is_ok();
 
-    let a = t!(net::TcpListener::bind("127.0.0.1:0"));
-    let ret = format!("http://{}", t!(a.local_addr()));
+    let addr = "127.0.0.1:0".parse().unwrap();
+    let listener = t!(TcpListener::bind(&addr));
+    let ret = format!("http://{}", t!(listener.local_addr()));
 
     let data = cache_file(&me.replace("::", "_"));
     let record = if record && !data.exists() {
@@ -103,7 +103,6 @@ pub fn proxy() -> (String, Bomb) {
 
     let thread = thread::spawn(move || {
         let mut rt = t!(Runtime::new());
-        let listener = t!(TcpListener::from_std(a, &tokio::reactor::Handle::default()));
         let client = if let Record::Capture(_, _) = record {
             Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
         } else {

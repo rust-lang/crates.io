@@ -75,12 +75,12 @@ conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
-conduit-hyper = { path = "../../jtgeibel/conduit-hyper" }
+conduit-hyper = { git = "https://github.com/jtgeibel/conduit-hyper", branch="async-await" }
 
-futures-preview = { version = "0.3.0-alpha.17", features = ["compat", "async-await", "nightly"] }
-tokio = { version = "0.2.0-alpha.1", default-features = false, features = ["tcp", "fs"]}
-tokio-signal = "0.3.0-alpha.1"
-hyper = { git = "https://github.com/hyperium/hyper" }
+futures-preview = { version = "0.3.0-alpha.19", features = ["compat", "async-await"] }
+tokio = { version = "0.2.0-alpha.2", default-features = false, features = ["tcp", "fs"]}
+tokio-net = { version = "0.2.0-alpha.2", default-features=false, features = ["signal"] }
+hyper = { git = "https://github.com/hyperium/hyper", rev = "4920f5e264c57f87dc8b91e7ed9a575359cc093c" }
 ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"
 handlebars = "2.0.1"
