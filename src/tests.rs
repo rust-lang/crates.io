@@ -89,7 +89,7 @@ where
 fn make_service<H: Handler>(
     handler: H,
 ) -> impl Service<
-    ReqBody = hyper::Body,
+    hyper::Body,
     ResBody = hyper::Body,
     Future = impl Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send + 'static,
     Error = hyper::Error,

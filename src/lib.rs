@@ -133,10 +133,11 @@ impl Service {
         handler: Arc<H>,
         remote_addr: std::net::SocketAddr,
     ) -> Result<
-        impl service::Service<
-            ReqBody = Body,
-            ResBody = Body,
-            Future = impl Future<Output = Result<(Response<Body>), hyper::Error>>,
+        impl tower_service::Service<
+            Request<Body>,
+            Response = Response<Body>,
+            Error = hyper::Error,
+            Future = impl Future<Output = Result<Response<Body>, hyper::Error>> + Send + 'static,
         >,
         hyper::Error,
     > {
