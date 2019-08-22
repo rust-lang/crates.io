@@ -197,7 +197,7 @@ dependencies = [
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "htmlescape 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.13.0-alpha.4 (git+https://github.com/hyperium/hyper)",
- "hyper-tls 0.3.2",
+ "hyper-tls 0.4.0-alpha.4 (git+https://github.com/hyperium/hyper-tls)",
  "indexmap 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "jemallocator 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1193,9 +1193,10 @@ dependencies = [
 
 [[package]]
 name = "hyper-tls"
-version = "0.3.2"
+version = "0.4.0-alpha.4"
+source = "git+https://github.com/hyperium/hyper-tls#0ec7bf4002bdd4d87c501125e95077fd270a9280"
 dependencies = [
- "hyper 0.13.0-alpha.4 (git+https://github.com/hyperium/hyper)",
+ "hyper 0.13.0-alpha.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "native-tls 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-io 0.2.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-tls 0.3.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3350,6 +3351,7 @@ dependencies = [
 "checksum hyper 0.13.0-alpha.4 (git+https://github.com/hyperium/hyper)" = "<none>"
 "checksum hyper 0.13.0-alpha.4 (registry+https://github.com/rust-lang/crates.io-index)" = "2d05aa523087ac0b9d8b93dd80d5d482a697308ed3b0dca7b0667511a7fa7cdc"
 "checksum hyper-tls 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "caaee4dea92794a9e697038bd401e264307d1f22c883dbcb6f6618ba0d3b3bd3"
+"checksum hyper-tls 0.4.0-alpha.4 (git+https://github.com/hyperium/hyper-tls)" = "<none>"
 "checksum idna 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "38f09e0f0b1fb55fdee1f17470ad800da77af5186a1a76c026b679358b7e844e"
 "checksum idna 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "02e2673c30ee86b5b96a9cb52ad15718aa1f966f5ab9ad54a8b95d5ca33120a9"
 "checksum indexmap 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7e81a7c05f79578dbc15793d8b619db9ba32b4577003ef3af1a91c416798c58d"

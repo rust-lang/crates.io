@@ -87,7 +87,7 @@ handlebars = "2.0.1"
 
 [dev-dependencies]
 conduit-test = "0.8"
-hyper-tls = { path = "../../hyperium/hyper-tls" }
+hyper-tls = { git = "https://github.com/hyperium/hyper-tls" }
 lazy_static = "1.0"
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
 tower-service = "0.3.0-alpha.1"
