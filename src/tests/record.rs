@@ -9,11 +9,15 @@ use std::{
     pin::Pin,
     str,
     sync::{Arc, Mutex, Once},
+    task::{Context, Poll},
     thread,
 };
 
 use futures::{channel::oneshot, future, prelude::*};
-use tokio::{net::TcpListener, runtime::current_thread::Runtime};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    runtime::current_thread::Runtime,
+};
 
 // A "bomb" so when the test task exists we know when to shut down
 // the server and fail if the subtask failed.
@@ -149,14 +153,17 @@ struct Proxy {
     client: Option<Client>,
 }
 
-impl hyper::service::Service for Proxy {
-    type ReqBody = hyper::Body;
-    type ResBody = hyper::Body;
+impl tower_service::Service<hyper::Request<hyper::Body>> for Proxy {
+    type Response = hyper::Response<hyper::Body>;
     type Error = hyper::Error;
     type Future =
         Pin<Box<dyn Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send>>;
 
-    fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
+    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: hyper::Request<hyper::Body>) -> Self::Future {
         match *self.record.lock().unwrap() {
             Record::Capture(_, _) => {
                 let client = self.client.as_ref().unwrap().clone();
@@ -176,15 +183,16 @@ impl hyper::service::Service for Proxy {
     }
 }
 
-impl<Target> hyper::service::MakeService<Target> for Proxy {
-    type ReqBody = hyper::Body;
-    type ResBody = hyper::Body;
+impl<'a> tower_service::Service<&'a TcpStream> for Proxy {
+    type Response = Proxy;
     type Error = hyper::Error;
-    type Service = Proxy;
     type Future = Pin<Box<dyn Future<Output = Result<Proxy, hyper::Error>> + Send + 'static>>;
-    type MakeError = hyper::Error;
 
-    fn make_service(&mut self, _: Target) -> Self::Future {
+    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _: &'a TcpStream) -> Self::Future {
         Box::pin(future::ok(self.clone()))
     }
 }

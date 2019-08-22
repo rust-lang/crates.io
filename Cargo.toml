@@ -80,7 +80,7 @@ conduit-hyper = { git = "https://github.com/jtgeibel/conduit-hyper", branch="asy
 futures-preview = { version = "0.3.0-alpha.19", features = ["compat", "async-await"] }
 tokio = { version = "0.2.0-alpha.2", default-features = false, features = ["tcp", "fs"]}
 tokio-net = { version = "0.2.0-alpha.2", default-features=false, features = ["signal"] }
-hyper = { git = "https://github.com/hyperium/hyper", rev = "4920f5e264c57f87dc8b91e7ed9a575359cc093c" }
+hyper = { git = "https://github.com/hyperium/hyper" }
 ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"
 handlebars = "2.0.1"
@@ -90,6 +90,7 @@ conduit-test = "0.8"
 hyper-tls = { path = "../../hyperium/hyper-tls" }
 lazy_static = "1.0"
 diesel_migrations = { version = "1.3.0", features = ["postgres"] }
+tower-service = "0.3.0-alpha.1"
 
 [build-dependencies]
 dotenv = "0.15"
