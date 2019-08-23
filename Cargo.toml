@@ -13,7 +13,7 @@ conduit = "0.8"
 futures-preview = "0.3.0-alpha.18"
 hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper" }
 http = "0.1"
-log = "0.4"
+tracing = { version = "0.1", features = ["log"] }
 semver = "0.5" # Must match version in conduit for now
 tokio-executor = { version = "0.2.0-alpha.2", features = ["threadpool"] }
 tower-service = "0.3.0-alpha.1"

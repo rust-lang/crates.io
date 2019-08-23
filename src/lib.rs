@@ -58,7 +58,7 @@ use std::sync::Arc;
 
 use futures::prelude::*;
 use hyper::{service, Body, Chunk, Method, Request, Response, StatusCode, Version};
-use log::error;
+use tracing::error;
 
 // Consumers of this library need access to this particular version of `semver`
 pub use semver;
