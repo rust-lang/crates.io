@@ -10,20 +10,18 @@ use swirl::PerformError;
 /// Create CSV dumps of the public information in the database, wrap them in a
 /// tarball and upload to S3.
 #[swirl::background_job]
-pub fn dump_db(env: &Environment) -> Result<(), PerformError> {
+pub fn dump_db(
+    env: &Environment,
+    database_url: String,
+    target_name: String,
+) -> Result<(), PerformError> {
     // TODO make path configurable
     const EXPORT_DIR_TEMPLATE: &str = "/tmp/dump-db/%Y-%m-%d-%H%M%S";
     let export_dir = PathBuf::from(chrono::Utc::now().format(EXPORT_DIR_TEMPLATE).to_string());
     std::fs::create_dir_all(&export_dir)?;
     let visibility_config = toml::from_str(include_str!("dump-db.toml")).unwrap();
-    let database_url = if cfg!(test) {
-        crate::env("TEST_DATABASE_URL")
-    } else {
-        crate::env("DATABASE_URL")
-    };
     run_psql(&visibility_config, &database_url, &export_dir)?;
     let tarball = create_tarball(&export_dir)?;
-    let target_name = format!("dumps/{}", tarball.file_name().unwrap().to_str().unwrap());
     upload_tarball(&tarball, &target_name, &env.uploader)?;
     // TODO: more robust cleanup
     std::fs::remove_dir_all(&export_dir)?;
