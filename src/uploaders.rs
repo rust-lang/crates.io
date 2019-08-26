@@ -7,7 +7,7 @@ use crate::util::{human, internal, CargoResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::{Cursor, Read};
 use std::sync::Arc;
 
 use crate::middleware::app::RequestApp;
@@ -83,30 +83,29 @@ impl Uploader {
 
     /// Uploads a file using the configured uploader (either `S3`, `Local`).
     ///
-    /// It returns a a tuple containing the path of the uploaded file
-    /// and its checksum.
-    pub fn upload(
+    /// It returns the path of the uploaded file.
+    pub fn upload<R: std::io::Read + Send + 'static>(
         &self,
         client: &reqwest::Client,
         path: &str,
-        body: Vec<u8>,
+        mut content: R,
+        content_length: u64,
         content_type: &str,
-    ) -> CargoResult<(Option<String>, Vec<u8>)> {
-        let hash = hash(&body);
+    ) -> CargoResult<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket
-                    .put(client, path, body, content_type)
+                    .put(client, path, content, content_length, content_type)
                     .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
-                Ok((Some(String::from(path)), hash))
+                Ok(Some(String::from(path)))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
                 fs::create_dir_all(dir)?;
                 let mut file = File::create(&filename)?;
-                file.write_all(&body)?;
-                Ok((filename.to_str().map(String::from), hash))
+                std::io::copy(&mut content, &mut file)?;
+                Ok(filename.to_str().map(String::from))
             }
         }
     }
@@ -120,13 +119,20 @@ impl Uploader {
         vers: &semver::Version,
     ) -> CargoResult<Vec<u8>> {
         let app = Arc::clone(req.app());
-        let (_, checksum) = {
-            let path = Uploader::crate_path(&krate.name, &vers.to_string());
-            let mut body = Vec::new();
-            LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
-            verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
-            self.upload(app.http_client(), &path, body, "application/x-tar")?
-        };
+        let path = Uploader::crate_path(&krate.name, &vers.to_string());
+        let mut body = Vec::new();
+        LimitErrorReader::new(req.body(), maximums.max_upload_size).read_to_end(&mut body)?;
+        verify_tarball(krate, vers, &body, maximums.max_unpack_size)?;
+        let checksum = hash(&body);
+        let content_length = body.len() as u64;
+        let content = Cursor::new(body);
+        self.upload(
+            app.http_client(),
+            &path,
+            content,
+            content_length,
+            "application/x-tar",
+        )?;
         Ok(checksum)
     }
 
@@ -138,7 +144,9 @@ impl Uploader {
         readme: String,
     ) -> CargoResult<()> {
         let path = Uploader::readme_path(crate_name, vers);
-        self.upload(http_client, &path, readme.into_bytes(), "text/html")?;
+        let content_length = readme.len() as u64;
+        let content = Cursor::new(readme);
+        self.upload(http_client, &path, content, content_length, "text/html")?;
         Ok(())
     }
 }
