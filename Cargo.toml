@@ -83,6 +83,7 @@ tokio = "0.1"
 hyper = "0.12"
 ctrlc = { version = "3.0", features = ["termination"] }
 indexmap = "1.0.2"
+scopeguard = "0.3.3"
 
 [dev-dependencies]
 conduit-test = "0.8"

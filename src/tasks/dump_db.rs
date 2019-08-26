@@ -5,6 +5,7 @@ use std::{
 
 use crate::{background_jobs::Environment, uploaders::Uploader, util::errors::std_error_no_send};
 
+use scopeguard::defer;
 use swirl::PerformError;
 
 /// Create CSV dumps of the public information in the database, wrap them in a
@@ -15,17 +16,20 @@ pub fn dump_db(
     database_url: String,
     target_name: String,
 ) -> Result<(), PerformError> {
-    // TODO make path configurable
-    const EXPORT_DIR_TEMPLATE: &str = "/tmp/dump-db/%Y-%m-%d-%H%M%S";
-    let export_dir = PathBuf::from(chrono::Utc::now().format(EXPORT_DIR_TEMPLATE).to_string());
+    let timestamp = chrono::Utc::now().format("%Y-%m-%d-%H%M%S").to_string();
+    let export_dir = std::env::temp_dir().join("dump-db").join(timestamp);
     std::fs::create_dir_all(&export_dir)?;
+    defer! {{
+        std::fs::remove_dir_all(&export_dir).unwrap();
+    }}
     let visibility_config = toml::from_str(include_str!("dump-db.toml")).unwrap();
     run_psql(&visibility_config, &database_url, &export_dir)?;
     let tarball = create_tarball(&export_dir)?;
+    defer! {{
+        std::fs::remove_file(&tarball).unwrap();
+    }}
     upload_tarball(&tarball, &target_name, &env.uploader)?;
-    // TODO: more robust cleanup
-    std::fs::remove_dir_all(&export_dir)?;
-    std::fs::remove_file(&tarball)?;
+    println!("Database dump uploaded to {}.", &target_name);
     Ok(())
 }
 
