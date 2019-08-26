@@ -149,16 +149,29 @@ fn run_psql(
     use std::process::{Command, Stdio};
 
     let psql_script = config.gen_psql_script();
-    // TODO Redirect stdout and stderr to avoid polluting the worker logs.
     let mut psql = Command::new("psql")
         .arg(database_url)
         .current_dir(export_dir)
         .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()?;
     let mut stdin = psql.stdin.take().unwrap();
-    stdin.write_all(psql_script.as_bytes())?;
-    drop(stdin);
-    psql.wait()?;
+    let input_thread = std::thread::spawn(move || -> std::io::Result<()> {
+        stdin.write_all(psql_script.as_bytes())?;
+        Ok(())
+    });
+    let output = psql.wait_with_output()?;
+    input_thread.join().unwrap()?;
+    if !output.stderr.is_empty() {
+        Err(format!(
+            "Error while executing psql: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ))?;
+    }
+    if !output.status.success() {
+        Err("psql did not finish successfully.")?;
+    }
     Ok(())
 }
 
