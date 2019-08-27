@@ -68,6 +68,16 @@ matrix:
     - rust: nightly
       script:
         - cargo test
+    - name: Integration Tests
+      services:
+        - docker
+      before_install: skip
+      install:
+        - docker-compose build
+        - docker-compose up -d
+      before_script: skip
+      script:
+        - "sh wait-docker-compose.sh | fgrep '>crates.io: Rust Package Registry<'"
 
 notifications:
   email:
