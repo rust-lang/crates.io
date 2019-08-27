@@ -176,15 +176,18 @@ fn upload_tarball(
     target_name: &str,
     uploader: &Uploader,
 ) -> Result<(), PerformError> {
-    use std::io::Read;
-
     let client = reqwest::Client::new();
-    let mut buf = vec![];
-    // TODO: find solution that does not require holding the whole database
-    // export in memory at once.
-    std::fs::File::open(tarball)?.read_to_end(&mut buf)?;
+    let tarfile = std::fs::File::open(tarball)?;
+    let content_length = tarfile.metadata()?.len();
+    // TODO Figure out the correct content type.
     uploader
-        .upload(&client, target_name, buf, "application/gzip")
+        .upload(
+            &client,
+            target_name,
+            tarfile,
+            content_length,
+            "application/gzip",
+        )
         .map_err(std_error_no_send)?;
     Ok(())
 }
