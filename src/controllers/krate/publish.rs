@@ -79,17 +79,12 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
             repository: repo.as_ref().map(String::as_str),
-            license: new_crate.license.as_ref().map(|s| &**s),
             max_upload_size: None,
         };
 
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
-        let krate = persist.create_or_update(
-            &conn,
-            license_file,
-            user.id,
-            Some(&app.config.publish_rate_limit),
-        )?;
+        let krate =
+            persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {

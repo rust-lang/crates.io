@@ -234,7 +234,7 @@ impl<'a> CrateBuilder<'a> {
 
         let mut krate = self
             .krate
-            .create_or_update(connection, None, self.owner_id, None)?;
+            .create_or_update(connection, self.owner_id, None)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
