@@ -146,7 +146,7 @@ impl<T> PaginatedQuery<T> {
     where
         Self: LoadQuery<PgConnection, WithCount<U>>,
     {
-        let options = self.options.clone();
+        let options = self.options;
         let records_and_total = self.internal_load(conn)?;
         Ok(Paginated {
             records_and_total,
