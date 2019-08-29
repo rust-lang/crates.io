@@ -148,6 +148,7 @@ fn simple_config() -> Config {
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),
         publish_rate_limit: Default::default(),
+        blocked_traffic: Default::default(),
     }
 }
 

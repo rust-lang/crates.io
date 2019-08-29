@@ -14,7 +14,7 @@ pub use self::security_headers::SecurityHeaders;
 pub use self::static_or_continue::StaticOrContinue;
 
 pub mod app;
-mod block_ips;
+mod block_traffic;
 pub mod current_user;
 mod debug;
 mod ember_index_rewrite;
@@ -38,7 +38,8 @@ use crate::{App, Env};
 
 pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     let mut m = MiddlewareBuilder::new(endpoints);
-    let env = app.config.env;
+    let config = app.config.clone();
+    let env = config.env;
 
     if env != Env::Test {
         m.add(ensure_well_formed_500::EnsureWellFormed500);
@@ -69,7 +70,7 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
     ));
 
     if env == Env::Production {
-        m.add(SecurityHeaders::new(&app.config.uploader));
+        m.add(SecurityHeaders::new(&config.uploader));
     }
     m.add(AppMiddleware::new(app));
 
@@ -87,9 +88,8 @@ pub fn build_middleware(app: Arc<App>, endpoints: R404) -> MiddlewareBuilder {
 
     m.around(Head::default());
 
-    if let Ok(ip_list) = env::var("BLOCKED_IPS") {
-        let ips = ip_list.split(',').map(String::from).collect();
-        m.around(block_ips::BlockIps::new(ips));
+    for (header, blocked_values) in config.blocked_traffic {
+        m.around(block_traffic::BlockTraffic::new(header, blocked_values));
     }
 
     m.around(require_user_agent::RequireUserAgent::default());

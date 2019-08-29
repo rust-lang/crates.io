@@ -268,10 +268,16 @@ impl TestAppBuilder {
         (app, anon, user, token)
     }
 
-    pub fn with_publish_rate_limit(mut self, rate: Duration, burst: i32) -> Self {
-        self.config.publish_rate_limit.rate = rate;
-        self.config.publish_rate_limit.burst = burst;
+    pub fn with_config(mut self, f: impl FnOnce(&mut Config)) -> Self {
+        f(&mut self.config);
         self
+    }
+
+    pub fn with_publish_rate_limit(self, rate: Duration, burst: i32) -> Self {
+        self.with_config(|config| {
+            config.publish_rate_limit.rate = rate;
+            config.publish_rate_limit.burst = burst;
+        })
     }
 
     pub fn with_git_index(mut self) -> Self {

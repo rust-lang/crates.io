@@ -18,6 +18,7 @@ pub struct Config {
     pub mirror: Replica,
     pub api_protocol: String,
     pub publish_rate_limit: PublishRateLimit,
+    pub blocked_traffic: Vec<(String, Vec<String>)>,
 }
 
 impl Default for Config {
@@ -42,6 +43,8 @@ impl Default for Config {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `DATABASE_URL`: The URL of the postgres database to use.
+    /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
+    ///.  traffic. See the `block_traffic` module for more documentation.
     fn default() -> Config {
         let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
         let api_protocol = String::from("https");
@@ -135,6 +138,48 @@ impl Default for Config {
             mirror,
             api_protocol,
             publish_rate_limit: Default::default(),
+            blocked_traffic: blocked_traffic(),
         }
     }
+}
+
+fn blocked_traffic() -> Vec<(String, Vec<String>)> {
+    let pattern_list = dotenv::var("BLOCKED_TRAFFIC").unwrap_or_default();
+    parse_traffic_patterns(&pattern_list)
+        .map(|(header, value_env_var)| {
+            let value_list = dotenv::var(value_env_var).unwrap_or_default();
+            let values = value_list.split(',').map(String::from).collect();
+            (header.into(), values)
+        })
+        .collect()
+}
+
+fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
+    patterns.split_terminator(',').map(|pattern| {
+        if let Some(idx) = pattern.find('=') {
+            (&pattern[..idx], &pattern[(idx + 1)..])
+        } else {
+            panic!(
+                "BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
+                 got invalid pattern {}",
+                pattern
+            )
+        }
+    })
+}
+
+#[test]
+fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
+    let pattern_string_1 = "Foo=BAR,Bar=BAZ";
+    let pattern_string_2 = "Baz=QUX";
+    let pattern_string_3 = "";
+
+    let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
+    assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
+
+    let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
+    assert_eq!(vec![("Baz", "QUX")], patterns_2);
+
+    let patterns_3 = parse_traffic_patterns(pattern_string_3).collect::<Vec<_>>();
+    assert!(patterns_3.is_empty());
 }
