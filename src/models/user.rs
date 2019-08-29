@@ -5,8 +5,10 @@ use std::borrow::Cow;
 use crate::app::App;
 use crate::util::CargoResult;
 
+use crate::github;
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
+use crate::util::human;
 use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
 /// The model representing a row in the `users` database table.
@@ -14,7 +16,7 @@ use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
-    pub gh_access_token: String,
+    pub gh_access_token: Option<String>,
     pub gh_login: String,
     pub name: Option<String>,
     pub gh_avatar: Option<String>,
@@ -220,5 +222,13 @@ impl User {
             name,
             url: Some(url),
         }
+    }
+
+    pub fn github_token(&self) -> CargoResult<oauth2::Token> {
+        let access_token = self
+            .gh_access_token
+            .clone()
+            .ok_or_else(|| human("no GitHub access token"))?;
+        Ok(github::token(access_token))
     }
 }

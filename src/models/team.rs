@@ -141,7 +141,7 @@ impl Team {
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
-        let token = github::token(req_user.gh_access_token.clone());
+        let token = req_user.github_token()?;
         let teams = github::github::<Vec<GithubTeam>>(app, &url, &token)?;
 
         let team = teams
@@ -222,7 +222,7 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     }
 
     let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
-    let token = github::token(user.gh_access_token.clone());
+    let token = user.github_token()?;
     let membership = match github::github::<Membership>(app, &url, &token) {
         // Officially how `false` is returned
         Err(ref e) if e.is::<NotFound>() => return Ok(false),

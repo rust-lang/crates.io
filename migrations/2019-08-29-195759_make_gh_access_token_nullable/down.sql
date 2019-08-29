@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN gh_access_token SET NOT NULL;

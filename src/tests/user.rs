@@ -331,7 +331,7 @@ fn updating_existing_user_doesnt_change_api_token() {
     });
 
     assert_eq!("bar", user.gh_login);
-    assert_eq!("bar_token", user.gh_access_token);
+    assert_eq!("bar_token", user.gh_access_token.unwrap());
 }
 
 /*  Given a GitHub user, check that if the user logs in,
