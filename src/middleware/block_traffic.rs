@@ -1,4 +1,5 @@
 //! Middleware that blocks requests if a header matches the given list
+//!
 //! To use, set the `BLOCKED_TRAFFIC` environment variable to a comma-separated list of pairs
 //! containing a header name, an equals sign, and the name of another environment variable that
 //! contains the values of that header that should be blocked. For example, set `BLOCKED_TRAFFIC`
