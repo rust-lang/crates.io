@@ -1,0 +1,21 @@
+BEGIN;
+{{~#each tables}}
+{{~#if this.filter}}
+    CREATE TEMPORARY VIEW "dump_db_{{@key}}" AS (
+        SELECT {{this.columns}}
+        FROM "{{@key}}"
+        WHERE {{this.filter}}
+    );
+{{~/if}}
+{{~/each}}
+COMMIT;
+
+BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;
+{{~#each tables}}
+{{~#if this.filter}}
+    \copy (SELECT * FROM "dump_db_{{@key}}") TO '{{@key}}.csv' WITH CSV HEADER
+{{~else}}
+    \copy "{{@key}}" ({{this.columns}}) TO '{{@key}}.csv' WITH CSV HEADER
+{{~/if}}
+{{~/each}}
+COMMIT;

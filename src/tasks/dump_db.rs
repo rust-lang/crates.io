@@ -60,50 +60,6 @@ impl TableConfig {
             .collect::<Vec<String>>()
             .join(", ")
     }
-
-    fn view_sql(&self, table: &str) -> String {
-        self.filter
-            .as_ref()
-            .map(|filter| {
-                format!(
-                    r#"
-                    CREATE TEMPORARY VIEW "dump_db_{table}" AS (
-                        SELECT {columns}
-                        FROM "{table}"
-                        WHERE {filter}
-                    );
-                    "#,
-                    table = table,
-                    columns = self.columns_str(),
-                    filter = filter,
-                )
-            })
-            .unwrap_or_default()
-    }
-
-    fn copy_sql(&self, table: &str) -> String {
-        if self.filter.is_some() {
-            format!(
-                r#"
-                \copy (SELECT * FROM "dump_db_{table}") TO '{table}.csv' WITH CSV HEADER
-                "#,
-                table = table,
-            )
-        } else {
-            let cols_str = self.columns_str();
-            if cols_str.is_empty() {
-                String::new()
-            } else {
-                format!(
-                    r#"
-                    \copy "{table}" ({columns}) TO '{table}.csv' WITH CSV HEADER
-                    "#,
-                    table = table,
-                    columns = cols_str,
-                )
-            }
-        }
-    }
 }
 
 /// Maps table names to the respective configurations. Used to load `dump_db.toml`.
@@ -113,30 +69,39 @@ struct VisibilityConfig(BTreeMap<String, TableConfig>);
 
 impl VisibilityConfig {
     fn gen_psql_script(&self) -> String {
-        let view_sql = self
+        #[derive(Serialize)]
+        struct TableContext<'a> {
+            filter: Option<&'a str>,
+            columns: String,
+        }
+        #[derive(Serialize)]
+        struct Context<'a> {
+            tables: BTreeMap<&'a str, TableContext<'a>>,
+        }
+        let tables = self
             .0
             .iter()
-            .map(|(table, config)| config.view_sql(table))
-            .collect::<Vec<String>>()
-            .concat();
-        let copy_sql = self
-            .0
-            .iter()
-            .map(|(table, config)| config.copy_sql(table))
-            .collect::<Vec<String>>()
-            .concat();
-        format!(
-            r#"
-            BEGIN;
-            {view_sql}
-            COMMIT;
-            BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;
-            {copy_sql}
-            COMMIT;
-            "#,
-            view_sql = view_sql,
-            copy_sql = copy_sql,
-        )
+            .filter_map(|(table, config)| {
+                let columns = config.columns_str();
+                if columns.is_empty() {
+                    None
+                } else {
+                    Some((
+                        table.as_str(),
+                        TableContext {
+                            filter: config.filter.as_ref().map(String::as_str),
+                            columns,
+                        },
+                    ))
+                }
+            })
+            .collect();
+        let context = Context { tables };
+        let mut handlebars = handlebars::Handlebars::new();
+        handlebars.register_escape_fn(handlebars::no_escape);
+        handlebars
+            .render_template(include_str!("dump-export.hbs"), &context)
+            .unwrap()
     }
 }
 

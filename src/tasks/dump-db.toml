@@ -144,8 +144,7 @@ id in (
     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0
     UNION
     SELECT published_by as user_id FROM versions
-)
-"""
+)"""
 [users.columns]
 id = "public"
 email = "private"
