@@ -43,6 +43,8 @@ impl Default for Config {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `DATABASE_URL`: The URL of the postgres database to use.
+    /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
+    ///.  traffic. See the `block_traffic` module for more documentation.
     fn default() -> Config {
         let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
         let api_protocol = String::from("https");
