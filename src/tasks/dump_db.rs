@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, VecDeque},
+    fs::File,
     path::{Path, PathBuf},
 };
 
@@ -22,8 +23,11 @@ pub fn dump_db(
     defer! {{
         std::fs::remove_dir_all(&export_dir).unwrap();
     }}
-    let visibility_config = toml::from_str(include_str!("dump-db.toml")).unwrap();
-    run_psql(&visibility_config, &database_url, &export_dir)?;
+    let visibility_config: VisibilityConfig = toml::from_str(include_str!("dump-db.toml")).unwrap();
+    let export_script = export_dir.join("export.sql");
+    let import_script = export_dir.join("import.sql");
+    visibility_config.gen_psql_scripts(&export_script, &import_script)?;
+    run_psql(&database_url, &export_script)?;
     let tarball = create_tarball(&export_dir)?;
     defer! {{
         std::fs::remove_file(&tarball).unwrap();
@@ -145,46 +149,42 @@ impl VisibilityConfig {
         HandlebarsContext { tables }
     }
 
-    fn render_template(&self, template: &str) -> String {
+    fn gen_psql_scripts(
+        &self,
+        export_script: &Path,
+        import_script: &Path,
+    ) -> Result<(), PerformError> {
         let context = self.handlebars_context();
         let mut handlebars = handlebars::Handlebars::new();
         handlebars.register_escape_fn(handlebars::no_escape);
-        handlebars.render_template(template, &context).unwrap()
-    }
-
-    fn gen_export_script(&self) -> String {
-        self.render_template(include_str!("dump-export.hbs"))
-    }
-
-    #[allow(dead_code)]
-    fn gen_import_script(&self) -> String {
-        self.render_template(include_str!("dump-import.hbs"))
+        let export_sql = File::create(export_script)?;
+        handlebars.render_template_to_write(
+            include_str!("dump-export.hbs"),
+            &context,
+            export_sql,
+        )?;
+        let import_sql = File::create(import_script)?;
+        handlebars.render_template_to_write(
+            include_str!("dump-import.hbs"),
+            &context,
+            import_sql,
+        )?;
+        Ok(())
     }
 }
 
-fn run_psql(
-    config: &VisibilityConfig,
-    database_url: &str,
-    export_dir: &Path,
-) -> Result<(), PerformError> {
-    use std::io::prelude::*;
+fn run_psql(database_url: &str, export_script: &Path) -> Result<(), PerformError> {
     use std::process::{Command, Stdio};
 
-    let psql_script = config.gen_export_script();
-    let mut psql = Command::new("psql")
+    let psql_script = File::open(export_script)?;
+    let psql = Command::new("psql")
         .arg(database_url)
-        .current_dir(export_dir)
-        .stdin(Stdio::piped())
+        .current_dir(export_script.parent().unwrap())
+        .stdin(psql_script)
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()?;
-    let mut stdin = psql.stdin.take().unwrap();
-    let input_thread = std::thread::spawn(move || -> std::io::Result<()> {
-        stdin.write_all(psql_script.as_bytes())?;
-        Ok(())
-    });
     let output = psql.wait_with_output()?;
-    input_thread.join().unwrap()?;
     if !output.stderr.is_empty() {
         Err(format!(
             "Error while executing psql: {}",
@@ -199,7 +199,7 @@ fn run_psql(
 
 fn create_tarball(export_dir: &Path) -> Result<PathBuf, PerformError> {
     let tarball_name = export_dir.with_extension("tar.gz");
-    let tarball = std::fs::File::create(&tarball_name)?;
+    let tarball = File::create(&tarball_name)?;
     let encoder = flate2::write::GzEncoder::new(tarball, flate2::Compression::default());
     let mut archive = tar::Builder::new(encoder);
     archive.append_dir_all(export_dir.file_name().unwrap(), &export_dir)?;
@@ -212,7 +212,7 @@ fn upload_tarball(
     uploader: &Uploader,
 ) -> Result<(), PerformError> {
     let client = reqwest::Client::new();
-    let tarfile = std::fs::File::open(tarball)?;
+    let tarfile = File::open(tarball)?;
     let content_length = tarfile.metadata()?.len();
     // TODO Figure out the correct content type.
     uploader

@@ -1,3 +1,19 @@
+-- Script for psql to restore the dump into a local crates.io database.
+--
+-- WARNING: This will destroy the current database contents.
+--
+-- Instructions:
+--
+-- 1. Create a new database and run the Diesel migrations.
+--
+--        createdb DATABASE_NAME
+--        diesel migration run --database-url DATABASE_URL
+--
+-- 2. Run this script.
+--
+--        cd DUMP_DIRECTORY
+--        psql DATABASE_URL < import.sql
+
 BEGIN;
 {{~#each tables}}
     TRUNCATE "{{this.name}}" RESTART IDENTITY CASCADE;
