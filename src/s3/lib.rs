@@ -38,11 +38,12 @@ impl Bucket {
         }
     }
 
-    pub fn put(
+    pub fn put<R: std::io::Read + Send + 'static>(
         &self,
         client: &reqwest::Client,
         path: &str,
-        content: Vec<u8>,
+        content: R,
+        content_length: u64,
         content_type: &str,
     ) -> reqwest::Result<reqwest::Response> {
         let path = if path.starts_with('/') {
@@ -59,7 +60,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
-            .body(content)
+            .body(reqwest::Body::sized(content, content_length))
             .send()?
             .error_for_status()
     }
