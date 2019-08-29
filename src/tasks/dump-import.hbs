@@ -1,0 +1,8 @@
+BEGIN;
+{{~#each tables}}
+    TRUNCATE "{{this.name}}" RESTART IDENTITY CASCADE;
+{{~/each}}
+{{~#each tables}}
+    \copy "{{this.name}}" ({{this.columns}}) FROM '{{this.name}}.csv' WITH CSV HEADER
+{{~/each}}
+COMMIT;

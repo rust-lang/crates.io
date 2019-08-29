@@ -1,5 +1,5 @@
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     path::{Path, PathBuf},
 };
 
@@ -42,23 +42,46 @@ enum ColumnVisibility {
     Public,
 }
 
-/// Filtering information for a single table. The `filter` field is a valid SQL
-/// expression used in a `WHERE` clause to filter the rows of the table. The
-/// `columns` field maps column names to their respective visibilities.
+/// Filtering information for a single table. The `dependencies` field is only
+/// used to determine the order of the tables in the generated import script,
+/// and should list all tables the current tables refers to with foreign key
+/// constraints on public columns. The `filter` field is a valid SQL expression
+/// used in a `WHERE` clause to filter the rows of the table. The `columns`
+/// field maps column names to their respective visibilities.
 #[derive(Clone, Debug, Deserialize)]
 struct TableConfig {
+    #[serde(default)]
+    dependencies: Vec<String>,
     filter: Option<String>,
     columns: BTreeMap<String, ColumnVisibility>,
 }
 
+/// Subset of the configuration data to be passed on to the Handlbars template.
+#[derive(Debug, Serialize)]
+struct HandlebarsTableContext<'a> {
+    name: &'a str,
+    filter: Option<&'a str>,
+    columns: String,
+}
+
 impl TableConfig {
-    fn columns_str(&self) -> String {
-        self.columns
+    fn handlebars_context<'a>(&'a self, name: &'a str) -> Option<HandlebarsTableContext<'a>> {
+        let columns = self
+            .columns
             .iter()
             .filter(|&(_, &vis)| vis == ColumnVisibility::Public)
             .map(|(col, _)| format!("\"{}\"", col))
             .collect::<Vec<String>>()
-            .join(", ")
+            .join(", ");
+        if columns.is_empty() {
+            None
+        } else {
+            Some(HandlebarsTableContext {
+                name,
+                filter: self.filter.as_ref().map(String::as_str),
+                columns,
+            })
+        }
     }
 }
 
@@ -67,41 +90,75 @@ impl TableConfig {
 #[serde(transparent)]
 struct VisibilityConfig(BTreeMap<String, TableConfig>);
 
+/// Subset of the configuration data to be passed on to the Handlbars template.
+#[derive(Debug, Serialize)]
+struct HandlebarsContext<'a> {
+    tables: Vec<HandlebarsTableContext<'a>>,
+}
+
 impl VisibilityConfig {
-    fn gen_psql_script(&self) -> String {
-        #[derive(Serialize)]
-        struct TableContext<'a> {
-            filter: Option<&'a str>,
-            columns: String,
-        }
-        #[derive(Serialize)]
-        struct Context<'a> {
-            tables: BTreeMap<&'a str, TableContext<'a>>,
-        }
-        let tables = self
+    /// Sort the tables in a way that dependencies come before dependent tables.
+    ///
+    /// Returns a vector of table names.
+    fn topological_sort(&self) -> Vec<&str> {
+        let mut result = Vec::new();
+        let mut num_deps = BTreeMap::new();
+        let mut rev_deps: BTreeMap<&str, Vec<&str>> = self
             .0
             .iter()
-            .filter_map(|(table, config)| {
-                let columns = config.columns_str();
-                if columns.is_empty() {
-                    None
-                } else {
-                    Some((
-                        table.as_str(),
-                        TableContext {
-                            filter: config.filter.as_ref().map(String::as_str),
-                            columns,
-                        },
-                    ))
-                }
-            })
+            .map(|(table, _)| (table.as_str(), vec![]))
             .collect();
-        let context = Context { tables };
+        for (table, config) in self.0.iter() {
+            num_deps.insert(table.as_str(), config.dependencies.len());
+            for dep in &config.dependencies {
+                rev_deps.get_mut(dep.as_str()).unwrap().push(table.as_str());
+            }
+        }
+        let mut ready: VecDeque<&str> = num_deps
+            .iter()
+            .filter(|(_, &count)| count == 0)
+            .map(|(&table, _)| table)
+            .collect();
+        while let Some(table) = ready.pop_front() {
+            result.push(table);
+            for dep in &rev_deps[table] {
+                *num_deps.get_mut(dep).unwrap() -= 1;
+                if num_deps[dep] == 0 {
+                    ready.push_back(dep);
+                }
+            }
+        }
+        assert_eq!(
+            self.0.len(),
+            result.len(),
+            "circular dependencies in DB dump config detected",
+        );
+        result
+    }
+
+    fn handlebars_context(&self) -> HandlebarsContext<'_> {
+        let tables = self
+            .topological_sort()
+            .into_iter()
+            .filter_map(|table| self.0[table].handlebars_context(table))
+            .collect();
+        HandlebarsContext { tables }
+    }
+
+    fn render_template(&self, template: &str) -> String {
+        let context = self.handlebars_context();
         let mut handlebars = handlebars::Handlebars::new();
         handlebars.register_escape_fn(handlebars::no_escape);
-        handlebars
-            .render_template(include_str!("dump-export.hbs"), &context)
-            .unwrap()
+        handlebars.render_template(template, &context).unwrap()
+    }
+
+    fn gen_export_script(&self) -> String {
+        self.render_template(include_str!("dump-export.hbs"))
+    }
+
+    #[allow(dead_code)]
+    fn gen_import_script(&self) -> String {
+        self.render_template(include_str!("dump-import.hbs"))
     }
 }
 
@@ -113,7 +170,7 @@ fn run_psql(
     use std::io::prelude::*;
     use std::process::{Command, Stdio};
 
-    let psql_script = config.gen_psql_script();
+    let psql_script = config.gen_export_script();
     let mut psql = Command::new("psql")
         .arg(database_url)
         .current_dir(export_dir)

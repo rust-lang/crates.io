@@ -1,9 +1,9 @@
 BEGIN;
 {{~#each tables}}
 {{~#if this.filter}}
-    CREATE TEMPORARY VIEW "dump_db_{{@key}}" AS (
+    CREATE TEMPORARY VIEW "dump_db_{{this.name}}" AS (
         SELECT {{this.columns}}
-        FROM "{{@key}}"
+        FROM "{{this.name}}"
         WHERE {{this.filter}}
     );
 {{~/if}}
@@ -13,9 +13,9 @@ COMMIT;
 BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;
 {{~#each tables}}
 {{~#if this.filter}}
-    \copy (SELECT * FROM "dump_db_{{@key}}") TO '{{@key}}.csv' WITH CSV HEADER
+    \copy (SELECT * FROM "dump_db_{{this.name}}") TO '{{this.name}}.csv' WITH CSV HEADER
 {{~else}}
-    \copy "{{@key}}" ({{this.columns}}) TO '{{@key}}.csv' WITH CSV HEADER
+    \copy "{{this.name}}" ({{this.columns}}) TO '{{this.name}}.csv' WITH CSV HEADER
 {{~/if}}
 {{~/each}}
 COMMIT;

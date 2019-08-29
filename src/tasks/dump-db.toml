@@ -7,6 +7,11 @@
 #
 # <table_name>.filter - a string that is a valid SQL expression, which is used
 #     in a WHERE clause to filter the rows of the table.
+#
+# <table_name>.dependencies - an array of table names, used to determine the
+#     order of the tables in the generated import script. All tables referred
+#     to by public columns in the current table should be listed, to make sure
+#     they are imported before this table.
 
 [api_tokens.columns]
 id = "private"
@@ -46,6 +51,7 @@ crate_id = "private"
 created_at = "private"
 
 [crate_owners]
+dependencies = ["crates", "users"]
 filter = "NOT deleted"
 [crate_owners.columns]
 crate_id = "public"
@@ -71,14 +77,20 @@ license = "public"
 repository = "public"
 max_upload_size = "public"
 
+[crates_categories]
+dependencies = ["categories", "crates"]
 [crates_categories.columns]
 crate_id = "public"
 category_id = "public"
 
+[crates_keywords]
+dependencies = ["crates", "keywords"]
 [crates_keywords.columns]
 crate_id = "public"
 keyword_id = "public"
 
+[dependencies]
+dependencies = ["crates", "versions"]
 [dependencies.columns]
 id = "public"
 version_id = "public"
@@ -154,12 +166,16 @@ name = "public"
 gh_avatar = "public"
 gh_id = "public"
 
+[version_authors]
+dependencies = ["users", "versions"]
 [version_authors.columns]
 id = "public"
 version_id = "public"
 user_id = "private"
 name = "public"
 
+[version_downloads]
+dependencies = ["versions"]
 [version_downloads.columns]
 version_id = "public"
 downloads = "public"
@@ -167,6 +183,8 @@ counted = "private"
 date = "public"
 processed = "private"
 
+[versions]
+dependencies = ["crates", "users"]
 [versions.columns]
 id = "public"
 crate_id = "public"
