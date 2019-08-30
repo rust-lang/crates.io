@@ -1,4 +1,4 @@
 module.exports = {
-    parallel: true,
-    reporters: ['json', 'lcov'],
+  parallel: true,
+  reporters: ['json', 'lcov'],
 };

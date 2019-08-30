@@ -1,3 +1,3 @@
 export default function(server) {
-    server.loadFixtures();
+  server.loadFixtures();
 }

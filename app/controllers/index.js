@@ -6,26 +6,26 @@ import ajax from 'ember-fetch/ajax';
 import { task } from 'ember-concurrency';
 
 export default Controller.extend({
-    model: readOnly('dataTask.lastSuccessful.value'),
+  model: readOnly('dataTask.lastSuccessful.value'),
 
-    hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
-        return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
-    }),
+  hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
+    return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
+  }),
 
-    dataTask: task(function*() {
-        let data = yield ajax('/api/v1/summary');
+  dataTask: task(function*() {
+    let data = yield ajax('/api/v1/summary');
 
-        addCrates(this.store, data.new_crates);
-        addCrates(this.store, data.most_downloaded);
-        addCrates(this.store, data.just_updated);
-        addCrates(this.store, data.most_recently_downloaded);
+    addCrates(this.store, data.new_crates);
+    addCrates(this.store, data.most_downloaded);
+    addCrates(this.store, data.just_updated);
+    addCrates(this.store, data.most_recently_downloaded);
 
-        return data;
-    }).drop(),
+    return data;
+  }).drop(),
 });
 
 function addCrates(store, crates) {
-    for (let i = 0; i < crates.length; i++) {
-        crates[i] = store.push(store.normalize('crate', crates[i]));
-    }
+  for (let i = 0; i < crates.length; i++) {
+    crates[i] = store.push(store.normalize('crate', crates[i]));
+  }
 }
