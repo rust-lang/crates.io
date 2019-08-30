@@ -9,5 +9,6 @@ module.exports = {
     'block-indentation': false,
     'img-alt-attributes': false,
     'triple-curlies': false,
+    'html-comments': false,
   },
 };
