@@ -59,6 +59,7 @@ matrix:
         - npm ci
       before_script: skip
       script:
+        - npm run lint:hbs
         - npm run lint:js
         - npm run lint:deps
         - npm test
