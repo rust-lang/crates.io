@@ -15,10 +15,12 @@
 --        psql DATABASE_URL < import.sql
 
 BEGIN;
-{{~#each tables}}
+    -- Set defaults for non-nullable columns not included in the dump.
+    ALTER TABLE users ALTER COLUMN gh_access_token SET DEFAULT '';
+{{#each tables}}
     TRUNCATE "{{this.name}}" RESTART IDENTITY CASCADE;
 {{~/each}}
-{{~#each tables}}
+{{#each tables}}
     \copy "{{this.name}}" ({{this.columns}}) FROM '{{this.name}}.csv' WITH CSV HEADER
 {{~/each}}
 COMMIT;
