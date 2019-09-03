@@ -107,15 +107,11 @@ impl VisibilityConfig {
     fn topological_sort(&self) -> Vec<&str> {
         let mut result = Vec::new();
         let mut num_deps = BTreeMap::new();
-        let mut rev_deps: BTreeMap<&str, Vec<&str>> = self
-            .0
-            .iter()
-            .map(|(table, _)| (table.as_str(), vec![]))
-            .collect();
+        let mut rev_deps: BTreeMap<_, Vec<_>> = BTreeMap::new();
         for (table, config) in self.0.iter() {
             num_deps.insert(table.as_str(), config.dependencies.len());
             for dep in &config.dependencies {
-                rev_deps.get_mut(dep.as_str()).unwrap().push(table.as_str());
+                rev_deps.entry(dep.as_str()).or_default().push(table.as_str());
             }
         }
         let mut ready: VecDeque<&str> = num_deps
@@ -125,7 +121,7 @@ impl VisibilityConfig {
             .collect();
         while let Some(table) = ready.pop_front() {
             result.push(table);
-            for dep in &rev_deps[table] {
+            for dep in rev_deps.get(table).iter().copied().flatten() {
                 *num_deps.get_mut(dep).unwrap() -= 1;
                 if num_deps[dep] == 0 {
                     ready.push_back(dep);
@@ -135,7 +131,7 @@ impl VisibilityConfig {
         assert_eq!(
             self.0.len(),
             result.len(),
-            "circular dependencies in DB dump config detected",
+            "circular dependencies in database dump configuration detected",
         );
         result
     }
