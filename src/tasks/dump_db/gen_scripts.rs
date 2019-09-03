@@ -151,38 +151,44 @@ mod tests {
     use crate::test_util::pg_connection;
     use diesel::prelude::*;
     use std::collections::HashSet;
+    use std::iter::FromIterator;
 
-    /// Test whether the schema in the visibility configuration matches the test database.
+    /// Test whether the visibility configuration matches the schema of the
+    /// test database.
     #[test]
     fn check_visibility_config() {
         let conn = pg_connection();
-        let db_columns: HashSet<_> = get_db_columns(&conn)
-            .into_iter()
-            .map(|c| (c.table_name, c.column_name))
-            .collect();
-        let visibility_config: VisibilityConfig =
-            toml::from_str(include_str!("dump-db.toml")).unwrap();
-        let vis_columns: HashSet<_> = visibility_config
+        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&conn));
+        let vis_columns = toml::from_str::<VisibilityConfig>(include_str!("dump-db.toml"))
+            .unwrap()
             .0
             .iter()
             .flat_map(|(table, config)| {
-                config
-                    .columns
-                    .iter()
-                    .map(move |(column, _)| (table.clone(), column.clone()))
+                config.columns.iter().map(move |(column, _)| Column {
+                    table_name: table.clone(),
+                    column_name: column.clone(),
+                })
             })
             .collect();
         let mut errors = vec![];
-        for (table, col) in db_columns.difference(&vis_columns) {
+        for Column {
+            table_name,
+            column_name,
+        } in db_columns.difference(&vis_columns)
+        {
             errors.push(format!(
                 "No visibility information for columns {}.{}.",
-                table, col
+                table_name, column_name
             ));
         }
-        for (table, col) in vis_columns.difference(&db_columns) {
+        for Column {
+            table_name,
+            column_name,
+        } in vis_columns.difference(&db_columns)
+        {
             errors.push(format!(
                 "Column {}.{} does not exist in the database.",
-                table, col
+                table_name, column_name
             ));
         }
         assert!(
@@ -203,7 +209,7 @@ mod tests {
         }
     }
 
-    #[derive(Debug, PartialEq, Queryable)]
+    #[derive(Debug, Eq, Hash, PartialEq, Queryable)]
     struct Column {
         table_name: String,
         column_name: String,
