@@ -22,9 +22,6 @@ module.exports = function(environment) {
             // Here you can pass flags/options to your application instance
             // when it is created
         },
-        fastboot: {
-            hostWhitelist: ['crates.io', /^localhost:\d+$/, /\.herokuapp\.com$/],
-        },
     };
 
     if (environment === 'development') {
