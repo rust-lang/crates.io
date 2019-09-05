@@ -28,7 +28,7 @@ enum ColumnVisibility {
 /// constraints on public columns. The `filter` field is a valid SQL expression
 /// used in a `WHERE` clause to filter the rows of the table. The `columns`
 /// field maps column names to their respective visibilities.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 struct TableConfig {
     #[serde(default)]
     dependencies: Vec<String>,
@@ -76,7 +76,7 @@ impl TableConfig {
 }
 
 /// Maps table names to the respective configurations. Used to load `dump_db.toml`.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(transparent)]
 struct VisibilityConfig(BTreeMap<String, TableConfig>);
 
@@ -204,7 +204,7 @@ mod tests {
         assert!(
             errors.is_empty(),
             "The visibility configuration does not match the database schema:\n{}",
-            errors.join("\n  - "),
+            errors.join("\n"),
         );
     }
 
@@ -233,5 +233,33 @@ mod tests {
             .order_by((table_name, ordinal_position))
             .load(conn)
             .unwrap()
+    }
+
+    fn table_config_with_deps(deps: &[&str]) -> TableConfig {
+        TableConfig {
+            dependencies: deps.iter().cloned().map(ToOwned::to_owned).collect(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_topological_sort() {
+        let mut config = VisibilityConfig::default();
+        let tables = &mut config.0;
+        tables.insert("a".to_owned(), table_config_with_deps(&["b", "c"]));
+        tables.insert("b".to_owned(), table_config_with_deps(&["c", "d"]));
+        tables.insert("c".to_owned(), table_config_with_deps(&["d"]));
+        config.0.insert("d".to_owned(), table_config_with_deps(&[]));
+        assert_eq!(config.topological_sort(), ["d", "c", "b", "a"]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn topological_sort_panics_for_cyclic_dependency() {
+        let mut config = VisibilityConfig::default();
+        let tables = &mut config.0;
+        tables.insert("a".to_owned(), table_config_with_deps(&["b"]));
+        tables.insert("b".to_owned(), table_config_with_deps(&["a"]));
+        config.topological_sort();
     }
 }
