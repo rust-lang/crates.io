@@ -20,12 +20,13 @@ env:
     - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
     - PERCY_PROJECT=crates-io/crates.io
     - PGPORT=5433
+    - PATH=$HOME/.cargo/bin:$PATH
 
 install:
   - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
   - sudo systemctl restart postgresql@11-main
   - script/ci/cargo-clean-on-new-rustc-version.sh
-  - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres
 
 before_script:
   - diesel database setup --locked-schema
@@ -63,6 +64,16 @@ matrix:
         - npm run lint:js
         - npm run lint:deps
         - npm test
+    - name: Integration Tests
+      language: node_js
+      node_js: 12
+      before_install:
+        # Install Rust, since Travis prepares Node.js box for this job
+        - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      script:
+        - npm ci
+        - cargo build
+        - ./script/ci/start-frontend-and-backend.sh
     - rust: beta
       script:
         - cargo test
