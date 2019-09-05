@@ -3,6 +3,7 @@ use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
+use indexmap::IndexMap;
 use url::Url;
 
 use crate::app::App;
@@ -522,16 +523,22 @@ impl Crate {
     pub fn reverse_dependencies(
         &self,
         conn: &PgConnection,
-        offset: i64,
-        limit: i64,
-    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
+        params: &IndexMap<String, String>,
+    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+        use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
 
+        // FIXME: It'd be great to support this with `.paginate` directly,
+        // and get cursor/id pagination for free. But Diesel doesn't currently
+        // have great support for abstracting over "Is this using `Queryable`
+        // or `QueryableByName` to load things?"
+        let options = PaginationOptions::new(params)?;
+        let offset = options.offset().unwrap_or_default();
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
-            .bind::<BigInt, _>(offset)
-            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(i64::from(offset))
+            .bind::<BigInt, _>(i64::from(options.per_page))
             .load::<WithCount<ReverseDependency>>(conn)?;
 
         Ok(rows.records_and_total())

@@ -2230,11 +2230,12 @@ fn pagination_links_included_if_applicable() {
     let page1 = anon.search("per_page=1");
     let page2 = anon.search("page=2&per_page=1");
     let page3 = anon.search("page=3&per_page=1");
+    let page4 = anon.search("page=4&per_page=1");
 
     assert_eq!(Some("?per_page=1&page=2".to_string()), page1.meta.next_page);
     assert_eq!(None, page1.meta.prev_page);
     assert_eq!(Some("?page=3&per_page=1".to_string()), page2.meta.next_page);
     assert_eq!(Some("?page=1&per_page=1".to_string()), page2.meta.prev_page);
-    assert_eq!(None, page3.meta.next_page);
+    assert_eq!(None, page4.meta.next_page);
     assert_eq!(Some("?page=2&per_page=1".to_string()), page3.meta.prev_page);
 }

@@ -1,9 +1,9 @@
 use crate::util::{json_response, CargoResult};
 use conduit::Response;
 
-pub mod pagination;
+pub(crate) mod pagination;
 
-pub use self::pagination::Paginate;
+pub(crate) use self::pagination::Paginate;
 
 pub fn ok_true() -> CargoResult<Response> {
     #[derive(Serialize)]
