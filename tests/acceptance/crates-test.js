@@ -4,7 +4,6 @@ import { click, currentURL, visit } from '@ember/test-helpers';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
-import { title } from '../helpers/dom';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | crates page', function(hooks) {
@@ -40,7 +39,7 @@ module('Acceptance | crates page', function(hooks) {
         await click('[data-test-all-crates-link]');
 
         assert.equal(currentURL(), '/crates');
-        assert.equal(title(), 'Crates - crates.io: Rust Package Registry');
+        assert.equal(document.title, 'Crates - crates.io: Rust Package Registry');
     });
 
     test('visiting the crates page directly', async function(assert) {
@@ -50,7 +49,7 @@ module('Acceptance | crates page', function(hooks) {
         await click('[data-test-all-crates-link]');
 
         assert.equal(currentURL(), '/crates');
-        assert.equal(title(), 'Crates - crates.io: Rust Package Registry');
+        assert.equal(document.title, 'Crates - crates.io: Rust Package Registry');
     });
 
     test('listing crates', async function(assert) {

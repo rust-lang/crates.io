@@ -5,7 +5,6 @@ import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 import axeConfig from '../axe-config';
 import setupMirage from '../helpers/setup-mirage';
-import { title } from '../helpers/dom';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | search', function(hooks) {
@@ -31,7 +30,7 @@ module('Acceptance | search', function(hooks) {
         await triggerEvent('[data-test-search-form]', 'submit');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
+        assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
 
         assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
         assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
@@ -54,7 +53,7 @@ module('Acceptance | search', function(hooks) {
         await visit('/search?q=rust');
 
         assert.equal(currentURL(), '/search?q=rust');
-        assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
+        assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
 
         assert.dom('[data-test-search-input]').hasValue('rust');
         assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
