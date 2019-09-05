@@ -102,8 +102,8 @@ fn main() {
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if heroku {
-        println!("Writing to /tmp/app-initialized");
-        File::create("/tmp/app-initialized").unwrap();
+        println!("Writing to /tmp/backend-initialized");
+        File::create("/tmp/backend-initialized").unwrap();
     }
 
     // Block the main thread until the server has shutdown
