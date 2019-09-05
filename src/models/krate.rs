@@ -43,7 +43,6 @@ pub struct Crate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
-    pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
 }
@@ -59,7 +58,6 @@ type AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -73,7 +71,6 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -98,20 +95,18 @@ pub struct NewCrate<'a> {
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
-    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        license_file: Option<&'a str>,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate(license_file)?;
+        self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
@@ -133,7 +128,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&'a str>) -> CargoResult<()> {
+    fn validate(&mut self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -164,28 +159,6 @@ impl<'a> NewCrate<'a> {
         validate_url(self.homepage, "homepage")?;
         validate_url(self.documentation, "documentation")?;
         validate_url(self.repository, "repository")?;
-        self.validate_license(license_file)?;
-        Ok(())
-    }
-
-    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(license) = self.license {
-            for part in license.split('/') {
-                license_exprs::validate_license_expr(part).map_err(|e| {
-                    human(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })?;
-            }
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            self.license = Some("non-standard");
-        }
         Ok(())
     }
 

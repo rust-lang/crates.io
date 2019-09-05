@@ -96,5 +96,4 @@ mod tests {
             .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#)
             .is_some());
     }
-
 }
