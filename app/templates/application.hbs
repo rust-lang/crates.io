@@ -92,6 +92,7 @@
                 {{#if session.currentUser}}
                     <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
                     <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
+                    <li>{{#link-to 'me.pending-invites'}}Owner Invites{{/link-to}}</li>
                     <li class='last'>{{#link-to 'logout'}}Sign Out{{/link-to}}</li>
                 {{else}}
                     <li>{{#link-to "login"}}Log in with GitHub{{/link-to}}</li>
