@@ -12,6 +12,11 @@
 #     order of the tables in the generated import script. All tables referred
 #     to by public columns in the current table should be listed, to make sure
 #     they are imported before this table.
+#
+# <table_name>.columns_defaults - a TOML dictionary mapping column names to a
+#     raw SQL expression that is used as the default value for the column on
+#     import. This is useful for private columns that are not nullable and do
+#     not have a default.
 
 [api_tokens.columns]
 id = "private"
@@ -165,6 +170,8 @@ gh_login = "public"
 name = "public"
 gh_avatar = "public"
 gh_id = "public"
+[users.column_defaults]
+gh_access_token = "''"
 
 [version_authors]
 dependencies = ["users", "versions"]

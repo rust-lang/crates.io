@@ -34,6 +34,8 @@ struct TableConfig {
     dependencies: Vec<String>,
     filter: Option<String>,
     columns: BTreeMap<String, ColumnVisibility>,
+    #[serde(default)]
+    column_defaults: BTreeMap<String, String>,
 }
 
 /// Subset of the configuration data to be passed on to the Handlbars template.
@@ -42,6 +44,7 @@ struct HandlebarsTableContext<'a> {
     name: &'a str,
     filter: Option<&'a str>,
     columns: String,
+    column_defaults: BTreeMap<&'a str, &'a str>,
 }
 
 impl TableConfig {
@@ -56,10 +59,17 @@ impl TableConfig {
         if columns.is_empty() {
             None
         } else {
+            let filter = self.filter.as_ref().map(String::as_str);
+            let column_defaults = self
+                .column_defaults
+                .iter()
+                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .collect();
             Some(HandlebarsTableContext {
                 name,
-                filter: self.filter.as_ref().map(String::as_str),
+                filter,
                 columns,
+                column_defaults,
             })
         }
     }
