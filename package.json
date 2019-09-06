@@ -79,7 +79,7 @@
     "eslint-plugin-prettier": "^2.6.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
-    "nyc": "^11.6.0",
+    "nyc": "^14.1.1",
     "prettier": "^1.13.4",
     "qunit-dom": "^0.8.4",
     "sass": "^1.23.0-module.beta.1",
