@@ -3,6 +3,7 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const FastBootAppServer = require('fastboot-app-server');
 
 // because fastboot-app-server uses cluster, but it might change in future
@@ -43,10 +44,15 @@ function writeAppInitializedWhenReady(logger) {
 
 var logger = new LoggerWithoutTimestamp();
 
+logger.writeLine(`${os.cpus().length} cores available`);
+
+let workerCount = process.env.WEB_CONCURRENCY || 1;
+
 let server = new FastBootAppServer({
     distPath: 'dist',
     port: 9000,
     ui: logger,
+    workerCount: workerCount,
 });
 
 if (!cluster.isWorker) {
