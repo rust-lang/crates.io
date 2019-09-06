@@ -46,7 +46,7 @@
     "ember-cli-mirage": "^0.4.7",
     "ember-cli-moment-shim": "^3.5.0",
     "ember-cli-qunit": "^4.3.2",
-    "ember-cli-sass": "^7.2.0",
+    "ember-cli-sass": "^10.0.1",
     "ember-cli-sri": "2.1.1",
     "ember-cli-template-lint": "^0.7.0",
     "ember-cli-uglify": "^2.0.0",
@@ -80,6 +80,7 @@
     "nyc": "^11.6.0",
     "prettier": "^1.13.4",
     "qunit-dom": "^0.8.4",
+    "sass": "^1.23.0-module.beta.1",
     "timekeeper": "^2.1.0"
   },
   "engines": {
