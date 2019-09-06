@@ -7,53 +7,51 @@ import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | user page', function(hooks) {
-    setupApplicationTest(hooks);
-    setupMirage(hooks);
+  setupApplicationTest(hooks);
+  setupMirage(hooks);
 
-    test('is accessible', async function(assert) {
-        assert.expect(0);
+  test('is accessible', async function(assert) {
+    assert.expect(0);
 
-        this.server.loadFixtures();
+    this.server.loadFixtures();
 
-        await visit('/users/thehydroimpulse');
-        percySnapshot(assert);
+    await visit('/users/thehydroimpulse');
+    percySnapshot(assert);
 
-        await a11yAudit(axeConfig);
-    });
+    await a11yAudit(axeConfig);
+  });
 
-    test('has user display', async function(assert) {
-        this.server.loadFixtures();
+  test('has user display', async function(assert) {
+    this.server.loadFixtures();
 
-        await visit('/users/thehydroimpulse');
+    await visit('/users/thehydroimpulse');
 
-        assert.dom('[data-test-heading] [data-test-username]').hasText('thehydroimpulse');
-    });
+    assert.dom('[data-test-heading] [data-test-username]').hasText('thehydroimpulse');
+  });
 
-    test('has link to github in user header', async function(assert) {
-        this.server.loadFixtures();
+  test('has link to github in user header', async function(assert) {
+    this.server.loadFixtures();
 
-        await visit('/users/thehydroimpulse');
+    await visit('/users/thehydroimpulse');
 
-        assert
-            .dom('[data-test-heading] [data-test-user-link]')
-            .hasAttribute('href', 'https://github.com/thehydroimpulse');
-    });
+    assert.dom('[data-test-heading] [data-test-user-link]').hasAttribute('href', 'https://github.com/thehydroimpulse');
+  });
 
-    test('github link has image in user header', async function(assert) {
-        this.server.loadFixtures();
+  test('github link has image in user header', async function(assert) {
+    this.server.loadFixtures();
 
-        await visit('/users/thehydroimpulse');
+    await visit('/users/thehydroimpulse');
 
-        assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
-    });
+    assert.dom('[data-test-heading] [data-test-user-link] img').hasAttribute('src', '/assets/GitHub-Mark.svg');
+  });
 
-    test('user details has github profile icon', async function(assert) {
-        this.server.loadFixtures();
+  test('user details has github profile icon', async function(assert) {
+    this.server.loadFixtures();
 
-        await visit('/users/thehydroimpulse');
+    await visit('/users/thehydroimpulse');
 
-        assert
-            .dom('[data-test-heading] [data-test-avatar]')
-            .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
-    });
+    assert
+      .dom('[data-test-heading] [data-test-avatar]')
+      .hasAttribute('src', 'https://avatars.githubusercontent.com/u/565790?v=3&s=170');
+  });
 });
