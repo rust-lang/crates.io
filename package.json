@@ -75,7 +75,7 @@
     "emberx-select": "^3.1.1",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-ember": "^5.1.0",
+    "eslint-plugin-ember": "^7.0.0",
     "eslint-plugin-prettier": "^2.6.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
