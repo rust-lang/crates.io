@@ -1,11 +1,8 @@
 module.exports = {
   root: true,
   parserOptions: {
-    ecmaVersion: 2017,
+    ecmaVersion: 2018,
     sourceType: 'module',
-    ecmaFeatures: {
-      experimentalObjectRestSpread: true,
-    },
   },
   plugins: ['ember', 'prettier'],
   extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:prettier/recommended'],
@@ -21,6 +18,10 @@ module.exports = {
     'comma-dangle': 'off',
     'dot-notation': 'off',
     'operator-linebreak': 'off',
+
+    'ember/no-observers': 'warn',
+    'ember/no-new-mixins': 'warn',
+    'ember/require-return-from-computed': 'warn',
   },
   overrides: [
     // node files
@@ -37,7 +38,7 @@ module.exports = {
       ],
       parserOptions: {
         sourceType: 'script',
-        ecmaVersion: 2015,
+        ecmaVersion: 2018,
       },
       env: {
         browser: false,
