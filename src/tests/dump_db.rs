@@ -13,10 +13,13 @@ fn dump_db_and_reimport_dump() {
     let directory = dump_db::DumpDirectory::create().unwrap();
     directory.dump_db(&database_url).unwrap();
 
-    let import_script = directory.export_dir.join("import.sql");
     let schema = TemporarySchema::create(database_url, "test_db_dump");
-    diesel_migrations::run_pending_migrations(&schema.connection).unwrap();
+    schema.run_migrations();
+
+    let import_script = directory.export_dir.join("import.sql");
     dump_db::run_psql(&import_script, &schema.database_url).unwrap();
+
+    // TODO: Consistency checks on the re-imported data?
 }
 
 struct TemporarySchema {
@@ -26,8 +29,8 @@ struct TemporarySchema {
 }
 
 impl TemporarySchema {
-    fn create(database_url: String, schema_name: &str) -> Self {
-        let params = &[("options", format!("--search_path={}", schema_name))];
+    pub fn create(database_url: String, schema_name: &str) -> Self {
+        let params = &[("options", format!("--search_path={},public", schema_name))];
         let database_url = url::Url::parse_with_params(&database_url, params)
             .unwrap()
             .into_string();
@@ -36,8 +39,7 @@ impl TemporarySchema {
         connection
             .batch_execute(&format!(
                 r#"DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;
-                   CREATE SCHEMA "{schema_name}";
-                   SET SESSION search_path TO "{schema_name}",public;"#,
+                   CREATE SCHEMA "{schema_name}";"#,
                 schema_name = schema_name,
             ))
             .unwrap();
@@ -47,16 +49,23 @@ impl TemporarySchema {
             connection,
         }
     }
+
+    pub fn run_migrations(&self) {
+        use diesel_migrations::{find_migrations_directory, run_pending_migrations_in_directory};
+        let migrations_dir = find_migrations_directory().unwrap();
+        run_pending_migrations_in_directory(
+            &self.connection,
+            &migrations_dir,
+            &mut std::io::sink(),
+        )
+        .unwrap();
+    }
 }
 
 impl Drop for TemporarySchema {
     fn drop(&mut self) {
         self.connection
-            .batch_execute(&format!(
-                r#"SET SESSION search_path TO DEFAULT;
-                   DROP SCHEMA {schema_name} CASCADE;"#,
-                schema_name = self.schema_name,
-            ))
+            .batch_execute(&format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name))
             .unwrap();
     }
 }
