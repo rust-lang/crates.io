@@ -11,14 +11,6 @@ module.exports = {
   },
   rules: {
     'prettier/prettier': 'error',
-
-    'arrow-parens': 'off',
-    'brace-style': 'off',
-    camelcase: 'off',
-    'comma-dangle': 'off',
-    'dot-notation': 'off',
-    'operator-linebreak': 'off',
-
     'ember/no-observers': 'warn',
     'ember/no-new-mixins': 'warn',
     'ember/require-return-from-computed': 'warn',

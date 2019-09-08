@@ -60,8 +60,8 @@ export default Mixin.create({
 
       if (this.dropdownExpanded) {
         /* Add clickout handler with 1ms delay, to allow opening the dropdown
-             * by clicking e.g. a checkbox and binding to dropdownExpanded, without
-             * having the handler close the dropdown immediately. */
+         * by clicking e.g. a checkbox and binding to dropdownExpanded, without
+         * having the handler close the dropdown immediately. */
         later(() => {
           $document.bind(clickEventName, { component }, component.boundClickoutHandler);
           $document.bind(focusEventName, { component }, component.boundClickoutHandler);
@@ -96,13 +96,13 @@ export default Mixin.create({
     let $target = $(event.target);
 
     /* There is an issue when the click triggered a dom change in the
-         * dropdown that unloaded the target element. The ancestry of the target
-         * can no longer be determined. We can check if html is still an ancestor
-         * to determine if this has happened. The safe option then seems to be to
-         * not close the dropdown, as occasionaly not closing the dropdown when it
-         * should have closed, seems to be less bad for usability than occasionaly
-         * closing the dropdown when it should not have closed.
-         */
+     * dropdown that unloaded the target element. The ancestry of the target
+     * can no longer be determined. We can check if html is still an ancestor
+     * to determine if this has happened. The safe option then seems to be to
+     * not close the dropdown, as occasionaly not closing the dropdown when it
+     * should have closed, seems to be less bad for usability than occasionaly
+     * closing the dropdown when it should not have closed.
+     */
     if (
       component.get('dropdownExpanded') &&
       $target.closest('html').length &&
