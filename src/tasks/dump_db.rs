@@ -27,41 +27,24 @@ pub fn dump_db(
 ///
 /// Create the directory, populate it with the psql scripts and CSV dumps, and
 /// make sure it gets deleted again even in the case of an error.
-struct DumpDirectory {
-    export_dir: PathBuf,
+#[derive(Debug)]
+pub struct DumpDirectory {
+    pub export_dir: PathBuf,
 }
 
 impl DumpDirectory {
-    fn create() -> Result<Self, PerformError> {
+    pub fn create() -> Result<Self, PerformError> {
         let timestamp = chrono::Utc::now().format("%Y-%m-%d-%H%M%S").to_string();
         let export_dir = std::env::temp_dir().join("dump-db").join(timestamp);
         std::fs::create_dir_all(&export_dir)?;
         Ok(Self { export_dir })
     }
 
-    fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+    pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
         let export_script = self.export_dir.join("export.sql");
         let import_script = self.export_dir.join("import.sql");
         gen_scripts::gen_scripts(&export_script, &import_script)?;
-        let psql_script = File::open(&export_script)?;
-        let psql = std::process::Command::new("psql")
-            .arg(database_url)
-            .current_dir(export_script.parent().unwrap())
-            .stdin(psql_script)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::piped())
-            .spawn()?;
-        let output = psql.wait_with_output()?;
-        if !output.stderr.is_empty() {
-            Err(format!(
-                "Error while executing psql: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ))?;
-        }
-        if !output.status.success() {
-            Err("psql did not finish successfully.")?;
-        }
-        Ok(())
+        run_psql(&export_script, database_url)
     }
 }
 
@@ -69,6 +52,26 @@ impl Drop for DumpDirectory {
     fn drop(&mut self) {
         std::fs::remove_dir_all(&self.export_dir).unwrap();
     }
+}
+
+pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
+    let psql_script = File::open(&script)?;
+    let psql = std::process::Command::new("psql")
+        .arg(database_url)
+        .current_dir(script.parent().unwrap())
+        .stdin(psql_script)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+    let output = psql.wait_with_output()?;
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if stderr.contains("ERROR") {
+        Err(format!("Error while executing psql: {}", stderr))?;
+    }
+    if !output.status.success() {
+        Err("psql did not finish successfully.")?;
+    }
+    Ok(())
 }
 
 /// Manage the tarball of the database dump.
