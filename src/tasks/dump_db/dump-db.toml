@@ -78,7 +78,6 @@ homepage = "public"
 documentation = "public"
 readme = "public"
 textsearchable_index_col = "public"
-license = "public"
 repository = "public"
 max_upload_size = "public"
 
