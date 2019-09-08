@@ -212,8 +212,7 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
-    let (offset, limit) = req.pagination(10, 100)?;
-    let (rev_deps, total) = krate.reverse_dependencies(&*conn, offset, limit)?;
+    let (rev_deps, total) = krate.reverse_dependencies(&*conn, &req.query())?;
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
         .map(|dep| dep.encodable(&krate.name))

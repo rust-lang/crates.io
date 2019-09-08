@@ -54,11 +54,12 @@ matrix:
         - cargo test
     - name: Frontend
       language: node_js
-      node_js: 10
+      node_js: 12
       install:
         - npm ci
       before_script: skip
       script:
+        - npm run lint:hbs
         - npm run lint:js
         - npm run lint:deps
         - npm test

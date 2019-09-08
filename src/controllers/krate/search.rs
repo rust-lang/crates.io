@@ -1,7 +1,6 @@
 //! Endpoint for searching and discovery functionality
 
 use diesel::dsl::*;
-use diesel::sql_types::{NotNull, Nullable};
 use diesel_full_text_search::*;
 
 use crate::controllers::helpers::Paginate;
@@ -37,13 +36,11 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::sql_types::{Bool, Text};
 
     let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
     let sort = params
         .get("sort")
         .map(|s| &**s)
         .unwrap_or("recent-downloads");
-    let mut has_filter = false;
     let include_yanked = params
         .get("include_yanked")
         .map(|s| s == "yes")
@@ -60,7 +57,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         .into_boxed();
 
     if let Some(q_string) = params.get("q") {
-        has_filter = true;
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
 
@@ -88,7 +84,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     if let Some(cat) = params.get("category") {
-        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crates_categories::table
@@ -104,7 +99,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     if let Some(kw) = params.get("keyword") {
-        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crates_keywords::table
@@ -114,7 +108,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if let Some(letter) = params.get("letter") {
-        has_filter = true;
         let pattern = format!(
             "{}%",
             letter
@@ -126,7 +119,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         );
         query = query.filter(canon_crate_name(crates::name).like(pattern));
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
-        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crate_owners::table
@@ -137,7 +129,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
-        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 crate_owners::table
@@ -148,7 +139,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
             ),
         );
     } else if params.get("following").is_some() {
-        has_filter = true;
         query = query.filter(
             crates::id.eq_any(
                 follows::table
@@ -159,7 +149,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     if !include_yanked {
-        has_filter = true;
         query = query.filter(exists(
             versions::table
                 .filter(versions::crate_id.eq(crates::id))
@@ -177,32 +166,20 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         query = query.then_order_by(crates::name.asc())
     }
 
-    // The database query returns a tuple within a tuple, with the root
-    // tuple containing 3 items.
-    let data = if has_filter {
-        query
-            .paginate(limit, offset)
-            .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?
-    } else {
-        sql_function!(fn coalesce<T: NotNull>(value: Nullable<T>, default: T) -> T);
-        query
-            .select((
-                // FIXME: Use `query.selection()` if that feature ends up in
-                // Diesel 2.0
-                selection,
-                coalesce(crates::table.count().single_value(), 0),
-            ))
-            .limit(limit)
-            .offset(offset)
-            .load(&*conn)?
-    };
-    let total = data.first().map(|&(_, t)| t).unwrap_or(0);
-    let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
+    let data = query
+        .paginate(&req.query())?
+        .load::<(Crate, bool, Option<i64>)>(&*conn)?;
+    let total = data.total();
+
+    let next_page = data.next_page_params().map(|p| req.query_with_params(p));
+    let prev_page = data.prev_page_params().map(|p| req.query_with_params(p));
+
+    let perfect_matches = data.iter().map(|&(_, b, _)| b).collect::<Vec<_>>();
     let recent_downloads = data
         .iter()
-        .map(|&((_, _, s), _)| s.unwrap_or(0))
+        .map(|&(_, _, s)| s.unwrap_or(0))
         .collect::<Vec<_>>();
-    let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
+    let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
     let versions = crates
         .versions()
@@ -235,27 +212,6 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         )
         .collect();
 
-    let mut next_page = None;
-    let mut prev_page = None;
-    let page_num = params.get("page").map(|s| s.parse()).unwrap_or(Ok(1))?;
-
-    let url_for_page = |num: i64| {
-        let mut params = req.query();
-        params.insert("page".into(), num.to_string());
-        let query_string = url::form_urlencoded::Serializer::new(String::new())
-            .clear()
-            .extend_pairs(params)
-            .finish();
-        Some(format!("?{}", query_string))
-    };
-
-    if offset + limit < total {
-        next_page = url_for_page(page_num + 1);
-    }
-    if page_num != 1 {
-        prev_page = url_for_page(page_num - 1);
-    };
-
     #[derive(Serialize)]
     struct R {
         crates: Vec<EncodableCrate>,
@@ -263,7 +219,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
     #[derive(Serialize)]
     struct Meta {
-        total: i64,
+        total: Option<i64>,
         next_page: Option<String>,
         prev_page: Option<String>,
     }

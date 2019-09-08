@@ -1,84 +1,84 @@
 {{ title 'Dashboard' }}
 
 <div id='crates-heading'>
-    {{svg-jar "dashboard"}}
-    <h1>My Dashboard</h1>
-    <div id="stats">
-        <div class='downloads'>
-            <img class="download" src="/assets/download.svg">
-            <span class='num'>{{format-num visibleStats.total_downloads}}</span>
-            <span class='desc small'>Total Downloads</span>
-        </div>
+  {{svg-jar "dashboard"}}
+  <h1>My Dashboard</h1>
+  <div id="stats">
+    <div class='downloads'>
+      <img class="download" src="/assets/download.svg">
+      <span class='num'>{{format-num visibleStats.total_downloads}}</span>
+      <span class='desc small'>Total Downloads</span>
     </div>
+  </div>
 </div>
 
 
 <div id='my-info'>
-    <div id='my-crate-lists' class='crate-lists'>
-        <div id='my-crates'>
-            <div class='header'>
-                <h2>
-                    {{svg-jar "my-packages"}}
-                    My Crates
-                </h2>
-
-                {{#if hasMoreCrates}}
-                    <span class='small'>
-                        {{link-to 'Show all' 'me.crates'}}
-                    </span>
-                {{/if}}
-            </div>
-            {{crate-downloads-list crates=visibleCrates}}
-        </div>
-        <div id='my-following'>
-            <div class='header'>
-                <h2>
-                    {{svg-jar "following"}}
-                    Following
-                </h2>
-
-                {{#if hasMoreFollowing}}
-                    <span class='small'>
-                        {{link-to 'Show all' 'me.following'}}
-                    </span>
-                {{/if}}
-            </div>
-            {{crate-downloads-list crates=visibleFollowing}}
-        </div>
-    </div>
-
-    <div id='my-feed'>
+  <div id='my-crate-lists' class='crate-lists'>
+    <div id='my-crates'>
+      <div class='header'>
         <h2>
-            {{svg-jar "latest-updates"}}
-            Latest Updates
+          {{svg-jar "my-packages"}}
+          My Crates
         </h2>
 
-        <div class='white-rows'>
-            {{#each myFeed as |version|}}
-                <div class='row'>
-                    <div class='info'>
-                        {{#link-to 'crate.version' version.crateName version.num}}
-                        {{ version.crateName }}
-                        <span class='small'>{{ version.num }}</span>
-                        {{/link-to}}
-                        <span class='date small'>
-                            {{moment-from-now version.created_at}}
-                        </span>
-                    </div>
-                </div>
-            {{/each}}
-
-            {{#if loadingMore}}
-                <span class='load-more'>
-                    <img src="/assets/ajax-loader.gif">
-                </span>
-            {{else}}
-                {{#if hasMore}}
-                    <button class='load-more' {{ action 'loadMore' }}>
-                        Load More
-                    </button>
-                {{/if}}
-            {{/if}}
-        </div>
+        {{#if hasMoreCrates}}
+          <span class='small'>
+            {{link-to 'Show all' 'me.crates'}}
+          </span>
+        {{/if}}
+      </div>
+      {{crate-downloads-list crates=visibleCrates}}
     </div>
+    <div id='my-following'>
+      <div class='header'>
+        <h2>
+          {{svg-jar "following"}}
+          Following
+        </h2>
+
+        {{#if hasMoreFollowing}}
+          <span class='small'>
+            {{link-to 'Show all' 'me.following'}}
+          </span>
+        {{/if}}
+      </div>
+      {{crate-downloads-list crates=visibleFollowing}}
+    </div>
+  </div>
+
+  <div id='my-feed'>
+    <h2>
+      {{svg-jar "latest-updates"}}
+      Latest Updates
+    </h2>
+
+    <div class='white-rows'>
+      {{#each myFeed as |version|}}
+        <div class='row'>
+          <div class='info'>
+            {{#link-to 'crate.version' version.crateName version.num}}
+              {{ version.crateName }}
+              <span class='small'>{{ version.num }}</span>
+            {{/link-to}}
+            <span class='date small'>
+              {{moment-from-now version.created_at}}
+            </span>
+          </div>
+        </div>
+      {{/each}}
+
+      {{#if loadingMore}}
+        <span class='load-more'>
+          <img src="/assets/ajax-loader.gif">
+        </span>
+      {{else}}
+        {{#if hasMore}}
+          <button class='load-more' {{ action 'loadMore' }}>
+            Load More
+          </button>
+        {{/if}}
+      {{/if}}
+    </div>
+  </div>
 </div>

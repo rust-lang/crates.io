@@ -3,6 +3,7 @@ use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
+use indexmap::IndexMap;
 use url::Url;
 
 use crate::app::App;
@@ -42,7 +43,6 @@ pub struct Crate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
-    pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
 }
@@ -58,7 +58,6 @@ type AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -72,7 +71,6 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -97,20 +95,18 @@ pub struct NewCrate<'a> {
     pub readme: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
-    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        license_file: Option<&'a str>,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate(license_file)?;
+        self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
@@ -132,7 +128,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&'a str>) -> CargoResult<()> {
+    fn validate(&mut self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -163,28 +159,6 @@ impl<'a> NewCrate<'a> {
         validate_url(self.homepage, "homepage")?;
         validate_url(self.documentation, "documentation")?;
         validate_url(self.repository, "repository")?;
-        self.validate_license(license_file)?;
-        Ok(())
-    }
-
-    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(license) = self.license {
-            for part in license.split('/') {
-                license_exprs::validate_license_expr(part).map_err(|e| {
-                    human(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })?;
-            }
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            self.license = Some("non-standard");
-        }
         Ok(())
     }
 
@@ -522,16 +496,22 @@ impl Crate {
     pub fn reverse_dependencies(
         &self,
         conn: &PgConnection,
-        offset: i64,
-        limit: i64,
-    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
+        params: &IndexMap<String, String>,
+    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+        use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
 
+        // FIXME: It'd be great to support this with `.paginate` directly,
+        // and get cursor/id pagination for free. But Diesel doesn't currently
+        // have great support for abstracting over "Is this using `Queryable`
+        // or `QueryableByName` to load things?"
+        let options = PaginationOptions::new(params)?;
+        let offset = options.offset().unwrap_or_default();
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
-            .bind::<BigInt, _>(offset)
-            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(i64::from(offset))
+            .bind::<BigInt, _>(i64::from(options.per_page))
             .load::<WithCount<ReverseDependency>>(conn)?;
 
         Ok(rows.records_and_total())

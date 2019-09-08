@@ -1,7 +1,7 @@
 import Component from '@ember/component';
 
 export default Component.extend({
-    classNames: ['crate', 'row'],
+  classNames: ['crate', 'row'],
 
-    'data-test-crate-row': true,
+  'data-test-crate-row': true,
 });

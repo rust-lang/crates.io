@@ -16,22 +16,22 @@ import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
  * @see `/login` route
  */
 export default Route.extend({
-    async beforeModel(transition) {
-        try {
-            let queryParams = serializeQueryParams(transition.queryParams);
-            let resp = await fetch(`/authorize?${queryParams}`);
-            let json = await resp.json();
-            let item = JSON.stringify({ ok: resp.ok, data: json });
-            if (window.opener) {
-                window.opener.github_response = item;
-            }
-        } catch (d) {
-            let item = JSON.stringify({ ok: false, data: d });
-            if (window.opener) {
-                window.opener.github_response = item;
-            }
-        } finally {
-            window.close();
-        }
-    },
+  async beforeModel(transition) {
+    try {
+      let queryParams = serializeQueryParams(transition.queryParams);
+      let resp = await fetch(`/authorize?${queryParams}`);
+      let json = await resp.json();
+      let item = JSON.stringify({ ok: resp.ok, data: json });
+      if (window.opener) {
+        window.opener.github_response = item;
+      }
+    } catch (d) {
+      let item = JSON.stringify({ ok: false, data: d });
+      if (window.opener) {
+        window.opener.github_response = item;
+      }
+    } finally {
+      window.close();
+    }
+  },
 });

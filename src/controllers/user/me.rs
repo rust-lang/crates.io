@@ -1,6 +1,6 @@
 use crate::controllers::prelude::*;
 
-use crate::controllers::helpers::Paginate;
+use crate::controllers::helpers::*;
 use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::CargoError;
@@ -50,7 +50,6 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
     use diesel::dsl::any;
 
     let user = req.user()?;
-    let (offset, limit) = req.pagination(10, 100)?;
     let conn = req.db_conn()?;
 
     let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
@@ -64,19 +63,14 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
             crates::name,
             users::all_columns.nullable(),
         ))
-        .paginate(limit, offset)
-        .load::<((Version, String, Option<User>), i64)>(&*conn)?;
+        .paginate(&req.query())?
+        .load::<(Version, String, Option<User>)>(&*conn)?;
 
-    let more = data
-        .get(0)
-        .map(|&(_, count)| count > offset + limit)
-        .unwrap_or(false);
+    let more = data.next_page_params().is_some();
 
     let versions = data
         .into_iter()
-        .map(|((version, crate_name, published_by), _)| {
-            version.encodable(&crate_name, published_by)
-        })
+        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
         .collect();
 
     #[derive(Serialize)]

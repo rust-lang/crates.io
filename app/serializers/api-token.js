@@ -1,7 +1,7 @@
 import DS from 'ember-data';
 
 export default DS.RESTSerializer.extend({
-    payloadKeyFromModelName() {
-        return 'api_token';
-    },
+  payloadKeyFromModelName() {
+    return 'api_token';
+  },
 });

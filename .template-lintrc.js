@@ -3,11 +3,11 @@
 /* eslint-env node */
 
 module.exports = {
-    extends: 'recommended',
+  extends: 'recommended',
 
-    rules: {
-        'block-indentation': false,
-        'img-alt-attributes': false,
-        'triple-curlies': false,
-    },
+  rules: {
+    'img-alt-attributes': false,
+    'triple-curlies': false,
+    'html-comments': false,
+  },
 };
