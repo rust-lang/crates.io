@@ -110,7 +110,7 @@ impl VisibilityConfig {
             .collect();
         while let Some(table) = ready.pop_front() {
             result.push(table);
-            for dep in rev_deps.get(table).iter().copied().flatten() {
+            for dep in rev_deps.get(table).iter().cloned().flatten() {
                 *num_deps.get_mut(dep).unwrap() -= 1;
                 if num_deps[dep] == 0 {
                     ready.push_back(dep);
