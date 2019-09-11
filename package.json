@@ -83,6 +83,7 @@
     "prettier": "^1.13.4",
     "qunit-dom": "^0.8.4",
     "sass": "^1.23.0-module.beta.1",
+    "semver": "^6.3.0",
     "timekeeper": "^2.1.0"
   },
   "engines": {

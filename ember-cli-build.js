@@ -51,6 +51,9 @@ module.exports = function(defaults) {
   app.import('node_modules/timekeeper/lib/timekeeper.js', {
     using: [{ transformation: 'cjs', as: 'timekeeper' }],
   });
+  app.import('node_modules/semver/semver.js', {
+    using: [{ transformation: 'cjs', as: 'semver' }],
+  });
 
   return app.toTree();
 };
