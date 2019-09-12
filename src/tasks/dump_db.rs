@@ -29,23 +29,56 @@ pub fn dump_db(
 /// make sure it gets deleted again even in the case of an error.
 #[derive(Debug)]
 pub struct DumpDirectory {
+    pub timestamp: chrono::DateTime<chrono::Utc>,
     pub export_dir: PathBuf,
 }
 
 impl DumpDirectory {
     pub fn create() -> Result<Self, PerformError> {
-        let timestamp = chrono::Utc::now().format("%Y-%m-%d-%H%M%S").to_string();
-        let export_dir = std::env::temp_dir().join("dump-db").join(timestamp);
+        let timestamp = chrono::Utc::now();
+        let timestamp_str = timestamp.format("%Y-%m-%d-%H%M%S").to_string();
+        let export_dir = std::env::temp_dir().join("dump-db").join(timestamp_str);
         std::fs::create_dir_all(&export_dir)?;
-        Ok(Self { export_dir })
+        Ok(Self {
+            timestamp,
+            export_dir,
+        })
     }
 
     pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+        self.add_readme()?;
+        self.add_metadata()?;
         let export_script = self.export_dir.join("export.sql");
         let import_script = self.export_dir.join("import.sql");
         gen_scripts::gen_scripts(&export_script, &import_script)?;
         std::fs::create_dir(self.export_dir.join("data"))?;
         run_psql(&export_script, database_url)
+    }
+
+    fn add_readme(&self) -> Result<(), PerformError> {
+        use std::io::Write;
+
+        let mut readme = File::create(self.export_dir.join("README.md"))?;
+        readme.write_all(include_bytes!("dump_db/readme_for_tarball.md"))?;
+        Ok(())
+    }
+
+    fn add_metadata(&self) -> Result<(), PerformError> {
+        #[derive(Serialize)]
+        struct Metadata<'a> {
+            timestamp: &'a chrono::DateTime<chrono::Utc>,
+            crates_io_commit: String,
+            format_version: &'static str,
+        }
+        let metadata = Metadata {
+            timestamp: &self.timestamp,
+            crates_io_commit: dotenv::var("HEROKU_SLUG_COMMIT")
+                .unwrap_or_else(|_| "unknown".to_owned()),
+            format_version: "0.1",
+        };
+        let file = File::create(self.export_dir.join("metadata.json"))?;
+        serde_json::to_writer_pretty(file, &metadata)?;
+        Ok(())
     }
 }
 
