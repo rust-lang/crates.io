@@ -44,6 +44,7 @@ impl DumpDirectory {
         let export_script = self.export_dir.join("export.sql");
         let import_script = self.export_dir.join("import.sql");
         gen_scripts::gen_scripts(&export_script, &import_script)?;
+        std::fs::create_dir(self.export_dir.join("data"))?;
         run_psql(&export_script, database_url)
     }
 }

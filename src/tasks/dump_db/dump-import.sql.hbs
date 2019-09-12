@@ -29,7 +29,7 @@ BEGIN;
 
     -- Import the CSV data.
 {{~#each tables}}
-    \copy "{{this.name}}" ({{this.columns}}) FROM '{{this.name}}.csv' WITH CSV HEADER
+    \copy "{{this.name}}" ({{this.columns}}) FROM 'data/{{this.name}}.csv' WITH CSV HEADER
 {{~/each}}
 
     -- Drop the defaults again.
