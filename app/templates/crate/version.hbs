@@ -221,7 +221,11 @@
             {{#each currentDependencies as |dep|}}
               {{link-to-dep tagName="li" dep=dep}}
             {{else}}
-              <li>None</li>
+              {{#if (is-pending currentDependencies)}}
+                <li>Loading…</li>
+              {{else}}
+                <li>None</li>
+              {{/if}}
             {{/each}}
           </ul>
         </div>
