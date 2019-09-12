@@ -66,6 +66,7 @@
     "ember-page-title": "^4.0.5",
     "ember-percy": "^1.4.0",
     "ember-prism": "^0.2.0",
+    "ember-promise-helpers": "^1.0.9",
     "ember-resolver": "^4.1.0",
     "ember-router-scroll": "^0.4.0",
     "ember-source": "~3.1.0",
