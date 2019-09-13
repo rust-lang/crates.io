@@ -7,6 +7,8 @@ struct BadgeRef {
     appveyor_attributes: HashMap<String, String>,
     travis_ci: Badge,
     travis_ci_attributes: HashMap<String, String>,
+    github_actions: Badge,
+    github_actions_attributes: HashMap<String, String>,
     gitlab: Badge,
     gitlab_attributes: HashMap<String, String>,
     azure_devops: Badge,
@@ -77,6 +79,15 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     let mut badge_attributes_travis_ci = HashMap::new();
     badge_attributes_travis_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_travis_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+
+    let github_actions = Badge::GitHubActions {
+        repository: String::from("rust-lang/rust"),
+        workflow: String::from("build"),
+    };
+    let mut badge_attributes_github_actions = HashMap::new();
+    badge_attributes_github_actions
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_github_actions.insert(String::from("workflow"), String::from("build"));
 
     let gitlab = Badge::GitLab {
         branch: Some(String::from("beta")),
@@ -169,6 +180,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         appveyor_attributes: badge_attributes_appveyor,
         travis_ci,
         travis_ci_attributes: badge_attributes_travis_ci,
+        github_actions,
+        github_actions_attributes: badge_attributes_github_actions,
         gitlab,
         gitlab_attributes: badge_attributes_gitlab,
         azure_devops,
@@ -224,6 +237,20 @@ fn update_add_travis_ci() {
     badges.insert(String::from("travis-ci"), test_badges.travis_ci_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.travis_ci]);
+}
+
+#[test]
+fn update_add_github_actions() {
+    // Add a github actions badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("github-actions"),
+        test_badges.github_actions_attributes,
+    );
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.github_actions]);
 }
 
 #[test]
@@ -456,6 +483,46 @@ fn travis_ci_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "travis-ci");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn github_actions_required_key_repository() {
+    // Add a GitHub Actions badge missing the required repository field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.github_actions_attributes.remove("repository");
+    badges.insert(
+        String::from("github-actions"),
+        test_badges.github_actions_attributes,
+    );
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "github-actions");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn github_actions_required_key_workflow() {
+    // Add a GitHub Actions badge missing the required workflow field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Workflow is a required key
+    test_badges.github_actions_attributes.remove("workflow");
+    badges.insert(
+        String::from("github-actions"),
+        test_badges.github_actions_attributes,
+    );
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "github-actions");
     assert_eq!(krate.badges(), vec![]);
 }
 

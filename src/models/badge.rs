@@ -39,6 +39,11 @@ pub enum Badge {
         pipeline: String,
         build: Option<String>,
     },
+    #[serde(rename = "github-actions")]
+    GitHubActions {
+        repository: String,
+        workflow: String,
+    },
     #[serde(rename = "gitlab")]
     GitLab {
         repository: String,
