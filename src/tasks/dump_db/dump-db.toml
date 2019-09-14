@@ -173,7 +173,7 @@ gh_id = "public"
 gh_access_token = "''"
 
 [version_authors]
-dependencies = ["users", "versions"]
+dependencies = ["versions"]
 [version_authors.columns]
 id = "public"
 version_id = "public"
