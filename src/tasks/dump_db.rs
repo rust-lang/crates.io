@@ -16,7 +16,7 @@ pub fn dump_db(
     target_name: String,
 ) -> Result<(), PerformError> {
     let directory = DumpDirectory::create()?;
-    directory.dump_db(&database_url)?;
+    directory.populate(&database_url)?;
     let tarball = DumpTarball::create(&directory.export_dir)?;
     tarball.upload(&target_name, &env.uploader)?;
     println!("Database dump uploaded to {}.", &target_name);
@@ -45,14 +45,11 @@ impl DumpDirectory {
         })
     }
 
-    pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+    pub fn populate(&self, database_url: &str) -> Result<(), PerformError> {
         self.add_readme()?;
         self.add_metadata()?;
-        let export_script = self.export_dir.join("export.sql");
-        let import_script = self.export_dir.join("import.sql");
-        gen_scripts::gen_scripts(&export_script, &import_script)?;
-        std::fs::create_dir(self.export_dir.join("data"))?;
-        run_psql(&export_script, database_url)
+        self.dump_schema(database_url)?;
+        self.dump_db(database_url)
     }
 
     fn add_readme(&self) -> Result<(), PerformError> {
@@ -79,6 +76,30 @@ impl DumpDirectory {
         let file = File::create(self.export_dir.join("metadata.json"))?;
         serde_json::to_writer_pretty(file, &metadata)?;
         Ok(())
+    }
+
+    pub fn dump_schema(&self, database_url: &str) -> Result<(), PerformError> {
+        let schema_sql = File::create(self.export_dir.join("schema.sql"))?;
+        let status = std::process::Command::new("pg_dump")
+            .arg("--schema-only")
+            .arg("--no-owner")
+            .arg("--no-acl")
+            .arg(database_url)
+            .stdout(schema_sql)
+            .spawn()?
+            .wait()?;
+        if !status.success() {
+            Err("pg_dump did not finish successfully.")?;
+        }
+        Ok(())
+    }
+
+    pub fn dump_db(&self, database_url: &str) -> Result<(), PerformError> {
+        let export_script = self.export_dir.join("export.sql");
+        let import_script = self.export_dir.join("import.sql");
+        gen_scripts::gen_scripts(&export_script, &import_script)?;
+        std::fs::create_dir(self.export_dir.join("data"))?;
+        run_psql(&export_script, database_url)
     }
 }
 

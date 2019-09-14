@@ -17,14 +17,14 @@ This is a dump of the public information in the crates.io database.
 
 ## Restoring to a Local crates.io Database
 
-WARNING: This will destroy the current database contents.
-
-1. Create a new database and run the Diesel migrations.
+1. Create a new database.
 
         createdb DATABASE_NAME
-        diesel migration run --database-url DATABASE_URL
 
-2. Run this script.
+2. Restore the database schema.
 
-        cd DUMP_DIRECTORY
+        psql DATABASE_NAME < schema.sql
+
+3. Run the import script.
+
         psql DATABASE_URL < import.sql

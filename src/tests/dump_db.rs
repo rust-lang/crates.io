@@ -11,7 +11,7 @@ fn dump_db_and_reimport_dump() {
     // TODO prefill database with some data
 
     let directory = dump_db::DumpDirectory::create().unwrap();
-    directory.dump_db(&database_url).unwrap();
+    directory.populate(&database_url).unwrap();
 
     let schema = TemporarySchema::create(database_url, "test_db_dump");
     schema.run_migrations();
