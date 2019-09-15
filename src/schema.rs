@@ -961,6 +961,7 @@ table! {
 }
 
 joinable!(api_tokens -> users (user_id));
+joinable!(badges -> crates (crate_id));
 joinable!(crate_owner_invitations -> crates (crate_id));
 joinable!(crate_owners -> crates (crate_id));
 joinable!(crate_owners -> teams (owner_id));

@@ -4,5 +4,8 @@ SELECT relname, conname, pg_get_constraintdef(pg_constraint.oid, true) AS defini
     FROM pg_attribute
     INNER JOIN pg_class ON pg_class.oid = attrelid
     LEFT JOIN pg_constraint ON pg_class.oid = conrelid AND ARRAY[attnum] = conkey
+    INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
     WHERE attname = $1
-      AND contype = 'f'
+      AND relkind = 'r'
+      AND (contype IS NULL OR contype = 'f')
+      AND nspname = 'public';
