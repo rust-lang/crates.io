@@ -65,13 +65,11 @@ impl DumpDirectory {
         struct Metadata<'a> {
             timestamp: &'a chrono::DateTime<chrono::Utc>,
             crates_io_commit: String,
-            format_version: &'static str,
         }
         let metadata = Metadata {
             timestamp: &self.timestamp,
             crates_io_commit: dotenv::var("HEROKU_SLUG_COMMIT")
                 .unwrap_or_else(|_| "unknown".to_owned()),
-            format_version: "0.1",
         };
         let file = File::create(self.export_dir.join("metadata.json"))?;
         serde_json::to_writer_pretty(file, &metadata)?;
