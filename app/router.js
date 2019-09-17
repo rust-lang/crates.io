@@ -46,6 +46,7 @@ Router.map(function() {
   this.route('category-slugs', { path: 'category_slugs' });
   this.route('team', { path: '/teams/:team_id' });
   this.route('policies');
+  this.route('data-access');
   this.route('confirm', { path: '/confirm/:email_token' });
 
   this.route('catch-all', { path: '*path' });
