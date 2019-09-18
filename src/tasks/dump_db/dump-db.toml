@@ -35,6 +35,8 @@ retries = "private"
 last_retry = "private"
 created_at = "private"
 
+[badges]
+dependencies = ["crates"]
 [badges.columns]
 crate_id = "public"
 badge_type = "public"
