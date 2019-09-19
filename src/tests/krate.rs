@@ -1904,6 +1904,31 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
 }
 
 #[test]
+fn reverse_dependencies_query_supports_u64_version_number_parts() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    let large_but_valid_version_number = format!("1.0.{}", std::u64::MAX);
+
+    app.db(|conn| {
+        let c1 = CrateBuilder::new("c1", user.id).expect_build(conn);
+        // The crate that depends on c1...
+        CrateBuilder::new("c2", user.id)
+            // ...has a patch version at the limits of what the semver crate supports
+            .version(VersionBuilder::new(&large_but_valid_version_number).dependency(&c1, None))
+            .expect_build(conn);
+    });
+
+    let deps = anon.reverse_dependencies("c1");
+    assert_eq!(deps.dependencies.len(), 1);
+    assert_eq!(deps.meta.total, 1);
+    assert_eq!(deps.dependencies[0].crate_id, "c1");
+    assert_eq!(deps.versions.len(), 1);
+    assert_eq!(deps.versions[0].krate, "c2");
+    assert_eq!(deps.versions[0].num, large_but_valid_version_number);
+}
+
+#[test]
 fn author_license_and_description_required() {
     let (_, _, _, token) = TestApp::init().with_token();
 
