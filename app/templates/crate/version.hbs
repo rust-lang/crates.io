@@ -260,34 +260,6 @@
         <span class='desc small'>Versions published</span>
       </div>
     </div>
-
-    <div class='versions'>
-      <span class='small'>Showing stats for</span>
-
-      {{#rl-dropdown-container class="button-holder"}}
-        {{#rl-dropdown-toggle class="tan-button dropdown"}}
-          {{#if requestedVersion}}
-            {{ requestedVersion }}
-          {{else}}
-            All Versions
-          {{/if}}
-          <span class='arrow'></span>
-        {{/rl-dropdown-toggle}}
-
-        {{#rl-dropdown id="all-versions" tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
-          <li class='all'>
-            {{#link-to 'crate.version' 'all'}}All Versions{{/link-to}}
-          </li>
-          {{#each smallSortedVersions as |version|}}
-            <li>
-              {{#link-to 'crate.version' version.num}}
-                {{ version.num }}
-              {{/link-to}}
-            </li>
-          {{/each}}
-        {{/rl-dropdown}}
-      {{/rl-dropdown-container}}
-    </div>
     <div class='graph'>
       <h4>Downloads over the last 90 days</h4>
       {{download-graph data=downloadData}}
