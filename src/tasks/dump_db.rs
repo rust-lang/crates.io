@@ -87,7 +87,7 @@ impl DumpDirectory {
             .spawn()?
             .wait()?;
         if !status.success() {
-            Err("pg_dump did not finish successfully.")?;
+            return Err("pg_dump did not finish successfully.".into());
         }
         Ok(())
     }
@@ -119,10 +119,10 @@ pub fn run_psql(script: &Path, database_url: &str) -> Result<(), PerformError> {
     let output = psql.wait_with_output()?;
     let stderr = String::from_utf8_lossy(&output.stderr);
     if stderr.contains("ERROR") {
-        Err(format!("Error while executing psql: {}", stderr))?;
+        return Err(format!("Error while executing psql: {}", stderr).into());
     }
     if !output.status.success() {
-        Err("psql did not finish successfully.")?;
+        return Err("psql did not finish successfully.".into());
     }
     Ok(())
 }
