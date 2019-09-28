@@ -341,6 +341,9 @@
 
         table {
             border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+            white-space: wrap;
 
             th, td {
                 border: 1px solid #dfe2e5;
@@ -466,7 +469,6 @@
     .small { margin-left: 20px; display: inline-block; }
     a.arrow {
         display: inline-block;
-        float: right;
     }
 }
 
