@@ -11,15 +11,15 @@
 <ol>
   <li>
     <b>
-      The <a href='https://github.com/rust-lang/crates.io-index'>crates.ioindex</a>.
+      The <a href='https://github.com/rust-lang/crates.io-index'>crates.io index</a>.
     </b>
-    This git repository is always kept up to date by crates.io, and it is used
+    This git repository is updated by crates.io, and it is used
     by Cargo to speed up local dependency resolution. It contains the majority
-    of the data exposed by crates.io and is cheap to clone and to update.
+    of the data exposed by crates.io and is cheap to clone and get updates.
   </li>
   <li>
-    <b>The database dumps (experimental).</b> The dumps contain all information
-    exposed by the API in a single download. They are updated every six hours.
+    <b>The database dumps (experimental).</b> The dump contains all information
+    exposed by the API in a single download. It is updated every 24 hours.
     The latest dump is available at the address
     <a href='https://static.crates.io/db-dump.tar.gz'>https://static.crates.io/db-dump.tar.gz</a>.
     Information on using the dump is contained in the tarball.
@@ -28,7 +28,7 @@
     <b>Crawl the crates.io API.</b> This should be used as a last resort, and
     doing so is subject to our {{#link-to 'policies'}}crawling policy{{/link-to}}.
     If the index and the database dumps do not satisfy your needs, we're happy to
-    discuss solutions to your needs that don't require you to crawl the registry.
+    discuss solutions that don't require you to crawl the registry.
     You can email us at <a href="mailto:help@crates.io">help@crates.io</a>.
   </li>
 </ol>
