@@ -11,7 +11,7 @@ export default Route.extend({
 
   flashMessages: service(),
 
-  refreshAfterLogin: observer('session.isLoggedIn', function () {
+  refreshAfterLogin: observer('session.isLoggedIn', function() {
     this.refresh();
   }),
 
