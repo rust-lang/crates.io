@@ -11,7 +11,7 @@ export default Route.extend({
 
   flashMessages: service(),
 
-  refreshAfterLogin: observer('session.isLoggedIn', function() {
+  refreshAfterLogin: observer('session.isLoggedIn', function () {
     this.refresh();
   }),
 
@@ -43,14 +43,28 @@ export default Route.extend({
           .get('versions')
           .then(versions => {
             const latestStableVersion = versions.find(version => {
+              // Find the latest version that is stable AND not-yanked.
               if (!isUnstableVersion(version.get('num')) && !version.get('yanked')) {
                 return version;
               }
             });
 
             if (latestStableVersion == null) {
-              // If no stable version exists, fallback to `maxVersion`
-              params.version_num = maxVersion;
+              // Cannot find any version that is stable AND not-yanked.
+              // The fact that "maxVersion" itself cannot be found means that
+              // we have to fall back to the latest one that is unstable....
+              const latestUnyankedVersion = versions.find(version => {
+                // Find the latest version that is stable AND not-yanked.
+                if (!version.get('yanked')) {
+                  return version;
+                }
+              });
+              if (latestStableVersion == null) {
+                // There's not even any unyanked version...
+                params.version_num = maxVersion;
+              } else {
+                params.version_num = latestUnyankedVersion;
+              }
             } else {
               params.version_num = latestStableVersion.get('num');
             }
