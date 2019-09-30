@@ -1,0 +1,211 @@
+# This file configures what to include in public database dumps. For each
+# database table, we set which columns are included in the dump, and optionally
+# how to filter the rows.
+#
+# <table_name>.columns - a TOML dictionary determining what columns to include.
+#     possible values are "private" (not included) and "public" (included).
+#
+# <table_name>.filter - a string that is a valid SQL expression, which is used
+#     in a WHERE clause to filter the rows of the table.
+#
+# <table_name>.dependencies - an array of table names, used to determine the
+#     order of the tables in the generated import script. All tables referred
+#     to by public columns in the current table should be listed, to make sure
+#     they are imported before this table.
+#
+# <table_name>.columns_defaults - a TOML dictionary mapping column names to a
+#     raw SQL expression that is used as the default value for the column on
+#     import. This is useful for private columns that are not nullable and do
+#     not have a default.
+
+[api_tokens.columns]
+id = "private"
+user_id = "private"
+token = "private"
+name = "private"
+created_at = "private"
+last_used_at = "private"
+revoked = "private"
+
+[background_jobs.columns]
+id = "private"
+job_type = "private"
+data = "private"
+retries = "private"
+last_retry = "private"
+created_at = "private"
+
+[badges]
+dependencies = ["crates"]
+[badges.columns]
+crate_id = "public"
+badge_type = "public"
+attributes = "public"
+
+[categories.columns]
+id = "public"
+category = "public"
+slug = "public"
+description = "public"
+crates_cnt = "public"
+created_at = "public"
+path = "public"
+
+[crate_owner_invitations.columns]
+invited_user_id = "private"
+invited_by_user_id = "private"
+crate_id = "private"
+created_at = "private"
+
+[crate_owners]
+dependencies = ["crates", "users"]
+filter = "NOT deleted"
+[crate_owners.columns]
+crate_id = "public"
+owner_id = "public"
+created_at = "public"
+created_by = "private"
+deleted = "private"
+updated_at = "public"
+owner_kind = "public"
+
+[crates.columns]
+id = "public"
+name = "public"
+updated_at = "public"
+created_at = "public"
+downloads = "public"
+description = "public"
+homepage = "public"
+documentation = "public"
+readme = "public"
+textsearchable_index_col = "public"
+repository = "public"
+max_upload_size = "public"
+
+[crates_categories]
+dependencies = ["categories", "crates"]
+[crates_categories.columns]
+crate_id = "public"
+category_id = "public"
+
+[crates_keywords]
+dependencies = ["crates", "keywords"]
+[crates_keywords.columns]
+crate_id = "public"
+keyword_id = "public"
+
+[dependencies]
+dependencies = ["crates", "versions"]
+[dependencies.columns]
+id = "public"
+version_id = "public"
+crate_id = "public"
+req = "public"
+optional = "public"
+default_features = "public"
+features = "public"
+target = "public"
+kind = "public"
+
+[__diesel_schema_migrations.columns]
+version = "private"
+run_on = "private"
+
+[emails.columns]
+id = "private"
+user_id = "private"
+email = "private"
+verified = "private"
+token = "private"
+token_generated_at = "private"
+
+[follows.columns]
+user_id = "private"
+crate_id = "private"
+
+[keywords.columns]
+id = "public"
+keyword = "public"
+crates_cnt = "public"
+created_at = "public"
+
+[metadata.columns]
+total_downloads = "public"
+
+[publish_limit_buckets.columns]
+user_id = "private"
+tokens = "private"
+last_refill = "private"
+
+[publish_rate_overrides.columns]
+user_id = "private"
+burst = "private"
+
+[readme_renderings.columns]
+version_id = "private"
+rendered_at = "private"
+
+[reserved_crate_names.columns]
+name = "public"
+
+[teams.columns]
+id = "public"
+login = "public"
+github_id = "public"
+name = "public"
+avatar = "public"
+
+[users]
+filter = """
+id in (
+    SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0
+    UNION
+    SELECT published_by as user_id FROM versions
+)"""
+[users.columns]
+id = "public"
+email = "private"
+gh_access_token = "private"
+gh_login = "public"
+name = "public"
+gh_avatar = "public"
+gh_id = "public"
+[users.column_defaults]
+gh_access_token = "''"
+
+[version_authors]
+dependencies = ["versions"]
+[version_authors.columns]
+id = "public"
+version_id = "public"
+user_id = "private"
+name = "public"
+
+[version_downloads]
+dependencies = ["versions"]
+[version_downloads.columns]
+version_id = "public"
+downloads = "public"
+counted = "private"
+date = "public"
+processed = "private"
+
+[versions]
+dependencies = ["crates", "users"]
+[versions.columns]
+id = "public"
+crate_id = "public"
+num = "public"
+updated_at = "public"
+created_at = "public"
+downloads = "public"
+features = "public"
+yanked = "public"
+license = "public"
+crate_size = "public"
+published_by = "public"
+
+[versions_published_by.columns]
+version_id = "private"
+email = "private"

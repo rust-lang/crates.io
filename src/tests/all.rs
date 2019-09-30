@@ -52,6 +52,7 @@ mod badge;
 mod builders;
 mod categories;
 mod category;
+mod dump_db;
 mod git;
 mod keyword;
 mod krate;

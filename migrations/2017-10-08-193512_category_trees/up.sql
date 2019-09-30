@@ -1,5 +1,4 @@
--- Your SQL goes here
-CREATE EXTENSION ltree;
+CREATE EXTENSION IF NOT EXISTS ltree;
 
 -- Create the new column which will represent our category tree.
 -- Fill it with values from `slug` column and then set to non-null
