@@ -11,7 +11,7 @@ edition = "2018"
 [dependencies]
 conduit = "0.8"
 futures-preview = "0.3.0-alpha.18"
-hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper", features = ["unstable-stream"] }
+hyper = { version = "0.13.0-alpha.4", features = ["unstable-stream"] }
 http = "0.1"
 tracing = { version = "0.1", features = ["log"] }
 semver = "0.5" # Must match version in conduit for now
