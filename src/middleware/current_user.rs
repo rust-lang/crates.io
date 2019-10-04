@@ -48,7 +48,7 @@ impl Middleware for CurrentUser {
                 User::find_by_api_token(&conn, &auth_header)
                     .map(|user| (AuthenticationSource::ApiToken { auth_header }, user))
                     .optional()
-                    .map_err(|e| return Box::new(e) as Box<dyn Error + Send>)?
+                    .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?
             } else {
                 None
             };
