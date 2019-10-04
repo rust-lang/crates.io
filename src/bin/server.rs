@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let server = if dotenv::var("USE_HYPER").is_ok() {
         use tokio::io::AsyncWriteExt;
-        use tokio_net::signal::unix::{Signal, SignalKind};
+        use tokio_net::signal::unix::{signal, SignalKind};
 
         println!("Booting with a hyper based server");
 
@@ -73,8 +73,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let addr = ([127, 0, 0, 1], port).into();
         let server = hyper::Server::bind(&addr).serve(make_service);
 
-        let mut sig_int = Signal::new(SignalKind::interrupt())?.into_future();
-        let mut sig_term = Signal::new(SignalKind::terminate())?.into_future();
+        let mut sig_int = signal(SignalKind::interrupt())?.into_future();
+        let mut sig_term = signal(SignalKind::terminate())?.into_future();
 
         let server = server.with_graceful_shutdown(async move {
             // Wait for either signal

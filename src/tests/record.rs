@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
     pin::Pin,
     str,
-    sync::{Arc, Mutex, Once},
+    sync::{mpsc, Arc, Mutex, Once},
     task::{Context, Poll},
     thread,
 };
@@ -86,9 +86,7 @@ pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
     let record = dotenv::var("RECORD").is_ok();
 
-    let addr = "127.0.0.1:0".parse().unwrap();
-    let listener = t!(TcpListener::bind(&addr));
-    let ret = format!("http://{}", t!(listener.local_addr()));
+    let (url_tx, url_rx) = mpsc::channel();
 
     let data = cache_file(&me.replace("::", "_"));
     let record = if record && !data.exists() {
@@ -108,14 +106,20 @@ pub fn proxy() -> (String, Bomb) {
 
     let thread = thread::spawn(move || {
         let mut rt = t!(Runtime::new());
+
         let client = if let Record::Capture(_, _) = record {
-            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
+            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new().unwrap()))
         } else {
             None
         };
 
+        let listener = t!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
+        url_tx
+            .send(format!("http://{}", t!(listener.local_addr())))
+            .unwrap();
+
         let record = Arc::new(Mutex::new(record));
-        let srv = Server::builder(listener.incoming())
+        let srv = Server::builder(hyper::server::accept::from_stream(listener.incoming()))
             .serve(Proxy {
                 sink: sink2,
                 record: Arc::clone(&record),
@@ -138,7 +142,7 @@ pub fn proxy() -> (String, Bomb) {
     });
 
     (
-        ret,
+        url_rx.recv().unwrap(),
         Bomb {
             iorx: Sink(sink),
             quittx: Some(quittx),
