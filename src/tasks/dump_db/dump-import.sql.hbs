@@ -1,0 +1,25 @@
+BEGIN;
+    -- Set defaults for non-nullable columns not included in the dump.
+{{~#each tables as |table|}}
+{{~#each column_defaults}}
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{@key}}" SET DEFAULT {{this}};
+{{~/each}}
+{{~/each}}
+
+    -- Truncate all tables.
+{{~#each tables}}
+    TRUNCATE "{{this.name}}" RESTART IDENTITY CASCADE;
+{{~/each}}
+
+    -- Import the CSV data.
+{{~#each tables}}
+    \copy "{{this.name}}" ({{this.columns}}) FROM 'data/{{this.name}}.csv' WITH CSV HEADER
+{{~/each}}
+
+    -- Drop the defaults again.
+{{~#each tables as |table|}}
+{{~#each column_defaults}}
+    ALTER TABLE "{{table.name}}" ALTER COLUMN "{{@key}}" DROP DEFAULT;
+{{~/each}}
+{{~/each}}
+COMMIT;

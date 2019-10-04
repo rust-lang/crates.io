@@ -1,6 +1,6 @@
 //! This module provides utility types and traits for managing a test session
 //!
-//! Tests start by using one of the `TestApp` constructors, `init` or `with_proxy`.  This returns a
+//! Tests start by using one of the `TestApp` constructors: `init`, `with_proxy`, or `full`.  This returns a
 //! `TestAppBuilder` which provides convience methods for creating up to one user, optionally with
 //! a token.  The builder methods all return at least an initialized `TestApp` and a
 //! `MockAnonymousUser`.  The `MockAnonymousUser` can be used to issue requests in an
@@ -20,52 +20,97 @@
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
 use crate::{
-    app, builders::PublishBuilder, record, CrateList, CrateResponse, GoodCrate, OkBool,
-    VersionResponse,
+    builders::PublishBuilder, record, CategoryListResponse, CategoryResponse, CrateList,
+    CrateResponse, GoodCrate, OkBool, OwnersResponse, VersionResponse,
 };
 use cargo_registry::{
+    background_jobs::Environment,
+    db::DieselPool,
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
-    uploaders::Uploader,
-    App,
+    App, Config,
 };
-use std::{rc::Rc, sync::Arc};
+use diesel::PgConnection;
+use std::{rc::Rc, sync::Arc, time::Duration};
+use swirl::Runner;
 
 use conduit::{Handler, Method, Request};
 use conduit_test::MockRequest;
+
+use cargo_registry::git::Repository as WorkerRepository;
+use git2::Repository as UpstreamRepository;
 
 struct TestAppInner {
     app: Arc<App>,
     // The bomb (if created) needs to be held in scope until the end of the test.
     _bomb: Option<record::Bomb>,
     middle: conduit_middleware::MiddlewareBuilder,
+    index: Option<UpstreamRepository>,
+    runner: Option<Runner<Environment, DieselPool>>,
+}
+
+use swirl::schema::background_jobs;
+// FIXME: This is copied from swirl::storage, because it is private
+#[derive(Queryable, Identifiable, Debug, Clone)]
+struct BackgroundJob {
+    pub id: i64,
+    pub job_type: String,
+    pub data: serde_json::Value,
+}
+
+impl Drop for TestAppInner {
+    fn drop(&mut self) {
+        use diesel::prelude::*;
+        use swirl::schema::background_jobs::dsl::*;
+
+        // Avoid a double-panic if the test is already failing
+        if std::thread::panicking() {
+            return;
+        }
+
+        // Lazily run any remaining jobs
+        if let Some(runner) = &self.runner {
+            runner.run_all_pending_jobs().expect("Could not run jobs");
+            runner.assert_no_failed_jobs().expect("Failed jobs remain");
+        }
+
+        // Manually verify that all jobs have completed successfully
+        // This will catch any tests that enqueued a job but forgot to initialize the runner
+        let conn = self.app.diesel_database.get().unwrap();
+        let job_count: i64 = background_jobs.count().get_result(&*conn).unwrap();
+        assert_eq!(
+            0, job_count,
+            "Unprocessed or failed jobs remain in the queue"
+        );
+
+        // TODO: If a runner was started, obtain the clone from it and ensure its HEAD matches the upstream index HEAD
+    }
 }
 
 /// A representation of the app and its database transaction
+#[derive(Clone)]
 pub struct TestApp(Rc<TestAppInner>);
 
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        dotenv::dotenv().ok();
-        let (app, middle) = crate::simple_app(Uploader::Panic);
-        let inner = Rc::new(TestAppInner {
-            app,
-            _bomb: None,
-            middle,
-        });
-        TestAppBuilder(TestApp(inner))
+        TestAppBuilder {
+            config: crate::simple_config(),
+            proxy: None,
+            bomb: None,
+            index: None,
+            build_job_runner: false,
+        }
     }
 
-    /// Initialize a full application that can record and playback outgoing HTTP requests
+    /// Initialize the app and a proxy that can record and playback outgoing HTTP requests
     pub fn with_proxy() -> TestAppBuilder {
-        let (bomb, app, middle) = app();
-        let inner = Rc::new(TestAppInner {
-            app,
-            _bomb: Some(bomb),
-            middle,
-        });
-        TestAppBuilder(TestApp(inner))
+        Self::init().with_proxy()
+    }
+
+    /// Initialize a full application, with a proxy, index, and background worker
+    pub fn full() -> TestAppBuilder {
+        Self::with_proxy().with_git_index().with_job_runner()
     }
 
     /// Obtain the database connection and pass it to the closure
@@ -73,20 +118,74 @@ impl TestApp {
     /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
     /// connection before making any API calls.  Once the closure returns, the connection is
     /// dropped, ensuring it is returned to the pool and available for any future API calls.
-    pub fn db<T, F: FnOnce(&DieselConnection) -> T>(&self, f: F) -> T {
+    pub fn db<T, F: FnOnce(&PgConnection) -> T>(&self, f: F) -> T {
         let conn = self.0.app.diesel_database.get().unwrap();
         f(&conn)
     }
 
-    /// Create a new user in the database and return a mock user session
+    /// Create a new user with a verified email address in the database and return a mock user
+    /// session
     ///
     /// This method updates the database directly
-    pub fn db_new_user(&self, user: &str) -> MockCookieUser {
-        let user = self.db(|conn| crate::new_user(user).create_or_update(conn).unwrap());
+    pub fn db_new_user(&self, username: &str) -> MockCookieUser {
+        use cargo_registry::schema::emails;
+        use diesel::prelude::*;
+
+        let user = self.db(|conn| {
+            let mut user = crate::new_user(username).create_or_update(conn).unwrap();
+            let email = "something@example.com";
+            user.email = Some(email.to_string());
+            diesel::insert_into(emails::table)
+                .values((
+                    emails::user_id.eq(user.id),
+                    emails::email.eq(email),
+                    emails::verified.eq(true),
+                ))
+                .execute(conn)
+                .unwrap();
+            user
+        });
         MockCookieUser {
             app: TestApp(Rc::clone(&self.0)),
             user,
         }
+    }
+
+    /// Obtain a reference to the upstream repository ("the index")
+    pub fn upstream_repository(&self) -> &UpstreamRepository {
+        self.0.index.as_ref().unwrap()
+    }
+
+    /// Obtain a list of crates from the index HEAD
+    pub fn crates_from_index_head(&self, path: &str) -> Vec<cargo_registry::git::Crate> {
+        let path = std::path::Path::new(path);
+        let index = self.upstream_repository();
+        let tree = index.head().unwrap().peel_to_tree().unwrap();
+        let blob = tree
+            .get_path(path)
+            .unwrap()
+            .to_object(&index)
+            .unwrap()
+            .peel_to_blob()
+            .unwrap();
+        let content = blob.content();
+
+        // The index format consists of one JSON object per line
+        // It is not a JSON array
+        let lines = std::str::from_utf8(content).unwrap().lines();
+        lines
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect()
+    }
+
+    pub fn run_pending_background_jobs(&self) {
+        let runner = &self.0.runner;
+        let runner = runner.as_ref().expect("Index has not been initialized");
+
+        runner.run_all_pending_jobs().expect("Could not run jobs");
+        runner
+            .assert_no_failed_jobs()
+            .expect("Could not determine if jobs failed");
     }
 
     /// Obtain a reference to the inner `App` value
@@ -95,15 +194,63 @@ impl TestApp {
     }
 }
 
-pub struct TestAppBuilder(TestApp);
+pub struct TestAppBuilder {
+    config: Config,
+    proxy: Option<String>,
+    bomb: Option<record::Bomb>,
+    index: Option<UpstreamRepository>,
+    build_job_runner: bool,
+}
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(self) -> (TestApp, MockAnonymousUser) {
-        let anon = MockAnonymousUser {
-            app: TestApp(Rc::clone(&(self.0).0)),
+        let (app, middle) = crate::build_app(self.config, self.proxy);
+
+        let runner = if self.build_job_runner {
+            let connection_pool = app.diesel_database.clone();
+            let index =
+                WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
+            let environment = Environment::new(
+                index,
+                None,
+                connection_pool.clone(),
+                app.config.uploader.clone(),
+                app.http_client().clone(),
+            );
+
+            Some(
+                Runner::builder(connection_pool, environment)
+                    // We only have 1 connection in tests, so trying to run more than
+                    // 1 job concurrently will just block
+                    .thread_count(1)
+                    .job_start_timeout(Duration::from_secs(1))
+                    .build(),
+            )
+        } else {
+            None
         };
-        (self.0, anon)
+
+        let test_app_inner = TestAppInner {
+            app,
+            _bomb: self.bomb,
+            middle,
+            index: self.index,
+            runner,
+        };
+        let test_app = TestApp(Rc::new(test_app_inner));
+        let anon = MockAnonymousUser {
+            app: test_app.clone(),
+        };
+        (test_app, anon)
+    }
+
+    /// Create a proxy for use with this app
+    pub fn with_proxy(mut self) -> Self {
+        let (proxy, bomb) = record::proxy();
+        self.proxy = Some(proxy);
+        self.bomb = Some(bomb);
+        self
     }
 
     // Create a `TestApp` with a database including a default user
@@ -120,6 +267,33 @@ impl TestAppBuilder {
         let token = user.db_new_token("bar");
         (app, anon, user, token)
     }
+
+    pub fn with_config(mut self, f: impl FnOnce(&mut Config)) -> Self {
+        f(&mut self.config);
+        self
+    }
+
+    pub fn with_publish_rate_limit(self, rate: Duration, burst: i32) -> Self {
+        self.with_config(|config| {
+            config.publish_rate_limit.rate = rate;
+            config.publish_rate_limit.burst = burst;
+        })
+    }
+
+    pub fn with_git_index(mut self) -> Self {
+        use crate::git;
+
+        git::init();
+
+        let thread_local_path = git::bare();
+        self.index = Some(UpstreamRepository::open_bare(thread_local_path).unwrap());
+        self
+    }
+
+    pub fn with_job_runner(mut self) -> Self {
+        self.build_job_runner = true;
+        self
+    }
 }
 
 /// A colleciton of helper methods for the 3 authentication types
@@ -129,13 +303,21 @@ pub trait RequestHelper {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest;
     fn app(&self) -> &TestApp;
 
+    /// Run a request
+    fn run<T>(&self, mut request: MockRequest) -> Response<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        Response::new(self.app().0.middle.call(&mut request))
+    }
+
     /// Issue a GET request
     fn get<T>(&self, path: &str) -> Response<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Get, path);
-        Response::new(self.app().0.middle.call(&mut request))
+        let request = self.request_builder(Method::Get, path);
+        self.run(request)
     }
 
     /// Issue a GET request that includes query parameters
@@ -145,7 +327,7 @@ pub trait RequestHelper {
     {
         let mut request = self.request_builder(Method::Get, path);
         request.with_query(query);
-        Response::new(self.app().0.middle.call(&mut request))
+        self.run(request)
     }
 
     /// Issue a PUT request
@@ -153,9 +335,9 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut builder = self.request_builder(Method::Put, path);
-        let request = builder.with_body(body);
-        Response::new(self.app().0.middle.call(request))
+        let mut request = self.request_builder(Method::Put, path);
+        request.with_body(body);
+        self.run(request)
     }
 
     /// Issue a DELETE request
@@ -163,8 +345,8 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut request = self.request_builder(Method::Delete, path);
-        Response::new(self.app().0.middle.call(&mut request))
+        let request = self.request_builder(Method::Delete, path);
+        self.run(request)
     }
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
@@ -172,9 +354,9 @@ pub trait RequestHelper {
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let mut builder = self.request_builder(Method::Delete, path);
-        let request = builder.with_body(body);
-        Response::new(self.app().0.middle.call(request))
+        let mut request = self.request_builder(Method::Delete, path);
+        request.with_body(body);
+        self.run(request)
     }
 
     /// Search for crates matching a query string
@@ -187,8 +369,14 @@ pub trait RequestHelper {
         self.search(&format!("user_id={}", id))
     }
 
-    /// Publish a crate
-    fn publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
+    /// Enqueue a crate for publishing
+    ///
+    /// The publish endpoint will enqueue a background job to update the index.  A test must run
+    /// any pending background jobs if it intends to observe changes to the index.
+    ///
+    /// Any pending jobs are run when the `TestApp` is dropped to ensure that the test fails unless
+    /// all background tasks complete successfully.
+    fn enqueue_publish(&self, publish_builder: PublishBuilder) -> Response<GoodCrate> {
         let krate_name = publish_builder.krate_name.clone();
         let response = self.put("/api/v1/crates/new", &publish_builder.body());
         let callback_on_good = move |json: &GoodCrate| assert_eq!(json.krate.name, krate_name);
@@ -201,10 +389,26 @@ pub trait RequestHelper {
         self.get(&url).good()
     }
 
+    /// Request the JSON used to list a crate's owners
+    fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
+        let url = format!("/api/v1/crates/{}/owners", krate_name);
+        self.get(&url).good()
+    }
+
     /// Request the JSON used for a crate version's page
     fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{}/{}", krate_name, version);
         self.get(&url).good()
+    }
+
+    fn show_category(&self, category_name: &str) -> CategoryResponse {
+        let url = format!("/api/v1/categories/{}", category_name);
+        self.get(&url).good()
+    }
+
+    fn show_category_list(&self) -> CategoryListResponse {
+        let url = "/api/v1/categories";
+        self.get(url).good()
     }
 }
 
@@ -248,6 +452,14 @@ impl RequestHelper for MockCookieUser {
 }
 
 impl MockCookieUser {
+    /// Creates an instance from a database `User` instance
+    pub fn new(app: &TestApp, user: User) -> Self {
+        Self {
+            app: TestApp(Rc::clone(&app.0)),
+            user,
+        }
+    }
+
     /// Returns a reference to the database `User` model
     pub fn as_model(&self) -> &User {
         &self.user
@@ -291,18 +503,33 @@ impl MockTokenUser {
         &self.token
     }
 
-    /// Add to the specified crate the specified owner.
-    pub fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", owner);
-        self.put(&url, body.as_bytes())
+    /// Add to the specified crate the specified owners.
+    pub fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
+        self.modify_owners(krate_name, owners, Self::put)
     }
 
-    /// Remove from the specified crate the specified owner.
+    /// Add a single owner to the specified crate.
+    pub fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        self.add_named_owners(krate_name, &[owner])
+    }
+
+    /// Remove from the specified crate the specified owners.
+    pub fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
+        self.modify_owners(krate_name, owners, Self::delete_with_body)
+    }
+
+    /// Remove a single owner to the specified crate.
     pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        self.remove_named_owners(krate_name, &[owner])
+    }
+
+    fn modify_owners<F>(&self, krate_name: &str, owners: &[&str], method: F) -> Response<OkBool>
+    where
+        F: Fn(&MockTokenUser, &str, &[u8]) -> Response<OkBool>,
+    {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
-        let body = format!("{{\"users\":[\"{}\"]}}", owner);
-        self.delete_with_body(&url, body.as_bytes())
+        let body = json!({ "owners": owners }).to_string();
+        method(&self, &url, body.to_string().as_bytes())
     }
 
     /// Add a user as an owner for a crate.
@@ -321,8 +548,6 @@ pub struct Bad {
     pub errors: Vec<Error>,
 }
 
-pub type DieselConnection =
-    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 type ResponseResult = Result<conduit::Response, Box<dyn std::error::Error + Send>>;
 
 /// A type providing helper methods for working with responses
@@ -375,6 +600,11 @@ where
 
     pub fn assert_status(&self, status: u32) -> &Self {
         assert_eq!(status, self.response.status.0);
+        self
+    }
+
+    pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
+        assert!(self.response.headers["Location"][0].ends_with(target));
         self
     }
 }

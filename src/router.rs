@@ -32,11 +32,11 @@ pub fn build_router(app: &App) -> R404 {
 
     // Routes that appear to be unused
     api_router.get("/versions", C(version::deprecated::index));
-    api_router.get("/versions/:version_id", C(version::deprecated::show));
+    api_router.get("/versions/:version_id", C(version::deprecated::show_by_id));
 
     // Routes used by the frontend
     api_router.get("/crates/:crate_id", C(krate::metadata::show));
-    api_router.get("/crates/:crate_id/:version", C(version::deprecated::show));
+    api_router.get("/crates/:crate_id/:version", C(version::metadata::show));
     api_router.get(
         "/crates/:crate_id/:version/readme",
         C(krate::metadata::readme),
@@ -146,11 +146,7 @@ impl<H: Handler> Handler for R<H> {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
         let path = req.params()["path"].to_string();
         let R(ref sub_router) = *self;
-        sub_router.call(&mut RequestProxy {
-            other: req,
-            path: Some(&path),
-            method: None,
-        })
+        sub_router.call(&mut RequestProxy::rewrite_path(req, &path))
     }
 }
 

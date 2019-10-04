@@ -65,11 +65,12 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     let user = req.user()?;
+    let conn = req.db_conn()?;
 
     let max_token_per_user = 500;
     let count = ApiToken::belonging_to(user)
         .count()
-        .get_result::<i64>(&*req.db_conn()?)?;
+        .get_result::<i64>(&*conn)?;
     if count >= max_token_per_user {
         return Err(bad_request(&format!(
             "maximum tokens per user is: {}",
@@ -77,7 +78,7 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
         )));
     }
 
-    let api_token = ApiToken::insert(&*req.db_conn()?, user.id, name)?;
+    let api_token = ApiToken::insert(&*conn, user.id, name)?;
 
     #[derive(Serialize)]
     struct R {

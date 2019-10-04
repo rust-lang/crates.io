@@ -1,51 +1,51 @@
 {{ title 'Settings' }}
 
 <div id='crates-heading'>
-    {{svg-jar "gear"}}
-    <h1>Account Settings</h1>
+  {{svg-jar "gear"}}
+  <h1>Account Settings</h1>
 </div>
 
 <div id='me-profile'>
-    <h2>Profile Information</h2>
+  <h2>Profile Information</h2>
 
-    <div class='info'>
-        {{#user-link user=model.user }} {{user-avatar user=model.user size='medium'}} {{/user-link}}
+  <div class='info'>
+    {{#user-link user=model.user }} {{user-avatar user=model.user size='medium'}} {{/user-link}}
 
-        <dl>
-            <dt>Name</dt>
-            <dd>{{ model.user.name }}</dd>
-            <dt>GitHub Account</dt>
-            <dd>{{ model.user.login }}</dd>
-        </dl>
-    </div>
+    <dl>
+      <dt>Name</dt>
+      <dd>{{ model.user.name }}</dd>
+      <dt>GitHub Account</dt>
+      <dd>{{ model.user.login }}</dd>
+    </dl>
+  </div>
 </div>
 
 <div id='me-email'>
-    <h2>User Email</h2>
-    {{email-input type='email' value=model.user.email user=model.user}}
+  <h2>User Email</h2>
+  {{email-input type='email' value=model.user.email user=model.user}}
 </div>
 
 <div id='me-api'>
-    <div class='me-subheading'>
-        <h2>API Access</h2>
-        <div class='right'>
-            <button class='yellow-button' disabled={{disableCreate}} {{action "startNewToken"}}>New Token</button>
-        </div>
+  <div class='me-subheading'>
+    <h2>API Access</h2>
+    <div class='right'>
+      <button class='yellow-button' disabled={{disableCreate}} {{action "startNewToken"}}>New Token</button>
     </div>
+  </div>
 
-    <p>
-        If you want to use package commands from the command line, you will need to
-        login with <code>cargo login (token)</code> using one of the tokens listed below.
-    </p>
-    <p>
-        When working in shared environments, supplying the token on the command line could
-        expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
-        token when prompted.
-    </p>
+  <p>
+    If you want to use package commands from the command line, you will need to
+    login with <code>cargo login (token)</code> using one of the tokens listed below.
+  </p>
+  <p>
+    When working in shared environments, supplying the token on the command line could
+    expose it to prying eyes. To avoid this, enter <code>cargo login</code> and supply your
+    token when prompted.
+  </p>
 
-    <div id='tokens'>
-        {{#each sortedTokens as |api_token|}}
-            {{api-token-row api_token=api_token}}
-        {{/each}}
-    </div>
+  <div id='tokens'>
+    {{#each sortedTokens as |api_token|}}
+      {{api-token-row api_token=api_token}}
+    {{/each}}
+  </div>
 </div>

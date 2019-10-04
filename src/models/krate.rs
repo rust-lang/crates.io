@@ -1,7 +1,9 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
+use diesel::sql_types::Bool;
+use indexmap::IndexMap;
 use url::Url;
 
 use crate::app::App;
@@ -14,20 +16,20 @@ use crate::models::{
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;
+use crate::publish_rate_limit::PublishRateLimit;
 use crate::schema::*;
 
 /// Hosts in this list are known to not be hosting documentation,
 /// and are possibly of malicious intent e.g. ad tracking networks, etc.
 const DOCUMENTATION_BLOCKLIST: [&str; 1] = ["rust-ci.org"];
 
-#[derive(Debug, Insertable, Queryable, Identifiable, Associations, AsChangeset, Clone, Copy)]
+#[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[belongs_to(Crate)]
-#[primary_key(crate_id, date)]
-#[table_name = "crate_downloads"]
-pub struct CrateDownload {
+#[primary_key(crate_id)]
+#[table_name = "recent_crate_downloads"]
+pub struct RecentCrateDownloads {
     pub crate_id: i32,
     pub downloads: i32,
-    pub date: NaiveDate,
 }
 
 #[derive(Debug, Clone, Queryable, Identifiable, Associations, AsChangeset, QueryableByName)]
@@ -41,9 +43,6 @@ pub struct Crate {
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
-    pub readme: Option<String>,
-    pub readme_file: Option<String>,
-    pub license: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
 }
@@ -59,9 +58,6 @@ type AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::readme,
-    crates::readme_file,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -75,9 +71,6 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::description,
     crates::homepage,
     crates::documentation,
-    crates::readme,
-    crates::readme_file,
-    crates::license,
     crates::repository,
     crates::max_upload_size,
 );
@@ -100,28 +93,29 @@ pub struct NewCrate<'a> {
     pub homepage: Option<&'a str>,
     pub documentation: Option<&'a str>,
     pub readme: Option<&'a str>,
-    pub readme_file: Option<&'a str>,
     pub repository: Option<&'a str>,
     pub max_upload_size: Option<i32>,
-    pub license: Option<&'a str>,
 }
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
         mut self,
         conn: &PgConnection,
-        license_file: Option<&'a str>,
         uploader: i32,
+        rate_limit: Option<&PublishRateLimit>,
     ) -> CargoResult<Crate> {
         use diesel::update;
 
-        self.validate(license_file)?;
+        self.validate()?;
         self.ensure_name_not_reserved(conn)?;
 
         conn.transaction(|| {
             // To avoid race conditions, we try to insert
             // first so we know whether to add an owner
             if let Some(krate) = self.save_new_crate(conn, uploader)? {
+                if let Some(rate_limit) = rate_limit {
+                    rate_limit.check_rate_limit(uploader, conn)?;
+                }
                 return Ok(krate);
             }
 
@@ -134,7 +128,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self, license_file: Option<&'a str>) -> CargoResult<()> {
+    fn validate(&mut self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -165,28 +159,6 @@ impl<'a> NewCrate<'a> {
         validate_url(self.homepage, "homepage")?;
         validate_url(self.documentation, "documentation")?;
         validate_url(self.repository, "repository")?;
-        self.validate_license(license_file)?;
-        Ok(())
-    }
-
-    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
-        if let Some(license) = self.license {
-            for part in license.split('/') {
-                license_exprs::validate_license_expr(part).map_err(|e| {
-                    human(&format_args!(
-                        "{}; see http://opensource.org/licenses \
-                         for options, and http://spdx.org/licenses/ \
-                         for their identifiers",
-                        e
-                    ))
-                })?;
-            }
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            self.license = Some("non-standard");
-        }
         Ok(())
     }
 
@@ -235,6 +207,29 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
+    /// SQL filter based on whether the crate's name loosly matches the given
+    /// string.
+    ///
+    /// The operator used varies based on the input.
+    pub fn loosly_matches_name<QS>(
+        name: &str,
+    ) -> Box<dyn BoxableExpression<QS, Pg, SqlType = Bool> + '_>
+    where
+        crates::name: SelectableExpression<QS>,
+    {
+        if name.len() > 2 {
+            let wildcard_name = format!("%{}%", name);
+            Box::new(canon_crate_name(crates::name).like(canon_crate_name(wildcard_name)))
+        } else {
+            diesel_infix_operator!(MatchesWord, "%>");
+            Box::new(MatchesWord::new(
+                canon_crate_name(crates::name),
+                name.into_sql::<Text>(),
+            ))
+        }
+    }
+
+    /// SQL filter with the = binary operator
     pub fn with_name(name: &str) -> WithName<'_> {
         canon_crate_name(crates::name).eq(canon_crate_name(name))
     }
@@ -333,7 +328,7 @@ impl Crate {
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
-        let badges = badges.map(|bs| bs.into_iter().map(|b| b.encodable()).collect());
+        let badges = badges.map(|bs| bs.into_iter().map(Badge::encodable).collect());
         let documentation = Crate::remove_blocked_documentation_urls(documentation);
 
         EncodableCrate {
@@ -501,16 +496,22 @@ impl Crate {
     pub fn reverse_dependencies(
         &self,
         conn: &PgConnection,
-        offset: i64,
-        limit: i64,
-    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
+        params: &IndexMap<String, String>,
+    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+        use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
 
+        // FIXME: It'd be great to support this with `.paginate` directly,
+        // and get cursor/id pagination for free. But Diesel doesn't currently
+        // have great support for abstracting over "Is this using `Queryable`
+        // or `QueryableByName` to load things?"
+        let options = PaginationOptions::new(params)?;
+        let offset = options.offset().unwrap_or_default();
         let rows = sql_query(include_str!("krate_reverse_dependencies.sql"))
             .bind::<Integer, _>(self.id)
-            .bind::<BigInt, _>(offset)
-            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(i64::from(offset))
+            .bind::<BigInt, _>(i64::from(options.per_page))
             .load::<WithCount<ReverseDependency>>(conn)?;
 
         Ok(rows.records_and_total())

@@ -16,29 +16,8 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
-/// We literally never want to select `categories.path`
-/// so we provide this type and constant to pass to `.select`
-type AllColumns = (
-    categories::id,
-    categories::category,
-    categories::slug,
-    categories::description,
-    categories::crates_cnt,
-    categories::created_at,
-);
-
-pub const ALL_COLUMNS: AllColumns = (
-    categories::id,
-    categories::category,
-    categories::slug,
-    categories::description,
-    categories::crates_cnt,
-    categories::created_at,
-);
-
-type All = diesel::dsl::Select<categories::table, AllColumns>;
 type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::lower::HelperType<&'a str>>;
-type BySlug<'a> = diesel::dsl::Filter<All, WithSlug<'a>>;
+type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
     categories::slug,
     diesel::pg::expression::array_comparison::Any<
@@ -48,7 +27,7 @@ type WithSlugsCaseSensitive<'a> = diesel::dsl::Eq<
         >,
     >,
 >;
-type BySlugsCaseSensitive<'a> = diesel::dsl::Filter<All, WithSlugsCaseSensitive<'a>>;
+type BySlugsCaseSensitive<'a> = diesel::dsl::Filter<categories::table, WithSlugsCaseSensitive<'a>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[belongs_to(Category)]
@@ -66,7 +45,7 @@ impl Category {
     }
 
     pub fn by_slug(slug: &str) -> BySlug<'_> {
-        Category::all().filter(Self::with_slug(slug))
+        categories::table.filter(Self::with_slug(slug))
     }
 
     pub fn with_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> WithSlugsCaseSensitive<'a> {
@@ -75,11 +54,7 @@ impl Category {
     }
 
     pub fn by_slugs_case_sensitive<'a>(slugs: &'a [&'a str]) -> BySlugsCaseSensitive<'a> {
-        Category::all().filter(Self::with_slugs_case_sensitive(slugs))
-    }
-
-    pub fn all() -> All {
-        categories::table.select(ALL_COLUMNS)
+        categories::table.filter(Self::with_slugs_case_sensitive(slugs))
     }
 
     pub fn encodable(self) -> EncodableCategory {
@@ -93,8 +68,8 @@ impl Category {
         } = self;
         EncodableCategory {
             id: slug.clone(),
-            slug: slug.clone(),
-            description: description.clone(),
+            slug,
+            description,
             created_at,
             crates_cnt,
             category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
@@ -112,7 +87,7 @@ impl Category {
                 .iter()
                 .cloned()
                 .filter(|s| !categories.iter().any(|c| c.slug == *s))
-                .map(|s| s.to_string())
+                .map(ToString::to_string)
                 .collect();
             let crate_categories = categories
                 .iter()
@@ -201,7 +176,6 @@ impl<'a> NewCategory<'a> {
             .on_conflict(slug)
             .do_update()
             .set(self)
-            .returning(ALL_COLUMNS)
             .get_result(conn)
     }
 }
@@ -209,15 +183,11 @@ impl<'a> NewCategory<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_util::pg_connection_no_transaction;
     use diesel::connection::SimpleConnection;
-    use dotenv::dotenv;
-    use std::env;
 
     fn pg_connection() -> PgConnection {
-        let _ = dotenv();
-        let database_url =
-            env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set to run tests");
-        let conn = PgConnection::establish(&database_url).unwrap();
+        let conn = pg_connection_no_transaction();
         // These tests deadlock if run concurrently
         conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE")
             .unwrap();

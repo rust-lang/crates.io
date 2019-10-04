@@ -1,0 +1,2 @@
+DROP TRIGGER trigger_ensure_reserved_name_not_in_use ON reserved_crate_names;
+DROP FUNCTION ensure_reserved_name_not_in_use();

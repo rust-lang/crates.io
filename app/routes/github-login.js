@@ -15,8 +15,8 @@ import ajax from 'ember-fetch/ajax';
  * @see `github-authorize` route
  */
 export default Route.extend({
-    async beforeModel() {
-        let url = await ajax(`/authorize_url`);
-        window.location = url.url;
-    },
+  async beforeModel() {
+    let url = await ajax(`/authorize_url`);
+    window.location = url.url;
+  },
 });

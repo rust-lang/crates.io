@@ -24,8 +24,10 @@ pub struct EncodableCrateUpload {
     pub documentation: Option<String>,
     pub readme: Option<String>,
     pub readme_file: Option<String>,
-    pub keywords: Option<EncodableKeywordList>,
-    pub categories: Option<EncodableCategoryList>,
+    #[serde(default)]
+    pub keywords: EncodableKeywordList,
+    #[serde(default)]
+    pub categories: EncodableCategoryList,
     pub license: Option<String>,
     pub license_file: Option<String>,
     pub repository: Option<String>,
@@ -40,11 +42,11 @@ pub struct EncodableCrateName(pub String);
 pub struct EncodableCrateVersion(pub semver::Version);
 #[derive(Debug, Deref)]
 pub struct EncodableCrateVersionReq(pub semver::VersionReq);
-#[derive(Serialize, Debug, Deref)]
+#[derive(Serialize, Debug, Deref, Default)]
 pub struct EncodableKeywordList(pub Vec<EncodableKeyword>);
 #[derive(Serialize, Debug, Deref)]
 pub struct EncodableKeyword(pub String);
-#[derive(Serialize, Debug, Deref)]
+#[derive(Serialize, Debug, Deref, Default)]
 pub struct EncodableCategoryList(pub Vec<EncodableCategory>);
 #[derive(Serialize, Deserialize, Debug, Deref)]
 pub struct EncodableCategory(pub String);
@@ -63,6 +65,7 @@ pub struct EncodableCrateDependency {
     pub target: Option<String>,
     pub kind: Option<DependencyKind>,
     pub explicit_name_in_toml: Option<EncodableCrateName>,
+    pub registry: Option<String>,
 }
 
 impl<'de> Deserialize<'de> for EncodableCrateName {

@@ -1,6 +1,6 @@
 import { helper } from '@ember/component/helper';
 
 export default helper(function(params) {
-    let [req] = params;
-    return req === '*' ? '' : req;
+  let [req] = params;
+  return req === '*' ? '' : req;
 });

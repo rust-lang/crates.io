@@ -1,8 +1,10 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::github;
+use crate::github::{github_api, team_url};
 use crate::util::{errors::NotFound, human, CargoResult};
+
+use oauth2::{prelude::*, AccessToken};
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
@@ -141,8 +143,8 @@ impl Team {
         // FIXME: we just set per_page=100 and don't bother chasing pagination
         // links. A hundred teams should be enough for any org, right?
         let url = format!("/orgs/{}/teams?per_page=100", org_name);
-        let token = github::token(req_user.gh_access_token.clone());
-        let teams = github::github::<Vec<GithubTeam>>(app, &url, &token)?;
+        let token = AccessToken::new(req_user.gh_access_token.clone());
+        let teams = github_api::<Vec<GithubTeam>>(app, &url, &token)?;
 
         let team = teams
             .into_iter()
@@ -164,7 +166,7 @@ impl Team {
         }
 
         let url = format!("/orgs/{}", org_name);
-        let org = github::github::<Org>(app, &url, &token)?;
+        let org = github_api::<Org>(app, &url, &token)?;
 
         NewTeam::new(&login.to_lowercase(), team.id, team.name, org.avatar_url)
             .create_or_update(conn)
@@ -200,7 +202,7 @@ impl Team {
             avatar,
             ..
         } = self;
-        let url = github::team_url(&login);
+        let url = team_url(&login);
 
         EncodableTeam {
             id,
@@ -222,8 +224,8 @@ fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> Carg
     }
 
     let url = format!("/teams/{}/memberships/{}", &github_id, &user.gh_login);
-    let token = github::token(user.gh_access_token.clone());
-    let membership = match github::github::<Membership>(app, &url, &token) {
+    let token = AccessToken::new(user.gh_access_token.clone());
+    let membership = match github_api::<Membership>(app, &url, &token) {
         // Officially how `false` is returned
         Err(ref e) if e.is::<NotFound>() => return Ok(false),
         x => x?,

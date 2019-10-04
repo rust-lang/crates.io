@@ -8,43 +8,43 @@ import { task } from 'ember-concurrency';
 import PaginationMixin from '../mixins/pagination';
 
 export default Controller.extend(PaginationMixin, {
-    search: service(),
-    queryParams: ['q', 'page', 'per_page', 'sort'],
-    q: alias('search.q'),
-    page: '1',
-    per_page: 10,
+  search: service(),
+  queryParams: ['q', 'page', 'per_page', 'sort'],
+  q: alias('search.q'),
+  page: '1',
+  per_page: 10,
 
-    model: readOnly('dataTask.lastSuccessful.value'),
+  model: readOnly('dataTask.lastSuccessful.value'),
 
-    hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
-        return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
-    }),
+  hasData: computed('dataTask.{lastSuccessful,isRunning}', function() {
+    return this.get('dataTask.lastSuccessful') || !this.get('dataTask.isRunning');
+  }),
 
-    firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function() {
-        return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
-    }),
+  firstResultPending: computed('dataTask.{lastSuccessful,isRunning}', function() {
+    return !this.get('dataTask.lastSuccessful') && this.get('dataTask.isRunning');
+  }),
 
-    totalItems: readOnly('model.meta.total'),
+  totalItems: readOnly('model.meta.total'),
 
-    currentSortBy: computed('sort', function() {
-        if (this.sort === 'downloads') {
-            return 'All-Time Downloads';
-        } else if (this.sort === 'recent-downloads') {
-            return 'Recent Downloads';
-        } else if (this.get('sort') === 'recent-updates') {
-            return 'Recent Updates';
-        } else {
-            return 'Relevance';
-        }
-    }),
+  currentSortBy: computed('sort', function() {
+    if (this.sort === 'downloads') {
+      return 'All-Time Downloads';
+    } else if (this.sort === 'recent-downloads') {
+      return 'Recent Downloads';
+    } else if (this.get('sort') === 'recent-updates') {
+      return 'Recent Updates';
+    } else {
+      return 'Relevance';
+    }
+  }),
 
-    hasItems: bool('totalItems'),
+  hasItems: bool('totalItems'),
 
-    dataTask: task(function*(params) {
-        if (params.q !== null) {
-            params.q = params.q.trim();
-        }
+  dataTask: task(function*(params) {
+    if (params.q !== null) {
+      params.q = params.q.trim();
+    }
 
-        return yield this.store.query('crate', params);
-    }).drop(),
+    return yield this.store.query('crate', params);
+  }).drop(),
 });

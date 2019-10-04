@@ -1,6 +1,6 @@
 //! This module implements functionality for interacting with GitHub.
 
-use oauth2::*;
+use oauth2::{prelude::*, AccessToken};
 use reqwest::{self, header};
 
 use serde::de::DeserializeOwned;
@@ -13,21 +13,17 @@ use crate::util::{errors::NotFound, human, internal, CargoError, CargoResult};
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
 /// `parse_github_response` to handle the "common" processing of responses.
-pub fn github<T>(app: &App, url: &str, auth: &Token) -> CargoResult<T>
+pub fn github_api<T>(app: &App, url: &str, auth: &AccessToken) -> CargoResult<T>
 where
     T: DeserializeOwned,
 {
     let url = format!("{}://api.github.com{}", app.config.api_protocol, url);
     info!("GITHUB HTTP: {}", url);
 
-    let client = app.http_client()?;
-    client
+    app.http_client()
         .get(&url)
         .header(header::ACCEPT, "application/vnd.github.v3+json")
-        .header(
-            header::AUTHORIZATION,
-            format!("token {}", auth.access_token),
-        )
+        .header(header::AUTHORIZATION, format!("token {}", auth.secret()))
         .send()?
         .error_for_status()
         .map_err(|e| handle_error_response(&e))?
@@ -53,16 +49,6 @@ fn handle_error_response(error: &reqwest::Error) -> Box<dyn CargoError> {
             "didn't get a 200 result from github: {}",
             error
         )),
-    }
-}
-
-/// Gets a token with the given string as the access token, but all
-/// other info null'd out. Generally, just to be fed to the `github` fn.
-pub fn token(token: String) -> Token {
-    Token {
-        access_token: token,
-        scopes: Vec::new(),
-        token_type: String::new(),
     }
 }
 

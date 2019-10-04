@@ -3,7 +3,6 @@ use cargo_registry::models::NewUser;
 use std::{
     borrow::Cow,
     collections::HashSet,
-    env,
     fs::{self, File},
     io::{self, prelude::*},
     net,
@@ -80,7 +79,7 @@ enum Record {
 
 pub fn proxy() -> (String, Bomb) {
     let me = thread::current().name().unwrap().to_string();
-    let record = env::var("RECORD").is_ok();
+    let record = dotenv::var("RECORD").is_ok();
 
     let a = t!(net::TcpListener::bind("127.0.0.1:0"));
     let ret = format!("http://{}", t!(a.local_addr()));
@@ -106,7 +105,11 @@ pub fn proxy() -> (String, Bomb) {
         let handle = core.handle();
         let addr = t!(a.local_addr());
         let listener = t!(TcpListener::from_listener(a, &addr, &handle));
-        let client = hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap());
+        let client = if let Record::Capture(_, _) = record {
+            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new(4).unwrap()))
+        } else {
+            None
+        };
 
         let record = Arc::new(Mutex::new(record));
         let srv = hyper::Server::builder(listener.incoming().map(|(l, _)| l))
@@ -143,7 +146,7 @@ pub fn proxy() -> (String, Bomb) {
 struct Proxy {
     sink: Sink,
     record: Arc<Mutex<Record>>,
-    client: Client,
+    client: Option<Client>,
 }
 
 impl hyper::service::Service for Proxy {
@@ -156,7 +159,7 @@ impl hyper::service::Service for Proxy {
     fn call(&mut self, req: hyper::Request<Self::ReqBody>) -> Self::Future {
         let record2 = self.record.clone();
         match *self.record.lock().unwrap() {
-            Record::Capture(_, _) => Box::new(record_http(req, &self.client).map(
+            Record::Capture(_, _) => Box::new(record_http(req, self.client.as_ref().unwrap()).map(
                 move |(response, exchange)| {
                     if let Record::Capture(ref mut d, _) = *record2.lock().unwrap() {
                         d.push(exchange);
@@ -359,7 +362,7 @@ impl GhUser {
             })
             .basic_auth(self.login, Some(password));
 
-        let mut response = t!(req.send().and_then(|r| r.error_for_status()));
+        let mut response = t!(req.send().and_then(reqwest::Response::error_for_status));
 
         #[derive(Deserialize)]
         struct Response {

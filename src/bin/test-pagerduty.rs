@@ -5,10 +5,7 @@
 //!
 //! Event type can be trigger, acknowledge, or resolve
 
-#![deny(warnings)]
-
-#[macro_use]
-extern crate serde_derive;
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
 mod on_call;
 

@@ -37,11 +37,7 @@ impl Handler for EmberIndexRewrite {
         let is_api_path = req.path().starts_with("/api");
         let handler = self.handler.as_ref().unwrap();
         if wants_html && !is_api_path {
-            handler.call(&mut RequestProxy {
-                other: req,
-                path: Some("/index.html"),
-                method: None,
-            })
+            handler.call(&mut RequestProxy::rewrite_path(req, "/index.html"))
         } else {
             handler.call(req)
         }

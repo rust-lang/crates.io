@@ -9,6 +9,8 @@ struct BadgeRef {
     travis_ci_attributes: HashMap<String, String>,
     gitlab: Badge,
     gitlab_attributes: HashMap<String, String>,
+    azure_devops: Badge,
+    azure_devops_attributes: HashMap<String, String>,
     isitmaintained_issue_resolution: Badge,
     isitmaintained_issue_resolution_attributes: HashMap<String, String>,
     isitmaintained_open_issues: Badge,
@@ -19,6 +21,8 @@ struct BadgeRef {
     coveralls_attributes: HashMap<String, String>,
     circle_ci: Badge,
     circle_ci_attributes: HashMap<String, String>,
+    cirrus_ci: Badge,
+    cirrus_ci_attributes: HashMap<String, String>,
     maintenance: Badge,
     maintenance_attributes: HashMap<String, String>,
 }
@@ -80,6 +84,16 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_gitlab.insert(String::from("branch"), String::from("beta"));
     badge_attributes_gitlab.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let azure_devops = Badge::AzureDevops {
+        project: String::from("rust-lang"),
+        pipeline: String::from("rust"),
+        build: Some(String::from("2")),
+    };
+    let mut badge_attributes_azure_devops = HashMap::new();
+    badge_attributes_azure_devops.insert(String::from("project"), String::from("rust-lang"));
+    badge_attributes_azure_devops.insert(String::from("pipeline"), String::from("rust"));
+    badge_attributes_azure_devops.insert(String::from("build"), String::from("2"));
+
     let isitmaintained_issue_resolution = Badge::IsItMaintainedIssueResolution {
         repository: String::from("rust-lang/rust"),
     };
@@ -122,6 +136,14 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_circle_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_circle_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let cirrus_ci = Badge::CirrusCi {
+        repository: String::from("rust-lang/rust"),
+        branch: Some(String::from("beta")),
+    };
+    let mut badge_attributes_cirrus_ci = HashMap::new();
+    badge_attributes_cirrus_ci.insert(String::from("branch"), String::from("beta"));
+    badge_attributes_cirrus_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
+
     let maintenance = Badge::Maintenance {
         status: MaintenanceStatus::LookingForMaintainer,
     };
@@ -138,6 +160,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         travis_ci_attributes: badge_attributes_travis_ci,
         gitlab,
         gitlab_attributes: badge_attributes_gitlab,
+        azure_devops,
+        azure_devops_attributes: badge_attributes_azure_devops,
         isitmaintained_issue_resolution,
         isitmaintained_issue_resolution_attributes:
             badge_attributes_isitmaintained_issue_resolution,
@@ -149,6 +173,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         coveralls_attributes: badge_attributes_coveralls,
         circle_ci,
         circle_ci_attributes: badge_attributes_circle_ci,
+        cirrus_ci,
+        cirrus_ci_attributes: badge_attributes_cirrus_ci,
         maintenance,
         maintenance_attributes,
     };
@@ -196,6 +222,20 @@ fn update_add_gitlab() {
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.gitlab]);
+}
+
+#[test]
+fn update_add_azure_devops() {
+    // Add a azure devops badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("azure-devops"),
+        test_badges.azure_devops_attributes,
+    );
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.azure_devops]);
 }
 
 #[test]
@@ -263,6 +303,17 @@ fn update_add_circle_ci() {
 }
 
 #[test]
+fn update_add_cirrus_ci() {
+    // Add a Cirrus CI badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(String::from("cirrus-ci"), test_badges.cirrus_ci_attributes);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.cirrus_ci]);
+}
+
+#[test]
 fn update_add_maintenance() {
     // Add a maintenance badge
     let (krate, test_badges) = set_up();
@@ -317,10 +368,7 @@ fn update_attributes() {
     };
     let mut badge_attributes_travis_ci2 = HashMap::new();
     badge_attributes_travis_ci2.insert(String::from("repository"), String::from("rust-lang/rust"));
-    badges.insert(
-        String::from("travis-ci"),
-        badge_attributes_travis_ci2.clone(),
-    );
+    badges.insert(String::from("travis-ci"), badge_attributes_travis_ci2);
     krate.update(&badges);
     let current_badges = krate.badges();
     assert_eq!(current_badges.len(), 1);
@@ -398,6 +446,26 @@ fn gitlab_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "gitlab");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn azure_devops_required_keys() {
+    // Add a azure devops badge missing a required field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // project is a required key
+    test_badges.azure_devops_attributes.remove("project");
+    badges.insert(
+        String::from("azure-devops"),
+        test_badges.azure_devops_attributes,
+    );
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "azure-devops");
     assert_eq!(krate.badges(), vec![]);
 }
 
@@ -499,6 +567,23 @@ fn circle_ci_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "circle-ci");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn cirrus_ci_required_keys() {
+    // Add a Cirrus CI badge missing a required field
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+
+    // Repository is a required key
+    test_badges.cirrus_ci_attributes.remove("repository");
+    badges.insert(String::from("cirrus-ci"), test_badges.cirrus_ci_attributes);
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "cirrus-ci");
     assert_eq!(krate.badges(), vec![]);
 }
 

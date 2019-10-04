@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
 extern crate base64;
 extern crate chrono;
@@ -38,11 +38,12 @@ impl Bucket {
         }
     }
 
-    pub fn put(
+    pub fn put<R: std::io::Read + Send + 'static>(
         &self,
         client: &reqwest::Client,
         path: &str,
-        content: Vec<u8>,
+        content: R,
+        content_length: u64,
         content_type: &str,
     ) -> reqwest::Result<reqwest::Response> {
         let path = if path.starts_with('/') {
@@ -50,7 +51,7 @@ impl Bucket {
         } else {
             path
         };
-        let date = Utc::now().to_rfc2822().to_string();
+        let date = Utc::now().to_rfc2822();
         let auth = self.auth("PUT", &date, path, "", content_type);
         let url = self.url(path);
 
@@ -59,7 +60,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
-            .body(content)
+            .body(reqwest::Body::sized(content, content_length))
             .send()?
             .error_for_status()
     }
@@ -74,7 +75,7 @@ impl Bucket {
         } else {
             path
         };
-        let date = Utc::now().to_rfc2822().to_string();
+        let date = Utc::now().to_rfc2822();
         let auth = self.auth("DELETE", &date, path, "", "");
         let url = self.url(path);
 

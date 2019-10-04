@@ -1,36 +1,43 @@
-#![deny(warnings)]
-#![allow(unknown_lints, proc_macro_derive_resolution_fallback)] // TODO: This can be removed after diesel-1.4
+#![deny(warnings, clippy::all, rust_2018_idioms)]
+// TODO: Remove after we can bump to Rust 1.35 stable in `RustConfig`
+#![allow(
+    renamed_and_removed_lints,
+    clippy::cyclomatic_complexity,
+    clippy::unknown_clippy_lints
+)]
 
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
 use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{
-    middleware::current_user::AuthenticationSource,
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
     util::CargoResult,
-    views::{EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion, GoodCrate},
+    views::{
+        EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
+        EncodableOwner, EncodableVersion, GoodCrate,
+    },
     App, Config, Env, Replica, Uploader,
 };
 use std::{
     borrow::Cow,
-    env,
     sync::{
-        atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT},
+        atomic::{AtomicUsize, Ordering},
         Arc,
     },
 };
 
-use conduit::Request;
 use conduit_test::MockRequest;
 use diesel::prelude::*;
+use reqwest::{Client, Proxy};
+use url::Url;
 
 macro_rules! t {
     ($e:expr) => {
@@ -41,34 +48,16 @@ macro_rules! t {
     };
 }
 
-macro_rules! ok_resp {
-    ($e:expr) => {{
-        let resp = t!($e);
-        if !crate::ok_resp(&resp) {
-            panic!("bad response: {:?}", resp.status);
-        }
-        resp
-    }};
-}
-
-macro_rules! bad_resp {
-    ($e:expr) => {{
-        let mut resp = t!($e);
-        match crate::bad_resp(&mut resp) {
-            None => panic!("ok response: {:?}", resp.status),
-            Some(b) => b,
-        }
-    }};
-}
-
 mod badge;
 mod builders;
 mod categories;
 mod category;
+mod dump_db;
 mod git;
 mod keyword;
 mod krate;
 mod owners;
+mod read_only_mode;
 mod record;
 mod schema_details;
 mod server;
@@ -86,6 +75,8 @@ pub struct CrateList {
 #[derive(Deserialize)]
 struct CrateMeta {
     total: i32,
+    next_page: Option<String>,
+    prev_page: Option<String>,
 }
 #[derive(Deserialize)]
 pub struct CrateResponse {
@@ -103,44 +94,52 @@ pub struct OwnerTeamsResponse {
     teams: Vec<EncodableOwner>,
 }
 #[derive(Deserialize)]
+pub struct OwnersResponse {
+    users: Vec<EncodableOwner>,
+}
+#[derive(Deserialize)]
+pub struct CategoryResponse {
+    category: EncodableCategoryWithSubcategories,
+}
+#[derive(Deserialize)]
+pub struct CategoryListResponse {
+    categories: Vec<EncodableCategory>,
+    meta: CategoryMeta,
+}
+#[derive(Deserialize)]
+pub struct CategoryMeta {
+    total: i32,
+}
+#[derive(Deserialize)]
 pub struct OkBool {
     ok: bool,
 }
 
-fn app() -> (
-    record::Bomb,
-    Arc<App>,
-    conduit_middleware::MiddlewareBuilder,
-) {
-    dotenv::dotenv().ok();
+fn app() -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    build_app(simple_config(), None)
+}
 
-    let (proxy, bomb) = record::proxy();
+fn simple_config() -> Config {
     let uploader = Uploader::S3 {
         bucket: s3::Bucket::new(
             String::from("alexcrichton-test"),
             None,
-            std::env::var("S3_ACCESS_KEY").unwrap_or_default(),
-            std::env::var("S3_SECRET_KEY").unwrap_or_default(),
+            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
             // When testing we route all API traffic over HTTP so we can
             // sniff/record it, but everywhere else we use https
             "http",
         ),
-        proxy: Some(proxy),
         cdn: None,
     };
 
-    let (app, handler) = simple_app(uploader);
-    (bomb, app, handler)
-}
-
-fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
-    git::init();
-    let config = Config {
+    Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
-        gh_client_id: env::var("GH_CLIENT_ID").unwrap_or_default(),
-        gh_client_secret: env::var("GH_CLIENT_SECRET").unwrap_or_default(),
+        index_location: Url::from_file_path(&git::bare()).unwrap(),
+        gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
+        gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
         env: Env::Test,
         max_upload_size: 3000,
@@ -149,8 +148,25 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
         // When testing we route all API traffic over HTTP so we can
         // sniff/record it, but everywhere else we use https
         api_protocol: String::from("http"),
+        publish_rate_limit: Default::default(),
+        blocked_traffic: Default::default(),
+    }
+}
+
+fn build_app(
+    config: Config,
+    proxy: Option<String>,
+) -> (Arc<App>, conduit_middleware::MiddlewareBuilder) {
+    let client = if let Some(proxy) = proxy {
+        let mut builder = Client::builder();
+        builder = builder
+            .proxy(Proxy::all(&proxy).expect("Unable to configure proxy with the provided URL"));
+        Some(builder.build().expect("TLS backend cannot be initialized"))
+    } else {
+        None
     };
-    let app = App::new(&config);
+
+    let app = App::new(&config, client);
     t!(t!(app.diesel_database.get()).begin_test_transaction());
     let app = Arc::new(app);
     let handler = cargo_registry::build_handler(Arc::clone(&app));
@@ -159,7 +175,7 @@ fn simple_app(uploader: Uploader) -> (Arc<App>, conduit_middleware::MiddlewareBu
 
 // Return the environment variable only if it has been defined
 fn env(var: &str) -> String {
-    match env::var(var) {
+    match dotenv::var(var) {
         Ok(ref s) if s == "" => panic!("environment variable `{}` must not be empty", var),
         Ok(s) => s,
         _ => panic!(
@@ -200,7 +216,7 @@ where
     }
 }
 
-static NEXT_GH_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
@@ -240,12 +256,6 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
     Ok(())
 }
 
-fn sign_in_as(req: &mut dyn Request, user: &User) {
-    req.mut_extensions().insert(user.clone());
-    req.mut_extensions()
-        .insert(AuthenticationSource::SessionCookie);
-}
-
 fn new_dependency(conn: &PgConnection, version: &Version, krate: &Crate) -> Dependency {
     use cargo_registry::schema::dependencies::dsl::*;
     use diesel::insert_into;
@@ -271,6 +281,15 @@ fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> N
     }
 }
 
-fn logout(req: &mut dyn Request) {
-    req.mut_extensions().pop::<User>();
+#[test]
+fn multiple_live_references_to_the_same_connection_can_be_checked_out() {
+    use std::ptr;
+
+    let (app, _) = app();
+    let conn1 = app.diesel_database.get().unwrap();
+    let conn2 = app.diesel_database.get().unwrap();
+    let conn1_ref: &PgConnection = &conn1;
+    let conn2_ref: &PgConnection = &conn2;
+
+    assert!(ptr::eq(conn1_ref, conn2_ref));
 }

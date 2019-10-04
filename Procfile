@@ -1,2 +1,3 @@
-web: bin/diesel migration run && bin/start-nginx ./target/release/server
-worker: ./target/release/update-downloads daemon 300
+release: bin/diesel migration run
+web: bin/start-nginx ./target/release/server
+background_worker: ./target/release/background-worker

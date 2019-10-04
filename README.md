@@ -1,6 +1,7 @@
 # crates.io
 
-[![Build Status](https://travis-ci.org/rust-lang/crates.io.svg?branch=master)](https://travis-ci.org/rust-lang/crates.io)
+[![Build Status](https://travis-ci.com/rust-lang/crates.io.svg?branch=master)](https://travis-ci.com/rust-lang/crates.io)
+[![What's Deployed](https://img.shields.io/badge/whatsdeployed-prod-green.svg)](https://whatsdeployed.io/s-9IG)
 
 Source code for the default [Cargo](http://doc.crates.io) registry. Viewable
 online at [crates.io](https://crates.io).
@@ -15,7 +16,7 @@ of the following ways:
 
 - [File a new issue](https://github.com/rust-lang/crates.io/issues/new)
 - Email [help@crates.io](mailto:help@crates.io)
-- Chat on irc.mozilla.org in the [#rust-infra](https://kiwiirc.com/client/irc.mozilla.org:+6667/#rust-infra) channel
+- Chat on ops > #crates-io channel on https://discord.gg/rust-lang
 
 A volunteer will get back to you as soon as possible.
 

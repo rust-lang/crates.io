@@ -1,14 +1,13 @@
 //! Structs using the builder pattern that make it easier to create records in tests.
 
 use cargo_registry::{
-    models::{Crate, CrateDownload, Keyword, NewCrate, NewVersion, Version},
-    schema::{crate_downloads, dependencies, versions},
+    models::{Crate, Keyword, NewCrate, NewVersion, Version},
+    schema::{crates, dependencies, version_downloads, versions},
     util::CargoResult,
     views::krate_publish as u,
 };
 use std::{collections::HashMap, io::Read};
 
-use chrono::Utc;
 use diesel::prelude::*;
 use flate2::{write::GzEncoder, Compression};
 
@@ -68,7 +67,12 @@ impl<'a> VersionBuilder<'a> {
         self
     }
 
-    fn build(self, crate_id: i32, connection: &PgConnection) -> CargoResult<Version> {
+    fn build(
+        self,
+        crate_id: i32,
+        published_by: i32,
+        connection: &PgConnection,
+    ) -> CargoResult<Version> {
         use diesel::{insert_into, update};
 
         let license = match self.license {
@@ -83,8 +87,9 @@ impl<'a> VersionBuilder<'a> {
             license,
             self.license_file,
             self.size,
+            published_by,
         )?
-        .save(connection, &[])?;
+        .save(connection, &[], "someone@example.com")?;
 
         if self.yanked {
             vers = update(&vers)
@@ -119,10 +124,16 @@ impl<'a> VersionBuilder<'a> {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the version record fails.
-    pub fn expect_build(self, crate_id: i32, connection: &PgConnection) -> Version {
-        self.build(crate_id, connection).unwrap_or_else(|e| {
-            panic!("Unable to create version: {:?}", e);
-        })
+    pub fn expect_build(
+        self,
+        crate_id: i32,
+        published_by: i32,
+        connection: &PgConnection,
+    ) -> Version {
+        self.build(crate_id, published_by, connection)
+            .unwrap_or_else(|e| {
+                panic!("Unable to create version: {:?}", e);
+            })
     }
 }
 
@@ -223,50 +234,39 @@ impl<'a> CrateBuilder<'a> {
 
         let mut krate = self
             .krate
-            .create_or_update(connection, None, self.owner_id)?;
+            .create_or_update(connection, self.owner_id, None)?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
 
-        let old_downloads = self.downloads.unwrap_or(0) - self.recent_downloads.unwrap_or(0);
-        let now = Utc::now();
-        let old_date = now.naive_utc().date() - chrono::Duration::days(91);
-
         if let Some(downloads) = self.downloads {
-            let crate_download = CrateDownload {
-                crate_id: krate.id,
-                downloads: old_downloads,
-                date: old_date,
-            };
-
-            insert_into(crate_downloads::table)
-                .values(&crate_download)
-                .execute(connection)?;
-            krate.downloads = downloads;
-            update(&krate).set(&krate).execute(connection)?;
-        }
-
-        if self.recent_downloads.is_some() {
-            let crate_download = CrateDownload {
-                crate_id: krate.id,
-                downloads: self.recent_downloads.unwrap(),
-                date: now.naive_utc().date(),
-            };
-
-            insert_into(crate_downloads::table)
-                .values(&crate_download)
-                .execute(connection)?;
-
-            no_arg_sql_function!(refresh_recent_crate_downloads, ());
-            select(refresh_recent_crate_downloads).execute(connection)?;
+            krate = update(&krate)
+                .set(crates::downloads.eq(downloads))
+                .returning(cargo_registry::models::krate::ALL_COLUMNS)
+                .get_result(connection)?;
         }
 
         if self.versions.is_empty() {
             self.versions.push(VersionBuilder::new("0.99.0"));
         }
 
+        let mut last_version_id = 0;
         for version_builder in self.versions {
-            version_builder.build(krate.id, connection)?;
+            last_version_id = version_builder
+                .build(krate.id, self.owner_id, connection)?
+                .id;
+        }
+
+        if let Some(downloads) = self.recent_downloads {
+            insert_into(version_downloads::table)
+                .values((
+                    version_downloads::version_id.eq(last_version_id),
+                    version_downloads::downloads.eq(downloads),
+                ))
+                .execute(connection)?;
+
+            no_arg_sql_function!(refresh_recent_crate_downloads, ());
+            select(refresh_recent_crate_downloads).execute(connection)?;
         }
 
         if !self.keywords.is_empty() {
@@ -477,15 +477,15 @@ impl PublishBuilder {
             documentation: self.doc_url,
             readme: self.readme,
             readme_file: None,
-            keywords: Some(u::EncodableKeywordList(
+            keywords: u::EncodableKeywordList(
                 self.keywords.into_iter().map(u::EncodableKeyword).collect(),
-            )),
-            categories: Some(u::EncodableCategoryList(
+            ),
+            categories: u::EncodableCategoryList(
                 self.categories
                     .into_iter()
                     .map(u::EncodableCategory)
                     .collect(),
-            )),
+            ),
             license: self.license,
             license_file: self.license_file,
             repository: None,
@@ -522,6 +522,7 @@ impl PublishBuilder {
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
     name: String,
+    registry: Option<String>,
     explicit_name_in_toml: Option<u::EncodableCrateName>,
     version_req: u::EncodableCrateVersionReq,
 }
@@ -531,6 +532,7 @@ impl DependencyBuilder {
     pub fn new(name: &str) -> Self {
         DependencyBuilder {
             name: name.to_string(),
+            registry: None,
             explicit_name_in_toml: None,
             version_req: u::EncodableCrateVersionReq(semver::VersionReq::parse(">= 0").unwrap()),
         }
@@ -539,6 +541,12 @@ impl DependencyBuilder {
     /// Rename this dependency.
     pub fn rename(mut self, new_name: &str) -> Self {
         self.explicit_name_in_toml = Some(u::EncodableCrateName(new_name.to_string()));
+        self
+    }
+
+    /// Set an alternative registry for this dependency.
+    pub fn registry(mut self, registry: &str) -> Self {
+        self.registry = Some(registry.to_string());
         self
     }
 
@@ -567,6 +575,7 @@ impl DependencyBuilder {
             target: None,
             kind: None,
             explicit_name_in_toml: self.explicit_name_in_toml,
+            registry: self.registry,
         }
     }
 }

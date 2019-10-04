@@ -5,12 +5,12 @@ use diesel::prelude::*;
 
 use crate::util::{human, CargoResult};
 
-use crate::models::{Crate, Dependency};
+use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::views::{EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug, Queryable)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
 #[belongs_to(Crate)]
 pub struct Version {
     pub id: i32,
@@ -23,6 +23,7 @@ pub struct Version {
     pub yanked: bool,
     pub license: Option<String>,
     pub crate_size: Option<i32>,
+    pub published_by: Option<i32>,
 }
 
 #[derive(Insertable, Debug)]
@@ -33,10 +34,11 @@ pub struct NewVersion {
     features: serde_json::Value,
     license: Option<String>,
     crate_size: Option<i32>,
+    published_by: i32,
 }
 
 impl Version {
-    pub fn encodable(self, crate_name: &str) -> EncodableVersion {
+    pub fn encodable(self, crate_name: &str, published_by: Option<User>) -> EncodableVersion {
         let Version {
             id,
             num,
@@ -68,6 +70,7 @@ impl Version {
                 authors: format!("/api/v1/crates/{}/{}/authors", crate_name, num),
             },
             crate_size,
+            published_by: published_by.map(User::encodable_public),
         }
     }
 
@@ -96,16 +99,25 @@ impl Version {
             })
     }
 
-    pub fn record_readme_rendering(&self, conn: &PgConnection) -> QueryResult<usize> {
+    pub fn record_readme_rendering(version_id_: i32, conn: &PgConnection) -> QueryResult<usize> {
         use crate::schema::readme_renderings::dsl::*;
         use diesel::dsl::now;
 
         diesel::insert_into(readme_renderings)
-            .values(version_id.eq(self.id))
+            .values(version_id.eq(version_id_))
             .on_conflict(version_id)
             .do_update()
             .set(rendered_at.eq(now))
             .execute(conn)
+    }
+
+    /// Gets the User who ran `cargo publish` for this version, if recorded.
+    /// Not for use when you have a group of versions you need the publishers for.
+    pub fn published_by(&self, conn: &PgConnection) -> Option<User> {
+        match self.published_by {
+            Some(pb) => users::table.find(pb).first(conn).ok(),
+            None => None,
+        }
     }
 }
 
@@ -118,6 +130,7 @@ impl NewVersion {
         license: Option<String>,
         license_file: Option<&str>,
         crate_size: i32,
+        published_by: i32,
     ) -> CargoResult<Self> {
         let features = serde_json::to_value(features)?;
 
@@ -127,6 +140,7 @@ impl NewVersion {
             features,
             license,
             crate_size: Some(crate_size),
+            published_by,
         };
 
         new_version.validate_license(license_file)?;
@@ -134,7 +148,12 @@ impl NewVersion {
         Ok(new_version)
     }
 
-    pub fn save(&self, conn: &PgConnection, authors: &[String]) -> CargoResult<Version> {
+    pub fn save(
+        &self,
+        conn: &PgConnection,
+        authors: &[String],
+        published_by_email: &str,
+    ) -> CargoResult<Version> {
         use crate::schema::version_authors::{name, version_id};
         use crate::schema::versions::dsl::*;
         use diesel::dsl::exists;
@@ -155,6 +174,13 @@ impl NewVersion {
             let version = insert_into(versions)
                 .values(self)
                 .get_result::<Version>(conn)?;
+
+            insert_into(versions_published_by::table)
+                .values((
+                    versions_published_by::version_id.eq(version.id),
+                    versions_published_by::email.eq(published_by_email),
+                ))
+                .execute(conn)?;
 
             let new_authors = authors
                 .iter()
