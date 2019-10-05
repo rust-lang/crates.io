@@ -29,7 +29,7 @@ use std::{
 
 use conduit_test::MockRequest;
 use diesel::prelude::*;
-use reqwest::{Client, Proxy};
+use reqwest::{blocking::Client, Proxy};
 
 macro_rules! t {
     ($e:expr) => {

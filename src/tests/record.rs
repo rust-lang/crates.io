@@ -366,7 +366,7 @@ impl GhUser {
             client_id: String,
             client_secret: String,
         }
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let req = client
             .post("https://api.github.com/authorizations")
             .json(&Authorization {
@@ -377,7 +377,9 @@ impl GhUser {
             })
             .basic_auth(self.login, Some(password));
 
-        let mut response = t!(req.send().and_then(reqwest::Response::error_for_status));
+        let response = t!(req
+            .send()
+            .and_then(reqwest::blocking::Response::error_for_status));
 
         #[derive(Deserialize)]
         struct Response {

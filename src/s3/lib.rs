@@ -6,7 +6,10 @@ use openssl::error::ErrorStack;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
-use reqwest::{header, Body, Client, Response};
+use reqwest::{
+    blocking::{Body, Client, Response},
+    header,
+};
 
 mod error;
 pub use error::Error;

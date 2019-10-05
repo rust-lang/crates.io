@@ -1,6 +1,6 @@
 use cargo_registry::util::Error;
 
-use reqwest::{header, StatusCode as Status};
+use reqwest::{blocking::Client, header, StatusCode as Status};
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]
@@ -29,7 +29,7 @@ impl Event {
         let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
         let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 
-        let mut response = reqwest::Client::new()
+        let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
             .header(header::ACCEPT, "application/vnd.pagerduty+json;version=2")
             .header(header::AUTHORIZATION, format!("Token token={}", api_token))

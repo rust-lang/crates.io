@@ -11,7 +11,7 @@ use std::{
 use civet::Server as CivetServer;
 use conduit_hyper::Service;
 use futures::prelude::*;
-use reqwest::Client;
+use reqwest::blocking::Client;
 
 enum Server {
     Civet(CivetServer),
