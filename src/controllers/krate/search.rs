@@ -1,5 +1,6 @@
 //! Endpoint for searching and discovery functionality
 
+use diesel::dsl::*;
 use diesel_full_text_search::*;
 
 use crate::controllers::helpers::Paginate;
@@ -32,32 +33,37 @@ use crate::models::krate::{canon_crate_name, ALL_COLUMNS};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
-    use diesel::sql_types::Bool;
+    use diesel::sql_types::{Bool, Text};
 
     let conn = req.db_conn()?;
-    let (offset, limit) = req.pagination(10, 100)?;
     let params = req.query();
-    let sort = params
-        .get("sort")
-        .map(|s| &**s)
-        .unwrap_or("recent-downloads");
+    let sort = params.get("sort").map(|s| &**s);
+    let include_yanked = params
+        .get("include_yanked")
+        .map(|s| s == "yes")
+        .unwrap_or(true);
 
+    let selection = (
+        ALL_COLUMNS,
+        false.into_sql::<Bool>(),
+        recent_crate_downloads::downloads.nullable(),
+    );
     let mut query = crates::table
         .left_join(recent_crate_downloads::table)
-        .select((
-            ALL_COLUMNS,
-            false.into_sql::<Bool>(),
-            recent_crate_downloads::downloads.nullable(),
-        ))
+        .select(selection)
         .into_boxed();
 
     if let Some(q_string) = params.get("q") {
         if !q_string.is_empty() {
             let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
-            let q = plainto_tsquery(q_string);
+
+            let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                .bind::<Text, _>(q_string)
+                .sql(")");
             query = query.filter(
-                q.matches(crates::textsearchable_index_col)
-                    .or(Crate::with_name(q_string)),
+                q.clone()
+                    .matches(crates::textsearchable_index_col)
+                    .or(Crate::loosly_matches_name(&q_string)),
             );
 
             query = query.select((
@@ -139,28 +145,38 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         );
     }
 
-    if sort == "downloads" {
+    if !include_yanked {
+        query = query.filter(exists(
+            versions::table
+                .filter(versions::crate_id.eq(crates::id))
+                .filter(versions::yanked.eq(false)),
+        ));
+    }
+
+    if sort == Some("downloads") {
         query = query.then_order_by(crates::downloads.desc())
-    } else if sort == "recent-downloads" {
+    } else if sort == Some("recent-downloads") {
         query = query.then_order_by(recent_crate_downloads::downloads.desc().nulls_last())
-    } else if sort == "recent-updates" {
+    } else if sort == Some("recent-updates") {
         query = query.order(crates::updated_at.desc());
     } else {
         query = query.then_order_by(crates::name.asc())
     }
 
-    // The database query returns a tuple within a tuple, with the root
-    // tuple containing 3 items.
     let data = query
-        .paginate(limit, offset)
-        .load::<((Crate, bool, Option<i64>), i64)>(&*conn)?;
-    let total = data.first().map(|&(_, t)| t).unwrap_or(0);
-    let perfect_matches = data.iter().map(|&((_, b, _), _)| b).collect::<Vec<_>>();
+        .paginate(&req.query())?
+        .load::<(Crate, bool, Option<i64>)>(&*conn)?;
+    let total = data.total();
+
+    let next_page = data.next_page_params().map(|p| req.query_with_params(p));
+    let prev_page = data.prev_page_params().map(|p| req.query_with_params(p));
+
+    let perfect_matches = data.iter().map(|&(_, b, _)| b).collect::<Vec<_>>();
     let recent_downloads = data
         .iter()
-        .map(|&((_, _, s), _)| s.unwrap_or(0))
+        .map(|&(_, _, s)| s.unwrap_or(0))
         .collect::<Vec<_>>();
-    let crates = data.into_iter().map(|((c, _, _), _)| c).collect::<Vec<_>>();
+    let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
     let versions = crates
         .versions()
@@ -171,7 +187,7 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))
-        .load::<CrateBadge>(&conn)?
+        .load::<CrateBadge>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
         .map(|badges| badges.into_iter().map(|cb| cb.badge).collect());
@@ -200,11 +216,17 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     }
     #[derive(Serialize)]
     struct Meta {
-        total: i64,
+        total: Option<i64>,
+        next_page: Option<String>,
+        prev_page: Option<String>,
     }
 
     Ok(req.json(&R {
         crates,
-        meta: Meta { total },
+        meta: Meta {
+            total,
+            next_page,
+            prev_page,
+        },
     }))
 }

@@ -4,39 +4,39 @@ import { computed } from '@ember/object';
 import RlDropdownContainer from './rl-dropdown-container';
 
 export default Component.extend({
-    classNames: ['rl-dropdown-toggle'],
+  classNames: ['rl-dropdown-toggle'],
 
-    tagName: 'button',
+  tagName: 'button',
 
-    attributeBindings: ['type', 'role', 'disabled'],
+  attributeBindings: ['type', 'role', 'disabled'],
 
-    type: computed('tagName', function() {
-        return this.tagName === 'button' ? 'button' : null;
-    }),
+  type: computed('tagName', function() {
+    return this.tagName === 'button' ? 'button' : null;
+  }),
 
-    role: computed('tagName', function() {
-        return this.tagName === 'a' ? 'button' : null;
-    }),
+  role: computed('tagName', function() {
+    return this.tagName === 'a' ? 'button' : null;
+  }),
 
-    dropdownContainer: computed(function() {
-        return this.nearestOfType(RlDropdownContainer);
-    }),
+  dropdownContainer: computed(function() {
+    return this.nearestOfType(RlDropdownContainer);
+  }),
 
-    action: 'toggleDropdown',
+  action: 'toggleDropdown',
 
-    propagateClicks: true,
+  propagateClicks: true,
 
-    disabled: false,
+  disabled: false,
 
-    click(event) {
-        if (!this.disabled) {
-            let propagateClicks = this.propagateClicks;
+  click(event) {
+    if (!this.disabled) {
+      let propagateClicks = this.propagateClicks;
 
-            this.dropdownContainer.send(this.action);
+      this.dropdownContainer.send(this.action);
 
-            if (propagateClicks === false || propagateClicks === 'false') {
-                event.stopPropagation();
-            }
-        }
-    },
+      if (propagateClicks === false || propagateClicks === 'false') {
+        event.stopPropagation();
+      }
+    }
+  },
 });

@@ -12,10 +12,10 @@ use crate::schema::users;
 #[derive(Debug, Clone, Copy)]
 pub struct CurrentUser;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AuthenticationSource {
     SessionCookie,
-    ApiToken,
+    ApiToken { auth_header: String },
 }
 
 impl Middleware for CurrentUser {
@@ -32,6 +32,7 @@ impl Middleware for CurrentUser {
         if let Some(id) = id {
             // If it did, look for a user in the database with the given `user_id`
             let maybe_user = users::table.find(id).first::<User>(&*conn);
+            drop(conn);
             if let Ok(user) = maybe_user {
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
@@ -41,15 +42,23 @@ impl Middleware for CurrentUser {
         } else {
             // Otherwise, look for an `Authorization` header on the request
             // and try to find a user in the database with a matching API token
-            let user = if let Some(headers) = req.headers().find("Authorization") {
-                User::find_by_api_token(&conn, headers[0]).ok()
+            let user_auth = if let Some(headers) = req.headers().find("Authorization") {
+                let auth_header = headers[0].to_string();
+
+                User::find_by_api_token(&conn, &auth_header)
+                    .map(|user| (AuthenticationSource::ApiToken { auth_header }, user))
+                    .optional()
+                    .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?
             } else {
                 None
             };
-            if let Some(user) = user {
-                // Attach the `User` model from the database to the request
+
+            drop(conn);
+
+            if let Some((api_token, user)) = user_auth {
+                // Attach the `User` model from the database and the API token to the request
                 req.mut_extensions().insert(user);
-                req.mut_extensions().insert(AuthenticationSource::ApiToken);
+                req.mut_extensions().insert(api_token);
             }
         }
 

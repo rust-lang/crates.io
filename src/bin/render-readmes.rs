@@ -3,10 +3,10 @@
 //
 // Warning: this can take a lot of time.
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 
 use cargo_registry::{
     db,
@@ -21,7 +21,7 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
-use itertools::Itertools;
+use reqwest::Client;
 use tar::{self, Archive};
 
 const DEFAULT_PAGE_SIZE: usize = 25;
@@ -95,23 +95,18 @@ fn main() {
         total_pages + 1
     };
 
-    for (page_num, version_ids_chunk) in version_ids
-        .into_iter()
-        .chunks(page_size)
-        .into_iter()
-        .enumerate()
-    {
+    let client = Client::new();
+
+    for (page_num, version_ids_chunk) in version_ids.chunks(page_size).enumerate() {
         println!(
             "= Page {} of {} ==================================",
             page_num + 1,
             total_pages
         );
 
-        let ids: Vec<_> = version_ids_chunk.collect();
-
         let versions = versions::table
             .inner_join(crates::table)
-            .filter(versions::id.eq(any(ids)))
+            .filter(versions::id.eq(any(version_ids_chunk)))
             .select((versions::all_columns, crates::name))
             .load::<(Version, String)>(&conn)
             .expect("error loading versions");
@@ -119,28 +114,26 @@ fn main() {
         let mut tasks = Vec::with_capacity(page_size as usize);
         for (version, krate_name) in versions {
             let config = config.clone();
-            version.record_readme_rendering(&conn).unwrap_or_else(|_| {
+            Version::record_readme_rendering(version.id, &conn).unwrap_or_else(|_| {
                 panic!(
                     "[{}-{}] Couldn't record rendering time",
                     krate_name, version.num
                 )
             });
+            let client = client.clone();
             let handle = thread::spawn(move || {
                 println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(&config, &version, &krate_name);
+                let readme = get_readme(&config, &client, &version, &krate_name);
                 if readme.is_none() {
                     return;
                 }
                 let readme = readme.unwrap();
+                let content_length = readme.len() as u64;
+                let content = std::io::Cursor::new(readme);
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 config
                     .uploader
-                    .upload(
-                        &reqwest::Client::new(),
-                        &readme_path,
-                        readme.into_bytes(),
-                        "text/html",
-                    )
+                    .upload(&client, &readme_path, content, content_length, "text/html")
                     .unwrap_or_else(|_| {
                         panic!(
                             "[{}-{}] Couldn't upload file to S3",
@@ -159,12 +152,17 @@ fn main() {
 }
 
 /// Renders the readme of an uploaded crate version.
-fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<String> {
+fn get_readme(
+    config: &Config,
+    client: &Client,
+    version: &Version,
+    krate_name: &str,
+) -> Option<String> {
     let location = config
         .uploader
-        .crate_location(krate_name, &version.num.to_string())?;
+        .crate_location(krate_name, &version.num.to_string());
 
-    let mut response = match reqwest::get(&location) {
+    let mut response = match client.get(&location).send() {
         Ok(r) => r,
         Err(err) => {
             println!(
@@ -219,7 +217,6 @@ fn get_readme(config: &Config, version: &Version, krate_name: &str) -> Option<St
                 .map_or("README.md", |e| &**e),
             manifest.package.repository.as_ref().map(|e| &**e),
         )
-        .unwrap_or_else(|_| panic!("[{}-{}] Couldn't render README", krate_name, version.num))
     };
     return Some(rendered);
 

@@ -1,13 +1,13 @@
 import DS from 'ember-data';
 
 export default DS.RESTSerializer.extend({
-    isNewSerializerAPI: true,
+  isNewSerializerAPI: true,
 
-    extractRelationships(modelClass, resourceHash) {
-        if (resourceHash.versions == null) {
-            delete resourceHash.versions;
-        }
+  extractRelationships(modelClass, resourceHash) {
+    if (resourceHash.versions == null) {
+      delete resourceHash.versions;
+    }
 
-        return this._super(...arguments);
-    },
+    return this._super(...arguments);
+  },
 });

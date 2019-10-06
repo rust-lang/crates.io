@@ -1,18 +1,16 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use hex::ToHex;
-
-use crate::git;
-use crate::render;
-use crate::util::{internal, ChainError, Maximums};
-use crate::util::{read_fill, read_le_u32};
+use std::sync::Arc;
+use swirl::Job;
 
 use crate::controllers::prelude::*;
+use crate::git;
 use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use crate::render;
+use crate::util::{read_fill, read_le_u32};
+use crate::util::{CargoError, ChainError, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -40,58 +38,53 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
     let (new_crate, user) = parse_new_headers(req)?;
 
-    let name = &*new_crate.name;
-    let vers = &*new_crate.vers;
-    let links = new_crate.links.clone();
-    let repo = new_crate.repository.as_ref().map(|s| &**s);
-    let features = new_crate
-        .features
-        .iter()
-        .map(|(k, v)| {
-            (
-                k[..].to_string(),
-                v.iter().map(|v| v[..].to_string()).collect(),
-            )
-        })
-        .collect::<HashMap<String, Vec<String>>>();
-    let keywords = new_crate
-        .keywords
-        .as_ref()
-        .map(|kws| kws.iter().map(|kw| &***kw).collect())
-        .unwrap_or_else(Vec::new);
+    let conn = app.diesel_database.get()?;
 
-    let categories = new_crate.categories.as_ref().map(|s| &s[..]).unwrap_or(&[]);
-    let categories: Vec<_> = categories.iter().map(|k| &***k).collect();
-
-    let conn = req.db_conn()?;
-
-    let mut other_warnings = vec![];
-    if !user.has_verified_email(&conn)? {
-        other_warnings.push(String::from(
-            "You do not currently have a verified email address associated with your crates.io \
-             account. Starting 2019-02-28, a verified email will be required to publish crates. \
+    let verified_email_address = user.verified_email(&conn)?;
+    let verified_email_address = verified_email_address.ok_or_else(|| {
+        human(
+            "A verified email address is required to publish crates to crates.io. \
              Visit https://crates.io/me to set and verify your email address.",
-        ));
-    }
+        )
+    })?;
 
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|| {
+        let name = new_crate.name;
+        let vers = &*new_crate.vers;
+        let links = new_crate.links;
+        let repo = new_crate.repository;
+        let features = new_crate
+            .features
+            .into_iter()
+            .map(|(k, v)| (k.0, v.into_iter().map(|v| v.0).collect()))
+            .collect();
+        let keywords = new_crate
+            .keywords
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>();
+        let categories = new_crate
+            .categories
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>();
+
         // Persist the new crate, if it doesn't already exist
         let persist = NewCrate {
-            name,
+            name: &name,
             description: new_crate.description.as_ref().map(|s| &**s),
             homepage: new_crate.homepage.as_ref().map(|s| &**s),
             documentation: new_crate.documentation.as_ref().map(|s| &**s),
             readme: new_crate.readme.as_ref().map(|s| &**s),
-            readme_file: new_crate.readme_file.as_ref().map(|s| &**s),
-            repository: repo,
-            license: new_crate.license.as_ref().map(|s| &**s),
+            repository: repo.as_ref().map(String::as_str),
             max_upload_size: None,
         };
 
         let license_file = new_crate.license_file.as_ref().map(|s| &**s);
-        let krate = persist.create_or_update(&conn, license_file, user.id)?;
+        let krate =
+            persist.create_or_update(&conn, user.id, Some(&app.config.publish_rate_limit))?;
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {
@@ -103,7 +96,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             ));
         }
 
-        if &krate.name != name {
+        if krate.name != *name {
             return Err(human(&format_args!(
                 "crate was previously named `{}`",
                 krate.name
@@ -146,8 +139,9 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
             file_length as i32,
+            user.id,
         )?
-        .save(&conn, &new_crate.authors)?;
+        .save(&conn, &new_crate.authors, &verified_email_address)?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
@@ -164,31 +158,30 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
         let max_version = krate.max_version(&conn)?;
 
-        // Render the README for this crate
-        let readme = match new_crate.readme.as_ref() {
-            Some(readme) => Some(render::readme_to_html(
-                &**readme,
-                new_crate.readme_file.as_ref().map_or("README.md", |s| &**s),
+        if let Some(readme) = new_crate.readme {
+            render::render_and_upload_readme(
+                version.id,
+                readme,
+                new_crate
+                    .readme_file
+                    .unwrap_or_else(|| String::from("README.md")),
                 repo,
-            )?),
-            None => None,
-        };
+            )
+            .enqueue(&conn)
+            .map_err(|e| CargoError::from_std_error(e))?;
+        }
 
-        // Upload the crate, return way to delete the crate from the server
-        // If the git commands fail below, we shouldn't keep the crate on the
-        // server.
-        let (cksum, mut crate_bomb, mut readme_bomb) = app
+        let cksum = app
             .config
             .uploader
-            .upload_crate(req, &krate, readme, maximums, vers)?;
-        version.record_readme_rendering(&conn)?;
+            .upload_crate(req, &krate, maximums, vers)?;
 
         let mut hex_cksum = String::new();
         cksum.write_hex(&mut hex_cksum)?;
 
         // Register this crate in our local git repo.
         let git_crate = git::Crate {
-            name: name.to_string(),
+            name: name.0,
             vers: vers.to_string(),
             cksum: hex_cksum,
             features,
@@ -196,21 +189,17 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(&**req.app(), &git_crate).chain_error(|| {
-            internal(&format_args!(
-                "could not add crate `{}` to the git repo",
-                name
-            ))
-        })?;
+        git::add_crate(git_crate)
+            .enqueue(&conn)
+            .map_err(|e| CargoError::from_std_error(e))?;
 
-        // Now that we've come this far, we're committed!
-        crate_bomb.path = None;
-        readme_bomb.path = None;
-
+        // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
+        // that is no longer needed. As such, crates.io currently does not return any `other`
+        // warnings at this time, but if we need to, the field is available.
         let warnings = PublishWarnings {
             invalid_categories: ignored_invalid_categories,
             invalid_badges: ignored_invalid_badges,
-            other: other_warnings,
+            other: vec![],
         };
 
         Ok(req.json(&GoodCrate {
@@ -240,7 +229,7 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
-        s.map_or(true, |s| s.is_empty())
+        s.map_or(true, String::is_empty)
     }
     let mut missing = Vec::new();
 
@@ -250,7 +239,7 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
     if empty(new.license.as_ref()) && empty(new.license_file.as_ref()) {
         missing.push("license");
     }
-    if new.authors.iter().all(|s| s.is_empty()) {
+    if new.authors.iter().all(String::is_empty) {
         missing.push("authors");
     }
     if !missing.is_empty() {

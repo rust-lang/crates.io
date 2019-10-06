@@ -3,7 +3,7 @@
 // Usage:
 //      cargo run --bin transfer-crates from-user to-user
 
-#![deny(warnings)]
+#![deny(warnings, clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
     db,

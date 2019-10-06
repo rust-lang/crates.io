@@ -1,5 +1,5 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
-//! information that we care about like User-Agent and Referer
+//! information that we care about like User-Agent
 
 use super::prelude::*;
 use crate::util::request_header;
@@ -34,14 +34,13 @@ impl Handler for LogRequests {
         print!(
             "at={level} method={method} path=\"{path}\" \
              request_id={request_id} fwd=\"{ip}\" service={time_ms}ms \
-             status={status} user_agent=\"{user_agent}\" referer=\"{referer}\"",
+             status={status} user_agent=\"{user_agent}\"",
             level = level,
             method = req.method(),
             path = FullPath(req),
-            ip = request_header(req, "X-Forwarded-For"),
+            ip = request_header(req, "X-Real-Ip"),
             time_ms = response_time,
             user_agent = request_header(req, "User-Agent"),
-            referer = request_header(req, "Referer"), // sic
             request_id = request_header(req, "X-Request-Id"),
             status = response_code,
         );

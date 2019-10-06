@@ -1,11 +1,14 @@
+use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, uploaders::Uploader, Env, Replica};
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
+use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,
     pub git_repo_checkout: PathBuf,
+    pub index_location: Url,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
@@ -14,6 +17,8 @@ pub struct Config {
     pub max_unpack_size: u64,
     pub mirror: Replica,
     pub api_protocol: String,
+    pub publish_rate_limit: PublishRateLimit,
+    pub blocked_traffic: Vec<(String, Vec<String>)>,
 }
 
 impl Default for Config {
@@ -38,15 +43,17 @@ impl Default for Config {
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
     /// - `DATABASE_URL`: The URL of the postgres database to use.
+    /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
+    ///.  traffic. See the `block_traffic` module for more documentation.
     fn default() -> Config {
         let checkout = PathBuf::from(env("GIT_REPO_CHECKOUT"));
         let api_protocol = String::from("https");
-        let mirror = if env::var("MIRROR").is_ok() {
+        let mirror = if dotenv::var("MIRROR").is_ok() {
             Replica::ReadOnlyMirror
         } else {
             Replica::Primary
         };
-        let heroku = env::var("HEROKU").is_ok();
+        let heroku = dotenv::var("HEROKU").is_ok();
         let cargo_env = if heroku {
             Env::Production
         } else {
@@ -60,13 +67,12 @@ impl Default for Config {
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
+                        dotenv::var("S3_REGION").ok(),
                         env("S3_ACCESS_KEY"),
                         env("S3_SECRET_KEY"),
                         &api_protocol,
                     ),
-                    cdn: env::var("S3_CDN").ok(),
-                    proxy: None,
+                    cdn: dotenv::var("S3_CDN").ok(),
                 }
             }
             (Env::Production, Replica::ReadOnlyMirror) => {
@@ -81,18 +87,17 @@ impl Default for Config {
                 Uploader::S3 {
                     bucket: s3::Bucket::new(
                         env("S3_BUCKET"),
-                        env::var("S3_REGION").ok(),
-                        env::var("S3_ACCESS_KEY").unwrap_or_default(),
-                        env::var("S3_SECRET_KEY").unwrap_or_default(),
+                        dotenv::var("S3_REGION").ok(),
+                        dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+                        dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
                         &api_protocol,
                     ),
-                    cdn: env::var("S3_CDN").ok(),
-                    proxy: None,
+                    cdn: dotenv::var("S3_CDN").ok(),
                 }
             }
             // In Development mode, either running as a primary instance or a read-only mirror
             _ => {
-                if env::var("S3_BUCKET").is_ok() {
+                if dotenv::var("S3_BUCKET").is_ok() {
                     // If we've set the `S3_BUCKET` variable to any value, use all of the values
                     // for the related S3 environment variables and configure the app to upload to
                     // and read from S3 like production does. All values except for bucket are
@@ -101,13 +106,12 @@ impl Default for Config {
                     Uploader::S3 {
                         bucket: s3::Bucket::new(
                             env("S3_BUCKET"),
-                            env::var("S3_REGION").ok(),
-                            env::var("S3_ACCESS_KEY").unwrap_or_default(),
-                            env::var("S3_SECRET_KEY").unwrap_or_default(),
+                            dotenv::var("S3_REGION").ok(),
+                            dotenv::var("S3_ACCESS_KEY").unwrap_or_default(),
+                            dotenv::var("S3_SECRET_KEY").unwrap_or_default(),
                             &api_protocol,
                         ),
-                        cdn: env::var("S3_CDN").ok(),
-                        proxy: None,
+                        cdn: dotenv::var("S3_CDN").ok(),
                     }
                 } else {
                     // If we don't set the `S3_BUCKET` variable, we'll use a development-only
@@ -124,6 +128,7 @@ impl Default for Config {
             uploader,
             session_key: env("SESSION_KEY"),
             git_repo_checkout: checkout,
+            index_location: Url::parse(&env("GIT_REPO_URL")).unwrap(),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),
@@ -132,6 +137,49 @@ impl Default for Config {
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             mirror,
             api_protocol,
+            publish_rate_limit: Default::default(),
+            blocked_traffic: blocked_traffic(),
         }
     }
+}
+
+fn blocked_traffic() -> Vec<(String, Vec<String>)> {
+    let pattern_list = dotenv::var("BLOCKED_TRAFFIC").unwrap_or_default();
+    parse_traffic_patterns(&pattern_list)
+        .map(|(header, value_env_var)| {
+            let value_list = dotenv::var(value_env_var).unwrap_or_default();
+            let values = value_list.split(',').map(String::from).collect();
+            (header.into(), values)
+        })
+        .collect()
+}
+
+fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> {
+    patterns.split_terminator(',').map(|pattern| {
+        if let Some(idx) = pattern.find('=') {
+            (&pattern[..idx], &pattern[(idx + 1)..])
+        } else {
+            panic!(
+                "BLOCKED_TRAFFIC must be in the form HEADER=VALUE_ENV_VAR, \
+                 got invalid pattern {}",
+                pattern
+            )
+        }
+    })
+}
+
+#[test]
+fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
+    let pattern_string_1 = "Foo=BAR,Bar=BAZ";
+    let pattern_string_2 = "Baz=QUX";
+    let pattern_string_3 = "";
+
+    let patterns_1 = parse_traffic_patterns(pattern_string_1).collect::<Vec<_>>();
+    assert_eq!(vec![("Foo", "BAR"), ("Bar", "BAZ")], patterns_1);
+
+    let patterns_2 = parse_traffic_patterns(pattern_string_2).collect::<Vec<_>>();
+    assert_eq!(vec![("Baz", "QUX")], patterns_2);
+
+    let patterns_3 = parse_traffic_patterns(pattern_string_3).collect::<Vec<_>>();
+    assert!(patterns_3.is_empty());
 }

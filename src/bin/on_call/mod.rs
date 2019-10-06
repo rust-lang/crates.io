@@ -1,15 +1,15 @@
 use cargo_registry::util::{internal, CargoResult};
-use std::env;
 
 use reqwest::{header, StatusCode as Status};
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]
 pub enum Event {
     Trigger {
         incident_key: Option<String>,
         description: String,
     },
+    #[allow(dead_code)] // Not all binaries create Acknowledge events
     Acknowledge {
         incident_key: String,
         description: Option<String>,
@@ -26,8 +26,8 @@ impl Event {
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
     pub fn send(self) -> CargoResult<()> {
-        let api_token = env::var("PAGERDUTY_API_TOKEN")?;
-        let service_key = env::var("PAGERDUTY_INTEGRATION_KEY")?;
+        let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
+        let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 
         let mut response = reqwest::Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
@@ -54,14 +54,14 @@ impl Event {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 struct FullEvent {
     service_key: String,
     #[serde(flatten)]
     event: Event,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 struct InvalidEvent {
     message: String,
     errors: Vec<String>,

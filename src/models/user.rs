@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use crate::app::App;
 use crate::util::CargoResult;
 
-use crate::models::{Crate, CrateOwner, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
@@ -21,7 +21,7 @@ pub struct User {
     pub gh_id: i32,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Default)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
@@ -58,7 +58,6 @@ impl<'a> NewUser<'a> {
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
-        use diesel::NotFound;
 
         conn.transaction(|| {
             let user = insert_into(users)
@@ -96,8 +95,7 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token)
-                        .map_err(|_| NotFound)?;
+                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
                 }
             }
 
@@ -108,18 +106,26 @@ impl<'a> NewUser<'a> {
 
 impl User {
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> CargoResult<User> {
+    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> QueryResult<User> {
         use crate::schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token, user_id};
-        use crate::schema::users::dsl::{id, users};
         use diesel::update;
+
         let tokens = api_tokens
             .filter(token.eq(token_))
             .filter(revoked.eq(false));
-        let user_id_ = update(tokens)
-            .set(last_used_at.eq(now.nullable()))
-            .returning(user_id)
-            .get_result::<i32>(conn)?;
-        Ok(users.filter(id.eq(user_id_)).get_result(conn)?)
+
+        // If the database is in read only mode, we can't update last_used_at.
+        // Try updating in a new transaction, if that fails, fall back to reading
+        let user_id_ = conn
+            .transaction(|| {
+                update(tokens)
+                    .set(last_used_at.eq(now.nullable()))
+                    .returning(user_id)
+                    .get_result::<i32>(conn)
+            })
+            .or_else(|_| tokens.select(user_id).first(conn))?;
+
+        users::table.find(user_id_).first(conn)
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
@@ -162,15 +168,12 @@ impl User {
         Ok(best)
     }
 
-    pub fn has_verified_email(&self, conn: &PgConnection) -> CargoResult<bool> {
-        use diesel::dsl::exists;
-        let email_exists = diesel::select(exists(
-            emails::table
-                .filter(emails::user_id.eq(self.id))
-                .filter(emails::verified.eq(true)),
-        ))
-        .get_result(&*conn)?;
-        Ok(email_exists)
+    pub fn verified_email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+        Ok(Email::belonging_to(self)
+            .select(emails::email)
+            .filter(emails::verified.eq(true))
+            .first::<String>(&*conn)
+            .optional()?)
     }
 
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.

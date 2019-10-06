@@ -98,6 +98,12 @@ description = """
 Algorithms intended for securing data.\
 """
 
+[cryptography.categories.cryptocurrencies]
+name = "Cryptocurrencies"
+description = """
+Crates for digital currencies, wallets, and distributed ledgers.\
+"""
+
 [database]
 name = "Database interfaces"
 description = """
@@ -348,7 +354,7 @@ Parsers implemented for particular formats or languages.\
 """
 
 [parsing]
-name = "Parsing"
+name = "Parsing tools"
 description = """
 Crates to help create parsers of binary and text \
 formats. Format-specific parsers belong in other, more specific \

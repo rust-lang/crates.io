@@ -68,70 +68,83 @@ pub fn remove_owners(req: &mut dyn Request) -> CargoResult<Response> {
     modify_owners(req, false)
 }
 
-fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
+/// Parse the JSON request body of requests to modify the owners of a crate.
+/// The format is
+///
+///     {"owners": ["username", "github:org:team", ...]}
+fn parse_owners_request(req: &mut dyn Request) -> CargoResult<Vec<String>> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
-
-    let user = req.user()?;
-    let conn = req.db_conn()?;
-    let krate = Crate::by_name(&req.params()["crate_id"]).first::<Crate>(&*conn)?;
-    let owners = krate.owners(&conn)?;
-
-    match user.rights(req.app(), &owners)? {
-        Rights::Full => {}
-        // Yes!
-        Rights::Publish => {
-            return Err(human("team members don't have permission to modify owners"));
-        }
-        Rights::None => {
-            return Err(human("only owners have permission to modify owners"));
-        }
-    }
-
     #[derive(Deserialize)]
     struct Request {
         // identical, for back-compat (owners preferred)
         users: Option<Vec<String>>,
         owners: Option<Vec<String>>,
     }
-
     let request: Request =
         serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
-
-    let logins = request
+    request
         .owners
         .or(request.users)
-        .ok_or_else(|| human("invalid json request"))?;
+        .ok_or_else(|| human("invalid json request"))
+}
 
-    let mut msgs = Vec::new();
+fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
+    let logins = parse_owners_request(req)?;
+    let app = req.app();
+    let user = req.user()?;
+    let crate_name = &req.params()["crate_id"];
+    let conn = req.db_conn()?;
 
-    for login in &logins {
-        if add {
-            let login_test = |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
-            if owners.iter().any(login_test) {
-                return Err(human(&format_args!("`{}` is already an owner", login)));
+    conn.transaction(|| {
+        let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+        let owners = krate.owners(&conn)?;
+
+        match user.rights(app, &owners)? {
+            Rights::Full => {}
+            // Yes!
+            Rights::Publish => {
+                return Err(human("team members don't have permission to modify owners"));
             }
-            let msg = krate.owner_add(req.app(), &conn, user, login)?;
-            msgs.push(msg);
-        } else {
-            // Removing the team that gives you rights is prevented because
-            // team members only have Rights::Publish
-            if owners.len() == 1 {
-                return Err(human("cannot remove the sole owner of a crate"));
+            Rights::None => {
+                return Err(human("only owners have permission to modify owners"));
             }
-            krate.owner_remove(req.app(), &conn, user, login)?;
         }
-    }
 
-    let comma_sep_msg = msgs.join(",");
+        let comma_sep_msg = if add {
+            let mut msgs = Vec::new();
+            for login in &logins {
+                let login_test =
+                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+                if owners.iter().any(login_test) {
+                    return Err(human(&format_args!("`{}` is already an owner", login)));
+                }
+                let msg = krate.owner_add(app, &conn, user, login)?;
+                msgs.push(msg);
+            }
+            msgs.join(",")
+        } else {
+            for login in &logins {
+                krate.owner_remove(app, &conn, user, login)?;
+            }
+            if User::owning(&krate, &conn)?.is_empty() {
+                return Err(human(
+                    "cannot remove all individual owners of a crate. \
+                     Team member don't have permission to modify owners, so \
+                     at least one individual owner is required.",
+                ));
+            }
+            "owners successfully removed".to_owned()
+        };
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-        msg: String,
-    }
-    Ok(req.json(&R {
-        ok: true,
-        msg: comma_sep_msg,
-    }))
+        #[derive(Serialize)]
+        struct R {
+            ok: bool,
+            msg: String,
+        }
+        Ok(req.json(&R {
+            ok: true,
+            msg: comma_sep_msg,
+        }))
+    })
 }

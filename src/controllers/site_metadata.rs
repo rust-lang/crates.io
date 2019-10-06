@@ -6,7 +6,7 @@ use super::prelude::*;
 /// If `HEROKU_SLUG_COMMIT` is not set, returns `"unknown"`.
 pub fn show_deployed_sha(req: &mut dyn Request) -> CargoResult<Response> {
     let deployed_sha =
-        ::std::env::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
+        dotenv::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
 
     #[derive(Serialize)]
     struct R<'a> {

@@ -34,12 +34,21 @@ pub enum Badge {
         project_name: Option<String>,
         service: Option<String>,
     },
+    AzureDevops {
+        project: String,
+        pipeline: String,
+        build: Option<String>,
+    },
     #[serde(rename = "gitlab")]
     GitLab {
         repository: String,
         branch: Option<String>,
     },
     CircleCi {
+        repository: String,
+        branch: Option<String>,
+    },
+    CirrusCi {
         repository: String,
         branch: Option<String>,
     },

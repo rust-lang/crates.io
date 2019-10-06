@@ -1,65 +1,65 @@
 {{ title 'Keywords' }}
 
 <div id='crates-heading'>
-    {{svg-jar "crate"}}
-    <h1>All Keywords</h1>
+  {{svg-jar "crate"}}
+  <h1>All Keywords</h1>
 </div>
 
 <div id='results'>
-    <div class='nav' data-test-keywords-nav>
-        <span class='amt small'>
-            Displaying
-            <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
-            of <span class='total'>{{ totalItems }}</span> total results
-        </span>
-    </div>
+  <div class='nav' data-test-keywords-nav>
+    <span class='amt small'>
+      Displaying
+      <span class='cur'>{{ currentPageStart }}-{{ currentPageEnd }}</span>
+      of <span class='total'>{{ totalItems }}</span> total results
+    </span>
+  </div>
 
-    <div class='sort' data-test-keywords-sort>
-        <span class='small'>Sort by</span>
-        {{#rl-dropdown-container class="dropdown-container"}}
-            {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
-                {{svg-jar "sort"}}
-                {{ currentSortBy }}
-                <span class='arrow'></span>
-            {{/rl-dropdown-toggle}}
+  <div class='sort' data-test-keywords-sort>
+    <span class='small'>Sort by</span>
+    {{#rl-dropdown-container class="dropdown-container"}}
+      {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+        {{svg-jar "sort"}}
+        {{ currentSortBy }}
+        <span class='arrow'></span>
+      {{/rl-dropdown-toggle}}
 
-            {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
-                <li>
-                    {{#link-to (query-params sort="alpha")}}
-                        Alphabetical
-                    {{/link-to}}
-                </li>
-                <li>
-                    {{#link-to (query-params sort="crates")}}
-                        # Crates
-                    {{/link-to}}
-                </li>
-            {{/rl-dropdown}}
-        {{/rl-dropdown-container}}
-    </div>
+      {{#rl-dropdown tagName="ul" class="dropdown" closeOnChildClick="a:link"}}
+        <li>
+          {{#link-to (query-params sort="alpha")}}
+            Alphabetical
+          {{/link-to}}
+        </li>
+        <li>
+          {{#link-to (query-params sort="crates")}}
+            # Crates
+          {{/link-to}}
+        </li>
+      {{/rl-dropdown}}
+    {{/rl-dropdown-container}}
+  </div>
 </div>
 
 <div class='white-rows'>
-    {{#each model as |keyword|}}
-        <div class='row'>
-            <div class='info'>
-                {{link-to keyword.id "keyword" keyword}}
-                <span class='vers small'>
-                    {{ pluralize (format-num keyword.crates_cnt) "crate" }}
-                </span>
-            </div>
-        </div>
-    {{/each}}
+  {{#each model as |keyword|}}
+    <div class='row'>
+      <div class='info'>
+        {{link-to keyword.id "keyword" keyword}}
+        <span class='vers small'>
+          {{ pluralize (format-num keyword.crates_cnt) "crate" }}
+        </span>
+      </div>
+    </div>
+  {{/each}}
 </div>
 
 <div class='pagination'>
-    {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
-        {{svg-jar "left-pag"}}
-    {{/link-to}}
-    {{#each pages as |page|}}
-        {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
-    {{/each}}
-    {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
-        {{svg-jar "right-pag"}}
-    {{/link-to}}
+  {{#link-to (query-params page=prevPage) class="prev" rel="prev" title="previous page"}}
+    {{svg-jar "left-pag"}}
+  {{/link-to}}
+  {{#each pages as |page|}}
+    {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
+  {{/each}}
+  {{#link-to (query-params page=nextPage) class="next" rel="next" title="next page"}}
+    {{svg-jar "right-pag"}}
+  {{/link-to}}
 </div>

@@ -7,25 +7,25 @@ import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
 module('Acceptance | keywords', function(hooks) {
-    setupApplicationTest(hooks);
-    setupMirage(hooks);
+  setupApplicationTest(hooks);
+  setupMirage(hooks);
 
-    test('keyword/:keyword_id is accessible', async function(assert) {
-        assert.expect(0);
+  test('keyword/:keyword_id is accessible', async function(assert) {
+    assert.expect(0);
 
-        this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
+    this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
 
-        await visit('keywords/network');
-        percySnapshot(assert);
+    await visit('keywords/network');
+    percySnapshot(assert);
 
-        await a11yAudit(axeConfig);
-    });
+    await a11yAudit(axeConfig);
+  });
 
-    test('keyword/:keyword_id index default sort is recent-downloads', async function(assert) {
-        this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
+  test('keyword/:keyword_id index default sort is recent-downloads', async function(assert) {
+    this.server.create('keyword', { id: 'network', keyword: 'network', crates_cnt: 38 });
 
-        await visit('/keywords/network');
+    await visit('/keywords/network');
 
-        assert.dom('[data-test-keyword-sort] [data-test-current-order]').hasText('Recent Downloads');
-    });
+    assert.dom('[data-test-keyword-sort] [data-test-current-order]').hasText('Recent Downloads');
+  });
 });

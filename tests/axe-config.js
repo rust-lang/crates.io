@@ -1,7 +1,7 @@
 export default {
-    rules: {
-        'color-contrast': {
-            enabled: false,
-        },
+  rules: {
+    'color-contrast': {
+      enabled: false,
     },
+  },
 };
