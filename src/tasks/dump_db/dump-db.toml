@@ -191,6 +191,14 @@ counted = "private"
 date = "public"
 processed = "private"
 
+[version_owner_actions.columns]
+id = "private"
+version_id = "private"
+owner_id = "private"
+owner_token_id = "private"
+action = "private"
+time = "private"
+
 [versions]
 dependencies = ["crates", "users"]
 [versions.columns]
