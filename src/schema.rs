@@ -910,7 +910,6 @@ table! {
 table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
-    use diesel_ltree::Ltree;
 
     /// Representation of the `versions` table.
     ///
