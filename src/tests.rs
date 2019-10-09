@@ -3,7 +3,8 @@ use std::error::Error;
 use std::io::Cursor;
 
 use conduit::{Handler, Request, Response};
-use futures::{future, Future, Stream};
+use futures::prelude::*;
+use hyper::service::Service;
 
 struct OkResult;
 impl Handler for OkResult {
@@ -72,93 +73,102 @@ fn build_headers(msg: &str) -> HashMap<String, Vec<String>> {
     headers
 }
 
-fn block_on<F>(f: F)
+fn block_on<F>(future: F)
 where
-    F: FnOnce() -> () + Send + 'static,
+    F: Future<Output = ()> + Send + 'static,
 {
-    let mut rt = tokio::runtime::Builder::new()
+    let rt = tokio::runtime::Builder::new()
         .core_threads(1)
         .blocking_threads(1)
         .build()
         .unwrap();
-    rt.spawn(futures::lazy(move || {
-        f();
-        future::ok(())
-    }));
-    rt.shutdown_on_idle().wait().unwrap();
+    rt.spawn(future);
+    rt.shutdown_on_idle();
 }
 
-fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
-    use hyper::service::{NewService, Service};
+fn make_service<H: Handler>(
+    handler: H,
+) -> impl Service<
+    hyper::Body,
+    ResBody = hyper::Body,
+    Future = impl Future<Output = Result<hyper::Response<hyper::Body>, hyper::Error>> + Send + 'static,
+    Error = hyper::Error,
+> {
+    use hyper::service::service_fn;
 
-    let new_service = super::Service::new(handler);
-    let mut service = new_service.new_service().wait().unwrap();
-    service.call(hyper::Request::default()).wait().unwrap()
+    let handler = std::sync::Arc::new(handler);
+
+    service_fn(move |request: hyper::Request<hyper::Body>| {
+        let remote_addr = ([0, 0, 0, 0], 0).into();
+        super::blocking_handler(handler.clone(), request, remote_addr)
+    })
 }
 
-fn into_chunk(resp: hyper::Response<hyper::Body>) -> hyper::Chunk {
-    resp.into_body().concat2().wait().unwrap()
+async fn simulate_request<H: Handler>(handler: H) -> hyper::Response<hyper::Body> {
+    let mut service = make_service(handler);
+    service.call(hyper::Request::default()).await.unwrap()
 }
 
-fn assert_generic_err(resp: hyper::Response<hyper::Body>) {
+async fn into_chunk(resp: hyper::Response<hyper::Body>) -> hyper::Chunk {
+    resp.into_body().try_concat().await.unwrap()
+}
+
+async fn assert_generic_err(resp: hyper::Response<hyper::Body>) {
     assert_eq!(resp.status(), 500);
     assert!(resp.headers().is_empty());
-    let full_body = into_chunk(resp);
+    let full_body = into_chunk(resp).await;
     assert_eq!(&*full_body, b"Internal Server Error");
 }
 
 #[test]
 fn valid_ok_response() {
-    block_on(|| {
-        let resp = simulate_request(OkResult);
+    block_on(async {
+        let resp = simulate_request(OkResult).await;
         assert_eq!(resp.status(), 200);
         assert_eq!(resp.headers().len(), 1);
-        let full_body = into_chunk(resp);
+        let full_body = into_chunk(resp).await;
         assert_eq!(&*full_body, b"Hello, world!");
     })
 }
 
 #[test]
 fn invalid_ok_responses() {
-    block_on(|| {
-        assert_generic_err(simulate_request(InvalidHeader));
-        assert_generic_err(simulate_request(InvalidStatus));
+    block_on(async {
+        assert_generic_err(simulate_request(InvalidHeader).await).await;
+        assert_generic_err(simulate_request(InvalidStatus).await).await;
     })
 }
 
 #[test]
 fn err_responses() {
-    block_on(|| {
-        assert_generic_err(simulate_request(ErrorResult));
+    block_on(async {
+        assert_generic_err(simulate_request(ErrorResult).await).await;
     })
 }
 
 #[ignore] // catch_unwind not yet implemented
 #[test]
 fn recover_from_panic() {
-    block_on(|| {
-        assert_generic_err(simulate_request(Panic));
+    block_on(async {
+        assert_generic_err(simulate_request(Panic).await).await;
     })
 }
 
 #[test]
 fn normalize_path() {
-    use hyper::service::{NewService, Service};
-
-    block_on(|| {
-        let new_service = super::Service::new(AssertPathNormalized);
-        let mut service = new_service.new_service().wait().unwrap();
+    block_on(async {
+        let mut service = make_service(AssertPathNormalized);
         let req = hyper::Request::put("//removed/.././.././normalized")
             .body(hyper::Body::default())
             .unwrap();
-        let resp = service.call(req).wait().unwrap();
+        let resp = service.call(req).await.unwrap();
         assert_eq!(resp.status(), 200);
         assert_eq!(resp.headers().len(), 1);
 
         let req = hyper::Request::put("//normalized")
             .body(hyper::Body::default())
             .unwrap();
-        let resp = service.call(req).wait().unwrap();
+        let resp = service.call(req).await.unwrap();
         assert_eq!(resp.status(), 200);
         assert_eq!(resp.headers().len(), 1);
     })

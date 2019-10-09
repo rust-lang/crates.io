@@ -3,7 +3,6 @@
 use conduit::{Handler, Request, Response};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
-use futures::Future;
 use tokio::runtime;
 
 use std::collections::HashMap;
@@ -11,25 +10,28 @@ use std::io::{Cursor, Error};
 use std::thread::sleep;
 
 fn main() {
+    env_logger::init();
+
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
-    let server = Server::bind(&addr, app).map_err(|e| {
-        eprintln!("server error: {}", e);
-    });
+    let server = Server::bind(&addr, app);
 
-    let mut rt = runtime::Builder::new()
+    let rt = runtime::Builder::new()
         // Set the max number of concurrent requests (tokio defaults to 100)
         .blocking_threads(2)
         .build()
         .unwrap();
-    rt.spawn(server);
-    rt.shutdown_on_idle().wait().unwrap();
+    rt.spawn(async {
+        server.await;
+    });
+    rt.shutdown_on_idle();
 }
 
 fn build_conduit_handler() -> impl Handler {
     let mut router = RouteBuilder::new();
     router.get("/", endpoint);
     router.get("/panic", panic);
+    router.get("/error", error);
     router
 }
 
@@ -54,4 +56,8 @@ fn endpoint(_: &mut dyn Request) -> Result<Response, Error> {
 fn panic(_: &mut dyn Request) -> Result<Response, Error> {
     // For now, connection is immediately closed
     panic!("message");
+}
+
+fn error(_: &mut dyn Request) -> Result<Response, Error> {
+    Err(Error::new(std::io::ErrorKind::Other, "io error, oops"))
 }

@@ -1,10 +1,10 @@
 #![deny(warnings, clippy::all, missing_debug_implementations)]
 
-//! A wrapper for integrating `hyper 0.12` with a `conduit 0.8` blocking application stack.
+//! A wrapper for integrating `hyper 0.13` with a `conduit 0.8` blocking application stack.
 //!
 //! A `conduit::Handler` is allowed to block so the `Server` must be spawned on the (default)
 //! multi-threaded `Runtime` which allows (by default) 100 concurrent blocking threads.  Any excess
-//! requests will asynchronously wait for an available blocking thread.
+//! requests will asynchronously await for an available blocking thread.
 //!
 //! # Examples
 //!
@@ -15,19 +15,16 @@
 //! ```no_run
 //! use conduit::Handler;
 //! use conduit_hyper::Server;
-//! use futures::Future;
+//! use futures::executor::block_on;
 //! use tokio::runtime::Runtime;
 //!
-//! fn main() {
+//! #[tokio::main]
+//! async fn main() {
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::bind(&addr, app).map_err(|e| {
-//!         eprintln!("server error: {}", e);
-//!     });
+//!     let server = Server::bind(&addr, app);
 //!
-//!     let mut rt = Runtime::new().unwrap();
-//!     rt.spawn(server);
-//!     rt.shutdown_on_idle().wait().unwrap();
+//!     server.await;
 //! }
 //!
 //! fn build_conduit_handler() -> impl Handler {
@@ -35,17 +32,15 @@
 //! #     Endpoint()
 //! }
 //! #
-//! # use std::{collections, error, io};
-//! #
+//! # use std::{error, io};
 //! # use conduit::{Request, Response};
 //! #
 //! # struct Endpoint();
-//! #
 //! # impl Handler for Endpoint {
 //! #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
 //! #         Ok(Response {
 //! #             status: (200, "OK"),
-//! #             headers: collections::HashMap::new(),
+//! #             headers: Default::default(),
 //! #             body: Box::new(io::Cursor::new("")),
 //! #         })
 //! #     }
@@ -55,31 +50,126 @@
 #[cfg(test)]
 mod tests;
 
+use std::future::Future;
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
-use futures::{future, Future, Stream};
-use hyper::{Body, Chunk, Method, Request, Response, StatusCode, Version};
-use log::error;
+use futures::prelude::*;
+use hyper::{service, Body, Chunk, Method, Request, Response, StatusCode, Version};
+use tracing::error;
 
 // Consumers of this library need access to this particular version of `semver`
 pub use semver;
 
-/// A builder for a `hyper::Server`
+/// A builder for a `hyper::Server` (behind an opaque `impl Future`).
 #[derive(Debug)]
 pub struct Server;
 
 impl Server {
-    /// Bind a handler to an address
-    pub fn bind<H: conduit::Handler>(
-        addr: &SocketAddr,
-        handler: H,
-    ) -> hyper::Server<hyper::server::conn::AddrIncoming, Service<H>> {
-        let service = Service::new(handler);
-        hyper::Server::bind(&addr).serve(service)
+    /// Bind a handler to an address.
+    ///
+    /// This returns an opaque `impl Future` so while it can be directly spawned on a
+    /// `tokio::Runtime` it is not possible to furter configure the `hyper::Server`.  If more
+    /// control, such as configuring a graceful shutdown is necessary, then call
+    /// `Service::from_conduit` instead.
+    pub fn bind<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
+        use hyper::server::conn::AddrStream;
+        use service::make_service_fn;
+
+        let handler = Arc::new(handler);
+
+        let make_service = make_service_fn(move |socket: &AddrStream| {
+            let handler = handler.clone();
+            let remote_addr = socket.remote_addr();
+            async move { Service::from_conduit(handler, remote_addr) }
+        });
+
+        hyper::Server::bind(&addr).serve(make_service)
     }
+}
+
+/// A builder for a `hyper::Service`.
+#[derive(Debug)]
+pub struct Service;
+
+impl Service {
+    /// Turn a conduit handler into a `Service` which can be bound to a `hyper::Server`.
+    ///
+    /// The returned service can be built into a `hyper::Server` using `make_service_fn` and
+    /// capturing the socket `remote_addr`.
+    ///
+    /// ```no_run
+    /// # use std::sync::Arc;
+    /// # use conduit_hyper::Service;
+    /// # use std::{error, io};
+    /// # use conduit::{Handler, Request, Response};
+    /// #
+    /// # struct Endpoint();
+    /// # impl Handler for Endpoint {
+    /// #     fn call(&self, _: &mut dyn Request) -> Result<Response, Box<dyn error::Error + Send>> {
+    /// #         Ok(Response {
+    /// #             status: (200, "OK"),
+    /// #             headers: Default::default(),
+    /// #             body: Box::new(io::Cursor::new("")),
+    /// #         })
+    /// #     }
+    /// # }
+    /// # let app = Endpoint();
+    /// let handler = Arc::new(app);
+    /// let make_service =
+    ///     hyper::service::make_service_fn(move |socket: &hyper::server::conn::AddrStream| {
+    ///         let addr = socket.remote_addr();
+    ///         let handler = handler.clone();
+    ///         async move { Service::from_conduit(handler, addr) }
+    ///     });
+    ///
+    /// # let port = 0;
+    /// let addr = ([127, 0, 0, 1], port).into();
+    /// let server = hyper::Server::bind(&addr).serve(make_service);
+    /// ```
+    pub fn from_conduit<H: conduit::Handler>(
+        handler: Arc<H>,
+        remote_addr: std::net::SocketAddr,
+    ) -> Result<
+        impl tower_service::Service<
+            Request<Body>,
+            Response = Response<Body>,
+            Error = hyper::Error,
+            Future = impl Future<Output = Result<Response<Body>, hyper::Error>> + Send + 'static,
+        >,
+        hyper::Error,
+    > {
+        Ok(service::service_fn(move |request: Request<Body>| {
+            blocking_handler(handler.clone(), request, remote_addr)
+        }))
+    }
+}
+
+async fn blocking_handler<H: conduit::Handler>(
+    handler: Arc<H>,
+    request: Request<Body>,
+    remote_addr: std::net::SocketAddr,
+) -> Result<Response<Body>, hyper::Error> {
+    let (parts, body) = request.into_parts();
+
+    body.try_concat()
+        .and_then(|full_body| {
+            let mut request_info = RequestInfo::new(parts, full_body);
+
+            future::poll_fn(move |_| {
+                tokio_executor::threadpool::blocking(|| {
+                    let mut request = ConduitRequest::new(&mut request_info, remote_addr);
+                    handler
+                        .call(&mut request)
+                        .map(good_response)
+                        .unwrap_or_else(|e| error_response(&e.to_string()))
+                })
+                .map_err(|_| panic!("the threadpool shut down"))
+            })
+        })
+        .await
 }
 
 #[derive(Debug)]
@@ -132,6 +222,7 @@ impl Parts {
 struct ConduitRequest {
     parts: Parts,
     path: String,
+    remote_addr: SocketAddr,
     body: Cursor<Chunk>,
     extensions: conduit::Extensions, // makes struct non-Send
 }
@@ -181,8 +272,7 @@ impl conduit::Request for ConduitRequest {
 
     /// Always returns an address of 0.0.0.0:0
     fn remote_addr(&self) -> SocketAddr {
-        // See: https://github.com/hyperium/hyper/issues/1410#issuecomment-356115678
-        ([0, 0, 0, 0], 0).into()
+        self.remote_addr
     }
 
     fn virtual_root(&self) -> Option<&str> {
@@ -249,7 +339,7 @@ impl RequestInfo {
 }
 
 impl ConduitRequest {
-    fn new(info: &mut RequestInfo) -> Self {
+    fn new(info: &mut RequestInfo, remote_addr: SocketAddr) -> Self {
         let (parts, body) = info.take();
         let path = parts.0.uri.path().to_string();
         let path = Path::new(&path);
@@ -278,72 +368,9 @@ impl ConduitRequest {
         Self {
             parts,
             path,
+            remote_addr,
             body: Cursor::new(body),
             extensions: conduit::Extensions::new(),
-        }
-    }
-}
-
-/// Serve a `conduit::Handler` on a thread pool
-#[derive(Debug)]
-pub struct Service<H> {
-    handler: Arc<H>,
-}
-
-// #[derive(Clone)] results in cloning a ref, and not the Service
-impl<H> Clone for Service<H> {
-    fn clone(&self) -> Self {
-        Service {
-            handler: self.handler.clone(),
-        }
-    }
-}
-
-impl<H: conduit::Handler> hyper::service::NewService for Service<H> {
-    type ReqBody = Body;
-    type ResBody = Body;
-    type Error = hyper::Error;
-    type Service = Service<H>;
-    type Future = Box<dyn Future<Item = Self::Service, Error = Self::InitError> + Send>;
-    type InitError = hyper::Error;
-
-    fn new_service(&self) -> Self::Future {
-        Box::new(future::ok(self.clone()))
-    }
-}
-
-impl<H: conduit::Handler> hyper::service::Service for Service<H> {
-    type ReqBody = Body;
-    type ResBody = Body;
-    type Error = hyper::Error;
-    type Future = Box<dyn Future<Item = Response<Self::ResBody>, Error = Self::Error> + Send>;
-
-    /// Returns a future which buffers the response body and then calls the conduit handler from a thread pool
-    fn call(&mut self, request: Request<Self::ReqBody>) -> Self::Future {
-        let handler = self.handler.clone();
-
-        let (parts, body) = request.into_parts();
-        let response = body.concat2().and_then(move |full_body| {
-            let mut request_info = RequestInfo::new(parts, full_body);
-            future::poll_fn(move || {
-                tokio_threadpool::blocking(|| {
-                    let mut request = ConduitRequest::new(&mut request_info);
-                    handler
-                        .call(&mut request)
-                        .map(good_response)
-                        .unwrap_or_else(|e| error_response(e.description()))
-                })
-                .map_err(|_| panic!("the threadpool shut down"))
-            })
-        });
-        Box::new(response)
-    }
-}
-
-impl<H: conduit::Handler> Service<H> {
-    fn new(handler: H) -> Self {
-        Service {
-            handler: Arc::new(handler),
         }
     }
 }
