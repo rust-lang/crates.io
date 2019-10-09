@@ -1,6 +1,6 @@
 [package]
 name = "conduit-hyper"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 authors = ["Justin Geibel <jtgeibel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Host a conduit based web application on a hyper server"
@@ -10,13 +10,13 @@ edition = "2018"
 
 [dependencies]
 conduit = "0.8"
-futures-preview = "0.3.0-alpha.18"
+futures-preview = "0.3.0-alpha.19"
 hyper = { version = "0.13.0-alpha.4", features = ["unstable-stream"] }
 http = "0.1"
 tracing = { version = "0.1", features = ["log"] }
 semver = "0.5" # Must match version in conduit for now
-tokio-executor = { version = "0.2.0-alpha.2", features = ["threadpool"] }
-tower-service = "0.3.0-alpha.1"
+tokio-executor = { version = "0.2.0-alpha.6", features = ["threadpool"] }
+tower-service = "0.3.0-alpha.2"
 
 [dev-dependencies]
 conduit-router = "0.8"
