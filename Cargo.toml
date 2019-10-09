@@ -57,7 +57,7 @@ ammonia = "3.0.0"
 docopt = "1.0"
 scheduled-thread-pool = "0.2.0"
 derive_deref = "1.0.0"
-reqwest = { git = "https://github.com/seanmonstar/reqwest", features = ["blocking", "gzip", "json"] }
+reqwest = { version = "0.10.0-alpha.1", features = ["blocking", "gzip", "json"] }
 tempdir = "0.3.7"
 parking_lot = "0.7.1"
 jemallocator = { version = "0.3", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
@@ -75,7 +75,7 @@ conduit-router = "0.8"
 conduit-static = "0.8"
 conduit-git-http-backend = "0.8"
 civet = "0.9"
-conduit-hyper = { git = "https://github.com/jtgeibel/conduit-hyper", branch="async-await" }
+conduit-hyper = "0.2.0-alpha.1"
 
 futures-preview = { version = "0.3.0-alpha.19", features = ["compat", "async-await"] }
 tokio = { version = "0.2.0-alpha.2", default-features = false, features = ["tcp", "fs"]}
