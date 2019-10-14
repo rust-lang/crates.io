@@ -12,7 +12,7 @@ on:
 jobs:
   frontend:
     name: Frontend
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
 
@@ -175,7 +175,7 @@ jobs:
 
       - name: Setup database
         run: |
-          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres
+          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres --debug
           diesel database setup --locked-schema
 
       - name: Lint
