@@ -67,6 +67,8 @@ impl<'a> MarkdownRenderer<'a> {
             ("a", hashset(&["href", "id", "target"])),
             ("img", hashset(&["width", "height", "src", "alt", "align"])),
             ("input", hashset(&["checked", "disabled", "type"])),
+            ("th", hashset(&["rowspan", "colspan"])),
+            ("td", hashset(&["rowspan", "colspan"])),
         ]);
         let allowed_classes = hashmap(&[(
             "code",
@@ -453,6 +455,16 @@ mod tests {
         assert_eq!(
             result,
             "<h1><a href=\"#my-crate\" id=\"user-content-my-crate\" rel=\"nofollow noopener noreferrer\"></a>My crate</h1>\n<p>Hello, world!</p>\n"
+        );
+    }
+
+    #[test]
+    fn tables_with_rowspan_and_colspan() {
+        let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
+        let result = markdown_to_html(text, None);
+        assert_eq!(
+            result,
+            "<table><tbody><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></tbody></table>\n"
         );
     }
 }
