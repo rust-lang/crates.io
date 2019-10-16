@@ -157,6 +157,7 @@ impl DumpTarball {
                 tarfile,
                 content_length,
                 "application/gzip",
+                None,
             )
             .map_err(std_error_no_send)?;
         Ok(())
