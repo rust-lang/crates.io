@@ -1,4 +1,5 @@
 #![deny(warnings, clippy::all, missing_debug_implementations)]
+#![allow(clippy::needless_doctest_main, clippy::unknown_clippy_lints)] // using the tokio::main attribute
 
 //! A wrapper for integrating `hyper 0.13` with a `conduit 0.8` blocking application stack.
 //!
