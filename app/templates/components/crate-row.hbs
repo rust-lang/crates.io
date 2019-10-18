@@ -21,6 +21,12 @@
     {{svg-jar "download"}}
     <span class='num'><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num crate.recent_downloads }}</span>
   </div>
+  <div class="updated-at" >
+    {{svg-jar "latest-updates" height="32" width="32"}}
+    <time title="Last updated: {{ crate.updated_at }}" datetime="{{ moment-format crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
+      {{ moment-from-now crate.updated_at }}
+    </time>
+  </div>
 </div>
 <div class="quick-links">
   <ul>

@@ -155,6 +155,15 @@
         @include display-flex;
         @include align-items(center);
     }
+    .updated-at {
+        padding-top: 5px;
+        @include display-flex;
+        @include align-items(center);
+
+        svg {
+            padding: 10px;
+        }
+    }
 
     .rev-dep-downloads {padding-left: 7px}
 }
