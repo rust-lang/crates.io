@@ -15,8 +15,8 @@ export default Component.extend({
         this.set('isAccepted', true);
       } catch (error) {
         this.set('isError', true);
-        if (error.payload) {
-          this.set('inviteError', `Error in accepting invite: ${error.payload.errors[0].detail}`);
+        if (error.errors) {
+          this.set('inviteError', `Error in accepting invite: ${error.errors[0].detail}`);
         } else {
           this.set('inviteError', 'Error in accepting invite');
         }
@@ -31,8 +31,8 @@ export default Component.extend({
         this.set('isDeclined', true);
       } catch (error) {
         this.set('isError', true);
-        if (error.payload) {
-          this.set('inviteError', `Error in declining invite: ${error.payload.errors[0].detail}`);
+        if (error.errors) {
+          this.set('inviteError', `Error in declining invite: ${error.errors[0].detail}`);
         } else {
           this.set('inviteError', 'Error in declining invite');
         }

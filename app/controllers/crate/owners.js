@@ -23,8 +23,8 @@ export default Controller.extend({
         await this.crate.inviteOwner(username);
         this.set('invited', `An invite has been sent to ${username}`);
       } catch (error) {
-        if (error.payload) {
-          this.set('error', `Error sending invite: ${error.payload.errors[0].detail}`);
+        if (error.errors) {
+          this.set('error', `Error sending invite: ${error.errors[0].detail}`);
         } else {
           this.set('error', 'Error sending invite');
         }
@@ -40,8 +40,8 @@ export default Controller.extend({
 
         this.get('crate.owner_user').removeObject(user);
       } catch (error) {
-        if (error.payload) {
-          this.set('removed', `Error removing owner: ${error.payload.errors[0].detail}`);
+        if (error.errors) {
+          this.set('removed', `Error removing owner: ${error.errors[0].detail}`);
         } else {
           this.set('removed', 'Error removing owner');
         }

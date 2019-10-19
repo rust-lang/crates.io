@@ -26,8 +26,8 @@ export default Route.extend({
         });
       }
     } catch (error) {
-      if (error.payload) {
-        this.flashMessages.queue(`Error in email confirmation: ${error.payload.errors[0].detail}`);
+      if (error.errors) {
+        this.flashMessages.queue(`Error in email confirmation: ${error.errors[0].detail}`);
         return this.replaceWith('index');
       } else {
         this.flashMessages.queue(`Unknown error in email confirmation`);
