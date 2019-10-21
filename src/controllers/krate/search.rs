@@ -99,7 +99,10 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
         use diesel::sql_types::Array;
         sql_function!(#[aggregate] fn array_agg<T>(x: T) -> Array<T>);
 
-        let names: Vec<_> = kws.split_whitespace().map(|name| name.to_lowercase()).collect();
+        let names: Vec<_> = kws
+            .split_whitespace()
+            .map(|name| name.to_lowercase())
+            .collect();
 
         query = query.filter(
             // FIXME: Just use `.contains` in Diesel 2.0

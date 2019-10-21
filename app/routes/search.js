@@ -2,8 +2,9 @@ import Route from '@ember/routing/route';
 
 export default Route.extend({
   queryParams: {
-    q: { refreshModel: true },
+    all_keywords: { refreshModel: true },
     page: { refreshModel: true },
+    q: { refreshModel: true },
     sort: { refreshModel: true },
   },
 
