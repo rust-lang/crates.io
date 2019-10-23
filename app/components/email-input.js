@@ -100,9 +100,9 @@ export default Component.extend({
         await ajax(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
         this.set('disableResend', true);
       } catch (error) {
-        if (error.payload) {
+        if (error.errors) {
           this.set('isError', true);
-          this.set('emailError', `Error in resending message: ${error.payload.errors[0].detail}`);
+          this.set('emailError', `Error in resending message: ${error.errors[0].detail}`);
         } else {
           this.set('isError', true);
           this.set('emailError', 'Unknown error in resending message');

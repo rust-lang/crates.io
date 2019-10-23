@@ -258,7 +258,7 @@ module('Acceptance | crate page', function(hooks) {
     await click('#add-owner');
 
     assert.dom('.error').exists();
-    assert.dom('.error').hasText('Error sending invite');
+    assert.dom('.error').hasText('Error sending invite: Not Found');
     assert.dom('.owners .row').exists({ count: 2 });
   });
 
