@@ -529,7 +529,7 @@ impl MockTokenUser {
     {
         let url = format!("/api/v1/crates/{}/owners", krate_name);
         let body = json!({ "owners": owners }).to_string();
-        method(&self, &url, body.to_string().as_bytes())
+        method(&self, &url, body.as_bytes())
     }
 
     /// Add a user as an owner for a crate.
