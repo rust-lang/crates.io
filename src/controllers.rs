@@ -56,7 +56,7 @@ mod prelude {
         }
 
         fn query_with_params(&self, new_params: IndexMap<String, String>) -> String {
-            let mut params = self.query().clone();
+            let mut params = self.query();
             params.extend(new_params);
             let query_string = url::form_urlencoded::Serializer::new(String::new())
                 .extend_pairs(params)
