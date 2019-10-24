@@ -22,10 +22,6 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
-        let tag_attributes = hashmap(&[
-            ("a", hashset(&["id", "target"])),
-            ("input", hashset(&["checked", "disabled", "type"])),
-        ]);
         let allowed_classes = hashmap(&[(
             "code",
             hashset(&[
