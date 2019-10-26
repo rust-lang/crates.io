@@ -22,8 +22,8 @@ export default Component.extend({
   click(event) {
     let closeOnChildClick = this.closeOnChildClick;
     let propagateClicks = this.propagateClicks;
-    let $target = $(event.target);
-    let $c = this.$();
+    let $target = event.target;
+    let $c = this.element;
 
     if ($target !== $c) {
       if ((closeOnChildClick === true || closeOnChildClick === 'true') && $target.closest($c).length) {
