@@ -20,12 +20,12 @@ export default Component.extend({
     let $target = event.target;
     let $c = this.element;
 
-    if ($target !== $c) {
-      if ((closeOnChildClick === true || closeOnChildClick === 'true') && $target.closest($c).length) {
-        this.set('isExpanded', false);
-      } else if (closeOnChildClick && $target.closest(closeOnChildClick, $c).length) {
-        this.set('isExpanded', false);
-      }
+    if ($target === $c) {
+      return;
+    }
+
+    if ($target.closest(closeOnChildClick, $c).length) {
+      this.set('isExpanded', false);
     }
   },
 });
