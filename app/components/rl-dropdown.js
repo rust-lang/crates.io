@@ -17,11 +17,8 @@ export default Component.extend({
 
   closeOnChildClick: false,
 
-  propagateClicks: true,
-
   click(event) {
     let closeOnChildClick = this.closeOnChildClick;
-    let propagateClicks = this.propagateClicks;
     let $target = event.target;
     let $c = this.element;
 
@@ -31,10 +28,6 @@ export default Component.extend({
       } else if (closeOnChildClick && $target.closest(closeOnChildClick, $c).length) {
         this.set('isExpanded', false);
       }
-    }
-
-    if (propagateClicks === false || propagateClicks === 'false') {
-      event.stopPropagation();
     }
   },
 });
