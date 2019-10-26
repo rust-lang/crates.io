@@ -1,7 +1,6 @@
 import Component from '@ember/component';
 import { alias } from '@ember/object/computed';
 import { computed } from '@ember/object';
-import $ from 'jquery';
 
 import RlDropdownContainer from './rl-dropdown-container';
 
