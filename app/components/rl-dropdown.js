@@ -15,10 +15,8 @@ export default Component.extend({
 
   isExpanded: alias('dropdownContainer.dropdownExpanded'),
 
-  closeOnChildClick: false,
-
   click(event) {
-    let closeOnChildClick = this.closeOnChildClick;
+    let closeOnChildClick = 'a:link';
     let $target = event.target;
     let $c = this.element;
 
