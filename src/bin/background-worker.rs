@@ -12,7 +12,7 @@
 
 #![deny(warnings, clippy::all, rust_2018_idioms)]
 
-use cargo_registry::git::Repository;
+use cargo_registry::git::{Credentials, Repository};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
 use std::thread::sleep;
@@ -34,9 +34,17 @@ fn main() {
 
     let username = dotenv::var("GIT_HTTP_USER");
     let password = dotenv::var("GIT_HTTP_PWD");
-    let credentials = match (username, password) {
-        (Ok(u), Ok(p)) => Some((u, p)),
-        _ => None,
+    let ssh_key = dotenv::var("GIT_SSH_KEY");
+    let credentials = match (username, password, ssh_key) {
+        (Ok(username), Ok(password), Err(_)) => Credentials::Http { username, password },
+        (Err(_), Err(_), Ok(encoded_key)) => Credentials::Ssh {
+            key: String::from_utf8(
+                base64::decode(&encoded_key).expect("failed to base64 decode the ssh key"),
+            )
+            .expect("failed to convert the ssh key to a string"),
+        },
+        (Ok(_), Ok(_), Ok(_)) => panic!("can't configure both http and ssh authentication"),
+        _ => Credentials::Missing,
     };
 
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")

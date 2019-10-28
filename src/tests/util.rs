@@ -26,6 +26,7 @@ use crate::{
 use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
+    git::Credentials,
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
     App, Config,
@@ -213,7 +214,7 @@ impl TestAppBuilder {
                 WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                None,
+                Credentials::Missing,
                 connection_pool.clone(),
                 app.config.uploader.clone(),
                 app.http_client().clone(),

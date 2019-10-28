@@ -12,6 +12,25 @@ use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
 use crate::util::errors::{std_error_no_send, CargoResult};
 
+#[derive(Clone)]
+pub enum Credentials {
+    Missing,
+    Http { username: String, password: String },
+    Ssh { key: String },
+}
+
+impl Credentials {
+    fn to_git2_credentials(&self) -> Result<git2::Cred, git2::Error> {
+        match self {
+            Credentials::Missing => Err(git2::Error::from_str("no authentication set")),
+            Credentials::Http { username, password } => {
+                git2::Cred::userpass_plaintext(username, password)
+            }
+            Credentials::Ssh { key } => git2::Cred::ssh_key_from_memory("git", None, key, None),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
     pub name: String,
@@ -79,7 +98,7 @@ impl Repository {
         &self,
         msg: &str,
         modified_file: &Path,
-        credentials: Option<(&str, &str)>,
+        credentials: &Credentials,
     ) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
@@ -100,11 +119,7 @@ impl Repository {
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.credentials(|_, _, _| {
-                credentials
-                    .ok_or_else(|| git2::Error::from_str("no authentication set"))
-                    .and_then(|(u, p)| git2::Cred::userpass_plaintext(u, p))
-            });
+            callbacks.credentials(|_, _, _| credentials.to_git2_credentials());
             callbacks.push_update_reference(|refname, status| {
                 assert_eq!(refname, "refs/heads/master");
                 if let Some(s) = status {

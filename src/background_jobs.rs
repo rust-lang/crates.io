@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
-use crate::git::Repository;
+use crate::git::{Credentials, Repository};
 use crate::uploaders::Uploader;
 use crate::util::errors::{CargoErrToStdErr, CargoResult};
 
@@ -22,7 +22,7 @@ impl swirl::db::DieselPool for DieselPool {
 #[allow(missing_debug_implementations)]
 pub struct Environment {
     index: Arc<Mutex<Repository>>,
-    pub credentials: Option<(String, String)>,
+    pub credentials: Credentials,
     // FIXME: https://github.com/sfackler/r2d2/pull/70
     pub connection_pool: AssertUnwindSafe<DieselPool>,
     pub uploader: Uploader,
@@ -46,7 +46,7 @@ impl Clone for Environment {
 impl Environment {
     pub fn new(
         index: Repository,
-        credentials: Option<(String, String)>,
+        credentials: Credentials,
         connection_pool: DieselPool,
         uploader: Uploader,
         http_client: reqwest::Client,
@@ -60,10 +60,8 @@ impl Environment {
         }
     }
 
-    pub fn credentials(&self) -> Option<(&str, &str)> {
-        self.credentials
-            .as_ref()
-            .map(|(u, p)| (u.as_str(), p.as_str()))
+    pub fn credentials(&self) -> &Credentials {
+        &self.credentials
     }
 
     pub fn connection(&self) -> Result<DieselPooledConn<'_>, PerformError> {
