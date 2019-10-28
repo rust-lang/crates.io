@@ -57,7 +57,11 @@
         {{/link-to}}
       </div>
       <div class='stats'>
-        {{{ if user.email user.email "&nbsp;" }}}
+        {{#if user.email}}
+          {{user.email}}
+        {{else}}
+          &nbsp;
+        {{/if}}
       </div>
       <div class='stats downloads'>
         <button class='remove-owner small yellow-button' {{action 'removeOwner' user}}>Remove</button>
