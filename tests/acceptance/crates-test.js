@@ -10,6 +10,9 @@ module('Acceptance | crates page', function(hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
+  // should match the default set in the crates controller
+  const per_page = 50;
+
   test('is accessible', async function(assert) {
     assert.expect(0);
 
@@ -53,23 +56,29 @@ module('Acceptance | crates page', function(hooks) {
   });
 
   test('listing crates', async function(assert) {
-    this.server.loadFixtures();
+    for (let i = 1; i <= per_page; i++) {
+      this.server.create('crate');
+    }
 
     await visit('/crates');
 
-    assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText('1-10');
-    assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText('19');
+    assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText(`1-${per_page}`);
+    assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${per_page}`);
   });
 
   test('navigating to next page of crates', async function(assert) {
-    this.server.loadFixtures();
+    for (let i = 1; i <= per_page + 2; i++) {
+      this.server.create('crate');
+    }
+    const page_start = per_page + 1;
+    const total = per_page + 2;
 
     await visit('/crates');
     await click('[data-test-pagination-next]');
 
     assert.equal(currentURL(), '/crates?page=2');
-    assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText('11-19');
-    assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText('19');
+    assert.dom('[data-test-crates-nav] [data-test-current-rows]').hasText(`${page_start}-${total}`);
+    assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${total}`);
   });
 
   test('crates default sort is alphabetical', async function(assert) {
