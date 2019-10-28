@@ -36,14 +36,19 @@ fn main() {
     let password = dotenv::var("GIT_HTTP_PWD");
     let ssh_key = dotenv::var("GIT_SSH_KEY");
     let credentials = match (username, password, ssh_key) {
+        (extra_user, extra_pass, Ok(encoded_key)) => {
+            if let (Ok(_), Ok(_)) = (extra_user, extra_pass) {
+                println!("warning: both http and ssh credentials to authenticate with git are set");
+                println!("note: ssh credentials will take precedence over the http ones");
+            }
+            Credentials::Ssh {
+                key: String::from_utf8(
+                    base64::decode(&encoded_key).expect("failed to base64 decode the ssh key"),
+                )
+                .expect("failed to convert the ssh key to a string"),
+            }
+        }
         (Ok(username), Ok(password), Err(_)) => Credentials::Http { username, password },
-        (Err(_), Err(_), Ok(encoded_key)) => Credentials::Ssh {
-            key: String::from_utf8(
-                base64::decode(&encoded_key).expect("failed to base64 decode the ssh key"),
-            )
-            .expect("failed to convert the ssh key to a string"),
-        },
-        (Ok(_), Ok(_), Ok(_)) => panic!("can't configure both http and ssh authentication"),
         _ => Credentials::Missing,
     };
 
