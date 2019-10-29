@@ -12,6 +12,8 @@ use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
 use crate::util::errors::{std_error_no_send, CargoResult};
 
+static DEFAULT_GIT_SSH_USERNAME: &str = "git";
+
 #[derive(Clone)]
 pub enum Credentials {
     Missing,
@@ -20,13 +22,35 @@ pub enum Credentials {
 }
 
 impl Credentials {
-    fn to_git2_credentials(&self) -> Result<git2::Cred, git2::Error> {
+    fn git2_callback(
+        &self,
+        user_from_url: Option<&str>,
+        cred_type: git2::CredentialType,
+    ) -> Result<git2::Cred, git2::Error> {
         match self {
             Credentials::Missing => Err(git2::Error::from_str("no authentication set")),
             Credentials::Http { username, password } => {
                 git2::Cred::userpass_plaintext(username, password)
             }
-            Credentials::Ssh { key } => git2::Cred::ssh_key_from_memory("git", None, key, None),
+            Credentials::Ssh { key } => {
+                // git2 might call the callback two times when requesting credentials:
+                //
+                // 1. If the username is not specified in the URL, the first call will request it,
+                //    without asking for the SSH key.
+                //
+                // 2. The other call will request the proper SSH key, and the username must be the
+                //    same one either specified in the URL or the previous call.
+                //
+                // More information on this behavior is available at the following links:
+                // - https://github.com/rust-lang/git2-rs/issues/329
+                // - https://libgit2.org/docs/guides/authentication/
+                let user = user_from_url.unwrap_or(DEFAULT_GIT_SSH_USERNAME);
+                if cred_type.contains(git2::CredentialType::USERNAME) {
+                    git2::Cred::username(user)
+                } else {
+                    git2::Cred::ssh_key_from_memory(user, None, key, None)
+                }
+            }
         }
     }
 }
@@ -119,7 +143,9 @@ impl Repository {
         {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
-            callbacks.credentials(|_, _, _| credentials.to_git2_credentials());
+            callbacks.credentials(|_, user_from_url, cred_type| {
+                credentials.git2_callback(user_from_url, cred_type)
+            });
             callbacks.push_update_reference(|refname, status| {
                 assert_eq!(refname, "refs/heads/master");
                 if let Some(s) = status {
