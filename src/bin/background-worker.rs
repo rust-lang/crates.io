@@ -59,7 +59,8 @@ fn main() {
 
     println!("Cloning index");
 
-    let repository = Repository::open(&config.index_location).expect("Failed to clone index");
+    let repository =
+        Repository::open(&config.index_location, &credentials).expect("Failed to clone index");
 
     let environment = Environment::new(
         repository,

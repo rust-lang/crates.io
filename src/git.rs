@@ -86,9 +86,11 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub fn open(url: &Url) -> CargoResult<Self> {
+    pub fn open(url: &Url, credentials: &Credentials) -> CargoResult<Self> {
         let checkout_path = TempDir::new("git")?;
-        let repository = git2::Repository::clone(url.as_str(), checkout_path.path())?;
+        let repository = git2::build::RepoBuilder::new()
+            .fetch_options(Self::fetch_options(credentials))
+            .clone(url.as_str(), checkout_path.path())?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
@@ -160,13 +162,27 @@ impl Repository {
         ref_status
     }
 
-    pub fn reset_head(&self) -> CargoResult<()> {
+    pub fn reset_head(&self, credentials: &Credentials) -> CargoResult<()> {
         let mut origin = self.repository.find_remote("origin")?;
-        origin.fetch(&["refs/heads/*:refs/heads/*"], None, None)?;
+        origin.fetch(
+            &["refs/heads/*:refs/heads/*"],
+            Some(&mut Self::fetch_options(credentials)),
+            None,
+        )?;
         let head = self.repository.head()?.target().unwrap();
         let obj = self.repository.find_object(head, None)?;
         self.repository.reset(&obj, git2::ResetType::Hard, None)?;
         Ok(())
+    }
+
+    fn fetch_options(credentials: &Credentials) -> git2::FetchOptions<'_> {
+        let mut callbacks = git2::RemoteCallbacks::new();
+        callbacks.credentials(move |_, user_from_url, cred_type| {
+            credentials.git2_callback(user_from_url, cred_type)
+        });
+        let mut opts = git2::FetchOptions::new();
+        opts.remote_callbacks(callbacks);
+        opts
     }
 }
 

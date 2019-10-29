@@ -210,8 +210,8 @@ impl TestAppBuilder {
 
         let runner = if self.build_job_runner {
             let connection_pool = app.diesel_database.clone();
-            let index =
-                WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
+            let index = WorkerRepository::open(&app.config.index_location, &Credentials::Missing)
+                .expect("Could not clone index");
             let environment = Environment::new(
                 index,
                 Credentials::Missing,

@@ -72,7 +72,7 @@ impl Environment {
 
     pub fn lock_index(&self) -> CargoResult<MutexGuard<'_, Repository>> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
-        repo.reset_head()?;
+        repo.reset_head(&self.credentials)?;
         Ok(repo)
     }
 
