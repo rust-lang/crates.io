@@ -22,54 +22,6 @@ impl<'a> MarkdownRenderer<'a> {
     /// Per `readme_to_html`, `base_url` is the base URL prepended to any
     /// relative links in the input document.  See that function for more detail.
     fn new(base_url: Option<&'a str>) -> MarkdownRenderer<'a> {
-        let tags = hashset(&[
-            "a",
-            "b",
-            "blockquote",
-            "br",
-            "code",
-            "dd",
-            "del",
-            "dl",
-            "dt",
-            "em",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-            "hr",
-            "i",
-            "img",
-            "input",
-            "kbd",
-            "li",
-            "ol",
-            "p",
-            "pre",
-            "s",
-            "strike",
-            "strong",
-            "sub",
-            "sup",
-            "table",
-            "tbody",
-            "td",
-            "th",
-            "thead",
-            "tr",
-            "ul",
-            "hr",
-            "span",
-        ]);
-        let tag_attributes = hashmap(&[
-            ("a", hashset(&["href", "id", "target"])),
-            ("img", hashset(&["width", "height", "src", "alt", "align"])),
-            ("input", hashset(&["checked", "disabled", "type"])),
-            ("th", hashset(&["rowspan", "colspan"])),
-            ("td", hashset(&["rowspan", "colspan"])),
-        ]);
         let allowed_classes = hashmap(&[(
             "code",
             hashset(&[
@@ -91,11 +43,12 @@ impl<'a> MarkdownRenderer<'a> {
         )]);
         let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url)));
 
-        let mut html_sanitizer = Builder::new();
+        let mut html_sanitizer = Builder::default();
         html_sanitizer
+            .add_tags(&["input"])
             .link_rel(Some("nofollow noopener noreferrer"))
-            .tags(tags)
-            .tag_attributes(tag_attributes)
+            .add_tag_attributes("a", &["id", "target"])
+            .add_tag_attributes("input", &["checked", "disabled", "type"])
             .allowed_classes(allowed_classes)
             .url_relative(sanitize_url)
             .id_prefix(Some("user-content-"));
