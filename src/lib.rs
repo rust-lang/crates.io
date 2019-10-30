@@ -154,11 +154,10 @@ async fn blocking_handler<H: conduit::Handler>(
     remote_addr: std::net::SocketAddr,
 ) -> Result<Response<Body>, hyper::Error> {
     let (parts, body) = request.into_parts();
-
     let full_body = body.try_concat().await?;
     let mut request_info = RequestInfo::new(parts, full_body);
 
-    future::poll_fn(move |_| {
+    let future = future::poll_fn(move |_| {
         tokio_executor::threadpool::blocking(|| {
             let mut request = ConduitRequest::new(&mut request_info, remote_addr);
             handler
@@ -167,7 +166,12 @@ async fn blocking_handler<H: conduit::Handler>(
                 .unwrap_or_else(|e| error_response(&e.to_string()))
         })
         .map_err(|_| panic!("the threadpool shut down"))
-    }).await
+    });
+
+    // Spawn as a new top-level task, otherwise the parent task is blocked as well
+    let (future, handle) = future.remote_handle();
+    tokio_executor::spawn(future);
+    handle.await
 }
 
 #[derive(Debug)]
