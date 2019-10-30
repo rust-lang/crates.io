@@ -155,22 +155,19 @@ async fn blocking_handler<H: conduit::Handler>(
 ) -> Result<Response<Body>, hyper::Error> {
     let (parts, body) = request.into_parts();
 
-    body.try_concat()
-        .and_then(|full_body| {
-            let mut request_info = RequestInfo::new(parts, full_body);
+    let full_body = body.try_concat().await?;
+    let mut request_info = RequestInfo::new(parts, full_body);
 
-            future::poll_fn(move |_| {
-                tokio_executor::threadpool::blocking(|| {
-                    let mut request = ConduitRequest::new(&mut request_info, remote_addr);
-                    handler
-                        .call(&mut request)
-                        .map(good_response)
-                        .unwrap_or_else(|e| error_response(&e.to_string()))
-                })
-                .map_err(|_| panic!("the threadpool shut down"))
-            })
+    future::poll_fn(move |_| {
+        tokio_executor::threadpool::blocking(|| {
+            let mut request = ConduitRequest::new(&mut request_info, remote_addr);
+            handler
+                .call(&mut request)
+                .map(good_response)
+                .unwrap_or_else(|e| error_response(&e.to_string()))
         })
-        .await
+        .map_err(|_| panic!("the threadpool shut down"))
+    }).await
 }
 
 #[derive(Debug)]
