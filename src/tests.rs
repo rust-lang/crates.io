@@ -100,7 +100,7 @@ fn make_service<H: Handler>(
 
     service_fn(move |request: hyper::Request<hyper::Body>| {
         let remote_addr = ([0, 0, 0, 0], 0).into();
-        super::blocking_handler(handler.clone(), request, remote_addr)
+        super::service::blocking_handler(handler.clone(), request, remote_addr)
     })
 }
 
