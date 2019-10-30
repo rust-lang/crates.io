@@ -4,10 +4,10 @@ use std::path::{Component, Path, PathBuf};
 
 use hyper::{Chunk, Method, Version};
 
-/// Owned data consumed by the worker thread
+/// Owned data consumed by the background thread
 ///
-/// `ConduitRequest` cannot be sent between threads, so the input data is
-/// captured on a core thread and taken by the worker thread.
+/// `ConduitRequest` cannot be sent between threads, so the needed request data
+/// is extracted from hyper on a core thread and taken by the background thread.
 pub(crate) struct RequestInfo(Option<(Parts, Chunk)>);
 
 impl RequestInfo {
@@ -19,7 +19,7 @@ impl RequestInfo {
 
     /// Take back the request info
     ///
-    /// Call this from the worker thread to obtain ownership of the `Send` data
+    /// Call this from the background thread to obtain ownership of the `Send` data
     ///
     /// # Panics
     ///
@@ -49,7 +49,7 @@ impl conduit::Headers for Parts {
             .get_all(key)
             .iter()
             .map(|v| v.to_str().unwrap_or(""))
-            .collect::<Vec<&str>>();
+            .collect::<Vec<_>>();
 
         if values.is_empty() {
             None
@@ -91,6 +91,8 @@ impl ConduitRequest {
         let path = Path::new(&path);
         let path = path
             .components()
+            // Normalize path (needed by crates.io)
+            // TODO: Make this optional?
             .fold(PathBuf::new(), |mut result, p| match p {
                 Component::Normal(x) => {
                     if x != "" {
@@ -119,11 +121,15 @@ impl ConduitRequest {
             extensions: conduit::Extensions::new(),
         }
     }
+
+    fn parts(&self) -> &http::request::Parts {
+        &self.parts.0
+    }
 }
 
 impl conduit::Request for ConduitRequest {
     fn http_version(&self) -> semver::Version {
-        match self.parts.0.version {
+        match self.parts().version {
             Version::HTTP_09 => version(0, 9),
             Version::HTTP_10 => version(1, 0),
             Version::HTTP_11 => version(1, 1),
@@ -136,7 +142,7 @@ impl conduit::Request for ConduitRequest {
     }
 
     fn method(&self) -> conduit::Method {
-        match self.parts.0.method {
+        match self.parts().method {
             Method::CONNECT => conduit::Method::Connect,
             Method::DELETE => conduit::Method::Delete,
             Method::GET => conduit::Method::Get,
@@ -146,7 +152,7 @@ impl conduit::Request for ConduitRequest {
             Method::POST => conduit::Method::Post,
             Method::PUT => conduit::Method::Put,
             Method::TRACE => conduit::Method::Trace,
-            _ => conduit::Method::Other(self.parts.0.method.to_string()),
+            _ => conduit::Method::Other(self.parts().method.to_string()),
         }
     }
 
@@ -199,7 +205,7 @@ impl conduit::Request for ConduitRequest {
     }
 
     fn query_string(&self) -> Option<&str> {
-        self.parts.0.uri.query()
+        self.parts().uri.query()
     }
 
     fn body(&mut self) -> &mut dyn Read {
