@@ -4,7 +4,9 @@ use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use hyper::server::conn::AddrStream;
 use hyper::service;
+use service::make_service_fn;
 
 /// A builder for a `hyper::Server` (behind an opaque `impl Future`).
 #[derive(Debug)]
@@ -18,11 +20,7 @@ impl Server {
     /// control, such as configuring a graceful shutdown is necessary, then call
     /// `Service::from_conduit` instead.
     pub fn bind<H: conduit::Handler>(addr: &SocketAddr, handler: H) -> impl Future {
-        use hyper::server::conn::AddrStream;
-        use service::make_service_fn;
-
         let handler = Arc::new(handler);
-
         let make_service = make_service_fn(move |socket: &AddrStream| {
             let handler = handler.clone();
             let remote_addr = socket.remote_addr();

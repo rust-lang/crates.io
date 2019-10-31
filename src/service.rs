@@ -1,10 +1,11 @@
 use super::adaptor::{ConduitRequest, RequestInfo};
 
 use std::future::Future;
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use futures::prelude::*;
-use hyper::{service, Body, Request, Response, StatusCode};
+use hyper::{service, Body, Error, Request, Response, StatusCode};
 use tracing::error;
 
 /// A builder for a `hyper::Service`.
@@ -48,15 +49,15 @@ impl Service {
     /// ```
     pub fn from_conduit<H: conduit::Handler>(
         handler: Arc<H>,
-        remote_addr: std::net::SocketAddr,
+        remote_addr: SocketAddr,
     ) -> Result<
         impl tower_service::Service<
             Request<Body>,
             Response = Response<Body>,
-            Error = hyper::Error,
-            Future = impl Future<Output = Result<Response<Body>, hyper::Error>> + Send + 'static,
+            Error = Error,
+            Future = impl Future<Output = Result<Response<Body>, Error>> + Send + 'static,
         >,
-        hyper::Error,
+        Error,
     > {
         Ok(service::service_fn(move |request: Request<Body>| {
             blocking_handler(handler.clone(), request, remote_addr)
@@ -64,11 +65,12 @@ impl Service {
     }
 }
 
+// pub(crate) is for tests
 pub(crate) async fn blocking_handler<H: conduit::Handler>(
     handler: Arc<H>,
     request: Request<Body>,
-    remote_addr: std::net::SocketAddr,
-) -> Result<Response<Body>, hyper::Error> {
+    remote_addr: SocketAddr,
+) -> Result<Response<Body>, Error> {
     let (parts, body) = request.into_parts();
     let full_body = body.try_concat().await?;
     let mut request_info = RequestInfo::new(parts, full_body);
@@ -81,7 +83,7 @@ pub(crate) async fn blocking_handler<H: conduit::Handler>(
                 .map(good_response)
                 .unwrap_or_else(|e| error_response(&e.to_string()))
         })
-        .map_err(|_| panic!("the threadpool shut down"))
+        .map_err(|_| panic!("The threadpool shut down"))
     });
 
     // Spawn as a new top-level task, otherwise the parent task is blocked as well
@@ -122,5 +124,5 @@ fn error_response(message: &str) -> Response<Body> {
     Response::builder()
         .status(500)
         .body(body)
-        .expect("unexpected invalid header")
+        .expect("Unexpected invalid header")
 }
