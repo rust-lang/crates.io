@@ -37,7 +37,6 @@ use std::{
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{Client, Proxy};
-use url::Url;
 
 macro_rules! t {
     ($e:expr) => {
@@ -137,7 +136,6 @@ fn simple_config() -> Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
-        index_location: Url::from_file_path(&git::bare()).unwrap(),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),

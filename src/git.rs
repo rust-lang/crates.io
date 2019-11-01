@@ -80,17 +80,83 @@ pub struct Dependency {
     pub package: Option<String>,
 }
 
+pub struct RepositoryConfig {
+    pub index_location: Url,
+    pub credentials: Credentials,
+}
+
+impl RepositoryConfig {
+    pub fn from_environment() -> Self {
+        let username = dotenv::var("GIT_HTTP_USER");
+        let password = dotenv::var("GIT_HTTP_PWD");
+        let http_url = dotenv::var("GIT_REPO_URL");
+
+        let ssh_key = dotenv::var("GIT_SSH_KEY");
+        let ssh_url = dotenv::var("GIT_SSH_REPO_URL");
+
+        match (username, password, http_url, ssh_key, ssh_url) {
+            (extra_user, extra_pass, extra_http_url, Ok(encoded_key), Ok(ssh_url)) => {
+                if let (Ok(_), Ok(_), Ok(_)) = (extra_user, extra_pass, extra_http_url) {
+                    println!(
+                        "warning: both http and ssh credentials to authenticate with git are set"
+                    );
+                    println!("note: ssh credentials will take precedence over the http ones");
+                }
+
+                let index_location =
+                    Url::parse(&ssh_url).expect("failed to parse GIT_SSH_REPO_URL");
+
+                let credentials = Credentials::Ssh {
+                    key: String::from_utf8(
+                        base64::decode(&encoded_key).expect("failed to base64 decode the ssh key"),
+                    )
+                    .expect("failed to convert the ssh key to a string"),
+                };
+
+                Self {
+                    index_location,
+                    credentials,
+                }
+            }
+            (Ok(username), Ok(password), Ok(http_url), Err(_), Err(_)) => {
+                let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
+                let credentials = Credentials::Http { username, password };
+
+                Self {
+                    index_location,
+                    credentials,
+                }
+            }
+            (_, _, Ok(http_url), _, _) => {
+                let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
+                let credentials = Credentials::Missing;
+
+                Self {
+                    index_location,
+                    credentials,
+                }
+            }
+            _ => panic!("must have `GIT_REPO_URL` defined"),
+        }
+    }
+}
+
 pub struct Repository {
     checkout_path: TempDir,
     repository: git2::Repository,
+    credentials: Credentials,
 }
 
 impl Repository {
-    pub fn open(url: &Url, credentials: &Credentials) -> CargoResult<Self> {
+    pub fn open(repository_config: &RepositoryConfig) -> CargoResult<Self> {
         let checkout_path = TempDir::new("git")?;
+
         let repository = git2::build::RepoBuilder::new()
-            .fetch_options(Self::fetch_options(credentials))
-            .clone(url.as_str(), checkout_path.path())?;
+            .fetch_options(Self::fetch_options(&repository_config.credentials))
+            .clone(
+                repository_config.index_location.as_str(),
+                checkout_path.path(),
+            )?;
 
         // All commits to the index registry made through crates.io will be made by bors, the Rust
         // community's friendly GitHub bot.
@@ -101,6 +167,7 @@ impl Repository {
         Ok(Self {
             checkout_path,
             repository,
+            credentials: repository_config.credentials.clone(),
         })
     }
 
@@ -120,12 +187,7 @@ impl Repository {
         }
     }
 
-    fn commit_and_push(
-        &self,
-        msg: &str,
-        modified_file: &Path,
-        credentials: &Credentials,
-    ) -> Result<(), PerformError> {
+    fn commit_and_push(&self, msg: &str, modified_file: &Path) -> Result<(), PerformError> {
         // git add $file
         let mut index = self.repository.index()?;
         index.add_path(modified_file)?;
@@ -146,7 +208,7 @@ impl Repository {
             let mut origin = self.repository.find_remote("origin")?;
             let mut callbacks = git2::RemoteCallbacks::new();
             callbacks.credentials(|_, user_from_url, cred_type| {
-                credentials.git2_callback(user_from_url, cred_type)
+                self.credentials.git2_callback(user_from_url, cred_type)
             });
             callbacks.push_update_reference(|refname, status| {
                 assert_eq!(refname, "refs/heads/master");
@@ -162,11 +224,11 @@ impl Repository {
         ref_status
     }
 
-    pub fn reset_head(&self, credentials: &Credentials) -> CargoResult<()> {
+    pub fn reset_head(&self) -> CargoResult<()> {
         let mut origin = self.repository.find_remote("origin")?;
         origin.fetch(
             &["refs/heads/*:refs/heads/*"],
-            Some(&mut Self::fetch_options(credentials)),
+            Some(&mut Self::fetch_options(&self.credentials)),
             None,
         )?;
         let head = self.repository.head()?.target().unwrap();
@@ -202,7 +264,6 @@ pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     repo.commit_and_push(
         &format!("Updating crate `{}#{}`", krate.name, krate.vers),
         &repo.relative_index_file(&krate.name),
-        env.credentials(),
     )
 }
 
@@ -261,7 +322,6 @@ pub fn yank(
                 version.num
             ),
             &repo.relative_index_file(&krate),
-            env.credentials(),
         )?;
 
         diesel::update(&version)

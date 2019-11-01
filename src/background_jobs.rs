@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use swirl::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
-use crate::git::{Credentials, Repository};
+use crate::git::Repository;
 use crate::uploaders::Uploader;
 use crate::util::errors::{CargoErrToStdErr, CargoResult};
 
@@ -22,7 +22,6 @@ impl swirl::db::DieselPool for DieselPool {
 #[allow(missing_debug_implementations)]
 pub struct Environment {
     index: Arc<Mutex<Repository>>,
-    pub credentials: Credentials,
     // FIXME: https://github.com/sfackler/r2d2/pull/70
     pub connection_pool: AssertUnwindSafe<DieselPool>,
     pub uploader: Uploader,
@@ -35,7 +34,6 @@ impl Clone for Environment {
     fn clone(&self) -> Self {
         Self {
             index: self.index.clone(),
-            credentials: self.credentials.clone(),
             connection_pool: AssertUnwindSafe(self.connection_pool.0.clone()),
             uploader: self.uploader.clone(),
             http_client: AssertUnwindSafe(self.http_client.0.clone()),
@@ -46,22 +44,16 @@ impl Clone for Environment {
 impl Environment {
     pub fn new(
         index: Repository,
-        credentials: Credentials,
         connection_pool: DieselPool,
         uploader: Uploader,
         http_client: reqwest::Client,
     ) -> Self {
         Self {
             index: Arc::new(Mutex::new(index)),
-            credentials,
             connection_pool: AssertUnwindSafe(connection_pool),
             uploader,
             http_client: AssertUnwindSafe(http_client),
         }
-    }
-
-    pub fn credentials(&self) -> &Credentials {
-        &self.credentials
     }
 
     pub fn connection(&self) -> Result<DieselPooledConn<'_>, PerformError> {
@@ -72,7 +64,7 @@ impl Environment {
 
     pub fn lock_index(&self) -> CargoResult<MutexGuard<'_, Repository>> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
-        repo.reset_head(&self.credentials)?;
+        repo.reset_head()?;
         Ok(repo)
     }
 
