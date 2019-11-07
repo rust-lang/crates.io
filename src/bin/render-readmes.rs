@@ -79,9 +79,7 @@ fn main() {
         query = query.filter(crates::name.eq(crate_name));
     }
 
-    let version_ids = query
-        .load::<(i32)>(&conn)
-        .expect("error loading version ids");
+    let version_ids = query.load::<i32>(&conn).expect("error loading version ids");
 
     let total_versions = version_ids.len();
     println!("Rendering {} versions", total_versions);
