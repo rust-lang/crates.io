@@ -272,8 +272,7 @@ mod tests {
 
     #[test]
     fn text_with_inline_javascript() {
-        let text =
-            r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
+        let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
         let result = markdown_to_html(text, None);
         assert_eq!(
             result,
