@@ -1,8 +1,22 @@
+//! Types implementing `conduit::Request` and `conduit::Headers` to provide to the guest application
+//!
+//! `ConduitRequest` and `Parts` implement `conduit::Request` and `conduit::Headers` respectively.
+//! `Parts` is the concrete type that is returned from `ConduitRequest::headers()` as a
+//! `&dyn conduit::Headers`.
+//!
+//! Because a `ConduitRequest` needs to carry around an `Extensions`, it cannot be `Send`.
+//! Therefore, construction of this value must be deferred to the background thread where it will
+//! be used.  To work around this, the essential request information from hyper is captured in a
+//! `RequestInfo` which is `Send` and is moved into `ConduitRequest::new`.
+
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
 
-use hyper::{Chunk, Method, Version};
+use conduit::{Extensions, Headers, Host, Method, Request, Scheme};
+use http::{request::Parts as HttpParts, HeaderMap};
+use hyper::{Chunk, Method as HyperMethod, Version as HttpVersion};
+use semver::Version;
 
 /// Owned data consumed by the background thread
 ///
@@ -12,33 +26,33 @@ pub(crate) struct RequestInfo(Option<(Parts, Chunk)>);
 
 impl RequestInfo {
     /// Save the request info that can be sent between threads
-    pub(crate) fn new(parts: http::request::Parts, body: Chunk) -> Self {
+    pub(crate) fn new(parts: HttpParts, body: Chunk) -> Self {
         let tuple = (Parts(parts), body);
         Self(Some(tuple))
     }
 
     /// Take back the request info
     ///
-    /// Call this from the background thread to obtain ownership of the `Send` data
+    /// Call this from the background thread to obtain ownership of the `Send` data.
     ///
     /// # Panics
     ///
-    /// Panics if called more than once on a value
+    /// Panics if called more than once on a value.
     fn take(&mut self) -> (Parts, Chunk) {
         self.0.take().expect("called take multiple times")
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct Parts(http::request::Parts);
+pub(crate) struct Parts(HttpParts);
 
 impl Parts {
-    fn headers(&self) -> &http::HeaderMap {
+    fn headers(&self) -> &HeaderMap {
         &self.0.headers
     }
 }
 
-impl conduit::Headers for Parts {
+impl Headers for Parts {
     /// Find all values associated with a header, or None.
     ///
     /// If the value of a header is not valid UTF-8, that value
@@ -81,7 +95,7 @@ pub(crate) struct ConduitRequest {
     path: String,
     remote_addr: SocketAddr,
     body: Cursor<Chunk>,
-    extensions: conduit::Extensions, // makes struct non-Send
+    extensions: Extensions, // makes struct non-Send
 }
 
 impl ConduitRequest {
@@ -118,50 +132,50 @@ impl ConduitRequest {
             path,
             remote_addr,
             body: Cursor::new(body),
-            extensions: conduit::Extensions::new(),
+            extensions: Extensions::new(),
         }
     }
 
-    fn parts(&self) -> &http::request::Parts {
+    fn parts(&self) -> &HttpParts {
         &self.parts.0
     }
 }
 
-impl conduit::Request for ConduitRequest {
-    fn http_version(&self) -> semver::Version {
+impl Request for ConduitRequest {
+    fn http_version(&self) -> Version {
         match self.parts().version {
-            Version::HTTP_09 => version(0, 9),
-            Version::HTTP_10 => version(1, 0),
-            Version::HTTP_11 => version(1, 1),
-            Version::HTTP_2 => version(2, 0),
+            HttpVersion::HTTP_09 => version(0, 9),
+            HttpVersion::HTTP_10 => version(1, 0),
+            HttpVersion::HTTP_11 => version(1, 1),
+            HttpVersion::HTTP_2 => version(2, 0),
         }
     }
 
-    fn conduit_version(&self) -> semver::Version {
+    fn conduit_version(&self) -> Version {
         version(0, 1)
     }
 
-    fn method(&self) -> conduit::Method {
+    fn method(&self) -> Method {
         match self.parts().method {
-            Method::CONNECT => conduit::Method::Connect,
-            Method::DELETE => conduit::Method::Delete,
-            Method::GET => conduit::Method::Get,
-            Method::HEAD => conduit::Method::Head,
-            Method::OPTIONS => conduit::Method::Options,
-            Method::PATCH => conduit::Method::Patch,
-            Method::POST => conduit::Method::Post,
-            Method::PUT => conduit::Method::Put,
-            Method::TRACE => conduit::Method::Trace,
-            _ => conduit::Method::Other(self.parts().method.to_string()),
+            HyperMethod::CONNECT => Method::Connect,
+            HyperMethod::DELETE => Method::Delete,
+            HyperMethod::GET => Method::Get,
+            HyperMethod::HEAD => Method::Head,
+            HyperMethod::OPTIONS => Method::Options,
+            HyperMethod::PATCH => Method::Patch,
+            HyperMethod::POST => Method::Post,
+            HyperMethod::PUT => Method::Put,
+            HyperMethod::TRACE => Method::Trace,
+            _ => Method::Other(self.parts().method.to_string()),
         }
     }
 
     /// Always returns Http
-    fn scheme(&self) -> conduit::Scheme {
-        conduit::Scheme::Http
+    fn scheme(&self) -> Scheme {
+        Scheme::Http
     }
 
-    fn headers(&self) -> &dyn conduit::Headers {
+    fn headers(&self) -> &dyn Headers {
         &self.parts
     }
 
@@ -183,25 +197,25 @@ impl conduit::Request for ConduitRequest {
         &*self.path
     }
 
-    fn extensions(&self) -> &conduit::Extensions {
+    fn extensions(&self) -> &Extensions {
         &self.extensions
     }
 
-    fn mut_extensions(&mut self) -> &mut conduit::Extensions {
+    fn mut_extensions(&mut self) -> &mut Extensions {
         &mut self.extensions
     }
 
     /// Returns the value of the `Host` header
     ///
     /// If the header is not present or is invalid UTF-8, then the empty string is returned
-    fn host(&self) -> conduit::Host<'_> {
+    fn host(&self) -> Host<'_> {
         let host = self
             .parts
             .headers()
             .get("host")
             .map(|h| h.to_str().unwrap_or(""))
             .unwrap_or("");
-        conduit::Host::Name(host)
+        Host::Name(host)
     }
 
     fn query_string(&self) -> Option<&str> {
@@ -213,8 +227,8 @@ impl conduit::Request for ConduitRequest {
     }
 }
 
-fn version(major: u64, minor: u64) -> semver::Version {
-    semver::Version {
+fn version(major: u64, minor: u64) -> Version {
+    Version {
         major,
         minor,
         patch: 0,
