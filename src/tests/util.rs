@@ -26,6 +26,7 @@ use crate::{
 use cargo_registry::{
     background_jobs::Environment,
     db::DieselPool,
+    git::{Credentials, RepositoryConfig},
     middleware::current_user::AuthenticationSource,
     models::{ApiToken, User},
     App, Config,
@@ -39,6 +40,8 @@ use conduit_test::MockRequest;
 
 use cargo_registry::git::Repository as WorkerRepository;
 use git2::Repository as UpstreamRepository;
+
+use url::Url;
 
 struct TestAppInner {
     app: Arc<App>,
@@ -205,15 +208,19 @@ pub struct TestAppBuilder {
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(self) -> (TestApp, MockAnonymousUser) {
+        use crate::git;
+
         let (app, middle) = crate::build_app(self.config, self.proxy);
 
         let runner = if self.build_job_runner {
             let connection_pool = app.diesel_database.clone();
-            let index =
-                WorkerRepository::open(&app.config.index_location).expect("Could not clone index");
+            let repository_config = RepositoryConfig {
+                index_location: Url::from_file_path(&git::bare()).unwrap(),
+                credentials: Credentials::Missing,
+            };
+            let index = WorkerRepository::open(&repository_config).expect("Could not clone index");
             let environment = Environment::new(
                 index,
-                None,
                 connection_pool.clone(),
                 app.config.uploader.clone(),
                 app.http_client().clone(),
