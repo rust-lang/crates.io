@@ -4,6 +4,7 @@ cache:
   cargo: true
 
 rust:
+  - stable
   - beta
   - nightly
 
