@@ -33,7 +33,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "broccoli-asset-rev": "^3.0.0",
     "ember-a11y-testing": "^0.5.0",
-    "ember-cli": "~3.9.0",
+    "ember-cli": "~3.12.0",
     "ember-cli-app-version": "^3.1.3",
     "ember-cli-babel": "^6.14.1",
     "ember-cli-cjs-transform": "^1.3.0",
@@ -82,7 +82,7 @@
     "normalize.css": "^7.0.0",
     "nyc": "^14.1.1",
     "prettier": "^1.13.4",
-    "qunit-dom": "^0.8.4",
+    "qunit-dom": "^0.9.0",
     "sass": "^1.23.0-module.beta.1",
     "semver": "^6.3.0",
     "timekeeper": "^2.1.0"
