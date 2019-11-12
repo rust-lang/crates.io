@@ -86,7 +86,7 @@ fn index() {
     assert_eq!(json.meta.total, 0);
 
     let krate = app.db(|conn| {
-        let u = new_user("foo").create_or_update(conn).unwrap();
+        let u = new_user("foo").create_or_update(None, conn).unwrap();
         CrateBuilder::new("fooindex", u.id).expect_build(conn)
     });
 

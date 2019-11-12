@@ -267,7 +267,7 @@ fn token_gives_access_to_me() {
     anon.get(url).assert_forbidden();
 
     let json: UserShowPrivateResponse = token.get(url).good();
-    assert_eq!(json.user.email, user.as_model().email);
+    assert_eq!(json.user.name, user.as_model().name);
 }
 
 #[test]
