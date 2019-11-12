@@ -325,7 +325,7 @@ mod tests {
             gh_login,
             ..NewUser::default()
         }
-        .create_or_update(conn)?;
+        .create_or_update(None, conn)?;
         Ok(user.id)
     }
 

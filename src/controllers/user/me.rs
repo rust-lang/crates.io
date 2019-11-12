@@ -38,10 +38,10 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    let user = User { email, ..user };
+    let user = User { ..user };
 
     Ok(req.json(&EncodableMe {
-        user: user.encodable_private(verified, verification_sent),
+        user: user.encodable_private(email, verified, verification_sent)?,
     }))
 }
 
@@ -91,8 +91,7 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 /// Handles the `PUT /user/:user_id` route.
 pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
     use self::emails::user_id;
-    use self::users::dsl::{email, gh_login, users};
-    use diesel::{insert_into, update};
+    use diesel::insert_into;
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
@@ -130,10 +129,6 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     conn.transaction::<_, Box<dyn CargoError>, _>(|| {
-        update(users.filter(gh_login.eq(&user.gh_login)))
-            .set(email.eq(user_email))
-            .execute(&*conn)?;
-
         let new_email = NewEmail {
             user_id: user.id,
             email: user_email,

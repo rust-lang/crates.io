@@ -118,12 +118,11 @@ impl GithubUser {
         NewUser::new(
             self.id,
             &self.login,
-            self.email.as_ref().map(|s| &s[..]),
             self.name.as_ref().map(|s| &s[..]),
             self.avatar_url.as_ref().map(|s| &s[..]),
             access_token,
         )
-        .create_or_update(conn)
+        .create_or_update(self.email.as_ref().map(|s| &s[..]), conn)
         .map_err(Into::into)
         .or_else(|e: Box<dyn CargoError>| {
             // If we're in read only mode, we can't update their details

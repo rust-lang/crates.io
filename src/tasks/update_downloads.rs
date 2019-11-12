@@ -93,8 +93,8 @@ mod test {
     }
 
     fn user(conn: &PgConnection) -> User {
-        NewUser::new(2, "login", None, None, None, "access_token")
-            .create_or_update(conn)
+        NewUser::new(2, "login", None, None, "access_token")
+            .create_or_update(None, conn)
             .unwrap()
     }
 

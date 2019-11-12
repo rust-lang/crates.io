@@ -13,7 +13,6 @@ use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
 pub struct User {
     pub id: i32,
-    pub email: Option<String>,
     pub gh_access_token: String,
     pub gh_login: String,
     pub name: Option<String>,
@@ -21,12 +20,12 @@ pub struct User {
     pub gh_id: i32,
 }
 
+/// Represents a new user record insertible to the `users` table
 #[derive(Insertable, Debug, Default)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
-    pub email: Option<&'a str>,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: Cow<'a, str>,
@@ -36,7 +35,6 @@ impl<'a> NewUser<'a> {
     pub fn new(
         gh_id: i32,
         gh_login: &'a str,
-        email: Option<&'a str>,
         name: Option<&'a str>,
         gh_avatar: Option<&'a str>,
         gh_access_token: &'a str,
@@ -44,7 +42,6 @@ impl<'a> NewUser<'a> {
         NewUser {
             gh_id,
             gh_login,
-            email,
             name,
             gh_avatar,
             gh_access_token: Cow::Borrowed(gh_access_token),
@@ -52,7 +49,11 @@ impl<'a> NewUser<'a> {
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
+    pub fn create_or_update(
+        &self,
+        email: Option<&'a str>,
+        conn: &PgConnection,
+    ) -> QueryResult<User> {
         use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
         use diesel::insert_into;
@@ -81,7 +82,7 @@ impl<'a> NewUser<'a> {
                 .get_result::<User>(conn)?;
 
             // To send the user an account verification email...
-            if let Some(user_email) = user.email.as_ref() {
+            if let Some(user_email) = email {
                 let new_email = NewEmail {
                     user_id: user.id,
                     email: user_email,
@@ -168,6 +169,8 @@ impl User {
         Ok(best)
     }
 
+    /// Queries the database for the verified emails
+    /// belonging to a given user
     pub fn verified_email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
@@ -179,19 +182,21 @@ impl User {
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
     pub fn encodable_private(
         self,
+        email: Option<String>,
+
         email_verified: bool,
         email_verification_sent: bool,
-    ) -> EncodablePrivateUser {
+    ) -> CargoResult<EncodablePrivateUser> {
         let User {
             id,
-            email,
             name,
             gh_login,
             gh_avatar,
             ..
         } = self;
         let url = format!("https://github.com/{}", gh_login);
-        EncodablePrivateUser {
+
+        Ok(EncodablePrivateUser {
             id,
             email,
             email_verified,
@@ -200,7 +205,15 @@ impl User {
             login: gh_login,
             name,
             url: Some(url),
-        }
+        })
+    }
+
+    /// Queries for the email belonging to a particular user
+    pub fn email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+        Ok(Email::belonging_to(self)
+            .select(emails::email)
+            .first::<String>(&*conn)
+            .optional()?)
     }
 
     /// Converts this`User` model into an `EncodablePublicUser` for JSON serialization.
