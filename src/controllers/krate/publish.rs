@@ -10,7 +10,7 @@ use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use crate::render;
 use crate::util::{read_fill, read_le_u32};
-use crate::util::{CargoError, ChainError, Maximums};
+use crate::util::{ChainError, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -167,8 +167,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
                     .unwrap_or_else(|| String::from("README.md")),
                 repo,
             )
-            .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+            .enqueue(&conn)?;
         }
 
         let cksum = app
@@ -189,9 +188,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
             yanked: Some(false),
             links,
         };
-        git::add_crate(git_crate)
-            .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+        git::add_crate(git_crate).enqueue(&conn)?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`

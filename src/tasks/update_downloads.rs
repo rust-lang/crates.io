@@ -8,9 +8,8 @@ use diesel::prelude::*;
 use swirl::PerformError;
 
 #[swirl::background_job]
-pub fn update_downloads(env: &Environment) -> Result<(), PerformError> {
-    let conn = env.connection()?;
-    update(&conn)?;
+pub fn update_downloads(_env: &Environment, conn: &PgConnection) -> Result<(), PerformError> {
+    update(conn)?;
     Ok(())
 }
 

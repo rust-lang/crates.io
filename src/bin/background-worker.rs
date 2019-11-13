@@ -14,7 +14,6 @@
 
 use cargo_registry::git::Repository;
 use cargo_registry::{background_jobs::*, db};
-use diesel::r2d2;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -22,16 +21,7 @@ fn main() {
     println!("Booting runner");
 
     let config = cargo_registry::Config::default();
-
-    // 2x the thread pool size -- not all our jobs need a DB connection,
-    // but we want to always be able to run our jobs in parallel, rather
-    // than adjusting based on how many concurrent jobs need a connection.
-    // Eventually swirl will do this for us, and this will be the default
-    // -- we should just let it do a thread pool size of CPU count, and a
-    // a connection pool size of 2x that when that lands.
-    let db_config = r2d2::Pool::builder().max_size(4);
-    let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
-
+    let db_url = db::database_url(&config.db_url);
     let username = dotenv::var("GIT_HTTP_USER");
     let password = dotenv::var("GIT_HTTP_PWD");
     let credentials = match (username, password) {
@@ -51,13 +41,13 @@ fn main() {
     let environment = Environment::new(
         repository,
         credentials,
-        db_pool.clone(),
         config.uploader,
         reqwest::Client::new(),
     );
 
     let build_runner = || {
-        swirl::Runner::builder(db_pool.clone(), environment.clone())
+        swirl::Runner::builder(environment.clone())
+            .database_url(db_url.clone())
             .thread_count(2)
             .job_start_timeout(Duration::from_secs(job_start_timeout))
             .build()

@@ -51,11 +51,7 @@ impl dyn CargoError {
         self.get_type_id() == TypeId::of::<T>()
     }
 
-    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn CargoError> {
-        Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
-    }
-
-    fn try_convert(err: &(dyn Error + Send + 'static)) -> Option<Box<Self>> {
+    fn try_convert(err: &(dyn Error + 'static)) -> Option<Box<Self>> {
         match err.downcast_ref() {
             Some(DieselError::NotFound) => Some(Box::new(NotFound)),
             Some(DieselError::DatabaseError(_, info))
@@ -63,7 +59,7 @@ impl dyn CargoError {
             {
                 Some(Box::new(ReadOnlyMode))
             }
-            _ => None,
+            _ => err.source().and_then(Self::try_convert),
         }
     }
 }

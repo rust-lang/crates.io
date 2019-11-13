@@ -18,7 +18,7 @@ pub enum DieselPool {
 }
 
 impl DieselPool {
-    pub fn get(&self) -> CargoResult<DieselPooledConn<'_>> {
+    pub fn get(&self) -> Result<DieselPooledConn<'_>, diesel::r2d2::PoolError> {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),
@@ -57,11 +57,16 @@ impl Deref for DieselPooledConn<'_> {
 }
 
 pub fn connect_now() -> ConnectionResult<PgConnection> {
-    let mut url = Url::parse(&crate::env("DATABASE_URL")).expect("Invalid database URL");
+    let url = database_url(&crate::env("DATABASE_URL"));
+    PgConnection::establish(&url)
+}
+
+pub fn database_url(url: &str) -> String {
+    let mut url = Url::parse(url).expect("Invalid database URL");
     if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
         url.query_pairs_mut().append_pair("sslmode", "require");
     }
-    PgConnection::establish(&url.to_string())
+    url.into_string()
 }
 
 pub fn diesel_pool(
@@ -69,17 +74,13 @@ pub fn diesel_pool(
     env: Env,
     config: r2d2::Builder<ConnectionManager<PgConnection>>,
 ) -> DieselPool {
-    let mut url = Url::parse(url).expect("Invalid database URL");
-    if dotenv::var("HEROKU").is_ok() && !url.query_pairs().any(|(k, _)| k == "sslmode") {
-        url.query_pairs_mut().append_pair("sslmode", "require");
-    }
+    let url = database_url(url);
 
     if env == Env::Test {
-        let conn =
-            PgConnection::establish(&url.into_string()).expect("failed to establish connection");
+        let conn = PgConnection::establish(&url).expect("failed to establish connection");
         DieselPool::test_conn(conn)
     } else {
-        let manager = ConnectionManager::new(url.into_string());
+        let manager = ConnectionManager::new(url);
         DieselPool::Pool(config.build(manager).unwrap())
     }
 }

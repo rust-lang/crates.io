@@ -234,6 +234,7 @@ pub fn readme_to_html(text: &str, filename: &str, base_url: Option<&str>) -> Str
 #[swirl::background_job]
 pub fn render_and_upload_readme(
     env: &Environment,
+    conn: &PgConnection,
     version_id: i32,
     text: String,
     file_name: String,
@@ -244,7 +245,6 @@ pub fn render_and_upload_readme(
     use diesel::prelude::*;
 
     let rendered = readme_to_html(&text, &file_name, base_url.as_ref().map(String::as_str));
-    let conn = env.connection()?;
 
     conn.transaction(|| {
         Version::record_readme_rendering(version_id, &conn)?;

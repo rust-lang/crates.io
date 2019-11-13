@@ -71,7 +71,7 @@ impl Drop for TestAppInner {
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
             runner.run_all_pending_jobs().expect("Could not run jobs");
-            runner.assert_no_failed_jobs().expect("Failed jobs remain");
+            runner.check_for_failed_jobs().expect("Failed jobs remain");
         }
 
         // Manually verify that all jobs have completed successfully
@@ -184,7 +184,7 @@ impl TestApp {
 
         runner.run_all_pending_jobs().expect("Could not run jobs");
         runner
-            .assert_no_failed_jobs()
+            .check_for_failed_jobs()
             .expect("Could not determine if jobs failed");
     }
 
@@ -214,13 +214,13 @@ impl TestAppBuilder {
             let environment = Environment::new(
                 index,
                 None,
-                connection_pool.clone(),
                 app.config.uploader.clone(),
                 app.http_client().clone(),
             );
 
             Some(
-                Runner::builder(connection_pool, environment)
+                Runner::builder(environment)
+                    .connection_pool(connection_pool)
                     // We only have 1 connection in tests, so trying to run more than
                     // 1 job concurrently will just block
                     .thread_count(1)
