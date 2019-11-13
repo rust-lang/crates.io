@@ -54,6 +54,7 @@ impl<'a> NewUser<'a> {
         email: Option<&'a str>,
         conn: &PgConnection,
     ) -> QueryResult<User> {
+        use crate::schema::emails::columns::user_id;
         use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
         use diesel::insert_into;
@@ -90,7 +91,9 @@ impl<'a> NewUser<'a> {
 
                 let token = insert_into(emails::table)
                     .values(&new_email)
-                    .on_conflict_do_nothing()
+                    .on_conflict(user_id)
+                    .do_update()
+                    .set(&new_email)
                     .returning(emails::token)
                     .get_result::<String>(conn)
                     .optional()?;
