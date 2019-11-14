@@ -7,11 +7,12 @@ use indexmap::IndexMap;
 use url::Url;
 
 use crate::app::App;
+use crate::email;
 use crate::util::{human, CargoResult};
 
 use crate::models::{
-    Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
-    ReverseDependency, User, Version,
+    Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
+    OwnerKind, ReverseDependency, User, Version,
 };
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
@@ -427,14 +428,28 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             owner @ Owner::User(_) => {
-                insert_into(crate_owner_invitations::table)
+                let maybe_inserted = insert_into(crate_owner_invitations::table)
                     .values(&NewCrateOwnerInvitation {
                         invited_user_id: owner.id(),
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
                     })
                     .on_conflict_do_nothing()
-                    .execute(conn)?;
+                    .get_result::<CrateOwnerInvitation>(conn)
+                    .optional()?;
+
+                if maybe_inserted.is_some() {
+                    if let Owner::User(user) = &owner {
+                        if let Ok(Some(email)) = user.verified_email(&conn) {
+                            email::send_owner_invite_email(
+                                &email.as_str(),
+                                &req_user.gh_login.as_str(),
+                                &self.name.as_str(),
+                            );
+                        }
+                    }
+                }
+
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
                     owner.login(),
