@@ -134,25 +134,19 @@ impl<'a> NewCrate<'a> {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url)
-                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
-            match &url.scheme()[..] {
-                "http" | "https" => {}
-                s => {
-                    return Err(human(&format_args!(
-                        "`{}` has an invalid url \
-                         scheme: `{}`",
-                        field, s
-                    )));
-                }
-            }
-            if url.cannot_be_a_base() {
+
+            // Manually check the string, as `Url::parse` may normalize relative URLs
+            // making it difficult to ensure that both slashes are present.
+            if !url.starts_with("http://") && !url.starts_with("https://") {
                 return Err(human(&format_args!(
-                    "`{}` must have relative scheme \
-                     data: {}",
+                    "URL for field `{}` must begin with http:// or https:// (url: {})",
                     field, url
                 )));
             }
+
+            // Ensure the entire URL parses as well
+            Url::parse(url)
+                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
             Ok(())
         }
 
@@ -531,7 +525,7 @@ mod tests {
         let krate = NewCrate {
             name: "name",
             description: None,
-            homepage: Some("http:/example.com/home"),
+            homepage: Some("https:/example.com/home"),
             documentation: None,
             readme: None,
             repository: None,
