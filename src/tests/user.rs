@@ -514,11 +514,13 @@ fn test_confirm_user_email() {
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
+    let email = "cow@mammals@milk";
+
     let user = app.db(|conn| {
         let u = NewUser {
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(None, conn).unwrap();
+        let u = u.create_or_update(Some(email), conn).unwrap();
         MockCookieUser::new(&app, u)
     });
     let user_model = user.as_model();
@@ -533,7 +535,7 @@ fn test_confirm_user_email() {
     user.confirm_email(&email_token);
 
     let json = user.show_me();
-    assert_eq!(json.user.email.unwrap(), "potato2@example.com");
+    assert_eq!(json.user.email.unwrap(), "cow@mammals@milk");
     assert!(json.user.email_verified);
     assert!(json.user.email_verification_sent);
 }
@@ -552,11 +554,12 @@ fn test_existing_user_email() {
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
+    let email = "potahto@example.com";
     let user = app.db(|conn| {
         let u = NewUser {
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(None, conn).unwrap();
+        let u = u.create_or_update(Some(email), conn).unwrap();
         update(Email::belonging_to(&u))
             // Users created before we added verification will have
             // `NULL` in the `token_generated_at` column.
