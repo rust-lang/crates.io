@@ -38,10 +38,9 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    let user = User { ..user };
 
     Ok(req.json(&EncodableMe {
-        user: user.encodable_private(email, verified, verification_sent)?,
+        user: user.encodable_private(email, verified, verification_sent),
     }))
 }
 

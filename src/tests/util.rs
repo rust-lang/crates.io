@@ -136,8 +136,9 @@ impl TestApp {
 
         let user = self.db(|conn| {
             let email = "cow@mammals.milk";
+
             let user = crate::new_user(username)
-                .create_or_update(Some(email), conn)
+                .create_or_update(None, conn)
                 .unwrap();
             diesel::insert_into(emails::table)
                 .values((

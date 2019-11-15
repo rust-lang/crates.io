@@ -20,7 +20,7 @@ pub struct User {
     pub gh_id: i32,
 }
 
-/// Represents a new user record insertible to the `users` table
+/// Represents a new user record insertable to the `users` table
 #[derive(Insertable, Debug, Default)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
@@ -186,10 +186,9 @@ impl User {
     pub fn encodable_private(
         self,
         email: Option<String>,
-
         email_verified: bool,
         email_verification_sent: bool,
-    ) -> CargoResult<EncodablePrivateUser> {
+    ) -> EncodablePrivateUser {
         let User {
             id,
             name,
@@ -199,7 +198,7 @@ impl User {
         } = self;
         let url = format!("https://github.com/{}", gh_login);
 
-        Ok(EncodablePrivateUser {
+        EncodablePrivateUser {
             id,
             email,
             email_verified,
@@ -208,7 +207,7 @@ impl User {
             login: gh_login,
             name,
             url: Some(url),
-        })
+        }
     }
 
     /// Queries for the email belonging to a particular user
