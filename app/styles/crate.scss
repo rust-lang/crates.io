@@ -158,8 +158,7 @@
         display: inline-block;
 
         button, button:active {
-            padding: 0;
-            width: 25px;
+            padding: 0 .2rem;
             outline: 0;
 
             &:hover {
@@ -167,14 +166,19 @@
             }
 
             svg {
-                width: 20px;
+                height: 1rem;
+                width: 1rem;
             }
 
             .copy-notification {
-                top: -15px;
+                top: -1.25rem;
                 left: 0;
-                width: 255px;
                 text-align: left;
+                width: 4rem;
+
+                &.copy-failure {
+                    width: 15rem;
+                }
             }
         }
     }
@@ -370,9 +374,9 @@
                 }
 
                 &.copy-failure {
-                    bottom: -30px;
+                    bottom: -2rem;
                     right: 0;
-                    width: 255px;
+                    width: 18rem;
                     text-align: right;
                 }
             }
