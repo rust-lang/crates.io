@@ -5,9 +5,9 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::CargoError;
 
-use crate::models::{Email, Follow, NewEmail, User, Version};
-use crate::schema::{crates, emails, follows, users, versions};
-use crate::views::{EncodableMe, EncodableVersion};
+use crate::models::{CrateOwner, Email, Follow, NewEmail, User, Version};
+use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
@@ -22,11 +22,11 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
 
-    let id = req.user()?.id;
+    let user_id = req.user()?.id;
     let conn = req.db_conn()?;
 
     let (user, verified, email, verification_sent) = users::table
-        .find(id)
+        .find(user_id)
         .left_join(emails::table)
         .select((
             users::all_columns,
@@ -36,12 +36,27 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
         ))
         .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
+    let owned_crates = crate_owners::table
+        .inner_join(crates::table)
+        .filter(crate_owners::owner_id.eq(user_id))
+        .select((crates::id, crates::name, crate_owners::email_notifications))
+        .order(crates::name.asc())
+        .load(&*conn)?
+        .into_iter()
+        .map(|(id, name, email_notifications)| OwnedCrate {
+            id,
+            name,
+            email_notifications,
+        })
+        .collect();
+
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
     let user = User { email, ..user };
 
     Ok(req.json(&EncodableMe {
         user: user.encodable_private(verified, verification_sent),
+        owned_crates,
     }))
 }
 
@@ -205,6 +220,41 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles `PUT /me/email_notifications` route
+pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response> {
+    use self::crate_owners::dsl::*;
+    use diesel::update;
+
+    #[derive(Deserialize)]
+    struct CrateEmailNotifications {
+        id: i32,
+        email_notifications: bool,
+    }
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let updates: Vec<CrateEmailNotifications> =
+        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+
+    let user = req.user()?;
+    let conn = req.db_conn()?;
+
+    for to_update in updates {
+        update(CrateOwner::belonging_to(user))
+            .set(email_notifications.eq(to_update.email_notifications))
+            .filter(crate_id.eq(to_update.id))
+            .filter(email_notifications.ne(to_update.email_notifications))
+            .execute(&*conn)
+            .map_err(|_| human("Error updating crate owner email notifications"))?;
+    }
 
     #[derive(Serialize)]
     struct R {

@@ -19,6 +19,7 @@ pub struct CrateOwner {
     pub owner_id: i32,
     pub created_by: i32,
     pub owner_kind: i32,
+    pub email_notifications: bool,
 }
 
 #[derive(Debug, Clone, Copy)]

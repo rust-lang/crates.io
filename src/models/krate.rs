@@ -195,6 +195,7 @@ impl<'a> NewCrate<'a> {
                     owner_id: user_id,
                     created_by: user_id,
                     owner_kind: OwnerKind::User as i32,
+                    email_notifications: true,
                 };
                 diesel::insert_into(crate_owners::table)
                     .values(&owner)
@@ -455,6 +456,7 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
+                        email_notifications: true,
                     })
                     .on_conflict(crate_owners::table.primary_key())
                     .do_update()

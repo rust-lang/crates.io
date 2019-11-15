@@ -89,6 +89,10 @@ pub fn build_router(app: &App) -> R404 {
         "/me/crate_owner_invitations/:crate_id",
         C(crate_owner_invitation::handle_invite),
     );
+    api_router.put(
+        "/me/email_notifications",
+        C(user::me::update_email_notifications),
+    );
     api_router.get("/summary", C(krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
     api_router.put(

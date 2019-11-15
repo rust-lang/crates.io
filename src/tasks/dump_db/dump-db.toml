@@ -68,6 +68,7 @@ created_by = "private"
 deleted = "private"
 updated_at = "public"
 owner_kind = "public"
+email_notifications = "private"
 
 [crates.columns]
 id = "public"

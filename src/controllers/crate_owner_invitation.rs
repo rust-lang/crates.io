@@ -69,6 +69,7 @@ fn accept_invite(
                 owner_id: user_id,
                 created_by: pending_crate_owner.invited_by_user_id,
                 owner_kind: OwnerKind::User as i32,
+                email_notifications: true,
             })
             .on_conflict(crate_owners::table.primary_key())
             .do_update()

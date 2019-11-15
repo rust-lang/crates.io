@@ -242,6 +242,7 @@ fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> 
         owner_id: t.id,
         created_by: u.id,
         owner_kind: 1, // Team owner kind is 1 according to owner.rs
+        email_notifications: true,
     };
 
     diesel::insert_into(crate_owners::table)
