@@ -99,7 +99,7 @@ pub struct NewCrate<'a> {
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        mut self,
+        self,
         conn: &PgConnection,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
@@ -128,7 +128,7 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self) -> CargoResult<()> {
+    fn validate(&self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
@@ -524,7 +524,21 @@ sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use crate::models::Crate;
+    use crate::models::{Crate, NewCrate};
+
+    #[test]
+    fn deny_relative_urls() {
+        let krate = NewCrate {
+            name: "name",
+            description: None,
+            homepage: Some("http:/example.com/home"),
+            documentation: None,
+            readme: None,
+            repository: None,
+            max_upload_size: None,
+        };
+        assert!(krate.validate().is_err());
+    }
 
     #[test]
     fn documentation_blocked_no_url_provided() {
