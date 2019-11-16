@@ -514,7 +514,7 @@ fn test_confirm_user_email() {
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
-    let email = "cow@mammals@milk";
+    let email = "potato2@example.com";
 
     let user = app.db(|conn| {
         let u = NewUser {
@@ -535,7 +535,7 @@ fn test_confirm_user_email() {
     user.confirm_email(&email_token);
 
     let json = user.show_me();
-    assert_eq!(json.user.email.unwrap(), "cow@mammals@milk");
+    assert_eq!(json.user.email.unwrap(), "potato2@example.com");
     assert!(json.user.email_verified);
     assert!(json.user.email_verification_sent);
 }
