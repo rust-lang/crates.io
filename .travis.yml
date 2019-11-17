@@ -2,6 +2,13 @@ language: rust
 
 cache:
   cargo: true
+before_cache:
+  - find ./target/debug -maxdepth 1 -type f -delete
+  - rm -f  ./target/.rustc_info.json
+
+env:
+  global:
+    - CARGO_INCREMENTAL=0
 
 rust:
   - stable
