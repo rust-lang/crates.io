@@ -99,7 +99,7 @@ pub struct NewCrate<'a> {
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        mut self,
+        self,
         conn: &PgConnection,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
@@ -128,31 +128,25 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self) -> CargoResult<()> {
+    fn validate(&self) -> CargoResult<()> {
         fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
             let url = match url {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url)
-                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
-            match &url.scheme()[..] {
-                "http" | "https" => {}
-                s => {
-                    return Err(human(&format_args!(
-                        "`{}` has an invalid url \
-                         scheme: `{}`",
-                        field, s
-                    )));
-                }
-            }
-            if url.cannot_be_a_base() {
+
+            // Manually check the string, as `Url::parse` may normalize relative URLs
+            // making it difficult to ensure that both slashes are present.
+            if !url.starts_with("http://") && !url.starts_with("https://") {
                 return Err(human(&format_args!(
-                    "`{}` must have relative scheme \
-                     data: {}",
+                    "URL for field `{}` must begin with http:// or https:// (url: {})",
                     field, url
                 )));
             }
+
+            // Ensure the entire URL parses as well
+            Url::parse(url)
+                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
             Ok(())
         }
 
@@ -524,7 +518,21 @@ sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use crate::models::Crate;
+    use crate::models::{Crate, NewCrate};
+
+    #[test]
+    fn deny_relative_urls() {
+        let krate = NewCrate {
+            name: "name",
+            description: None,
+            homepage: Some("https:/example.com/home"),
+            documentation: None,
+            readme: None,
+            repository: None,
+            max_upload_size: None,
+        };
+        assert!(krate.validate().is_err());
+    }
 
     #[test]
     fn documentation_blocked_no_url_provided() {
