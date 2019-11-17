@@ -9,6 +9,7 @@ before_cache:
 env:
   global:
     - CARGO_INCREMENTAL=0
+    - RUSTFLAGS="-C debuginfo=0"
 
 rust:
   - stable
