@@ -217,6 +217,8 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
+    req.mut_extensions().insert(metadata_length);
+
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
         return Err(human(&format_args!("max upload size is: {}", max)));

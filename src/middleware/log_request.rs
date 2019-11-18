@@ -31,10 +31,16 @@ impl Handler for LogRequests {
         let response_time =
             response_time.as_secs() * 1000 + u64::from(response_time.subsec_nanos()) / 1_000_000;
 
+        let metadata_length = req
+            .extensions()
+            .find::<u64>()
+            .map_or(String::new(), |l| format!(" metadata_length={}", l));
+
         print!(
             "at={level} method={method} path=\"{path}\" \
              request_id={request_id} fwd=\"{ip}\" service={time_ms}ms \
-             status={status} user_agent=\"{user_agent}\"",
+             status={status} user_agent=\"{user_agent}\"\
+             {metadata_length}",
             level = level,
             method = req.method(),
             path = FullPath(req),
@@ -43,6 +49,7 @@ impl Handler for LogRequests {
             user_agent = request_header(req, "User-Agent"),
             request_id = request_header(req, "X-Request-Id"),
             status = response_code,
+            metadata_length = metadata_length,
         );
 
         if let Err(ref e) = res {
