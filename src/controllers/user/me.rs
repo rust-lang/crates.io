@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::controllers::prelude::*;
 
 use crate::controllers::helpers::*;
@@ -5,7 +7,7 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::CargoError;
 
-use crate::models::{CrateOwner, Email, Follow, NewEmail, User, Version};
+use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
@@ -39,6 +41,7 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     let owned_crates = crate_owners::table
         .inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
         .select((crates::id, crates::name, crate_owners::email_notifications))
         .order(crates::name.asc())
         .load(&*conn)?
@@ -231,7 +234,8 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
 /// Handles `PUT /me/email_notifications` route
 pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response> {
     use self::crate_owners::dsl::*;
-    use diesel::update;
+    // use diesel::update;
+    use diesel::pg::upsert::excluded;
 
     #[derive(Deserialize)]
     struct CrateEmailNotifications {
@@ -241,20 +245,41 @@ pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response
 
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
-    let updates: Vec<CrateEmailNotifications> =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+    let updates: HashMap<i32, bool> = serde_json::from_str::<Vec<CrateEmailNotifications>>(&body)
+        .map_err(|_| human("invalid json request"))?
+        .iter()
+        .map(|c| (c.id, c.email_notifications))
+        .collect();
 
     let user = req.user()?;
     let conn = req.db_conn()?;
 
-    for to_update in updates {
-        update(CrateOwner::belonging_to(user))
-            .set(email_notifications.eq(to_update.email_notifications))
-            .filter(crate_id.eq(to_update.id))
-            .filter(email_notifications.ne(to_update.email_notifications))
-            .execute(&*conn)
-            .map_err(|_| human("Error updating crate owner email notifications"))?;
-    }
+    // Build inserts from existing crates beloning to the current user
+    let to_insert = CrateOwner::belonging_to(user)
+        .select((crate_id, owner_id, owner_kind, email_notifications))
+        .filter(owner_kind.eq(OwnerKind::User as i32))
+        .load(&*conn)?
+        .into_iter()
+        .map(
+            |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
+                (
+                    crate_id.eq(c_id),
+                    owner_id.eq(o_id),
+                    owner_kind.eq(o_kind),
+                    email_notifications
+                        .eq(updates.get(&c_id).unwrap_or(&e_notifications).to_owned()),
+                )
+            },
+        )
+        .collect::<Vec<_>>();
+
+    // Upsert crate owners; this should only actually exectute updates
+    diesel::insert_into(crate_owners)
+        .values(&to_insert)
+        .on_conflict((crate_id, owner_id, owner_kind))
+        .do_update()
+        .set(email_notifications.eq(excluded(email_notifications)))
+        .execute(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
