@@ -10,7 +10,7 @@ const FastBootAppServer = require('fastboot-app-server');
 // because fastboot-app-server uses cluster, but it might change in future
 const cluster = require('cluster');
 
-const morgan = require('morgan')
+const morgan = require('morgan');
 
 class LoggerWithoutTimestamp {
   constructor() {
@@ -49,10 +49,12 @@ var logger = new LoggerWithoutTimestamp();
 logger.writeLine(`${os.cpus().length} cores available`);
 
 let workerCount = process.env.WEB_CONCURRENCY || 1;
-let logRequests = morgan('at=info method=:method path=":url" ' +
-                         'request_id=:req[x-request-id] ' +
-                         'fwd=":req[x-real-ip]" ' +
-                         'user_agent=:req[user-agent]');
+let logRequests = morgan(
+  'at=info method=:method path=":url" ' +
+    'request_id=:req[x-request-id] ' +
+    'fwd=":req[x-real-ip]" ' +
+    'user_agent=:req[user-agent]',
+);
 
 let server = new FastBootAppServer({
   distPath: 'dist',

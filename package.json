@@ -20,7 +20,7 @@
     "lint:hbs": "ember-template-lint app/templates",
     "lint:js": "eslint . --cache",
     "lint:deps": "ember dependency-lint",
-    "prettier": "prettier --write '{app,tests,mirage}/**/*.js'",
+    "prettier": "prettier --write '**/*.js'",
     "start": "./script/ember.sh serve",
     "start:live": "./script/ember.sh serve --proxy https://crates.io",
     "start:local": "./script/ember.sh serve --proxy http://127.0.0.1:8888",
