@@ -25,6 +25,39 @@
   {{email-input type='email' value=model.user.email user=model.user}}
 </div>
 
+<form id='me-email-notifications' {{ action 'saveEmailNotifications' on='submit' }} >
+  <h2>Email Notification Preferences</h2>
+
+  <p>
+    To aid detection of unauthorized crate changes, we email you each time a new version of a crate you own is pushed.
+    By receiving and reading these emails, you help protect the Rust ecosystem.
+  </p>
+
+  <div class='row'>
+    <ul>
+      {{#each ownedCrates as |ownedCrate|}}
+        {{owned-crate-row ownedCrate=ownedCrate}}
+      {{/each}}
+    </ul>
+  </div>
+
+  <div class='row'>
+    {{#if emailNotificationsError}}
+      <div class='error'>
+        An error occurred while saving your email preferences.
+      </div>
+    {{/if}}
+    {{#if emailNotificationsSuccess}}
+      <div class='success'>
+        Your email notification preferences have been updated!
+      </div>
+    {{/if}}
+    <div class='right'>
+      <button type='submit' class='yellow-button'>Update</button>
+    </div>
+  </div>
+</form>
+
 <div id='me-api'>
   <div class='me-subheading'>
     <h2>API Access</h2>
