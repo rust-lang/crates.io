@@ -1,5 +1,7 @@
 use crate::controllers::prelude::*;
 
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
 use crate::models::{OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
@@ -11,16 +13,17 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
     let user = users
+        .select(user::ALL_COLUMNS)
         .filter(crate::lower(gh_login).eq(name))
         .order(id.desc())
-        .first::<User>(&*conn)?;
+        .first::<UserNoEmailType>(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
         user: EncodablePublicUser,
     }
     Ok(req.json(&R {
-        user: user.encodable_public(),
+        user: User::from(user).encodable_public(),
     }))
 }
 
