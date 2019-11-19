@@ -100,6 +100,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "fastboot-app-server": "^2.0.0"
+    "fastboot-app-server": "^2.0.0",
+    "morgan": "^1.9.1"
   }
 }
