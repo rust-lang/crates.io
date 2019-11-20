@@ -246,7 +246,7 @@ pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
     let updates: HashMap<i32, bool> = serde_json::from_str::<Vec<CrateEmailNotifications>>(&body)
-        .map_err(|_| human("invalid json request"))?
+        .map_err(|_| bad_request("invalid json request"))?
         .iter()
         .map(|c| (c.id, c.email_notifications))
         .collect();

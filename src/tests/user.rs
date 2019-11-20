@@ -592,7 +592,7 @@ fn test_existing_user_email() {
 }
 
 /* A user should be able to update the email notifications for crates they own. Only the crates that
-   were sent in the request should be updated the the corresponding `email_notifications` value.
+   were sent in the request should be updated to the corresponding `email_notifications` value.
 */
 #[test]
 fn test_update_email_notifications() {
@@ -678,7 +678,7 @@ fn test_update_email_notifications() {
 }
 
 /* A user should not be able to update the `email_notifications` value for a crate that is not
-   owend by them.
+   owned by them.
 */
 #[test]
 fn test_update_email_notifications_not_owned() {
