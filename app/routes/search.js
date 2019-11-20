@@ -14,6 +14,7 @@ export default Route.extend({
   },
 
   setupController(controller, params) {
+    this.controllerFor('application').set('searchQuery', params.q);
     controller.dataTask.perform(params);
   },
 });
