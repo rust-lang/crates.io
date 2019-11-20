@@ -88,6 +88,28 @@
     }
 }
 
+.crate-toml-copy {
+    button, button:active {
+        background-color: #FFFFFF;
+        border: none;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .copy-notification {
+        font-size: 70%;
+        font-weight: bold;
+        position: absolute;
+
+        &.copy-success {
+            color: $link-color;
+        }
+        &.copy-failure {
+            color: red;
+        }
+    }
+}
+
 #results {
     width: 100%;
     @include display-flex;
@@ -132,6 +154,35 @@
         width: 75%;
     }
 
+    .crate-toml-copy {
+        display: inline-block;
+
+        button, button:active {
+            padding: 0 .2rem;
+            outline: 0;
+
+            &:hover {
+                background: inherit;
+            }
+
+            svg {
+                height: 1rem;
+                width: 1rem;
+            }
+
+            .copy-notification {
+                top: -1.25rem;
+                left: 0;
+                padding: 0;
+                text-align: left;
+                width: 4rem;
+
+                &.copy-failure {
+                    width: 15rem;
+                }
+            }
+        }
+    }
     .info a {
         color: $main-color;
         font-weight: bold;
@@ -300,33 +351,36 @@
             color: white;
             padding: 20px;
         }
-        button, button:active {
-            padding: 5px 0;
-            background-color: #FFFFFF;
-            border: none;
-            width: 60px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #edebdd;
-        }
         @media only screen and (min-width: 500px) {
             .action { @include flex(2); display: block; }
             code { @include flex(8); }
         }
-    }
-    .copy-result {
-        text-align: right;
+        .crate-toml-copy {
+            display: flex;
 
-        span {
-            font-size: 80%;
-            font-weight: bold;
-        }
-        .copy-success {
-            color: $link-color;
-        }
-        .copy-failure {
-            color: red;
+            button, button:active {
+                padding: 5px 0;
+                width: 60px;
+                cursor: pointer;
+                position: relative;
+            }
+            button:hover {
+                background: #edebdd;
+            }
+
+            .copy-notification {
+                &.copy-success {
+                    width: 100%;
+                    text-align: center;
+                }
+
+                &.copy-failure {
+                    bottom: -2rem;
+                    right: 0;
+                    width: 18rem;
+                    text-align: right;
+                }
+            }
         }
     }
     .crate-readme {
