@@ -1,3 +1,4 @@
+use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use crate::app::App;
@@ -20,6 +21,21 @@ pub struct CrateOwner {
     pub created_by: i32,
     pub owner_kind: i32,
     pub email_notifications: bool,
+}
+
+type BoxedQuery<'a> = crate_owners::BoxedQuery<'a, Pg, crate_owners::SqlType>;
+
+impl CrateOwner {
+    /// Returns a base crate owner query filtered by the owner kind argument. This query also
+    /// filters out deleted records.
+    pub fn by_owner_kind(kind: OwnerKind) -> BoxedQuery<'static> {
+        use self::crate_owners::dsl::*;
+
+        crate_owners
+            .filter(deleted.eq(false))
+            .filter(owner_kind.eq(kind as i32))
+            .into_boxed()
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

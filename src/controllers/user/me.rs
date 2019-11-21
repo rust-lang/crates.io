@@ -234,7 +234,6 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
 /// Handles `PUT /me/email_notifications` route
 pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response> {
     use self::crate_owners::dsl::*;
-    // use diesel::update;
     use diesel::pg::upsert::excluded;
 
     #[derive(Deserialize)]
@@ -255,20 +254,26 @@ pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response
     let conn = req.db_conn()?;
 
     // Build inserts from existing crates beloning to the current user
-    let to_insert = CrateOwner::belonging_to(user)
+    let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
+        .filter(owner_id.eq(user.id))
         .select((crate_id, owner_id, owner_kind, email_notifications))
-        .filter(owner_kind.eq(OwnerKind::User as i32))
         .load(&*conn)?
         .into_iter()
-        .map(
+        // Remove records whose `email_notifications` will not change from their current value
+        .filter_map(
             |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
-                (
-                    crate_id.eq(c_id),
-                    owner_id.eq(o_id),
-                    owner_kind.eq(o_kind),
-                    email_notifications
-                        .eq(updates.get(&c_id).unwrap_or(&e_notifications).to_owned()),
-                )
+                let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
+
+                if e_notifications == current_e_notifications {
+                    None
+                } else {
+                    Some((
+                        crate_id.eq(c_id),
+                        owner_id.eq(o_id),
+                        owner_kind.eq(o_kind),
+                        email_notifications.eq(current_e_notifications),
+                    ))
+                }
             },
         )
         .collect::<Vec<_>>();

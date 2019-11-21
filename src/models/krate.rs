@@ -401,18 +401,17 @@ impl Crate {
     }
 
     pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
-        let users = base_query
+        let users = CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
             .select(users::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
             .load(conn)?
             .into_iter()
             .map(Owner::User);
-        let teams = base_query
+        let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
+            .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(teams::table)
             .select(teams::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
             .load(conn)?
             .into_iter()
             .map(Owner::Team);
