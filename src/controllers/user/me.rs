@@ -260,20 +260,15 @@ pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response
         .load(&*conn)?
         .into_iter()
         // Remove records whose `email_notifications` will not change from their current value
-        .filter_map(
+        .map(
             |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
                 let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
-
-                if e_notifications == current_e_notifications {
-                    None
-                } else {
-                    Some((
-                        crate_id.eq(c_id),
-                        owner_id.eq(o_id),
-                        owner_kind.eq(o_kind),
-                        email_notifications.eq(current_e_notifications),
-                    ))
-                }
+                (
+                    crate_id.eq(c_id),
+                    owner_id.eq(o_id),
+                    owner_kind.eq(o_kind),
+                    email_notifications.eq(current_e_notifications),
+                )
             },
         )
         .collect::<Vec<_>>();
