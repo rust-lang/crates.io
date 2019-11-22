@@ -129,11 +129,10 @@ impl User {
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
-        let users = base_query
+        let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(users::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+            .filter(crate_owners::crate_id.eq(krate.id))
             .load(conn)?
             .into_iter()
             .map(Owner::User);

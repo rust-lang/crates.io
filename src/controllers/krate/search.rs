@@ -5,7 +5,7 @@ use diesel_full_text_search::*;
 
 use crate::controllers::helpers::Paginate;
 use crate::controllers::prelude::*;
-use crate::models::{Crate, CrateBadge, CrateVersions, OwnerKind, Version};
+use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
 use crate::views::EncodableCrate;
 
@@ -118,21 +118,17 @@ pub fn search(req: &mut dyn Request) -> CargoResult<Response> {
     } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
         query = query.filter(
             crates::id.eq_any(
-                crate_owners::table
+                CrateOwner::by_owner_kind(OwnerKind::User)
                     .select(crate_owners::crate_id)
-                    .filter(crate_owners::owner_id.eq(user_id))
-                    .filter(crate_owners::deleted.eq(false))
-                    .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
+                    .filter(crate_owners::owner_id.eq(user_id)),
             ),
         );
     } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
         query = query.filter(
             crates::id.eq_any(
-                crate_owners::table
+                CrateOwner::by_owner_kind(OwnerKind::Team)
                     .select(crate_owners::crate_id)
-                    .filter(crate_owners::owner_id.eq(team_id))
-                    .filter(crate_owners::deleted.eq(false))
-                    .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32)),
+                    .filter(crate_owners::owner_id.eq(team_id)),
             ),
         );
     } else if params.get("following").is_some() {

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::controllers::prelude::*;
 
 use crate::controllers::helpers::*;
@@ -5,9 +7,9 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::CargoError;
 
-use crate::models::{Email, Follow, NewEmail, User, Version};
-use crate::schema::{crates, emails, follows, users, versions};
-use crate::views::{EncodableMe, EncodableVersion};
+use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
+use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
 pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
@@ -22,11 +24,11 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
 
-    let id = req.user()?.id;
+    let user_id = req.user()?.id;
     let conn = req.db_conn()?;
 
     let (user, verified, email, verification_sent) = users::table
-        .find(id)
+        .find(user_id)
         .left_join(emails::table)
         .select((
             users::all_columns,
@@ -36,12 +38,28 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
         ))
         .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
+    let owned_crates = crate_owners::table
+        .inner_join(crates::table)
+        .filter(crate_owners::owner_id.eq(user_id))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+        .select((crates::id, crates::name, crate_owners::email_notifications))
+        .order(crates::name.asc())
+        .load(&*conn)?
+        .into_iter()
+        .map(|(id, name, email_notifications)| OwnedCrate {
+            id,
+            name,
+            email_notifications,
+        })
+        .collect();
+
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
     let user = User { email, ..user };
 
     Ok(req.json(&EncodableMe {
         user: user.encodable_private(verified, verification_sent),
+        owned_crates,
     }))
 }
 
@@ -205,6 +223,63 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles `PUT /me/email_notifications` route
+pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response> {
+    use self::crate_owners::dsl::*;
+    use diesel::pg::upsert::excluded;
+
+    #[derive(Deserialize)]
+    struct CrateEmailNotifications {
+        id: i32,
+        email_notifications: bool,
+    }
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let updates: HashMap<i32, bool> = serde_json::from_str::<Vec<CrateEmailNotifications>>(&body)
+        .map_err(|_| bad_request("invalid json request"))?
+        .iter()
+        .map(|c| (c.id, c.email_notifications))
+        .collect();
+
+    let user = req.user()?;
+    let conn = req.db_conn()?;
+
+    // Build inserts from existing crates beloning to the current user
+    let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
+        .filter(owner_id.eq(user.id))
+        .select((crate_id, owner_id, owner_kind, email_notifications))
+        .load(&*conn)?
+        .into_iter()
+        // Remove records whose `email_notifications` will not change from their current value
+        .map(
+            |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
+                let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
+                (
+                    crate_id.eq(c_id),
+                    owner_id.eq(o_id),
+                    owner_kind.eq(o_kind),
+                    email_notifications.eq(current_e_notifications),
+                )
+            },
+        )
+        .collect::<Vec<_>>();
+
+    // Upsert crate owners; this should only actually exectute updates
+    diesel::insert_into(crate_owners)
+        .values(&to_insert)
+        .on_conflict((crate_id, owner_id, owner_kind))
+        .do_update()
+        .set(email_notifications.eq(excluded(email_notifications)))
+        .execute(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
