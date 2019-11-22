@@ -427,10 +427,10 @@ impl Crate {
 
         match owner {
             // Users are invited and must accept before being added
-            owner @ Owner::User(_) => {
+            Owner::User(user) => {
                 let maybe_inserted = insert_into(crate_owner_invitations::table)
                     .values(&NewCrateOwnerInvitation {
-                        invited_user_id: owner.id(),
+                        invited_user_id: user.id,
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
                     })
@@ -439,21 +439,18 @@ impl Crate {
                     .optional()?;
 
                 if maybe_inserted.is_some() {
-                    if let Owner::User(user) = &owner {
-                        if let Ok(Some(email)) = user.verified_email(&conn) {
-                            email::send_owner_invite_email(
-                                &email.as_str(),
-                                &req_user.gh_login.as_str(),
-                                &self.name.as_str(),
-                            );
-                        }
+                    if let Ok(Some(email)) = user.verified_email(&conn) {
+                        email::send_owner_invite_email(
+                            &email.as_str(),
+                            &req_user.gh_login.as_str(),
+                            &self.name.as_str(),
+                        );
                     }
                 }
 
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
-                    owner.login(),
-                    self.name
+                    user.gh_login, self.name
                 ))
             }
             // Teams are added as owners immediately

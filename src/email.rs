@@ -92,7 +92,7 @@ https://crates.io/confirm/{}",
 /// the database and the user will see the invitation when they visit
 /// https://crates.io/me/pending-invites/.
 pub fn send_owner_invite_email(email: &str, user_name: &str, crate_name: &str) {
-    let subject = "Please confirm crate ownership";
+    let subject = "Crate ownership invitation";
     let body = format!(
         "{} has invited you to become an owner of the crate {}!\n
 Please visit https://crates.io/me/pending-invites to accept or reject
