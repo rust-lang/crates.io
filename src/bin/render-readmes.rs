@@ -131,7 +131,14 @@ fn main() {
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
                 config
                     .uploader
-                    .upload(&client, &readme_path, content, content_length, "text/html")
+                    .upload(
+                        &client,
+                        &readme_path,
+                        content,
+                        content_length,
+                        "text/html",
+                        None,
+                    )
                     .unwrap_or_else(|_| {
                         panic!(
                             "[{}-{}] Couldn't upload file to S3",
