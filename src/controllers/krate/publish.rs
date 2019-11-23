@@ -10,7 +10,7 @@ use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use crate::render;
 use crate::util::{read_fill, read_le_u32};
-use crate::util::{CargoError, ChainError, Maximums};
+use crate::util::{AppError, ChainError, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -20,7 +20,7 @@ use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
     let app = Arc::clone(req.app());
 
     // The format of the req.body() of a publish request is as follows:
@@ -168,7 +168,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
                 repo,
             )
             .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+            .map_err(|e| AppError::from_std_error(e))?;
         }
 
         let cksum = app
@@ -191,7 +191,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         };
         git::add_crate(git_crate)
             .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+            .map_err(|e| AppError::from_std_error(e))?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`
@@ -214,7 +214,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload, User)> {
+fn parse_new_headers(req: &mut dyn Request) -> AppResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
     req.mut_extensions().insert(metadata_length);

@@ -6,7 +6,7 @@ mod prelude {
     pub use conduit_router::RequestParams;
 
     pub use crate::db::RequestTransaction;
-    pub use crate::util::{human, CargoResult};
+    pub use crate::util::{human, AppResult};
 
     pub use crate::middleware::app::RequestApp;
     pub use crate::middleware::current_user::RequestUser;

@@ -19,7 +19,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
     use crate::schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -28,7 +28,7 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
         .select(metadata::total_downloads)
         .get_result(&*conn)?;
 
-    let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
+    let encode_crates = |krates: Vec<Crate>| -> AppResult<Vec<_>> {
         let versions = krates.versions().load::<Version>(&*conn)?;
         versions
             .grouped_by(&krates)
@@ -102,7 +102,7 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
@@ -161,7 +161,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn readme(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -185,7 +185,7 @@ pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn versions(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -208,7 +208,7 @@ pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];

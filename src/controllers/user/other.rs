@@ -7,7 +7,7 @@ use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     use self::users::dsl::{gh_login, id, users};
 
     let name = &req.params()["user_id"].to_lowercase();
@@ -28,7 +28,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub fn stats(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn stats(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::sum;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();

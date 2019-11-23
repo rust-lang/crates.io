@@ -1,8 +1,8 @@
-use cargo_registry::util::{human, CargoError, CargoResult};
+use cargo_registry::util::{human, AppError, AppResult};
 use cargo_registry::{db, env, tasks};
 use diesel::PgConnection;
 
-fn main() -> CargoResult<()> {
+fn main() -> AppResult<()> {
     let conn = db::connect_now()?;
     let mut args = std::env::args().skip(1);
     match &*args.next().unwrap_or_default() {
@@ -19,10 +19,10 @@ fn main() -> CargoResult<()> {
 }
 
 /// Helper to map the `PerformError` returned by `swirl::Job::enqueue()` to a
-/// `CargoError`. Can be removed once `map_err()` isn't needed any more.
+/// `AppError`. Can be removed once `map_err()` isn't needed any more.
 trait Enqueue: swirl::Job {
-    fn enqueue(self, conn: &PgConnection) -> CargoResult<()> {
-        <Self as swirl::Job>::enqueue(self, conn).map_err(|e| CargoError::from_std_error(e))
+    fn enqueue(self, conn: &PgConnection) -> AppResult<()> {
+        <Self as swirl::Job>::enqueue(self, conn).map_err(|e| AppError::from_std_error(e))
     }
 }
 

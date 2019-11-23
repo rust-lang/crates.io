@@ -3,7 +3,7 @@
 
 use crate::{
     db,
-    util::errors::{internal, CargoResult, ChainError},
+    util::errors::{internal, AppResult, ChainError},
 };
 
 use diesel::prelude::*;
@@ -37,7 +37,7 @@ impl Category {
     }
 }
 
-fn required_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> CargoResult<&'a str> {
+fn required_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> AppResult<&'a str> {
     toml.get(key).and_then(toml::Value::as_str).chain_error(|| {
         internal(&format_args!(
             "Expected category TOML attribute '{}' to be a String",
@@ -53,7 +53,7 @@ fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a
 fn categories_from_toml(
     categories: &toml::value::Table,
     parent: Option<&Category>,
-) -> CargoResult<Vec<Category>> {
+) -> AppResult<Vec<Category>> {
     let mut result = vec![];
 
     for (slug, details) in categories {
@@ -85,12 +85,12 @@ fn categories_from_toml(
     Ok(result)
 }
 
-pub fn sync(toml_str: &str) -> CargoResult<()> {
+pub fn sync(toml_str: &str) -> AppResult<()> {
     let conn = db::connect_now().unwrap();
     sync_with_connection(toml_str, &conn)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> CargoResult<()> {
+pub fn sync_with_connection(toml_str: &str, conn: &PgConnection) -> AppResult<()> {
     use crate::schema::categories::dsl::*;
     use diesel::dsl::all;
     use diesel::pg::upsert::excluded;

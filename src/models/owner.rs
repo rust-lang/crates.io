@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github;
-use crate::util::{human, CargoResult};
+use crate::util::{human, AppResult};
 
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{Crate, Team, User};
@@ -65,7 +65,7 @@ impl Owner {
         conn: &PgConnection,
         req_user: &User,
         name: &str,
-    ) -> CargoResult<Owner> {
+    ) -> AppResult<Owner> {
         if name.contains(':') {
             Ok(Owner::Team(Team::create_or_update(
                 app, conn, name, req_user,

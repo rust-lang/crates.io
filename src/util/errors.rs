@@ -18,11 +18,11 @@ struct Bad {
 }
 
 // =============================================================================
-// CargoError trait
+// AppError trait
 
-pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
+pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     fn description(&self) -> &str;
-    fn cause(&self) -> Option<&(dyn CargoError)> {
+    fn cause(&self) -> Option<&(dyn AppError)> {
         None
     }
 
@@ -34,7 +34,7 @@ pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
                 }],
             }))
         } else {
-            self.cause().and_then(CargoError::response)
+            self.cause().and_then(AppError::response)
         }
     }
     fn human(&self) -> bool {
@@ -46,12 +46,12 @@ pub trait CargoError: Send + fmt::Display + fmt::Debug + 'static {
     }
 }
 
-impl dyn CargoError {
+impl dyn AppError {
     pub fn is<T: Any>(&self) -> bool {
         self.get_type_id() == TypeId::of::<T>()
     }
 
-    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn CargoError> {
+    pub fn from_std_error(err: Box<dyn Error + Send>) -> Box<dyn AppError> {
         Self::try_convert(&*err).unwrap_or_else(|| internal(&err))
     }
 
@@ -68,11 +68,11 @@ impl dyn CargoError {
     }
 }
 
-impl CargoError for Box<dyn CargoError> {
+impl AppError for Box<dyn AppError> {
     fn description(&self) -> &str {
         (**self).description()
     }
-    fn cause(&self) -> Option<&dyn CargoError> {
+    fn cause(&self) -> Option<&dyn AppError> {
         (**self).cause()
     }
     fn human(&self) -> bool {
@@ -83,56 +83,56 @@ impl CargoError for Box<dyn CargoError> {
     }
 }
 
-pub type CargoResult<T> = Result<T, Box<dyn CargoError>>;
+pub type AppResult<T> = Result<T, Box<dyn AppError>>;
 
 // =============================================================================
 // Chaining errors
 
 pub trait ChainError<T> {
-    fn chain_error<E, F>(self, callback: F) -> CargoResult<T>
+    fn chain_error<E, F>(self, callback: F) -> AppResult<T>
     where
-        E: CargoError,
+        E: AppError,
         F: FnOnce() -> E;
 }
 
 #[derive(Debug)]
 struct ChainedError<E> {
     error: E,
-    cause: Box<dyn CargoError>,
+    cause: Box<dyn AppError>,
 }
 
 impl<T, F> ChainError<T> for F
 where
-    F: FnOnce() -> CargoResult<T>,
+    F: FnOnce() -> AppResult<T>,
 {
-    fn chain_error<E, C>(self, callback: C) -> CargoResult<T>
+    fn chain_error<E, C>(self, callback: C) -> AppResult<T>
     where
-        E: CargoError,
+        E: AppError,
         C: FnOnce() -> E,
     {
         self().chain_error(callback)
     }
 }
 
-impl<T, E: CargoError> ChainError<T> for Result<T, E> {
-    fn chain_error<E2, C>(self, callback: C) -> CargoResult<T>
+impl<T, E: AppError> ChainError<T> for Result<T, E> {
+    fn chain_error<E2, C>(self, callback: C) -> AppResult<T>
     where
-        E2: CargoError,
+        E2: AppError,
         C: FnOnce() -> E2,
     {
         self.map_err(move |err| {
             Box::new(ChainedError {
                 error: callback(),
                 cause: Box::new(err),
-            }) as Box<dyn CargoError>
+            }) as Box<dyn AppError>
         })
     }
 }
 
 impl<T> ChainError<T> for Option<T> {
-    fn chain_error<E, C>(self, callback: C) -> CargoResult<T>
+    fn chain_error<E, C>(self, callback: C) -> AppResult<T>
     where
-        E: CargoError,
+        E: AppError,
         C: FnOnce() -> E,
     {
         match self {
@@ -142,11 +142,11 @@ impl<T> ChainError<T> for Option<T> {
     }
 }
 
-impl<E: CargoError> CargoError for ChainedError<E> {
+impl<E: AppError> AppError for ChainedError<E> {
     fn description(&self) -> &str {
         self.error.description()
     }
-    fn cause(&self) -> Option<&dyn CargoError> {
+    fn cause(&self) -> Option<&dyn AppError> {
         Some(&*self.cause)
     }
     fn response(&self) -> Option<Response> {
@@ -157,7 +157,7 @@ impl<E: CargoError> CargoError for ChainedError<E> {
     }
 }
 
-impl<E: CargoError> fmt::Display for ChainedError<E> {
+impl<E: AppError> fmt::Display for ChainedError<E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} caused by {}", self.error, self.cause)
     }
@@ -166,29 +166,29 @@ impl<E: CargoError> fmt::Display for ChainedError<E> {
 // =============================================================================
 // Error impls
 
-impl<E: Error + Send + 'static> CargoError for E {
+impl<E: Error + Send + 'static> AppError for E {
     fn description(&self) -> &str {
         Error::description(self)
     }
 }
 
-impl<E: Error + Send + 'static> From<E> for Box<dyn CargoError> {
-    fn from(err: E) -> Box<dyn CargoError> {
-        CargoError::try_convert(&err).unwrap_or_else(|| Box::new(err))
+impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
+    fn from(err: E) -> Box<dyn AppError> {
+        AppError::try_convert(&err).unwrap_or_else(|| Box::new(err))
     }
 }
 // =============================================================================
 // Concrete errors
 
 #[derive(Debug)]
-struct ConcreteCargoError {
+struct ConcreteAppError {
     description: String,
     detail: Option<String>,
-    cause: Option<Box<dyn CargoError>>,
+    cause: Option<Box<dyn AppError>>,
     human: bool,
 }
 
-impl fmt::Display for ConcreteCargoError {
+impl fmt::Display for ConcreteAppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
         if let Some(ref s) = self.detail {
@@ -198,11 +198,11 @@ impl fmt::Display for ConcreteCargoError {
     }
 }
 
-impl CargoError for ConcreteCargoError {
+impl AppError for ConcreteAppError {
     fn description(&self) -> &str {
         &self.description
     }
-    fn cause(&self) -> Option<&dyn CargoError> {
+    fn cause(&self) -> Option<&dyn AppError> {
         self.cause.as_ref().map(|c| &**c)
     }
     fn human(&self) -> bool {
@@ -213,7 +213,7 @@ impl CargoError for ConcreteCargoError {
 #[derive(Debug, Clone, Copy)]
 pub struct NotFound;
 
-impl CargoError for NotFound {
+impl AppError for NotFound {
     fn description(&self) -> &str {
         "not found"
     }
@@ -238,7 +238,7 @@ impl fmt::Display for NotFound {
 #[derive(Debug, Clone, Copy)]
 pub struct Unauthorized;
 
-impl CargoError for Unauthorized {
+impl AppError for Unauthorized {
     fn description(&self) -> &str {
         "unauthorized"
     }
@@ -263,7 +263,7 @@ impl fmt::Display for Unauthorized {
 #[derive(Debug)]
 struct BadRequest(String);
 
-impl CargoError for BadRequest {
+impl AppError for BadRequest {
     fn description(&self) -> &str {
         self.0.as_ref()
     }
@@ -285,8 +285,8 @@ impl fmt::Display for BadRequest {
     }
 }
 
-pub fn internal_error(error: &str, detail: &str) -> Box<dyn CargoError> {
-    Box::new(ConcreteCargoError {
+pub fn internal_error(error: &str, detail: &str) -> Box<dyn AppError> {
+    Box::new(ConcreteAppError {
         description: error.to_string(),
         detail: Some(detail.to_string()),
         cause: None,
@@ -294,8 +294,8 @@ pub fn internal_error(error: &str, detail: &str) -> Box<dyn CargoError> {
     })
 }
 
-pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
-    Box::new(ConcreteCargoError {
+pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(ConcreteAppError {
         description: error.to_string(),
         detail: None,
         cause: None,
@@ -303,8 +303,8 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
     })
 }
 
-pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
-    Box::new(ConcreteCargoError {
+pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(ConcreteAppError {
         description: error.to_string(),
         detail: None,
         cause: None,
@@ -319,20 +319,20 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
 ///
 /// Since this is going back to the UI these errors are treated the same as
 /// `human` errors, other than the HTTP status code.
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn CargoError> {
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(BadRequest(error.to_string()))
 }
 
 #[derive(Debug)]
-pub struct CargoErrToStdErr(pub Box<dyn CargoError>);
+pub struct AppErrToStdErr(pub Box<dyn AppError>);
 
-impl Error for CargoErrToStdErr {
+impl Error for AppErrToStdErr {
     fn description(&self) -> &str {
         self.0.description()
     }
 }
 
-impl fmt::Display for CargoErrToStdErr {
+impl fmt::Display for AppErrToStdErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)?;
 
@@ -346,18 +346,18 @@ impl fmt::Display for CargoErrToStdErr {
     }
 }
 
-pub(crate) fn std_error(e: Box<dyn CargoError>) -> Box<dyn Error + Send> {
-    Box::new(CargoErrToStdErr(e))
+pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
+    Box::new(AppErrToStdErr(e))
 }
 
-pub(crate) fn std_error_no_send(e: Box<dyn CargoError>) -> Box<dyn Error> {
-    Box::new(CargoErrToStdErr(e))
+pub(crate) fn std_error_no_send(e: Box<dyn AppError>) -> Box<dyn Error> {
+    Box::new(AppErrToStdErr(e))
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOnlyMode;
 
-impl CargoError for ReadOnlyMode {
+impl AppError for ReadOnlyMode {
     fn description(&self) -> &str {
         "tried to write in read only mode"
     }
@@ -390,7 +390,7 @@ pub struct TooManyRequests {
     pub retry_after: NaiveDateTime,
 }
 
-impl CargoError for TooManyRequests {
+impl AppError for TooManyRequests {
     fn description(&self) -> &str {
         "too many requests"
     }

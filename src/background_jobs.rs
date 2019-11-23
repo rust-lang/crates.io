@@ -5,17 +5,17 @@ use swirl::PerformError;
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::Repository;
 use crate::uploaders::Uploader;
-use crate::util::errors::{CargoErrToStdErr, CargoResult};
+use crate::util::errors::{AppErrToStdErr, AppResult};
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
 }
 
 impl swirl::db::DieselPool for DieselPool {
-    type Error = CargoErrToStdErr;
+    type Error = AppErrToStdErr;
 
     fn get(&self) -> Result<swirl::db::DieselPooledConn<'_, Self>, Self::Error> {
-        self.get().map_err(CargoErrToStdErr)
+        self.get().map_err(AppErrToStdErr)
     }
 }
 
@@ -59,10 +59,10 @@ impl Environment {
     pub fn connection(&self) -> Result<DieselPooledConn<'_>, PerformError> {
         self.connection_pool
             .get()
-            .map_err(|e| CargoErrToStdErr(e).into())
+            .map_err(|e| AppErrToStdErr(e).into())
     }
 
-    pub fn lock_index(&self) -> CargoResult<MutexGuard<'_, Repository>> {
+    pub fn lock_index(&self) -> AppResult<MutexGuard<'_, Repository>> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
         repo.reset_head()?;
         Ok(repo)

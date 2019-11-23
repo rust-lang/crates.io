@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::git;
-use crate::util::{human, CargoResult};
+use crate::util::{human, AppResult};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
@@ -73,7 +73,7 @@ pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
-) -> CargoResult<Vec<git::Dependency>> {
+) -> AppResult<Vec<git::Dependency>> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 

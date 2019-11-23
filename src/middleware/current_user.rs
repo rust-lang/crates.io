@@ -4,7 +4,7 @@ use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
 use crate::db::RequestTransaction;
-use crate::util::errors::{std_error, CargoResult, ChainError, Unauthorized};
+use crate::util::errors::{std_error, AppResult, ChainError, Unauthorized};
 
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::User;
@@ -72,18 +72,18 @@ impl Middleware for CurrentUser {
 }
 
 pub trait RequestUser {
-    fn user(&self) -> CargoResult<&User>;
-    fn authentication_source(&self) -> CargoResult<AuthenticationSource>;
+    fn user(&self) -> AppResult<&User>;
+    fn authentication_source(&self) -> AppResult<AuthenticationSource>;
 }
 
 impl<'a> RequestUser for dyn Request + 'a {
-    fn user(&self) -> CargoResult<&User> {
+    fn user(&self) -> AppResult<&User> {
         self.extensions()
             .find::<User>()
             .chain_error(|| Unauthorized)
     }
 
-    fn authentication_source(&self) -> CargoResult<AuthenticationSource> {
+    fn authentication_source(&self) -> AppResult<AuthenticationSource> {
         self.extensions()
             .find::<AuthenticationSource>()
             .cloned()

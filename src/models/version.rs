@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::util::{human, CargoResult};
+use crate::util::{human, AppResult};
 
 use crate::models::user;
 use crate::models::user::UserNoEmailType;
@@ -138,7 +138,7 @@ impl NewVersion {
         license_file: Option<&str>,
         crate_size: i32,
         published_by: i32,
-    ) -> CargoResult<Self> {
+    ) -> AppResult<Self> {
         let features = serde_json::to_value(features)?;
 
         let mut new_version = NewVersion {
@@ -160,7 +160,7 @@ impl NewVersion {
         conn: &PgConnection,
         authors: &[String],
         published_by_email: &str,
-    ) -> CargoResult<Version> {
+    ) -> AppResult<Version> {
         use crate::schema::version_authors::{name, version_id};
         use crate::schema::versions::dsl::*;
         use diesel::dsl::exists;
@@ -201,7 +201,7 @@ impl NewVersion {
         })
     }
 
-    fn validate_license(&mut self, license_file: Option<&str>) -> CargoResult<()> {
+    fn validate_license(&mut self, license_file: Option<&str>) -> AppResult<()> {
         if let Some(ref license) = self.license {
             for part in license.split('/') {
                 license_exprs::validate_license_expr(part).map_err(|e| {

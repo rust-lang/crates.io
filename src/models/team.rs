@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github::{github_api, team_url};
-use crate::util::{errors::NotFound, human, CargoResult};
+use crate::util::{errors::NotFound, human, AppResult};
 
 use oauth2::{prelude::*, AccessToken};
 
@@ -73,7 +73,7 @@ impl Team {
         conn: &PgConnection,
         login: &str,
         req_user: &User,
-    ) -> CargoResult<Self> {
+    ) -> AppResult<Self> {
         // must look like system:xxxxxxx
         let mut chunks = login.split(':');
         match chunks.next().unwrap() {
@@ -113,7 +113,7 @@ impl Team {
         org_name: &str,
         team_name: &str,
         req_user: &User,
-    ) -> CargoResult<Self> {
+    ) -> AppResult<Self> {
         // GET orgs/:org/teams
         // check that `team` is the `slug` in results, and grab its data
 
@@ -177,11 +177,11 @@ impl Team {
     /// Note that we're assuming that the given user is the one interested in
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
-    pub fn contains_user(&self, app: &App, user: &User) -> CargoResult<bool> {
+    pub fn contains_user(&self, app: &App, user: &User) -> AppResult<bool> {
         team_with_gh_id_contains_user(app, self.github_id, user)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)
@@ -214,7 +214,7 @@ impl Team {
     }
 }
 
-fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> CargoResult<bool> {
+fn team_with_gh_id_contains_user(app: &App, github_id: i32, user: &User) -> AppResult<bool> {
     // GET teams/:team_id/memberships/:user_name
     // check that "state": "active"
 

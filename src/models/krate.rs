@@ -10,7 +10,7 @@ use crate::app::App;
 use crate::email;
 use crate::models::user;
 use crate::models::user::UserNoEmailType;
-use crate::util::{human, CargoResult};
+use crate::util::{human, AppResult};
 
 use crate::models::{
     Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
@@ -106,7 +106,7 @@ impl<'a> NewCrate<'a> {
         conn: &PgConnection,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
-    ) -> CargoResult<Crate> {
+    ) -> AppResult<Crate> {
         use diesel::update;
 
         self.validate()?;
@@ -131,8 +131,8 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&self) -> CargoResult<()> {
-        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
+    fn validate(&self) -> AppResult<()> {
+        fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
             let url = match url {
                 Some(s) => s,
                 None => return Ok(()),
@@ -159,7 +159,7 @@ impl<'a> NewCrate<'a> {
         Ok(())
     }
 
-    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
+    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> AppResult<()> {
         use crate::schema::reserved_crate_names::dsl::*;
         use diesel::dsl::exists;
         use diesel::select;
@@ -385,7 +385,7 @@ impl Crate {
         }
     }
 
-    pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
+    pub fn max_version(&self, conn: &PgConnection) -> AppResult<semver::Version> {
         use crate::schema::versions::dsl::*;
 
         let vs = self
@@ -397,7 +397,7 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+    pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
@@ -423,7 +423,7 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<String> {
+    ) -> AppResult<String> {
         use diesel::insert_into;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
@@ -486,7 +486,7 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<()> {
+    ) -> AppResult<()> {
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind() as i32));
@@ -507,7 +507,7 @@ impl Crate {
         &self,
         conn: &PgConnection,
         params: &IndexMap<String, String>,
-    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+    ) -> AppResult<(Vec<ReverseDependency>, i64)> {
         use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};

@@ -5,7 +5,7 @@ use crate::schema::{crate_owner_invitations, crate_owners};
 use crate::views::{EncodableCrateOwnerInvitation, InvitationResponse};
 
 /// Handles the `GET /me/crate_owner_invitations` route.
-pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn list(req: &mut dyn Request) -> AppResult<Response> {
     let conn = &*req.db_conn()?;
     let user_id = req.user()?.id;
 
@@ -31,7 +31,7 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /me/crate_owner_invitations/:crate_id` route.
-pub fn handle_invite(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
 
@@ -53,7 +53,7 @@ fn accept_invite(
     req: &dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
-) -> CargoResult<Response> {
+) -> AppResult<Response> {
     use diesel::{delete, insert_into};
 
     let user_id = req.user()?.id;
@@ -92,7 +92,7 @@ fn decline_invite(
     req: &dyn Request,
     conn: &PgConnection,
     crate_invite: InvitationResponse,
-) -> CargoResult<Response> {
+) -> AppResult<Response> {
     use diesel::delete;
 
     let user_id = req.user()?.id;

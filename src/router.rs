@@ -5,7 +5,7 @@ use conduit::{Handler, Request, Response};
 use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, CargoError, CargoResult, NotFound};
+use crate::util::errors::{std_error, AppError, AppResult, NotFound};
 use crate::util::RequestProxy;
 use crate::{App, Env};
 
@@ -129,7 +129,7 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-struct C(pub fn(&mut dyn Request) -> CargoResult<Response>);
+struct C(pub fn(&mut dyn Request) -> AppResult<Response>);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
@@ -179,7 +179,7 @@ mod tests {
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
-    fn err<E: CargoError>(err: E) -> CargoResult<Response> {
+    fn err<E: AppError>(err: E) -> AppResult<Response> {
         Err(Box::new(err))
     }
 

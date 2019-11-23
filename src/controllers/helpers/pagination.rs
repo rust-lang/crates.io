@@ -14,7 +14,7 @@ pub(crate) enum Page {
 }
 
 impl Page {
-    fn new(params: &IndexMap<String, String>) -> CargoResult<Self> {
+    fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
         if let Some(s) = params.get("page") {
             let numeric_page = s.parse()?;
             if numeric_page < 1 {
@@ -38,7 +38,7 @@ pub(crate) struct PaginationOptions {
 }
 
 impl PaginationOptions {
-    pub(crate) fn new(params: &IndexMap<String, String>) -> CargoResult<Self> {
+    pub(crate) fn new(params: &IndexMap<String, String>) -> AppResult<Self> {
         const DEFAULT_PER_PAGE: u32 = 10;
         const MAX_PER_PAGE: u32 = 100;
 
@@ -70,7 +70,7 @@ impl PaginationOptions {
 }
 
 pub(crate) trait Paginate: Sized {
-    fn paginate(self, params: &IndexMap<String, String>) -> CargoResult<PaginatedQuery<Self>> {
+    fn paginate(self, params: &IndexMap<String, String>) -> AppResult<PaginatedQuery<Self>> {
         Ok(PaginatedQuery {
             query: self,
             options: PaginationOptions::new(params)?,
