@@ -53,7 +53,7 @@ let logRequests = morgan(
   'at=info method=:method path=":url" ' +
     'request_id=:req[x-request-id] ' +
     'fwd=":req[x-real-ip]" ' +
-    'user_agent=:req[user-agent]',
+    'user_agent=":req[user-agent]"',
 );
 
 let server = new FastBootAppServer({
