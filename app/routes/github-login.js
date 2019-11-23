@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import ajax from 'ember-fetch/ajax';
 
 /**
- * Calling this route will query the `/authorize_url` API endpoint
+ * Calling this route will query the `/api/private/session/begin` API endpoint
  * and redirect to the received URL to initiate the OAuth flow.
  *
  * Example URL:
@@ -16,7 +16,7 @@ import ajax from 'ember-fetch/ajax';
  */
 export default Route.extend({
   async beforeModel() {
-    let url = await ajax(`/authorize_url`);
+    let url = await ajax(`/api/private/session/begin`);
     window.location = url.url;
   },
 });

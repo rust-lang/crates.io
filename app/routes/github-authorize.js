@@ -19,7 +19,7 @@ export default Route.extend({
   async beforeModel(transition) {
     try {
       let queryParams = serializeQueryParams(transition.queryParams);
-      let resp = await fetch(`/authorize?${queryParams}`);
+      let resp = await fetch(`/api/private/session/authorize?${queryParams}`);
       let json = await resp.json();
       let item = JSON.stringify({ ok: resp.ok, data: json });
       if (window.opener) {

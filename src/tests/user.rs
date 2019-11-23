@@ -106,14 +106,16 @@ impl crate::util::MockAnonymousUser {
 #[test]
 fn auth_gives_a_token() {
     let (_, anon) = TestApp::init().empty();
-    let json: AuthResponse = anon.get("/authorize_url").good();
+    let json: AuthResponse = anon.get("/api/private/session/begin").good();
     assert!(json.url.contains(&json.state));
 }
 
 #[test]
 fn access_token_needs_data() {
     let (_, anon) = TestApp::init().empty();
-    let json = anon.get::<()>("/authorize").bad_with_status(200); // Change endpoint to 400?
+    let json = anon
+        .get::<()>("/api/private/session/authorize")
+        .bad_with_status(200); // Change endpoint to 400?
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 

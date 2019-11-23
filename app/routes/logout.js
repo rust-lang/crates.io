@@ -7,7 +7,7 @@ export default Route.extend({
   session: service(),
 
   async activate() {
-    await ajax(`/logout`, { method: 'DELETE' });
+    await ajax(`/api/private/session`, { method: 'DELETE' });
     run(() => {
       this.session.logoutUser();
       this.transitionTo('index');
