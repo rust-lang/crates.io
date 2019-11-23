@@ -285,15 +285,6 @@ impl fmt::Display for BadRequest {
     }
 }
 
-pub fn internal_error(error: &str, detail: &str) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
-        description: error.to_string(),
-        detail: Some(detail.to_string()),
-        cause: None,
-        cargo_err: false,
-    })
-}
-
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
