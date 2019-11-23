@@ -33,7 +33,7 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> AppResult<Response> {
     let conn = req.db_conn()?;
     let owners = krate.owners(&conn)?;
     if user.rights(req.app(), &owners)? < Rights::Publish {
-        return Err(human("must already be an owner to yank or unyank"));
+        return Err(cargo_err("must already be an owner to yank or unyank"));
     }
 
     git::yank(krate.name, version, yanked)

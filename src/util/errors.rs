@@ -27,7 +27,7 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     }
 
     fn response(&self) -> Option<Response> {
-        if self.human() {
+        if self.cargo_err() {
             Some(json_response(&Bad {
                 errors: vec![StringError {
                     detail: self.description().to_string(),
@@ -37,7 +37,7 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
             self.cause().and_then(AppError::response)
         }
     }
-    fn human(&self) -> bool {
+    fn cargo_err(&self) -> bool {
         false
     }
 
@@ -75,8 +75,8 @@ impl AppError for Box<dyn AppError> {
     fn cause(&self) -> Option<&dyn AppError> {
         (**self).cause()
     }
-    fn human(&self) -> bool {
-        (**self).human()
+    fn cargo_err(&self) -> bool {
+        (**self).cargo_err()
     }
     fn response(&self) -> Option<Response> {
         (**self).response()
@@ -152,8 +152,8 @@ impl<E: AppError> AppError for ChainedError<E> {
     fn response(&self) -> Option<Response> {
         self.error.response()
     }
-    fn human(&self) -> bool {
-        self.error.human()
+    fn cargo_err(&self) -> bool {
+        self.error.cargo_err()
     }
 }
 
@@ -185,7 +185,7 @@ struct ConcreteAppError {
     description: String,
     detail: Option<String>,
     cause: Option<Box<dyn AppError>>,
-    human: bool,
+    cargo_err: bool,
 }
 
 impl fmt::Display for ConcreteAppError {
@@ -205,8 +205,8 @@ impl AppError for ConcreteAppError {
     fn cause(&self) -> Option<&dyn AppError> {
         self.cause.as_ref().map(|c| &**c)
     }
-    fn human(&self) -> bool {
-        self.human
+    fn cargo_err(&self) -> bool {
+        self.cargo_err
     }
 }
 
@@ -290,7 +290,7 @@ pub fn internal_error(error: &str, detail: &str) -> Box<dyn AppError> {
         description: error.to_string(),
         detail: Some(detail.to_string()),
         cause: None,
-        human: false,
+        cargo_err: false,
     })
 }
 
@@ -299,16 +299,16 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
         description: error.to_string(),
         detail: None,
         cause: None,
-        human: false,
+        cargo_err: false,
     })
 }
 
-pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
         detail: None,
         cause: None,
-        human: true,
+        cargo_err: true,
     })
 }
 
@@ -318,7 +318,7 @@ pub fn human<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 /// non-200 response codes for its stores to work properly.
 ///
 /// Since this is going back to the UI these errors are treated the same as
-/// `human` errors, other than the HTTP status code.
+/// `cargo_err` errors, other than the HTTP status code.
 pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(BadRequest(error.to_string()))
 }
@@ -374,7 +374,7 @@ impl AppError for ReadOnlyMode {
         Some(response)
     }
 
-    fn human(&self) -> bool {
+    fn cargo_err(&self) -> bool {
         true
     }
 }
@@ -416,7 +416,7 @@ impl AppError for TooManyRequests {
         Some(response)
     }
 
-    fn human(&self) -> bool {
+    fn cargo_err(&self) -> bool {
         true
     }
 }

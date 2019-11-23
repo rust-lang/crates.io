@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github;
-use crate::util::{human, AppResult};
+use crate::util::{cargo_err, AppResult};
 
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{Crate, Team, User};
@@ -77,7 +77,7 @@ impl Owner {
                 .first::<UserNoEmailType>(conn)
                 .map(User::from)
                 .map(Owner::User)
-                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)))
+                .map_err(|_| cargo_err(&format_args!("could not find user with login `{}`", name)))
         }
     }
 

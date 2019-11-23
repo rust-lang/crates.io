@@ -10,7 +10,7 @@ use crate::app::App;
 use crate::email;
 use crate::models::user;
 use crate::models::user::UserNoEmailType;
-use crate::util::{human, AppResult};
+use crate::util::{cargo_err, AppResult};
 
 use crate::models::{
     Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
@@ -141,7 +141,7 @@ impl<'a> NewCrate<'a> {
             // Manually check the string, as `Url::parse` may normalize relative URLs
             // making it difficult to ensure that both slashes are present.
             if !url.starts_with("http://") && !url.starts_with("https://") {
-                return Err(human(&format_args!(
+                return Err(cargo_err(&format_args!(
                     "URL for field `{}` must begin with http:// or https:// (url: {})",
                     field, url
                 )));
@@ -149,7 +149,7 @@ impl<'a> NewCrate<'a> {
 
             // Ensure the entire URL parses as well
             Url::parse(url)
-                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
+                .map_err(|_| cargo_err(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
             Ok(())
         }
 
@@ -169,7 +169,7 @@ impl<'a> NewCrate<'a> {
         ))
         .get_result::<bool>(conn)?;
         if reserved_name {
-            Err(human("cannot upload a crate with a reserved name"))
+            Err(cargo_err("cannot upload a crate with a reserved name"))
         } else {
             Ok(())
         }

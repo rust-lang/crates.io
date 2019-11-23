@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github::{github_api, team_url};
-use crate::util::{errors::NotFound, human, AppResult};
+use crate::util::{errors::NotFound, cargo_err, AppResult};
 
 use oauth2::{prelude::*, AccessToken};
 
@@ -82,7 +82,7 @@ impl Team {
                 // Ok to unwrap since we know one ":" is contained
                 let org = chunks.next().unwrap();
                 let team = chunks.next().ok_or_else(|| {
-                    human(
+                    cargo_err(
                         "missing github team argument; \
                          format is github:org:team",
                     )
@@ -96,7 +96,7 @@ impl Team {
                     req_user,
                 )
             }
-            _ => Err(human(
+            _ => Err(cargo_err(
                 "unknown organization handler, \
                  only 'github:org:team' is supported",
             )),
@@ -126,7 +126,7 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(|c| whitelist(*c)) {
-            return Err(human(&format_args!(
+            return Err(cargo_err(&format_args!(
                 "organization cannot contain special \
                  characters like {}",
                 c
@@ -150,14 +150,14 @@ impl Team {
             .into_iter()
             .find(|team| team.slug.to_lowercase() == team_name.to_lowercase())
             .ok_or_else(|| {
-                human(&format_args!(
+                cargo_err(&format_args!(
                     "could not find the github team {}/{}",
                     org_name, team_name
                 ))
             })?;
 
         if !team_with_gh_id_contains_user(app, team.id, req_user)? {
-            return Err(human("only members of a team can add it as an owner"));
+            return Err(cargo_err("only members of a team can add it as an owner"));
         }
 
         #[derive(Deserialize)]

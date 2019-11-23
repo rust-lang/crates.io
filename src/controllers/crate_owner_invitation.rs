@@ -38,7 +38,7 @@ pub fn handle_invite(req: &mut dyn Request) -> AppResult<Response> {
     let conn = &*req.db_conn()?;
 
     let crate_invite: OwnerInvitation =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 

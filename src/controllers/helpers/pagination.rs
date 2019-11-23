@@ -18,7 +18,7 @@ impl Page {
         if let Some(s) = params.get("page") {
             let numeric_page = s.parse()?;
             if numeric_page < 1 {
-                return Err(human(&format_args!(
+                return Err(cargo_err(&format_args!(
                     "page indexing starts from 1, page {} is invalid",
                     numeric_page,
                 )));
@@ -48,7 +48,7 @@ impl PaginationOptions {
             .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
 
         if per_page > MAX_PER_PAGE {
-            return Err(human(&format_args!(
+            return Err(cargo_err(&format_args!(
                 "cannot request more than {} items",
                 MAX_PER_PAGE,
             )));

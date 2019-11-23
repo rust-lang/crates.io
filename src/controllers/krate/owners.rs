@@ -82,11 +82,11 @@ fn parse_owners_request(req: &mut dyn Request) -> AppResult<Vec<String>> {
         owners: Option<Vec<String>>,
     }
     let request: Request =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
     request
         .owners
         .or(request.users)
-        .ok_or_else(|| human("invalid json request"))
+        .ok_or_else(|| cargo_err("invalid json request"))
 }
 
 fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
@@ -104,10 +104,10 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
             Rights::Full => {}
             // Yes!
             Rights::Publish => {
-                return Err(human("team members don't have permission to modify owners"));
+                return Err(cargo_err("team members don't have permission to modify owners"));
             }
             Rights::None => {
-                return Err(human("only owners have permission to modify owners"));
+                return Err(cargo_err("only owners have permission to modify owners"));
             }
         }
 
@@ -117,7 +117,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
                 if owners.iter().any(login_test) {
-                    return Err(human(&format_args!("`{}` is already an owner", login)));
+                    return Err(cargo_err(&format_args!("`{}` is already an owner", login)));
                 }
                 let msg = krate.owner_add(app, &conn, user, login)?;
                 msgs.push(msg);
@@ -128,7 +128,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
                 krate.owner_remove(app, &conn, user, login)?;
             }
             if User::owning(&krate, &conn)?.is_empty() {
-                return Err(human(
+                return Err(cargo_err(
                     "cannot remove all individual owners of a crate. \
                      Team member don't have permission to modify owners, so \
                      at least one individual owner is required.",

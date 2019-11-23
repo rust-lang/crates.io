@@ -85,7 +85,7 @@ pub fn github_access_token(req: &mut dyn Request) -> AppResult<Response> {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| &a[..]);
         if Some(&state[..]) != session_state {
-            return Err(human("invalid state parameter"));
+            return Err(cargo_err("invalid state parameter"));
         }
     }
 
@@ -96,7 +96,7 @@ pub fn github_access_token(req: &mut dyn Request) -> AppResult<Response> {
         .app()
         .github
         .exchange_code(code)
-        .map_err(|s| human(&s))?;
+        .map_err(|s| cargo_err(&s))?;
     let token = token.access_token();
     let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;

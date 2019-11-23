@@ -122,7 +122,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     #[derive(Deserialize)]
@@ -136,17 +136,17 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
 
     if user_update.user.email.is_none() {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
     let user_email = user_update.user.email.unwrap();
     let user_email = user_email.trim();
 
     if user_email == "" {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
     conn.transaction::<_, Box<dyn AppError>, _>(|| {
@@ -166,7 +166,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
             .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
-            .map_err(|_| human("Error in creating token"))?;
+            .map_err(|_| cargo_err("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
 
@@ -213,7 +213,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     conn.transaction(|| {

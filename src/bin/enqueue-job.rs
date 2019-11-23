@@ -1,4 +1,4 @@
-use cargo_registry::util::{human, AppError, AppResult};
+use cargo_registry::util::{cargo_err, AppError, AppResult};
 use cargo_registry::{db, env, tasks};
 use diesel::PgConnection;
 
@@ -14,7 +14,7 @@ fn main() -> AppResult<()> {
                 .unwrap_or_else(|| String::from("db-dump.tar.gz"));
             tasks::dump_db(database_url, target_name).enqueue(&conn)
         }
-        other => Err(human(&format!("Unrecognized job type `{}`", other))),
+        other => Err(cargo_err(&format!("Unrecognized job type `{}`", other))),
     }
 }
 
