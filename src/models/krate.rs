@@ -148,8 +148,9 @@ impl<'a> NewCrate<'a> {
             }
 
             // Ensure the entire URL parses as well
-            Url::parse(url)
-                .map_err(|_| cargo_err(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
+            Url::parse(url).map_err(|_| {
+                cargo_err(&format_args!("`{}` is not a valid url: `{}`", field, url))
+            })?;
             Ok(())
         }
 

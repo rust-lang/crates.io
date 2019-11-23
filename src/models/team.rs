@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github::{github_api, team_url};
-use crate::util::{errors::NotFound, cargo_err, AppResult};
+use crate::util::{cargo_err, errors::NotFound, AppResult};
 
 use oauth2::{prelude::*, AccessToken};
 

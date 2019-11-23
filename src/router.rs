@@ -207,7 +207,10 @@ mod tests {
         assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status.0, 404);
 
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
-        assert_eq!(C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status.0, 200);
+        assert_eq!(
+            C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status.0,
+            200
+        );
 
         // All other error types are propogated up the middleware, eventually becoming status 500
         assert!(C(|_| Err(internal(""))).call(&mut req).is_err());

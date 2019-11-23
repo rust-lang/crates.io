@@ -104,7 +104,9 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
             Rights::Full => {}
             // Yes!
             Rights::Publish => {
-                return Err(cargo_err("team members don't have permission to modify owners"));
+                return Err(cargo_err(
+                    "team members don't have permission to modify owners",
+                ));
             }
             Rights::None => {
                 return Err(cargo_err("only owners have permission to modify owners"));
