@@ -26,8 +26,14 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
         None
     }
 
-    fn response(&self) -> Option<Response> {
-        if self.cargo_err() {
+    /// Generate an HTTP response for the error
+    fn response(&self) -> Option<Response>;
+
+    /// Fallback logic for generating a cargo friendly response
+    ///
+    /// This behavior is deprecated and no new calls or impls should be added.
+    fn fallback_response(&self) -> Option<Response> {
+        if self.fallback_with_description_as_bad_200() {
             Some(json_response(&Bad {
                 errors: vec![StringError {
                     detail: self.description().to_string(),
@@ -37,7 +43,13 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
             self.cause().and_then(AppError::response)
         }
     }
-    fn cargo_err(&self) -> bool {
+
+    /// Determines if the `fallback_response` method should send the description as a status 200
+    /// error to cargo, or send the cause response (if applicable).
+    ///
+    /// This is only to be used by the `fallback_response` method.  If your error type impls
+    /// `response`, then there is no need to impl this method.
+    fn fallback_with_description_as_bad_200(&self) -> bool {
         false
     }
 
@@ -75,8 +87,8 @@ impl AppError for Box<dyn AppError> {
     fn cause(&self) -> Option<&dyn AppError> {
         (**self).cause()
     }
-    fn cargo_err(&self) -> bool {
-        (**self).cargo_err()
+    fn fallback_with_description_as_bad_200(&self) -> bool {
+        (**self).fallback_with_description_as_bad_200()
     }
     fn response(&self) -> Option<Response> {
         (**self).response()
@@ -152,8 +164,8 @@ impl<E: AppError> AppError for ChainedError<E> {
     fn response(&self) -> Option<Response> {
         self.error.response()
     }
-    fn cargo_err(&self) -> bool {
-        self.error.cargo_err()
+    fn fallback_with_description_as_bad_200(&self) -> bool {
+        self.error.fallback_with_description_as_bad_200()
     }
 }
 
@@ -169,6 +181,9 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 impl<E: Error + Send + 'static> AppError for E {
     fn description(&self) -> &str {
         Error::description(self)
+    }
+    fn response(&self) -> Option<Response> {
+        self.fallback_response()
     }
 }
 
@@ -205,7 +220,10 @@ impl AppError for ConcreteAppError {
     fn cause(&self) -> Option<&dyn AppError> {
         self.cause.as_ref().map(|c| &**c)
     }
-    fn cargo_err(&self) -> bool {
+    fn response(&self) -> Option<Response> {
+        self.fallback_response()
+    }
+    fn fallback_with_description_as_bad_200(&self) -> bool {
         self.cargo_err
     }
 }
@@ -364,10 +382,6 @@ impl AppError for ReadOnlyMode {
         response.status = (503, "Service Unavailable");
         Some(response)
     }
-
-    fn cargo_err(&self) -> bool {
-        true
-    }
 }
 
 impl fmt::Display for ReadOnlyMode {
@@ -405,10 +419,6 @@ impl AppError for TooManyRequests {
             .headers
             .insert("Retry-After".into(), vec![retry_after.to_string()]);
         Some(response)
-    }
-
-    fn cargo_err(&self) -> bool {
-        true
     }
 }
 
