@@ -45,7 +45,7 @@ impl Bucket {
         content: R,
         content_length: u64,
         content_type: &str,
-        extra_headers: Option<header::HeaderMap>,
+        extra_headers: header::HeaderMap,
     ) -> reqwest::Result<reqwest::Response> {
         let path = if path.starts_with('/') {
             &path[1..]
@@ -61,7 +61,7 @@ impl Bucket {
             .header(header::AUTHORIZATION, auth)
             .header(header::CONTENT_TYPE, content_type)
             .header(header::DATE, date)
-            .headers(extra_headers.unwrap_or_else(header::HeaderMap::new))
+            .headers(extra_headers)
             .body(reqwest::Body::sized(content, content_length))
             .send()?
             .error_for_status()

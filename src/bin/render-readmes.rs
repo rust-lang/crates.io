@@ -21,7 +21,7 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
-use reqwest::Client;
+use reqwest::{header, Client};
 use tar::{self, Archive};
 
 const DEFAULT_PAGE_SIZE: usize = 25;
@@ -137,7 +137,7 @@ fn main() {
                         content,
                         content_length,
                         "text/html",
-                        None,
+                        header::HeaderMap::new(),
                     )
                     .unwrap_or_else(|_| {
                         panic!(

@@ -94,7 +94,7 @@ impl Uploader {
         mut content: R,
         content_length: u64,
         content_type: &str,
-        extra_headers: Option<header::HeaderMap>,
+        extra_headers: header::HeaderMap,
     ) -> CargoResult<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
@@ -148,7 +148,7 @@ impl Uploader {
             content,
             content_length,
             "application/x-tar",
-            Some(extra_headers),
+            extra_headers,
         )?;
         Ok(checksum)
     }
@@ -163,13 +163,18 @@ impl Uploader {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
+        let mut extra_headers = header::HeaderMap::new();
+        extra_headers.insert(
+            header::CACHE_CONTROL,
+            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
+        );
         self.upload(
             http_client,
             &path,
             content,
             content_length,
             "text/html",
-            None,
+            extra_headers,
         )?;
         Ok(())
     }

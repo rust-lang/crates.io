@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{background_jobs::Environment, uploaders::Uploader, util::errors::std_error_no_send};
-
+use reqwest::header;
 use swirl::PerformError;
 
 /// Create CSV dumps of the public information in the database, wrap them in a
@@ -157,7 +157,7 @@ impl DumpTarball {
                 tarfile,
                 content_length,
                 "application/gzip",
-                None,
+                header::HeaderMap::new(),
             )
             .map_err(std_error_no_send)?;
         Ok(())
