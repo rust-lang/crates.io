@@ -71,7 +71,7 @@
     "ember-router-scroll": "^0.4.0",
     "ember-template-lint": "^1.12.1",
     "ember-source": "~3.1.0",
-    "ember-svg-jar": "^1.1.1",
+    "ember-svg-jar": "^2.2.3",
     "ember-test-selectors": "^0.3.7",
     "ember-web-app": "^2.2.0",
     "emberx-select": "^3.1.1",
