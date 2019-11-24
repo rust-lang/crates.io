@@ -28,6 +28,9 @@ module.exports = function(defaults) {
       theme: 'twilight',
       components: highlightedLanguages,
     },
+    'ember-cli-template-lint': {
+      testGenerator: 'qunit', // remove when dependency is upgraded to latest version
+    },
     sassOptions: {
       includePaths: ['node_modules/normalize.css'],
     },
