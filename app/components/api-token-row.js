@@ -7,9 +7,8 @@ export default Component.extend({
   serverError: null,
 
   didInsertElement() {
-    let input = this.element.querySelector('input');
-    if (input.focus) {
-      input.focus();
+    if (this.get('api_token.isNew')) {
+      this.$('input').focus();
     }
   },
 
