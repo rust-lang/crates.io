@@ -8,7 +8,7 @@ export default Component.extend({
 
   didInsertElement() {
     let input = this.element.querySelector('input');
-    if (input.focus) {
+    if (input && input.focus) {
       input.focus();
     }
   },
