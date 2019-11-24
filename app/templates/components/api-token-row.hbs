@@ -6,10 +6,8 @@
           placeholder="New token name"
           disabled=api_token.isSaving
           value=api_token.name
-          autofocus="autofocus"
-          enter="saveToken"
-          data-test-focused-input=true
-      }}
+          autofocus=true
+          enter="saveToken"}}
     {{else}}
       {{ api_token.name }}
     {{/if}}
