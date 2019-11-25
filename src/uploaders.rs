@@ -14,8 +14,8 @@ use std::sync::Arc;
 use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
-pub const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
-pub const CACHE_CONTROL_README: &str = "public,max-age=604800";
+const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
