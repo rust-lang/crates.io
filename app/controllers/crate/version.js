@@ -4,7 +4,6 @@ import Controller from '@ember/controller';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
 import ArrayProxy from '@ember/array/proxy';
 import { computed, observer } from '@ember/object';
-import { later } from '@ember/runloop';
 import moment from 'moment';
 
 const NUM_VERSIONS = 5;
@@ -25,6 +24,9 @@ export default Controller.extend({
   fetchingFollowing: true,
   following: false,
   currentVersion: alias('model'),
+  crateTomlText: computed('crate.name', 'currentVersion.num', function() {
+    return `${this.get('crate.name')} = "${this.get('currentVersion.num')}"`;
+  }),
   requestedVersion: null,
   keywords: alias('crate.keywords'),
   categories: alias('crate.categories'),
@@ -152,30 +154,7 @@ export default Controller.extend({
     return data;
   }),
 
-  toggleClipboardProps(isSuccess) {
-    this.setProperties({
-      showSuccess: isSuccess,
-      showNotification: true,
-    });
-    later(
-      this,
-      () => {
-        this.set('showNotification', false);
-      },
-      2000,
-    );
-  },
-
   actions: {
-    copySuccess(event) {
-      event.clearSelection();
-      this.toggleClipboardProps(true);
-    },
-
-    copyError() {
-      this.toggleClipboardProps(false);
-    },
-
     toggleFollow() {
       this.set('fetchingFollowing', true);
 

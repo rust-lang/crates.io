@@ -65,23 +65,10 @@
     {{else}}
       <div class='install'>
         <div class='action'>Cargo.toml</div>
-        <code id="crate-toml">{{ crate.name }} = "{{ currentVersion.num }}"</code>
+        <code id="crate-toml">{{ crateTomlText }}</code>
         {{#if (is-clipboard-supported)}}
-          {{#copy-button clipboardTarget="#crate-toml" success=(action 'copySuccess') error=(action 'copyError') title="Copy to clipboard"}}
-            {{svg-jar "copy" alt="Copy to clipboard"}}
-          {{/copy-button}}
+          {{crate-toml-copy copyText=crateTomlText}}
         {{/if}}
-      </div>
-      <div class="copy-result">
-        <span id="copy-notification" class="{{if showSuccess "copy-success" "copy-failure"}}">
-          {{#if showNotification}}
-            {{#if showSuccess}}
-              Copied!
-            {{else}}
-              An error occured. Please use CTRL+C.
-            {{/if}}
-          {{/if}}
-        </span>
       </div>
       {{#if crate.readme}}
         <section class="crate-readme" aria-label="Readme">

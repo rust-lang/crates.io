@@ -25,5 +25,7 @@ for name in $bin_names; do
     rm -v target/debug/deps/$normalized-*
 done
 
+rm -v target/.rustc_info.json
+
 echo "Final cache size:"
 du -hs target/debug

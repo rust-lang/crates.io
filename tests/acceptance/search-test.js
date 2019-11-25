@@ -62,6 +62,20 @@ module('Acceptance | search', function(hooks) {
     assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
   });
 
+  test('clearing search results', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('/search?q=rust');
+
+    assert.equal(currentURL(), '/search?q=rust');
+    assert.dom('[data-test-search-input]').hasValue('rust');
+
+    await visit('/');
+
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-search-input]').hasValue('');
+  });
+
   test('pressing S key to focus the search bar', async function(assert) {
     this.server.loadFixtures();
 

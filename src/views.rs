@@ -149,9 +149,17 @@ pub struct EncodableApiTokenWithToken {
     pub last_used_at: Option<NaiveDateTime>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct OwnedCrate {
+    pub id: i32,
+    pub name: String,
+    pub email_notifications: bool,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableMe {
     pub user: EncodablePrivateUser,
+    pub owned_crates: Vec<OwnedCrate>,
 }
 
 /// The serialization format for the `User` model.
