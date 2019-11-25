@@ -5,6 +5,8 @@ use diesel::prelude::*;
 
 use crate::util::{human, CargoResult};
 
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::views::{EncodableVersion, EncodableVersionLinks};
@@ -115,7 +117,12 @@ impl Version {
     /// Not for use when you have a group of versions you need the publishers for.
     pub fn published_by(&self, conn: &PgConnection) -> Option<User> {
         match self.published_by {
-            Some(pb) => users::table.find(pb).first(conn).ok(),
+            Some(pb) => users::table
+                .find(pb)
+                .select(user::ALL_COLUMNS)
+                .first::<UserNoEmailType>(conn)
+                .map(User::from)
+                .ok(),
             None => None,
         }
     }
