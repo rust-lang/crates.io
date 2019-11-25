@@ -182,3 +182,30 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Page, PaginationOptions};
+    use indexmap::IndexMap;
+
+    #[test]
+    fn page_must_be_a_number() {
+        let mut params = IndexMap::new();
+        params.insert(String::from("page"), String::from("not a number"));
+        let page_error = Page::new(&params).unwrap_err().response().unwrap();
+
+        assert_eq!(page_error.status, (400, "Bad Request"));
+    }
+
+    #[test]
+    fn per_page_must_be_a_number() {
+        let mut params = IndexMap::new();
+        params.insert(String::from("per_page"), String::from("not a number"));
+        let per_page_error = PaginationOptions::new(&params)
+            .unwrap_err()
+            .response()
+            .unwrap();
+
+        assert_eq!(per_page_error.status, (400, "Bad Request"));
+    }
+}
