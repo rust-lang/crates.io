@@ -21,6 +21,12 @@ export default Controller.extend({
   emailNotificationsError: false,
   emailNotificationsSuccess: false,
 
+  setAllEmailNotifications(value) {
+    this.get('ownedCrates').forEach(c => {
+      c.set('email_notifications', value);
+    });
+  },
+
   actions: {
     async saveEmailNotifications() {
       try {
@@ -44,6 +50,12 @@ export default Controller.extend({
           emailNotificationsSuccess: false,
         });
       }
+    },
+    emailNotificationsSelectAll() {
+      this.setAllEmailNotifications(true);
+    },
+    emailNotificationsSelectNone() {
+      this.setAllEmailNotifications(false);
     },
     startNewToken() {
       this.store.createRecord('api-token', {

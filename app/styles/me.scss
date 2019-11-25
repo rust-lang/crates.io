@@ -143,6 +143,10 @@
         }
     }
 
+    .button-container {
+        margin-right: 1rem;
+    }
+
     ul {
         padding: 0;
         @include flex-grow(1);

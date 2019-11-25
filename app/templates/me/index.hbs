@@ -30,8 +30,18 @@
 
   <p>
     To aid detection of unauthorized crate changes, we email you each time a new version of a crate you own is pushed.
-    By receiving and reading these emails, you help protect the Rust ecosystem.
+    By receiving and reading these emails, you help protect the Rust ecosystem. You may also choose to turn these
+    emails off for any of your crates listed below.
   </p>
+
+  <div class='row'>
+    <div class='button-container'>
+      <button type='button' class='yellow-button small' {{action 'emailNotificationsSelectAll'}}>Select All</button>
+    </div>
+    <div class='button-container'>
+      <button type='button' class='yellow-button small' {{action 'emailNotificationsSelectNone'}}>Deselect All</button>
+    </div>
+  </div>
 
   <div class='row'>
     <ul>
