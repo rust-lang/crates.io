@@ -32,41 +32,6 @@ pub struct NewUser<'a> {
     pub gh_access_token: Cow<'a, str>,
 }
 
-pub type UserNoEmailType = (
-    // pub id:
-    i32,
-    // pub email:
-    // Option<String>,
-    // pub gh_access_token:
-    String,
-    // pub gh_login:
-    String,
-    // pub name:
-    Option<String>,
-    // pub gh_avatar:
-    Option<String>,
-    // pub gh_id:
-    i32,
-);
-
-pub type AllColumns = (
-    users::id,
-    users::gh_access_token,
-    users::gh_login,
-    users::name,
-    users::gh_avatar,
-    users::gh_id,
-);
-
-pub const ALL_COLUMNS: AllColumns = (
-    users::id,
-    users::gh_access_token,
-    users::gh_login,
-    users::name,
-    users::gh_avatar,
-    users::gh_id,
-);
-
 impl<'a> NewUser<'a> {
     pub fn new(
         gh_id: i32,
@@ -113,13 +78,12 @@ impl<'a> NewUser<'a> {
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
                 ))
-                .returning(ALL_COLUMNS)
-                .get_result::<UserNoEmailType>(conn)?;
+                .get_result::<User>(conn)?;
 
             // To send the user an account verification email...
-            if let Some(user_email) = self.email {
+            if let Some(user_email) = user.email.as_ref() {
                 let new_email = NewEmail {
-                    user_id: user.0,
+                    user_id: user.id,
                     email: user_email,
                 };
 
@@ -131,11 +95,11 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.2, &token);
+                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
                 }
             }
 
-            Ok(User::from(user))
+            Ok(user)
         })
     }
 }
@@ -161,21 +125,16 @@ impl User {
             })
             .or_else(|_| tokens.select(user_id).first(conn))?;
 
-        users::table
-            .select(ALL_COLUMNS)
-            .find(user_id_)
-            .first::<UserNoEmailType>(conn)
-            .map(User::from)
+        users::table.find(user_id_).first(conn)
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
-            .select(ALL_COLUMNS)
+            .select(users::all_columns)
             .filter(crate_owners::crate_id.eq(krate.id))
-            .load::<UserNoEmailType>(conn)?
+            .load(conn)?
             .into_iter()
-            .map(User::from)
             .map(Owner::User);
 
         Ok(users.collect())
@@ -219,12 +178,12 @@ impl User {
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
     pub fn encodable_private(
         self,
-        email: Option<String>,
         email_verified: bool,
         email_verification_sent: bool,
     ) -> EncodablePrivateUser {
         let User {
             id,
+            email,
             name,
             gh_login,
             gh_avatar,
@@ -259,20 +218,6 @@ impl User {
             login: gh_login,
             name,
             url: Some(url),
-        }
-    }
-}
-
-impl From<UserNoEmailType> for User {
-    fn from(user: UserNoEmailType) -> Self {
-        User {
-            id: user.0,
-            email: None,
-            gh_access_token: user.1,
-            gh_login: user.2,
-            name: user.3,
-            gh_avatar: user.4,
-            gh_id: user.5,
         }
     }
 }

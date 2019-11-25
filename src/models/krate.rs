@@ -8,8 +8,6 @@ use url::Url;
 
 use crate::app::App;
 use crate::email;
-use crate::models::user;
-use crate::models::user::UserNoEmailType;
 use crate::util::{human, CargoResult};
 
 use crate::models::{
@@ -401,10 +399,9 @@ impl Crate {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
-            .select(user::ALL_COLUMNS)
-            .load::<UserNoEmailType>(conn)?
+            .select(users::all_columns)
+            .load(conn)?
             .into_iter()
-            .map(User::from)
             .map(Owner::User);
         let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
             .filter(crate_owners::crate_id.eq(self.id))
