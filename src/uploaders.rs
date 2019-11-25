@@ -14,7 +14,8 @@ use std::sync::Arc;
 use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
-pub const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -94,7 +95,7 @@ impl Uploader {
         mut content: R,
         content_length: u64,
         content_type: &str,
-        extra_headers: Option<header::HeaderMap>,
+        extra_headers: header::HeaderMap,
     ) -> CargoResult<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
@@ -138,17 +139,14 @@ impl Uploader {
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
-        );
+        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
         self.upload(
             app.http_client(),
             &path,
             content,
             content_length,
             "application/x-tar",
-            Some(extra_headers),
+            extra_headers,
         )?;
         Ok(checksum)
     }
@@ -163,13 +161,18 @@ impl Uploader {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
+        let mut extra_headers = header::HeaderMap::new();
+        extra_headers.insert(
+            header::CACHE_CONTROL,
+            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
+        );
         self.upload(
             http_client,
             &path,
             content,
             content_length,
             "text/html",
-            None,
+            extra_headers,
         )?;
         Ok(())
     }

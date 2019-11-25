@@ -21,9 +21,10 @@ use chrono::{TimeZone, Utc};
 use diesel::{dsl::any, prelude::*};
 use docopt::Docopt;
 use flate2::read::GzDecoder;
-use reqwest::Client;
+use reqwest::{header, Client};
 use tar::{self, Archive};
 
+const CACHE_CONTROL_README: &str = "public,max-age=604800";
 const DEFAULT_PAGE_SIZE: usize = 25;
 const USAGE: &str = "
 Usage: render-readmes [options]
@@ -129,6 +130,8 @@ fn main() {
                 let content_length = readme.len() as u64;
                 let content = std::io::Cursor::new(readme);
                 let readme_path = format!("readmes/{0}/{0}-{1}.html", krate_name, version.num);
+                let mut extra_headers = header::HeaderMap::new();
+                extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
                 config
                     .uploader
                     .upload(
@@ -137,7 +140,7 @@ fn main() {
                         content,
                         content_length,
                         "text/html",
-                        None,
+                        extra_headers,
                     )
                     .unwrap_or_else(|_| {
                         panic!(
