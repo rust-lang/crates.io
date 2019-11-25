@@ -15,6 +15,7 @@ use crate::middleware::app::RequestApp;
 use crate::models::Crate;
 
 pub const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+pub const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -138,10 +139,7 @@ impl Uploader {
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
         let mut extra_headers = header::HeaderMap::new();
-        extra_headers.insert(
-            header::CACHE_CONTROL,
-            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
-        );
+        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
         self.upload(
             app.http_client(),
             &path,
