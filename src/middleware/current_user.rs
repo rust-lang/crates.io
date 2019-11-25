@@ -38,6 +38,7 @@ impl Middleware for CurrentUser {
                 .first::<UserNoEmailType>(&*conn);
             drop(conn);
             if let Ok(user) = maybe_user {
+                let user = User::from(user);
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
                 req.mut_extensions()
