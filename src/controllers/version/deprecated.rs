@@ -7,7 +7,9 @@
 
 use crate::controllers::prelude::*;
 
-use crate::models::{Crate, User, Version};
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
+use crate::models::{Crate, Version};
 use crate::schema::*;
 use crate::views::EncodableVersion;
 
@@ -28,12 +30,14 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
         .select((
             versions::all_columns,
             crates::name,
-            users::all_columns.nullable(),
+            user::ALL_COLUMNS.nullable(),
         ))
         .filter(versions::id.eq(any(ids)))
-        .load::<(Version, String, Option<User>)>(&*conn)?
+        .load::<(Version, String, Option<UserNoEmailType>)>(&*conn)?
         .into_iter()
-        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
+        .map(|(version, crate_name, published_by)| {
+            version.encodable(&crate_name, published_by.map(From::from))
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -50,14 +54,14 @@ pub fn show_by_id(req: &mut dyn Request) -> CargoResult<Response> {
     let id = &req.params()["version_id"];
     let id = id.parse().unwrap_or(0);
     let conn = req.db_conn()?;
-    let (version, krate, published_by): (Version, Crate, Option<User>) = versions::table
+    let (version, krate, published_by): (Version, Crate, Option<UserNoEmailType>) = versions::table
         .find(id)
         .inner_join(crates::table)
         .left_outer_join(users::table)
         .select((
             versions::all_columns,
             crate::models::krate::ALL_COLUMNS,
-            users::all_columns.nullable(),
+            user::ALL_COLUMNS.nullable(),
         ))
         .first(&*conn)?;
 
@@ -66,6 +70,6 @@ pub fn show_by_id(req: &mut dyn Request) -> CargoResult<Response> {
         version: EncodableVersion,
     }
     Ok(req.json(&R {
-        version: version.encodable(&krate.name, published_by),
+        version: version.encodable(&krate.name, published_by.map(From::from)),
     }))
 }
