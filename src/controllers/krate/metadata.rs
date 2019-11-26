@@ -5,9 +5,11 @@
 //! `Cargo.toml` file.
 
 use crate::controllers::prelude::*;
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    User, Version,
+    Version,
 };
 use crate::schema::*;
 use crate::views::{
@@ -17,7 +19,7 @@ use crate::views::{
 use crate::models::krate::ALL_COLUMNS;
 
 /// Handles the `GET /summary` route.
-pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
     use crate::schema::crates::dsl::*;
 
     let conn = req.db_conn()?;
@@ -26,7 +28,7 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
         .select(metadata::total_downloads)
         .get_result(&*conn)?;
 
-    let encode_crates = |krates: Vec<Crate>| -> CargoResult<Vec<_>> {
+    let encode_crates = |krates: Vec<Crate>| -> AppResult<Vec<_>> {
         let versions = krates.versions().load::<Version>(&*conn)?;
         versions
             .grouped_by(&krates)
@@ -100,15 +102,15 @@ pub fn summary(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+    let mut versions_and_publishers: Vec<(Version, Option<UserNoEmailType>)> = krate
         .all_versions()
         .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()))
+        .select((versions::all_columns, user::ALL_COLUMNS.nullable()))
         .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let ids = versions_and_publishers.iter().map(|v| v.0.id).collect();
@@ -151,7 +153,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
         ),
         versions: versions_and_publishers
             .into_iter()
-            .map(|(v, pb)| v.encodable(&krate.name, pb))
+            .map(|(v, pb)| v.encodable(&krate.name, pb.map(From::from)))
             .collect(),
         keywords: kws.into_iter().map(Keyword::encodable).collect(),
         categories: cats.into_iter().map(Category::encodable).collect(),
@@ -159,7 +161,7 @@ pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/:version/readme` route.
-pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn readme(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -183,19 +185,19 @@ pub fn readme(req: &mut dyn Request) -> CargoResult<Response> {
 /// Handles the `GET /crates/:crate_id/versions` route.
 // FIXME: Not sure why this is necessary since /crates/:crate_id returns
 // this information already, but ember is definitely requesting it
-pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn versions(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
+    let mut versions_and_publishers: Vec<(Version, Option<UserNoEmailType>)> = krate
         .all_versions()
         .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()))
+        .select((versions::all_columns, user::ALL_COLUMNS.nullable()))
         .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let versions = versions_and_publishers
         .into_iter()
-        .map(|(v, pb)| v.encodable(crate_name, pb))
+        .map(|(v, pb)| v.encodable(crate_name, pb.map(From::from)))
         .collect();
 
     #[derive(Serialize)]
@@ -206,7 +208,7 @@ pub fn versions(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
-pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
     let name = &req.params()["crate_id"];
@@ -227,11 +229,11 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> CargoResult<Response> {
         .select((
             versions::all_columns,
             crates::name,
-            users::all_columns.nullable(),
+            user::ALL_COLUMNS.nullable(),
         ))
-        .load::<(Version, String, Option<User>)>(&*conn)?
+        .load::<(Version, String, Option<UserNoEmailType>)>(&*conn)?
         .into_iter()
-        .map(|(version, krate_name, published_by)| version.encodable(&krate_name, published_by))
+        .map(|(version, krate_name, user)| version.encodable(&krate_name, user.map(From::from)))
         .collect();
 
     #[derive(Serialize)]

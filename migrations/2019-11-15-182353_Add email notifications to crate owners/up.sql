@@ -1,0 +1,1 @@
+ALTER TABLE crate_owners ADD COLUMN email_notifications BOOLEAN NOT NULL DEFAULT TRUE;

@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::util::CargoResult;
+use crate::util::AppResult;
 
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
@@ -30,6 +30,41 @@ pub struct NewUser<'a> {
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: Cow<'a, str>,
 }
+
+pub type UserNoEmailType = (
+    // pub id:
+    i32,
+    // pub email:
+    // Option<String>,
+    // pub gh_access_token:
+    String,
+    // pub gh_login:
+    String,
+    // pub name:
+    Option<String>,
+    // pub gh_avatar:
+    Option<String>,
+    // pub gh_id:
+    i32,
+);
+
+pub type AllColumns = (
+    users::id,
+    users::gh_access_token,
+    users::gh_login,
+    users::name,
+    users::gh_avatar,
+    users::gh_id,
+);
+
+pub const ALL_COLUMNS: AllColumns = (
+    users::id,
+    users::gh_access_token,
+    users::gh_login,
+    users::name,
+    users::gh_avatar,
+    users::gh_id,
+);
 
 impl<'a> NewUser<'a> {
     pub fn new(
@@ -79,12 +114,13 @@ impl<'a> NewUser<'a> {
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
                 ))
-                .get_result::<User>(conn)?;
+                .returning(ALL_COLUMNS)
+                .get_result::<UserNoEmailType>(conn)?;
 
-            // To send the user an account verification email...
+            // To send the user an account verification email
             if let Some(user_email) = email {
                 let new_email = NewEmail {
-                    user_id: user.id,
+                    user_id: user.0,
                     email: user_email,
                 };
 
@@ -96,11 +132,11 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
+                    crate::email::send_user_confirm_email(user_email, &user.2, &token);
                 }
             }
 
-            Ok(user)
+            Ok(User::from(user))
         })
     }
 }
@@ -126,17 +162,21 @@ impl User {
             })
             .or_else(|_| tokens.select(user_id).first(conn))?;
 
-        users::table.find(user_id_).first(conn)
+        users::table
+            .select(ALL_COLUMNS)
+            .find(user_id_)
+            .first::<UserNoEmailType>(conn)
+            .map(User::from)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
-        let users = base_query
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+        let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
-            .select(users::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
-            .load(conn)?
+            .select(ALL_COLUMNS)
+            .filter(crate_owners::crate_id.eq(krate.id))
+            .load::<UserNoEmailType>(conn)?
             .into_iter()
+            .map(User::from)
             .map(Owner::User);
 
         Ok(users.collect())
@@ -150,7 +190,7 @@ impl User {
     /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
     /// Sweet free optimization if teams are proving burdensome to check.
     /// More than one team isn't really expected, though.
-    pub fn rights(&self, app: &App, owners: &[Owner]) -> CargoResult<Rights> {
+    pub fn rights(&self, app: &App, owners: &[Owner]) -> AppResult<Rights> {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
@@ -171,7 +211,7 @@ impl User {
 
     /// Queries the database for the verified emails
     /// belonging to a given user
-    pub fn verified_email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+    pub fn verified_email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
@@ -208,7 +248,7 @@ impl User {
     }
 
     /// Queries for the email belonging to a particular user
-    pub fn email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+    pub fn email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
             .first::<String>(&*conn)
@@ -231,6 +271,19 @@ impl User {
             login: gh_login,
             name,
             url: Some(url),
+        }
+    }
+}
+
+impl From<UserNoEmailType> for User {
+    fn from(user: UserNoEmailType) -> Self {
+        User {
+            id: user.0,
+            gh_access_token: user.1,
+            gh_login: user.2,
+            name: user.3,
+            gh_avatar: user.4,
+            gh_id: user.5,
         }
     }
 }

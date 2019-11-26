@@ -1,3 +1,3 @@
 release: bin/diesel migration run
-web: bin/start-nginx ./target/release/server
+web: ./script/start-web.sh
 background_worker: ./target/release/background-worker

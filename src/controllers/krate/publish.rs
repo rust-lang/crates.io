@@ -10,7 +10,7 @@ use crate::models::dependency;
 use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
 use crate::render;
 use crate::util::{read_fill, read_le_u32};
-use crate::util::{CargoError, ChainError, Maximums};
+use crate::util::{AppError, ChainError, Maximums};
 use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 
 /// Handles the `PUT /crates/new` route.
@@ -20,7 +20,7 @@ use crate::views::{EncodableCrateUpload, GoodCrate, PublishWarnings};
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
     let app = Arc::clone(req.app());
 
     // The format of the req.body() of a publish request is as follows:
@@ -42,7 +42,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
     let verified_email_address = user.verified_email(&conn)?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
-        human(
+        cargo_err(
             "A verified email address is required to publish crates to crates.io. \
              Visit https://crates.io/me to set and verify your email address.",
         )
@@ -88,7 +88,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
         let owners = krate.owners(&conn)?;
         if user.rights(req.app(), &owners)? < Rights::Publish {
-            return Err(human(
+            return Err(cargo_err(
                 "this crate exists but you don't seem to be an owner. \
                  If you believe this is a mistake, perhaps you need \
                  to accept an invitation to be an owner before \
@@ -97,7 +97,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         }
 
         if krate.name != *name {
-            return Err(human(&format_args!(
+            return Err(cargo_err(&format_args!(
                 "crate was previously named `{}`",
                 krate.name
             )));
@@ -111,7 +111,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 
         let content_length = req
             .content_length()
-            .chain_error(|| human("missing header: Content-Length"))?;
+            .chain_error(|| cargo_err("missing header: Content-Length"))?;
 
         let maximums = Maximums::new(
             krate.max_upload_size,
@@ -120,7 +120,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         );
 
         if content_length > maximums.max_upload_size {
-            return Err(human(&format_args!(
+            return Err(cargo_err(&format_args!(
                 "max upload size is: {}",
                 maximums.max_upload_size
             )));
@@ -168,7 +168,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
                 repo,
             )
             .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+            .map_err(|e| AppError::from_std_error(e))?;
         }
 
         let cksum = app
@@ -191,7 +191,7 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
         };
         git::add_crate(git_crate)
             .enqueue(&conn)
-            .map_err(|e| CargoError::from_std_error(e))?;
+            .map_err(|e| AppError::from_std_error(e))?;
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
         // that is no longer needed. As such, crates.io currently does not return any `other`
@@ -214,18 +214,20 @@ pub fn publish(req: &mut dyn Request) -> CargoResult<Response> {
 /// This function parses the JSON headers to interpret the data and validates
 /// the data during and after the parsing. Returns crate metadata and user
 /// information.
-fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload, User)> {
+fn parse_new_headers(req: &mut dyn Request) -> AppResult<(EncodableCrateUpload, User)> {
     // Read the json upload request
     let metadata_length = u64::from(read_le_u32(req.body())?);
+    req.mut_extensions().insert(metadata_length);
+
     let max = req.app().config.max_upload_size;
     if metadata_length > max {
-        return Err(human(&format_args!("max upload size is: {}", max)));
+        return Err(cargo_err(&format_args!("max upload size is: {}", max)));
     }
     let mut json = vec![0; metadata_length as usize];
     read_fill(req.body(), &mut json)?;
-    let json = String::from_utf8(json).map_err(|_| human("json body was not valid utf-8"))?;
+    let json = String::from_utf8(json).map_err(|_| cargo_err("json body was not valid utf-8"))?;
     let new: EncodableCrateUpload = serde_json::from_str(&json)
-        .map_err(|e| human(&format_args!("invalid upload request: {}", e)))?;
+        .map_err(|e| cargo_err(&format_args!("invalid upload request: {}", e)))?;
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
@@ -243,7 +245,7 @@ fn parse_new_headers(req: &mut dyn Request) -> CargoResult<(EncodableCrateUpload
         missing.push("authors");
     }
     if !missing.is_empty() {
-        return Err(human(&format_args!(
+        return Err(cargo_err(&format_args!(
             "missing or empty metadata fields: {}. Please \
              see https://doc.rust-lang.org/cargo/reference/manifest.html for \
              how to upload metadata",

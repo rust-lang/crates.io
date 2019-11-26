@@ -39,6 +39,8 @@ fn main() {
     boot::categories::sync(categories_toml).unwrap();
 
     let heroku = dotenv::var("HEROKU").is_ok();
+    let fastboot = dotenv::var("USE_FASTBOOT").is_ok();
+
     let port = if heroku {
         8888
     } else {
@@ -102,8 +104,13 @@ fn main() {
     // Creating this file tells heroku to tell nginx that the application is ready
     // to receive traffic.
     if heroku {
-        println!("Writing to /tmp/app-initialized");
-        File::create("/tmp/app-initialized").unwrap();
+        let path = if fastboot {
+            "/tmp/backend-initialized"
+        } else {
+            "/tmp/app-initialized"
+        };
+        println!("Writing to {}", path);
+        File::create(path).unwrap();
     }
 
     // Block the main thread until the server has shutdown

@@ -1,7 +1,6 @@
 import Component from '@ember/component';
 import { alias } from '@ember/object/computed';
 import { computed } from '@ember/object';
-import $ from 'jquery';
 
 import RlDropdownContainer from './rl-dropdown-container';
 
@@ -15,26 +14,17 @@ export default Component.extend({
 
   isExpanded: alias('dropdownContainer.dropdownExpanded'),
 
-  closeOnChildClick: false,
-
-  propagateClicks: true,
-
   click(event) {
-    let closeOnChildClick = this.closeOnChildClick;
-    let propagateClicks = this.propagateClicks;
-    let $target = $(event.target);
-    let $c = this.$();
+    let closeOnChildClick = 'a:link';
+    let $target = event.target;
+    let $c = this.element;
 
-    if ($target !== $c) {
-      if ((closeOnChildClick === true || closeOnChildClick === 'true') && $target.closest($c).length) {
-        this.set('isExpanded', false);
-      } else if (closeOnChildClick && $target.closest(closeOnChildClick, $c).length) {
-        this.set('isExpanded', false);
-      }
+    if ($target === $c) {
+      return;
     }
 
-    if (propagateClicks === false || propagateClicks === 'false') {
-      event.stopPropagation();
+    if ($target.closest(closeOnChildClick, $c).length) {
+      this.set('isExpanded', false);
     }
   },
 });

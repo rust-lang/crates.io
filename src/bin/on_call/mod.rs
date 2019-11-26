@@ -1,4 +1,4 @@
-use cargo_registry::util::{internal, CargoResult};
+use cargo_registry::util::{internal, AppResult};
 
 use reqwest::{header, StatusCode as Status};
 
@@ -25,7 +25,7 @@ impl Event {
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub fn send(self) -> CargoResult<()> {
+    pub fn send(self) -> AppResult<()> {
         let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
         let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 

@@ -20,11 +20,11 @@
     "lint:hbs": "ember-template-lint app/templates",
     "lint:js": "eslint . --cache",
     "lint:deps": "ember dependency-lint",
-    "prettier": "prettier --write '{app,tests,mirage}/**/*.js'",
-    "start": "ember serve",
-    "start:live": "ember serve --proxy https://crates.io",
-    "start:local": "ember serve --proxy http://127.0.0.1:8888",
-    "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
+    "prettier": "prettier --write '**/*.js'",
+    "start": "./script/ember.sh serve",
+    "start:live": "./script/ember.sh serve --proxy https://crates.io",
+    "start:local": "./script/ember.sh serve --proxy http://127.0.0.1:8888",
+    "start:staging": "./script/ember.sh serve --proxy https://staging-crates-io.herokuapp.com",
     "test": "ember exam --split=2 --parallel",
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
   },
@@ -41,6 +41,7 @@
     "ember-cli-code-coverage": "^1.0.0-beta.4",
     "ember-cli-dependency-checker": "^2.0.1",
     "ember-cli-dependency-lint": "^1.1.3",
+    "ember-cli-fastboot": "^2.2.1",
     "ember-cli-htmlbars": "^2.0.3",
     "ember-cli-htmlbars-inline-precompile": "^1.0.2",
     "ember-cli-inject-live-reload": "1.6.1",
@@ -97,5 +98,9 @@
     "tabWidth": 2,
     "singleQuote": true,
     "trailingComma": "all"
+  },
+  "dependencies": {
+    "fastboot-app-server": "^2.0.0",
+    "morgan": "^1.9.1"
   }
 }
