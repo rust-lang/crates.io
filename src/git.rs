@@ -10,7 +10,7 @@ use url::Url;
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::errors::{std_error_no_send, CargoResult};
+use crate::util::errors::{std_error_no_send, AppResult};
 
 static DEFAULT_GIT_SSH_USERNAME: &str = "git";
 
@@ -148,7 +148,7 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub fn open(repository_config: &RepositoryConfig) -> CargoResult<Self> {
+    pub fn open(repository_config: &RepositoryConfig) -> AppResult<Self> {
         let checkout_path = TempDir::new("git")?;
 
         let repository = git2::build::RepoBuilder::new()
@@ -224,7 +224,7 @@ impl Repository {
         ref_status
     }
 
-    pub fn reset_head(&self) -> CargoResult<()> {
+    pub fn reset_head(&self) -> AppResult<()> {
         let mut origin = self.repository.find_remote("origin")?;
         origin.fetch(
             &["refs/heads/*:refs/heads/*"],

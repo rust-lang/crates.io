@@ -8,7 +8,7 @@ use crate::models::user;
 use crate::models::user::UserNoEmailType;
 use crate::models::{NewUser, User};
 use crate::schema::users;
-use crate::util::errors::{CargoError, ReadOnlyMode};
+use crate::util::errors::{AppError, ReadOnlyMode};
 
 /// Handles the `GET /authorize_url` route.
 ///
@@ -25,7 +25,7 @@ use crate::util::errors::{CargoError, ReadOnlyMode};
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn github_authorize(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn github_authorize(req: &mut dyn Request) -> AppResult<Response> {
     let (url, state) = req
         .app()
         .github
@@ -73,7 +73,7 @@ pub fn github_authorize(req: &mut dyn Request) -> CargoResult<Response> {
 ///     }
 /// }
 /// ```
-pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn github_access_token(req: &mut dyn Request) -> AppResult<Response> {
     // Parse the url query
     let mut query = req.query();
     let code = query.remove("code").unwrap_or_default();
@@ -85,7 +85,7 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         let session_state = req.session().remove(&"github_oauth_state".to_string());
         let session_state = session_state.as_ref().map(|a| &a[..]);
         if Some(&state[..]) != session_state {
-            return Err(human("invalid state parameter"));
+            return Err(cargo_err("invalid state parameter"));
         }
     }
 
@@ -96,7 +96,7 @@ pub fn github_access_token(req: &mut dyn Request) -> CargoResult<Response> {
         .app()
         .github
         .exchange_code(code)
-        .map_err(|s| human(&s))?;
+        .map_err(|s| cargo_err(&s))?;
     let token = token.access_token();
     let ghuser = github::github_api::<GithubUser>(req.app(), "/user", token)?;
     let user = ghuser.save_to_database(&token.secret(), &*req.db_conn()?)?;
@@ -116,7 +116,7 @@ struct GithubUser {
 }
 
 impl GithubUser {
-    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> CargoResult<User> {
+    fn save_to_database(&self, access_token: &str, conn: &PgConnection) -> AppResult<User> {
         NewUser::new(
             self.id,
             &self.login,
@@ -127,7 +127,7 @@ impl GithubUser {
         )
         .create_or_update(conn)
         .map_err(Into::into)
-        .or_else(|e: Box<dyn CargoError>| {
+        .or_else(|e: Box<dyn AppError>| {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
             if e.is::<ReadOnlyMode>() {
@@ -145,7 +145,7 @@ impl GithubUser {
 }
 
 /// Handles the `GET /logout` route.
-pub fn logout(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn logout(req: &mut dyn Request) -> AppResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))
 }

@@ -5,7 +5,7 @@ use crate::models::Keyword;
 use crate::views::EncodableKeyword;
 
 /// Handles the `GET /keywords` route.
-pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn index(req: &mut dyn Request) -> AppResult<Response> {
     use crate::schema::keywords;
 
     let conn = req.db_conn()?;
@@ -41,7 +41,7 @@ pub fn index(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let name = &req.params()["keyword_id"];
     let conn = req.db_conn()?;
 

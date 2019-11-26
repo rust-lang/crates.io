@@ -4,7 +4,7 @@ use openssl::hash::{Hasher, MessageDigest};
 use reqwest::header;
 
 use crate::util::LimitErrorReader;
-use crate::util::{human, internal, CargoResult, ChainError, Maximums};
+use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -96,7 +96,7 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> CargoResult<Option<String>> {
+    ) -> AppResult<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket
@@ -129,7 +129,7 @@ impl Uploader {
         krate: &Crate,
         maximums: Maximums,
         vers: &semver::Version,
-    ) -> CargoResult<Vec<u8>> {
+    ) -> AppResult<Vec<u8>> {
         let app = Arc::clone(req.app());
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
         let mut body = Vec::new();
@@ -157,7 +157,7 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> CargoResult<()> {
+    ) -> AppResult<()> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
@@ -183,7 +183,7 @@ fn verify_tarball(
     vers: &semver::Version,
     tarball: &[u8],
     max_unpack: u64,
-) -> CargoResult<()> {
+) -> AppResult<()> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -196,7 +196,7 @@ fn verify_tarball(
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
         let entry = entry.chain_error(|| {
-            human("uploaded tarball is malformed or too large when decompressed")
+            cargo_err("uploaded tarball is malformed or too large when decompressed")
         })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
@@ -205,7 +205,7 @@ fn verify_tarball(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         if !entry.path()?.starts_with(&prefix) {
-            return Err(human("invalid tarball uploaded"));
+            return Err(cargo_err("invalid tarball uploaded"));
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
@@ -215,7 +215,7 @@ fn verify_tarball(
         // generate a tarball with these file types so this should work for now.
         let entry_type = entry.header().entry_type();
         if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(human("invalid tarball uploaded"));
+            return Err(cargo_err("invalid tarball uploaded"));
         }
     }
     Ok(())

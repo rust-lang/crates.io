@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::util::CargoResult;
+use crate::util::AppResult;
 
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
@@ -168,7 +168,7 @@ impl User {
             .map(User::from)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(ALL_COLUMNS)
@@ -189,7 +189,7 @@ impl User {
     /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
     /// Sweet free optimization if teams are proving burdensome to check.
     /// More than one team isn't really expected, though.
-    pub fn rights(&self, app: &App, owners: &[Owner]) -> CargoResult<Rights> {
+    pub fn rights(&self, app: &App, owners: &[Owner]) -> AppResult<Rights> {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
@@ -208,7 +208,7 @@ impl User {
         Ok(best)
     }
 
-    pub fn verified_email(&self, conn: &PgConnection) -> CargoResult<Option<String>> {
+    pub fn verified_email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))

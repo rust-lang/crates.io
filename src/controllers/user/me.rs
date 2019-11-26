@@ -5,7 +5,7 @@ use crate::controllers::prelude::*;
 use crate::controllers::helpers::*;
 use crate::email;
 use crate::util::bad_request;
-use crate::util::errors::CargoError;
+use crate::util::errors::AppError;
 
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
@@ -13,7 +13,7 @@ use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn me(req: &mut dyn Request) -> AppResult<Response> {
     // Changed to getting User information from database because in
     // src/tests/user.rs, when testing put and get on updating email,
     // request seems to be somehow 'cached'. When we try to get a
@@ -68,7 +68,7 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
     let user = req.user()?;
@@ -109,7 +109,7 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /user/:user_id` route.
-pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     use self::emails::user_id;
     use self::users::dsl::{email, gh_login, users};
     use diesel::{insert_into, update};
@@ -122,7 +122,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     #[derive(Deserialize)]
@@ -136,20 +136,20 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
 
     if user_update.user.email.is_none() {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
     let user_email = user_update.user.email.unwrap();
     let user_email = user_email.trim();
 
     if user_email == "" {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
-    conn.transaction::<_, Box<dyn CargoError>, _>(|| {
+    conn.transaction::<_, Box<dyn AppError>, _>(|| {
         update(users.filter(gh_login.eq(&user.gh_login)))
             .set(email.eq(user_email))
             .execute(&*conn)?;
@@ -166,7 +166,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
             .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
-            .map_err(|_| human("Error in creating token"))?;
+            .map_err(|_| cargo_err("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
 
@@ -181,7 +181,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn confirm_user_email(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::update;
 
     let conn = req.db_conn()?;
@@ -203,7 +203,7 @@ pub fn confirm_user_email(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::sql;
     use diesel::update;
 
@@ -213,7 +213,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
 
     // need to check if current user matches user to be updated
     if &user.id != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     conn.transaction(|| {
@@ -234,7 +234,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
 }
 
 /// Handles `PUT /me/email_notifications` route
-pub fn update_email_notifications(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> {
     use self::crate_owners::dsl::*;
     use diesel::pg::upsert::excluded;
 
