@@ -198,17 +198,12 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
 #[derive(Debug)]
 struct ConcreteAppError {
     description: String,
-    detail: Option<String>,
-    cause: Option<Box<dyn AppError>>,
     cargo_err: bool,
 }
 
 impl fmt::Display for ConcreteAppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
-        if let Some(ref s) = self.detail {
-            write!(f, " ({})", s)?;
-        }
         Ok(())
     }
 }
@@ -218,7 +213,7 @@ impl AppError for ConcreteAppError {
         &self.description
     }
     fn cause(&self) -> Option<&dyn AppError> {
-        self.cause.as_ref().map(|c| &**c)
+        None
     }
     fn response(&self) -> Option<Response> {
         self.fallback_response()
@@ -306,8 +301,6 @@ impl fmt::Display for BadRequest {
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
-        detail: None,
-        cause: None,
         cargo_err: false,
     })
 }
@@ -315,8 +308,6 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
-        detail: None,
-        cause: None,
         cargo_err: true,
     })
 }
