@@ -475,7 +475,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, Some(""))
-        .bad_with_status(200);
+        .bad_with_status(400);
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
         "{:?}",
@@ -484,7 +484,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, None)
-        .bad_with_status(200);
+        .bad_with_status(400);
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -510,7 +510,7 @@ fn test_other_users_cannot_change_my_email() {
             another_user_model.id,
             Some("pineapple@pineapples.pineapple"),
         )
-        .bad_with_status(200);
+        .bad_with_status(400);
     assert!(
         json.errors[0]
             .detail

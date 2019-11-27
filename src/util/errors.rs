@@ -8,6 +8,30 @@ use diesel::result::Error as DieselError;
 
 use crate::util::json_response;
 
+mod http;
+
+/// Returns an error with status 200 and the provided description as JSON
+///
+/// This is for backwards compatibility with cargo endpoints.  For all other
+/// endpoints, use helpers like `bad_request` or `server_error` which set a
+/// correct status code.
+pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(ConcreteAppError {
+        description: error.to_string(),
+        cargo_err: true,
+    })
+}
+
+// The following are intended to be used for errors being sent back to the Ember
+// frontend, not to cargo as cargo does not handle non-200 response codes well
+// (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
+// non-200 response codes for its stores to work properly.
+
+/// Returns an error with status 500 and the provided description as JSON
+pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(http::ServerError(error.to_string()))
+}
+
 #[derive(Serialize)]
 struct StringError {
     detail: String,
@@ -302,13 +326,6 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
         cargo_err: false,
-    })
-}
-
-pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
-        description: error.to_string(),
-        cargo_err: true,
     })
 }
 
