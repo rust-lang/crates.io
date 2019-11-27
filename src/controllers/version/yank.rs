@@ -3,7 +3,7 @@
 use swirl::Job;
 
 use super::version_and_crate;
-use crate::controllers::prelude::*;
+use crate::controllers::cargo_prelude::*;
 use crate::git;
 use crate::models::{insert_version_owner_action, Rights, VersionAction};
 use crate::util::AppError;

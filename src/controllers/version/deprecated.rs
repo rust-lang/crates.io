@@ -5,7 +5,7 @@
 //! period of time to ensure there are no external users of an endpoint before
 //! it is removed.
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::models::{Crate, User, Version};
 use crate::schema::*;

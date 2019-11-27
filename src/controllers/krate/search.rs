@@ -3,8 +3,8 @@
 use diesel::dsl::*;
 use diesel_full_text_search::*;
 
+use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
-use crate::controllers::prelude::*;
 use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
 use crate::views::EncodableCrate;
