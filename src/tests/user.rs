@@ -115,7 +115,7 @@ fn access_token_needs_data() {
     let (_, anon) = TestApp::init().empty();
     let json = anon
         .get::<()>("/api/private/session/authorize")
-        .bad_with_status(200); // Change endpoint to 400?
+        .bad_with_status(400);
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
