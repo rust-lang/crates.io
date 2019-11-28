@@ -16,10 +16,7 @@ mod http;
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
 pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
-        description: error.to_string(),
-        cargo_err: true,
-    })
+    Box::new(http::Ok(error.to_string()))
 }
 
 // The following are intended to be used for errors being sent back to the Ember
@@ -51,6 +48,9 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     }
 
     /// Generate an HTTP response for the error
+    ///
+    /// If none is returned, the error will bubble up the middleware stack
+    /// where it is eventually logged and turned into a status 500 response.
     fn response(&self) -> Option<Response>;
 
     /// Fallback logic for generating a cargo friendly response
@@ -222,7 +222,6 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
 #[derive(Debug)]
 struct ConcreteAppError {
     description: String,
-    cargo_err: bool,
 }
 
 impl fmt::Display for ConcreteAppError {
@@ -241,9 +240,6 @@ impl AppError for ConcreteAppError {
     }
     fn response(&self) -> Option<Response> {
         self.fallback_response()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        self.cargo_err
     }
 }
 
@@ -325,7 +321,6 @@ impl fmt::Display for BadRequest {
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(ConcreteAppError {
         description: error.to_string(),
-        cargo_err: false,
     })
 }
 
