@@ -42,7 +42,6 @@ struct Bad {
 // AppError trait
 
 pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
-    fn description(&self) -> &str;
     fn cause(&self) -> Option<&(dyn AppError)> {
         None
     }
@@ -52,30 +51,6 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     /// If none is returned, the error will bubble up the middleware stack
     /// where it is eventually logged and turned into a status 500 response.
     fn response(&self) -> Option<Response>;
-
-    /// Fallback logic for generating a cargo friendly response
-    ///
-    /// This behavior is deprecated and no new calls or impls should be added.
-    fn fallback_response(&self) -> Option<Response> {
-        if self.fallback_with_description_as_bad_200() {
-            Some(json_response(&Bad {
-                errors: vec![StringError {
-                    detail: self.description().to_string(),
-                }],
-            }))
-        } else {
-            self.cause().and_then(AppError::response)
-        }
-    }
-
-    /// Determines if the `fallback_response` method should send the description as a status 200
-    /// error to cargo, or send the cause response (if applicable).
-    ///
-    /// This is only to be used by the `fallback_response` method.  If your error type impls
-    /// `response`, then there is no need to impl this method.
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        false
-    }
 
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
@@ -105,14 +80,8 @@ impl dyn AppError {
 }
 
 impl AppError for Box<dyn AppError> {
-    fn description(&self) -> &str {
-        (**self).description()
-    }
     fn cause(&self) -> Option<&dyn AppError> {
         (**self).cause()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        (**self).fallback_with_description_as_bad_200()
     }
     fn response(&self) -> Option<Response> {
         (**self).response()
@@ -179,17 +148,11 @@ impl<T> ChainError<T> for Option<T> {
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
-    fn description(&self) -> &str {
-        self.error.description()
-    }
     fn cause(&self) -> Option<&dyn AppError> {
         Some(&*self.cause)
     }
     fn response(&self) -> Option<Response> {
         self.error.response()
-    }
-    fn fallback_with_description_as_bad_200(&self) -> bool {
-        self.error.fallback_with_description_as_bad_200()
     }
 }
 
@@ -203,11 +166,8 @@ impl<E: AppError> fmt::Display for ChainedError<E> {
 // Error impls
 
 impl<E: Error + Send + 'static> AppError for E {
-    fn description(&self) -> &str {
-        Error::description(self)
-    }
     fn response(&self) -> Option<Response> {
-        self.fallback_response()
+        None
     }
 }
 
@@ -219,6 +179,7 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
 // =============================================================================
 // Concrete errors
 
+// TODO: Rename to InternalAppError
 #[derive(Debug)]
 struct ConcreteAppError {
     description: String,
@@ -232,14 +193,8 @@ impl fmt::Display for ConcreteAppError {
 }
 
 impl AppError for ConcreteAppError {
-    fn description(&self) -> &str {
-        &self.description
-    }
-    fn cause(&self) -> Option<&dyn AppError> {
-        None
-    }
     fn response(&self) -> Option<Response> {
-        self.fallback_response()
+        None
     }
 }
 
@@ -247,10 +202,6 @@ impl AppError for ConcreteAppError {
 pub struct NotFound;
 
 impl AppError for NotFound {
-    fn description(&self) -> &str {
-        "not found"
-    }
-
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![StringError {
@@ -272,10 +223,6 @@ impl fmt::Display for NotFound {
 pub struct Unauthorized;
 
 impl AppError for Unauthorized {
-    fn description(&self) -> &str {
-        "unauthorized"
-    }
-
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![StringError {
@@ -297,10 +244,6 @@ impl fmt::Display for Unauthorized {
 struct BadRequest(String);
 
 impl AppError for BadRequest {
-    fn description(&self) -> &str {
-        self.0.as_ref()
-    }
-
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![StringError {
@@ -338,11 +281,7 @@ pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 #[derive(Debug)]
 pub struct AppErrToStdErr(pub Box<dyn AppError>);
 
-impl Error for AppErrToStdErr {
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-}
+impl Error for AppErrToStdErr {}
 
 impl fmt::Display for AppErrToStdErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -370,10 +309,6 @@ pub(crate) fn std_error_no_send(e: Box<dyn AppError>) -> Box<dyn Error> {
 pub struct ReadOnlyMode;
 
 impl AppError for ReadOnlyMode {
-    fn description(&self) -> &str {
-        "tried to write in read only mode"
-    }
-
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![StringError {
@@ -399,10 +334,6 @@ pub struct TooManyRequests {
 }
 
 impl AppError for TooManyRequests {
-    fn description(&self) -> &str {
-        "too many requests"
-    }
-
     fn response(&self) -> Option<Response> {
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);

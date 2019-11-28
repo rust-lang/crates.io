@@ -11,10 +11,6 @@ pub(super) struct Ok(pub(super) String);
 pub(super) struct ServerError(pub(super) String);
 
 impl AppError for Ok {
-    fn description(&self) -> &str {
-        self.0.as_ref()
-    }
-
     fn response(&self) -> Option<Response> {
         Some(json_response(&Bad {
             errors: vec![StringError {
@@ -31,10 +27,6 @@ impl fmt::Display for Ok {
 }
 
 impl AppError for ServerError {
-    fn description(&self) -> &str {
-        self.0.as_ref()
-    }
-
     fn response(&self) -> Option<Response> {
         let mut response = json_response(&Bad {
             errors: vec![StringError {
