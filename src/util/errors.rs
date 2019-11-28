@@ -42,10 +42,6 @@ struct Bad {
 // AppError trait
 
 pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
-    fn cause(&self) -> Option<&(dyn AppError)> {
-        None
-    }
-
     /// Generate an HTTP response for the error
     ///
     /// If none is returned, the error will bubble up the middleware stack
@@ -80,9 +76,6 @@ impl dyn AppError {
 }
 
 impl AppError for Box<dyn AppError> {
-    fn cause(&self) -> Option<&dyn AppError> {
-        (**self).cause()
-    }
     fn response(&self) -> Option<Response> {
         (**self).response()
     }
@@ -148,9 +141,6 @@ impl<T> ChainError<T> for Option<T> {
 }
 
 impl<E: AppError> AppError for ChainedError<E> {
-    fn cause(&self) -> Option<&dyn AppError> {
-        Some(&*self.cause)
-    }
     fn response(&self) -> Option<Response> {
         self.error.response()
     }
@@ -284,15 +274,7 @@ impl Error for AppErrToStdErr {}
 
 impl fmt::Display for AppErrToStdErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)?;
-
-        let mut err = &*self.0;
-        while let Some(cause) = err.cause() {
-            err = cause;
-            write!(f, "\nCaused by: {}", err)?;
-        }
-
-        Ok(())
+        self.0.fmt(f)
     }
 }
 
