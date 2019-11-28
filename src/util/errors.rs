@@ -179,20 +179,19 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
 // =============================================================================
 // Concrete errors
 
-// TODO: Rename to InternalAppError
 #[derive(Debug)]
-struct ConcreteAppError {
+struct InternalAppError {
     description: String,
 }
 
-impl fmt::Display for ConcreteAppError {
+impl fmt::Display for InternalAppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
         Ok(())
     }
 }
 
-impl AppError for ConcreteAppError {
+impl AppError for InternalAppError {
     fn response(&self) -> Option<Response> {
         None
     }
@@ -262,7 +261,7 @@ impl fmt::Display for BadRequest {
 }
 
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(ConcreteAppError {
+    Box::new(InternalAppError {
         description: error.to_string(),
     })
 }
