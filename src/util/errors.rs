@@ -24,6 +24,11 @@ pub fn cargo_err<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 // (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
 // non-200 response codes for its stores to work properly.
 
+/// Return an error with status 400 and the provided description as JSON
+pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
+    Box::new(http::BadRequest(error.to_string()))
+}
+
 /// Returns an error with status 500 and the provided description as JSON
 pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(http::ServerError(error.to_string()))
@@ -229,42 +234,10 @@ impl fmt::Display for Unauthorized {
     }
 }
 
-#[derive(Debug)]
-struct BadRequest(String);
-
-impl AppError for BadRequest {
-    fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: self.0.clone(),
-            }],
-        });
-        response.status = (400, "Bad Request");
-        Some(response)
-    }
-}
-
-impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
 pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
     Box::new(InternalAppError {
         description: error.to_string(),
     })
-}
-
-/// This is intended to be used for errors being sent back to the Ember
-/// frontend, not to cargo as cargo does not handle non-200 response codes well
-/// (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
-/// non-200 response codes for its stores to work properly.
-///
-/// Since this is going back to the UI these errors are treated the same as
-/// `cargo_err` errors, other than the HTTP status code.
-pub fn bad_request<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
-    Box::new(BadRequest(error.to_string()))
 }
 
 #[derive(Debug)]
