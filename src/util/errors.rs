@@ -43,6 +43,15 @@ struct Bad {
     errors: Vec<StringError>,
 }
 
+/// Generates a response with the provided status and description as JSON
+fn json_error(detail: String, status: (u32, &'static str)) -> Response {
+    let mut response = json_response(&Bad {
+        errors: vec![StringError { detail }],
+    });
+    response.status = status;
+    response
+}
+
 // =============================================================================
 // AppError trait
 
@@ -197,13 +206,7 @@ pub struct NotFound;
 
 impl AppError for NotFound {
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "Not Found".to_string(),
-            }],
-        });
-        response.status = (404, "Not Found");
-        Some(response)
+        Some(json_error("Not Found".to_string(), (404, "Not Found")))
     }
 }
 
@@ -218,13 +221,8 @@ pub struct Unauthorized;
 
 impl AppError for Unauthorized {
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "must be logged in to perform that action".to_string(),
-            }],
-        });
-        response.status = (403, "Forbidden");
-        Some(response)
+        let detail = "must be logged in to perform that action".to_string();
+        Some(json_error(detail, (403, "Forbidden")))
     }
 }
 
@@ -264,15 +262,10 @@ pub struct ReadOnlyMode;
 
 impl AppError for ReadOnlyMode {
     fn response(&self) -> Option<Response> {
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: "Crates.io is currently in read-only mode for maintenance. \
-                         Please try again later."
-                    .to_string(),
-            }],
-        });
-        response.status = (503, "Service Unavailable");
-        Some(response)
+        let detail = "Crates.io is currently in read-only mode for maintenance. \
+                      Please try again later."
+            .to_string();
+        Some(json_error(detail, (503, "Service Unavailable")))
     }
 }
 
@@ -292,17 +285,13 @@ impl AppError for TooManyRequests {
         const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
-        let mut response = json_response(&Bad {
-            errors: vec![StringError {
-                detail: format!(
-                    "You have published too many crates in a \
-                     short period of time. Please try again after {} or email \
-                     help@crates.io to have your limit increased.",
-                    retry_after
-                ),
-            }],
-        });
-        response.status = (429, "TOO MANY REQUESTS");
+        let detail = format!(
+            "You have published too many crates in a \
+             short period of time. Please try again after {} or email \
+             help@crates.io to have your limit increased.",
+            retry_after
+        );
+        let mut response = json_error(detail, (429, "TOO MANY REQUESTS"));
         response
             .headers
             .insert("Retry-After".into(), vec![retry_after.to_string()]);
