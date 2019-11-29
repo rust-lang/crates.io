@@ -13,7 +13,7 @@ pub(super) struct ServerError(pub(super) String);
 
 impl AppError for Ok {
     fn response(&self) -> Option<Response> {
-        Some(json_error(self.0.clone(), (200, "OK")))
+        Some(json_error(&self.0, (200, "OK")))
     }
 }
 
@@ -25,7 +25,7 @@ impl fmt::Display for Ok {
 
 impl AppError for BadRequest {
     fn response(&self) -> Option<Response> {
-        Some(json_error(self.0.clone(), (400, "Bad Request")))
+        Some(json_error(&self.0, (400, "Bad Request")))
     }
 }
 
@@ -37,7 +37,7 @@ impl fmt::Display for BadRequest {
 
 impl AppError for ServerError {
     fn response(&self) -> Option<Response> {
-        Some(json_error(self.0.clone(), (500, "Internal Server Error")))
+        Some(json_error(&self.0, (500, "Internal Server Error")))
     }
 }
 

@@ -35,16 +35,16 @@ pub fn server_error<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 }
 
 #[derive(Serialize)]
-struct StringError {
-    detail: String,
+struct StringError<'a> {
+    detail: &'a str,
 }
 #[derive(Serialize)]
-struct Bad {
-    errors: Vec<StringError>,
+struct Bad<'a> {
+    errors: Vec<StringError<'a>>,
 }
 
 /// Generates a response with the provided status and description as JSON
-fn json_error(detail: String, status: (u32, &'static str)) -> Response {
+fn json_error(detail: &str, status: (u32, &'static str)) -> Response {
     let mut response = json_response(&Bad {
         errors: vec![StringError { detail }],
     });
@@ -206,7 +206,7 @@ pub struct NotFound;
 
 impl AppError for NotFound {
     fn response(&self) -> Option<Response> {
-        Some(json_error("Not Found".to_string(), (404, "Not Found")))
+        Some(json_error("Not Found", (404, "Not Found")))
     }
 }
 
@@ -221,7 +221,7 @@ pub struct Unauthorized;
 
 impl AppError for Unauthorized {
     fn response(&self) -> Option<Response> {
-        let detail = "must be logged in to perform that action".to_string();
+        let detail = "must be logged in to perform that action";
         Some(json_error(detail, (403, "Forbidden")))
     }
 }
@@ -263,8 +263,7 @@ pub struct ReadOnlyMode;
 impl AppError for ReadOnlyMode {
     fn response(&self) -> Option<Response> {
         let detail = "Crates.io is currently in read-only mode for maintenance. \
-                      Please try again later."
-            .to_string();
+                      Please try again later.";
         Some(json_error(detail, (503, "Service Unavailable")))
     }
 }
@@ -291,7 +290,7 @@ impl AppError for TooManyRequests {
              help@crates.io to have your limit increased.",
             retry_after
         );
-        let mut response = json_error(detail, (429, "TOO MANY REQUESTS"));
+        let mut response = json_error(&detail, (429, "TOO MANY REQUESTS"));
         response
             .headers
             .insert("Retry-After".into(), vec![retry_after.to_string()]);
