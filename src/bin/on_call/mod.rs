@@ -1,4 +1,4 @@
-use cargo_registry::util::{internal, AppResult};
+use cargo_registry::util::Error;
 
 use reqwest::{header, StatusCode as Status};
 
@@ -25,7 +25,7 @@ impl Event {
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub fn send(self) -> AppResult<()> {
+    pub fn send(self) -> Result<(), Error> {
         let api_token = dotenv::var("PAGERDUTY_API_TOKEN")?;
         let service_key = dotenv::var("PAGERDUTY_INTEGRATION_KEY")?;
 
@@ -43,14 +43,15 @@ impl Event {
             s if s.is_success() => Ok(()),
             Status::BAD_REQUEST => {
                 let error = response.json::<InvalidEvent>()?;
-                Err(internal(&format_args!("pagerduty error: {:?}", error)))
+                Err(format!("pagerduty error: {:?}", error))
             }
-            Status::FORBIDDEN => Err(internal("rate limited by pagerduty")),
-            n => Err(internal(&format_args!(
+            Status::FORBIDDEN => Err("rate limited by pagerduty".to_string()),
+            n => Err(format!(
                 "Got a non 200 response code from pagerduty: {} with {:?}",
                 n, response
-            ))),
+            )),
         }
+        .map_err(Into::into)
     }
 }
 
