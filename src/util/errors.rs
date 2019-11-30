@@ -8,6 +8,7 @@ use diesel::result::Error as DieselError;
 
 use crate::util::json_response;
 
+pub(super) mod concrete;
 mod http;
 
 /// Returns an error with status 200 and the provided description as JSON
@@ -181,7 +182,7 @@ impl<E: Error + Send + 'static> From<E> for Box<dyn AppError> {
     }
 }
 // =============================================================================
-// Concrete errors
+// Internal error for use with `chain_error`
 
 #[derive(Debug)]
 struct InternalAppError {
@@ -200,6 +201,8 @@ impl AppError for InternalAppError {
         None
     }
 }
+
+// TODO: The remaining can probably move under `http`
 
 #[derive(Debug, Clone, Copy)]
 pub struct NotFound;

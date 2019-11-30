@@ -5,8 +5,8 @@ use std::io::Cursor;
 use conduit::Response;
 use serde::Serialize;
 
-pub use self::errors::ChainError;
-pub use self::errors::{bad_request, cargo_err, internal, AppError, AppResult};
+pub use self::errors::concrete::Error;
+pub use self::errors::{bad_request, cargo_err, internal, AppError, AppResult, ChainError};
 pub use self::io_util::{read_fill, read_le_u32, LimitErrorReader};
 pub use self::request_helpers::*;
 pub use self::request_proxy::RequestProxy;
