@@ -31,7 +31,7 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)))
+            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)).to_string())
             .zip(krates)
             .map(|(max_version, krate)| {
                 Ok(krate.minimal_encodable(&max_version, None, false, None))
@@ -142,7 +142,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let badges = badges::table
         .filter(badges::crate_id.eq(krate.id))
         .load(&*conn)?;
-    let max_version = krate.max_version(&conn)?;
+    let top_versions = krate.top_versions(&conn)?;
 
     #[derive(Serialize)]
     struct R {
@@ -154,7 +154,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     }
     Ok(req.json(&R {
         krate: krate.clone().encodable(
-            &max_version,
+            &top_versions,
             Some(ids),
             Some(&kws),
             Some(&cats),

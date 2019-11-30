@@ -48,6 +48,14 @@ pub struct Crate {
     pub max_upload_size: Option<i32>,
 }
 
+/// The highest version (in semver order) and the most recently updated version
+/// for a single crate.
+#[derive(Debug, Clone)]
+pub struct TopVersions {
+    pub highest: String,
+    pub newest: String,
+}
+
 /// We literally never want to select `textsearchable_index_col`
 /// so we provide this type and constant to pass to `.select`
 type AllColumns = (
@@ -204,7 +212,7 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
-    /// SQL filter based on whether the crate's name loosly matches the given
+    /// SQL filter based on whether the crate's name loosely matches the given
     /// string.
     ///
     /// The operator used varies based on the input.
@@ -281,13 +289,16 @@ impl Crate {
 
     pub fn minimal_encodable(
         self,
-        max_version: &semver::Version,
+        max_version: &str,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> EncodableCrate {
         self.encodable(
-            max_version,
+            &TopVersions {
+                highest: max_version.to_owned(),
+                newest: max_version.to_owned(),
+            },
             None,
             None,
             None,
@@ -300,7 +311,7 @@ impl Crate {
     #[allow(clippy::too_many_arguments)]
     pub fn encodable(
         self,
-        max_version: &semver::Version,
+        top_versions: &TopVersions,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
@@ -339,8 +350,8 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges,
-            max_version: max_version.to_string(),
-            newest_version: max_version.to_string(), // FIXME: Make this the newest, not the highest
+            max_version: top_versions.highest.to_owned(),
+            newest_version: top_versions.newest.to_owned(),
             documentation,
             homepage,
             exact_match,
@@ -385,16 +396,28 @@ impl Crate {
         }
     }
 
-    pub fn max_version(&self, conn: &PgConnection) -> AppResult<semver::Version> {
+    pub fn top_versions(&self, conn: &PgConnection) -> AppResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
-        let vs = self
+        let results = self
             .versions()
-            .select(num)
-            .load::<String>(conn)?
-            .into_iter()
-            .map(|s| semver::Version::parse(&s).unwrap());
-        Ok(Version::max(vs))
+            .select((updated_at, num))
+            .load::<(NaiveDateTime, String)>(conn)?;
+
+        Ok(TopVersions {
+            newest: results
+                .to_owned()
+                .into_iter()
+                .max()
+                .unwrap_or((NaiveDateTime::from_timestamp(0, 0), "0.0.0".to_owned()))
+                .1,
+            highest: Version::max(
+                results
+                    .into_iter()
+                    .map(|(_, s)| semver::Version::parse(&s).unwrap()),
+            )
+            .to_string(),
+        })
     }
 
     pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {

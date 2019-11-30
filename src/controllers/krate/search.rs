@@ -179,7 +179,7 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)));
+        .map(|versions| Version::max(versions.into_iter().map(|v| v.num)).to_string());
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))

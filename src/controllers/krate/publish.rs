@@ -168,7 +168,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         // Update all badges for this crate, collecting any invalid badges in
         // order to be able to warn about them
         let ignored_invalid_badges = Badge::update_crate(&conn, &krate, new_crate.badges.as_ref())?;
-        let max_version = krate.max_version(&conn)?;
+        let top_versions = krate.top_versions(&conn)?;
 
         if let Some(readme) = new_crate.readme {
             render::render_and_upload_readme(
@@ -215,7 +215,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         };
 
         Ok(req.json(&GoodCrate {
-            krate: krate.minimal_encodable(&max_version, None, false, None),
+            krate: krate.minimal_encodable(&top_versions.highest, None, false, None),
             warnings,
         }))
     })

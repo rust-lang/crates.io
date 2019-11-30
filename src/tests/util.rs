@@ -305,7 +305,7 @@ impl TestAppBuilder {
     }
 }
 
-/// A colleciton of helper methods for the 3 authentication types
+/// A collection of helper methods for the 3 authentication types
 ///
 /// Helper methods go through public APIs, and should not modify the database directly
 pub trait RequestHelper {
