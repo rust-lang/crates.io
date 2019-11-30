@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::util::{bad_request, AppResult};
+use crate::util::{errors::server_error, AppResult};
 
 use failure::Fail;
 use lettre::file::FileTransport;
@@ -118,12 +118,12 @@ fn send_email(recipient: &str, subject: &str, body: &str) -> AppResult<()> {
                 .transport();
 
             let result = transport.send(email);
-            result.map_err(|_| bad_request("Error in sending email"))?;
+            result.map_err(|_| server_error("Error in sending email"))?;
         }
         None => {
             let mut sender = FileTransport::new(Path::new("/tmp"));
             let result = sender.send(email);
-            result.map_err(|_| bad_request("Email file could not be generated"))?;
+            result.map_err(|_| server_error("Email file could not be generated"))?;
         }
     }
 
