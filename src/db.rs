@@ -18,7 +18,7 @@ pub enum DieselPool {
 }
 
 impl DieselPool {
-    pub fn get(&self) -> AppResult<DieselPooledConn<'_>> {
+    pub fn get(&self) -> Result<DieselPooledConn<'_>, r2d2::PoolError> {
         match self {
             DieselPool::Pool(pool) => Ok(DieselPooledConn::Pool(pool.get()?)),
             DieselPool::Test(conn) => Ok(DieselPooledConn::Test(conn.lock())),

@@ -239,7 +239,7 @@ pub fn internal<S: ToString + ?Sized>(error: &S) -> Box<dyn AppError> {
 }
 
 #[derive(Debug)]
-pub struct AppErrToStdErr(pub Box<dyn AppError>);
+struct AppErrToStdErr(pub Box<dyn AppError>);
 
 impl Error for AppErrToStdErr {}
 
