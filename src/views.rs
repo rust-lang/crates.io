@@ -97,6 +97,7 @@ pub struct EncodableCrate {
     pub recent_downloads: Option<i64>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
+    pub newest_version: String, // Most recently updated version, which may not be max
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,
@@ -363,6 +364,7 @@ mod tests {
             downloads: 0,
             recent_downloads: None,
             max_version: "".to_string(),
+            newest_version: "".to_string(),
             description: None,
             homepage: None,
             documentation: None,

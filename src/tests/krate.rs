@@ -1301,11 +1301,11 @@ fn summary_new_crates() {
 
     assert_eq!(json.just_updated[0].name, "just_updated_patch");
     assert_eq!(json.just_updated[0].max_version, "0.2.0");
-    // TODO: assert_eq!(json.just_updated[0].newest_version, "0.1.1");
+    // FIXME: assert_eq!(json.just_updated[0].newest_version, "0.1.1");
 
     assert_eq!(json.just_updated[1].name, "just_updated");
     assert_eq!(json.just_updated[1].max_version, "0.1.2");
-    // TODO: assert_eq!(json.just_updated[1].newest_version, "0.1.2");
+    assert_eq!(json.just_updated[1].newest_version, "0.1.2");
 
     assert_eq!(json.new_crates.len(), 5);
 }

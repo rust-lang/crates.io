@@ -340,6 +340,7 @@ impl Crate {
             categories: category_ids,
             badges,
             max_version: max_version.to_string(),
+            newest_version: max_version.to_string(), // FIXME: Make this the newest, not the highest
             documentation,
             homepage,
             exact_match,
