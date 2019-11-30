@@ -2,11 +2,11 @@ use std::panic::AssertUnwindSafe;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use diesel::r2d2::PoolError;
+use swirl::errors::PerformError;
 
 use crate::db::{DieselPool, DieselPooledConn};
 use crate::git::Repository;
 use crate::uploaders::Uploader;
-use crate::util::errors::AppResult;
 
 impl<'a> swirl::db::BorrowedConnection<'a> for DieselPool {
     type Connection = DieselPooledConn<'a>;
@@ -61,7 +61,7 @@ impl Environment {
         self.connection_pool.get()
     }
 
-    pub fn lock_index(&self) -> AppResult<MutexGuard<'_, Repository>> {
+    pub fn lock_index(&self) -> Result<MutexGuard<'_, Repository>, PerformError> {
         let repo = self.index.lock().unwrap_or_else(PoisonError::into_inner);
         repo.reset_head()?;
         Ok(repo)

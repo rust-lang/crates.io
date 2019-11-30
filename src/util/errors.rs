@@ -253,10 +253,6 @@ pub(crate) fn std_error(e: Box<dyn AppError>) -> Box<dyn Error + Send> {
     Box::new(AppErrToStdErr(e))
 }
 
-pub(crate) fn std_error_no_send(e: Box<dyn AppError>) -> Box<dyn Error> {
-    Box::new(AppErrToStdErr(e))
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOnlyMode;
 

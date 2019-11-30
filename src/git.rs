@@ -10,7 +10,6 @@ use url::Url;
 use crate::background_jobs::Environment;
 use crate::models::{DependencyKind, Version};
 use crate::schema::versions;
-use crate::util::errors::{std_error_no_send, AppResult};
 
 static DEFAULT_GIT_SSH_USERNAME: &str = "git";
 
@@ -148,7 +147,7 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub fn open(repository_config: &RepositoryConfig) -> AppResult<Self> {
+    pub fn open(repository_config: &RepositoryConfig) -> Result<Self, PerformError> {
         let checkout_path = TempDir::new("git")?;
 
         let repository = git2::build::RepoBuilder::new()
@@ -224,7 +223,7 @@ impl Repository {
         ref_status
     }
 
-    pub fn reset_head(&self) -> AppResult<()> {
+    pub fn reset_head(&self) -> Result<(), PerformError> {
         let mut origin = self.repository.find_remote("origin")?;
         origin.fetch(
             &["refs/heads/*:refs/heads/*"],
@@ -252,7 +251,7 @@ impl Repository {
 pub fn add_crate(env: &Environment, krate: Crate) -> Result<(), PerformError> {
     use std::io::prelude::*;
 
-    let repo = env.lock_index().map_err(std_error_no_send)?;
+    let repo = env.lock_index()?;
     let dst = repo.index_file(&krate.name);
 
     // Add the crate to its relevant file
@@ -280,7 +279,7 @@ pub fn yank(
 ) -> Result<(), PerformError> {
     use diesel::prelude::*;
 
-    let repo = env.lock_index().map_err(std_error_no_send)?;
+    let repo = env.lock_index()?;
     let dst = repo.index_file(&krate);
 
     let conn = env.connection()?;

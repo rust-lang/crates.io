@@ -8,6 +8,7 @@ use crate::util::LimitErrorReader;
 use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
 
 use std::env;
+use std::error::Error;
 use std::fs::{self, File};
 use std::io::{Cursor, Read};
 use std::sync::Arc;
@@ -102,7 +103,7 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> AppResult<Option<String>> {
+    ) -> Result<Option<String>, Box<dyn Error>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket
@@ -114,15 +115,15 @@ impl Uploader {
                         content_type,
                         extra_headers,
                     )
-                    .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
+                    .map_err(Box::new)?;
                 Ok(Some(String::from(path)))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
-                fs::create_dir_all(dir)?;
-                let mut file = File::create(&filename)?;
-                std::io::copy(&mut content, &mut file)?;
+                fs::create_dir_all(dir).map_err(Box::new)?;
+                let mut file = File::create(&filename).map_err(Box::new)?;
+                std::io::copy(&mut content, &mut file).map_err(Box::new)?;
                 Ok(filename.to_str().map(String::from))
             }
         }
@@ -156,7 +157,8 @@ impl Uploader {
             content_length,
             "application/x-tar",
             extra_headers,
-        )?;
+        )
+        .map_err(|e| internal(&format_args!("failed to upload crate: {}", e)))?;
         Ok(checksum)
     }
 
@@ -166,7 +168,7 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> AppResult<()> {
+    ) -> Result<(), Box<dyn Error>> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
