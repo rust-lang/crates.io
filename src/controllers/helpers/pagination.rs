@@ -1,5 +1,5 @@
 use crate::models::helpers::with_count::*;
-use crate::util::errors::*;
+use crate::util::errors::{cargo_err, AppResult};
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::*;

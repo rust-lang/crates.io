@@ -4,8 +4,8 @@ use openssl::error::ErrorStack;
 use openssl::hash::{Hasher, MessageDigest};
 use reqwest::header;
 
-use crate::util::LimitErrorReader;
-use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
+use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
+use crate::util::{LimitErrorReader, Maximums};
 
 use std::env;
 use std::error::Error;

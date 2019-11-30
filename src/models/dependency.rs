@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::git;
-use crate::util::{cargo_err, AppResult};
+use crate::util::errors::{cargo_err, AppResult};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;

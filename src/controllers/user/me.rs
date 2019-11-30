@@ -4,7 +4,6 @@ use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
-use crate::util::errors::{AppError, ChainError};
 
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,

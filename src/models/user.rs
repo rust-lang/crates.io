@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::util::AppResult;
+use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};

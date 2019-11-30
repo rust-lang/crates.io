@@ -13,7 +13,7 @@ use crate::models::{
     Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
     OwnerKind, ReverseDependency, User, Version,
 };
-use crate::util::{cargo_err, AppResult};
+use crate::util::errors::{cargo_err, AppResult};
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;

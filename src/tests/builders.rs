@@ -3,7 +3,7 @@
 use cargo_registry::{
     models::{Crate, Keyword, NewCrate, NewVersion, Version},
     schema::{crates, dependencies, version_downloads, versions},
-    util::AppResult,
+    util::errors::AppResult,
     views::krate_publish as u,
 };
 use std::{collections::HashMap, io::Read};

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::util::{errors::server_error, AppResult};
+use crate::util::errors::{server_error, AppResult};
 
 use failure::Fail;
 use lettre::file::FileTransport;

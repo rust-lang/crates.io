@@ -178,7 +178,7 @@ impl Handler for R404 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{bad_request, cargo_err, internal, NotFound, Unauthorized};
+    use crate::util::errors::{bad_request, cargo_err, internal, AppError, NotFound, Unauthorized};
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
