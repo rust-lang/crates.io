@@ -396,6 +396,8 @@ impl Crate {
         }
     }
 
+    /// Return both the newest (most recently updated) and
+    /// highest version (in semver order) for the current crate.
     pub fn top_versions(&self, conn: &PgConnection) -> AppResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
