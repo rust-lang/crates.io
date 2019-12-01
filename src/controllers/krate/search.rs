@@ -1,12 +1,10 @@
 //! Endpoint for searching and discovery functionality
 
-use chrono::NaiveDateTime;
 use diesel::dsl::*;
 use diesel_full_text_search::*;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
-use crate::models::krate::TopVersions;
 use crate::models::{Crate, CrateBadge, CrateOwner, CrateVersions, OwnerKind, Version};
 use crate::schema::*;
 use crate::views::EncodableCrate;
@@ -181,26 +179,7 @@ pub fn search(req: &mut dyn Request) -> AppResult<Response> {
         .load::<Version>(&*conn)?
         .grouped_by(&crates)
         .into_iter()
-        .map(|versions| {
-            let pairs: Vec<_> = versions
-                .into_iter()
-                .map(|version| (version.created_at, version.num.to_string()))
-                .collect();
-            TopVersions {
-                newest: pairs
-                    .to_owned()
-                    .into_iter()
-                    .max()
-                    .unwrap_or((NaiveDateTime::from_timestamp(0, 0), "0.0.0".to_owned()))
-                    .1,
-                highest: Version::max(
-                    pairs
-                        .into_iter()
-                        .map(|(_, s)| semver::Version::parse(&s).unwrap()),
-                )
-                .to_string(),
-            }
-        });
+        .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))));
 
     let badges = CrateBadge::belonging_to(&crates)
         .select((badges::crate_id, badges::all_columns))

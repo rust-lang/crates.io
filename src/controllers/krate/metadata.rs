@@ -1,11 +1,10 @@
 //! Endpoints that expose metadata about a crate
 //!
-//! These endpoints provide data that could be obtained direclty from the
+//! These endpoints provide data that could be obtained directly from the
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
 use crate::controllers::frontend_prelude::*;
-use chrono::NaiveDateTime;
 
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
@@ -33,26 +32,7 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| {
-                let pairs: Vec<_> = versions
-                    .into_iter()
-                    .map(|version| (version.created_at, version.num.to_string()))
-                    .collect();
-                TopVersions {
-                    newest: pairs
-                        .to_owned()
-                        .into_iter()
-                        .max()
-                        .unwrap_or((NaiveDateTime::from_timestamp(0, 0), "0.0.0".to_owned()))
-                        .1,
-                    highest: Version::max(
-                        pairs
-                            .into_iter()
-                            .map(|(_, s)| semver::Version::parse(&s).unwrap()),
-                    )
-                    .to_string(),
-                }
-            })
+            .map(|versions| Version::top(versions.into_iter().map(|v| (v.created_at, v.num))))
             .zip(krates)
             .map(|(top_versions, krate)| {
                 Ok(krate.minimal_encodable(&top_versions, None, false, None))

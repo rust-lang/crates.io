@@ -8,12 +8,12 @@ use url::Url;
 
 use crate::app::App;
 use crate::email;
-use crate::util::{cargo_err, AppResult};
-
+use crate::models::version::TopVersions;
 use crate::models::{
     Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
     OwnerKind, ReverseDependency, User, Version,
 };
+use crate::util::{cargo_err, AppResult};
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;
@@ -46,14 +46,6 @@ pub struct Crate {
     pub documentation: Option<String>,
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
-}
-
-/// The highest version (in semver order) and the most recently updated version
-/// for a single crate.
-#[derive(Debug, Clone)]
-pub struct TopVersions {
-    pub highest: String,
-    pub newest: String,
 }
 
 /// We literally never want to select `textsearchable_index_col`
@@ -347,8 +339,8 @@ impl Crate {
             keywords: keyword_ids,
             categories: category_ids,
             badges,
-            max_version: top_versions.highest.to_owned(),
-            newest_version: top_versions.newest.to_owned(),
+            max_version: top_versions.highest.to_string(),
+            newest_version: top_versions.newest.to_string(),
             documentation,
             homepage,
             exact_match,
@@ -398,25 +390,11 @@ impl Crate {
     pub fn top_versions(&self, conn: &PgConnection) -> AppResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
-        let results = self
-            .versions()
-            .select((updated_at, num))
-            .load::<(NaiveDateTime, String)>(conn)?;
-
-        Ok(TopVersions {
-            newest: results
-                .to_owned()
-                .into_iter()
-                .max()
-                .unwrap_or((NaiveDateTime::from_timestamp(0, 0), "0.0.0".to_owned()))
-                .1,
-            highest: Version::max(
-                results
-                    .into_iter()
-                    .map(|(_, s)| semver::Version::parse(&s).unwrap()),
-            )
-            .to_string(),
-        })
+        Ok(Version::top(
+            self.versions()
+                .select((updated_at, num))
+                .load::<(NaiveDateTime, semver::Version)>(conn)?,
+        ))
     }
 
     pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {
