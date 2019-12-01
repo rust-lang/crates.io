@@ -173,11 +173,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
         Ok(())
     })?;
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+    ok_true()
 }
 
 /// Handles the `PUT /confirm/:email_token` route
@@ -195,11 +191,7 @@ pub fn confirm_user_email(req: &mut dyn Request) -> AppResult<Response> {
         return Err(bad_request("Email belonging to token not found."));
     }
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+    ok_true()
 }
 
 /// Handles `PUT /user/:user_id/resend` route
@@ -226,11 +218,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
             .map_err(|_| bad_request("Error in sending email"))
     })?;
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+    ok_true()
 }
 
 /// Handles `PUT /me/email_notifications` route
@@ -283,9 +271,5 @@ pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> 
         .set(email_notifications.eq(excluded(email_notifications)))
         .execute(&*conn)?;
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+    ok_true()
 }
