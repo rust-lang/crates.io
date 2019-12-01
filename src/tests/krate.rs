@@ -1505,7 +1505,6 @@ fn yank_by_a_non_owner_fails() {
 }
 
 #[test]
-#[allow(clippy::cognitive_complexity)]
 fn yank_max_version() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
