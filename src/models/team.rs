@@ -178,7 +178,7 @@ impl Team {
         team_with_gh_id_contains_user(app, self.github_id, user)
     }
 
-    pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

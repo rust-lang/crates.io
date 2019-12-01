@@ -387,7 +387,7 @@ impl Crate {
 
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate.
-    pub fn top_versions(&self, conn: &PgConnection) -> AppResult<TopVersions> {
+    pub fn top_versions(&self, conn: &PgConnection) -> QueryResult<TopVersions> {
         use crate::schema::versions::dsl::*;
 
         Ok(Version::top(
@@ -397,7 +397,7 @@ impl Crate {
         ))
     }
 
-    pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+    pub fn owners(&self, conn: &PgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
