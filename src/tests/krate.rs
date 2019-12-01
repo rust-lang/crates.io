@@ -1249,7 +1249,6 @@ fn summary_new_crates() {
         let krate4 = CrateBuilder::new("just_updated_patch", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .version(VersionBuilder::new("0.2.0"))
-            .version(VersionBuilder::new("0.1.1"))
             .expect_build(conn);
 
         CrateBuilder::new("with_downloads", user.id)
@@ -1277,13 +1276,19 @@ fn summary_new_crates() {
             .execute(&*conn)
             .unwrap();
 
-        // Adjust 'just_updated_patch' to be a little newer than 'just_updated'
-        update(&krate4)
-            .set(crates::updated_at.eq(updated + chrono::Duration::seconds(2)))
+        let plus_two = Utc::now().naive_utc() + chrono::Duration::seconds(2);
+        let newer = VersionBuilder::new("0.1.1").expect_build(krate4.id, user.id, conn);
+
+        // Update the patch version to be newer than the other versions, including the higher one.
+        update(&newer)
+            .set(versions::created_at.eq(plus_two))
             .execute(&*conn)
             .unwrap();
 
-        // TODO: Make sure that the most recently updated version for just_updated_patch is 0.1.1.
+        update(&krate4)
+            .set(crates::updated_at.eq(plus_two))
+            .execute(&*conn)
+            .unwrap();
     });
 
     let json: SummaryResponse = anon.get("/api/v1/summary").good();
@@ -1301,7 +1306,7 @@ fn summary_new_crates() {
 
     assert_eq!(json.just_updated[0].name, "just_updated_patch");
     assert_eq!(json.just_updated[0].max_version, "0.2.0");
-    // FIXME: assert_eq!(json.just_updated[0].newest_version, "0.1.1");
+    assert_eq!(json.just_updated[0].newest_version, "0.1.1");
 
     assert_eq!(json.just_updated[1].name, "just_updated");
     assert_eq!(json.just_updated[1].max_version, "0.1.2");

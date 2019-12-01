@@ -215,7 +215,7 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
         };
 
         Ok(req.json(&GoodCrate {
-            krate: krate.minimal_encodable(&top_versions.highest, None, false, None),
+            krate: krate.minimal_encodable(&top_versions, None, false, None),
             warnings,
         }))
     })

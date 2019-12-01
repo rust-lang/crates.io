@@ -289,16 +289,13 @@ impl Crate {
 
     pub fn minimal_encodable(
         self,
-        max_version: &str,
+        top_versions: &TopVersions,
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
     ) -> EncodableCrate {
         self.encodable(
-            &TopVersions {
-                highest: max_version.to_owned(),
-                newest: max_version.to_owned(),
-            },
+            top_versions,
             None,
             None,
             None,

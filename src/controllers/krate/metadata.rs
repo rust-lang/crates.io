@@ -5,6 +5,8 @@
 //! `Cargo.toml` file.
 
 use crate::controllers::frontend_prelude::*;
+use chrono::NaiveDateTime;
+
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
     User, Version, VersionOwnerAction,
@@ -31,10 +33,29 @@ pub fn summary(req: &mut dyn Request) -> AppResult<Response> {
         versions
             .grouped_by(&krates)
             .into_iter()
-            .map(|versions| Version::max(versions.into_iter().map(|v| v.num)).to_string())
+            .map(|versions| {
+                let pairs: Vec<_> = versions
+                    .into_iter()
+                    .map(|version| (version.created_at, version.num.to_string()))
+                    .collect();
+                TopVersions {
+                    newest: pairs
+                        .to_owned()
+                        .into_iter()
+                        .max()
+                        .unwrap_or((NaiveDateTime::from_timestamp(0, 0), "0.0.0".to_owned()))
+                        .1,
+                    highest: Version::max(
+                        pairs
+                            .into_iter()
+                            .map(|(_, s)| semver::Version::parse(&s).unwrap()),
+                    )
+                    .to_string(),
+                }
+            })
             .zip(krates)
-            .map(|(max_version, krate)| {
-                Ok(krate.minimal_encodable(&max_version, None, false, None))
+            .map(|(top_versions, krate)| {
+                Ok(krate.minimal_encodable(&top_versions, None, false, None))
             })
             .collect()
     };
