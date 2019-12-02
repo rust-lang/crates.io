@@ -48,9 +48,5 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> AppResult<Response> {
         .enqueue(&conn)
         .map_err(|e| AppError::from_std_error(e))?;
 
-    #[derive(Serialize)]
-    struct R {
-        ok: bool,
-    }
-    Ok(req.json(&R { ok: true }))
+    ok_true()
 }
