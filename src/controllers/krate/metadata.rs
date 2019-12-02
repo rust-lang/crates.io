@@ -5,11 +5,9 @@
 //! `Cargo.toml` file.
 
 use crate::controllers::prelude::*;
-use crate::models::user;
-use crate::models::user::UserNoEmailType;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    Version,
+    User, Version,
 };
 use crate::schema::*;
 use crate::views::{
@@ -107,10 +105,10 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
-    let mut versions_and_publishers: Vec<(Version, Option<UserNoEmailType>)> = krate
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
         .left_outer_join(users::table)
-        .select((versions::all_columns, user::ALL_COLUMNS.nullable()))
+        .select((versions::all_columns, users::all_columns.nullable()))
         .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let ids = versions_and_publishers.iter().map(|v| v.0.id).collect();
@@ -153,7 +151,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
         ),
         versions: versions_and_publishers
             .into_iter()
-            .map(|(v, pb)| v.encodable(&krate.name, pb.map(From::from)))
+            .map(|(v, pb)| v.encodable(&krate.name, pb))
             .collect(),
         keywords: kws.into_iter().map(Keyword::encodable).collect(),
         categories: cats.into_iter().map(Category::encodable).collect(),
@@ -189,15 +187,15 @@ pub fn versions(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
-    let mut versions_and_publishers: Vec<(Version, Option<UserNoEmailType>)> = krate
+    let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
         .all_versions()
         .left_outer_join(users::table)
-        .select((versions::all_columns, user::ALL_COLUMNS.nullable()))
+        .select((versions::all_columns, users::all_columns.nullable()))
         .load(&*conn)?;
     versions_and_publishers.sort_by(|a, b| b.0.num.cmp(&a.0.num));
     let versions = versions_and_publishers
         .into_iter()
-        .map(|(v, pb)| v.encodable(crate_name, pb.map(From::from)))
+        .map(|(v, pb)| v.encodable(crate_name, pb))
         .collect();
 
     #[derive(Serialize)]
@@ -229,11 +227,11 @@ pub fn reverse_dependencies(req: &mut dyn Request) -> AppResult<Response> {
         .select((
             versions::all_columns,
             crates::name,
-            user::ALL_COLUMNS.nullable(),
+            users::all_columns.nullable(),
         ))
-        .load::<(Version, String, Option<UserNoEmailType>)>(&*conn)?
+        .load::<(Version, String, Option<User>)>(&*conn)?
         .into_iter()
-        .map(|(version, krate_name, user)| version.encodable(&krate_name, user.map(From::from)))
+        .map(|(version, krate_name, user)| version.encodable(&krate_name, user))
         .collect();
 
     #[derive(Serialize)]

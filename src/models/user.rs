@@ -12,7 +12,6 @@ use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Associations)]
 pub struct User {
     pub id: i32,
-    pub email: Option<String>,
     pub gh_access_token: String,
     pub gh_login: String,
     pub name: Option<String>,
@@ -20,57 +19,21 @@ pub struct User {
     pub gh_id: i32,
 }
 
+/// Represents a new user record insertable to the `users` table
 #[derive(Insertable, Debug, Default)]
 #[table_name = "users"]
 pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
-    pub email: Option<&'a str>,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: Cow<'a, str>,
 }
 
-pub type UserNoEmailType = (
-    // pub id:
-    i32,
-    // pub email:
-    // Option<String>,
-    // pub gh_access_token:
-    String,
-    // pub gh_login:
-    String,
-    // pub name:
-    Option<String>,
-    // pub gh_avatar:
-    Option<String>,
-    // pub gh_id:
-    i32,
-);
-
-pub type AllColumns = (
-    users::id,
-    users::gh_access_token,
-    users::gh_login,
-    users::name,
-    users::gh_avatar,
-    users::gh_id,
-);
-
-pub const ALL_COLUMNS: AllColumns = (
-    users::id,
-    users::gh_access_token,
-    users::gh_login,
-    users::name,
-    users::gh_avatar,
-    users::gh_id,
-);
-
 impl<'a> NewUser<'a> {
     pub fn new(
         gh_id: i32,
         gh_login: &'a str,
-        email: Option<&'a str>,
         name: Option<&'a str>,
         gh_avatar: Option<&'a str>,
         gh_access_token: &'a str,
@@ -78,7 +41,6 @@ impl<'a> NewUser<'a> {
         NewUser {
             gh_id,
             gh_login,
-            email,
             name,
             gh_avatar,
             gh_access_token: Cow::Borrowed(gh_access_token),
@@ -86,7 +48,11 @@ impl<'a> NewUser<'a> {
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &PgConnection) -> QueryResult<User> {
+    pub fn create_or_update(
+        &self,
+        email: Option<&'a str>,
+        conn: &PgConnection,
+    ) -> QueryResult<User> {
         use crate::schema::users::dsl::*;
         use diesel::dsl::sql;
         use diesel::insert_into;
@@ -112,13 +78,12 @@ impl<'a> NewUser<'a> {
                     gh_avatar.eq(excluded(gh_avatar)),
                     gh_access_token.eq(excluded(gh_access_token)),
                 ))
-                .returning(ALL_COLUMNS)
-                .get_result::<UserNoEmailType>(conn)?;
+                .get_result::<User>(conn)?;
 
-            // To send the user an account verification email...
-            if let Some(user_email) = self.email {
+            // To send the user an account verification email
+            if let Some(user_email) = email {
                 let new_email = NewEmail {
-                    user_id: user.0,
+                    user_id: user.id,
                     email: user_email,
                 };
 
@@ -130,11 +95,11 @@ impl<'a> NewUser<'a> {
                     .optional()?;
 
                 if let Some(token) = token {
-                    crate::email::send_user_confirm_email(user_email, &user.2, &token);
+                    crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
                 }
             }
 
-            Ok(User::from(user))
+            Ok(user)
         })
     }
 }
@@ -154,11 +119,10 @@ impl User {
     pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
-            .select(ALL_COLUMNS)
+            .select(users::all_columns)
             .filter(crate_owners::crate_id.eq(krate.id))
-            .load::<UserNoEmailType>(conn)?
+            .load(conn)?
             .into_iter()
-            .map(User::from)
             .map(Owner::User);
 
         Ok(users.collect())
@@ -191,6 +155,8 @@ impl User {
         Ok(best)
     }
 
+    /// Queries the database for the verified emails
+    /// belonging to a given user
     pub fn verified_email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
         Ok(Email::belonging_to(self)
             .select(emails::email)
@@ -214,6 +180,7 @@ impl User {
             ..
         } = self;
         let url = format!("https://github.com/{}", gh_login);
+
         EncodablePrivateUser {
             id,
             email,
@@ -224,6 +191,14 @@ impl User {
             name,
             url: Some(url),
         }
+    }
+
+    /// Queries for the email belonging to a particular user
+    pub fn email(&self, conn: &PgConnection) -> AppResult<Option<String>> {
+        Ok(Email::belonging_to(self)
+            .select(emails::email)
+            .first::<String>(&*conn)
+            .optional()?)
     }
 
     /// Converts this`User` model into an `EncodablePublicUser` for JSON serialization.
@@ -242,20 +217,6 @@ impl User {
             login: gh_login,
             name,
             url: Some(url),
-        }
-    }
-}
-
-impl From<UserNoEmailType> for User {
-    fn from(user: UserNoEmailType) -> Self {
-        User {
-            id: user.0,
-            email: None,
-            gh_access_token: user.1,
-            gh_login: user.2,
-            name: user.3,
-            gh_avatar: user.4,
-            gh_id: user.5,
         }
     }
 }

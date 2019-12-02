@@ -135,9 +135,11 @@ impl TestApp {
         use diesel::prelude::*;
 
         let user = self.db(|conn| {
-            let mut user = crate::new_user(username).create_or_update(conn).unwrap();
             let email = "something@example.com";
-            user.email = Some(email.to_string());
+
+            let user = crate::new_user(username)
+                .create_or_update(None, conn)
+                .unwrap();
             diesel::insert_into(emails::table)
                 .values((
                     emails::user_id.eq(user.id),

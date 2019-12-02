@@ -220,7 +220,6 @@ fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
         gh_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
         gh_login: login,
-        email: None,
         name: None,
         gh_avatar: None,
         gh_access_token: Cow::Borrowed("some random token"),

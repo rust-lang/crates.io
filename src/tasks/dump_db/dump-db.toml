@@ -166,7 +166,6 @@ id in (
 )"""
 [users.columns]
 id = "public"
-email = "private"
 gh_access_token = "private"
 gh_login = "public"
 name = "public"

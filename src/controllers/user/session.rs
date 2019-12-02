@@ -4,8 +4,6 @@ use crate::github;
 use conduit_cookie::RequestSession;
 use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
-use crate::models::user;
-use crate::models::user::UserNoEmailType;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::{AppError, ReadOnlyMode};
@@ -120,23 +118,21 @@ impl GithubUser {
         NewUser::new(
             self.id,
             &self.login,
-            self.email.as_ref().map(|s| &s[..]),
             self.name.as_ref().map(|s| &s[..]),
             self.avatar_url.as_ref().map(|s| &s[..]),
             access_token,
         )
-        .create_or_update(conn)
+        .create_or_update(self.email.as_ref().map(|s| &s[..]), conn)
         .map_err(Into::into)
         .or_else(|e: Box<dyn AppError>| {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
             if e.is::<ReadOnlyMode>() {
                 users::table
-                    .select(user::ALL_COLUMNS)
                     .filter(users::gh_id.eq(self.id))
-                    .first::<UserNoEmailType>(conn)
-                    .map(User::from)
-                    .map_err(|_| e)
+                    .first(conn)
+                    .optional()?
+                    .ok_or(e)
             } else {
                 Err(e)
             }

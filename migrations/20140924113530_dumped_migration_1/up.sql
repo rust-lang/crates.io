@@ -4,3 +4,4 @@ CREATE TABLE users (
             gh_access_token VARCHAR NOT NULL,
             api_token       VARCHAR NOT NULL
         );
+

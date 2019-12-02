@@ -124,14 +124,17 @@ fn me() {
     anon.get(url).assert_forbidden();
 
     let user = app.db_new_user("foo");
-    app.db(|conn| {
-        CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
-    });
-
     let json = user.show_me();
 
-    assert_eq!(json.user.email, user.as_model().email);
-    assert_eq!(json.owned_crates.len(), 1);
+    assert_eq!(json.owned_crates.len(), 0);
+
+    app.db(|conn| {
+        CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
+        assert_eq!(json.user.email, user.as_model().email(conn).unwrap());
+    });
+    let updated_json = user.show_me();
+
+    assert_eq!(updated_json.owned_crates.len(), 1);
 }
 
 #[test]
@@ -162,21 +165,19 @@ fn show_latest_user_case_insensitively() {
         t!(NewUser::new(
             1,
             "foobar",
-            Some("foo@bar.com"),
             Some("I was first then deleted my github account"),
             None,
             "bar"
         )
-        .create_or_update(conn));
+        .create_or_update(None, conn));
         t!(NewUser::new(
             2,
             "FOOBAR",
-            Some("later-foo@bar.com"),
             Some("I was second, I took the foobar username on github"),
             None,
             "bar"
         )
-        .create_or_update(conn));
+        .create_or_update(None, conn));
     });
 
     let json: UserShowPublicResponse = anon.get("api/v1/users/fOObAr").good();
@@ -345,7 +346,7 @@ fn updating_existing_user_doesnt_change_api_token() {
 
     let user = app.db(|conn| {
         // Reuse gh_id but use new gh_login and gh_access_token
-        t!(NewUser::new(gh_id, "bar", None, None, None, "bar_token").create_or_update(conn));
+        t!(NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(None, conn));
 
         // Use the original API token to find the now updated user
         t!(User::find_by_api_token(conn, token))
@@ -374,7 +375,7 @@ fn github_without_email_does_not_overwrite_email() {
     // Don't use app.db_new_user because it adds a verified email.
     let user_without_github_email = app.db(|conn| {
         let u = new_user("arbitrary_username");
-        let u = u.create_or_update(conn).unwrap();
+        let u = u.create_or_update(None, conn).unwrap();
         MockCookieUser::new(&app, u)
     });
     let user_without_github_email_model = user_without_github_email.as_model();
@@ -394,7 +395,7 @@ fn github_without_email_does_not_overwrite_email() {
             // new_user uses a None email; the rest of the fields are arbitrary
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(conn).unwrap();
+        let u = u.create_or_update(None, conn).unwrap();
         MockCookieUser::new(&app, u)
     });
 
@@ -407,9 +408,16 @@ fn github_without_email_does_not_overwrite_email() {
 */
 #[test]
 fn github_with_email_does_not_overwrite_email() {
+    use cargo_registry::schema::emails;
+
     let (app, _, user) = TestApp::init().with_user();
     let model = user.as_model();
-    let original_email = &model.email;
+    let original_email = app.db(|conn| {
+        Email::belonging_to(model)
+            .select(emails::email)
+            .first::<String>(&*conn)
+            .unwrap()
+    });
 
     let new_github_email = "new-email-in-github@example.com";
 
@@ -418,16 +426,15 @@ fn github_with_email_does_not_overwrite_email() {
         let u = NewUser {
             // Use the same github ID to link to the existing account
             gh_id: model.gh_id,
-            email: Some(new_github_email),
             // the rest of the fields are arbitrary
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(conn).unwrap();
+        let u = u.create_or_update(Some(new_github_email), conn).unwrap();
         MockCookieUser::new(&app, u)
     });
 
     let json = user_with_different_email_in_github.show_me();
-    assert_eq!(json.user.email, *original_email);
+    assert_eq!(json.user.email, Some(original_email));
 }
 
 /*  Given a crates.io user, check that the user's email can be
@@ -531,12 +538,13 @@ fn test_confirm_user_email() {
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
+    let email = "potato2@example.com";
+
     let user = app.db(|conn| {
         let u = NewUser {
-            email: Some("potato2@example.com"),
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(conn).unwrap();
+        let u = u.create_or_update(Some(email), conn).unwrap();
         MockCookieUser::new(&app, u)
     });
     let user_model = user.as_model();
@@ -570,12 +578,12 @@ fn test_existing_user_email() {
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
+    let email = "potahto@example.com";
     let user = app.db(|conn| {
         let u = NewUser {
-            email: Some("potahto@example.com"),
             ..new_user("arbitrary_username")
         };
-        let u = u.create_or_update(conn).unwrap();
+        let u = u.create_or_update(Some(email), conn).unwrap();
         update(Email::belonging_to(&u))
             // Users created before we added verification will have
             // `NULL` in the `token_generated_at` column.
@@ -686,7 +694,7 @@ fn test_update_email_notifications_not_owned() {
 
     let not_my_crate = app.db(|conn| {
         let u = new_user("arbitrary_username")
-            .create_or_update(&conn)
+            .create_or_update(None, &conn)
             .unwrap();
         CrateBuilder::new("test_package", u.id).expect_build(&conn)
     });

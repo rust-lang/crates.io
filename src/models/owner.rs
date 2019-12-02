@@ -5,7 +5,6 @@ use crate::app::App;
 use crate::github;
 use crate::util::{cargo_err, AppResult};
 
-use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};
 use crate::views::EncodableOwner;
@@ -72,10 +71,8 @@ impl Owner {
             )?))
         } else {
             users::table
-                .select(ALL_COLUMNS)
                 .filter(users::gh_login.eq(name))
-                .first::<UserNoEmailType>(conn)
-                .map(User::from)
+                .first(conn)
                 .map(Owner::User)
                 .map_err(|_| cargo_err(&format_args!("could not find user with login `{}`", name)))
         }
