@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use std::time::Duration;
 
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
-use crate::util::errors::{CargoResult, TooManyRequests};
+use crate::util::errors::{AppResult, TooManyRequests};
 
 #[derive(Debug, Clone, Copy)]
 pub struct PublishRateLimit {
@@ -31,7 +31,7 @@ struct Bucket {
 }
 
 impl PublishRateLimit {
-    pub fn check_rate_limit(&self, uploader: i32, conn: &PgConnection) -> CargoResult<()> {
+    pub fn check_rate_limit(&self, uploader: i32, conn: &PgConnection) -> AppResult<()> {
         let bucket = self.take_token(uploader, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
             Ok(())
@@ -55,7 +55,7 @@ impl PublishRateLimit {
         uploader: i32,
         now: NaiveDateTime,
         conn: &PgConnection,
-    ) -> CargoResult<Bucket> {
+    ) -> AppResult<Bucket> {
         use self::publish_limit_buckets::dsl::*;
         use diesel::sql_types::{Double, Interval, Text, Timestamp};
 
@@ -108,7 +108,7 @@ mod tests {
     use crate::test_util::*;
 
     #[test]
-    fn take_token_with_no_bucket_creates_new_one() -> CargoResult<()> {
+    fn take_token_with_no_bucket_creates_new_one() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn take_token_with_existing_bucket_modifies_existing_bucket() -> CargoResult<()> {
+    fn take_token_with_existing_bucket_modifies_existing_bucket() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    fn take_token_after_delay_refills() -> CargoResult<()> {
+    fn take_token_after_delay_refills() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn refill_subsecond_rate() -> CargoResult<()> {
+    fn refill_subsecond_rate() -> AppResult<()> {
         let conn = pg_connection();
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
@@ -204,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn last_refill_always_advanced_by_multiple_of_rate() -> CargoResult<()> {
+    fn last_refill_always_advanced_by_multiple_of_rate() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_tokens_returned_when_user_has_no_tokens_left() -> CargoResult<()> {
+    fn zero_tokens_returned_when_user_has_no_tokens_left() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> CargoResult<()> {
+    fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn tokens_never_refill_past_burst() -> CargoResult<()> {
+    fn tokens_never_refill_past_burst() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -292,7 +292,7 @@ mod tests {
     }
 
     #[test]
-    fn override_is_used_instead_of_global_burst_if_present() -> CargoResult<()> {
+    fn override_is_used_instead_of_global_burst_if_present() -> AppResult<()> {
         let conn = pg_connection();
         let now = now();
 
@@ -318,7 +318,7 @@ mod tests {
         Ok(())
     }
 
-    fn new_user(conn: &PgConnection, gh_login: &str) -> CargoResult<i32> {
+    fn new_user(conn: &PgConnection, gh_login: &str) -> AppResult<i32> {
         use crate::models::NewUser;
 
         let user = NewUser {
@@ -329,11 +329,7 @@ mod tests {
         Ok(user.id)
     }
 
-    fn new_user_bucket(
-        conn: &PgConnection,
-        tokens: i32,
-        now: NaiveDateTime,
-    ) -> CargoResult<Bucket> {
+    fn new_user_bucket(conn: &PgConnection, tokens: i32, now: NaiveDateTime) -> AppResult<Bucket> {
         diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
                 user_id: new_user(conn, "new_user")?,

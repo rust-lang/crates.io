@@ -272,6 +272,12 @@ Crates to help adapting internationalized software to specific \
 languages and regions.\
 """
 
+[mathematics]
+name = "Mathematics"
+description = """
+Crates with a mathematical aspect.
+"""
+
 [memory-management]
 name = "Memory management"
 description = """
@@ -398,7 +404,7 @@ Rust.\
 [science]
 name = "Science"
 description = """
-Crates related to solving problems involving math, physics, chemistry, \
+Crates related to solving problems involving physics, chemistry, \
 biology, machine learning, geoscience, and other scientific fields.\
 """
 

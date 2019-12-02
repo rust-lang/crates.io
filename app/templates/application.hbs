@@ -40,7 +40,7 @@
         <span class='arrow'></span>
       {{/rl-dropdown-toggle}}
 
-      {{#rl-dropdown tagName="ul" id="doc-links" class="dropdown" closeOnChildClick="a:link"}}
+      {{#rl-dropdown tagName="ul" id="doc-links" class="dropdown"}}
         <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -66,7 +66,7 @@
           <span class='arrow'></span>
         {{/rl-dropdown-toggle}}
 
-        {{#rl-dropdown tagName="ul" class="dropdown current-user-links" closeOnChildClick="a:link"}}
+        {{#rl-dropdown tagName="ul" class="dropdown current-user-links"}}
           <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>
           <li>{{#link-to 'me'}}Account Settings{{/link-to}}</li>
           <li>{{#link-to 'me.pending-invites'}}Owner Invites{{/link-to}}</li>
@@ -87,7 +87,7 @@
         Menu
         <span class='arrow'></span>
       {{/rl-dropdown-toggle}}
-      {{#rl-dropdown tagName='ul' class='dropdown current-user-links' closeOnChildClick='a:link'}}
+      {{#rl-dropdown tagName='ul' class='dropdown current-user-links'}}
         <li>{{#link-to "crates"}}Browse All Crates{{/link-to}}</li>
         {{#if session.currentUser}}
           <li>{{#link-to 'dashboard'}}Dashboard{{/link-to}}</li>

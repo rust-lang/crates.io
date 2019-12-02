@@ -20,11 +20,11 @@
     "lint:hbs": "ember-template-lint app/templates",
     "lint:js": "eslint . --cache",
     "lint:deps": "ember dependency-lint",
-    "prettier": "prettier --write '{app,tests,mirage}/**/*.js'",
-    "start": "ember serve",
-    "start:live": "ember serve --proxy https://crates.io",
-    "start:local": "ember serve --proxy http://127.0.0.1:8888",
-    "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
+    "prettier": "prettier --write '**/*.js'",
+    "start": "./script/ember.sh serve",
+    "start:live": "./script/ember.sh serve --proxy https://crates.io",
+    "start:local": "./script/ember.sh serve --proxy http://127.0.0.1:8888",
+    "start:staging": "./script/ember.sh serve --proxy https://staging-crates-io.herokuapp.com",
     "test": "ember exam --split=2 --parallel",
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
   },
@@ -33,7 +33,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "broccoli-asset-rev": "^3.0.0",
     "ember-a11y-testing": "^0.5.0",
-    "ember-cli": "~3.9.0",
+    "ember-cli": "~3.12.0",
     "ember-cli-app-version": "^3.1.3",
     "ember-cli-babel": "^6.14.1",
     "ember-cli-cjs-transform": "^1.3.0",
@@ -41,6 +41,7 @@
     "ember-cli-code-coverage": "^1.0.0-beta.4",
     "ember-cli-dependency-checker": "^2.0.1",
     "ember-cli-dependency-lint": "^1.1.3",
+    "ember-cli-fastboot": "^2.2.1",
     "ember-cli-htmlbars": "^2.0.3",
     "ember-cli-htmlbars-inline-precompile": "^1.0.2",
     "ember-cli-inject-live-reload": "1.6.1",
@@ -82,7 +83,7 @@
     "normalize.css": "^7.0.0",
     "nyc": "^14.1.1",
     "prettier": "^1.13.4",
-    "qunit-dom": "^0.8.4",
+    "qunit-dom": "^0.9.0",
     "sass": "^1.23.0-module.beta.1",
     "semver": "^6.3.0",
     "timekeeper": "^2.1.0"
@@ -97,5 +98,9 @@
     "tabWidth": 2,
     "singleQuote": true,
     "trailingComma": "all"
+  },
+  "dependencies": {
+    "fastboot-app-server": "^2.0.0",
+    "morgan": "^1.9.1"
   }
 }

@@ -13,19 +13,21 @@ env:
     - JOBS=1 # See https://git.io/vdao3 for details.
     - DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
     - TEST_DATABASE_URL=postgres://postgres:@localhost/cargo_registry_test
-    - CARGO_TARGET_DIR=target
+    - CARGO_INCREMENTAL=0
     - PERCY_PARALLEL_TOTAL=2
     # Percy secrets are included here to enable Percy's GitHub integration
     # on community-submitted PRs
     - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
     - PERCY_PROJECT=crates-io/crates.io
     - PGPORT=5433
+    - PATH=$HOME/.cargo/bin:$PATH
+    - RUSTFLAGS="-C debuginfo=0"
 
 install:
   - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
   - sudo systemctl restart postgresql@11-main
   - script/ci/cargo-clean-on-new-rustc-version.sh
-  - cargo install --force diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres && export PATH=$HOME/.cargo/bin:$PATH
+  - which diesel || cargo install diesel_cli --vers `cat .diesel_version` --no-default-features --features postgres
 
 before_script:
   - diesel database setup --locked-schema

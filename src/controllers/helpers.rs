@@ -1,11 +1,11 @@
-use crate::util::{json_response, CargoResult};
+use crate::util::{json_response, AppResult};
 use conduit::Response;
 
 pub(crate) mod pagination;
 
 pub(crate) use self::pagination::Paginate;
 
-pub fn ok_true() -> CargoResult<Response> {
+pub fn ok_true() -> AppResult<Response> {
     #[derive(Serialize)]
     struct R {
         ok: bool,

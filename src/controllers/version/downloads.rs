@@ -14,7 +14,7 @@ use super::version_and_crate;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
-pub fn download(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn download(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let version = &req.params()["version"];
 
@@ -50,7 +50,7 @@ fn increment_download_counts(
     req: &dyn Request,
     crate_name: &str,
     version: &str,
-) -> CargoResult<String> {
+) -> AppResult<String> {
     use self::versions::dsl::*;
 
     let conn = req.db_conn()?;
@@ -68,7 +68,7 @@ fn increment_download_counts(
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
-pub fn downloads(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
     let (version, _) = version_and_crate(req)?;
     let conn = req.db_conn()?;
     let cutoff_end_date = req

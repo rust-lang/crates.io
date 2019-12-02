@@ -7,7 +7,7 @@ use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub fn owners(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn owners(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -25,7 +25,7 @@ pub fn owners(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub fn owner_team(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn owner_team(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -42,7 +42,7 @@ pub fn owner_team(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub fn owner_user(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn owner_user(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -59,12 +59,12 @@ pub fn owner_user(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
-pub fn add_owners(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn add_owners(req: &mut dyn Request) -> AppResult<Response> {
     modify_owners(req, true)
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
-pub fn remove_owners(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn remove_owners(req: &mut dyn Request) -> AppResult<Response> {
     modify_owners(req, false)
 }
 
@@ -72,7 +72,7 @@ pub fn remove_owners(req: &mut dyn Request) -> CargoResult<Response> {
 /// The format is
 ///
 ///     {"owners": ["username", "github:org:team", ...]}
-fn parse_owners_request(req: &mut dyn Request) -> CargoResult<Vec<String>> {
+fn parse_owners_request(req: &mut dyn Request) -> AppResult<Vec<String>> {
     let mut body = String::new();
     req.body().read_to_string(&mut body)?;
     #[derive(Deserialize)]
@@ -82,14 +82,14 @@ fn parse_owners_request(req: &mut dyn Request) -> CargoResult<Vec<String>> {
         owners: Option<Vec<String>>,
     }
     let request: Request =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
     request
         .owners
         .or(request.users)
-        .ok_or_else(|| human("invalid json request"))
+        .ok_or_else(|| cargo_err("invalid json request"))
 }
 
-fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
+fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
     let logins = parse_owners_request(req)?;
     let app = req.app();
     let user = req.user()?;
@@ -104,10 +104,12 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
             Rights::Full => {}
             // Yes!
             Rights::Publish => {
-                return Err(human("team members don't have permission to modify owners"));
+                return Err(cargo_err(
+                    "team members don't have permission to modify owners",
+                ));
             }
             Rights::None => {
-                return Err(human("only owners have permission to modify owners"));
+                return Err(cargo_err("only owners have permission to modify owners"));
             }
         }
 
@@ -117,7 +119,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
                 if owners.iter().any(login_test) {
-                    return Err(human(&format_args!("`{}` is already an owner", login)));
+                    return Err(cargo_err(&format_args!("`{}` is already an owner", login)));
                 }
                 let msg = krate.owner_add(app, &conn, user, login)?;
                 msgs.push(msg);
@@ -128,7 +130,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> CargoResult<Response> {
                 krate.owner_remove(app, &conn, user, login)?;
             }
             if User::owning(&krate, &conn)?.is_empty() {
-                return Err(human(
+                return Err(cargo_err(
                     "cannot remove all individual owners of a crate. \
                      Team member don't have permission to modify owners, so \
                      at least one individual owner is required.",

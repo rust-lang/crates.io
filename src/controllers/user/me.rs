@@ -1,16 +1,19 @@
+use std::collections::HashMap;
+
 use crate::controllers::prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
 use crate::util::bad_request;
-use crate::util::errors::CargoError;
+use crate::util::errors::AppError;
 
-use crate::models::{Email, Follow, NewEmail, User, Version};
-use crate::schema::{crates, emails, follows, users, versions};
-use crate::views::{EncodableMe, EncodableVersion};
+use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
+use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
+use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
 
 /// Handles the `GET /me` route.
-pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn me(req: &mut dyn Request) -> AppResult<Response> {
     // Changed to getting User information from database because in
     // src/tests/user.rs, when testing put and get on updating email,
     // request seems to be somehow 'cached'. When we try to get a
@@ -22,31 +25,50 @@ pub fn me(req: &mut dyn Request) -> CargoResult<Response> {
     // perhaps adding `req.mut_extensions().insert(user)` to the
     // update_user route, however this somehow does not seem to work
 
-    let id = req.user()?.id;
+    let user_id = req.user()?.id;
     let conn = req.db_conn()?;
 
     let (user, verified, email, verification_sent) = users::table
-        .find(id)
+        .find(user_id)
         .left_join(emails::table)
         .select((
-            users::all_columns,
+            ALL_COLUMNS,
             emails::verified.nullable(),
             emails::email.nullable(),
             emails::token_generated_at.nullable().is_not_null(),
         ))
-        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
+        .first::<(UserNoEmailType, Option<bool>, Option<String>, bool)>(&*conn)?;
+
+    let owned_crates = crate_owners::table
+        .inner_join(crates::table)
+        .filter(crate_owners::owner_id.eq(user_id))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
+        .select((crates::id, crates::name, crate_owners::email_notifications))
+        .order(crates::name.asc())
+        .load(&*conn)?
+        .into_iter()
+        .map(|(id, name, email_notifications)| OwnedCrate {
+            id,
+            name,
+            email_notifications,
+        })
+        .collect();
 
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
-    let user = User { email, ..user };
+    //  PR  ::  https://github.com/rust-lang/crates.io/pull/1891
+    //          Will modify this so that we don't need this kind of conversion anymore...
+    //          In fact, the PR will use the email that we obtained from the above SQL queries
+    //          and pass it along the encodable_private function below.
 
     Ok(req.json(&EncodableMe {
-        user: user.encodable_private(verified, verification_sent),
+        user: User::from(user).encodable_private(email, verified, verification_sent),
+        owned_crates,
     }))
 }
 
 /// Handles the `GET /me/updates` route.
-pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::any;
 
     let user = req.user()?;
@@ -58,19 +80,17 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
         .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
-        .select((
-            versions::all_columns,
-            crates::name,
-            users::all_columns.nullable(),
-        ))
+        .select((versions::all_columns, crates::name, ALL_COLUMNS.nullable()))
         .paginate(&req.query())?
-        .load::<(Version, String, Option<User>)>(&*conn)?;
+        .load::<(Version, String, Option<UserNoEmailType>)>(&*conn)?;
 
     let more = data.next_page_params().is_some();
 
     let versions = data
         .into_iter()
-        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
+        .map(|(version, crate_name, published_by)| {
+            version.encodable(&crate_name, published_by.map(From::from))
+        })
         .collect();
 
     #[derive(Serialize)]
@@ -89,7 +109,7 @@ pub fn updates(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /user/:user_id` route.
-pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     use self::emails::user_id;
     use self::users::dsl::{email, gh_login, users};
     use diesel::{insert_into, update};
@@ -102,7 +122,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     #[derive(Deserialize)]
@@ -116,20 +136,20 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| human("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
 
     if user_update.user.email.is_none() {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
     let user_email = user_update.user.email.unwrap();
     let user_email = user_email.trim();
 
     if user_email == "" {
-        return Err(human("empty email rejected"));
+        return Err(cargo_err("empty email rejected"));
     }
 
-    conn.transaction::<_, Box<dyn CargoError>, _>(|| {
+    conn.transaction::<_, Box<dyn AppError>, _>(|| {
         update(users.filter(gh_login.eq(&user.gh_login)))
             .set(email.eq(user_email))
             .execute(&*conn)?;
@@ -146,7 +166,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
             .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
-            .map_err(|_| human("Error in creating token"))?;
+            .map_err(|_| cargo_err("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
 
@@ -161,7 +181,7 @@ pub fn update_user(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /confirm/:email_token` route
-pub fn confirm_user_email(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn confirm_user_email(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::update;
 
     let conn = req.db_conn()?;
@@ -183,7 +203,7 @@ pub fn confirm_user_email(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles `PUT /user/:user_id/resend` route
-pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::sql;
     use diesel::update;
 
@@ -193,7 +213,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
 
     // need to check if current user matches user to be updated
     if &user.id != name {
-        return Err(human("current user does not match requested user"));
+        return Err(cargo_err("current user does not match requested user"));
     }
 
     conn.transaction(|| {
@@ -205,6 +225,63 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> CargoResult<Response>
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
             .map_err(|_| bad_request("Error in sending email"))
     })?;
+
+    #[derive(Serialize)]
+    struct R {
+        ok: bool,
+    }
+    Ok(req.json(&R { ok: true }))
+}
+
+/// Handles `PUT /me/email_notifications` route
+pub fn update_email_notifications(req: &mut dyn Request) -> AppResult<Response> {
+    use self::crate_owners::dsl::*;
+    use diesel::pg::upsert::excluded;
+
+    #[derive(Deserialize)]
+    struct CrateEmailNotifications {
+        id: i32,
+        email_notifications: bool,
+    }
+
+    let mut body = String::new();
+    req.body().read_to_string(&mut body)?;
+    let updates: HashMap<i32, bool> = serde_json::from_str::<Vec<CrateEmailNotifications>>(&body)
+        .map_err(|_| bad_request("invalid json request"))?
+        .iter()
+        .map(|c| (c.id, c.email_notifications))
+        .collect();
+
+    let user = req.user()?;
+    let conn = req.db_conn()?;
+
+    // Build inserts from existing crates beloning to the current user
+    let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
+        .filter(owner_id.eq(user.id))
+        .select((crate_id, owner_id, owner_kind, email_notifications))
+        .load(&*conn)?
+        .into_iter()
+        // Remove records whose `email_notifications` will not change from their current value
+        .map(
+            |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
+                let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
+                (
+                    crate_id.eq(c_id),
+                    owner_id.eq(o_id),
+                    owner_kind.eq(o_kind),
+                    email_notifications.eq(current_e_notifications),
+                )
+            },
+        )
+        .collect::<Vec<_>>();
+
+    // Upsert crate owners; this should only actually exectute updates
+    diesel::insert_into(crate_owners)
+        .values(&to_insert)
+        .on_conflict((crate_id, owner_id, owner_kind))
+        .do_update()
+        .set(email_notifications.eq(excluded(email_notifications)))
+        .execute(&*conn)?;
 
     #[derive(Serialize)]
     struct R {

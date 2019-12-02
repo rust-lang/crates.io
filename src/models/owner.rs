@@ -1,9 +1,11 @@
+use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use crate::app::App;
 use crate::github;
-use crate::util::{human, CargoResult};
+use crate::util::{cargo_err, AppResult};
 
+use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{Crate, Team, User};
 use crate::schema::{crate_owners, users};
 use crate::views::EncodableOwner;
@@ -19,6 +21,22 @@ pub struct CrateOwner {
     pub owner_id: i32,
     pub created_by: i32,
     pub owner_kind: i32,
+    pub email_notifications: bool,
+}
+
+type BoxedQuery<'a> = crate_owners::BoxedQuery<'a, Pg, crate_owners::SqlType>;
+
+impl CrateOwner {
+    /// Returns a base crate owner query filtered by the owner kind argument. This query also
+    /// filters out deleted records.
+    pub fn by_owner_kind(kind: OwnerKind) -> BoxedQuery<'static> {
+        use self::crate_owners::dsl::*;
+
+        crate_owners
+            .filter(deleted.eq(false))
+            .filter(owner_kind.eq(kind as i32))
+            .into_boxed()
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -47,17 +65,19 @@ impl Owner {
         conn: &PgConnection,
         req_user: &User,
         name: &str,
-    ) -> CargoResult<Owner> {
+    ) -> AppResult<Owner> {
         if name.contains(':') {
             Ok(Owner::Team(Team::create_or_update(
                 app, conn, name, req_user,
             )?))
         } else {
             users::table
+                .select(ALL_COLUMNS)
                 .filter(users::gh_login.eq(name))
-                .first(conn)
+                .first::<UserNoEmailType>(conn)
+                .map(User::from)
                 .map(Owner::User)
-                .map_err(|_| human(&format_args!("could not find user with login `{}`", name)))
+                .map_err(|_| cargo_err(&format_args!("could not find user with login `{}`", name)))
         }
     }
 

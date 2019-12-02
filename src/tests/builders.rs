@@ -3,7 +3,7 @@
 use cargo_registry::{
     models::{Crate, Keyword, NewCrate, NewVersion, Version},
     schema::{crates, dependencies, version_downloads, versions},
-    util::CargoResult,
+    util::AppResult,
     views::krate_publish as u,
 };
 use std::{collections::HashMap, io::Read};
@@ -72,7 +72,7 @@ impl<'a> VersionBuilder<'a> {
         crate_id: i32,
         published_by: i32,
         connection: &PgConnection,
-    ) -> CargoResult<Version> {
+    ) -> AppResult<Version> {
         use diesel::{insert_into, update};
 
         let license = match self.license {
@@ -229,7 +229,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    fn build(mut self, connection: &PgConnection) -> CargoResult<Crate> {
+    fn build(mut self, connection: &PgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
 
         let mut krate = self

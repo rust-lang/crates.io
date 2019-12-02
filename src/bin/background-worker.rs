@@ -12,7 +12,7 @@
 
 #![deny(warnings, clippy::all, rust_2018_idioms)]
 
-use cargo_registry::git::Repository;
+use cargo_registry::git::{Repository, RepositoryConfig};
 use cargo_registry::{background_jobs::*, db};
 use diesel::r2d2;
 use std::thread::sleep;
@@ -32,13 +32,6 @@ fn main() {
     let db_config = r2d2::Pool::builder().max_size(4);
     let db_pool = db::diesel_pool(&config.db_url, config.env, db_config);
 
-    let username = dotenv::var("GIT_HTTP_USER");
-    let password = dotenv::var("GIT_HTTP_PWD");
-    let credentials = match (username, password) {
-        (Ok(u), Ok(p)) => Some((u, p)),
-        _ => None,
-    };
-
     let job_start_timeout = dotenv::var("BACKGROUND_JOB_TIMEOUT")
         .unwrap_or_else(|_| "30".into())
         .parse()
@@ -46,11 +39,11 @@ fn main() {
 
     println!("Cloning index");
 
-    let repository = Repository::open(&config.index_location).expect("Failed to clone index");
+    let repository_config = RepositoryConfig::from_environment();
+    let repository = Repository::open(&repository_config).expect("Failed to clone index");
 
     let environment = Environment::new(
         repository,
-        credentials,
         db_pool.clone(),
         config.uploader,
         reqwest::Client::new(),

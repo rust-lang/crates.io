@@ -4,6 +4,7 @@ import { fillIn, currentURL, triggerEvent, visit, blur } from '@ember/test-helpe
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { triggerKeyDown, triggerKeyPress } from 'ember-keyboard';
 import axeConfig from '../axe-config';
+import { title } from '../helpers/dom';
 import setupMirage from '../helpers/setup-mirage';
 import { percySnapshot } from 'ember-percy';
 
@@ -30,7 +31,7 @@ module('Acceptance | search', function(hooks) {
     await triggerEvent('[data-test-search-form]', 'submit');
 
     assert.equal(currentURL(), '/search?q=rust');
-    assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
+    assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
     assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
@@ -45,6 +46,7 @@ module('Acceptance | search', function(hooks) {
       .hasText('A Kinetic protocol library written in Rust');
     assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 225');
     assert.dom('[data-test-crate-row="0"] [data-test-badge="maintenance"]').exists();
+    assert.dom('[data-test-crate-row="0"] [data-test-updated-at]').exists();
   });
 
   test('searching for "rust" from query', async function(assert) {
@@ -53,11 +55,25 @@ module('Acceptance | search', function(hooks) {
     await visit('/search?q=rust');
 
     assert.equal(currentURL(), '/search?q=rust');
-    assert.equal(document.title, "Search Results for 'rust' - crates.io: Rust Package Registry");
+    assert.equal(title(), "Search Results for 'rust' - crates.io: Rust Package Registry");
 
     assert.dom('[data-test-search-input]').hasValue('rust');
     assert.dom('[data-test-heading]').hasText("Search Results for 'rust'");
     assert.dom('[data-test-search-nav]').hasText('Displaying 1-8 of 8 total results');
+  });
+
+  test('clearing search results', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('/search?q=rust');
+
+    assert.equal(currentURL(), '/search?q=rust');
+    assert.dom('[data-test-search-input]').hasValue('rust');
+
+    await visit('/');
+
+    assert.equal(currentURL(), '/');
+    assert.dom('[data-test-search-input]').hasValue('');
   });
 
   test('pressing S key to focus the search bar', async function(assert) {

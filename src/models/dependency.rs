@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::git;
-use crate::util::{human, CargoResult};
+use crate::util::{cargo_err, AppResult};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
@@ -73,7 +73,7 @@ pub fn add_dependencies(
     conn: &PgConnection,
     deps: &[EncodableCrateDependency],
     target_version_id: i32,
-) -> CargoResult<Vec<git::Dependency>> {
+) -> AppResult<Vec<git::Dependency>> {
     use self::dependencies::dsl::*;
     use diesel::insert_into;
 
@@ -82,16 +82,16 @@ pub fn add_dependencies(
         .map(|dep| {
             if let Some(registry) = &dep.registry {
                 if !registry.is_empty() {
-                    return Err(human(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
+                    return Err(cargo_err(&format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", &*dep.name)));
                 }
             }
 
             // Match only identical names to ensure the index always references the original crate name
             let krate = Crate::by_exact_name(&dep.name)
                 .first::<Crate>(&*conn)
-                .map_err(|_| human(&format_args!("no known crate named `{}`", &*dep.name)))?;
+                .map_err(|_| cargo_err(&format_args!("no known crate named `{}`", &*dep.name)))?;
             if dep.version_req == semver::VersionReq::parse("*").unwrap() {
-                return Err(human(
+                return Err(cargo_err(
                     "wildcard (`*`) dependency constraints are not allowed \
                      on crates.io. See https://doc.rust-lang.org/cargo/faq.html#can-\
                      libraries-use--as-a-version-for-their-dependencies for more \

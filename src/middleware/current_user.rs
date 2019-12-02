@@ -4,9 +4,10 @@ use conduit_cookie::RequestSession;
 use diesel::prelude::*;
 
 use crate::db::RequestTransaction;
-use crate::util::errors::{std_error, CargoResult, ChainError, Unauthorized};
+use crate::util::errors::{std_error, AppResult, ChainError, Unauthorized};
 
 use crate::models::ApiToken;
+use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::User;
 use crate::schema::users;
 
@@ -32,9 +33,13 @@ impl Middleware for CurrentUser {
 
         if let Some(id) = id {
             // If it did, look for a user in the database with the given `user_id`
-            let maybe_user = users::table.find(id).first::<User>(&*conn);
+            let maybe_user = users::table
+                .select(ALL_COLUMNS)
+                .find(id)
+                .first::<UserNoEmailType>(&*conn);
             drop(conn);
             if let Ok(user) = maybe_user {
+                let user = User::from(user);
                 // Attach the `User` model from the database to the request
                 req.mut_extensions().insert(user);
                 req.mut_extensions()
@@ -75,18 +80,18 @@ impl Middleware for CurrentUser {
 }
 
 pub trait RequestUser {
-    fn user(&self) -> CargoResult<&User>;
-    fn authentication_source(&self) -> CargoResult<AuthenticationSource>;
+    fn user(&self) -> AppResult<&User>;
+    fn authentication_source(&self) -> AppResult<AuthenticationSource>;
 }
 
 impl<'a> RequestUser for dyn Request + 'a {
-    fn user(&self) -> CargoResult<&User> {
+    fn user(&self) -> AppResult<&User> {
         self.extensions()
             .find::<User>()
             .chain_error(|| Unauthorized)
     }
 
-    fn authentication_source(&self) -> CargoResult<AuthenticationSource> {
+    fn authentication_source(&self) -> AppResult<AuthenticationSource> {
         self.extensions()
             .find::<AuthenticationSource>()
             .cloned()

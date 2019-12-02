@@ -31,5 +31,5 @@ mod owner;
 mod rights;
 mod team;
 mod token;
-mod user;
+pub mod user;
 mod version;

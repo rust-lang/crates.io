@@ -1,14 +1,12 @@
 use crate::publish_rate_limit::PublishRateLimit;
 use crate::{env, uploaders::Uploader, Env, Replica};
 use std::path::PathBuf;
-use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct Config {
     pub uploader: Uploader,
     pub session_key: String,
     pub git_repo_checkout: PathBuf,
-    pub index_location: Url,
     pub gh_client_id: String,
     pub gh_client_secret: String,
     pub db_url: String,
@@ -128,7 +126,6 @@ impl Default for Config {
             uploader,
             session_key: env("SESSION_KEY"),
             git_repo_checkout: checkout,
-            index_location: Url::parse(&env("GIT_REPO_URL")).unwrap(),
             gh_client_id: env("GH_CLIENT_ID"),
             gh_client_secret: env("GH_CLIENT_SECRET"),
             db_url: env("DATABASE_URL"),

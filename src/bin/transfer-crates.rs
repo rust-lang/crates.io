@@ -7,7 +7,7 @@
 
 use cargo_registry::{
     db,
-    models::{Crate, OwnerKind, User},
+    models::{user, Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},
 };
 use std::{
@@ -16,6 +16,7 @@ use std::{
     process::exit,
 };
 
+use cargo_registry::models::user::UserNoEmailType;
 use diesel::prelude::*;
 
 fn main() {
@@ -44,12 +45,16 @@ fn transfer(conn: &PgConnection) {
     };
 
     let from = users::table
+        .select(user::ALL_COLUMNS)
         .filter(users::gh_login.eq(from))
-        .first::<User>(conn)
+        .first::<UserNoEmailType>(conn)
+        .map(User::from)
         .unwrap();
     let to = users::table
+        .select(user::ALL_COLUMNS)
         .filter(users::gh_login.eq(to))
-        .first::<User>(conn)
+        .first::<UserNoEmailType>(conn)
+        .map(User::from)
         .unwrap();
 
     if from.gh_id != to.gh_id {

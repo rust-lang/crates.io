@@ -8,12 +8,12 @@ use serde::de::DeserializeOwned;
 use std::str;
 
 use crate::app::App;
-use crate::util::{errors::NotFound, human, internal, CargoError, CargoResult};
+use crate::util::{cargo_err, errors::NotFound, internal, AppError, AppResult};
 
 /// Does all the nonsense for sending a GET to Github. Doesn't handle parsing
 /// because custom error-code handling may be desirable. Use
 /// `parse_github_response` to handle the "common" processing of responses.
-pub fn github_api<T>(app: &App, url: &str, auth: &AccessToken) -> CargoResult<T>
+pub fn github_api<T>(app: &App, url: &str, auth: &AccessToken) -> AppResult<T>
 where
     T: DeserializeOwned,
 {
@@ -31,11 +31,11 @@ where
         .map_err(Into::into)
 }
 
-fn handle_error_response(error: &reqwest::Error) -> Box<dyn CargoError> {
+fn handle_error_response(error: &reqwest::Error) -> Box<dyn AppError> {
     use reqwest::StatusCode as Status;
 
     match error.status() {
-        Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => human(
+        Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => cargo_err(
             "It looks like you don't have permission \
              to query a necessary property from Github \
              to complete this request. \

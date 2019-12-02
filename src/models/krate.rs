@@ -7,11 +7,14 @@ use indexmap::IndexMap;
 use url::Url;
 
 use crate::app::App;
-use crate::util::{human, CargoResult};
+use crate::email;
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
+use crate::util::{cargo_err, AppResult};
 
 use crate::models::{
-    Badge, Category, CrateOwner, Keyword, NewCrateOwnerInvitation, Owner, OwnerKind,
-    ReverseDependency, User, Version,
+    Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
+    OwnerKind, ReverseDependency, User, Version,
 };
 use crate::views::{EncodableCrate, EncodableCrateLinks};
 
@@ -99,11 +102,11 @@ pub struct NewCrate<'a> {
 
 impl<'a> NewCrate<'a> {
     pub fn create_or_update(
-        mut self,
+        self,
         conn: &PgConnection,
         uploader: i32,
         rate_limit: Option<&PublishRateLimit>,
-    ) -> CargoResult<Crate> {
+    ) -> AppResult<Crate> {
         use diesel::update;
 
         self.validate()?;
@@ -128,31 +131,26 @@ impl<'a> NewCrate<'a> {
         })
     }
 
-    fn validate(&mut self) -> CargoResult<()> {
-        fn validate_url(url: Option<&str>, field: &str) -> CargoResult<()> {
+    fn validate(&self) -> AppResult<()> {
+        fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
             let url = match url {
                 Some(s) => s,
                 None => return Ok(()),
             };
-            let url = Url::parse(url)
-                .map_err(|_| human(&format_args!("`{}` is not a valid url: `{}`", field, url)))?;
-            match &url.scheme()[..] {
-                "http" | "https" => {}
-                s => {
-                    return Err(human(&format_args!(
-                        "`{}` has an invalid url \
-                         scheme: `{}`",
-                        field, s
-                    )));
-                }
-            }
-            if url.cannot_be_a_base() {
-                return Err(human(&format_args!(
-                    "`{}` must have relative scheme \
-                     data: {}",
+
+            // Manually check the string, as `Url::parse` may normalize relative URLs
+            // making it difficult to ensure that both slashes are present.
+            if !url.starts_with("http://") && !url.starts_with("https://") {
+                return Err(cargo_err(&format_args!(
+                    "URL for field `{}` must begin with http:// or https:// (url: {})",
                     field, url
                 )));
             }
+
+            // Ensure the entire URL parses as well
+            Url::parse(url).map_err(|_| {
+                cargo_err(&format_args!("`{}` is not a valid url: `{}`", field, url))
+            })?;
             Ok(())
         }
 
@@ -162,7 +160,7 @@ impl<'a> NewCrate<'a> {
         Ok(())
     }
 
-    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> CargoResult<()> {
+    fn ensure_name_not_reserved(&self, conn: &PgConnection) -> AppResult<()> {
         use crate::schema::reserved_crate_names::dsl::*;
         use diesel::dsl::exists;
         use diesel::select;
@@ -172,7 +170,7 @@ impl<'a> NewCrate<'a> {
         ))
         .get_result::<bool>(conn)?;
         if reserved_name {
-            Err(human("cannot upload a crate with a reserved name"))
+            Err(cargo_err("cannot upload a crate with a reserved name"))
         } else {
             Ok(())
         }
@@ -195,6 +193,7 @@ impl<'a> NewCrate<'a> {
                     owner_id: user_id,
                     created_by: user_id,
                     owner_kind: OwnerKind::User as i32,
+                    email_notifications: true,
                 };
                 diesel::insert_into(crate_owners::table)
                     .values(&owner)
@@ -387,7 +386,7 @@ impl Crate {
         }
     }
 
-    pub fn max_version(&self, conn: &PgConnection) -> CargoResult<semver::Version> {
+    pub fn max_version(&self, conn: &PgConnection) -> AppResult<semver::Version> {
         use crate::schema::versions::dsl::*;
 
         let vs = self
@@ -399,19 +398,19 @@ impl Crate {
         Ok(Version::max(vs))
     }
 
-    pub fn owners(&self, conn: &PgConnection) -> CargoResult<Vec<Owner>> {
-        let base_query = CrateOwner::belonging_to(self).filter(crate_owners::deleted.eq(false));
-        let users = base_query
+    pub fn owners(&self, conn: &PgConnection) -> AppResult<Vec<Owner>> {
+        let users = CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
-            .select(users::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
-            .load(conn)?
+            .select(user::ALL_COLUMNS)
+            .load::<UserNoEmailType>(conn)?
             .into_iter()
+            .map(User::from)
             .map(Owner::User);
-        let teams = base_query
+        let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
+            .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(teams::table)
             .select(teams::all_columns)
-            .filter(crate_owners::owner_kind.eq(OwnerKind::Team as i32))
             .load(conn)?
             .into_iter()
             .map(Owner::Team);
@@ -425,26 +424,37 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<String> {
+    ) -> AppResult<String> {
         use diesel::insert_into;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
         match owner {
             // Users are invited and must accept before being added
-            owner @ Owner::User(_) => {
-                insert_into(crate_owner_invitations::table)
+            Owner::User(user) => {
+                let maybe_inserted = insert_into(crate_owner_invitations::table)
                     .values(&NewCrateOwnerInvitation {
-                        invited_user_id: owner.id(),
+                        invited_user_id: user.id,
                         invited_by_user_id: req_user.id,
                         crate_id: self.id,
                     })
                     .on_conflict_do_nothing()
-                    .execute(conn)?;
+                    .get_result::<CrateOwnerInvitation>(conn)
+                    .optional()?;
+
+                if maybe_inserted.is_some() {
+                    if let Ok(Some(email)) = user.verified_email(&conn) {
+                        email::send_owner_invite_email(
+                            &email.as_str(),
+                            &req_user.gh_login.as_str(),
+                            &self.name.as_str(),
+                        );
+                    }
+                }
+
                 Ok(format!(
                     "user {} has been invited to be an owner of crate {}",
-                    owner.login(),
-                    self.name
+                    user.gh_login, self.name
                 ))
             }
             // Teams are added as owners immediately
@@ -455,6 +465,7 @@ impl Crate {
                         owner_id: owner.id(),
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team as i32,
+                        email_notifications: true,
                     })
                     .on_conflict(crate_owners::table.primary_key())
                     .do_update()
@@ -476,7 +487,7 @@ impl Crate {
         conn: &PgConnection,
         req_user: &User,
         login: &str,
-    ) -> CargoResult<()> {
+    ) -> AppResult<()> {
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
 
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind() as i32));
@@ -497,7 +508,7 @@ impl Crate {
         &self,
         conn: &PgConnection,
         params: &IndexMap<String, String>,
-    ) -> CargoResult<(Vec<ReverseDependency>, i64)> {
+    ) -> AppResult<(Vec<ReverseDependency>, i64)> {
         use crate::controllers::helpers::pagination::*;
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
@@ -524,7 +535,21 @@ sql_function!(fn to_char(a: Date, b: Text) -> Text);
 
 #[cfg(test)]
 mod tests {
-    use crate::models::Crate;
+    use crate::models::{Crate, NewCrate};
+
+    #[test]
+    fn deny_relative_urls() {
+        let krate = NewCrate {
+            name: "name",
+            description: None,
+            homepage: Some("https:/example.com/home"),
+            documentation: None,
+            readme: None,
+            repository: None,
+            max_upload_size: None,
+        };
+        assert!(krate.validate().is_err());
+    }
 
     #[test]
     fn documentation_blocked_no_url_provided() {

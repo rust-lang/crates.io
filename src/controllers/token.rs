@@ -9,7 +9,7 @@ use crate::views::EncodableApiTokenWithToken;
 use serde_json as json;
 
 /// Handles the `GET /me/tokens` route.
-pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn list(req: &mut dyn Request) -> AppResult<Response> {
     let tokens = ApiToken::belonging_to(req.user()?)
         .filter(api_tokens::revoked.eq(false))
         .order(api_tokens::created_at.desc())
@@ -22,7 +22,7 @@ pub fn list(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `PUT /me/tokens` route.
-pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn new(req: &mut dyn Request) -> AppResult<Response> {
     /// The incoming serialization format for the `ApiToken` model.
     #[derive(Deserialize, Serialize)]
     struct NewApiToken {
@@ -90,7 +90,7 @@ pub fn new(req: &mut dyn Request) -> CargoResult<Response> {
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub fn revoke(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn revoke(req: &mut dyn Request) -> AppResult<Response> {
     let id = req.params()["id"]
         .parse::<i32>()
         .map_err(|e| bad_request(&format!("invalid token id: {:?}", e)))?;

@@ -272,7 +272,7 @@ fn replay_http(
     mut exchange: Exchange,
     stdout: &mut dyn Write,
 ) -> Box<dyn Future<Item = hyper::Response<hyper::Body>, Error = hyper::Error> + Send> {
-    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent"];
+    static IGNORED_HEADERS: &[&str] = &["authorization", "date", "user-agent", "cache-control"];
 
     assert_eq!(req.uri().to_string(), exchange.request.uri);
     assert_eq!(req.method().to_string(), exchange.request.method);

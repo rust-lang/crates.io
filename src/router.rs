@@ -5,7 +5,7 @@ use conduit::{Handler, Request, Response};
 use conduit_router::{RequestParams, RouteBuilder};
 
 use crate::controllers::*;
-use crate::util::errors::{std_error, CargoError, CargoResult, NotFound};
+use crate::util::errors::{std_error, AppError, AppResult, NotFound};
 use crate::util::RequestProxy;
 use crate::{App, Env};
 
@@ -89,6 +89,10 @@ pub fn build_router(app: &App) -> R404 {
         "/me/crate_owner_invitations/:crate_id",
         C(crate_owner_invitation::handle_invite),
     );
+    api_router.put(
+        "/me/email_notifications",
+        C(user::me::update_email_notifications),
+    );
     api_router.get("/summary", C(krate::metadata::summary));
     api_router.put("/confirm/:email_token", C(user::me::confirm_user_email));
     api_router.put(
@@ -125,7 +129,7 @@ pub fn build_router(app: &App) -> R404 {
     R404(router)
 }
 
-struct C(pub fn(&mut dyn Request) -> CargoResult<Response>);
+struct C(pub fn(&mut dyn Request) -> AppResult<Response>);
 
 impl Handler for C {
     fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
@@ -170,12 +174,12 @@ impl Handler for R404 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::errors::{bad_request, human, internal, NotFound, Unauthorized};
+    use crate::util::errors::{bad_request, cargo_err, internal, NotFound, Unauthorized};
 
     use conduit_test::MockRequest;
     use diesel::result::Error as DieselError;
 
-    fn err<E: CargoError>(err: E) -> CargoResult<Response> {
+    fn err<E: AppError>(err: E) -> AppResult<Response> {
         Err(Box::new(err))
     }
 
@@ -202,8 +206,11 @@ mod tests {
         );
         assert_eq!(C(|_| err(NotFound)).call(&mut req).unwrap().status.0, 404);
 
-        // Human errors are returned as 200 so that cargo displays this nicely on the command line
-        assert_eq!(C(|_| Err(human(""))).call(&mut req).unwrap().status.0, 200);
+        // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
+        assert_eq!(
+            C(|_| Err(cargo_err(""))).call(&mut req).unwrap().status.0,
+            200
+        );
 
         // All other error types are propogated up the middleware, eventually becoming status 500
         assert!(C(|_| Err(internal(""))).call(&mut req).is_err());

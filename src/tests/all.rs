@@ -19,7 +19,7 @@ use crate::util::{Bad, RequestHelper, TestApp};
 use cargo_registry::{
     models::{Crate, CrateOwner, Dependency, NewCategory, NewTeam, NewUser, Team, User, Version},
     schema::crate_owners,
-    util::CargoResult,
+    util::AppResult,
     views::{
         EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
         EncodableOwner, EncodableVersion, GoodCrate,
@@ -37,7 +37,6 @@ use std::{
 use conduit_test::MockRequest;
 use diesel::prelude::*;
 use reqwest::{Client, Proxy};
-use url::Url;
 
 macro_rules! t {
     ($e:expr) => {
@@ -137,7 +136,6 @@ fn simple_config() -> Config {
         uploader,
         session_key: "test this has to be over 32 bytes long".to_string(),
         git_repo_checkout: git::checkout(),
-        index_location: Url::from_file_path(&git::bare()).unwrap(),
         gh_client_id: dotenv::var("GH_CLIENT_ID").unwrap_or_default(),
         gh_client_secret: dotenv::var("GH_CLIENT_SECRET").unwrap_or_default(),
         db_url: env("TEST_DATABASE_URL"),
@@ -238,12 +236,13 @@ fn new_team(login: &str) -> NewTeam<'_> {
     }
 }
 
-fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> CargoResult<()> {
+fn add_team_to_crate(t: &Team, krate: &Crate, u: &User, conn: &PgConnection) -> AppResult<()> {
     let crate_owner = CrateOwner {
         crate_id: krate.id,
         owner_id: t.id,
         created_by: u.id,
         owner_kind: 1, // Team owner kind is 1 according to owner.rs
+        email_notifications: true,
     };
 
     diesel::insert_into(crate_owners::table)

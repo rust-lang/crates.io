@@ -103,15 +103,39 @@ impl SanitizeUrl {
     }
 }
 
+/// Groups media-related URL info
+struct MediaUrl {
+    is_media: bool,
+    add_sanitize_query: bool,
+}
+
 /// Determine whether the given URL has a media file externsion.
-fn is_media_url(url: &str) -> bool {
+/// Also check if `sanitize=true` must be added to the query string,
+/// which is required to load SVGs properly from GitHub.
+fn is_media_url(url: &str) -> MediaUrl {
     Path::new(url)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .map_or(false, |e| match e {
-            "png" | "svg" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => true,
-            _ => false,
-        })
+        .map_or(
+            MediaUrl {
+                is_media: false,
+                add_sanitize_query: false,
+            },
+            |e| match e {
+                "svg" => MediaUrl {
+                    is_media: true,
+                    add_sanitize_query: true,
+                },
+                "png" | "jpg" | "jpeg" | "gif" | "mp4" | "webm" | "ogg" => MediaUrl {
+                    is_media: true,
+                    add_sanitize_query: false,
+                },
+                _ => MediaUrl {
+                    is_media: false,
+                    add_sanitize_query: false,
+                },
+            },
+        )
 }
 
 impl UrlRelativeEvaluate for SanitizeUrl {
@@ -124,7 +148,11 @@ impl UrlRelativeEvaluate for SanitizeUrl {
             let mut new_url = base_url.clone();
             // Assumes GitHub’s URL scheme. GitHub renders text and markdown
             // better in the "blob" view, but images need to be served raw.
-            new_url += if is_media_url(url) {
+            let MediaUrl {
+                is_media,
+                add_sanitize_query,
+            } = is_media_url(url);
+            new_url += if is_media {
                 "raw/master"
             } else {
                 "blob/master"
@@ -133,6 +161,12 @@ impl UrlRelativeEvaluate for SanitizeUrl {
                 new_url.push('/');
             }
             new_url += url;
+            if add_sanitize_query {
+                if let Ok(mut parsed_url) = Url::parse(&new_url) {
+                    parsed_url.query_pairs_mut().append_pair("sanitize", "true");
+                    new_url = parsed_url.into_string();
+                }
+            }
             Cow::Owned(new_url)
         })
     }
@@ -272,8 +306,7 @@ mod tests {
 
     #[test]
     fn text_with_inline_javascript() {
-        let text =
-            r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
+        let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
         let result = markdown_to_html(text, None);
         assert_eq!(
             result,
@@ -311,6 +344,7 @@ mod tests {
         let absolute = "[hi](/hi)";
         let relative = "[there](there)";
         let image = "![alt](img.png)";
+        let svg = "![alt](sanitize.svg)";
 
         for host in &["github.com", "gitlab.com", "bitbucket.org"] {
             for (&extra_slash, &dot_git) in [true, false].iter().zip(&[true, false]) {
@@ -344,6 +378,15 @@ mod tests {
                     result,
                     format!(
                  "<p><img src=\"https://{}/rust-lang/test/raw/master/img.png\" alt=\"alt\"></p>\n",
+                        host
+                    )
+                );
+
+                let result = markdown_to_html(svg, Some(&url));
+                assert_eq!(
+                    result,
+                    format!(
+                        "<p><img src=\"https://{}/rust-lang/test/raw/master/sanitize.svg?sanitize=true\" alt=\"alt\"></p>\n",
                         host
                     )
                 );

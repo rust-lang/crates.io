@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::util::{bad_request, CargoResult};
+use crate::util::{bad_request, AppResult};
 
 use failure::Fail;
 use lettre::file::FileTransport;
@@ -37,7 +37,7 @@ fn build_email(
     subject: &str,
     body: &str,
     mailgun_config: &Option<MailgunConfigVars>,
-) -> CargoResult<SendableEmail> {
+) -> AppResult<SendableEmail> {
     let sender = mailgun_config
         .as_ref()
         .map(|s| s.smtp_login.as_str())
@@ -70,7 +70,7 @@ pub fn send_user_confirm_email(email: &str, user_name: &str, token: &str) {
 /// For use in cases where we want to fail if an email is bad because the user is directly trying
 /// to set their email correctly, as opposed to us silently trying to use the email from their
 /// GitHub profile during signup.
-pub fn try_send_user_confirm_email(email: &str, user_name: &str, token: &str) -> CargoResult<()> {
+pub fn try_send_user_confirm_email(email: &str, user_name: &str, token: &str) -> AppResult<()> {
     // Create a URL with token string as path to send to user
     // If user clicks on path, look email/user up in database,
     // make sure tokens match
@@ -86,7 +86,24 @@ https://crates.io/confirm/{}",
     send_email(email, subject, &body)
 }
 
-fn send_email(recipient: &str, subject: &str, body: &str) -> CargoResult<()> {
+/// Attempts to send a crate owner invitation email. Swallows all errors.
+///
+/// Whether or not the email is sent, the invitation entry will be created in
+/// the database and the user will see the invitation when they visit
+/// https://crates.io/me/pending-invites/.
+pub fn send_owner_invite_email(email: &str, user_name: &str, crate_name: &str) {
+    let subject = "Crate ownership invitation";
+    let body = format!(
+        "{} has invited you to become an owner of the crate {}!\n
+Please visit https://crates.io/me/pending-invites to accept or reject
+this invitation.",
+        user_name, crate_name
+    );
+
+    let _ = send_email(email, subject, &body);
+}
+
+fn send_email(recipient: &str, subject: &str, body: &str) -> AppResult<()> {
     let mailgun_config = init_config_vars();
     let email = build_email(recipient, subject, body, &mailgun_config)?;
 

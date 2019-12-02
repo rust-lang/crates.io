@@ -1,9 +1,10 @@
 use conduit::Request;
 use flate2::read::GzDecoder;
 use openssl::hash::{Hasher, MessageDigest};
+use reqwest::header;
 
 use crate::util::LimitErrorReader;
-use crate::util::{human, internal, CargoResult, ChainError, Maximums};
+use crate::util::{cargo_err, internal, AppResult, ChainError, Maximums};
 
 use std::env;
 use std::fs::{self, File};
@@ -12,6 +13,9 @@ use std::sync::Arc;
 
 use crate::middleware::app::RequestApp;
 use crate::models::Crate;
+
+const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
+const CACHE_CONTROL_README: &str = "public,max-age=604800";
 
 #[derive(Clone, Debug)]
 pub enum Uploader {
@@ -70,13 +74,13 @@ impl Uploader {
         }
     }
 
-    /// Returns the interna path of an uploaded crate's version archive.
+    /// Returns the internal path of an uploaded crate's version archive.
     fn crate_path(name: &str, version: &str) -> String {
         // No slash in front so we can use join
         format!("crates/{}/{}-{}.crate", name, name, version)
     }
 
-    /// Returns the interna path of an uploaded crate's version readme.
+    /// Returns the internal path of an uploaded crate's version readme.
     fn readme_path(name: &str, version: &str) -> String {
         format!("readmes/{}/{}-{}.html", name, name, version)
     }
@@ -91,11 +95,19 @@ impl Uploader {
         mut content: R,
         content_length: u64,
         content_type: &str,
-    ) -> CargoResult<Option<String>> {
+        extra_headers: header::HeaderMap,
+    ) -> AppResult<Option<String>> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
                 bucket
-                    .put(client, path, content, content_length, content_type)
+                    .put(
+                        client,
+                        path,
+                        content,
+                        content_length,
+                        content_type,
+                        extra_headers,
+                    )
                     .map_err(|e| internal(&format_args!("failed to upload to S3: {}", e)))?;
                 Ok(Some(String::from(path)))
             }
@@ -117,7 +129,7 @@ impl Uploader {
         krate: &Crate,
         maximums: Maximums,
         vers: &semver::Version,
-    ) -> CargoResult<Vec<u8>> {
+    ) -> AppResult<Vec<u8>> {
         let app = Arc::clone(req.app());
         let path = Uploader::crate_path(&krate.name, &vers.to_string());
         let mut body = Vec::new();
@@ -126,12 +138,15 @@ impl Uploader {
         let checksum = hash(&body);
         let content_length = body.len() as u64;
         let content = Cursor::new(body);
+        let mut extra_headers = header::HeaderMap::new();
+        extra_headers.insert(header::CACHE_CONTROL, CACHE_CONTROL_README.parse().unwrap());
         self.upload(
             app.http_client(),
             &path,
             content,
             content_length,
             "application/x-tar",
+            extra_headers,
         )?;
         Ok(checksum)
     }
@@ -142,11 +157,23 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> CargoResult<()> {
+    ) -> AppResult<()> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);
-        self.upload(http_client, &path, content, content_length, "text/html")?;
+        let mut extra_headers = header::HeaderMap::new();
+        extra_headers.insert(
+            header::CACHE_CONTROL,
+            CACHE_CONTROL_IMMUTABLE.parse().unwrap(),
+        );
+        self.upload(
+            http_client,
+            &path,
+            content,
+            content_length,
+            "text/html",
+            extra_headers,
+        )?;
         Ok(())
     }
 }
@@ -156,7 +183,7 @@ fn verify_tarball(
     vers: &semver::Version,
     tarball: &[u8],
     max_unpack: u64,
-) -> CargoResult<()> {
+) -> AppResult<()> {
     // All our data is currently encoded with gzip
     let decoder = GzDecoder::new(tarball);
 
@@ -169,7 +196,7 @@ fn verify_tarball(
     let prefix = format!("{}-{}", krate.name, vers);
     for entry in archive.entries()? {
         let entry = entry.chain_error(|| {
-            human("uploaded tarball is malformed or too large when decompressed")
+            cargo_err("uploaded tarball is malformed or too large when decompressed")
         })?;
 
         // Verify that all entries actually start with `$name-$vers/`.
@@ -178,7 +205,7 @@ fn verify_tarball(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         if !entry.path()?.starts_with(&prefix) {
-            return Err(human("invalid tarball uploaded"));
+            return Err(cargo_err("invalid tarball uploaded"));
         }
 
         // Historical versions of the `tar` crate which Cargo uses internally
@@ -188,7 +215,7 @@ fn verify_tarball(
         // generate a tarball with these file types so this should work for now.
         let entry_type = entry.header().entry_type();
         if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(human("invalid tarball uploaded"));
+            return Err(cargo_err("invalid tarball uploaded"));
         }
     }
     Ok(())

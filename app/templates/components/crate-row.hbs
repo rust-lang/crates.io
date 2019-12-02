@@ -1,6 +1,7 @@
 <div class='desc'>
   <div class='info'>
     {{#link-to 'crate' crate.id data-test-crate-link}}{{ crate.name }}{{/link-to}}
+    {{crate-toml-copy copyText=crateTomlText}}
     {{crate-badge crate=crate}}
     {{#each crate.annotated_badges as |badge|}}
       {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
@@ -20,6 +21,12 @@
   <div class="recent-downloads" data-test-recent-downloads>
     {{svg-jar "download"}}
     <span class='num'><abbr title="Downloads in the last 90 days">Recent:</abbr> {{ format-num crate.recent_downloads }}</span>
+  </div>
+  <div class="updated-at" >
+    {{svg-jar "latest-updates" height="32" width="32"}}
+    <time title="Last updated: {{ crate.updated_at }}" datetime="{{ moment-format crate.updated_at 'YYYY-MM-DDTHH:mm:ssZ' }}" data-test-updated-at>
+      {{ moment-from-now crate.updated_at }}
+    </time>
   </div>
 </div>
 <div class="quick-links">

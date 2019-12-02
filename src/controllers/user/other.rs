@@ -1,31 +1,34 @@
 use crate::controllers::prelude::*;
 
+use crate::models::user;
+use crate::models::user::UserNoEmailType;
 use crate::models::{OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub fn show(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     use self::users::dsl::{gh_login, id, users};
 
     let name = &req.params()["user_id"].to_lowercase();
     let conn = req.db_conn()?;
     let user = users
+        .select(user::ALL_COLUMNS)
         .filter(crate::lower(gh_login).eq(name))
         .order(id.desc())
-        .first::<User>(&*conn)?;
+        .first::<UserNoEmailType>(&*conn)?;
 
     #[derive(Serialize)]
     struct R {
         user: EncodablePublicUser,
     }
     Ok(req.json(&R {
-        user: user.encodable_public(),
+        user: User::from(user).encodable_public(),
     }))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub fn stats(req: &mut dyn Request) -> CargoResult<Response> {
+pub fn stats(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::sum;
 
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
