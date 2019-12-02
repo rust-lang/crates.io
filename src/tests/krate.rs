@@ -1590,6 +1590,99 @@ fn publish_after_yank_max_version() {
 }
 
 #[test]
+fn publish_records_an_audit_action() {
+    use cargo_registry::models::{VersionAction, VersionOwnerAction};
+
+    let (app, anon, _, token) = TestApp::full().with_token();
+
+    app.db(|conn| assert!(VersionOwnerAction::all(&conn).unwrap().is_empty()));
+
+    // Upload a new crate, putting it in the git index
+    let crate_to_publish = PublishBuilder::new("fyk");
+    token.enqueue_publish(crate_to_publish).good();
+
+    // make sure it has one publish audit action
+    // do this as a full integration test once the api is in place.
+    let json = anon.show_version("fyk", "1.0.0");
+    let version_id = json.version.id;
+
+    app.db(|conn| {
+        let actions = VersionOwnerAction::all(conn).unwrap();
+        assert_eq!(actions.len(), 1);
+        let action = actions[0];
+        assert_eq!(action.version_id, version_id);
+        assert_eq!(action.user_id, token.as_model().user_id);
+        assert_eq!(action.api_token_id, Some(token.as_model().id));
+        assert_eq!(action.action, VersionAction::Publish);
+    });
+}
+
+#[test]
+fn yank_records_an_audit_action() {
+    use cargo_registry::models::{VersionAction, VersionOwnerAction};
+
+    let (app, anon, _, token) = TestApp::full().with_token();
+
+    // Upload a new crate, putting it in the git index
+    let crate_to_publish = PublishBuilder::new("fyk");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let json = anon.show_version("fyk", "1.0.0");
+    let version_id = json.version.id;
+
+    // yank it
+    token.yank("fyk", "1.0.0").good();
+
+    // make sure it has one publish and one yank audit action
+    // do this as a full integration test once the api is in place.
+    app.db(|conn| {
+        let actions =
+            VersionOwnerAction::by_version_id_and_action(conn, version_id, VersionAction::Yank)
+                .unwrap();
+        assert_eq!(actions.len(), 1);
+        let action = actions[0];
+        assert_eq!(action.version_id, version_id);
+        assert_eq!(action.user_id, token.as_model().user_id);
+        assert_eq!(action.api_token_id, Some(token.as_model().id));
+        assert_eq!(action.action, VersionAction::Yank);
+    });
+}
+
+#[test]
+fn unyank_records_an_audit_action() {
+    use cargo_registry::models::{VersionAction, VersionOwnerAction};
+
+    let (app, anon, _, token) = TestApp::full().with_token();
+
+    // Upload a new crate
+    let crate_to_publish = PublishBuilder::new("fyk");
+    token.enqueue_publish(crate_to_publish).good();
+
+    let json = anon.show_version("fyk", "1.0.0");
+    let version_id = json.version.id;
+
+    // yank version 1.0.0
+    token.yank("fyk", "1.0.0").good();
+
+    // unyank version 1.0.0
+    token.unyank("fyk", "1.0.0").good();
+
+    // make sure it has one publish, one yank, and one unyank audit action
+    // do this as a full integration test once the api is in place.
+    app.db(|conn| {
+        let actions =
+            VersionOwnerAction::by_version_id_and_action(conn, version_id, VersionAction::Unyank)
+                .unwrap();
+        assert_eq!(actions.len(), 1);
+        let action = actions[0];
+        assert_eq!(action.version_id, version_id);
+        assert_eq!(action.user_id, token.as_model().user_id);
+        assert_eq!(action.api_token_id, Some(token.as_model().id));
+        assert_eq!(action.action, VersionAction::Unyank);
+    });
+}
+
+#[test]
 fn publish_after_removing_documentation() {
     let (app, anon, user, token) = TestApp::full().with_token();
     let user = user.as_model();

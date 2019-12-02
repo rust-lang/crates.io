@@ -1,11 +1,10 @@
-use diesel::dsl::now;
 use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
 use crate::util::AppResult;
 
-use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::views::{EncodablePrivateUser, EncodablePublicUser};
 
@@ -106,27 +105,15 @@ impl<'a> NewUser<'a> {
 }
 
 impl User {
+    pub fn find(conn: &PgConnection, id: i32) -> QueryResult<User> {
+        users::table.find(id).first(conn)
+    }
+
     /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &PgConnection, token_: &str) -> QueryResult<User> {
-        use crate::schema::api_tokens::dsl::{api_tokens, last_used_at, revoked, token, user_id};
-        use diesel::update;
+    pub fn find_by_api_token(conn: &PgConnection, token: &str) -> QueryResult<User> {
+        let api_token = ApiToken::find_by_api_token(conn, token)?;
 
-        let tokens = api_tokens
-            .filter(token.eq(token_))
-            .filter(revoked.eq(false));
-
-        // If the database is in read only mode, we can't update last_used_at.
-        // Try updating in a new transaction, if that fails, fall back to reading
-        let user_id_ = conn
-            .transaction(|| {
-                update(tokens)
-                    .set(last_used_at.eq(now.nullable()))
-                    .returning(user_id)
-                    .get_result::<i32>(conn)
-            })
-            .or_else(|_| tokens.select(user_id).first(conn))?;
-
-        users::table.find(user_id_).first(conn)
+        Self::find(conn, api_token.user_id)
     }
 
     pub fn owning(krate: &Crate, conn: &PgConnection) -> AppResult<Vec<Owner>> {
