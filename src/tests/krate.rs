@@ -1601,13 +1601,11 @@ fn publish_records_an_audit_action() {
     let crate_to_publish = PublishBuilder::new("fyk");
     token.enqueue_publish(crate_to_publish).good();
 
-    // make sure it doesn't have any audit actions
+    // make sure it has one publish audit action
     // do this as a full integration test once the api is in place.
     let json = anon.show_version("fyk", "1.0.0");
     let version_id = json.version.id;
 
-    // make sure it has one audit action
-    // do this as a full integration test once the api is in place.
     app.db(|conn| {
         let actions = VersionOwnerAction::all(conn).unwrap();
         assert_eq!(actions.len(), 1);
@@ -1629,8 +1627,6 @@ fn yank_records_an_audit_action() {
     let crate_to_publish = PublishBuilder::new("fyk");
     token.enqueue_publish(crate_to_publish).good();
 
-    // make sure it doesn't have any audit actions
-    // do this as a full integration test once the api is in place.
     let json = anon.show_version("fyk", "1.0.0");
     let version_id = json.version.id;
     app.db(|conn| {
@@ -1644,7 +1640,7 @@ fn yank_records_an_audit_action() {
     // yank it
     token.yank("fyk", "1.0.0").good();
 
-    // make sure it has one audit action
+    // make sure it has one publish and one yank audit action
     // do this as a full integration test once the api is in place.
     app.db(|conn| {
         let actions =
@@ -1688,7 +1684,7 @@ fn unyank_records_an_audit_action() {
     // unyank version 1.0.0
     token.unyank("fyk", "1.0.0").good();
 
-    // make sure it has one audit action
+    // make sure it has one publish, one yank, and one unyank audit action
     // do this as a full integration test once the api is in place.
     app.db(|conn| {
         let actions =
