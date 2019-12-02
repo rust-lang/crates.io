@@ -7,7 +7,6 @@ use crate::email;
 use crate::util::bad_request;
 use crate::util::errors::AppError;
 
-use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
 use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::views::{EncodableMe, EncodableVersion, OwnedCrate};
@@ -32,12 +31,12 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
         .find(user_id)
         .left_join(emails::table)
         .select((
-            ALL_COLUMNS,
+            users::all_columns,
             emails::verified.nullable(),
             emails::email.nullable(),
             emails::token_generated_at.nullable().is_not_null(),
         ))
-        .first::<(UserNoEmailType, Option<bool>, Option<String>, bool)>(&*conn)?;
+        .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
     let owned_crates = crate_owners::table
         .inner_join(crates::table)
@@ -57,7 +56,7 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
     let verified = verified.unwrap_or(false);
     let verification_sent = verified || verification_sent;
     Ok(req.json(&EncodableMe {
-        user: User::from(user).encodable_private(email, verified, verification_sent),
+        user: user.encodable_private(email, verified, verification_sent),
         owned_crates,
     }))
 }
@@ -75,17 +74,19 @@ pub fn updates(req: &mut dyn Request) -> AppResult<Response> {
         .left_outer_join(users::table)
         .filter(crates::id.eq(any(followed_crates)))
         .order(versions::created_at.desc())
-        .select((versions::all_columns, crates::name, ALL_COLUMNS.nullable()))
+        .select((
+            versions::all_columns,
+            crates::name,
+            users::all_columns.nullable(),
+        ))
         .paginate(&req.query())?
-        .load::<(Version, String, Option<UserNoEmailType>)>(&*conn)?;
+        .load::<(Version, String, Option<User>)>(&*conn)?;
 
     let more = data.next_page_params().is_some();
 
     let versions = data
         .into_iter()
-        .map(|(version, crate_name, published_by)| {
-            version.encodable(&crate_name, published_by.map(From::from))
-        })
+        .map(|(version, crate_name, published_by)| version.encodable(&crate_name, published_by))
         .collect();
 
     #[derive(Serialize)]

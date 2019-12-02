@@ -4,8 +4,6 @@ use crate::github;
 use conduit_cookie::RequestSession;
 use oauth2::{prelude::*, AuthorizationCode, TokenResponse};
 
-use crate::models::user;
-use crate::models::user::UserNoEmailType;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::{AppError, ReadOnlyMode};
@@ -131,11 +129,10 @@ impl GithubUser {
             // just look for an existing user
             if e.is::<ReadOnlyMode>() {
                 users::table
-                    .select(user::ALL_COLUMNS)
                     .filter(users::gh_id.eq(self.id))
-                    .first::<UserNoEmailType>(conn)
-                    .map(User::from)
-                    .map_err(|_| e)
+                    .first(conn)
+                    .optional()?
+                    .ok_or(e)
             } else {
                 Err(e)
             }
