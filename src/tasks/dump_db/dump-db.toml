@@ -195,8 +195,8 @@ processed = "private"
 [version_owner_actions.columns]
 id = "private"
 version_id = "private"
-owner_id = "private"
-owner_token_id = "private"
+user_id = "private"
+api_token_id = "private"
 action = "private"
 time = "private"
 

@@ -5,7 +5,7 @@ use swirl::Job;
 use super::version_and_crate;
 use crate::controllers::prelude::*;
 use crate::git;
-use crate::models::Rights;
+use crate::models::{insert_version_owner_action, Rights, VersionAction};
 use crate::util::AppError;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -35,6 +35,14 @@ fn modify_yank(req: &mut dyn Request, yanked: bool) -> AppResult<Response> {
     if user.rights(req.app(), &owners)? < Rights::Publish {
         return Err(cargo_err("must already be an owner to yank or unyank"));
     }
+    let action = if yanked {
+        VersionAction::Yank
+    } else {
+        VersionAction::Unyank
+    };
+    let api_token_id = req.authentication_source()?.api_token_id();
+
+    insert_version_owner_action(&conn, version.id, user.id, api_token_id, action)?;
 
     git::yank(krate.name, version, yanked)
         .enqueue(&conn)

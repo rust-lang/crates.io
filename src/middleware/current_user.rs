@@ -7,16 +7,17 @@ use crate::db::RequestTransaction;
 use crate::util::errors::{std_error, AppResult, ChainError, Unauthorized};
 
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
+use crate::models::ApiToken;
 use crate::models::User;
 use crate::schema::users;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CurrentUser;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AuthenticationSource {
     SessionCookie,
-    ApiToken { auth_header: String },
+    ApiToken { api_token_id: i32 },
 }
 
 impl Middleware for CurrentUser {
@@ -48,10 +49,17 @@ impl Middleware for CurrentUser {
             // Otherwise, look for an `Authorization` header on the request
             // and try to find a user in the database with a matching API token
             let user_auth = if let Some(headers) = req.headers().find("Authorization") {
-                let auth_header = headers[0].to_string();
-
-                User::find_by_api_token(&conn, &auth_header)
-                    .map(|user| (AuthenticationSource::ApiToken { auth_header }, user))
+                ApiToken::find_by_api_token(&conn, headers[0])
+                    .and_then(|api_token| {
+                        User::find(&conn, api_token.user_id).map(|user| {
+                            (
+                                AuthenticationSource::ApiToken {
+                                    api_token_id: api_token.id,
+                                },
+                                user,
+                            )
+                        })
+                    })
                     .optional()
                     .map_err(|e| Box::new(e) as Box<dyn Error + Send>)?
             } else {
@@ -88,5 +96,14 @@ impl<'a> RequestUser for dyn Request + 'a {
             .find::<AuthenticationSource>()
             .cloned()
             .chain_error(|| Unauthorized)
+    }
+}
+
+impl AuthenticationSource {
+    pub fn api_token_id(self) -> Option<i32> {
+        match self {
+            AuthenticationSource::SessionCookie => None,
+            AuthenticationSource::ApiToken { api_token_id } => Some(api_token_id),
+        }
     }
 }

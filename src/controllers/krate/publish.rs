@@ -7,7 +7,11 @@ use swirl::Job;
 use crate::controllers::prelude::*;
 use crate::git;
 use crate::models::dependency;
-use crate::models::{Badge, Category, Keyword, NewCrate, NewVersion, Rights, User};
+use crate::models::{
+    insert_version_owner_action, Badge, Category, Keyword, NewCrate, NewVersion, Rights, User,
+    VersionAction,
+};
+
 use crate::render;
 use crate::util::{read_fill, read_le_u32};
 use crate::util::{AppError, ChainError, Maximums};
@@ -142,6 +146,14 @@ pub fn publish(req: &mut dyn Request) -> AppResult<Response> {
             user.id,
         )?
         .save(&conn, &new_crate.authors, &verified_email_address)?;
+
+        insert_version_owner_action(
+            &conn,
+            version.id,
+            user.id,
+            req.authentication_source()?.api_token_id(),
+            VersionAction::Publish,
+        )?;
 
         // Link this new version to all dependencies
         let git_deps = dependency::add_dependencies(&conn, &new_crate.deps, version.id)?;
