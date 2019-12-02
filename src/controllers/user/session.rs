@@ -8,7 +8,7 @@ use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::{AppError, ReadOnlyMode};
 
-/// Handles the `GET /authorize_url` route.
+/// Handles the `GET /api/private/session/begin` route.
 ///
 /// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
@@ -23,7 +23,7 @@ use crate::util::errors::{AppError, ReadOnlyMode};
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub fn github_authorize(req: &mut dyn Request) -> AppResult<Response> {
+pub fn begin(req: &mut dyn Request) -> AppResult<Response> {
     let (url, state) = req
         .app()
         .github
@@ -43,7 +43,7 @@ pub fn github_authorize(req: &mut dyn Request) -> AppResult<Response> {
     }))
 }
 
-/// Handles the `GET /authorize` route.
+/// Handles the `GET /api/private/session/authorize` route.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
 /// the data access permissions. It will check the `state` parameter and then call the GitHub API
@@ -71,7 +71,7 @@ pub fn github_authorize(req: &mut dyn Request) -> AppResult<Response> {
 ///     }
 /// }
 /// ```
-pub fn github_access_token(req: &mut dyn Request) -> AppResult<Response> {
+pub fn authorize(req: &mut dyn Request) -> AppResult<Response> {
     // Parse the url query
     let mut query = req.query();
     let code = query.remove("code").unwrap_or_default();
@@ -140,7 +140,7 @@ impl GithubUser {
     }
 }
 
-/// Handles the `GET /logout` route.
+/// Handles the `DELETE /api/private/session` route.
 pub fn logout(req: &mut dyn Request) -> AppResult<Response> {
     req.session().remove(&"user_id".to_string());
     Ok(req.json(&true))

@@ -112,9 +112,13 @@ pub fn build_router(app: &App) -> R404 {
     router.head("/api/v1/*path", R(Arc::clone(&api_router)));
     router.delete("/api/v1/*path", R(api_router));
 
-    router.get("/authorize_url", C(user::session::github_authorize));
-    router.get("/authorize", C(user::session::github_access_token));
-    router.delete("/logout", C(user::session::logout));
+    // Session management
+    router.get("/api/private/session/begin", C(user::session::begin));
+    router.get(
+        "/api/private/session/authorize",
+        C(user::session::authorize),
+    );
+    router.delete("/api/private/session", C(user::session::logout));
 
     // Only serve the local checkout of the git index in development mode.
     // In production, for crates.io, cargo gets the index from
