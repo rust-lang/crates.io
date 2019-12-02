@@ -58,33 +58,33 @@ impl VersionOwnerAction {
 
     pub fn by_version_id_and_action(
         conn: &PgConnection,
-        _version_id: i32,
-        _action: VersionAction,
+        version_id_: i32,
+        action_: VersionAction,
     ) -> QueryResult<Vec<VersionOwnerAction>> {
         use version_owner_actions::dsl::{action, version_id};
 
         version_owner_actions::table
-            .filter(version_id.eq(_version_id))
-            .filter(action.eq(_action))
+            .filter(version_id.eq(version_id_))
+            .filter(action.eq(action_))
             .load(conn)
     }
 }
 
 pub fn insert_version_owner_action(
     conn: &PgConnection,
-    _version_id: i32,
-    _user_id: i32,
-    _api_token_id: Option<i32>,
-    _action: VersionAction,
+    version_id_: i32,
+    user_id_: i32,
+    api_token_id_: Option<i32>,
+    action_: VersionAction,
 ) -> QueryResult<VersionOwnerAction> {
     use version_owner_actions::dsl::{action, api_token_id, user_id, version_id};
 
     diesel::insert_into(version_owner_actions::table)
         .values((
-            version_id.eq(_version_id),
-            user_id.eq(_user_id),
-            api_token_id.eq(_api_token_id),
-            action.eq(_action),
+            version_id.eq(version_id_),
+            user_id.eq(user_id_),
+            api_token_id.eq(api_token_id_),
+            action.eq(action_),
         ))
         .get_result(conn)
 }
