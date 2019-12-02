@@ -6,8 +6,8 @@ use diesel::prelude::*;
 use crate::db::RequestTransaction;
 use crate::util::errors::{std_error, AppResult, ChainError, Unauthorized};
 
-use crate::models::ApiToken;
 use crate::models::user::{UserNoEmailType, ALL_COLUMNS};
+use crate::models::ApiToken;
 use crate::models::User;
 use crate::schema::users;
 
