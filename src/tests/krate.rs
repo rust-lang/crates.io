@@ -1629,13 +1629,6 @@ fn yank_records_an_audit_action() {
 
     let json = anon.show_version("fyk", "1.0.0");
     let version_id = json.version.id;
-    app.db(|conn| {
-        assert!(
-            VersionOwnerAction::by_version_id_and_action(conn, version_id, VersionAction::Yank)
-                .unwrap()
-                .is_empty()
-        )
-    });
 
     // yank it
     token.yank("fyk", "1.0.0").good();
@@ -1670,16 +1663,6 @@ fn unyank_records_an_audit_action() {
 
     // yank version 1.0.0
     token.yank("fyk", "1.0.0").good();
-
-    app.db(|conn| {
-        assert!(VersionOwnerAction::by_version_id_and_action(
-            conn,
-            version_id,
-            VersionAction::Unyank
-        )
-        .unwrap()
-        .is_empty())
-    });
 
     // unyank version 1.0.0
     token.unyank("fyk", "1.0.0").good();
