@@ -38,7 +38,7 @@ module('Acceptance | front page', function(hooks) {
     assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasText('Inflector (0.1.6)');
     assert.dom('[data-test-new-crates] [data-test-crate-link="0"]').hasAttribute('href', '/crates/Inflector');
 
-    assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasText('serde (0.6.1)');
+    assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasText('serde');
     assert.dom('[data-test-most-downloaded] [data-test-crate-link="0"]').hasAttribute('href', '/crates/serde');
 
     assert.dom('[data-test-just-updated] [data-test-crate-link="0"]').hasText('nanomsg (0.7.0-alpha)');
