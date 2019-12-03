@@ -3,7 +3,7 @@ set -ue
 
 export FASTBOOT_DISABLED
 
-if [ "${USE_FASTBOOT:-0}" = '1' ]; then
+if [ -z "${USE_FASTBOOT}" ]; then
     unset FASTBOOT_DISABLED
 else
     FASTBOOT_DISABLED=1
