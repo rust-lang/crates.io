@@ -1,7 +1,7 @@
 #! /bin/bash
 set -ue
 
-if [[ -z "${USE_FASTBOOT}" ]]; then
+if [[ -z "${USE_FASTBOOT-}" ]]; then
     unset USE_FASTBOOT
     bin/start-nginx ./target/release/server
 else
