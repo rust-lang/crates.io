@@ -14,6 +14,7 @@ export default BaseSerializer.extend({
     'keywords',
     'links',
     'max_version',
+    'newest_version',
     'name',
     'repository',
     'updated_at',

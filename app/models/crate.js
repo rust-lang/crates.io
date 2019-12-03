@@ -8,6 +8,7 @@ export default Model.extend({
   created_at: attr('date'),
   updated_at: attr('date'),
   max_version: attr('string'),
+  newest_version: attr('string'),
 
   description: attr('string'),
   homepage: attr('string'),
