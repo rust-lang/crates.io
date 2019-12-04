@@ -151,7 +151,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         branch: String::from("beta"),
     };
     let mut badge_attributes_bitbucket_pipelines = HashMap::new();
-    badge_attributes_bitbucket_pipelines.insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_bitbucket_pipelines
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
     badge_attributes_bitbucket_pipelines.insert(String::from("branch"), String::from("beta"));
 
     let maintenance = Badge::Maintenance {
@@ -331,7 +332,10 @@ fn update_add_bitbucket_pipelines() {
     let (krate, test_badges) = set_up();
 
     let mut badges = HashMap::new();
-    badges.insert(String::from("bitbucket-pipelines"), test_badges.bitbucket_pipelines_attributes);
+    badges.insert(
+        String::from("bitbucket-pipelines"),
+        test_badges.bitbucket_pipelines_attributes,
+    );
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.bitbucket_pipelines]);
 }
