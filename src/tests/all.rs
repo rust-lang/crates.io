@@ -1,10 +1,4 @@
-#![deny(warnings, clippy::all, rust_2018_idioms)]
-// TODO: Remove after we can bump to Rust 1.35 stable in `RustConfig`
-#![allow(
-    renamed_and_removed_lints,
-    clippy::cyclomatic_complexity,
-    clippy::unknown_clippy_lints
-)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 #[macro_use]
 extern crate diesel;

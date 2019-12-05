@@ -4,7 +4,7 @@
 //! Usage:
 //!     cargo run --bin monitor
 
-#![deny(warnings, clippy::all, rust_2018_idioms)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 mod on_call;
 

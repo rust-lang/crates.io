@@ -5,7 +5,7 @@
 // Usage:
 //      cargo run --bin delete-version crate-name version-number
 
-#![deny(warnings, clippy::all, rust_2018_idioms)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{
     db,
