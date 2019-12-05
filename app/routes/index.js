@@ -1,6 +1,9 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 
 export default Route.extend({
+  fetcher: service(),
+
   headTags() {
     return [
       {
@@ -13,8 +16,26 @@ export default Route.extend({
     ];
   },
 
+  // eslint-disable-next-line no-unused-vars
   setupController(controller) {
     this.controllerFor('application').set('searchQuery', null);
-    controller.dataTask.perform();
+  },
+
+  model() {
+    return this.fetcher.ajax('/api/v1/summary');
+  },
+
+  // eslint-disable-next-line no-unused-vars
+  afterModel(model, transition) {
+    addCrates(this.store, model.new_crates);
+    addCrates(this.store, model.most_downloaded);
+    addCrates(this.store, model.just_updated);
+    addCrates(this.store, model.most_recently_downloaded);
   },
 });
+
+function addCrates(store, crates) {
+  for (let i = 0; i < crates.length; i++) {
+    crates[i] = store.push(store.normalize('crate', crates[i]));
+  }
+}
