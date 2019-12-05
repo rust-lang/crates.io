@@ -1,3 +1,4 @@
+import { A } from '@ember/array';
 import Service, { inject as service } from '@ember/service';
 import ajax from 'ember-fetch/ajax';
 
@@ -7,6 +8,7 @@ export default Service.extend({
   isLoggedIn: false,
   currentUser: null,
   currentUserDetected: false,
+  ownedCrates: A(),
 
   store: service(),
   router: service(),
@@ -66,6 +68,9 @@ export default Service.extend({
   fetchUser() {
     return ajax('/api/v1/me').then(response => {
       this.set('currentUser', this.store.push(this.store.normalize('user', response.user)));
+      this.ownedCrates.pushObjects(
+        response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c))),
+      );
     });
   },
 
