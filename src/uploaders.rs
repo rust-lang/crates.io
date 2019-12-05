@@ -5,10 +5,9 @@ use openssl::hash::{Hasher, MessageDigest};
 use reqwest::header;
 
 use crate::util::errors::{cargo_err, internal, AppResult, ChainError};
-use crate::util::{LimitErrorReader, Maximums};
+use crate::util::{Error, LimitErrorReader, Maximums};
 
 use std::env;
-use std::error::Error;
 use std::fs::{self, File};
 use std::io::{Cursor, Read};
 use std::sync::Arc;
@@ -103,27 +102,25 @@ impl Uploader {
         content_length: u64,
         content_type: &str,
         extra_headers: header::HeaderMap,
-    ) -> Result<Option<String>, Box<dyn Error>> {
+    ) -> Result<Option<String>, Error> {
         match *self {
             Uploader::S3 { ref bucket, .. } => {
-                bucket
-                    .put(
-                        client,
-                        path,
-                        content,
-                        content_length,
-                        content_type,
-                        extra_headers,
-                    )
-                    .map_err(Box::new)?;
+                bucket.put(
+                    client,
+                    path,
+                    content,
+                    content_length,
+                    content_type,
+                    extra_headers,
+                )?;
                 Ok(Some(String::from(path)))
             }
             Uploader::Local => {
                 let filename = env::current_dir().unwrap().join("local_uploads").join(path);
                 let dir = filename.parent().unwrap();
-                fs::create_dir_all(dir).map_err(Box::new)?;
-                let mut file = File::create(&filename).map_err(Box::new)?;
-                std::io::copy(&mut content, &mut file).map_err(Box::new)?;
+                fs::create_dir_all(dir)?;
+                let mut file = File::create(&filename)?;
+                std::io::copy(&mut content, &mut file)?;
                 Ok(filename.to_str().map(String::from))
             }
         }
@@ -168,7 +165,7 @@ impl Uploader {
         crate_name: &str,
         vers: &str,
         readme: String,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Error> {
         let path = Uploader::readme_path(crate_name, vers);
         let content_length = readme.len() as u64;
         let content = Cursor::new(readme);

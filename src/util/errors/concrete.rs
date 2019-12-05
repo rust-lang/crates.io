@@ -1,4 +1,4 @@
-use std::{error, fmt};
+use std::{error, fmt, io};
 
 #[derive(Debug)]
 pub enum Error {
@@ -6,6 +6,7 @@ pub enum Error {
     DbQuery(diesel::result::Error),
     DotEnv(dotenv::Error),
     Internal(String),
+    Io(io::Error),
     JobEnqueue(swirl::EnqueueError),
     Reqwest(reqwest::Error),
 }
@@ -19,6 +20,7 @@ impl fmt::Display for Error {
             Error::DbQuery(inner) => inner.fmt(f),
             Error::DotEnv(inner) => inner.fmt(f),
             Error::Internal(inner) => inner.fmt(f),
+            Error::Io(inner) => inner.fmt(f),
             Error::JobEnqueue(inner) => inner.fmt(f),
             Error::Reqwest(inner) => inner.fmt(f),
         }
@@ -46,6 +48,12 @@ impl From<dotenv::Error> for Error {
 impl From<String> for Error {
     fn from(err: String) -> Self {
         Error::Internal(err)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Self {
+        Error::Io(err)
     }
 }
 
