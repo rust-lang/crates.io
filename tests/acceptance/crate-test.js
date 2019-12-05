@@ -124,6 +124,15 @@ module('Acceptance | crate page', function(hooks) {
     assert.dom('.info').hasText(/All 13\s+versions of nanomsg since\s+December \d+, 2014/);
   });
 
+  test('viewing crate downloads graph', async function(assert) {
+    this.server.loadFixtures();
+
+    await visit('/crates/nanomsg');
+    await click('[data-test-all-versions-link]');
+
+    assert.dom('.graph').hasText(/Downloads per minor version/);
+  });
+
   test('navigating to the reverse dependencies page', async function(assert) {
     this.server.loadFixtures();
 
