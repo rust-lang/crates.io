@@ -23,6 +23,8 @@ struct BadgeRef {
     circle_ci_attributes: HashMap<String, String>,
     cirrus_ci: Badge,
     cirrus_ci_attributes: HashMap<String, String>,
+    bitbucket_pipelines: Badge,
+    bitbucket_pipelines_attributes: HashMap<String, String>,
     maintenance: Badge,
     maintenance_attributes: HashMap<String, String>,
 }
@@ -144,6 +146,15 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     badge_attributes_cirrus_ci.insert(String::from("branch"), String::from("beta"));
     badge_attributes_cirrus_ci.insert(String::from("repository"), String::from("rust-lang/rust"));
 
+    let bitbucket_pipelines = Badge::BitbucketPipelines {
+        repository: String::from("rust-lang/rust"),
+        branch: String::from("beta"),
+    };
+    let mut badge_attributes_bitbucket_pipelines = HashMap::new();
+    badge_attributes_bitbucket_pipelines
+        .insert(String::from("repository"), String::from("rust-lang/rust"));
+    badge_attributes_bitbucket_pipelines.insert(String::from("branch"), String::from("beta"));
+
     let maintenance = Badge::Maintenance {
         status: MaintenanceStatus::LookingForMaintainer,
     };
@@ -175,6 +186,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         circle_ci_attributes: badge_attributes_circle_ci,
         cirrus_ci,
         cirrus_ci_attributes: badge_attributes_cirrus_ci,
+        bitbucket_pipelines,
+        bitbucket_pipelines_attributes: badge_attributes_bitbucket_pipelines,
         maintenance,
         maintenance_attributes,
     };
@@ -311,6 +324,20 @@ fn update_add_cirrus_ci() {
     badges.insert(String::from("cirrus-ci"), test_badges.cirrus_ci_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.cirrus_ci]);
+}
+
+#[test]
+fn update_add_bitbucket_pipelines() {
+    // Add a Bitbucket Pipelines badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(
+        String::from("bitbucket-pipelines"),
+        test_badges.bitbucket_pipelines_attributes,
+    );
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.bitbucket_pipelines]);
 }
 
 #[test]
@@ -585,6 +612,25 @@ fn cirrus_ci_required_keys() {
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "cirrus-ci");
     assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn bitbucket_pipelines_required_keys() {
+    // Add a Bitbucket Pipelines badge missing a required field
+    let (krate, test_badges) = set_up();
+
+    for required in &["repository", "branch"] {
+        let mut attributes = test_badges.bitbucket_pipelines_attributes.clone();
+        attributes.remove(*required);
+
+        let mut badges = HashMap::new();
+        badges.insert(String::from("bitbucket-pipelines"), attributes);
+
+        let invalid_badges = krate.update(&badges);
+        assert_eq!(invalid_badges.len(), 1);
+        assert_eq!(invalid_badges.first().unwrap(), "bitbucket-pipelines");
+        assert_eq!(krate.badges(), vec![]);
+    }
 }
 
 #[test]

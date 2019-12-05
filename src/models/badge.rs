@@ -68,6 +68,10 @@ pub enum Badge {
         branch: Option<String>,
         service: Option<String>,
     },
+    BitbucketPipelines {
+        repository: String,
+        branch: String,
+    },
     Maintenance {
         status: MaintenanceStatus,
     },
