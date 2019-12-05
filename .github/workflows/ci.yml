@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - README.md
+
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - README.md
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-16.04
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+      PERCY_PARALLEL_TOTAL: 2
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+      PERCY_PROJECT: crates-io/crates.io
+
+    steps:
+      - uses: actions/checkout@v2-beta
+
+      - uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Lint
+        run: |
+          npm run lint:hbs
+          npm run lint:js
+          npm run lint:deps
+
+      - name: Test
+        run: npm test
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-16.04
+    strategy:
+      matrix:
+        rust: ['stable', 'beta', 'nightly']
+    env:
+      DATABASE_URL: postgres://postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres@localhost/cargo_registry_test
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: "-C debuginfo=0"
+
+    steps:
+      - uses: actions/checkout@v2-beta
+
+      - name: Before cache
+        run: echo hello-world # script/ci/prune-cache.sh
+
+      - name: Cache rustup
+        uses: actions/cache@v1
+        with:
+          path: ~/.rustup
+          key: ${{ runner.os }}-rustup
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-bin-
+
+      - name: Cache cargo registry cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-cache-
+
+      - name: Cache cargo registry index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-index-
+
+      - name: Cache cargo git db
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-git-db-
+
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-build-target-
+
+      - name: Install ${{ matrix.rust }} Rust
+        run: |
+          rustup update ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+
+      - name: Install lint tools
+        if: matrix.rust == 'stable'
+        run: |
+          rustup component add rustfmt-preview
+          rustup component add clippy-preview
+
+      - name: Cargo clean on new rustc version # TODO: figure out if this is still necessary
+        run: script/ci/cargo-clean-on-new-rustc-version.sh
+
+      - name: Install PostgreSQL
+        run: |
+          sudo tee /etc/apt/sources.list.d/pgdg.list <<END
+          deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main
+          END
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install postgresql-11 postgresql-client-11 libpq-dev
+          sudo systemctl restart postgresql@11-main
+
+      - name: Setup database
+        run: |
+          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres
+          diesel database setup --locked-schema
+
+      - name: Lint
+        if: matrix.rust == 'stable'
+        run: |
+          cargo fmt -- --check
+          cargo clippy --all-targets --all-features --all
+
+      - name: Test
+        run: cargo test

@@ -19,8 +19,6 @@ env:
     # on community-submitted PRs
     - PERCY_TOKEN=0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
     - PERCY_PROJECT=crates-io/crates.io
-    - PGPORT=5433
-    - PATH=$HOME/.cargo/bin:$PATH
     - RUSTFLAGS="-C debuginfo=0"
 
 install:
