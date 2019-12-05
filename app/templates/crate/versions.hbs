@@ -10,6 +10,10 @@
   </span>
 </div>
 
+<div class="graph">
+  {{versions-graph data=model.versions}}
+</div>
+
 <div id='crate-all-versions' class='white-rows'>
   {{#each model.versions as |version|}}
     <div class='row'>
