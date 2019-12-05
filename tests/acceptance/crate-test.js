@@ -66,7 +66,7 @@ module('Acceptance | crate page', function(hooks) {
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
 
-    assert.equal(currentURL(), '/crates/nanomsg');
+    assert.equal(currentURL(), '/crates/nanomsg/6.8.9');
     assert.equal(title(), 'nanomsg - crates.io: Rust Package Registry');
   });
 
