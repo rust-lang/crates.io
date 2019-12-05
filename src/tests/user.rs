@@ -323,11 +323,20 @@ fn user_total_downloads() {
             .set(&another_krate)
             .execute(conn)
             .unwrap();
+
+        let mut no_longer_my_krate = CrateBuilder::new("nacho", user.id).expect_build(conn);
+        no_longer_my_krate.downloads = 5;
+        update(&no_longer_my_krate).set(&no_longer_my_krate).execute(conn).unwrap();
+        no_longer_my_krate
+            .owner_remove(app.as_inner(), conn, user, &user.gh_login)
+            .unwrap();
+
     });
 
     let url = format!("/api/v1/users/{}/stats", user.id);
     let stats: UserStats = anon.get(&url).good();
-    assert_eq!(stats.total_downloads, 30); // instead of 32
+    // does not include crates user never owned (2) or no longer owns (5)
+    assert_eq!(stats.total_downloads, 30);
 }
 
 #[test]
@@ -599,6 +608,22 @@ fn test_existing_user_email() {
     assert_eq!(json.user.email.unwrap(), "potahto@example.com");
     assert!(!json.user.email_verified);
     assert!(!json.user.email_verification_sent);
+}
+
+#[test]
+fn test_user_owned_crates_doesnt_include_deleted_ownership() {
+    let (app, _, user) = TestApp::init().with_user();
+    let user_model = user.as_model();
+
+    app.db(|conn| {
+        let krate = CrateBuilder::new("foo_my_packages", user_model.id).expect_build(conn);
+        krate
+            .owner_remove(app.as_inner(), conn, user_model, &user_model.gh_login)
+            .unwrap();
+    });
+
+    let json = user.show_me();
+    assert_eq!(json.owned_crates.len(), 0);
 }
 
 /* A user should be able to update the email notifications for crates they own. Only the crates that
