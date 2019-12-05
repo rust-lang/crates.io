@@ -57,11 +57,7 @@ impl SecurityHeaders {
 }
 
 impl Middleware for SecurityHeaders {
-    fn after(
-        &self,
-        _: &mut dyn Request,
-        mut res: Result<Response, Box<dyn Error + Send>>,
-    ) -> Result<Response, Box<dyn Error + Send>> {
+    fn after(&self, _: &mut dyn Request, mut res: Result<Response>) -> Result<Response> {
         if let Ok(ref mut response) = res {
             response.headers.extend(self.headers.clone());
         }

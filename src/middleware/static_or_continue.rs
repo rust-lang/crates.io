@@ -27,7 +27,7 @@ impl AroundMiddleware for StaticOrContinue {
 }
 
 impl Handler for StaticOrContinue {
-    fn call(&self, req: &mut dyn Request) -> Result<Response, Box<dyn Error + Send>> {
+    fn call(&self, req: &mut dyn Request) -> Result<Response> {
         match self.static_handler.call(req) {
             Ok(ref resp) if resp.status.0 == 404 => {}
             ret => return ret,

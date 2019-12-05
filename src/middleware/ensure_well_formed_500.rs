@@ -10,11 +10,7 @@ use std::collections::HashMap;
 pub struct EnsureWellFormed500;
 
 impl Middleware for EnsureWellFormed500 {
-    fn after(
-        &self,
-        _: &mut dyn Request,
-        res: Result<Response, Box<dyn Error + Send>>,
-    ) -> Result<Response, Box<dyn Error + Send>> {
+    fn after(&self, _: &mut dyn Request, res: Result<Response>) -> Result<Response> {
         res.or_else(|_| {
             let body = "Internal Server Error";
             let mut headers = HashMap::new();
