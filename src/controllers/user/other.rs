@@ -1,6 +1,6 @@
 use crate::controllers::prelude::*;
 
-use crate::models::{OwnerKind, User};
+use crate::models::{CrateOwner, OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};
 use crate::views::EncodablePublicUser;
 
@@ -31,13 +31,9 @@ pub fn stats(req: &mut dyn Request) -> AppResult<Response> {
     let user_id = &req.params()["user_id"].parse::<i32>().ok().unwrap();
     let conn = req.db_conn()?;
 
-    let data = crate_owners::table
+    let data = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
-        .filter(
-            crate_owners::owner_id
-                .eq(user_id)
-                .and(crate_owners::owner_kind.eq(OwnerKind::User as i32)),
-        )
+        .filter(crate_owners::owner_id.eq(user_id))
         .select(sum(crates::downloads))
         .first::<Option<i64>>(&*conn)?
         .unwrap_or(0);

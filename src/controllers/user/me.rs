@@ -38,10 +38,9 @@ pub fn me(req: &mut dyn Request) -> AppResult<Response> {
         ))
         .first::<(User, Option<bool>, Option<String>, bool)>(&*conn)?;
 
-    let owned_crates = crate_owners::table
+    let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
         .filter(crate_owners::owner_id.eq(user_id))
-        .filter(crate_owners::owner_kind.eq(OwnerKind::User as i32))
         .select((crates::id, crates::name, crate_owners::email_notifications))
         .order(crates::name.asc())
         .load(&*conn)?

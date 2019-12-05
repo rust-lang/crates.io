@@ -326,11 +326,13 @@ fn user_total_downloads() {
 
         let mut no_longer_my_krate = CrateBuilder::new("nacho", user.id).expect_build(conn);
         no_longer_my_krate.downloads = 5;
-        update(&no_longer_my_krate).set(&no_longer_my_krate).execute(conn).unwrap();
+        update(&no_longer_my_krate)
+            .set(&no_longer_my_krate)
+            .execute(conn)
+            .unwrap();
         no_longer_my_krate
             .owner_remove(app.as_inner(), conn, user, &user.gh_login)
             .unwrap();
-
     });
 
     let url = format!("/api/v1/users/{}/stats", user.id);
