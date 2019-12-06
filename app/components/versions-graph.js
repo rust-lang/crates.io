@@ -39,7 +39,10 @@ export default Component.extend({
       let minor = semver.minor(v.num);
       let downloads = v.downloads;
 
-      let key = `${major}.${minor}`;
+      // XXX ugly hack to get semver to parse the version correctly later on.
+      // We want to do a semver-aware sort, but the `semver.lt` function only
+      // understands version triples, not doubles.
+      let key = `${major}.${minor}.0`;
       if (downloadsPerVersion.has(key)) {
         const old = downloadsPerVersion.get(key);
         downloadsPerVersion.set(key, old + downloads);
@@ -55,7 +58,7 @@ export default Component.extend({
     ];
 
     // Update plotData with rows in the correct format for google visualization library
-    for (var [key, value] of downloadsPerVersion) {
+    for (var [key, value] of sortIncreasingBySemver(downloadsPerVersion)) {
       plotData.push([key, value, '#62865f', value]);
     }
 
@@ -82,3 +85,16 @@ export default Component.extend({
     chart.draw(myData, options);
   },
 });
+
+function sortIncreasingBySemver(downloadsMap) {
+  const items = Array.from(downloadsMap.entries());
+  // Sort by semver comparison
+  items.sort((a, b) => {
+    // Index 0 is the version string in the array.
+    //
+    // We use `lt` here as we want the array to be sorted in reverse order
+    // (newest at the top)
+    return semver.lt(a[0], b[0]);
+  });
+  return items;
+}
