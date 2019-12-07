@@ -2,6 +2,11 @@
 
 set -e
 
+if [[ ! -d "target/debug" ]]; then
+    echo "No build artifacts found. Exit immediately."
+    exit 0
+fi
+
 echo "Initial cache size:"
 du -hs target/debug
 
