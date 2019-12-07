@@ -51,3 +51,141 @@ jobs:
       - name: Test
         run: npm test
 
+  backend:
+    name: Backend
+    runs-on: ubuntu-16.04
+    strategy:
+      # TODO: [ci] should be true if GitHub Actions supports ""allow failures" on matrix
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    env:
+      DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: "-C debuginfo=0"
+
+    steps:
+      - uses: actions/checkout@v2-beta
+
+      - name: Cleanup pre-installed Rust toolchains
+        # The pre-installed toolchain is under root permission, and this would
+        # make tarball fail to extract. Here we remove the symlink and install
+        # our own Rust toolchain if necessary.
+        run: |
+          which rustup
+          which cargo
+          if [[ -L "$HOME/.cargo" && -L "$HOME/.rustup" ]]; then
+              rm -v "$HOME/.rustup"
+              rm -v "$HOME/.cargo"
+          fi
+          echo "::add-path::$HOME/.cargo/bin"
+
+      - name: Cache rustup
+        uses: actions/cache@v1
+        with:
+          path: ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+              ${{ runner.os }}-rustup-${{ matrix.rust }}-
+              ${{ runner.os }}-rustup-
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-bin-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-bin-
+
+      - name: Cache cargo registry cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-cache-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-cache-
+
+      - name: Cache cargo registry index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-registry-index-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-registry-index-
+
+      - name: Cache cargo git db
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git/db
+          key: ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-git-db-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-git-db-
+
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-key: |
+            ${{ runner.os }}-cargo-build-target-${{ matrix.rust }}-
+            ${{ runner.os }}-cargo-build-target-
+
+      - name: Install ${{ matrix.rust }} Rust
+        run: |
+          if [[ ! -d "$HOME/.cargo" || ! -d "$HOME/.rustup" ]]; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+              sh rustup-init.sh -y --default-toolchain none
+          fi
+          rustup set profile minimal
+          rustup update ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+
+      - name: Install lint tools
+        if: matrix.rust == 'stable'
+        run: |
+          rustup component add rustfmt
+          rustup component add clippy
+
+      - name: Cargo clean on new rustc version
+        run: script/ci/cargo-clean-on-new-rustc-version.sh
+
+      - name: Install required system libraries
+        run: |
+          sudo tee /etc/apt/sources.list.d/pgdg.list <<END
+          deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main
+          END
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev postgresql-11
+          mkdir -p /etc/postgresql/11/main
+          sudo tee /etc/postgresql/11/main/pg_hba.conf <<END
+          local   all             all                                     trust
+          host    all             all             127.0.0.1/32            trust
+          END
+          sudo systemctl restart postgresql@11-main
+
+      - name: Setup database
+        run: |
+          which diesel || cargo install diesel_cli --force --vers $(cat .diesel_version) --no-default-features --features postgres
+          diesel database setup --locked-schema
+
+      - name: Lint
+        if: matrix.rust == 'stable'
+        run: |
+          cargo fmt -- --check
+          cargo clippy --all-targets --all-features --all
+
+      - name: Test
+        run: cargo test
+
+      - name: Prune unnecessary cache
+        run: script/ci/prune-cache.sh
