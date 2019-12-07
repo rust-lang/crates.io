@@ -101,8 +101,8 @@ local development environment
   writable directory - (ignored in `.gitignore`)
 * `tmp/index-bare` - A bare git repository, used as the origin for `tmp/index-co` during
   development - (ignored in `.gitignore`)
-* `.travis.yml` - Configuration for continous integration at [Travis CI][]
+* `.github/workflows/*` - Configuration for continuous integration at [GitHub Actions]
 * `.watchmanconfig` - Use by Ember CLI to efficiently watch for file changes if you install watchman
 
 [bors-ng]: https://github.com/bors-ng/bors-ng
-[Travis CI]: https://travis-ci.com/rust-lang/crates.io
+[GitHub Actions]: https://github.com/rust-lang/crates.io/actions
