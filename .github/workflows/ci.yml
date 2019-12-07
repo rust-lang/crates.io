@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
+      - README.md
+
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - README.md
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-16.04
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+      PERCY_PARALLEL_TOTAL: 2
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: 0d8707a02b19aebbec79bb0bf302b8d2fa95edb33169cfe41b084289596670b1
+      PERCY_PROJECT: crates-io/crates.io
+
+    steps:
+      - uses: actions/checkout@v2-beta
+
+      - uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Lint
+        run: |
+          npm run lint:hbs
+          npm run lint:js
+          npm run lint:deps
+
+      - name: Test
+        run: npm test
+
