@@ -67,7 +67,7 @@ jobs:
       DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
       TEST_DATABASE_URL: postgres://postgres:@localhost/cargo_registry_test
       CARGO_INCREMENTAL: 0
-      RUSTFLAGS: "-C debuginfo=0"
+      RUSTFLAGS: "-C debuginfo=0 -D warnings"
 
     steps:
       - uses: actions/checkout@v2-beta
@@ -175,7 +175,7 @@ jobs:
 
       - name: Setup database
         run: |
-          which diesel || cargo install diesel_cli --force --vers $(cat .diesel_version) --no-default-features --features postgres
+          which diesel || cargo install diesel_cli --vers $(cat .diesel_version) --no-default-features --features postgres
           diesel database setup --locked-schema
 
       - name: Lint
