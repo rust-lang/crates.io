@@ -115,8 +115,7 @@ pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
             // version.
             let version = versions
                 .iter()
-                .filter(|v| v.id == grouped_versions[0].version_id)
-                .next()
+                .find(|v| v.id == grouped_versions[0].version_id)
                 .unwrap();
 
             Download {
