@@ -57,6 +57,10 @@ pub fn build_router(app: &App) -> R404 {
         "/crates/:crate_id/downloads",
         C(krate::downloads::downloads),
     );
+    api_router.get(
+        "/crates/:crate_id/recent_downloads",
+        C(krate::downloads::recent_downloads),
+    );
     api_router.get("/crates/:crate_id/versions", C(krate::metadata::versions));
     api_router.put("/crates/:crate_id/follow", C(krate::follow::follow));
     api_router.delete("/crates/:crate_id/follow", C(krate::follow::unfollow));

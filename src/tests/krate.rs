@@ -4,7 +4,7 @@ use crate::{
     RequestHelper, TestApp,
 };
 use cargo_registry::{
-    models::{krate::MAX_NAME_LENGTH, Category, Crate},
+    models::{krate::MAX_NAME_LENGTH, Category, Crate, VersionDownload},
     schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
     views::{
         EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
@@ -51,6 +51,17 @@ struct SummaryResponse {
     just_updated: Vec<EncodableCrate>,
     popular_keywords: Vec<EncodableKeyword>,
     popular_categories: Vec<EncodableCategory>,
+}
+
+#[derive(Deserialize)]
+struct RecentVersion {
+    version: semver::Version,
+    downloads: i32,
+}
+
+#[derive(Deserialize)]
+struct RecentVersions {
+    downloads: Vec<RecentVersion>,
 }
 
 impl crate::util::MockAnonymousUser {
@@ -616,6 +627,55 @@ fn versions() {
         json.versions[1].published_by.as_ref().unwrap().login,
         user.gh_login
     );
+}
+
+#[test]
+fn recent_versions() {
+    use cargo_registry::schema::versions;
+
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        let _krate = CrateBuilder::new("foo_versions", user.id)
+            .version("0.5.1")
+            .version("1.0.0")
+            .expect_build(conn);
+
+        // Get the ids of the versions inserted
+        let v1: i32 = versions::table
+            .select(versions::id)
+            .filter(versions::dsl::num.eq("0.5.1"))
+            .first(conn)
+            .unwrap();
+        let v2: i32 = versions::table
+            .select(versions::id)
+            .filter(versions::dsl::num.eq("1.0.0"))
+            .first(conn)
+            .unwrap();
+
+        // Update the download count for some of these versions
+        VersionDownload::create_or_increment(v1, conn).unwrap();
+        VersionDownload::create_or_increment(v1, conn).unwrap();
+        VersionDownload::create_or_increment(v1, conn).unwrap();
+
+        VersionDownload::create_or_increment(v2, conn).unwrap();
+        VersionDownload::create_or_increment(v2, conn).unwrap();
+    });
+
+    let json: RecentVersions = anon
+        .get("/api/v1/crates/foo_versions/recent_downloads")
+        .good();
+
+    assert_eq!(
+        json.downloads[0].version,
+        semver::Version::parse("0.5.1").unwrap()
+    );
+    assert_eq!(json.downloads[0].downloads, 3);
+    assert_eq!(
+        json.downloads[1].version,
+        semver::Version::parse("1.0.0").unwrap()
+    );
+    assert_eq!(json.downloads[1].downloads, 2);
 }
 
 #[test]
