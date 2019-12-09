@@ -96,5 +96,10 @@ function sortIncreasingBySemver(downloadsMap) {
     // (newest at the top)
     return semver.lt(a[0], b[0]);
   });
-  return items;
+
+  // Update the labels to show e.g. `0.1.x` instead of `0.1.0` which is
+  // required by semver comparisons
+  return items.map(i => {
+    return [i[0].replace(/\.0$/, '.x'), i[1]];
+  });
 }
