@@ -16,8 +16,8 @@ export default Route.extend({
     ];
   },
 
-  // eslint-disable-next-line no-unused-vars
-  setupController(controller) {
+  setupController(controller, model) {
+    this._super(controller, model);
     this.controllerFor('application').set('searchQuery', null);
   },
 
