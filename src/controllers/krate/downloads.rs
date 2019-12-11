@@ -84,7 +84,7 @@ pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
 
     #[derive(Debug, Serialize, Queryable)]
     struct Download {
-        version: String,
+        version: semver::Version,
         downloads: i64,
     }
 
