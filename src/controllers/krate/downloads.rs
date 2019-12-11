@@ -8,15 +8,16 @@ use std::cmp;
 use crate::controllers::prelude::*;
 
 use crate::models::{Crate, CrateVersions, Version, VersionDownload};
-use crate::schema::version_downloads;
+use crate::schema::{version_downloads, versions};
 use crate::views::EncodableVersionDownload;
 
 use crate::models::krate::to_char;
 
+use diesel::sql_types::BigInt;
+
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::*;
-    use diesel::sql_types::BigInt;
 
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
@@ -79,17 +80,17 @@ pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
 
     // Get the versions for this crate
-    let versions = krate.all_versions().load::<Version>(&*conn)?;
+    let available_versions = krate.all_versions().load::<Version>(&*conn)?;
 
-    #[derive(Debug, Serialize)]
-    struct Download<'a> {
-        version: &'a semver::Version,
-        downloads: i32,
+    #[derive(Debug, Serialize, Queryable)]
+    struct Download {
+        version: String,
+        downloads: i64,
     }
 
     #[derive(Debug, Serialize)]
     struct Response<'a> {
-        downloads: Vec<Download<'a>>,
+        downloads: Vec<Download>,
         meta: Meta<'a>,
     }
 
@@ -101,29 +102,14 @@ pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
     }
 
     // Now get the grouped versions for the last `ndays` days.
-    //
-    // XXX I am not sure how to do this in the database yet, with Diesel's API, so for the time
-    // being, perform this aggregation in Rust.
-    let downloads = VersionDownload::belonging_to(versions.as_slice())
-        .filter(version_downloads::date.gt(date(now - ndays.days())))
-        .load(&*conn)?
-        .grouped_by(versions.as_slice())
-        .into_iter()
-        .map(|grouped_versions: Vec<VersionDownload>| {
-            let total_downloads = grouped_versions.iter().map(|v| v.downloads).sum();
-            // XXX(perf) this is slow, iterating over the versions array looking for the matching
-            // version.
-            let version = versions
-                .iter()
-                .find(|v| v.id == grouped_versions[0].version_id)
-                .unwrap();
+    let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
 
-            Download {
-                version: &version.num,
-                downloads: total_downloads,
-            }
-        })
-        .collect::<Vec<Download<'_>>>();
+    let downloads = VersionDownload::belonging_to(available_versions.as_slice())
+        .inner_join(versions::table)
+        .select((versions::num, sum_downloads))
+        .filter(version_downloads::date.gt(date(now - ndays.days())))
+        .group_by(versions::num)
+        .load::<Download>(&*conn)?;
 
     Ok(req.json(&Response {
         downloads,
