@@ -103,12 +103,12 @@ pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
 
     // Now get the grouped versions for the last `ndays` days.
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-
     let downloads = VersionDownload::belonging_to(available_versions.as_slice())
         .inner_join(versions::table)
         .select((versions::num, sum_downloads))
         .filter(version_downloads::date.gt(date(now - ndays.days())))
         .group_by(versions::num)
+        .order_by(versions::num.asc())
         .load::<Download>(&*conn)?;
 
     Ok(req.json(&Response {
