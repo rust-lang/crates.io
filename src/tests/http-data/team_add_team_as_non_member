@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://api.github.com/orgs/crates-test-org/teams?per_page=100",
+      "uri": "http://api.github.com/orgs/crates-test-org/teams/just-for-crates-2",
       "method": "GET",
       "headers": [
         [
@@ -32,7 +32,7 @@
       "headers": [
         [
           "content-length",
-          "905"
+          "358"
         ],
         [
           "X-accepted-OAuth-Scopes",
@@ -127,7 +127,7 @@
           "GitHub.com"
         ]
       ],
-      "body": "W3sibmFtZSI6ImNvcmUiLCJpZCI6MTY5OTM3Nywic2x1ZyI6ImNvcmUiLCJkZXNjcmlwdGlvbiI6bnVsbCwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3NyIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L3JlcG9zIiwicGVybWlzc2lvbiI6ImFkbWluIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzLTIiLCJpZCI6MTY5OTM3OSwic2x1ZyI6Imp1c3QtZm9yLWNyYXRlcy0yIiwiZGVzY3JpcHRpb24iOiJKdXN0IGZvciBDcmF0ZXMgMiIsInByaXZhY3kiOiJzZWNyZXQiLCJ1cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL3RlYW1zLzE2OTkzNzkiLCJtZW1iZXJzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9tZW1iZXJzey9tZW1iZXJ9IiwicmVwb3NpdG9yaWVzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9yZXBvcyIsInBlcm1pc3Npb24iOiJwdWxsIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzMSIsImlkIjoxNjk5Mzc4LCJzbHVnIjoianVzdC1mb3ItY3JhdGVzMSIsImRlc2NyaXB0aW9uIjoiIiwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OCIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L3JlcG9zIiwicGVybWlzc2lvbiI6InB1bGwifV0="
+      "body": "ewogICJuYW1lIjogImp1c3QtZm9yLWNyYXRlcy0yIiwKICAiaWQiOiAxNjk5Mzc5LAogICJzbHVnIjogImp1c3QtZm9yLWNyYXRlcy0yIiwKICAiZGVzY3JpcHRpb24iOiAiSnVzdCBmb3IgQ3JhdGVzIDIiLAogICJwcml2YWN5IjogInNlY3JldCIsCiAgInVybCI6ICJodHRwczovL2FwaS5naXRodWIuY29tL3RlYW1zLzE2OTkzNzkiLAogICJtZW1iZXJzX3VybCI6ICJodHRwczovL2FwaS5naXRodWIuY29tL3RlYW1zLzE2OTkzNzkvbWVtYmVyc3svbWVtYmVyfSIsCiAgInJlcG9zaXRvcmllc191cmwiOiAiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc5L3JlcG9zIiwKICAicGVybWlzc2lvbiI6ICJwdWxsIgp9Cg=="
     }
   },
   {

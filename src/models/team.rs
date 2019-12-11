@@ -135,26 +135,18 @@ impl Team {
 
         #[derive(Deserialize)]
         struct GithubTeam {
-            slug: String,         // the name we want to find
             id: i32,              // unique GH id (needed for membership queries)
             name: Option<String>, // Pretty name
         }
 
-        // FIXME: we just set per_page=100 and don't bother chasing pagination
-        // links. A hundred teams should be enough for any org, right?
-        let url = format!("/orgs/{}/teams?per_page=100", org_name);
+        let url = format!("/orgs/{}/teams/{}", org_name, team_name);
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let teams = github_api::<Vec<GithubTeam>>(app, &url, &token)?;
-
-        let team = teams
-            .into_iter()
-            .find(|team| team.slug.to_lowercase() == team_name.to_lowercase())
-            .ok_or_else(|| {
-                cargo_err(&format_args!(
-                    "could not find the github team {}/{}",
-                    org_name, team_name
-                ))
-            })?;
+        let team = github_api::<GithubTeam>(app, &url, &token).map_err(|_| {
+            cargo_err(&format_args!(
+                "could not find the github team {}/{}",
+                org_name, team_name
+            ))
+        })?;
 
         if !team_with_gh_id_contains_user(app, team.id, req_user)? {
             return Err(cargo_err("only members of a team can add it as an owner"));
