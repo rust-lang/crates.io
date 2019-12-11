@@ -4,7 +4,7 @@ use crate::{
     RequestHelper, TestApp,
 };
 use cargo_registry::{
-    models::{krate::MAX_NAME_LENGTH, Category, Crate, VersionDownload},
+    models::{krate::MAX_NAME_LENGTH, Category, Crate},
     schema::{api_tokens, crates, emails, metadata, versions, versions_published_by},
     views::{
         EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
@@ -56,7 +56,7 @@ struct SummaryResponse {
 #[derive(Deserialize)]
 struct RecentVersion {
     version: semver::Version,
-    downloads: i32,
+    downloads: i64,
 }
 
 #[derive(Deserialize)]
@@ -631,41 +631,45 @@ fn versions() {
 
 #[test]
 fn recent_versions() {
-    use cargo_registry::schema::versions;
+    use cargo_registry::schema::version_downloads;
 
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
-        let _krate = CrateBuilder::new("foo_versions", user.id)
-            .version("0.5.1")
-            .version("1.0.0")
-            .expect_build(conn);
+        let krate = CrateBuilder::new("foo_versions", user.id).expect_build(conn);
 
-        // Get the ids of the versions inserted
-        let v1: i32 = versions::table
-            .select(versions::id)
-            .filter(versions::dsl::num.eq("0.5.1"))
-            .first(conn)
-            .unwrap();
-        let v2: i32 = versions::table
-            .select(versions::id)
-            .filter(versions::dsl::num.eq("1.0.0"))
-            .first(conn)
-            .unwrap();
+        // Create a helper closure for setting the version_downloads table
+        let insert_custom_downloads = |version_str, downloads, dt| {
+            // Insert the crate version into the database
+            let v = VersionBuilder::new(version_str).expect_build(krate.id, user.id, conn);
 
-        // Update the download count for some of these versions
-        VersionDownload::create_or_increment(v1, conn).unwrap();
-        VersionDownload::create_or_increment(v1, conn).unwrap();
-        VersionDownload::create_or_increment(v1, conn).unwrap();
+            // Update the download count
+            insert_into(version_downloads::table)
+                .values((
+                    version_downloads::version_id.eq(v.id),
+                    version_downloads::downloads.eq(downloads),
+                    version_downloads::date.eq(dt),
+                ))
+                .execute(conn)
+                .unwrap();
+        };
 
-        VersionDownload::create_or_increment(v2, conn).unwrap();
-        VersionDownload::create_or_increment(v2, conn).unwrap();
+        // Insert new versions (out of order so we test the sorting), inside the recent downloads
+        // window
+        insert_custom_downloads("1.0.0", 2, date(now - 3.days()));
+        insert_custom_downloads("0.5.1", 3, date(now - 20.days()));
+
+        // Insert non-recent versions that should be excluded
+        insert_custom_downloads("0.2.0", 20, date(now - 100.days()));
+        insert_custom_downloads("0.1.0", 100, date(now - 120.days()));
     });
 
     let json: RecentVersions = anon
         .get("/api/v1/crates/foo_versions/recent_downloads")
         .good();
 
+    // We expect there to be two items, 0.5.1 and 1.0.0 sorted in ascending order (string sort?)
+    assert_eq!(json.downloads.len(), 2);
     assert_eq!(
         json.downloads[0].version,
         semver::Version::parse("0.5.1").unwrap()
