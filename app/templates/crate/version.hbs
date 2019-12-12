@@ -217,6 +217,17 @@
           </ul>
         </div>
 
+        {{#if currentBuildDependencies}}
+          <div class='section' id='crate-build-dependencies'>
+            <h3>Build-Dependencies</h3>
+            <ul>
+              {{#each currentBuildDependencies as |dep|}}
+                {{link-to-dep tagName="li" dep=dep}}
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+
         {{#if currentDevDependencies}}
           <div class='section' id='crate-dev-dependencies'>
             <h3>Dev-Dependencies</h3>
