@@ -14,17 +14,6 @@ module('Acceptance | crates page', function(hooks) {
   // should match the default set in the crates controller
   const per_page = 50;
 
-  test('is accessible', async function(assert) {
-    assert.expect(0);
-
-    this.server.loadFixtures();
-
-    await visit('/');
-    percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('/crates is accessible', async function(assert) {
     assert.expect(0);
 
