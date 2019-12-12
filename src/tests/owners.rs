@@ -269,6 +269,22 @@ fn check_ownership_one_crate() {
 }
 
 #[test]
+fn deleted_ownership_isnt_in_owner_user() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+
+    app.db(|conn| {
+        let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
+        krate
+            .owner_remove(app.as_inner(), conn, user, &user.gh_login)
+            .unwrap();
+    });
+
+    let json: UserResponse = anon.get("/api/v1/crates/foo_my_packages/owner_user").good();
+    assert_eq!(json.users.len(), 0);
+}
+
+#[test]
 fn invitations_are_empty_by_default() {
     let (_, _, user) = TestApp::init().with_user();
 

@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "uri": "http://api.github.com/orgs/crates-test-org/teams?per_page=100",
+      "uri": "http://api.github.com/orgs/crates-test-org/teams/this-does-not-exist",
       "method": "GET",
       "headers": [
         [
@@ -28,7 +28,7 @@
       "body": ""
     },
     "response": {
-      "status": 200,
+      "status": 404,
       "headers": [
         [
           "X-OAuth-Client-Id",
@@ -88,7 +88,7 @@
         ],
         [
           "content-length",
-          "905"
+          "111"
         ],
         [
           "Server",
@@ -120,14 +120,14 @@
         ],
         [
           "Status",
-          "200 OK"
+          "404 Not Found"
         ],
         [
           "Access-Control-Allow-Origin",
           "*"
         ]
       ],
-      "body": "W3sibmFtZSI6ImNvcmUiLCJpZCI6MTY5OTM3Nywic2x1ZyI6ImNvcmUiLCJkZXNjcmlwdGlvbiI6bnVsbCwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3NyIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc3L3JlcG9zIiwicGVybWlzc2lvbiI6ImFkbWluIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzLTIiLCJpZCI6MTY5OTM3OSwic2x1ZyI6Imp1c3QtZm9yLWNyYXRlcy0yIiwiZGVzY3JpcHRpb24iOiJKdXN0IGZvciBDcmF0ZXMgMiIsInByaXZhY3kiOiJzZWNyZXQiLCJ1cmwiOiJodHRwczovL2FwaS5naXRodWIuY29tL3RlYW1zLzE2OTkzNzkiLCJtZW1iZXJzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9tZW1iZXJzey9tZW1iZXJ9IiwicmVwb3NpdG9yaWVzX3VybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OS9yZXBvcyIsInBlcm1pc3Npb24iOiJwdWxsIn0seyJuYW1lIjoianVzdC1mb3ItY3JhdGVzMSIsImlkIjoxNjk5Mzc4LCJzbHVnIjoianVzdC1mb3ItY3JhdGVzMSIsImRlc2NyaXB0aW9uIjoiIiwicHJpdmFjeSI6InNlY3JldCIsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vdGVhbXMvMTY5OTM3OCIsIm1lbWJlcnNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L21lbWJlcnN7L21lbWJlcn0iLCJyZXBvc2l0b3JpZXNfdXJsIjoiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS90ZWFtcy8xNjk5Mzc4L3JlcG9zIiwicGVybWlzc2lvbiI6InB1bGwifV0="
+      "body": "ewogICJtZXNzYWdlIjogIk5vdCBGb3VuZCIsCiAgImRvY3VtZW50YXRpb25fdXJsIjogImh0dHBzOi8vZGV2ZWxvcGVyLmdpdGh1Yi5jb20vdjMvdGVhbXMvI2dldC10ZWFtLWJ5LW5hbWUiCn0K"
     }
   }
 ]
