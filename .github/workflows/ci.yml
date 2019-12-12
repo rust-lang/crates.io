@@ -50,6 +50,9 @@ jobs:
           npm run lint:js
           npm run lint:deps
 
+      - name: Add nonce for parallel tests
+        run: echo ::set-env name=PERCY_PARALLEL_NONCE::`date +%s`
+
       - name: Test
         run: npm test
 
