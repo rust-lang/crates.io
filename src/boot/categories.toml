@@ -227,7 +227,15 @@ Crates for dealing with files and filesystems.\
 [game-engines]
 name = "Game engines"
 description = """
-Crates for creating games.\
+For crates that try to provide a \"one-stop-shop\" for \
+all of your game development needs.\
+"""
+
+[game-development]
+name = "Game development"
+description = """
+For crates that focus on some individual part of accelerating \
+the development of games.\
 """
 
 [games]
