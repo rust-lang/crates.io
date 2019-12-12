@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+      - auto
+      - try
     paths-ignore:
       - 'docs/**'
       - README.md
