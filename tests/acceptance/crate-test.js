@@ -12,17 +12,6 @@ module('Acceptance | crate page', function(hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('is accessible', async function(assert) {
-    assert.expect(0);
-
-    this.server.create('crate', 'withVersion', { id: 'nanomsg' });
-
-    await visit('/');
-    percySnapshot(assert);
-
-    await a11yAudit(axeConfig);
-  });
-
   test('/crates/:crate is accessible', async function(assert) {
     assert.expect(0);
 
