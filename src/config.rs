@@ -17,6 +17,13 @@ pub struct Config {
     pub api_protocol: String,
     pub publish_rate_limit: PublishRateLimit,
     pub blocked_traffic: Vec<(String, Vec<String>)>,
+    // This variable configures how many days ago is considered for "recent" downloads. This
+    // variable must match what is contained within:
+    //
+    // migrations/2018-04-24-145128_create_recent_crate_downloads/up.sql
+    //
+    // By default it is configured to be set up to be 90 days.
+    pub ndays: i32,
 }
 
 impl Default for Config {
@@ -136,6 +143,7 @@ impl Default for Config {
             api_protocol,
             publish_rate_limit: Default::default(),
             blocked_traffic: blocked_traffic(),
+            ndays: 90,
         }
     }
 }

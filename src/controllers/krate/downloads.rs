@@ -22,13 +22,14 @@ pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let ndays = req.app().config.ndays;
 
     let mut versions = krate.all_versions().load::<Version>(&*conn)?;
     versions.sort_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
     let downloads = VersionDownload::belonging_to(latest_five)
-        .filter(version_downloads::date.gt(date(now - 90.days())))
+        .filter(version_downloads::date.gt(date(now - ndays.days())))
         .order(version_downloads::date.asc())
         .load(&*conn)?
         .into_iter()
@@ -41,7 +42,7 @@ pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
             to_char(version_downloads::date, "YYYY-MM-DD"),
             sum_downloads,
         ))
-        .filter(version_downloads::date.gt(date(now - 90.days())))
+        .filter(version_downloads::date.gt(date(now - ndays.days())))
         .group_by(version_downloads::date)
         .order(version_downloads::date.asc())
         .load::<ExtraDownload>(&*conn)?;
@@ -73,11 +74,10 @@ pub fn downloads(req: &mut dyn Request) -> AppResult<Response> {
 pub fn recent_downloads(req: &mut dyn Request) -> AppResult<Response> {
     use diesel::dsl::*;
 
-    let ndays = 90;
-
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
     let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
+    let ndays = req.app().config.ndays;
 
     // Get the versions for this crate
     let available_versions = krate.all_versions().load::<Version>(&*conn)?;

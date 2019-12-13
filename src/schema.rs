@@ -664,7 +664,7 @@ table! {
 table! {
     /// Representation of the `recent_crate_downloads` view.
     ///
-    /// This data represents the downloads in the last 90 days.
+    /// This data represents the downloads in the last `Config::ndays` days.
     /// This view does not contain realtime data.
     /// It is refreshed by the `update-downloads` script.
     recent_crate_downloads (crate_id) {

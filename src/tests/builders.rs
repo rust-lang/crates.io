@@ -202,15 +202,16 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    /// Sets the crate's number of downloads that happened more than 90 days ago. The total
-    /// number of downloads for this crate will be this plus the number of recent downloads.
+    /// Sets the crate's number of downloads that happened more than `Config::ndays` days ago. The
+    /// total number of downloads for this crate will be this plus the number of recent downloads.
     pub fn downloads(mut self, downloads: i32) -> Self {
         self.downloads = Some(downloads);
         self
     }
 
-    /// Sets the crate's number of downloads in the last 90 days. The total number of downloads
-    /// for this crate will be this plus the number of downloads set with the `downloads` method.
+    /// Sets the crate's number of downloads in the last `Config::ndays` days. The total number of
+    /// downloads for this crate will be this plus the number of downloads set with the `downloads`
+    /// method.
     pub fn recent_downloads(mut self, recent_downloads: i32) -> Self {
         self.recent_downloads = Some(recent_downloads);
         self

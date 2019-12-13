@@ -1395,7 +1395,7 @@ fn download() {
     let yesterday = (Utc::today() + Duration::days(-1)).format("%F");
     let query = format!("before_date={}", yesterday);
     assert_dl_count("FOO_DOWNLOAD/1.0.0", Some(&query), 0);
-    // crate/downloads always returns the last 90 days and ignores date params
+    // crate/downloads always returns the last `Config::ndays days` and ignores date params
     assert_dl_count("FOO_DOWNLOAD", Some(&query), 2);
 
     let tomorrow = (Utc::today() + Duration::days(1)).format("%F");
@@ -2134,12 +2134,12 @@ fn author_license_and_description_required() {
     );
 }
 
-/*  Given two crates, one with downloads less than 90 days ago, the
-    other with all downloads greater than 90 days ago, check that
-    the order returned is by recent downloads, descending. Check
-    also that recent download counts are returned in recent_downloads,
-    and total downloads counts are returned in downloads, and that
-    these numbers do not overlap.
+/* Given two crates, one with downloads less than `Config::ndays` days ago,
+   the other with all downloads greater than `Config::ndays` days ago, check
+   that the order returned is by recent downloads, descending. Check also
+   that recent download counts are returned in recent_downloads, and total
+   downloads counts are returned in downloads, and that these numbers do
+   not overlap.
 */
 #[test]
 fn test_recent_download_count() {
@@ -2147,7 +2147,7 @@ fn test_recent_download_count() {
     let user = user.as_model();
 
     app.db(|conn| {
-        // More than 90 days ago
+        // More than `Config::ndays` days ago
         CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .downloads(10)
@@ -2185,7 +2185,7 @@ fn test_zero_downloads() {
     let user = user.as_model();
 
     app.db(|conn| {
-        // More than 90 days ago
+        // More than `Config::ndays` days ago
         CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .downloads(0)
@@ -2201,7 +2201,7 @@ fn test_zero_downloads() {
 }
 
 /*  Given two crates, one with more all-time downloads, the other with
-    more downloads in the past 90 days, check that the index page for
+    more downloads in the past `Config::ndays` days, check that the index page for
     categories and keywords is sorted by recent downlaods by default.
 */
 #[test]
@@ -2210,7 +2210,7 @@ fn test_default_sort_recent() {
     let user = user.as_model();
 
     let (green_crate, potato_crate) = app.db(|conn| {
-        // More than 90 days ago
+        // More than `Config::ndays` days ago
         let green_crate = CrateBuilder::new("green_ball", user.id)
             .description("For fetching")
             .keyword("dog")
