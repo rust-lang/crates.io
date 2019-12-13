@@ -70,9 +70,19 @@ export default Controller.extend({
     }
 
     return PromiseArray.create({
-      promise: deps.then(deps => {
-        return deps.filter(dep => dep.get('kind') !== 'dev').uniqBy('crate_id');
-      }),
+      promise: deps.then(deps => deps.filterBy('kind', 'normal').uniqBy('crate_id')),
+    });
+  }),
+
+  currentBuildDependencies: computed('currentVersion.dependencies', function() {
+    let deps = this.get('currentVersion.dependencies');
+
+    if (deps === null) {
+      return [];
+    }
+
+    return PromiseArray.create({
+      promise: deps.then(deps => deps.filterBy('kind', 'build').uniqBy('crate_id')),
     });
   }),
 
@@ -82,9 +92,7 @@ export default Controller.extend({
       return [];
     }
     return PromiseArray.create({
-      promise: deps.then(deps => {
-        return deps.filterBy('kind', 'dev');
-      }),
+      promise: deps.then(deps => deps.filterBy('kind', 'dev').uniqBy('crate_id')),
     });
   }),
 
