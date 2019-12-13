@@ -9,6 +9,8 @@ struct BadgeRef {
     travis_ci_attributes: HashMap<String, String>,
     gitlab: Badge,
     gitlab_attributes: HashMap<String, String>,
+    github: Badge,
+    github_attributes: HashMap<String, String>,
     azure_devops: Badge,
     azure_devops_attributes: HashMap<String, String>,
     isitmaintained_issue_resolution: Badge,
@@ -85,6 +87,17 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
     let mut badge_attributes_gitlab = HashMap::new();
     badge_attributes_gitlab.insert(String::from("branch"), String::from("beta"));
     badge_attributes_gitlab.insert(String::from("repository"), String::from("rust-lang/rust"));
+
+    let github = Badge::GitHub {
+        repository: String::from("rust-lang/crates.io"),
+        workflow: Some(String::from("Rust")),
+    };
+    let mut badge_attributes_github = HashMap::new();
+    badge_attributes_github.insert(
+        String::from("repository"),
+        String::from("rust-lang/crates.io"),
+    );
+    badge_attributes_github.insert(String::from("workflow"), String::from("Rust"));
 
     let azure_devops = Badge::AzureDevops {
         project: String::from("rust-lang"),
@@ -171,6 +184,8 @@ fn set_up() -> (BadgeTestCrate, BadgeRef) {
         travis_ci_attributes: badge_attributes_travis_ci,
         gitlab,
         gitlab_attributes: badge_attributes_gitlab,
+        github,
+        github_attributes: badge_attributes_github,
         azure_devops,
         azure_devops_attributes: badge_attributes_azure_devops,
         isitmaintained_issue_resolution,
@@ -235,6 +250,17 @@ fn update_add_gitlab() {
     badges.insert(String::from("gitlab"), test_badges.gitlab_attributes);
     krate.update(&badges);
     assert_eq!(krate.badges(), vec![test_badges.gitlab]);
+}
+
+#[test]
+fn update_add_github() {
+    // Add a github badge
+    let (krate, test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    badges.insert(String::from("github"), test_badges.github_attributes);
+    krate.update(&badges);
+    assert_eq!(krate.badges(), vec![test_badges.github]);
 }
 
 #[test]
@@ -473,6 +499,21 @@ fn gitlab_required_keys() {
     let invalid_badges = krate.update(&badges);
     assert_eq!(invalid_badges.len(), 1);
     assert_eq!(invalid_badges.first().unwrap(), "gitlab");
+    assert_eq!(krate.badges(), vec![]);
+}
+
+#[test]
+fn github_required_keys() {
+    // Add a github badge missing a riquired filed
+    let (krate, mut test_badges) = set_up();
+
+    let mut badges = HashMap::new();
+    test_badges.github_attributes.remove("repository");
+    badges.insert(String::from("github"), test_badges.github_attributes);
+
+    let invalid_badges = krate.update(&badges);
+    assert_eq!(invalid_badges.len(), 1);
+    assert_eq!(invalid_badges.first().unwrap(), "github");
     assert_eq!(krate.badges(), vec![]);
 }
 

@@ -44,6 +44,11 @@ pub enum Badge {
         repository: String,
         branch: Option<String>,
     },
+    #[serde(rename = "github")]
+    GitHub {
+        repository: String,
+        workflow: Option<String>,
+    },
     CircleCi {
         repository: String,
         branch: Option<String>,
