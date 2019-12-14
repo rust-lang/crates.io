@@ -7,9 +7,6 @@ on:
       - try
 
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - README.md
 
 jobs:
   frontend:
