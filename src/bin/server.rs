@@ -15,7 +15,7 @@ use reqwest::blocking::Client;
 
 enum Server {
     Civet(CivetServer),
-    Hyper(tokio::runtime::Runtime),
+    Hyper(tokio::runtime::Runtime, tokio::task::JoinHandle<()>),
 }
 
 use Server::*;
@@ -58,9 +58,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let server = if dotenv::var("USE_HYPER").is_ok() {
         use tokio::io::AsyncWriteExt;
-        use tokio_net::signal::unix::{signal, SignalKind};
+        use tokio::signal::unix::{signal, SignalKind};
 
         println!("Booting with a hyper based server");
+
+        let mut rt = tokio::runtime::Builder::new()
+            //.blocking_threads(threads as usize) // FIXME: Impl this in conduit-hyper
+            .threaded_scheduler()
+            .enable_all()
+            .build()
+            .unwrap();
 
         let handler = Arc::new(app);
         let make_service =
@@ -71,30 +78,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
 
         let addr = ([127, 0, 0, 1], port).into();
-        let server = hyper::Server::bind(&addr).serve(make_service);
+        let server = rt.block_on(async { hyper::Server::bind(&addr).serve(make_service) });
 
-        let mut sig_int = signal(SignalKind::interrupt())?.into_future();
-        let mut sig_term = signal(SignalKind::terminate())?.into_future();
+        let mut sig_int = rt.block_on(async { signal(SignalKind::interrupt()) })?;
+        let mut sig_term = rt.block_on(async { signal(SignalKind::terminate()) })?;
 
         let server = server.with_graceful_shutdown(async move {
             // Wait for either signal
             futures::select! {
-                _ = sig_int => (),
-                _ = sig_term => (),
+                _ = sig_int.recv().fuse() => (),
+                _ = sig_term.recv().fuse() => (),
             };
             let mut stdout = tokio::io::stdout();
             stdout.write_all(b"Starting graceful shutdown\n").await.ok();
         });
 
-        let rt = tokio::runtime::Builder::new()
-            .blocking_threads(threads as usize)
-            .build()
-            .unwrap();
-        rt.spawn(async {
-            server.await.unwrap();
-        });
-
-        Hyper(rt)
+        let server = rt.spawn(async { server.await.unwrap() });
+        Hyper(rt, server)
     } else {
         println!("Booting with a civet based server");
         let mut cfg = civet::Config::new();
@@ -121,8 +121,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Block the main thread until the server has shutdown
     match server {
-        Hyper(rt) => {
-            rt.shutdown_on_idle();
+        Hyper(mut rt, server) => {
+            rt.block_on(async { server.await.unwrap() });
         }
         Civet(server) => {
             let (tx, rx) = channel::<()>();

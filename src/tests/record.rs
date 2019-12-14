@@ -14,10 +14,10 @@ use std::{
 };
 
 use futures::{channel::oneshot, future, prelude::*};
-use hyper::{Body, Error, Request, Response, Server, StatusCode, Uri};
+use hyper::{body::to_bytes, Body, Error, Request, Response, Server, StatusCode, Uri};
 use tokio::{
     net::{TcpListener, TcpStream},
-    runtime::current_thread::Runtime,
+    runtime,
 };
 
 // A "bomb" so when the test task exists we know when to shut down
@@ -105,15 +105,18 @@ pub fn proxy() -> (String, Bomb) {
     let (quittx, quitrx) = oneshot::channel();
 
     let thread = thread::spawn(move || {
-        let mut rt = t!(Runtime::new());
+        let mut rt = t!(runtime::Builder::new()
+            .basic_scheduler()
+            .enable_io()
+            .build());
 
         let client = if let Record::Capture(_, _) = record {
-            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new().unwrap()))
+            Some(hyper::Client::builder().build(hyper_tls::HttpsConnector::new()))
         } else {
             None
         };
 
-        let listener = t!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
+        let mut listener = t!(rt.block_on(TcpListener::bind("127.0.0.1:0")));
         url_tx
             .send(format!("http://{}", t!(listener.local_addr())))
             .unwrap();
@@ -231,7 +234,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
     let method = header_parts.method;
     let uri = header_parts.uri;
     let headers = header_parts.headers;
-    let body = body.try_concat().await?;
+    let body = to_bytes(body).await?;
 
     // Save info on the incoming request for the exchange log
     let request = RecordedRequest {
@@ -258,7 +261,7 @@ async fn record_http(req: Request<Body>, client: Client) -> Result<ResponseAndEx
     let hyper_response = client.request(req).await?;
     let status = hyper_response.status();
     let headers = hyper_response.headers().clone();
-    let body = hyper_response.into_body().try_concat().await?;
+    let body = to_bytes(hyper_response.into_body()).await?;
 
     // Save the response for the exchange log
     let response = RecordedResponse {
@@ -316,17 +319,17 @@ fn replay_http(
 
     async {
         assert_eq!(
-            req.into_body().try_concat().await.unwrap().into_bytes(),
+            to_bytes(req.into_body()).await.unwrap(),
             base64::decode(&exchange.request.body).unwrap()
         );
 
         let mut builder = Response::builder();
-        builder.status(StatusCode::from_u16(exchange.response.status).unwrap());
         for (key, value) in exchange.response.headers {
-            builder.header(key.as_str(), value.as_str());
+            builder = builder.header(key.as_str(), value.as_str());
         }
         let body = base64::decode(exchange.response.body.as_bytes()).unwrap();
-        let response = builder.body(body.into()).unwrap();
+        let status = StatusCode::from_u16(exchange.response.status).unwrap();
+        let response = builder.status(status).body(body.into()).unwrap();
 
         Ok(response)
     }
