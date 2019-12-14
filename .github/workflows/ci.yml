@@ -3,12 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - master
       - auto
       - try
-    paths-ignore:
-      - 'docs/**'
-      - README.md
 
   pull_request:
     paths-ignore:
