@@ -3,10 +3,10 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-module('Integration | Component | flash-message', function (hooks) {
+module('Integration | Component | flash-message', function(hooks) {
   setupRenderingTest(hooks);
 
-  test('it renders', async function (assert) {
+  test('it renders', async function(assert) {
     assert.expect(2);
 
     this.flashMessages = this.owner.lookup('service:flashMessages');
@@ -18,7 +18,7 @@ module('Integration | Component | flash-message', function (hooks) {
     assert.equal(this.element.querySelector('#flash').className, 'shown warning ember-view', 'should have right class');
   });
 
-  test('it renders with right passed type', async function (assert) {
+  test('it renders with right passed type', async function(assert) {
     assert.expect(1);
 
     this.flashMessages = this.owner.lookup('service:flashMessages');

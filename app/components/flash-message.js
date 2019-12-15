@@ -7,7 +7,7 @@ export default Component.extend({
   flashMessages: service(),
   message: readOnly('flashMessages.message'),
   options: readOnly('flashMessages.options'),
-  type: computed('flashMessages.options', function () {
+  type: computed('flashMessages.options', function() {
     return this.get('flashMessages.options.type') || 'warning';
   }),
 
