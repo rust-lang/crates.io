@@ -104,6 +104,7 @@ pub struct EncodableCrate {
     pub repository: Option<String>,
     pub links: EncodableCrateLinks,
     pub exact_match: bool,
+    pub audit_actions: Vec<EncodableAuditAction>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -378,6 +379,7 @@ mod tests {
                 reverse_dependencies: "".to_string(),
             },
             exact_match: false,
+            audit_actions: vec![],
         };
         let json = serde_json::to_string(&crt).unwrap();
         assert!(json

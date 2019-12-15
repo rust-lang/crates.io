@@ -10,11 +10,11 @@ use crate::app::App;
 use crate::email;
 use crate::models::version::TopVersions;
 use crate::models::{
-    Badge, Category, CrateOwner, CrateOwnerInvitation, Keyword, NewCrateOwnerInvitation, Owner,
-    OwnerKind, ReverseDependency, User, Version,
+    Badge, Category, CrateOwner, CrateOwnerAction, CrateOwnerInvitation, Keyword,
+    NewCrateOwnerInvitation, Owner, OwnerKind, ReverseDependency, User, Version,
 };
 use crate::util::{cargo_err, AppResult};
-use crate::views::{EncodableCrate, EncodableCrateLinks};
+use crate::views::{EncodableAuditAction, EncodableCrate, EncodableCrateLinks};
 
 use crate::models::helpers::with_count::*;
 use crate::publish_rate_limit::PublishRateLimit;
@@ -294,6 +294,7 @@ impl Crate {
             badges,
             exact_match,
             recent_downloads,
+            vec![],
         )
     }
 
@@ -307,6 +308,7 @@ impl Crate {
         badges: Option<Vec<Badge>>,
         exact_match: bool,
         recent_downloads: Option<i64>,
+        audit_actions: Vec<(CrateOwnerAction, User)>,
     ) -> EncodableCrate {
         let Crate {
             name,
@@ -327,6 +329,14 @@ impl Crate {
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
         let badges = badges.map(|bs| bs.into_iter().map(Badge::encodable).collect());
         let documentation = Crate::remove_blocked_documentation_urls(documentation);
+        let audit_actions = audit_actions
+            .into_iter()
+            .map(|(audit_action, user)| EncodableAuditAction {
+                action: audit_action.action.into(),
+                user: User::encodable_public(user),
+                time: audit_action.time,
+            })
+            .collect();
 
         EncodableCrate {
             id: name.clone(),
@@ -354,6 +364,7 @@ impl Crate {
                 owner_user: Some(format!("/api/v1/crates/{}/owner_user", name)),
                 reverse_dependencies: format!("/api/v1/crates/{}/reverse_dependencies", name),
             },
+            audit_actions,
         }
     }
 

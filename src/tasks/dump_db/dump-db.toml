@@ -217,3 +217,11 @@ published_by = "public"
 [versions_published_by.columns]
 version_id = "private"
 email = "private"
+
+[crate_owner_actions.columns]
+id = "private"
+crate_id = "private"
+user_id = "private"
+api_token_id = "private"
+action = "private"
+time = "private"

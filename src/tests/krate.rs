@@ -2263,6 +2263,80 @@ fn test_cargo_invite_owners() {
 }
 
 #[test]
+fn test_invite_user_audit_action() {
+    let (app, anon, owner) = TestApp::init().with_user();
+
+    let new_user = app.db_new_user("cilantro");
+    app.db(|conn| {
+        CrateBuilder::new("guacamole", owner.as_model().id).expect_build(conn);
+    });
+
+    #[derive(Serialize)]
+    struct OwnerReq {
+        owners: Option<Vec<String>>,
+    }
+    #[derive(Deserialize, Debug)]
+    struct OwnerResp {
+        // server must include `ok: true` to support old cargo clients
+        ok: bool,
+        msg: String,
+    }
+
+    let body = serde_json::to_string(&OwnerReq {
+        owners: Some(vec![new_user.as_model().gh_login.clone()]),
+    });
+    owner
+        .put::<serde_json::Value>("/api/v1/crates/guacamole/owners", body.unwrap().as_bytes())
+        .good();
+
+    let json = anon.show_crate("guacamole");
+
+    assert_eq!(json.krate.audit_actions.len(), 1);
+    let action = &json.krate.audit_actions[0];
+    assert_eq!(action.action, "invite_user");
+    assert_eq!(action.user.id, owner.as_model().id);
+}
+
+#[test]
+fn test_remove_user_audit_action() {
+    let (app, anon, owner) = TestApp::init().with_user();
+
+    let new_user = app.db_new_user("cilantro");
+    app.db(|conn| {
+        CrateBuilder::new("guacamole", owner.as_model().id).expect_build(conn);
+    });
+
+    #[derive(Serialize)]
+    struct OwnerReq {
+        owners: Option<Vec<String>>,
+    }
+    #[derive(Deserialize, Debug)]
+    struct OwnerResp {
+        // server must include `ok: true` to support old cargo clients
+        ok: bool,
+        msg: String,
+    }
+
+    let body = serde_json::to_string(&OwnerReq {
+        owners: Some(vec![new_user.as_model().gh_login.clone()]),
+    })
+    .unwrap();
+    owner
+        .put::<serde_json::Value>("/api/v1/crates/guacamole/owners", body.as_bytes())
+        .good();
+    owner
+        .delete_with_body::<serde_json::Value>("/api/v1/crates/guacamole/owners", body.as_bytes())
+        .good();
+
+    let json = anon.show_crate("guacamole");
+
+    assert_eq!(json.krate.audit_actions.len(), 2);
+    let action = &json.krate.audit_actions[1];
+    assert_eq!(action.action, "remove_user");
+    assert_eq!(action.user.id, owner.as_model().id);
+}
+
+#[test]
 fn new_krate_tarball_with_hard_links() {
     let (_, _, _, token) = TestApp::init().with_token();
 

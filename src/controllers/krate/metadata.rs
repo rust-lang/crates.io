@@ -7,8 +7,8 @@
 use crate::controllers::frontend_prelude::*;
 
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    User, Version, VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, CrateOwnerAction, CrateVersions, Keyword,
+    RecentCrateDownloads, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::views::{
@@ -106,6 +106,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
     let conn = req.db_conn()?;
     let krate = Crate::by_name(name).first::<Crate>(&*conn)?;
 
+    let krate_owner_actions = CrateOwnerAction::by_crate(&*conn, &krate)?;
     let mut versions_and_publishers = krate
         .all_versions()
         .left_outer_join(users::table)
@@ -162,6 +163,7 @@ pub fn show(req: &mut dyn Request) -> AppResult<Response> {
             Some(badges),
             false,
             recent_downloads,
+            krate_owner_actions,
         ),
         versions: versions_publishers_and_audit_actions
             .into_iter()

@@ -3,7 +3,7 @@
 use serde_json;
 
 use crate::controllers::prelude::*;
-use crate::models::{Crate, Owner, Rights, Team, User};
+use crate::models::{insert_crate_owner_action, Crate, CrateAction, Owner, Rights, Team, User};
 use crate::views::EncodableOwner;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
@@ -95,6 +95,7 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
     let user = req.user()?;
     let crate_name = &req.params()["crate_id"];
     let conn = req.db_conn()?;
+    let authentication_source = req.authentication_source()?;
 
     conn.transaction(|| {
         let krate = Crate::by_name(crate_name).first::<Crate>(&*conn)?;
@@ -124,6 +125,15 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
                 let msg = krate.owner_add(app, &conn, user, login)?;
                 msgs.push(msg);
             }
+
+            insert_crate_owner_action(
+                &conn,
+                krate.id,
+                user.id,
+                authentication_source.api_token_id(),
+                CrateAction::InviteUser,
+            )?;
+
             msgs.join(",")
         } else {
             for login in &logins {
@@ -136,6 +146,15 @@ fn modify_owners(req: &mut dyn Request, add: bool) -> AppResult<Response> {
                      at least one individual owner is required.",
                 ));
             }
+
+            insert_crate_owner_action(
+                &conn,
+                krate.id,
+                user.id,
+                authentication_source.api_token_id(),
+                CrateAction::RemoveUser,
+            )?;
+
             "owners successfully removed".to_owned()
         };
 
