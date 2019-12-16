@@ -344,8 +344,7 @@ Mailgun environment variables in `.env` manually or run your app instance
 on Heroku and add the Mailgun app.
 
 To set the environment variables manually, create an account and configure
-Mailgun. [These quick start instructions]
-(http://mailgun-documentation.readthedocs.io/en/latest/quickstart.html)
+Mailgun. [These quick start instructions](https://documentation.mailgun.com/en/latest/quickstart.html)
 might be helpful. Once you get the environment variables for the app, you
 will have to add them to the bottom of the `.env` file. You will need to
 fill in the `MAILGUN_SMTP_LOGIN`, `MAILGUN_SMTP_PASSWORD`, and
