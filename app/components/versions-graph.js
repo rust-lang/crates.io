@@ -44,7 +44,7 @@ export default Component.extend({
       // understands version triples, not doubles.
       let key = `${major}.${minor}.0`;
       if (downloadsPerVersion.has(key)) {
-        const old = downloadsPerVersion.get(key);
+        let old = downloadsPerVersion.get(key);
         downloadsPerVersion.set(key, old + downloads);
       } else {
         downloadsPerVersion.set(key, downloads);
@@ -58,7 +58,7 @@ export default Component.extend({
     ];
 
     // Update plotData with rows in the correct format for google visualization library
-    for (var [key, value] of sortIncreasingBySemver(downloadsPerVersion)) {
+    for (let [key, value] of sortIncreasingBySemver(downloadsPerVersion)) {
       plotData.push([key, value, '#62865f', value]);
     }
 
@@ -89,17 +89,17 @@ export default Component.extend({
 function sortIncreasingBySemver(downloadsMap) {
   const items = Array.from(downloadsMap.entries());
   // Sort by semver comparison
-  items.sort((a, b) => {
+  items.sort(([versionA], [versionB]) => {
     // Index 0 is the version string in the array.
     //
     // We use `lt` here as we want the array to be sorted in reverse order
     // (newest at the top)
-    return semver.lt(a[0], b[0]);
+    return semver.lt(versionA, versionB);
   });
 
   // Update the labels to show e.g. `0.1.x` instead of `0.1.0` which is
   // required by semver comparisons
-  return items.map(i => {
-    return [i[0].replace(/\.0$/, '.x'), i[1]];
+  return items.map(([version, count]) => {
+    return [version.replace(/\.0$/, '.x'), count];
   });
 }
