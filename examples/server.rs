@@ -3,28 +3,20 @@
 use conduit::{Handler, Request, Response};
 use conduit_hyper::Server;
 use conduit_router::RouteBuilder;
-use tokio::runtime;
 
 use std::collections::HashMap;
 use std::io::{Cursor, Error};
 use std::thread::sleep;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
 
     let app = build_conduit_handler();
     let addr = ([127, 0, 0, 1], 12345).into();
-    let server = Server::bind(&addr, app);
 
-    let rt = runtime::Builder::new()
-        // Set the max number of concurrent requests (tokio defaults to 100)
-        .blocking_threads(2)
-        .build()
-        .unwrap();
-    rt.spawn(async {
-        server.await;
-    });
-    rt.shutdown_on_idle();
+    // FIXME: Set limit on number of blocking tasks
+    Server::serve(&addr, app).await;
 }
 
 fn build_conduit_handler() -> impl Handler {

@@ -1,4 +1,4 @@
-#![deny(warnings, clippy::all, missing_debug_implementations)]
+#![deny(warnings, clippy::all, missing_debug_implementations, rust_2018_idioms)]
 #![allow(clippy::needless_doctest_main, clippy::unknown_clippy_lints)] // using the tokio::main attribute
 
 //! A wrapper for integrating `hyper 0.13` with a `conduit 0.8` blocking application stack.
@@ -16,14 +16,13 @@
 //! ```no_run
 //! use conduit::Handler;
 //! use conduit_hyper::Server;
-//! use futures::executor::block_on;
 //! use tokio::runtime::Runtime;
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     let app = build_conduit_handler();
 //!     let addr = ([127, 0, 0, 1], 12345).into();
-//!     let server = Server::bind(&addr, app);
+//!     let server = Server::serve(&addr, app);
 //!
 //!     server.await;
 //! }

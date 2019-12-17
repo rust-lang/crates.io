@@ -15,18 +15,18 @@ use std::path::{Component, Path, PathBuf};
 
 use conduit::{Extensions, Headers, Host, Method, Request, Scheme};
 use http::{request::Parts as HttpParts, HeaderMap};
-use hyper::{Chunk, Method as HyperMethod, Version as HttpVersion};
+use hyper::{body::Bytes, Method as HyperMethod, Version as HttpVersion};
 use semver::Version;
 
 /// Owned data consumed by the background thread
 ///
 /// `ConduitRequest` cannot be sent between threads, so the needed request data
 /// is extracted from hyper on a core thread and taken by the background thread.
-pub(crate) struct RequestInfo(Option<(Parts, Chunk)>);
+pub(crate) struct RequestInfo(Option<(Parts, Bytes)>);
 
 impl RequestInfo {
     /// Save the request info that can be sent between threads
-    pub(crate) fn new(parts: HttpParts, body: Chunk) -> Self {
+    pub(crate) fn new(parts: HttpParts, body: Bytes) -> Self {
         let tuple = (Parts(parts), body);
         Self(Some(tuple))
     }
@@ -38,7 +38,7 @@ impl RequestInfo {
     /// # Panics
     ///
     /// Panics if called more than once on a value.
-    fn take(&mut self) -> (Parts, Chunk) {
+    fn take(&mut self) -> (Parts, Bytes) {
         self.0.take().expect("called take multiple times")
     }
 }
@@ -94,7 +94,7 @@ pub(crate) struct ConduitRequest {
     parts: Parts,
     path: String,
     remote_addr: SocketAddr,
-    body: Cursor<Chunk>,
+    body: Cursor<Bytes>,
     extensions: Extensions, // makes struct non-Send
 }
 
@@ -148,6 +148,8 @@ impl Request for ConduitRequest {
             HttpVersion::HTTP_10 => version(1, 0),
             HttpVersion::HTTP_11 => version(1, 1),
             HttpVersion::HTTP_2 => version(2, 0),
+            HttpVersion::HTTP_3 => version(3, 0),
+            _ => version(0, 0),
         }
     }
 

@@ -4,9 +4,11 @@ use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use futures::prelude::*;
-use hyper::{service, Body, Error, Request, Response, StatusCode};
+use hyper::{service, Body, Request, Response, StatusCode};
 use tracing::error;
+
+mod error;
+pub use error::ServiceError;
 
 /// A builder for a `hyper::Service`.
 #[derive(Debug)]
@@ -54,10 +56,10 @@ impl Service {
         impl tower_service::Service<
             Request<Body>,
             Response = Response<Body>,
-            Error = Error,
-            Future = impl Future<Output = Result<Response<Body>, Error>> + Send + 'static,
+            Error = ServiceError,
+            Future = impl Future<Output = Result<Response<Body>, ServiceError>> + Send + 'static,
         >,
-        Error,
+        ServiceError,
     > {
         Ok(service::service_fn(move |request: Request<Body>| {
             blocking_handler(handler.clone(), request, remote_addr)
@@ -70,26 +72,22 @@ pub(crate) async fn blocking_handler<H: conduit::Handler>(
     handler: Arc<H>,
     request: Request<Body>,
     remote_addr: SocketAddr,
-) -> Result<Response<Body>, Error> {
+) -> Result<Response<Body>, ServiceError> {
     let (parts, body) = request.into_parts();
-    let full_body = body.try_concat().await?;
+
+    let full_body = hyper::body::to_bytes(body).await?;
     let mut request_info = RequestInfo::new(parts, full_body);
 
-    let future = future::poll_fn(move |_| {
-        tokio_executor::threadpool::blocking(|| {
-            let mut request = ConduitRequest::new(&mut request_info, remote_addr);
-            handler
-                .call(&mut request)
-                .map(good_response)
-                .unwrap_or_else(|e| error_response(&e.to_string()))
-        })
-        .map_err(|_| panic!("The threadpool shut down"))
-    });
-
-    // Spawn as a new top-level task, otherwise the parent task is blocked as well
-    let (future, handle) = future.remote_handle();
-    tokio_executor::spawn(future);
-    handle.await
+    // FIXME: Provide a configurable limit on the number of blocking tasks
+    tokio::task::spawn_blocking(move || {
+        let mut request = ConduitRequest::new(&mut request_info, remote_addr);
+        handler
+            .call(&mut request)
+            .map(good_response)
+            .unwrap_or_else(|e| error_response(&e.to_string()))
+    })
+    .await
+    .map_err(Into::into)
 }
 
 /// Builds a `hyper::Response` given a `conduit:Response`
@@ -104,15 +102,15 @@ fn good_response(mut response: conduit::Response) -> Response<Body> {
         Ok(s) => s,
         Err(e) => return error_response(&e.to_string()),
     };
-    builder.status(status);
 
     for (key, values) in response.headers {
         for value in values {
-            builder.header(key.as_str(), value.as_str());
+            builder = builder.header(key.as_str(), value.as_str());
         }
     }
 
     builder
+        .status(status)
         .body(body.into())
         .unwrap_or_else(|e| error_response(&e.to_string()))
 }
