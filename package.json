@@ -50,7 +50,7 @@
     "ember-cli-moment-shim": "^3.5.0",
     "ember-cli-sass": "^10.0.1",
     "ember-cli-sri": "2.1.1",
-    "ember-cli-uglify": "^2.0.0",
+    "ember-cli-uglify": "^3.0.0",
     "ember-component-attributes": "^0.1.1",
     "ember-concurrency": "^1.1.3",
     "ember-data": "~2.18.2",
