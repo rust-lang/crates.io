@@ -361,4 +361,42 @@ fn chain_error_internal() {
             .to_string(),
         "outer caused by inner"
     );
+
+    // Don't do this, the user will see a generic 500 error instead of the intended message
+    assert_eq!(
+        Err::<(), _>(cargo_err("inner"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner"
+    );
+    assert_eq!(
+        Err::<(), _>(Unauthorized)
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by must be logged in to perform that action"
+    );
+}
+
+#[test]
+fn chain_error_user_facing() {
+    // Do this rarely, the user will only see the outer error
+    assert_eq!(
+        Err::<(), _>(cargo_err("inner"))
+            .chain_error(|| cargo_err("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner" // never logged
+    );
+
+    // The outer error is sent as a response to the client.
+    // The inner error never bubbles up to the logging middleware
+    assert_eq!(
+        Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
+            .chain_error(|| cargo_err("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by permission denied" // never logged
+    );
 }
