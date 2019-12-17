@@ -63,7 +63,7 @@
     "ember-maybe-import-regenerator": "^0.1.6",
     "ember-moment": "^7.5.0",
     "ember-qunit": "^4.6.0",
-    "ember-page-title": "^4.0.5",
+    "ember-page-title": "^5.1.0",
     "ember-percy": "^1.4.0",
     "ember-prism": "^0.5.0",
     "ember-promise-helpers": "^1.0.9",
