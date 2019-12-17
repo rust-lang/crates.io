@@ -342,3 +342,23 @@ impl fmt::Display for TooManyRequests {
         "Too many requests".fmt(f)
     }
 }
+
+#[test]
+fn chain_error_internal() {
+    assert_eq!(
+        None::<()>
+            .chain_error(|| internal("inner"))
+            .chain_error(|| internal("middle"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by middle caused by inner"
+    );
+    assert_eq!(
+        Err::<(), _>(internal("inner"))
+            .chain_error(|| internal("outer"))
+            .unwrap_err()
+            .to_string(),
+        "outer caused by inner"
+    );
+}
