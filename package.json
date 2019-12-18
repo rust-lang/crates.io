@@ -67,7 +67,7 @@
     "ember-percy": "^1.6.0",
     "ember-prism": "^0.5.0",
     "ember-promise-helpers": "^1.0.9",
-    "ember-resolver": "^4.1.0",
+    "ember-resolver": "^7.0.0",
     "ember-router-scroll": "^0.4.0",
     "ember-template-lint": "^1.12.1",
     "ember-source": "~3.1.0",
