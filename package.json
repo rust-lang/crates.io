@@ -78,7 +78,7 @@
     "eslint": "^6.3.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-ember": "^7.7.2",
-    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "faker": "^4.1.0",
     "loader.js": "^4.5.1",
     "normalize.css": "^7.0.0",
