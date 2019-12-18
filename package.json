@@ -55,7 +55,7 @@
     "ember-concurrency": "^1.1.3",
     "ember-data": "~2.18.2",
     "ember-disable-prototype-extensions": "^1.1.3",
-    "ember-exam": "^1.0.0",
+    "ember-exam": "^4.0.9",
     "ember-export-application-global": "^2.0.0",
     "ember-fetch": "^6.5.1",
     "ember-keyboard": "^5.0.0",
