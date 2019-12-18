@@ -99,6 +99,12 @@ export default function() {
     return schema.versions.where({ crate }).sort((a, b) => compareIsoDates(b.created_at, a.created_at));
   });
 
+  this.get('/crates/:crate_id/recent_downloads', (schema, request) => {
+    let crate = request.params.crate_id;
+    let downloads = [{ version: "0.1.0", downloads: 32 }, { version: "0.2.0", downloads: 128 }];
+    return { downloads: downloads, meta: { crate: crate, ndays: 90 } }
+  });
+
   this.get('/crates/:crate_id/:version_num/authors', (schema, request) => {
     let crate = request.params.crate_id;
     let num = request.params.version_num;
