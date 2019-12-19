@@ -115,7 +115,7 @@ fn access_token_needs_data() {
     let (_, anon) = TestApp::init().empty();
     let json = anon
         .get::<()>("/api/private/session/authorize")
-        .bad_with_status(200); // Change endpoint to 400?
+        .bad_with_status(400);
     assert!(json.errors[0].detail.contains("invalid state"));
 }
 
@@ -486,7 +486,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, Some(""))
-        .bad_with_status(200);
+        .bad_with_status(400);
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
         "{:?}",
@@ -495,7 +495,7 @@ fn test_empty_email_not_added() {
 
     let json = user
         .update_email_more_control(model.id, None)
-        .bad_with_status(200);
+        .bad_with_status(400);
 
     assert!(
         json.errors[0].detail.contains("empty email rejected"),
@@ -521,7 +521,7 @@ fn test_other_users_cannot_change_my_email() {
             another_user_model.id,
             Some("pineapple@pineapples.pineapple"),
         )
-        .bad_with_status(200);
+        .bad_with_status(400);
     assert!(
         json.errors[0]
             .detail

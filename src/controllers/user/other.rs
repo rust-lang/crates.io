@@ -1,4 +1,4 @@
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::models::{CrateOwner, OwnerKind, User};
 use crate::schema::{crate_owners, crates, users};

@@ -4,7 +4,7 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
     User, Version,

@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 
 use crate::controllers::helpers::*;
 use crate::email;
-use crate::util::bad_request;
 use crate::util::errors::AppError;
 
 use crate::models::{CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version};
@@ -117,7 +116,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id.to_string() != name {
-        return Err(cargo_err("current user does not match requested user"));
+        return Err(bad_request("current user does not match requested user"));
     }
 
     #[derive(Deserialize)]
@@ -131,17 +130,17 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
     }
 
     let user_update: UserUpdate =
-        serde_json::from_str(&body).map_err(|_| cargo_err("invalid json request"))?;
+        serde_json::from_str(&body).map_err(|_| bad_request("invalid json request"))?;
 
     if user_update.user.email.is_none() {
-        return Err(cargo_err("empty email rejected"));
+        return Err(bad_request("empty email rejected"));
     }
 
     let user_email = user_update.user.email.unwrap();
     let user_email = user_email.trim();
 
     if user_email == "" {
-        return Err(cargo_err("empty email rejected"));
+        return Err(bad_request("empty email rejected"));
     }
 
     conn.transaction::<_, Box<dyn AppError>, _>(|| {
@@ -157,7 +156,7 @@ pub fn update_user(req: &mut dyn Request) -> AppResult<Response> {
             .set(&new_email)
             .returning(emails::token)
             .get_result::<String>(&*conn)
-            .map_err(|_| cargo_err("Error in creating token"))?;
+            .map_err(|_| server_error("Error in creating token"))?;
 
         crate::email::send_user_confirm_email(user_email, &user.gh_login, &token);
 
@@ -196,7 +195,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
 
     // need to check if current user matches user to be updated
     if &user.id != name {
-        return Err(cargo_err("current user does not match requested user"));
+        return Err(bad_request("current user does not match requested user"));
     }
 
     conn.transaction(|| {
@@ -206,7 +205,7 @@ pub fn regenerate_token_and_send(req: &mut dyn Request) -> AppResult<Response> {
             .map_err(|_| bad_request("Email could not be found"))?;
 
         email::try_send_user_confirm_email(&email.email, &user.gh_login, &email.token)
-            .map_err(|_| bad_request("Error in sending email"))
+            .map_err(|_| server_error("Error in sending email"))
     })?;
 
     ok_true()

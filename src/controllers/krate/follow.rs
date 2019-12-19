@@ -2,7 +2,7 @@
 
 use diesel::associations::Identifiable;
 
-use crate::controllers::prelude::*;
+use crate::controllers::frontend_prelude::*;
 use crate::db::DieselPooledConn;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
