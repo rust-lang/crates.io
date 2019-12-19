@@ -5,9 +5,9 @@ use diesel::prelude::*;
 
 use crate::util::{cargo_err, AppResult};
 
-use crate::models::{Crate, Dependency, User};
+use crate::models::{Crate, Dependency, User, VersionOwnerAction};
 use crate::schema::*;
-use crate::views::{EncodableVersion, EncodableVersionLinks};
+use crate::views::{EncodableAuditAction, EncodableVersion, EncodableVersionLinks};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Deserialize, Serialize)]
@@ -38,7 +38,12 @@ pub struct NewVersion {
 }
 
 impl Version {
-    pub fn encodable(self, crate_name: &str, published_by: Option<User>) -> EncodableVersion {
+    pub fn encodable(
+        self,
+        crate_name: &str,
+        published_by: Option<User>,
+        audit_actions: Vec<(VersionOwnerAction, User)>,
+    ) -> EncodableVersion {
         let Version {
             id,
             num,
@@ -71,6 +76,14 @@ impl Version {
             },
             crate_size,
             published_by: published_by.map(User::encodable_public),
+            audit_actions: audit_actions
+                .into_iter()
+                .map(|(audit_action, user)| EncodableAuditAction {
+                    action: audit_action.action.into(),
+                    user: User::encodable_public(user),
+                    time: audit_action.time,
+                })
+                .collect(),
         }
     }
 
@@ -122,7 +135,6 @@ impl Version {
 }
 
 impl NewVersion {
-    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         crate_id: i32,
         num: &semver::Version,

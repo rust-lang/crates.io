@@ -2,6 +2,12 @@ language: rust
 sudo: required
 dist: xenial
 
+branches:
+  only:
+  - auto
+  - try
+  - master
+
 cache:
   cargo: true
   directories:
@@ -21,7 +27,7 @@ env:
     - PERCY_PROJECT=crates-io/crates.io
     - PGPORT=5433
     - PATH=$HOME/.cargo/bin:$PATH
-    - RUSTFLAGS="-C debuginfo=0"
+    - RUSTFLAGS="-C debuginfo=0 -D warnings"
 
 install:
   - sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf

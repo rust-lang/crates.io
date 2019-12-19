@@ -5,7 +5,7 @@
 // Usage:
 //      cargo run --bin delete-crate crate-name
 
-#![deny(warnings, clippy::all, rust_2018_idioms)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 use cargo_registry::{db, models::Crate, schema::crates};
 use std::{

@@ -4,7 +4,7 @@ use hex::ToHex;
 use std::sync::Arc;
 use swirl::Job;
 
-use crate::controllers::prelude::*;
+use crate::controllers::cargo_prelude::*;
 use crate::git;
 use crate::models::dependency;
 use crate::models::{

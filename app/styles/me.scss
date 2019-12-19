@@ -116,6 +116,126 @@
     }
 }
 
+#me-email-notifications {
+    border-bottom: 5px solid $gray-border;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    @include display-flex;
+    @include flex-direction(column);
+
+    .row {
+        @include display-flex;
+        @include flex-direction(row);
+
+        .error, .success {
+            border-top-width: 0px;
+            font-weight: bold;
+
+            padding: 0px 10px 10px 20px;
+        }
+
+        .error {
+            color: rgb(216, 0, 41);
+        }
+
+        .success {
+            color: green;
+        }
+    }
+
+    .button-container {
+        margin-right: 1rem;
+    }
+
+    ul {
+        padding: 0;
+        @include flex-grow(1);
+
+        li {
+            background-color: #fff;
+            display: block;
+            position: relative;
+            border: 1px solid #d5d3cb;
+        }
+
+        label {
+            padding: 20px 30px;
+            width: 100%;
+            display: block;
+            text-align: left;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            transition: color 200ms ease-in;
+            overflow: hidden;
+
+            &:before {
+                width: 100%;
+                height: 10px;
+                border-radius: 50%;
+                content: '';
+                background-color: $main-bg-dark;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale3d(1, 1, 1);
+                opacity: 0;
+                z-index: -1;
+            }
+
+            &:after {
+                width: 32px;
+                height: 32px;
+                content: '';
+                border: 2px solid #d5d3cb;
+                border-radius: 50%;
+                z-index: 2;
+                position: absolute;
+                right: 30px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+            }
+        }
+
+        input:checked ~ label {
+            &:before {
+                transform: translate(-50%, -50%) scale3d(56, 56, 1);
+                opacity: 1;
+            }
+
+            &:after {
+                background-color: #cfc487;
+                border-color: #cfc487;
+                background-image: url('/assets/check-mark.svg');
+                background-repeat: no-repeat;
+                background-position: 3px 4px;
+            }
+        }
+
+        input {
+            width: 32px;
+            height: 32px;
+            order: 1;
+            z-index: 2;
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            visibility: hidden;
+        }
+    }
+
+    .right {
+        @include flex(2);
+        @include display-flex;
+        @include justify-content(flex-end);
+        @include align-self(center);
+    }
+}
+
 #me-api {
     @media only screen and (max-width: 350px) {
         .api { display: none; }

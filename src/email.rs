@@ -43,7 +43,6 @@ fn build_email(
         .map(|s| s.smtp_login.as_str())
         .unwrap_or("test@localhost");
 
-    #[allow(clippy::redundant_closure)]
     let email = Email::builder()
         .to(recipient)
         .from(sender)

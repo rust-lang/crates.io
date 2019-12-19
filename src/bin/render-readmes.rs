@@ -3,7 +3,7 @@
 //
 // Warning: this can take a lot of time.
 
-#![deny(warnings, clippy::all, rust_2018_idioms)]
+#![warn(clippy::all, rust_2018_idioms)]
 
 #[macro_use]
 extern crate serde;

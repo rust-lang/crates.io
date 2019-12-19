@@ -1,5 +1,5 @@
 import setupMirage from 'ember-cli-mirage/test-support/setup-mirage';
-import { faker } from 'ember-cli-mirage';
+import faker from 'faker';
 import timekeeper from 'timekeeper';
 
 export default function(hooks) {

@@ -1,7 +1,7 @@
 import { observer } from '@ember/object';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
-import semver from 'semver';
+import { prerelease } from 'semver';
 
 import fetch from 'fetch';
 import ajax from 'ember-fetch/ajax';
@@ -21,7 +21,7 @@ export default Route.extend({
     const controller = this.controllerFor(this.routeName);
     const maxVersion = crate.get('max_version');
 
-    const isUnstableVersion = version => !!semver.prerelease(version);
+    const isUnstableVersion = version => !!prerelease(version);
 
     const fetchCrateDocumentation = () => {
       if (!crate.get('documentation') || crate.get('documentation').substr(0, 16) === 'https://docs.rs/') {
