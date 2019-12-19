@@ -1,4 +1,11 @@
 BEGIN;
+    -- Disable triggers on each table.
+{{~#each tables}}
+    ALTER TABLE "{{this.name}}" DISABLE TRIGGER ALL;
+{{~/each}}
+COMMIT;
+
+BEGIN;
     -- Set defaults for non-nullable columns not included in the dump.
 {{~#each tables as |table|}}
 {{~#each column_defaults}}
@@ -21,5 +28,12 @@ BEGIN;
 {{~#each column_defaults}}
     ALTER TABLE "{{table.name}}" ALTER COLUMN "{{@key}}" DROP DEFAULT;
 {{~/each}}
+{{~/each}}
+COMMIT;
+
+BEGIN;
+    -- Reenable triggers on each table.
+{{~#each tables}}
+    ALTER TABLE "{{this.name}}" ENABLE TRIGGER ALL;
 {{~/each}}
 COMMIT;
