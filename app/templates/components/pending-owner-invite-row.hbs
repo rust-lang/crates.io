@@ -2,28 +2,28 @@
   {{#if isAccepted }}
     <p>
       Success! You've been added as an owner of crate
-      {{#link-to 'crate' invite.crate_name}}{{invite.crate_name}}{{/link-to}}.
+      <LinkTo @route="crate" @model={{invite.crate_name}}>{{invite.crate_name}}</LinkTo>.
     </p>
   {{else if isDeclined}}
     <p>
       Declined. You have not been added as an owner of crate
-      {{#link-to 'crate' invite.crate_name}}{{invite.crate_name}}{{/link-to}}.
+      <LinkTo @route="crate" @model={{invite.crate_name}}>{{invite.crate_name}}</LinkTo>.
     </p>
   {{else}}
     <div class='info'>
       <div class='name'>
         <h3>
-          {{#link-to 'crate' invite.crate_name}}
+          <LinkTo @route="crate" @model={{invite.crate_name}}>
             {{invite.crate_name}}
-          {{/link-to}}
+          </LinkTo>
         </h3>
       </div>
       <div class='invite'>
         <p>
           Invited by:
-          {{#link-to 'user' invite.invited_by_username}}
+          <LinkTo @route="user" @model={{invite.invited_by_username}}>
             {{invite.invited_by_username}}
-          {{/link-to}}
+          </LinkTo>
         </p>
       </div>
       <div class='sent'>

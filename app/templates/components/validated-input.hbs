@@ -1,5 +1,5 @@
 <div class='form-group'>
-  {{input type=type value=value placeholder=placeholder class='form-control' name=valuePath}}
+  <Input @type={{type}} @value={{value}} placeholder={{placeholder}} class="form-control" @name={{valuePath}} />
   {{#if isValid}}
     <span class='valid-input fa fa-check'></span>
   {{/if}}

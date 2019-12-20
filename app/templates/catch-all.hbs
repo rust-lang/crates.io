@@ -3,9 +3,12 @@
 <p id='p404'>
   Perhaps a search of the site may help?
 
-  {{input type="text" class="search"
-          placeholder="Search"
-          value=search
-          enter=(action "search")
-          required=true}}
+  <Input
+    @type="text"
+    class="search"
+    placeholder="Search"
+    @value={{search}}
+    @enter={{action "search"}}
+    required={{true}}
+  />
 </p>

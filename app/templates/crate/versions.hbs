@@ -1,5 +1,5 @@
 <div class='all-versions-back'>
-  {{#link-to 'crate' model}}&#11013; Back to Main Page{{/link-to}}
+  <LinkTo @route="crate" @model={{model}}>&#11013; Back to Main Page</LinkTo>
 </div>
 
 <div class='info'>
@@ -14,16 +14,16 @@
   {{#each model.versions as |version|}}
     <div class='row'>
       <div>
-        {{#link-to 'crate.version' version.num}}{{ version.num }}{{/link-to}}
+        <LinkTo @route="crate.version" @model={{version.num}}>{{ version.num }}</LinkTo>
 
         <span class='small'>{{moment-format version.created_at 'LL'}}</span>
         {{#if version.yanked}}
           <span class='yanked'>yanked</span>
         {{/if}}
       </div>
-      {{#link-to 'crate.version' version.num class='arrow'}}
+      <LinkTo @route="crate.version" @model={{version.num}} class="arrow">
         {{svg-jar "right-arrow"}}
-      {{/link-to}}
+      </LinkTo>
     </div>
   {{/each}}
 </div>

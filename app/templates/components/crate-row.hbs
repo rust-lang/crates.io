@@ -1,8 +1,8 @@
 <div class='desc'>
   <div class='info'>
-    {{#link-to 'crate' crate.id data-test-crate-link}}{{ crate.name }}{{/link-to}}
-    {{crate-toml-copy copyText=crateTomlText}}
-    {{crate-badge crate=crate}}
+    <LinkTo @route="crate" @model={{crate.id}} data-test-crate-link={{true}}>{{ crate.name }}</LinkTo>
+    <CrateTomlCopy @copyText={{crateTomlText}} />
+    <CrateBadge @crate={{crate}} />
     {{#each crate.annotated_badges as |badge|}}
       {{component badge.component_name badge=badge data-test-badge=badge.badge_type}}
     {{/each}}

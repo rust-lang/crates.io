@@ -29,36 +29,36 @@
     <div class='sort' data-test-search-sort>
       <span class='small'>Sort by </span>
 
-      {{#rl-dropdown-container class="dropdown-container"}}
-        {{#rl-dropdown-toggle tagName="a" class="dropdown" data-test-current-order=true}}
+      <RlDropdownContainer @class="dropdown-container">
+        <RlDropdownToggle @tagName="a" @class="dropdown" @data-test-current-order={{true}}>
           {{svg-jar "sort"}}
           {{ currentSortBy }}
           <span class='arrow'></span>
-        {{/rl-dropdown-toggle}}
+        </RlDropdownToggle>
 
-        {{#rl-dropdown tagName="ul" class="dropdown"}}
+        <RlDropdown @tagName="ul" @class="dropdown">
           <li>
-            {{#link-to (query-params page=1 sort="relevance")}}
+            <LinkTo @query={{hash page=1 sort="relevance"}}>
               Relevance
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="downloads")}}
+            <LinkTo @query={{hash page=1 sort="downloads"}}>
               All-Time Downloads
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="recent-downloads")}}
+            <LinkTo @query={{hash page=1 sort="recent-downloads"}}>
               Recent Downloads
-            {{/link-to}}
+            </LinkTo>
           </li>
           <li>
-            {{#link-to (query-params page=1 sort="recent-updates")}}
+            <LinkTo @query={{hash page=1 sort="recent-updates"}}>
               Recent Updates
-            {{/link-to}}
+            </LinkTo>
           </li>
-        {{/rl-dropdown}}
-      {{/rl-dropdown-container}}
+        </RlDropdown>
+      </RlDropdownContainer>
     </div>
   </div>
 
@@ -66,29 +66,29 @@
     {{#each model as |crate index|}}
       {{#if crate.exact_match}}
         <div class='exact-match'>
-          {{#link-to "crate" crate}}
+          <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
-          {{/link-to}}
-          {{crate-row crate=crate data-test-crate-row=index}}
+          </LinkTo>
+          <CrateRow @crate={{crate}} @data-test-crate-row={{index}} />
         </div>
       {{else}}
         <div>
-          {{crate-row crate=crate data-test-crate-row=index}}
+          <CrateRow @crate={{crate}} @data-test-crate-row={{index}} />
         </div>
       {{/if}}
     {{/each}}
   </div>
 
   <div class='pagination'>
-    {{#link-to (query-params page=prevPage) class='prev'}}
+    <LinkTo @query={{hash page=prevPage}} class="prev">
       {{svg-jar "left-pag"}}
-    {{/link-to}}
+    </LinkTo>
     {{#each pages as |page|}}
-      {{#link-to (query-params page=page)}}{{ page }}{{/link-to}}
+      <LinkTo @query={{hash page=page}}>{{ page }}</LinkTo>
     {{/each}}
-    {{#link-to (query-params page=nextPage) class='next'}}
+    <LinkTo @query={{hash page=nextPage}} class="next">
       {{svg-jar "right-pag"}}
-    {{/link-to}}
+    </LinkTo>
   </div>
 {{else}}
   <div id="no-results">

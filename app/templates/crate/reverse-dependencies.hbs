@@ -1,5 +1,5 @@
 <div class='all-versions-back'>
-  {{#link-to 'crate' crate.id}}&#11013; Back to {{ crate.name }}{{/link-to}}
+  <LinkTo @route="crate" @model={{crate.id}}>&#11013; Back to {{ crate.name }}</LinkTo>
 </div>
 
 <div id='results'>
@@ -17,7 +17,7 @@
   {{#each model as |dependency|}}
     <div class='crate row'>
       <div>
-        {{#link-to 'crate' dependency.version.crateName}}{{dependency.version.crateName}}{{/link-to}} requires {{dependency.req}}
+        <LinkTo @route="crate" @model={{dependency.version.crateName}}>{{dependency.version.crateName}}</LinkTo> requires {{dependency.req}}
       </div>
       <div class='stats downloads'>
         {{svg-jar "download-clear-back"}}
@@ -28,15 +28,15 @@
 </div>
 
 <div class='pagination'>
-  {{#link-to (query-params page=prevPage) class='prev'}}
+  <LinkTo @query={{hash page=prevPage}} class="prev">
     {{svg-jar "left-pag"}}
-  {{/link-to}}
+  </LinkTo>
   {{#each pages as |page|}}
-    {{#link-to (query-params page=page)}}
+    <LinkTo @query={{hash page=page}}>
       {{ page }}
-    {{/link-to}}
+    </LinkTo>
   {{/each}}
-  {{#link-to (query-params page=nextPage) class='next'}}
+  <LinkTo @query={{hash page=nextPage}} class="next">
     {{svg-jar "right-pag"}}
-  {{/link-to}}
+  </LinkTo>
 </div>

@@ -9,7 +9,7 @@
   <h2>Profile Information</h2>
 
   <div class='info'>
-    {{#user-link user=model.user }} {{user-avatar user=model.user size='medium'}} {{/user-link}}
+    <UserLink @user={{model.user}}> <UserAvatar @user={{model.user}} @size="medium" /> </UserLink>
 
     <dl>
       <dt>Name</dt>
@@ -22,7 +22,7 @@
 
 <div id='me-email'>
   <h2>User Email</h2>
-  {{email-input type='email' value=model.user.email user=model.user}}
+  <EmailInput @type="email" @value={{model.user.email}} @user={{model.user}} />
 </div>
 
 <form id='me-email-notifications' {{ action 'saveEmailNotifications' on='submit' }} >
@@ -46,7 +46,7 @@
   <div class='row'>
     <ul>
       {{#each ownedCrates as |ownedCrate|}}
-        {{owned-crate-row ownedCrate=ownedCrate}}
+        <OwnedCrateRow @ownedCrate={{ownedCrate}} />
       {{/each}}
     </ul>
   </div>
@@ -88,7 +88,7 @@
 
   <div id='tokens'>
     {{#each sortedTokens as |api_token|}}
-      {{api-token-row api_token=api_token}}
+      <ApiTokenRow @api_token={{api_token}} />
     {{/each}}
   </div>
 </div>

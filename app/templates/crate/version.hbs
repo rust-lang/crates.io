@@ -43,9 +43,9 @@
         <li><a href="{{crate.repository}}">Repository</a></li>
       {{/if}}
       <li>
-        {{#link-to 'crate.reverse-dependencies' (query-params dependency=crate.crate_id) data-test-reverse-deps-link=true}}
+        <LinkTo @route="crate.reverse-dependencies" @query={{hash dependency=crate.crate_id}} data-test-reverse-deps-link={{true}}>
           Dependent crates
-        {{/link-to}}
+        </LinkTo>
       </li>
     </ul>
   </div>
@@ -59,7 +59,7 @@
         may be depending on it.
       </p>
       <p>
-        You may wish to {{#link-to 'crate.versions' crate}}view all versions{{/link-to}} to find
+        You may wish to <LinkTo @route="crate.versions" @model={{crate}}>view all versions</LinkTo> to find
         one that has not been yanked.
       </p>
     {{else}}
@@ -67,12 +67,12 @@
         <div class='action'>Cargo.toml</div>
         <code id="crate-toml">{{ crateTomlText }}</code>
         {{#if (is-clipboard-supported)}}
-          {{crate-toml-copy copyText=crateTomlText}}
+          <CrateTomlCopy @copyText={{crateTomlText}} />
         {{/if}}
       </div>
       {{#if crate.readme}}
         <section class="crate-readme" aria-label="Readme">
-          {{crate-readme rendered=crate.readme}}
+          <CrateReadme @rendered={{crate.readme}} />
         </section>
       {{else}}
         {{#if crate.description}}
@@ -128,7 +128,7 @@
               <h3>Keywords</h3>
               <ul class='keywords'>
                 {{#each keywords as |keyword|}}
-                  <li>{{link-to keyword.id 'keyword' keyword}}</li>
+                  <li><LinkTo @route="keyword" @model={{keyword}}>{{keyword.id}}</LinkTo></li>
                 {{/each}}
               </ul>
             </div>
@@ -141,7 +141,7 @@
               <h3>Categories</h3>
               <ul class='categories'>
                 {{#each categories as |category|}}
-                  <li>{{link-to category.category 'category' category.slug}}</li>
+                  <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>
                 {{/each}}
               </ul>
             </div>
@@ -153,26 +153,26 @@
 
           {{#if isOwner}}
             <p>
-              {{#link-to 'crate.owners' crate}}
+              <LinkTo @route="crate.owners" @model={{crate}}>
                 Manage owners
-              {{/link-to}}
+              </LinkTo>
             </p>
           {{/if}}
 
           <ul class='owners' data-test-owners>
             {{#each crate.owner_team as |team|}}
               <li>
-                {{#link-to team.kind team.login data-test-team-link=team.login}}
-                  {{user-avatar user=team size='medium-small'}}
-                {{/link-to}}
+                <LinkTo @route={{team.kind}} @model={{team.login}} data-test-team-link={{team.login}}>
+                  <UserAvatar @user={{team}} @size="medium-small" />
+                </LinkTo>
               </li>
             {{/each}}
 
             {{#each crate.owner_user as |user|}}
               <li>
-                {{#link-to user.kind user.login data-test-user-link=user.login}}
-                  {{user-avatar user=user size='medium-small'}}
-                {{/link-to}}
+                <LinkTo @route={{user.kind}} @model={{user.login}} data-test-user-link={{user.login}}>
+                  <UserAvatar @user={{user}} @size="medium-small" />
+                </LinkTo>
               </li>
             {{/each}}
           </ul>
@@ -183,9 +183,9 @@
           <ul>
             {{#each smallSortedVersions as |version|}}
               <li>
-                {{#link-to 'crate.version' version.num data-test-version-link=version.num}}
+                <LinkTo @route="crate.version" @model={{version.num}} data-test-version-link={{version.num}}>
                   {{ version.num }}
-                {{/link-to}}
+                </LinkTo>
                 <span class='date'>{{moment-format version.created_at 'll'}}</span>
                 {{#if version.yanked}}
                   <span class='yanked'>yanked</span>
@@ -195,9 +195,9 @@
           </ul>
           <span class='small'>
             {{#if hasMoreVersions}}
-              {{#link-to 'crate.versions' crate data-test-all-versions-link=true}}
+              <LinkTo @route="crate.versions" @model={{crate}} data-test-all-versions-link={{true}}>
                 show all {{ crate.versions.length }} versions
-              {{/link-to}}
+              </LinkTo>
             {{/if}}
           </span>
         </div>
@@ -206,7 +206,7 @@
           <h3>Dependencies</h3>
           <ul>
             {{#each currentDependencies as |dep|}}
-              {{link-to-dep tagName="li" dep=dep}}
+              <LinkToDep @tagName="li" @dep={{dep}} />
             {{else}}
               {{#if (is-pending currentDependencies)}}
                 <li>Loading…</li>
@@ -222,7 +222,7 @@
             <h3>Build-Dependencies</h3>
             <ul>
               {{#each currentBuildDependencies as |dep|}}
-                {{link-to-dep tagName="li" dep=dep}}
+                <LinkToDep @tagName="li" @dep={{dep}} />
               {{/each}}
             </ul>
           </div>
@@ -233,7 +233,7 @@
             <h3>Dev-Dependencies</h3>
             <ul>
               {{#each currentDevDependencies as |dep|}}
-                {{link-to-dep tagName="li" dep=dep}}
+                <LinkToDep @tagName="li" @dep={{dep}} />
               {{/each}}
             </ul>
           </div>
@@ -264,7 +264,7 @@
     </div>
     <div class='graph'>
       <h4>Downloads over the last 90 days</h4>
-      {{download-graph data=downloadData}}
+      <DownloadGraph @data={{downloadData}} />
     </div>
   </div>
 {{/unless}}

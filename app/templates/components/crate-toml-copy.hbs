@@ -1,4 +1,4 @@
-{{#copy-button clipboardText=copyText success=(action 'copySuccess') error=(action 'copyError') title="Copy Cargo.toml snippet to clipboard"}}
+<CopyButton @clipboardText={{copyText}} @success={{action "copySuccess"}} @error={{action "copyError"}} @title="Copy Cargo.toml snippet to clipboard">
   {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
   <div class="copy-notification {{if showSuccess "copy-success" "copy-failure"}}">
     {{#if showNotification}}
@@ -9,4 +9,4 @@
       {{/if}}
     {{/if}}
   </div>
-{{/copy-button}}
+</CopyButton>

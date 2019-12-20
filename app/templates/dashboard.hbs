@@ -24,11 +24,11 @@
 
         {{#if hasMoreCrates}}
           <span class='small'>
-            {{link-to 'Show all' 'me.crates'}}
+            <LinkTo @route="me.crates">Show all</LinkTo>
           </span>
         {{/if}}
       </div>
-      {{crate-downloads-list crates=visibleCrates}}
+      <CrateDownloadsList @crates={{visibleCrates}} />
     </div>
     <div id='my-following'>
       <div class='header'>
@@ -39,11 +39,11 @@
 
         {{#if hasMoreFollowing}}
           <span class='small'>
-            {{link-to 'Show all' 'me.following'}}
+            <LinkTo @route="me.following">Show all</LinkTo>
           </span>
         {{/if}}
       </div>
-      {{crate-downloads-list crates=visibleFollowing}}
+      <CrateDownloadsList @crates={{visibleFollowing}} />
     </div>
   </div>
 
@@ -57,10 +57,10 @@
       {{#each myFeed as |version|}}
         <div class='row'>
           <div class='info'>
-            {{#link-to 'crate.version' version.crateName version.num}}
+            <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
               <span class='small'>{{ version.num }}</span>
-            {{/link-to}}
+            </LinkTo>
             <span class='date small'>
               {{moment-from-now version.created_at}}
             </span>
