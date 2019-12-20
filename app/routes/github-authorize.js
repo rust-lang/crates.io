@@ -18,7 +18,7 @@ import { serializeQueryParams } from 'ember-fetch/utils/serialize-query-params';
 export default Route.extend({
   async beforeModel(transition) {
     try {
-      let queryParams = serializeQueryParams(transition.queryParams);
+      let queryParams = serializeQueryParams(transition.to.queryParams);
       let resp = await fetch(`/api/private/session/authorize?${queryParams}`);
       let json = await resp.json();
       let item = JSON.stringify({ ok: resp.ok, data: json });
