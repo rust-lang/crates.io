@@ -34,13 +34,13 @@
       Browse All Crates
     </LinkTo>
     <span class="sep">|</span>
-    <RlDropdownContainer @class="dropdown-container">
-      <RlDropdownToggle @class="dropdown">
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle class="dropdown">
         Docs
         <span class='arrow'></span>
       </RlDropdownToggle>
 
-      <RlDropdown @tagName="ul" @id="doc-links" @class="dropdown">
+      <RlDropdown @tagName="ul" @id="doc-links" class="dropdown">
         <li><a href='https://doc.rust-lang.org/cargo/getting-started/'>Getting Started</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/guide/'>Guide</a></li>
         <li><a href='https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html'>Specifying Dependencies</a></li>
@@ -59,14 +59,14 @@
     </RlDropdownContainer>
     <span class="sep">|</span>
     {{#if session.currentUser}}
-      <RlDropdownContainer @class="dropdown-container">
-        <RlDropdownToggle @class="dropdown">
+      <RlDropdownContainer class="dropdown-container">
+        <RlDropdownToggle class="dropdown">
           <UserAvatar @user={{session.currentUser}} @size="small" />
           {{ session.currentUser.name }}
           <span class='arrow'></span>
         </RlDropdownToggle>
 
-        <RlDropdown @tagName="ul" @class="dropdown current-user-links">
+        <RlDropdown @tagName="ul" class="dropdown current-user-links">
           <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>
           <li><LinkTo @route="me">Account Settings</LinkTo></li>
           <li><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></li>
@@ -82,12 +82,12 @@
   </div>
 
   <div class='menu'>
-    <RlDropdownContainer @class="dropdown-container">
-      <RlDropdownToggle @class="dropdown">
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle class="dropdown">
         Menu
         <span class='arrow'></span>
       </RlDropdownToggle>
-      <RlDropdown @tagName="ul" @class="dropdown current-user-links">
+      <RlDropdown @tagName="ul" class="dropdown current-user-links">
         <li><LinkTo @route="crates">Browse All Crates</LinkTo></li>
         {{#if session.currentUser}}
           <li><LinkTo @route="dashboard">Dashboard</LinkTo></li>

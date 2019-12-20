@@ -37,14 +37,14 @@
   <div class='sort' data-test-crates-sort>
     <span class='small'>Sort by</span>
 
-    <RlDropdownContainer @class="dropdown-container">
-      <RlDropdownToggle @tagName="a" @class="dropdown" data-test-current-order>
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
         {{ currentSortBy }}
         <span class='arrow'></span>
       </RlDropdownToggle>
 
-      <RlDropdown @tagName="ul" @class="dropdown">
+      <RlDropdown @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash page=1 sort="alpha"}}>
             Alphabetical

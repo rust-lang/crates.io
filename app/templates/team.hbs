@@ -32,14 +32,14 @@
 
       <div class='sort'>
         <span class='small'>Sort by</span>
-        <RlDropdownContainer @class="dropdown-container">
-          <RlDropdownToggle @tagName="a" @class="dropdown">
+        <RlDropdownContainer class="dropdown-container">
+          <RlDropdownToggle @tagName="a" class="dropdown">
             {{svg-jar "sort"}}
             {{ currentSortBy }}
             <span class='arrow'></span>
           </RlDropdownToggle>
 
-          <RlDropdown @tagName="ul" @class="dropdown">
+          <RlDropdown @tagName="ul" class="dropdown">
             <li>
               <LinkTo @query={{hash sort="alpha"}}>
                 Alphabetical

@@ -17,14 +17,14 @@
 
   <div class='sort' data-test-keyword-sort>
     <span class='small'>Sort by</span>
-    <RlDropdownContainer @class="dropdown-container">
-      <RlDropdownToggle @tagName="a" @class="dropdown" data-test-current-order>
+    <RlDropdownContainer class="dropdown-container">
+      <RlDropdownToggle @tagName="a" class="dropdown" data-test-current-order>
         {{svg-jar "sort"}}
         {{ currentSortBy }}
         <span class='arrow'></span>
       </RlDropdownToggle>
 
-      <RlDropdown @tagName="ul" @class="dropdown">
+      <RlDropdown @tagName="ul" class="dropdown">
         <li>
           <LinkTo @query={{hash sort="alpha"}}>
             Alphabetical
