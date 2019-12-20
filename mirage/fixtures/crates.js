@@ -5,6 +5,29 @@ export default [
       {
         badge_type: 'maintenance',
         attributes: {
+          status: 'actively-developed',
+        },
+      },
+    ],
+    created_at: '2014-11-23T09:01:21Z',
+    description: 'A Kinetic protocol library written in Rust',
+    documentation: 'https://icorderi.github.io/kinetic-rust/doc/kinetic/',
+    downloads: 225,
+    recent_downloads: 125,
+    homepage: 'https://icorderi.github.io/icorderi/kinetic-rust',
+    id: 'kinetic-rust',
+    keywords: ['Protocol', 'Kinetic', 'Storage'],
+    max_version: '0.0.16',
+    name: 'kinetic-rust',
+    repository: 'https://github.com/icorderi/kinetic-rust/',
+    updated_at: '2015-04-21T00:15:49Z',
+    versions: null,
+  },
+  {
+    badges: [
+      {
+        badge_type: 'maintenance',
+        attributes: {
           value: 'actively-developed',
         },
       },
@@ -199,29 +222,6 @@ export default [
     name: 'rust-htslib',
     repository: 'https://github.com/rust-bio/rust-htslib.git',
     updated_at: '2015-11-11T00:10:43Z',
-    versions: null,
-  },
-  {
-    badges: [
-      {
-        badge_type: 'maintenance',
-        attributes: {
-          status: 'actively-developed',
-        },
-      },
-    ],
-    created_at: '2014-11-23T09:01:21Z',
-    description: 'A Kinetic protocol library written in Rust',
-    documentation: 'https://icorderi.github.io/kinetic-rust/doc/kinetic/',
-    downloads: 225,
-    recent_downloads: 125,
-    homepage: 'https://icorderi.github.io/icorderi/kinetic-rust',
-    id: 'kinetic-rust',
-    keywords: ['Protocol', 'Kinetic', 'Storage'],
-    max_version: '0.0.16',
-    name: 'kinetic-rust',
-    repository: 'https://github.com/icorderi/kinetic-rust/',
-    updated_at: '2015-04-21T00:15:49Z',
     versions: null,
   },
   {
