@@ -30,7 +30,7 @@
       <span class='small'>Sort by </span>
 
       <RlDropdownContainer @class="dropdown-container">
-        <RlDropdownToggle @tagName="a" @class="dropdown" @data-test-current-order={{true}}>
+        <RlDropdownToggle @tagName="a" @class="dropdown" data-test-current-order={{true}}>
           {{svg-jar "sort"}}
           {{ currentSortBy }}
           <span class='arrow'></span>
@@ -69,11 +69,11 @@
           <LinkTo @route="crate" @model={{crate}}>
             <h1>Exact Match</h1>
           </LinkTo>
-          <CrateRow @crate={{crate}} @data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
         </div>
       {{else}}
         <div>
-          <CrateRow @crate={{crate}} @data-test-crate-row={{index}} />
+          <CrateRow @crate={{crate}} data-test-crate-row={{index}} />
         </div>
       {{/if}}
     {{/each}}
